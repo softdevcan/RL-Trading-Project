@@ -4,7 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.api.routes import health, items
+from app.api.routes import health, items, trading
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+import os
 
 settings = get_settings()
 
@@ -30,6 +33,31 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(items.router)
+app.include_router(trading.router, prefix="/api")
+
+# Serve static files (for web UI)
+if not os.path.exists("static"):
+    os.makedirs("static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Serve web UI
+@app.get("/", response_class=HTMLResponse)
+async def serve_ui():
+    """Serve the web UI"""
+    ui_path = "static/index.html"
+    if os.path.exists(ui_path):
+        with open(ui_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    return """
+    <html>
+        <head><title>RL Trading System</title></head>
+        <body>
+            <h1>RL Trading System</h1>
+            <p>Web UI not found. Please create static/index.html</p>
+            <p><a href="/docs">API Documentation</a></p>
+        </body>
+    </html>
+    """
 
 
 @app.on_event("startup")

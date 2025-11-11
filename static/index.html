@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL Trading Dashboard - BIST-30</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🚀 RL Trading Dashboard</h1>
+            <p class="subtitle">Deep Reinforcement Learning ile BIST-30 Algoritmik Ticaret</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab-button" onclick="switchTab('training')">🎯 Model Eğitimi</button>
+            <button class="tab-button" onclick="switchTab('data')">📈 Veri İstatistikleri</button>
+            <button class="tab-button" onclick="switchTab('models')">🤖 Model Karşılaştırma</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid">
+                <!-- System Status -->
+                <div class="card">
+                    <h2>⚡ Sistem Durumu</h2>
+                    <div id="systemStatus">
+                        <div style="text-align: center; padding: 20px;">
+                            <span class="status-badge status-idle" id="statusBadge">Hazır</span>
+                        </div>
+                        <div id="progressContainer" style="display: none;">
+                            <div class="progress-container">
+                                <div class="progress-bar" id="progressBar">0%</div>
+                            </div>
+                            <div id="stepInfo" style="text-align: center; color: #666; margin-top: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Model Info -->
+                <div class="card">
+                    <h2>📊 Aktif Model</h2>
+                    <div id="activeModelInfo">
+                        <p class="info-text">Henüz model seçilmedi</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="card">
+                <h2>📈 Performans Metrikleri</h2>
+                <div class="metrics-grid" id="dashboardMetrics">
+                    <div class="metric-card purple">
+                        <div class="metric-label">Cumulative Return</div>
+                        <div class="metric-value" id="metricReturn">-</div>
+                    </div>
+                    <div class="metric-card green">
+                        <div class="metric-label">Sharpe Ratio</div>
+                        <div class="metric-value" id="metricSharpe">-</div>
+                    </div>
+                    <div class="metric-card blue">
+                        <div class="metric-label">Max Drawdown</div>
+                        <div class="metric-value" id="metricDrawdown">-</div>
+                    </div>
+                    <div class="metric-card orange">
+                        <div class="metric-label">Final Portfolio</div>
+                        <div class="metric-value" id="metricPortfolio">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Trades</div>
+                        <div class="metric-value" id="metricTrades">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Models -->
+            <div class="grid">
+                <!-- Performance Chart -->
+                <div class="card">
+                    <h2>📉 Performans Trendi</h2>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Models List -->
+                <div class="card">
+                    <h2>🔄 Eğitilmiş Modeller</h2>
+                    <button onclick="loadModels()" style="margin-bottom: 15px;">Yenile</button>
+                    <div class="model-list" id="modelsList">
+                        <p class="info-text">Modeller yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Tab -->
+        <div id="training" class="tab-content">
+            <div class="grid">
+                <!-- Training Form -->
+                <div class="card">
+                    <h2>🎯 Model Eğitimi</h2>
+                    <form id="trainingForm">
+                        <div class="form-group">
+                            <label for="algorithm">Algoritma:</label>
+                            <select id="algorithm" name="algorithm">
+                                <option value="A2C">A2C (Advantage Actor-Critic)</option>
+                                <option value="PPO">PPO (Proximal Policy Optimization)</option>
+                                <option value="TD3">TD3 (Twin Delayed DDPG)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phase">Faz:</label>
+                            <select id="phase" name="phase">
+                                <option value="1">Faz 1 (5 Hisse - Proof of Concept)</option>
+                                <option value="2">Faz 2 (Full BIST-30)</option>
+                                <option value="3">Faz 3 (Production)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="timesteps">Toplam Timesteps:</label>
+                            <input type="number" id="timesteps" name="timesteps" value="50000" min="1000" step="1000">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="learning_rate">Learning Rate:</label>
+                            <input type="number" id="learning_rate" name="learning_rate" value="0.0007" step="0.0001" min="0.0001">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="initial_balance">Başlangıç Bakiyesi (₺):</label>
+                            <input type="number" id="initial_balance" name="initial_balance" value="1000000" step="100000">
+                        </div>
+
+                        <button type="submit" id="trainButton">Eğitimi Başlat</button>
+                    </form>
+
+                    <div id="errorContainer"></div>
+                </div>
+
+                <!-- Training Progress Chart -->
+                <div class="card">
+                    <h2>⏱️ Eğitim İlerlemesi</h2>
+                    <div class="chart-container">
+                        <canvas id="trainingProgressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Statistics Tab -->
+        <div id="data" class="tab-content">
+            <div class="card">
+                <h2>📈 Veri İstatistikleri</h2>
+
+                <!-- Stats Grid -->
+                <div class="data-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Toplam Hisse</div>
+                        <div class="stat-value">5</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Faz</div>
+                        <div class="stat-value">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Veri Periyodu</div>
+                        <div class="stat-value">2018-2024</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Trading Days</div>
+                        <div class="stat-value">~1500</div>
+                    </div>
+                </div>
+
+                <!-- BIST Stocks Table -->
+                <h3>BIST-30 Hisseleri (Faz 1)</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Hisse</th>
+                            <th>Kod</th>
+                            <th>Sektör</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Akbank</td>
+                            <td>AKBNK.IS</td>
+                            <td>Bankacılık</td>
+                        </tr>
+                        <tr>
+                            <td>Türk Hava Yolları</td>
+                            <td>THYAO.IS</td>
+                            <td>Havacılık</td>
+                        </tr>
+                        <tr>
+                            <td>Tüpraş</td>
+                            <td>TUPRS.IS</td>
+                            <td>Enerji</td>
+                        </tr>
+                        <tr>
+                            <td>BIM</td>
+                            <td>BIMAS.IS</td>
+                            <td>Perakende</td>
+                        </tr>
+                        <tr>
+                            <td>Aselsan</td>
+                            <td>ASELS.IS</td>
+                            <td>Savunma</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Technical Indicators -->
+                <h3>Teknik İndikatörler</h3>
+                <div class="data-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">MACD</div>
+                        <div class="stat-value">✓</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">RSI</div>
+                        <div class="stat-value">✓</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">CCI</div>
+                        <div class="stat-value">✓</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">ADX</div>
+                        <div class="stat-value">✓</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Turbulence</div>
+                        <div class="stat-value">✓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Comparison Tab -->
+        <div id="models" class="tab-content">
+            <!-- Comparison Table -->
+            <div class="card">
+                <h2>🤖 Model Karşılaştırma</h2>
+                <button onclick="loadModelsComparison()">Modelleri Yükle</button>
+                <table class="comparison-table" style="margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Algoritma</th>
+                            <th>Return (%)</th>
+                            <th>Sharpe</th>
+                            <th>Drawdown (%)</th>
+                            <th>Trades</th>
+                            <th>Tarih</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modelsComparisonTable">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">Henüz model yok</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Algorithm Comparison Chart -->
+            <div class="card" style="margin-top: 20px;">
+                <h2>📊 Algoritma Performans Karşılaştırması</h2>
+                <div class="chart-container">
+                    <canvas id="algorithmComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
