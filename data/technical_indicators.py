@@ -192,8 +192,8 @@ def add_indicators_to_multi_symbol_df(df: pd.DataFrame) -> pd.DataFrame:
         # İndikatörleri ekle
         symbol_df = calculator.add_all_indicators(symbol_df)
 
-        # Symbol bilgisini geri ekle
-        symbol_df['symbol'] = symbol
+        # Symbol bilgisini geri ekleme - concat keys parametresi ile eklenecek
+        # symbol_df['symbol'] = symbol  # REMOVED - causes duplicate
 
         result_dfs.append((symbol, symbol_df))
 

@@ -126,28 +126,49 @@ class TradingEnv(gym.Env):
         Returns:
             (observation, reward, terminated, truncated, info)
         """
+        # CRITICAL FIX: Flatten action if it comes from VectorizedEnv
+        # VectorizedEnv might send shape (1, n_stocks) but we need (n_stocks,)
+        action = np.array(action).flatten()
+
+        # Ensure action has correct length
+        if len(action) != self.n_stocks:
+            logger.error(f"Action length mismatch! Expected {self.n_stocks}, got {len(action)}")
+            logger.error(f"Action shape: {np.array(action).shape}, action: {action}")
+            logger.error(f"Symbols: {self.symbols}")
+            raise ValueError(f"Action must have length {self.n_stocks}, got {len(action)}")
+
         # Scale continuous actions [-1, 1] to integer shares
         # Use np.round() instead of astype(int) to avoid truncating small actions to zero
         scaled_action = np.round(action * self.max_shares_per_trade).astype(int)
         scaled_action = np.clip(scaled_action, -self.max_shares_per_trade, self.max_shares_per_trade)
 
-        # Apply minimum threshold to encourage trading
-        # If action is too small (< 5% of max), zero it out to avoid noise
-        min_threshold = int(self.max_shares_per_trade * 0.05)  # 5 shares if max=100
-        for i in range(len(scaled_action)):
-            if abs(scaled_action[i]) < min_threshold:
-                scaled_action[i] = 0
+        # THRESHOLD REMOVED FOR TESTING!
+        # Let ANY non-zero action through to see if model is producing actions
+        # Previously: min_threshold = 1 share (1% of 100)
+        # Now: NO THRESHOLD - even 1 share will execute
+        min_threshold = 0  # DISABLED!
+        # for i in range(len(scaled_action)):
+        #     if abs(scaled_action[i]) < min_threshold:
+        #         scaled_action[i] = 0
 
         # Önceki portfolio değeri
         prev_portfolio_value = self._get_portfolio_value()
 
         # İşlemleri gerçekleştir
         trades_executed = 0
+        total_commission_cost = 0.0
+
         for i, shares_to_trade in enumerate(scaled_action):
             if shares_to_trade != 0:
-                success = self._execute_trade(i, shares_to_trade)
+                success, commission = self._execute_trade(i, shares_to_trade)
                 if success:
                     trades_executed += 1
+                    total_commission_cost += commission
+
+        # Debug logging (reduced frequency - only every 100 steps)
+        if self.current_step % 100 == 0:
+            logger.info(f"[ENV {id(self)}] Step {self.current_step}: Trades={len(self.trades_history)}, "
+                       f"Balance=₺{self.balance:,.0f}, Portfolio=₺{self._get_portfolio_value():,.0f}")
 
         # Bir adım ilerle
         self.current_step += 1
@@ -156,13 +177,15 @@ class TradingEnv(gym.Env):
         current_portfolio_value = self._get_portfolio_value()
         self.portfolio_values.append(current_portfolio_value)
 
-        # Reward hesapla (Faz 1: basit - portfolio value değişimi)
-        # Amplify reward signal for better learning
-        reward = ((current_portfolio_value - prev_portfolio_value) / prev_portfolio_value) * 100
+        # Reward hesapla (Faz 1: portfolio value değişimi - komisyon cezası)
+        # Portfolio change as percentage
+        portfolio_change_pct = ((current_portfolio_value - prev_portfolio_value) / prev_portfolio_value) * 100
 
-        # Add small bonus for taking action (to encourage exploration)
-        if trades_executed > 0:
-            reward += 0.01 * trades_executed  # Small bonus per trade
+        # Commission penalty as percentage of initial balance
+        commission_penalty = (total_commission_cost / self.initial_balance) * 100
+
+        # Final reward: portfolio gain minus commission cost
+        reward = portfolio_change_pct - commission_penalty
 
         # Episode sonu kontrolü
         terminated = self.current_step >= self.frame_bound[1]
@@ -183,7 +206,7 @@ class TradingEnv(gym.Env):
 
         return obs, reward, terminated, truncated, info
 
-    def _execute_trade(self, stock_idx: int, shares: int) -> bool:
+    def _execute_trade(self, stock_idx: int, shares: int) -> tuple:
         """
         İşlem gerçekleştir
 
@@ -192,12 +215,13 @@ class TradingEnv(gym.Env):
             shares: + (buy) veya - (sell)
 
         Returns:
-            bool: İşlem başarılı olduysa True
+            tuple: (success: bool, commission_cost: float)
         """
         symbol = self.symbols[stock_idx]
         current_price = self._get_current_price(symbol)
 
         if shares > 0:  # BUY
+            commission_cost = shares * current_price * self.commission_rate
             cost = shares * current_price * (1 + self.commission_rate)
 
             if cost <= self.balance:
@@ -210,14 +234,16 @@ class TradingEnv(gym.Env):
                     'action': 'BUY',
                     'shares': shares,
                     'price': current_price,
-                    'cost': cost
+                    'cost': cost,
+                    'commission': commission_cost
                 })
-                return True
+                return True, commission_cost
 
         elif shares < 0:  # SELL
             shares_to_sell = min(abs(shares), self.shares_owned[stock_idx])
 
             if shares_to_sell > 0:
+                commission_cost = shares_to_sell * current_price * self.commission_rate
                 revenue = shares_to_sell * current_price * (1 - self.commission_rate)
                 self.balance += revenue
                 self.shares_owned[stock_idx] -= shares_to_sell
@@ -228,11 +254,12 @@ class TradingEnv(gym.Env):
                     'action': 'SELL',
                     'shares': shares_to_sell,
                     'price': current_price,
-                    'revenue': revenue
+                    'revenue': revenue,
+                    'commission': commission_cost
                 })
-                return True
+                return True, commission_cost
 
-        return False  # İşlem yapılamadı
+        return False, 0.0  # İşlem yapılamadı
 
     def _get_observation(self) -> np.ndarray:
         """
@@ -330,12 +357,18 @@ class TradingEnv(gym.Env):
             portfolio_value = self._get_portfolio_value()
             print(f"\nStep: {self.current_step}")
             print(f"Date: {self._get_current_date()}")
-            print(f"Balance: ${self.balance:,.2f}")
-            print(f"Portfolio Value: ${portfolio_value:,.2f}")
+            print(f"Balance: ₺{self.balance:,.2f}")
+            print(f"Portfolio Value: ₺{portfolio_value:,.2f}")
             print(f"Shares Owned: {dict(zip(self.symbols, self.shares_owned.astype(int)))}")
 
     def get_metrics(self) -> Dict:
         """Trading metriklerini hesapla"""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"get_metrics() called: trades_history has {len(self.trades_history)} trades")
+        logger.info(f"get_metrics() called: portfolio_values has {len(self.portfolio_values)} values")
+
         portfolio_values = np.array(self.portfolio_values)
 
         # Cumulative return
@@ -343,7 +376,7 @@ class TradingEnv(gym.Env):
 
         # Sharpe ratio (basit hesaplama)
         returns = np.diff(portfolio_values) / portfolio_values[:-1]
-        sharpe_ratio = np.mean(returns) / (np.std(returns) + 1e-9) * np.sqrt(252)
+        sharpe_ratio = np.mean(returns) / (np.std(returns) + 1e-9) * np.sqrt(252) if len(returns) > 0 else np.nan
 
         # Max drawdown
         cummax = np.maximum.accumulate(portfolio_values)
@@ -398,7 +431,7 @@ if __name__ == '__main__':
     # Reset
     obs, info = env.reset()
     print(f"\nInitial state shape: {obs.shape}")
-    print(f"Initial portfolio value: ${info['portfolio_value']:,.2f}")
+    print(f"Initial portfolio value: ₺{info['portfolio_value']:,.2f}")
 
     # Birkaç random step
     for i in range(5):
@@ -408,7 +441,7 @@ if __name__ == '__main__':
         print(f"\nStep {i+1}:")
         print(f"  Action: {action}")
         print(f"  Reward: {reward:.4f}")
-        print(f"  Portfolio Value: ${info['portfolio_value']:,.2f}")
+        print(f"  Portfolio Value: ₺{info['portfolio_value']:,.2f}")
 
         if terminated:
             break

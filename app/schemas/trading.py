@@ -91,6 +91,8 @@ class ModelMetrics(BaseModel):
     total_timesteps: Optional[int] = None
     learning_rate: Optional[float] = None
     trained_at: Optional[str] = None
+    trades: Optional[List[Dict]] = Field(default=[], description="Trade history")
+    portfolio_history: Optional[List[float]] = Field(default=[], description="Portfolio value over time")
 
     class Config:
         json_schema_extra = {

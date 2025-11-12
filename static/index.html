@@ -13,18 +13,18 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>🚀 RL Trading Dashboard</h1>
-            <p class="subtitle">Deep Reinforcement Learning ile BIST-30 Algoritmik Ticaret</p>
-        </header>
-
-        <!-- Navigation Tabs -->
+        <!-- Navigation Tabs with Header -->
         <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('dashboard', event)">📊 Dashboard</button>
-            <button class="tab-button" onclick="switchTab('training', event)">🎯 Model Eğitimi</button>
-            <button class="tab-button" onclick="switchTab('data', event)">📈 Veri İstatistikleri</button>
-            <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
+            <div class="navbar-title">
+                <span class="navbar-logo">🚀 RL Trading Dashboard</span>
+                <span class="navbar-subtitle">Deep RL ile BIST-30 Algoritmik Ticaret</span>
+            </div>
+            <div class="navbar-buttons">
+                <button class="tab-button active" onclick="switchTab('dashboard', event)">📊 Dashboard</button>
+                <button class="tab-button" onclick="switchTab('training', event)">🎯 Model Eğitimi</button>
+                <button class="tab-button" onclick="switchTab('data', event)">📈 Veri İstatistikleri</button>
+                <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
+            </div>
         </div>
 
         <!-- Dashboard Tab -->
@@ -36,12 +36,6 @@
                     <div id="systemStatus">
                         <div style="text-align: center; padding: 20px;">
                             <span class="status-badge status-idle" id="statusBadge">Hazır</span>
-                        </div>
-                        <div id="progressContainer" style="display: none;">
-                            <div class="progress-container">
-                                <div class="progress-bar" id="progressBar">0%</div>
-                            </div>
-                            <div id="stepInfo" style="text-align: center; color: #666; margin-top: 10px;"></div>
                         </div>
                     </div>
                 </div>
@@ -113,9 +107,10 @@
                         <div class="form-group">
                             <label for="algorithm">Algoritma:</label>
                             <select id="algorithm" name="algorithm">
-                                <option value="A2C">A2C - Advantage Actor-Critic (Dikkatli ayar gerektirir)</option>
-                                <option value="PPO" selected>PPO - Proximal Policy Optimization (En Kararlı - Önerilen)</option>
-                                <option value="TD3">TD3 - Twin Delayed DDPG (Gelişmiş, Experience Replay)</option>
+                                <option value="A2C">A2C - Advantage Actor-Critic (Hızlı, trading-optimized)</option>
+                                <option value="PPO">PPO - Proximal Policy Optimization (Kararlı, yüksek exploration)</option>
+                                <option value="SAC" selected>SAC - Soft Actor-Critic (⭐ En İyi - Otomatik entropy tuning)</option>
+                                <option value="TD3">TD3 - Twin Delayed DDPG (Gelişmiş, noise-based exploration)</option>
                             </select>
                         </div>
 
@@ -141,25 +136,31 @@
                         </div>
 
                         <div class="info-box" style="background: #1a1f2e; padding: 10px; border-radius: 4px; margin: 15px 0;">
-                            <strong>ℹ️ Not:</strong> Her algoritma kendi optimize edilmiş learning rate'ini kullanır:
+                            <strong>ℹ️ Trading-Optimized Hyperparameters:</strong>
                             <ul style="margin: 8px 0 0 20px; font-size: 0.9em;">
-                                <li><strong>PPO:</strong> 0.0003 (en kararlı)</li>
-                                <li><strong>A2C:</strong> 0.0007</li>
-                                <li><strong>TD3:</strong> 0.001</li>
+                                <li><strong>SAC:</strong> LR=0.0003, Auto entropy ⭐ <em>(Önerilen!)</em></li>
+                                <li><strong>PPO:</strong> LR=0.0003, ent_coef=0.15 (yüksek exploration)</li>
+                                <li><strong>A2C:</strong> LR=0.0007, ent_coef=0.01 (düşük entropy, fast updates)</li>
+                                <li><strong>TD3:</strong> LR=0.001, noise=0.2 (agresif exploration)</li>
                             </ul>
+                            <p style="margin-top: 8px; font-size: 0.85em; color: #888;">
+                                <strong>Action threshold:</strong> %1 (5 share min) |
+                                <strong>Beklenen trades:</strong> 50-200
+                            </p>
                         </div>
 
                         <button type="submit" id="trainButton">Eğitimi Başlat</button>
                     </form>
 
                     <div id="errorContainer"></div>
-                </div>
 
-                <!-- Training Progress Chart -->
-                <div class="card">
-                    <h2>⏱️ Eğitim İlerlemesi</h2>
-                    <div class="chart-container">
-                        <canvas id="trainingProgressChart"></canvas>
+                    <div class="info-box" style="background: #1e3a5f; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #3b82f6;">
+                        <strong>ℹ️ Eğitim Hakkında</strong>
+                        <p style="margin-top: 10px; font-size: 0.9em; color: #94a3b8;">
+                            Eğitim işlemi seçtiğiniz timestep sayısına göre 5-30 dakika sürebilir.
+                            Eğitim tamamlandığında model otomatik olarak kaydedilir ve "🤖 Model Karşılaştırma"
+                            sekmesinden görüntüleyebilirsiniz.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -168,13 +169,70 @@
         <!-- Data Statistics Tab -->
         <div id="data" class="tab-content">
             <div class="card">
-                <h2>📈 Veri İstatistikleri</h2>
+                <h2>📈 Veri Yönetimi</h2>
+
+                <!-- Date Range Selection -->
+                <div class="grid" style="margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label for="dataStartDate">Başlangıç Tarihi:</label>
+                        <input type="date" id="dataStartDate" value="2018-01-01">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataEndDate">Bitiş Tarihi:</label>
+                        <input type="date" id="dataEndDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataPhase">Faz:</label>
+                        <select id="dataPhase">
+                            <option value="1">Faz 1 (5 Hisse)</option>
+                            <option value="2">Faz 2 (BIST-30)</option>
+                            <option value="3">Faz 3 (Production)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Data Controls -->
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <button onclick="generateDataWithDates(event)" class="btn-primary">🔄 Veri Oluştur</button>
+                    <button onclick="loadDatasetsList()" class="btn-secondary">📋 Veri Setlerini Listele</button>
+                    <button onclick="setQuickRange('1y')" class="btn-secondary">📅 Son 1 Yıl</button>
+                    <button onclick="setQuickRange('3y')" class="btn-secondary">📅 Son 3 Yıl</button>
+                    <button onclick="setQuickRange('5y')" class="btn-secondary">📅 Son 5 Yıl</button>
+                </div>
+
+                <!-- Datasets List -->
+                <div id="datasetsContainer" style="display: none; margin-bottom: 20px;">
+                    <h3 style="color: #60a5fa; margin-bottom: 15px;">📊 Mevcut Veri Setleri</h3>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Dosya Adı</th>
+                                    <th>Boyut</th>
+                                    <th>Tarih Aralığı</th>
+                                    <th>Hisseler</th>
+                                    <th>Toplam Satır</th>
+                                    <th>Train/Val/Test</th>
+                                    <th>Oluşturulma</th>
+                                </tr>
+                            </thead>
+                            <tbody id="datasetsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Data Info -->
+                <div id="dataInfo" style="display: none; margin-bottom: 20px; padding: 15px; background: #1e3a5f; border-radius: 8px; border: 1px solid #334155;">
+                    <h3 style="color: #60a5fa; margin-bottom: 10px;">Mevcut Veri Bilgisi</h3>
+                    <div id="dataInfoContent" style="color: #e2e8f0;"></div>
+                </div>
 
                 <!-- Stats Grid -->
-                <div class="data-stats">
+                <div class="data-stats" id="dataStats">
                     <div class="stat-item">
                         <div class="stat-label">Toplam Hisse</div>
-                        <div class="stat-value">5</div>
+                        <div class="stat-value" id="totalSymbols">-</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Faz</div>
@@ -182,11 +240,11 @@
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Veri Periyodu</div>
-                        <div class="stat-value">2018-2024</div>
+                        <div class="stat-value" id="dataPeriod">-</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Trading Days</div>
-                        <div class="stat-value">~1500</div>
+                        <div class="stat-label">Toplam Satır</div>
+                        <div class="stat-value" id="totalRows">-</div>
                     </div>
                 </div>
 
@@ -258,10 +316,26 @@
 
         <!-- Model Comparison Tab -->
         <div id="models" class="tab-content">
-            <!-- Comparison Table -->
+            <!-- Model Selection -->
             <div class="card">
-                <h2>🤖 Model Karşılaştırma</h2>
-                <button onclick="loadModelsComparison()">Modelleri Yükle</button>
+                <h2>🤖 Model Seçimi</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px;">Karşılaştırmak istediğiniz modelleri seçin:</p>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <button onclick="loadAvailableModels()" class="btn-primary">📋 Modelleri Listele</button>
+                    <button onclick="selectAllModels()" class="btn-secondary">✓ Tümünü Seç</button>
+                    <button onclick="deselectAllModels()" class="btn-secondary">✗ Tümünü Kaldır</button>
+                    <button onclick="compareSelectedModels()" class="btn-primary" style="margin-left: auto;">📊 Karşılaştır</button>
+                </div>
+
+                <div id="modelSelectionList" class="model-selection-grid">
+                    <p class="info-text">Modelleri listele butonuna tıklayın</p>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="card" style="margin-top: 20px; display: none;" id="comparisonTableCard">
+                <h2>📈 Karşılaştırma Tablosu</h2>
                 <table class="comparison-table" style="margin-top: 20px;">
                     <thead>
                         <tr>
@@ -271,22 +345,67 @@
                             <th>Sharpe</th>
                             <th>Drawdown (%)</th>
                             <th>Trades</th>
+                            <th>Final Value</th>
                             <th>Tarih</th>
                         </tr>
                     </thead>
                     <tbody id="modelsComparisonTable">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px;">Henüz model yok</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Algorithm Comparison Chart -->
-            <div class="card" style="margin-top: 20px;">
-                <h2>📊 Algoritma Performans Karşılaştırması</h2>
+            <div class="card" style="margin-top: 20px; display: none;" id="comparisonChartCard">
+                <h2>📊 Performans Karşılaştırması</h2>
                 <div class="chart-container">
                     <canvas id="algorithmComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Details Modal -->
+    <div id="modelDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModelDetails()">&times;</span>
+            <h2 id="modalModelName">Model Detayları</h2>
+
+            <div class="grid" style="margin-top: 20px;">
+                <!-- Portfolio Value Chart -->
+                <div class="card">
+                    <h3>📈 Portfolio Değeri (Test Set)</h3>
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Trades Table -->
+                <div class="card">
+                    <h3>💼 İşlem Geçmişi</h3>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sembol</th>
+                                    <th>İşlem</th>
+                                    <th>Miktar</th>
+                                    <th>Fiyat</th>
+                                    <th>Toplam</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Activity Chart -->
+            <div class="card" style="margin-top: 20px;">
+                <h3>📊 İşlem Aktivitesi</h3>
+                <div class="chart-container">
+                    <canvas id="tradeActivityChart"></canvas>
                 </div>
             </div>
         </div>

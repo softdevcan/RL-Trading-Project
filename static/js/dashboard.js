@@ -81,42 +81,7 @@ function initCharts() {
         }
     });
 
-    // Training Progress Chart
-    const trainCtx = document.getElementById('trainingProgressChart');
-    trainingProgressChart = new Chart(trainCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Training Progress (%)',
-                data: [],
-                borderColor: '#4facfe',
-                backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                }
-            }
-        }
-    });
+    // Training Progress Chart - Removed (training is synchronous)
 
     // Algorithm Comparison Chart
     const algoCtx = document.getElementById('algorithmComparisonChart');
@@ -191,11 +156,13 @@ function initTrainingForm() {
             const data = await response.json();
 
             if (response.ok) {
-                isTraining = true;
-                updateStatus('training');
+                // Training started - just wait for completion
                 document.getElementById('trainButton').disabled = true;
-                document.getElementById('progressContainer').style.display = 'block';
-                startStatusCheck();
+                document.getElementById('trainButton').textContent = '⏳ Eğitim Devam Ediyor...';
+                updateStatus('training');
+
+                // Show success message
+                showError('✅ Eğitim başlatıldı! Bu işlem birkaç dakika sürebilir. Model eğitimi tamamlandığında bu sayfa otomatik olarak güncellenecek.', 'success');
             } else {
                 showError(data.detail || 'Eğitim başlatılamadı');
             }
@@ -246,14 +213,8 @@ async function checkStatus() {
 }
 
 function updateTrainingChart(step, progress) {
-    if (trainingProgressChart.data.labels.length > 50) {
-        trainingProgressChart.data.labels.shift();
-        trainingProgressChart.data.datasets[0].data.shift();
-    }
-
-    trainingProgressChart.data.labels.push(step);
-    trainingProgressChart.data.datasets[0].data.push(progress * 100);
-    trainingProgressChart.update('none');
+    // Training chart removed - training is synchronous
+    return;
 }
 
 function startStatusCheck() {
@@ -304,23 +265,26 @@ function updateMetrics(metrics) {
 }
 
 function updatePerformanceChart(metrics) {
-    // Simulated portfolio growth data
-    // In production, this should come from the API with actual portfolio history
-    const steps = 100;
-    const initialValue = 1000000;
-    const finalValue = metrics.final_portfolio_value || initialValue;
-    const labels = Array.from({length: steps}, (_, i) => i);
+    // Use actual portfolio history from model metrics
+    if (metrics.portfolio_history && metrics.portfolio_history.length > 0) {
+        // Real portfolio values from test run
+        const portfolioValues = metrics.portfolio_history;
+        const labels = Array.from({length: portfolioValues.length}, (_, i) => `Day ${i + 1}`);
 
-    // Generate realistic portfolio growth curve
-    const data = labels.map(i => {
-        const progress = i / (steps - 1);
-        const noise = (Math.random() - 0.5) * 0.05; // ±5% noise
-        return initialValue + (finalValue - initialValue) * progress * (1 + noise);
-    });
+        performanceChart.data.labels = labels;
+        performanceChart.data.datasets[0].data = portfolioValues;
+        performanceChart.data.datasets[0].label = `Portfolio Value - ${metrics.algorithm || 'Model'}`;
+        performanceChart.update();
+    } else {
+        // Fallback: Show only initial and final value
+        const initialValue = 1000000;
+        const finalValue = metrics.final_portfolio_value || initialValue;
 
-    performanceChart.data.labels = labels;
-    performanceChart.data.datasets[0].data = data;
-    performanceChart.update();
+        performanceChart.data.labels = ['Start', 'End'];
+        performanceChart.data.datasets[0].data = [initialValue, finalValue];
+        performanceChart.data.datasets[0].label = 'Portfolio Value (Summary)';
+        performanceChart.update();
+    }
 }
 
 /**
@@ -348,11 +312,21 @@ async function loadModels() {
                 ${model.metrics.cumulative_return ? `
                     <div class="model-meta">
                         Return: ${(model.metrics.cumulative_return * 100).toFixed(2)}% |
-                        Sharpe: ${model.metrics.sharpe_ratio?.toFixed(4) || 'N/A'}
+                        Sharpe: ${model.metrics.sharpe_ratio?.toFixed(4) || 'N/A'} |
+                        Trades: ${model.metrics.total_trades || 0}
                     </div>
                 ` : ''}
+                <button onclick="event.stopPropagation(); showModelDetails('${model.name}')"
+                        class="btn-secondary" style="margin-top: 10px; width: 100%;">
+                    📊 Detayları Gör
+                </button>
             </div>
         `).join('');
+
+        // Auto-select the most recent model (first in list)
+        if (models.length > 0) {
+            selectModel(0);
+        }
     } catch (error) {
         console.error('Model loading error:', error);
         document.getElementById('modelsList').innerHTML =
@@ -466,7 +440,639 @@ function init() {
     initTrainingForm();
     loadModels();
     checkStatus();
+    initDataForm();
     console.log('Dashboard initialized successfully!');
+}
+
+function initDataForm() {
+    // Set end date to today
+    const today = new Date();
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    document.getElementById('dataEndDate').value = formatDate(today);
+}
+
+/**
+ * Data Management Functions
+ */
+async function generateDataWithDates(event) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '🔄 Veri Oluşturuluyor...';
+
+    try {
+        // Get values from form
+        const startDate = document.getElementById('dataStartDate').value;
+        const endDate = document.getElementById('dataEndDate').value;
+        const phase = document.getElementById('dataPhase').value;
+
+        // Validate dates
+        if (!startDate || !endDate) {
+            alert('❌ Lütfen başlangıç ve bitiş tarihlerini seçin!');
+            return;
+        }
+
+        if (new Date(startDate) >= new Date(endDate)) {
+            alert('❌ Başlangıç tarihi bitiş tarihinden önce olmalı!');
+            return;
+        }
+
+        // Build URL with parameters
+        const url = `/api/trading/data/generate?phase=${phase}&start_date=${startDate}&end_date=${endDate}`;
+
+        const response = await fetch(url, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Veri oluşturma başarısız');
+        }
+
+        const data = await response.json();
+
+        // Show success message
+        alert(`✅ Veri başarıyla oluşturuldu!\n\n` +
+              `Hisseler: ${data.symbols.join(', ')}\n` +
+              `Toplam Satır: ${data.total_rows}\n` +
+              `Train: ${data.train_rows} | Val: ${data.val_rows} | Test: ${data.test_rows}\n` +
+              `Tarih Aralığı: ${data.date_range.start} - ${data.date_range.end}`);
+
+        // Update UI
+        updateDataStats(data);
+        checkDataInfo();
+
+    } catch (error) {
+        alert('❌ Hata: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Veri Oluştur';
+    }
+}
+
+// Quick date range helpers
+function setQuickRange(range) {
+    const endDate = new Date();
+    const startDate = new Date();
+
+    switch(range) {
+        case '1y':
+            startDate.setFullYear(endDate.getFullYear() - 1);
+            break;
+        case '3y':
+            startDate.setFullYear(endDate.getFullYear() - 3);
+            break;
+        case '5y':
+            startDate.setFullYear(endDate.getFullYear() - 5);
+            break;
+        default:
+            startDate.setFullYear(2018);
+    }
+
+    // Format dates as YYYY-MM-DD
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    document.getElementById('dataStartDate').value = formatDate(startDate);
+    document.getElementById('dataEndDate').value = formatDate(endDate);
+}
+
+// Legacy function - keep for compatibility
+async function generateData(event) {
+    generateDataWithDates(event);
+}
+
+async function checkDataInfo() {
+    try {
+        const response = await fetch('/api/trading/data/info');
+        const data = await response.json();
+
+        const infoDiv = document.getElementById('dataInfo');
+        const infoContent = document.getElementById('dataInfoContent');
+
+        if (data.status === 'no_data') {
+            infoContent.innerHTML = `<p style="color: orange;">⚠️ ${data.message}</p>`;
+        } else {
+            infoContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <div><strong>Toplam Satır:</strong> ${data.total_rows}</div>
+                    <div><strong>Hisseler:</strong> ${data.symbols.join(', ')}</div>
+                    <div><strong>Train Set:</strong> ${data.train_rows} satır</div>
+                    <div><strong>Val Set:</strong> ${data.val_rows} satır</div>
+                    <div><strong>Test Set:</strong> ${data.test_rows} satır</div>
+                    <div><strong>Tarih:</strong> ${data.date_range.start} - ${data.date_range.end}</div>
+                    <div><strong>Sütunlar:</strong> ${data.columns.length} adet</div>
+                    <div><strong>Sütun Listesi:</strong> ${data.columns.join(', ')}</div>
+                </div>
+            `;
+            updateDataStats(data);
+        }
+
+        infoDiv.style.display = 'block';
+
+    } catch (error) {
+        console.error('Data info fetch error:', error);
+        alert('❌ Veri bilgisi alınamadı: ' + error.message);
+    }
+}
+
+async function loadDatasetsList() {
+    try {
+        const response = await fetch('/api/trading/data/list');
+        const data = await response.json();
+
+        const container = document.getElementById('datasetsContainer');
+        const tbody = document.getElementById('datasetsTableBody');
+
+        if (data.count === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888;">Henüz veri seti yok</td></tr>';
+            container.style.display = 'block';
+            return;
+        }
+
+        tbody.innerHTML = data.datasets.map(dataset => {
+            if (dataset.error) {
+                return `
+                    <tr>
+                        <td>${dataset.filename}</td>
+                        <td>${dataset.size_mb} MB</td>
+                        <td colspan="5" style="color: #ef4444;">❌ Hata: ${dataset.error}</td>
+                    </tr>
+                `;
+            }
+
+            const dateRange = `${dataset.date_range.start} → ${dataset.date_range.end}`;
+            const symbols = dataset.symbols.length <= 3
+                ? dataset.symbols.join(', ')
+                : `${dataset.symbols.slice(0, 3).join(', ')} +${dataset.symbols.length - 3}`;
+            const splits = `${dataset.train_rows} / ${dataset.val_rows} / ${dataset.test_rows}`;
+            const created = new Date(dataset.created_at).toLocaleString('tr-TR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `
+                <tr>
+                    <td><strong>${dataset.filename}</strong></td>
+                    <td>${dataset.size_mb} MB</td>
+                    <td>${dateRange}</td>
+                    <td title="${dataset.symbols.join(', ')}">${symbols}</td>
+                    <td>${dataset.total_rows.toLocaleString()}</td>
+                    <td>${splits}</td>
+                    <td>${created}</td>
+                </tr>
+            `;
+        }).join('');
+
+        container.style.display = 'block';
+
+    } catch (error) {
+        console.error('Datasets list error:', error);
+        alert('❌ Veri setleri listelenemedi: ' + error.message);
+    }
+}
+
+function updateDataStats(data) {
+    if (data.symbols) {
+        document.getElementById('totalSymbols').textContent = data.symbols.length;
+    }
+    if (data.date_range) {
+        document.getElementById('dataPeriod').textContent =
+            `${data.date_range.start} - ${data.date_range.end}`;
+    }
+    if (data.total_rows) {
+        document.getElementById('totalRows').textContent = data.total_rows;
+    }
+}
+
+// Modal functions
+let portfolioChartInstance = null;
+let tradeActivityChartInstance = null;
+
+async function showModelDetails(modelName) {
+    try {
+        const response = await fetch(`/api/trading/models/${modelName}/metrics`);
+        const data = await response.json();
+
+        // Set modal title
+        document.getElementById('modalModelName').textContent =
+            `${data.algorithm} - ${modelName}`;
+
+        // Render portfolio chart
+        renderPortfolioChart(data.portfolio_history || []);
+
+        // Render trades table
+        renderTradesTable(data.trades || []);
+
+        // Render trade activity chart
+        renderTradeActivityChart(data.trades || []);
+
+        // Show modal
+        document.getElementById('modelDetailsModal').style.display = 'block';
+
+    } catch (error) {
+        console.error('Error loading model details:', error);
+        alert('❌ Model detayları yüklenemedi: ' + error.message);
+    }
+}
+
+function closeModelDetails() {
+    document.getElementById('modelDetailsModal').style.display = 'none';
+
+    // Destroy charts to prevent memory leaks
+    if (portfolioChartInstance) {
+        portfolioChartInstance.destroy();
+        portfolioChartInstance = null;
+    }
+    if (tradeActivityChartInstance) {
+        tradeActivityChartInstance.destroy();
+        tradeActivityChartInstance = null;
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('modelDetailsModal');
+    if (event.target === modal) {
+        closeModelDetails();
+    }
+}
+
+function renderPortfolioChart(portfolioHistory) {
+    const ctx = document.getElementById('portfolioChart').getContext('2d');
+
+    if (portfolioChartInstance) {
+        portfolioChartInstance.destroy();
+    }
+
+    const steps = portfolioHistory.map((_, i) => i);
+
+    portfolioChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: steps,
+            datasets: [{
+                label: 'Portfolio Value ($)',
+                data: portfolioHistory,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#f8fafc' }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Trading Step',
+                        color: '#94a3b8'
+                    },
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Portfolio Value ($)',
+                        color: '#94a3b8'
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    grid: { color: '#334155' }
+                }
+            }
+        }
+    });
+}
+
+function renderTradesTable(trades) {
+    const tbody = document.getElementById('tradesTableBody');
+
+    if (trades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">İşlem bulunamadı</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = trades.map(trade => `
+        <tr>
+            <td>${trade.index}</td>
+            <td>${trade.symbol}</td>
+            <td style="color: ${trade.action === 'BUY' ? '#10b981' : '#ef4444'}">
+                ${trade.action}
+            </td>
+            <td>${trade.shares}</td>
+            <td>$${trade.price.toFixed(2)}</td>
+            <td>$${trade.total_cost.toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderTradeActivityChart(trades) {
+    const ctx = document.getElementById('tradeActivityChart').getContext('2d');
+
+    if (tradeActivityChartInstance) {
+        tradeActivityChartInstance.destroy();
+    }
+
+    // Group trades by symbol
+    const tradesBySymbol = {};
+    trades.forEach(trade => {
+        if (!tradesBySymbol[trade.symbol]) {
+            tradesBySymbol[trade.symbol] = [];
+        }
+        tradesBySymbol[trade.symbol].push({
+            x: trade.index,
+            y: trade.action === 'BUY' ? trade.shares : -trade.shares
+        });
+    });
+
+    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const datasets = Object.keys(tradesBySymbol).map((symbol, index) => ({
+        label: symbol,
+        data: tradesBySymbol[symbol],
+        backgroundColor: colors[index % colors.length],
+        borderColor: colors[index % colors.length]
+    }));
+
+    tradeActivityChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#f8fafc' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const shares = Math.abs(context.parsed.y);
+                            const action = context.parsed.y > 0 ? 'BUY' : 'SELL';
+                            return `${context.dataset.label}: ${action} ${shares} shares`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Trade Index',
+                        color: '#94a3b8'
+                    },
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Shares (BUY: +, SELL: -)',
+                        color: '#94a3b8'
+                    },
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                }
+            }
+        }
+    });
+}
+
+// Model Comparison Functions
+let availableModelsForComparison = [];
+let selectedModelNames = [];
+
+async function loadAvailableModels() {
+    try {
+        const response = await fetch('/api/trading/models');
+        const models = await response.json();
+        availableModelsForComparison = models;
+
+        const container = document.getElementById('modelSelectionList');
+
+        if (models.length === 0) {
+            container.innerHTML = '<p class="info-text">Henüz eğitilmiş model yok</p>';
+            return;
+        }
+
+        container.innerHTML = models.map(model => `
+            <div class="model-selection-item" onclick="toggleModelSelection('${model.name}')" id="select-${model.name}">
+                <div class="model-selection-name">${model.name}</div>
+                <div class="model-selection-info">
+                    <span><strong>Algoritma:</strong> ${model.metrics.algorithm || 'N/A'}</span>
+                    <span><strong>Return:</strong> ${model.metrics.cumulative_return ? (model.metrics.cumulative_return * 100).toFixed(2) + '%' : 'N/A'}</span>
+                    <span><strong>Sharpe:</strong> ${model.metrics.sharpe_ratio?.toFixed(2) || 'N/A'}</span>
+                    <span><strong>Trades:</strong> ${model.metrics.total_trades || 0}</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Auto-select all models initially
+        selectedModelNames = models.map(m => m.name);
+        selectedModelNames.forEach(name => {
+            document.getElementById(`select-${name}`)?.classList.add('selected');
+        });
+
+    } catch (error) {
+        console.error('Model loading error:', error);
+        document.getElementById('modelSelectionList').innerHTML =
+            '<p class="error">Modeller yüklenemedi</p>';
+    }
+}
+
+function toggleModelSelection(modelName) {
+    const element = document.getElementById(`select-${modelName}`);
+    if (!element) return;
+
+    if (selectedModelNames.includes(modelName)) {
+        // Deselect
+        selectedModelNames = selectedModelNames.filter(n => n !== modelName);
+        element.classList.remove('selected');
+    } else {
+        // Select
+        selectedModelNames.push(modelName);
+        element.classList.add('selected');
+    }
+}
+
+function selectAllModels() {
+    selectedModelNames = availableModelsForComparison.map(m => m.name);
+    availableModelsForComparison.forEach(model => {
+        document.getElementById(`select-${model.name}`)?.classList.add('selected');
+    });
+}
+
+function deselectAllModels() {
+    selectedModelNames = [];
+    availableModelsForComparison.forEach(model => {
+        document.getElementById(`select-${model.name}`)?.classList.remove('selected');
+    });
+}
+
+async function compareSelectedModels() {
+    if (selectedModelNames.length === 0) {
+        alert('❌ Lütfen en az bir model seçin!');
+        return;
+    }
+
+    // Get selected models
+    const selectedModels = availableModelsForComparison.filter(m =>
+        selectedModelNames.includes(m.name)
+    );
+
+    // Show comparison table
+    renderComparisonTable(selectedModels);
+
+    // Show comparison chart
+    renderComparisonChart(selectedModels);
+
+    // Show the cards
+    document.getElementById('comparisonTableCard').style.display = 'block';
+    document.getElementById('comparisonChartCard').style.display = 'block';
+}
+
+function renderComparisonTable(models) {
+    const tbody = document.getElementById('modelsComparisonTable');
+
+    if (models.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Model seçilmedi</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = models.map(model => {
+        const metrics = model.metrics;
+        return `
+            <tr>
+                <td style="font-weight: 600;">${model.name}</td>
+                <td><span class="badge">${metrics.algorithm || 'N/A'}</span></td>
+                <td style="color: ${(metrics.cumulative_return || 0) >= 0 ? '#10b981' : '#ef4444'}">
+                    ${metrics.cumulative_return ? (metrics.cumulative_return * 100).toFixed(2) : 'N/A'}%
+                </td>
+                <td>${metrics.sharpe_ratio?.toFixed(2) || 'N/A'}</td>
+                <td style="color: #ef4444">${metrics.max_drawdown ? (metrics.max_drawdown * 100).toFixed(2) : 'N/A'}%</td>
+                <td>${metrics.total_trades || 0}</td>
+                <td>$${metrics.final_portfolio_value ? metrics.final_portfolio_value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'N/A'}</td>
+                <td>${metrics.trained_at ? new Date(metrics.trained_at).toLocaleDateString('tr-TR') : 'N/A'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderComparisonChart(models) {
+    const canvas = document.getElementById('algorithmComparisonChart');
+
+    // Destroy existing chart - more thorough cleanup
+    if (window.comparisonChartInstance) {
+        window.comparisonChartInstance.destroy();
+        window.comparisonChartInstance = null;
+    }
+
+    // Also check Chart.js internal registry
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    const labels = models.map(m => m.name.replace('_phase1_', '\n').substring(0, 30));
+    const returns = models.map(m => (m.metrics.cumulative_return || 0) * 100);
+    const sharpes = models.map(m => m.metrics.sharpe_ratio || 0);
+    const trades = models.map(m => m.metrics.total_trades || 0);
+
+    window.comparisonChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Return (%)',
+                    data: returns,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Sharpe Ratio',
+                    data: sharpes,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#f8fafc' }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const idx = context.dataIndex;
+                            return `Trades: ${trades[idx]}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { size: 10 }
+                    },
+                    grid: { color: '#334155' }
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Return (%)',
+                        color: '#10b981'
+                    },
+                    ticks: { color: '#10b981' },
+                    grid: { color: '#334155' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Sharpe Ratio',
+                        color: '#3b82f6'
+                    },
+                    ticks: { color: '#3b82f6' },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
 }
 
 // Run on page load

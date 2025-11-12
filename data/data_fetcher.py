@@ -64,8 +64,8 @@ class DataFetcher:
                 # Sadece ihtiyacımız olan sütunları al
                 df = df[['open', 'high', 'low', 'close', 'volume']]
 
-                # Symbol sütunu ekle
-                df['symbol'] = symbol
+                # DON'T add symbol column here - it will be added by concat with keys
+                # df['symbol'] = symbol  # REMOVED - causes duplicate column!
 
                 all_data[symbol] = df
 
@@ -94,7 +94,8 @@ class DataFetcher:
     def save_data(self, df: pd.DataFrame, filename: str):
         """DataFrame'i CSV olarak kaydet"""
         filepath = os.path.join(self.data_dir, filename)
-        df.to_csv(filepath)
+        # Reset index to avoid duplicate symbol column in CSV
+        df.to_csv(filepath, index=True)
         logger.info(f"Data saved to {filepath}")
 
     def load_data(self, filename: str = 'raw_stock_data.csv') -> pd.DataFrame:
@@ -104,8 +105,27 @@ class DataFetcher:
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Data file not found: {filepath}")
 
-        df = pd.read_csv(filepath, index_col=[0, 1], parse_dates=['date'])
+        # Read CSV and handle potential duplicate columns
+        df = pd.read_csv(filepath, parse_dates=['date'])
+
+        # Remove duplicate symbol column if it exists
+        if 'symbol' in df.columns and df.columns.tolist().count('symbol') > 1:
+            logger.warning("Found duplicate 'symbol' column in CSV, removing duplicates")
+            # Keep only first occurrence of each column
+            df = df.loc[:, ~df.columns.duplicated()]
+
+        # Set multi-index
+        if 'symbol' in df.columns and 'date' in df.columns:
+            df = df.set_index(['symbol', 'date'])
+        else:
+            # Already has multi-index from CSV
+            df.index.names = ['symbol', 'date']
+
         logger.info(f"Data loaded from {filepath}: {len(df)} rows")
+        logger.info(f"  Columns: {df.columns.tolist()}")
+        logger.info(f"  Index names: {df.index.names}")
+        logger.info(f"  Unique symbols: {df.index.get_level_values('symbol').unique().tolist()}")
+
         return df
 
     def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -143,8 +163,8 @@ class DataFetcher:
             # Volume negatif olamaz
             symbol_df['volume'] = symbol_df['volume'].clip(lower=0)
 
-            # Symbol bilgisini geri ekle
-            symbol_df['symbol'] = symbol
+            # Symbol bilgisini geri ekleme - concat keys parametresi ile eklenecek
+            # symbol_df['symbol'] = symbol  # REMOVED - causes duplicate
 
             cleaned_dfs.append((symbol, symbol_df))
 

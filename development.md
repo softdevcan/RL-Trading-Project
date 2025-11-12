@@ -144,6 +144,8 @@ TD3(buffer_size=100000, batch_size=256, action_noise=NormalActionNoise)
 - `GET /api/trading/models` - Modelleri listele
 - `GET /api/trading/models/{name}/metrics` - Model metrikleri
 - `DELETE /api/trading/models/{name}` - Model sil
+- `POST /api/trading/data/generate` - Veri oluştur (yeni!)
+- `GET /api/trading/data/info` - Veri durumu (yeni!)
 
 **Deliverables (1. Ara Değerlendirme)** ✅:
 - ✅ Çalışan Trading Environment
@@ -374,5 +376,101 @@ experiments = [
 
 ---
 
-**Son Güncelleme**: Faz 1 Tamamlandı ✅ - 2024
-**Sonraki Milestone**: Faz 2 - Fundamental Data & PSR Reward
+---
+
+## 🔧 Son Değişiklikler (2025-11-12)
+
+### Duplicate Symbol Column Bug Fix ✅
+
+**Problem**: CSV dosyasında `symbol` sütunu iki kez kaydediliyordu:
+- Biri multi-index'ten (`to_csv(index=True)`)
+- Biri de kod içinde manuel eklenen sütundan
+
+**Düzeltme**:
+1. [data/data_fetcher.py:167](data/data_fetcher.py#L167) - `symbol_df['symbol'] = symbol` satırı kaldırıldı
+2. [data/technical_indicators.py:196](data/technical_indicators.py#L196) - Aynı satır kaldırıldı
+3. `pd.concat(..., keys=symbols)` zaten multi-index olarak symbol ekliyor
+
+**Sonuç**: Artık CSV'de sadece index olarak symbol var (doğru format)
+
+### Web Arayüzünden Veri Yönetimi ✅
+
+**Yeni Özellikler**:
+- Veri İstatistikleri sekmesine "Veri Oluştur" butonu eklendi
+- "Veri Durumunu Kontrol Et" butonu ile mevcut veri bilgisi görüntüleme
+- API endpoints: `POST /api/trading/data/generate`, `GET /api/trading/data/info`
+
+**Kullanım**:
+1. Web arayüzünü aç: `http://localhost:8000`
+2. "📈 Veri İstatistikleri" sekmesine git
+3. "🔄 Veri Oluştur" butonuna tıkla
+4. Veri otomatik olarak indirilir, temizlenir ve teknik indikatörler eklenir
+
+### Test Loop Bug Fix ✅
+
+**Problem**: DummyVecEnv `done` array döndürüyor ama boolean gibi kullanılıyordu
+```python
+done = False
+while not done:  # [False] array her zaman truthy!
+```
+
+**Düzeltme**: [app/api/routes/trading.py:469](app/api/routes/trading.py#L469)
+```python
+done = np.array([False])
+while not done[0]:  # Array index kontrolü
+```
+
+### Reward Function İyileştirmesi ✅
+
+**Problem**: Model overtrading yapıyordu (712 trade) - trade başına bonus vardı!
+
+**Eski Reward**:
+```python
+reward = portfolio_change * 100
+if trades_executed > 0:
+    reward += 0.01 * trades_executed  # ❌ YANLIŞ - overtrading teşvik ediyor!
+```
+
+**Yeni Reward**: [env/trading_env.py:186-194](env/trading_env.py#L186-L194)
+```python
+portfolio_change_pct = (ΔPortfolio / prev_value) * 100
+commission_penalty = (total_commission / initial_balance) * 100
+reward = portfolio_change_pct - commission_penalty  # ✅ Komisyon cezası
+```
+
+**Sonuç**: Artık model gereksiz trade yapmaktan cezalandırılıyor
+
+### DummyVecEnv Autoreset Bug Fix ✅
+
+**Problem**: Test evaluation sırasında model trade yapıyor ama metrics=0 çıkıyor!
+
+**Kök Sebep**: DummyVecEnv `done=True` olunca **otomatik reset** yapıyor
+```python
+obs, reward, done, info = test_env.step(action)  # done=True olunca
+# DummyVecEnv içinde: env.reset() çağrılıyor!
+# trades_history = [] oldu
+
+metrics = test_env.envs[0].get_metrics()  # total_trades = 0 ❌
+```
+
+**Çözüm**: [app/api/routes/trading.py:481-494](app/api/routes/trading.py#L481-L494)
+```python
+# Her step öncesi state kaydet
+pre_step_trades = len(actual_env.trades_history)
+pre_step_portfolio_values = actual_env.portfolio_values.copy()
+
+obs, reward, done, info = test_env.step(action)
+
+if done[0]:
+    # State'i geri yükle
+    actual_env.trades_history = actual_env.trades_history[:pre_step_trades]
+    actual_env.portfolio_values = pre_step_portfolio_values
+```
+
+**Sonuç**: Artık test metrics doğru alınıyor
+
+---
+
+**Son Güncelleme**: 2025-11-12
+**Durum**: Faz 1 Tamamlandı ✅ + Kritik buglar düzeltildi
+**Sonraki Milestone**: Test eğitimi + Faz 2 başlangıcı

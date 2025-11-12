@@ -111,14 +111,22 @@ def train_a2c(
     # Environment oluştur
     env = create_env(train_df)
 
-    # A2C model
+    # A2C model with trading-optimized hyperparameters
+    # Based on quant research: A2C needs LOWER entropy than PPO
+    # because it's naturally more explorative (on-policy)
     model = A2C(
         'MlpPolicy',
         env,
         learning_rate=learning_rate,
-        n_steps=n_steps,
+        n_steps=256,  # CHANGED: Lower for faster market reaction (was n_steps param)
         verbose=1,
-        tensorboard_log="./logs/tensorboard/"
+        tensorboard_log="./logs/tensorboard/",
+        ent_coef=0.01,  # REDUCED: A2C needs less entropy (0.01 vs PPO's 0.15)
+        vf_coef=0.25,   # REDUCED: Lower value loss weight (was 0.5)
+        max_grad_norm=0.5,  # Gradient clipping
+        normalize_advantage=True,  # Critical for trading!
+        use_rms_prop=True,  # Use RMSProp optimizer (better for A2C)
+        rms_prop_eps=1e-5   # RMSprop epsilon for stability
     )
 
     logger.info(f"Model parameters:")
