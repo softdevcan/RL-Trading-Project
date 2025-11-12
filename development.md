@@ -144,8 +144,9 @@ TD3(buffer_size=100000, batch_size=256, action_noise=NormalActionNoise)
 - `GET /api/trading/models` - Modelleri listele
 - `GET /api/trading/models/{name}/metrics` - Model metrikleri
 - `DELETE /api/trading/models/{name}` - Model sil
-- `POST /api/trading/data/generate` - Veri oluştur (yeni!)
-- `GET /api/trading/data/info` - Veri durumu (yeni!)
+- `POST /api/trading/data/generate?phase=X&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` - Veri oluştur (date range ile)
+- `GET /api/trading/data/info` - Aktif veri seti durumu
+- `GET /api/trading/data/list` - Tüm veri setlerini listele (NEW! ✨)
 
 **Deliverables (1. Ara Değerlendirme)** ✅:
 - ✅ Çalışan Trading Environment
@@ -471,6 +472,168 @@ if done[0]:
 
 ---
 
-**Son Güncelleme**: 2025-11-12
-**Durum**: Faz 1 Tamamlandı ✅ + Kritik buglar düzeltildi
-**Sonraki Milestone**: Test eğitimi + Faz 2 başlangıcı
+## 🎨 UI/UX İyileştirmeleri (2025-11-13)
+
+### Trade History Modal & Visualization ✅
+
+**Özellikler**:
+- Model detayları modal ekranı
+- Gerçek trade geçmişi tablosu (tarih, sembol, işlem, miktar, fiyat, toplam)
+- Portfolio değeri line chart (test set boyunca)
+- Trade aktivitesi scatter plot (hisse bazında alım/satım)
+
+**Dosyalar**:
+- [static/index.html:313-358](static/index.html#L313-L358) - Modal HTML
+- [static/js/dashboard.js:561-586](static/js/dashboard.js#L561-L586) - `showModelDetails()`
+- [app/schemas/trading.py:94-95](app/schemas/trading.py#L94-L95) - `trades` ve `portfolio_history` fields
+- [app/api/routes/trading.py:511-543](app/api/routes/trading.py#L511-L543) - Trade history kaydetme
+
+**Chart.js Canvas Reuse Bug Fix**: `Chart.getChart()` ile mevcut chart'ı kontrol edip destroy etme
+
+### Interactive Model Comparison ✅
+
+**Öncesi**: Tüm modeller otomatik karşılaştırılıyordu
+**Sonrası**: İstenen modeller seçilebiliyor
+
+**Özellikler**:
+- Model seçim grid'i (checkbox benzeri görsel)
+- Select All / Deselect All butonları
+- Dinamik karşılaştırma (sadece seçili modeller)
+- Model bilgileri (algoritma, return, sharpe, trades)
+
+**Dosyalar**:
+- [static/index.html:279-324](static/index.html#L279-L324) - Model seçim UI
+- [static/js/dashboard.js:771-807](static/js/dashboard.js#L771-L807) - `loadAvailableModels()`
+- [static/js/dashboard.js:809-835](static/js/dashboard.js#L809-L835) - Selection yönetimi
+
+### Navbar-Style Tabs & Header Consolidation ✅
+
+**Değişiklik**: Büyük header kaldırıldı, title navbar'ın soluna taşındı
+
+**Öncesi**:
+```
+[------------ Header ------------]
+[Tab1] [Tab2] [Tab3] [Tab4]
+```
+
+**Sonrası**:
+```
+[🚀 Title + Subtitle | Tab1 Tab2 Tab3 Tab4 →]
+```
+
+**Faydası**: Önemli miktarda dikey alan kazanıldı
+
+**Dosyalar**:
+- [static/index.html:16-28](static/index.html#L16-L28) - Navbar yapısı
+- [static/css/styles.css:27-80](static/css/styles.css#L27-L80) - Navbar stilleri
+
+### Dynamic Data Generation with Date Range ✅
+
+**Özellikler**:
+- Başlangıç ve bitiş tarihi seçimi
+- Quick range butonları (1y, 3y, 5y)
+- Form validation (start < end)
+- API ve UI tarafı entegrasyonu
+
+**Dosyalar**:
+- [app/api/routes/trading.py:158-187](app/api/routes/trading.py#L158-L187) - Date parametreleri
+- [static/index.html:179-206](static/index.html#L179-L206) - Date picker UI
+- [static/js/dashboard.js:454-506](static/js/dashboard.js#L454-L506) - `generateDataWithDates()`
+- [static/js/dashboard.js:509-543](static/js/dashboard.js#L509-L543) - Quick range helpers
+
+### Non-Scrollable Single-Page Layout ✅
+
+**Hedef**: Tüm içerik sayfaya sığmalı, sayfa scroll olmamalı
+
+**Değişiklikler**:
+- `body`: `overflow: hidden`, `height: 100vh`
+- Container: flexbox column layout
+- Tab content: `flex: 1`, `overflow: hidden`
+- Sadece gerekli bölümler scroll (model listesi, tablolar)
+- Sticky table headers
+- Tüm padding/margin azaltıldı
+
+**Dosyalar**:
+- [static/css/styles.css:9-25](static/css/styles.css#L9-L25) - Body & container
+- [static/css/styles.css:87-96](static/css/styles.css#L87-L96) - Tab content flexible
+- [static/css/styles.css:115-136](static/css/styles.css#L115-L136) - Cards overflow control
+- [static/css/styles.css:297-310](static/css/styles.css#L297-L310) - Scrollable sections
+- [static/css/styles.css:424-446](static/css/styles.css#L424-L446) - Sticky headers
+
+### Training Progress Removed ✅
+
+**Neden**: Eğitim senkron (blocking) çalışıyor, gerçek zamanlı ilerleme takibi yapılamıyor
+
+**Kaldırılanlar**:
+- Progress bar (dashboard)
+- Training progress chart
+- Status polling
+
+**Eklenen**: Bilgilendirme mesajı (eğitim 5-30 dakika sürebilir)
+
+**Dosyalar**:
+- [static/index.html:34-40](static/index.html#L34-L40) - Progress container kaldırıldı
+- [static/index.html:157-164](static/index.html#L157-L164) - Info box eklendi
+- [static/js/dashboard.js:84](static/js/dashboard.js#L84) - Chart initialization kaldırıldı
+- [static/js/dashboard.js:193-200](static/js/dashboard.js#L193-L200) - Training start güncellendi
+
+### Dataset Management & Listing ✅
+
+**Özellikler**:
+- `data/` klasöründeki tüm CSV dosyalarını listele
+- Her dataset için detaylı bilgi:
+  - Dosya adı, boyut (MB)
+  - Tarih aralığı, hisse listesi
+  - Satır sayıları (total, train, val, test)
+  - Oluşturulma tarihi
+- Tablo formatında gösterim
+
+**API Endpoint**: `GET /api/trading/data/list`
+
+**Dosyalar**:
+- [app/api/routes/trading.py:254-315](app/api/routes/trading.py#L254-L315) - `/data/list` endpoint
+- [static/index.html:203-223](static/index.html#L203-L223) - Datasets tablo UI
+- [static/js/dashboard.js:578-635](static/js/dashboard.js#L578-L635) - `loadDatasetsList()`
+
+### Performance Chart Fixed ✅
+
+**Problem**: Dashboard'daki "Performans Trendi" sahte veri gösteriyordu
+
+**Öncesi**:
+- ❌ Rastgele noise ile simüle edilmiş veri
+- ❌ Sadece final_portfolio_value'dan lineer interpolasyon
+- ❌ Gerçek performansı yansıtmıyordu
+
+**Sonrası**:
+- ✅ Test sırasında kaydedilen **gerçek portfolio_history** kullanılıyor
+- ✅ Her günün portfolio değeri gösteriliyor
+- ✅ Trade'lerin etkisi görünüyor
+- ✅ Model adı label'da gösteriliyor
+
+**Dosyalar**:
+- [static/js/dashboard.js:267-288](static/js/dashboard.js#L267-L288) - `updatePerformanceChart()` tamamen yeniden yazıldı
+- [static/js/dashboard.js:326-329](static/js/dashboard.js#L326-L329) - Otomatik model seçimi
+
+**Veri Akışı**:
+```
+init() → loadModels() → selectModel(0) → updateMetrics() → updatePerformanceChart()
+                                                                         ↓
+                                                              Real portfolio_history
+```
+
+### Dark Mode Fixes ✅
+
+**Problem**: "Mevcut Veri Bilgisi" kartı beyaz background + beyaz text (okunamıyor)
+
+**Çözüm**: Dark theme renkleri
+- Background: `#1e3a5f` (dark blue)
+- Text: `#e2e8f0` (light gray)
+- Border: `#334155`
+
+**Dosya**: [static/index.html:204-206](static/index.html#L204-L206)
+
+---
+
+**Son Güncelleme**: 2025-11-13
+**Durum**: Faz 1 Tamamlandı ✅ + UI/UX İyileştirmeleri ✅
+**Sonraki Milestone**: Faz 2 (Full BIST-30) + Hyperparameter optimization
