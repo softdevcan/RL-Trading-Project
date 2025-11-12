@@ -109,17 +109,38 @@ Tarayıcınızda açın: **http://localhost:8000/**
 - 🤖 Model karşılaştırma
 - 📉 Chart.js grafikleri
 
-### Komut Satırı ile Eğitim
+### TensorBoard ile İzleme
+
+Eğitim sürecini gerçek zamanlı izlemek için:
 
 ```bash
-# Standalone A2C eğitimi (Faz 1)
-python train_a2c_phase1.py
+# TensorBoard'u başlatın
+tensorboard --logdir=logs
+
+# Tarayıcıda açın: http://localhost:6006
 ```
 
-**Çıktılar:**
-- Model: `models/a2c_bist30_phase1.zip`
-- Metrikler: `results/a2c_phase1_*.txt`
-- Tensorboard: `logs/tensorboard/`
+**TensorBoard'da görüntülenecekler:**
+- 📉 Loss curves (policy loss, value loss, entropy loss)
+- 📊 Reward progression
+- 🎯 Episode statistics
+- 📈 Learning rate schedule
+- 🔍 Gradient norms
+
+### Test Scriptleri
+
+```bash
+# Tüm testler tests/ klasöründe
+
+# Environment testi (48 işlem)
+python tests/test_env.py
+
+# PPO algoritması testi (67 işlem, 39.59% return)
+python tests/test_ppo.py
+
+# Tüm algoritmaları karşılaştır
+python tests/test_all_algorithms.py
+```
 
 ---
 
@@ -394,11 +415,23 @@ tensorboard --logdir logs/tensorboard/
 
 ### Hyperparameters (Faz 1)
 
+Her algoritma için optimize edilmiş learning rate'ler:
+
 ```python
+# PPO (Önerilen)
+learning_rate = 0.0003
+n_steps = 2048
+total_timesteps = 50_000+
+
 # A2C
 learning_rate = 0.0007
-n_steps = 5
-total_timesteps = 50_000
+n_steps = 512
+total_timesteps = 50_000+
+
+# TD3
+learning_rate = 0.001
+buffer_size = 100_000
+total_timesteps = 50_000+
 
 # Environment
 initial_balance = 1_000_000 TL

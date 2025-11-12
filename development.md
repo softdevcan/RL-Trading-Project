@@ -98,10 +98,29 @@ state = [
 ### 1.4 İlk RL Modeli ✅
 
 - [x] A2C model eğitimi ✅ `train_a2c_phase1.py`
+- [x] PPO model eğitimi ✅ (En kararlı - önerilen)
+- [x] TD3 model eğitimi ✅ (Experience replay ile)
 - [x] Stable-Baselines3 entegrasyonu ✅
 - [x] Model kaydetme (`.zip`) ✅
 - [x] Metrik hesaplama (Sharpe, Return, Drawdown) ✅
 - [x] Tensorboard logging ✅
+
+**⚠️ Önemli Bulgular - Algoritma Performansları**:
+- **PPO**: ✅ En kararlı ve güvenilir (39.59% return, 67 işlem, Sharpe: 1.26)
+- **A2C**: ⚠️ Tek thread ile zayıf performans (makale 16 parallel thread öneriyor)
+- **TD3**: ✅ Off-policy learning, experience replay ile iyi sonuçlar
+
+**Optimized Hyperparameters**:
+```python
+# PPO (Önerilen)
+PPO(n_steps=2048, batch_size=64, n_epochs=10, ent_coef=0.01)
+
+# A2C (Dikkatli ayar gerekir)
+A2C(n_steps=512, normalize_advantage=True, use_rms_prop=True, ent_coef=0.01)
+
+# TD3 (Gelişmiş)
+TD3(buffer_size=100000, batch_size=256, action_noise=NormalActionNoise)
+```
 
 ### 1.5 Basit Backtesting ✅
 

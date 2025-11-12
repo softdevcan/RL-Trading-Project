@@ -75,12 +75,12 @@ class TradingEnv(gym.Env):
             dtype=np.float32
         )
 
-        # Action space: [-max_shares, +max_shares] for each stock
+        # Action space: continuous [-1, +1] for each stock (will be scaled to shares)
         self.action_space = spaces.Box(
-            low=-max_shares_per_trade,
-            high=max_shares_per_trade,
+            low=-1.0,
+            high=1.0,
             shape=(self.n_stocks,),
-            dtype=np.int32
+            dtype=np.float32
         )
 
         # Trading variables
@@ -121,21 +121,33 @@ class TradingEnv(gym.Env):
         Bir adım ilerle
 
         Args:
-            action: Array of shares to buy (+) or sell (-) for each stock
+            action: Array of continuous values [-1, 1] for each stock
 
         Returns:
             (observation, reward, terminated, truncated, info)
         """
-        # Action'ı integer'a çevir ve clip et
-        action = np.clip(action.astype(int), -self.max_shares_per_trade, self.max_shares_per_trade)
+        # Scale continuous actions [-1, 1] to integer shares
+        # Use np.round() instead of astype(int) to avoid truncating small actions to zero
+        scaled_action = np.round(action * self.max_shares_per_trade).astype(int)
+        scaled_action = np.clip(scaled_action, -self.max_shares_per_trade, self.max_shares_per_trade)
+
+        # Apply minimum threshold to encourage trading
+        # If action is too small (< 5% of max), zero it out to avoid noise
+        min_threshold = int(self.max_shares_per_trade * 0.05)  # 5 shares if max=100
+        for i in range(len(scaled_action)):
+            if abs(scaled_action[i]) < min_threshold:
+                scaled_action[i] = 0
 
         # Önceki portfolio değeri
         prev_portfolio_value = self._get_portfolio_value()
 
         # İşlemleri gerçekleştir
-        for i, shares_to_trade in enumerate(action):
+        trades_executed = 0
+        for i, shares_to_trade in enumerate(scaled_action):
             if shares_to_trade != 0:
-                self._execute_trade(i, shares_to_trade)
+                success = self._execute_trade(i, shares_to_trade)
+                if success:
+                    trades_executed += 1
 
         # Bir adım ilerle
         self.current_step += 1
@@ -145,7 +157,12 @@ class TradingEnv(gym.Env):
         self.portfolio_values.append(current_portfolio_value)
 
         # Reward hesapla (Faz 1: basit - portfolio value değişimi)
-        reward = (current_portfolio_value - prev_portfolio_value) / prev_portfolio_value
+        # Amplify reward signal for better learning
+        reward = ((current_portfolio_value - prev_portfolio_value) / prev_portfolio_value) * 100
+
+        # Add small bonus for taking action (to encourage exploration)
+        if trades_executed > 0:
+            reward += 0.01 * trades_executed  # Small bonus per trade
 
         # Episode sonu kontrolü
         terminated = self.current_step >= self.frame_bound[1]
@@ -160,18 +177,22 @@ class TradingEnv(gym.Env):
             'balance': self.balance,
             'portfolio_value': current_portfolio_value,
             'shares_owned': self.shares_owned.copy(),
-            'action': action
+            'action': action,
+            'trades_executed': trades_executed
         }
 
         return obs, reward, terminated, truncated, info
 
-    def _execute_trade(self, stock_idx: int, shares: int):
+    def _execute_trade(self, stock_idx: int, shares: int) -> bool:
         """
         İşlem gerçekleştir
 
         Args:
             stock_idx: Hisse index'i
             shares: + (buy) veya - (sell)
+
+        Returns:
+            bool: İşlem başarılı olduysa True
         """
         symbol = self.symbols[stock_idx]
         current_price = self._get_current_price(symbol)
@@ -191,6 +212,7 @@ class TradingEnv(gym.Env):
                     'price': current_price,
                     'cost': cost
                 })
+                return True
 
         elif shares < 0:  # SELL
             shares_to_sell = min(abs(shares), self.shares_owned[stock_idx])
@@ -208,6 +230,9 @@ class TradingEnv(gym.Env):
                     'price': current_price,
                     'revenue': revenue
                 })
+                return True
+
+        return False  # İşlem yapılamadı
 
     def _get_observation(self) -> np.ndarray:
         """
@@ -216,11 +241,11 @@ class TradingEnv(gym.Env):
         State: [balance, shares_owned[N], features[N*10]]
         Features per stock: open, high, low, close, volume, macd, rsi, cci, adx, turbulence
         """
-        # Balance (normalize)
-        balance_norm = self.balance / self.initial_balance
+        # Balance (normalize with log scale for better range)
+        balance_norm = np.log(self.balance / self.initial_balance + 1)
 
-        # Shares owned (normalize)
-        shares_norm = self.shares_owned / 100  # Rough normalization
+        # Shares owned (normalize relative to max possible)
+        shares_norm = self.shares_owned / self.max_shares_per_trade
 
         # Market features
         features = []
@@ -245,18 +270,21 @@ class TradingEnv(gym.Env):
                 adx = row.get('adx', 0)
                 turbulence = row.get('turbulence', 0)
 
-                # Normalize (basit normalizasyon)
+                # Improved normalization for better neural network learning
+                # Use log-scale for volume to handle large variance
+                volume_norm = np.log(volume / 1e6 + 1) / 3 if volume > 0 else 0
+
                 features.extend([
-                    open_price / 100,  # Rough normalization
-                    high_price / 100,
-                    low_price / 100,
-                    close_price / 100,
-                    volume / 1e6,
-                    macd / 10,
-                    rsi / 100,
-                    cci / 100,
-                    adx / 100,
-                    turbulence / 10
+                    (open_price - 50) / 50,      # Center around typical BIST price
+                    (high_price - 50) / 50,
+                    (low_price - 50) / 50,
+                    (close_price - 50) / 50,
+                    volume_norm,                  # Log-scaled volume
+                    np.tanh(macd / 0.1),         # Bounded to [-1, 1]
+                    (rsi - 50) / 50,             # Center RSI around 50
+                    np.tanh(cci / 100),          # Bounded CCI
+                    (adx - 25) / 25,             # Center ADX around 25
+                    np.tanh(turbulence / 2)      # Bounded turbulence
                 ])
 
             except KeyError:

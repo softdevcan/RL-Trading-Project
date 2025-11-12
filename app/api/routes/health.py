@@ -8,9 +8,9 @@ from app import __version__
 router = APIRouter(tags=["Health"])
 
 
-@router.get("/", response_model=dict)
+@router.get("/api", response_model=dict)
 async def root():
-    """Root endpoint - welcome message"""
+    """API root endpoint - welcome message"""
     return {
         "message": "Welcome to RL Trading API",
         "version": __version__,

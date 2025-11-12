@@ -15,7 +15,7 @@ let allModels = [];
 /**
  * Tab Management
  */
-function switchTab(tabName) {
+function switchTab(tabName, event) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -26,7 +26,9 @@ function switchTab(tabName) {
 
     // Show selected tab
     document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 
     // Load data for specific tabs
     if (tabName === 'models') {
@@ -171,7 +173,7 @@ function initTrainingForm() {
             algorithm: document.getElementById('algorithm').value,
             phase: parseInt(document.getElementById('phase').value),
             total_timesteps: parseInt(document.getElementById('timesteps').value),
-            learning_rate: parseFloat(document.getElementById('learning_rate').value),
+            learning_rate: 0.0007,  // Default value (will be overridden by algorithm-specific optimal LR in backend)
             initial_balance: parseFloat(document.getElementById('initial_balance').value),
             commission_rate: 0.001,
             max_shares_per_trade: 100
@@ -280,19 +282,25 @@ function updateStatus(status) {
  * Metrics Update
  */
 function updateMetrics(metrics) {
+    if (!metrics || Object.keys(metrics).length === 0) {
+        return;
+    }
+
     document.getElementById('metricReturn').textContent =
-        (metrics.cumulative_return * 100).toFixed(2) + '%';
+        metrics.cumulative_return ? (metrics.cumulative_return * 100).toFixed(2) + '%' : '-';
     document.getElementById('metricSharpe').textContent =
-        metrics.sharpe_ratio.toFixed(4);
+        metrics.sharpe_ratio ? metrics.sharpe_ratio.toFixed(4) : '-';
     document.getElementById('metricDrawdown').textContent =
-        (metrics.max_drawdown * 100).toFixed(2) + '%';
+        metrics.max_drawdown ? (metrics.max_drawdown * 100).toFixed(2) + '%' : '-';
     document.getElementById('metricPortfolio').textContent =
-        '₺' + metrics.final_portfolio_value.toLocaleString('tr-TR', {maximumFractionDigits: 0});
+        metrics.final_portfolio_value ? '₺' + metrics.final_portfolio_value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) : '-';
     document.getElementById('metricTrades').textContent =
         metrics.total_trades || '-';
 
     // Update performance chart
-    updatePerformanceChart(metrics);
+    if (metrics.final_portfolio_value) {
+        updatePerformanceChart(metrics);
+    }
 }
 
 function updatePerformanceChart(metrics) {

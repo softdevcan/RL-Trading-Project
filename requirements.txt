@@ -58,6 +58,7 @@ soupsieve==2.8
 stable_baselines3==2.7.0
 starlette==0.49.3
 sympy==1.14.0
+torch-tb-profiler==0.4.3  # Brings tensorboard==2.20.0 (Python 3.13 compatible)
 threadpoolctl==3.6.0
 torch==2.9.0
 tqdm==4.67.1

@@ -21,10 +21,10 @@
 
         <!-- Navigation Tabs -->
         <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-            <button class="tab-button" onclick="switchTab('training')">🎯 Model Eğitimi</button>
-            <button class="tab-button" onclick="switchTab('data')">📈 Veri İstatistikleri</button>
-            <button class="tab-button" onclick="switchTab('models')">🤖 Model Karşılaştırma</button>
+            <button class="tab-button active" onclick="switchTab('dashboard', event)">📊 Dashboard</button>
+            <button class="tab-button" onclick="switchTab('training', event)">🎯 Model Eğitimi</button>
+            <button class="tab-button" onclick="switchTab('data', event)">📈 Veri İstatistikleri</button>
+            <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -113,9 +113,9 @@
                         <div class="form-group">
                             <label for="algorithm">Algoritma:</label>
                             <select id="algorithm" name="algorithm">
-                                <option value="A2C">A2C (Advantage Actor-Critic)</option>
-                                <option value="PPO">PPO (Proximal Policy Optimization)</option>
-                                <option value="TD3">TD3 (Twin Delayed DDPG)</option>
+                                <option value="A2C">A2C - Advantage Actor-Critic (Dikkatli ayar gerektirir)</option>
+                                <option value="PPO" selected>PPO - Proximal Policy Optimization (En Kararlı - Önerilen)</option>
+                                <option value="TD3">TD3 - Twin Delayed DDPG (Gelişmiş, Experience Replay)</option>
                             </select>
                         </div>
 
@@ -130,17 +130,23 @@
 
                         <div class="form-group">
                             <label for="timesteps">Toplam Timesteps:</label>
-                            <input type="number" id="timesteps" name="timesteps" value="50000" min="1000" step="1000">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="learning_rate">Learning Rate:</label>
-                            <input type="number" id="learning_rate" name="learning_rate" value="0.0007" step="0.0001" min="0.0001">
+                            <input type="number" id="timesteps" name="timesteps" value="50000" min="10000" step="1000">
+                            <small style="color: #888; font-size: 0.85em;">Minimum 10,000 (önerilen: 50,000+)</small>
                         </div>
 
                         <div class="form-group">
                             <label for="initial_balance">Başlangıç Bakiyesi (₺):</label>
-                            <input type="number" id="initial_balance" name="initial_balance" value="1000000" step="100000">
+                            <input type="number" id="initial_balance" name="initial_balance" value="1000000" step="10000" min="100000">
+                            <small style="color: #888; font-size: 0.85em;">Minimum 100,000₺</small>
+                        </div>
+
+                        <div class="info-box" style="background: #1a1f2e; padding: 10px; border-radius: 4px; margin: 15px 0;">
+                            <strong>ℹ️ Not:</strong> Her algoritma kendi optimize edilmiş learning rate'ini kullanır:
+                            <ul style="margin: 8px 0 0 20px; font-size: 0.9em;">
+                                <li><strong>PPO:</strong> 0.0003 (en kararlı)</li>
+                                <li><strong>A2C:</strong> 0.0007</li>
+                                <li><strong>TD3:</strong> 0.001</li>
+                            </ul>
                         </div>
 
                         <button type="submit" id="trainButton">Eğitimi Başlat</button>

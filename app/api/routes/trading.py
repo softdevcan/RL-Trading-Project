@@ -225,30 +225,102 @@ async def run_training(request: TrainingRequest):
         )
         env = DummyVecEnv([lambda: env])
 
-        # Create model based on algorithm
+        # Create model based on algorithm with optimized hyperparameters
         model_class = {
             "A2C": A2C,
             "PPO": PPO,
             "TD3": TD3
-        }.get(request.algorithm, A2C)
+        }.get(request.algorithm, PPO)  # Default to PPO instead of A2C
 
-        model = model_class(
-            'MlpPolicy',
-            env,
-            learning_rate=request.learning_rate,
-            verbose=0
-        )
+        # Setup TensorBoard logging
+        os.makedirs('logs', exist_ok=True)
+        model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        # Train model
+        # Algorithm-specific hyperparameters optimized for trading
+        # Each algorithm has its own optimal learning rate
+        if request.algorithm == "PPO":
+            # PPO: Most stable for single-threaded training
+            # Optimal learning rate for PPO in trading: 0.0003
+            model = model_class(
+                'MlpPolicy',
+                env,
+                learning_rate=0.0003,   # PPO-specific optimal LR
+                n_steps=2048,           # Number of steps to run for each environment per update
+                batch_size=64,          # Minibatch size
+                n_epochs=10,            # Number of epochs when optimizing surrogate loss
+                gamma=0.99,             # Discount factor
+                gae_lambda=0.95,        # Factor for trade-off of bias vs variance for GAE
+                clip_range=0.2,         # Clipping parameter for PPO
+                ent_coef=0.05,          # Increased for more exploration (trading needs active trading!)
+                tensorboard_log='logs',
+                verbose=1
+            )
+        elif request.algorithm == "A2C":
+            # A2C: Synchronous version, needs careful tuning
+            # Optimal learning rate for A2C: 0.0007
+            model = model_class(
+                'MlpPolicy',
+                env,
+                learning_rate=0.0007,   # A2C-specific optimal LR
+                n_steps=512,            # Smaller steps for more frequent updates
+                gamma=0.99,
+                gae_lambda=0.95,
+                ent_coef=0.05,          # Increased for more exploration
+                vf_coef=0.5,            # Value function coefficient
+                normalize_advantage=True,  # Normalize advantages for stability
+                use_rms_prop=True,      # Use RMSprop optimizer (original A2C paper)
+                tensorboard_log='logs',
+                verbose=1
+            )
+        elif request.algorithm == "TD3":
+            # TD3: Twin Delayed DDPG - for continuous action spaces
+            # Optimal learning rate for TD3: 0.001
+            from stable_baselines3.common.noise import NormalActionNoise
+
+            # Add action noise for exploration
+            action_noise = NormalActionNoise(
+                mean=np.zeros(env.action_space.shape[0]),
+                sigma=0.1 * np.ones(env.action_space.shape[0])
+            )
+
+            model = model_class(
+                'MlpPolicy',
+                env,
+                learning_rate=0.001,    # TD3-specific optimal LR
+                buffer_size=100000,     # Replay buffer size
+                learning_starts=1000,   # Start learning after this many steps
+                batch_size=256,         # Larger batch for off-policy learning
+                tau=0.005,              # Soft update coefficient
+                gamma=0.99,
+                train_freq=1,           # Update the model every step
+                gradient_steps=1,
+                action_noise=action_noise,
+                policy_delay=2,         # Delay policy updates (TD3 feature)
+                target_policy_noise=0.2,  # Noise added to target policy
+                target_noise_clip=0.5,  # Clip the noise
+                tensorboard_log='logs',
+                verbose=1
+            )
+        else:
+            # Fallback to default settings
+            model = model_class(
+                'MlpPolicy',
+                env,
+                learning_rate=request.learning_rate,
+                tensorboard_log='logs',
+                verbose=1
+            )
+
+        # Train model with logging
         callback = TrainingStateCallback()
         model.learn(
             total_timesteps=request.total_timesteps,
-            callback=callback
+            callback=callback,
+            tb_log_name=model_name
         )
 
         # Save model
         os.makedirs('models', exist_ok=True)
-        model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         model_path = f'models/{model_name}'
         model.save(model_path)
 
@@ -271,9 +343,10 @@ async def run_training(request: TrainingRequest):
         # Get metrics
         metrics = test_env.envs[0].get_metrics()
 
-        # Convert numpy types to Python types
+        # Convert numpy types to Python types and handle NaN
         metrics = {
-            k: float(v) if isinstance(v, (np.floating, np.integer)) else v
+            k: (None if (isinstance(v, (np.floating, float)) and np.isnan(v))
+                else (float(v) if isinstance(v, (np.floating, np.integer)) else v))
             for k, v in metrics.items()
         }
 
