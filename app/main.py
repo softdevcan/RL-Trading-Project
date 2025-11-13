@@ -60,6 +60,25 @@ async def serve_ui():
     """
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    """Serve favicon to prevent 404 errors"""
+    from fastapi.responses import FileResponse
+    favicon_path = "static/favicon.ico"
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    # Return 204 No Content instead of 404
+    from fastapi.responses import Response
+    return Response(status_code=204)
+
+
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools():
+    """Chrome DevTools metadata endpoint"""
+    from fastapi.responses import Response
+    return Response(status_code=204)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Run on application startup"""

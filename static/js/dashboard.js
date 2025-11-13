@@ -165,21 +165,43 @@ function initTrainingForm() {
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            // Try to parse JSON response
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                showError('❌ Sunucu yanıt hatası. Lütfen tekrar deneyin.');
+                return;
+            }
 
             if (response.ok) {
-                // Training started - just wait for completion
-                document.getElementById('trainButton').disabled = true;
-                document.getElementById('trainButton').textContent = '⏳ Eğitim Devam Ediyor...';
+                // Training started - set state and start polling
+                isTraining = true;
+                const trainButton = document.getElementById('trainButton');
+                if (trainButton) {
+                    trainButton.disabled = true;
+                    trainButton.textContent = '⏳ Eğitim Devam Ediyor...';
+                }
+
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.style.display = 'block';
+                }
+
                 updateStatus('training');
+
+                // Start polling for status updates
+                startStatusCheck();
 
                 // Show success message
                 showError('✅ Eğitim başlatıldı! Bu işlem birkaç dakika sürebilir. Model eğitimi tamamlandığında bu sayfa otomatik olarak güncellenecek.', 'success');
             } else {
-                showError(data.detail || 'Eğitim başlatılamadı');
+                showError('❌ ' + (data.detail || 'Eğitim başlatılamadı'));
             }
         } catch (error) {
-            showError('API bağlantı hatası: ' + error.message);
+            console.error('Training request error:', error);
+            showError('❌ API bağlantı hatası: ' + error.message);
         }
     });
 }
@@ -194,10 +216,17 @@ async function checkStatus() {
 
         if (data.is_training) {
             const progress = (data.progress * 100).toFixed(1);
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressBar').textContent = progress + '%';
-            document.getElementById('stepInfo').textContent =
-                `Step: ${data.current_step.toLocaleString()} / ${data.total_steps.toLocaleString()}`;
+
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+            }
+
+            const stepInfo = document.getElementById('stepInfo');
+            if (stepInfo) {
+                stepInfo.textContent = `Step: ${data.current_step.toLocaleString()} / ${data.total_steps.toLocaleString()}`;
+            }
 
             // Update training progress chart
             updateTrainingChart(data.current_step, data.progress);
@@ -206,12 +235,22 @@ async function checkStatus() {
                 // Training just finished
                 isTraining = false;
                 updateStatus('idle');
-                document.getElementById('trainButton').disabled = false;
-                document.getElementById('progressContainer').style.display = 'none';
+
+                const trainButton = document.getElementById('trainButton');
+                if (trainButton) {
+                    trainButton.disabled = false;
+                    trainButton.textContent = '🚀 Eğitimi Başlat';
+                }
+
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
 
                 if (data.error) {
-                    showError('Eğitim hatası: ' + data.error);
+                    showError('❌ Eğitim hatası: ' + data.error);
                 } else if (data.metrics) {
+                    showError('✅ Eğitim başarıyla tamamlandı! Model kaydedildi.', 'success');
                     updateMetrics(data.metrics);
                     loadModels();
                 }
@@ -435,9 +474,10 @@ function updateComparisonChart(models) {
 /**
  * Error Handling
  */
-function showError(message) {
+function showError(message, type = 'error') {
     const errorContainer = document.getElementById('errorContainer');
-    errorContainer.innerHTML = `<div class="error">${message}</div>`;
+    const className = type === 'success' ? 'success' : 'error';
+    errorContainer.innerHTML = `<div class="${className}">${message}</div>`;
     setTimeout(() => {
         errorContainer.innerHTML = '';
     }, 5000);

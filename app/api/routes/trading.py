@@ -774,12 +774,17 @@ async def get_daily_decision(request: DailyDecisionRequest):
                 / portfolio_before["portfolio_value"] * 100
             )
 
+        # Get actual date used (may differ from requested date)
+        actual_date = market_data.attrs.get('actual_date', target_date)
+
         summary = {
             "total_trades": total_trades,
             "total_commission": round(total_commission, 2),
             "daily_return_pct": round(daily_return_pct, 2),
             "risk_mode": request.risk_mode,
-            "max_shares_per_trade": request.max_shares_per_trade
+            "max_shares_per_trade": request.max_shares_per_trade,
+            "actual_date": actual_date,
+            "requested_date": target_date
         }
 
         # 10. Save decision

@@ -456,6 +456,15 @@
                         </div>
                     </div>
 
+                    <!-- Trading Date -->
+                    <div class="form-group">
+                        <label>📅 İşlem Tarihi</label>
+                        <input type="date" id="trading-date" class="form-control" style="width: 100%; padding: 10px;">
+                        <small style="color: #94a3b8; margin-top: 5px; display: block;">
+                            💡 Seçilen tarih için veri yoksa, en yakın önceki gün kullanılacak
+                        </small>
+                    </div>
+
                     <!-- Max Shares Per Trade -->
                     <div class="form-group">
                         <label>📊 Max İşlem Boyutu</label>
@@ -477,24 +486,24 @@
                             </div>
                             <div class="shares-grid">
                                 <div class="share-input">
-                                    <label>ASELS.IS:</label>
-                                    <input type="number" id="shares-ASELS" value="0" min="0" class="form-control">
+                                    <label>AKBNK.IS (Akbank):</label>
+                                    <input type="number" id="shares-AKBNK" value="0" min="0" class="form-control">
                                 </div>
                                 <div class="share-input">
-                                    <label>THYAO.IS:</label>
+                                    <label>THYAO.IS (THY):</label>
                                     <input type="number" id="shares-THYAO" value="0" min="0" class="form-control">
                                 </div>
                                 <div class="share-input">
-                                    <label>EREGL.IS:</label>
-                                    <input type="number" id="shares-EREGL" value="0" min="0" class="form-control">
+                                    <label>TUPRS.IS (Tüpraş):</label>
+                                    <input type="number" id="shares-TUPRS" value="0" min="0" class="form-control">
                                 </div>
                                 <div class="share-input">
-                                    <label>KCHOL.IS:</label>
-                                    <input type="number" id="shares-KCHOL" value="0" min="0" class="form-control">
+                                    <label>BIMAS.IS (BIM):</label>
+                                    <input type="number" id="shares-BIMAS" value="0" min="0" class="form-control">
                                 </div>
                                 <div class="share-input">
-                                    <label>SAHOL.IS:</label>
-                                    <input type="number" id="shares-SAHOL" value="0" min="0" class="form-control">
+                                    <label>ASELS.IS (Aselsan):</label>
+                                    <input type="number" id="shares-ASELS" value="0" min="0" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -523,7 +532,7 @@
                     </div>
 
                     <!-- Initial State -->
-                    <div id="decision-initial" class="initial-state">
+                    <div id="empty-state" class="initial-state">
                         <div class="empty-state">
                             <span style="font-size: 48px;">💼</span>
                             <h4>Günlük Trading Kararı</h4>
@@ -554,6 +563,18 @@
                             </div>
                         </div>
 
+                        <!-- Summary Stats -->
+                        <div class="decision-summary" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="summary-item">
+                                <span class="label">Toplam İşlem:</span>
+                                <strong id="summary-total-trades">0</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Toplam Komisyon:</span>
+                                <strong id="summary-total-commission">0 ₺</strong>
+                            </div>
+                        </div>
+
                         <!-- Decisions Table -->
                         <div class="table-container">
                             <table class="decisions-table">
@@ -569,7 +590,7 @@
                                         <th>Açıklama</th>
                                     </tr>
                                 </thead>
-                                <tbody id="decisions-tbody">
+                                <tbody id="decisions-table-body">
                                     <!-- Dinamik olarak doldurulacak -->
                                 </tbody>
                             </table>

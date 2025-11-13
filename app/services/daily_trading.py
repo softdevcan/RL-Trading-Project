@@ -62,6 +62,7 @@ async def fetch_latest_market_data(
 ) -> pd.DataFrame:
     """
     Fetch latest market data for given symbols
+    Uses the same proven pattern as data_fetcher.py
 
     Args:
         symbols: List of stock symbols (e.g., ['ASELS.IS', 'THYAO.IS'])
@@ -74,105 +75,80 @@ async def fetch_latest_market_data(
     logger.info(f"Fetching market data for {len(symbols)} symbols, target: {target_date}")
 
     try:
-        # Calculate date range
+        # Calculate date range - add extra buffer for technical indicators
         end_date = datetime.strptime(target_date, "%Y-%m-%d")
-        start_date = end_date - timedelta(days=lookback_days + 30)  # Extra buffer for indicators
+        start_date = end_date - timedelta(days=lookback_days + 30)
 
-        # Fetch data from yfinance
-        data_frames = []
+        # Fetch data from yfinance - same pattern as data_fetcher.py
+        all_data = {}
 
         for symbol in symbols:
             try:
                 logger.info(f"Downloading {symbol}...")
-                ticker_data = yf.download(
-                    symbol,
+
+                # Use Ticker().history() - same as data_fetcher.py
+                ticker = yf.Ticker(symbol)
+                df = ticker.history(
                     start=start_date.strftime("%Y-%m-%d"),
-                    end=(end_date + timedelta(days=1)).strftime("%Y-%m-%d"),
-                    progress=False,
-                    auto_adjust=True  # Fix FutureWarning
+                    end=(end_date + timedelta(days=1)).strftime("%Y-%m-%d")
                 )
 
-                if ticker_data.empty:
+                if df.empty:
                     logger.warning(f"No data found for {symbol}")
                     continue
 
-                # Reset index to get date as column
-                ticker_data = ticker_data.reset_index()
+                # Lowercase column names - same as data_fetcher.py
+                df.columns = df.columns.str.lower()
 
-                # Rename columns to lowercase first
-                ticker_data.columns = [col.lower() if isinstance(col, str) else col for col in ticker_data.columns]
+                # Keep only OHLCV columns - same as data_fetcher.py
+                df = df[['open', 'high', 'low', 'close', 'volume']]
 
-                # Set date as index temporarily for indicators
-                ticker_data = ticker_data.set_index('date')
+                all_data[symbol] = df
 
-                # Add technical indicators for this symbol
-                logger.info(f"Calculating indicators for {symbol}...")
-                from data.technical_indicators import TechnicalIndicatorCalculator
-                calculator = TechnicalIndicatorCalculator()
-                ticker_data = calculator.add_all_indicators(ticker_data)
-
-                # Reset index again and add symbol column
-                ticker_data = ticker_data.reset_index()
-                ticker_data['symbol'] = symbol
-
-                logger.info(f"Processed {symbol}, final columns: {ticker_data.columns.tolist()}")
-                data_frames.append(ticker_data)
+                logger.info(f"  ✓ {symbol}: {len(df)} rows ({df.index[0].date()} to {df.index[-1].date()})")
 
             except Exception as e:
-                logger.error(f"Error fetching {symbol}: {str(e)}")
+                logger.error(f"Error fetching {symbol}: {e}")
                 continue
 
-        if not data_frames:
+        if not all_data:
             raise ValueError("No market data could be fetched")
 
-        # Combine all symbols
-        combined_df = pd.concat(data_frames, ignore_index=True)
+        # Combine using keys parameter - same as data_fetcher.py
+        # This creates clean multi-index without duplicate symbol columns
+        combined_df = pd.concat(all_data.values(), keys=all_data.keys())
+        combined_df.index.names = ['symbol', 'date']
 
-        logger.info(f"Combined DataFrame columns BEFORE flatten: {combined_df.columns.tolist()}")
-        logger.info(f"Combined DataFrame shape: {combined_df.shape}")
-        logger.info(f"Columns type: {type(combined_df.columns)}")
-        logger.info(f"Is MultiIndex: {isinstance(combined_df.columns, pd.MultiIndex)}")
-
-        # Handle MultiIndex columns or tuple columns
-        # Check if any column is a tuple (MultiIndex might appear as regular Index with tuple values)
-        has_tuple_columns = any(isinstance(col, tuple) for col in combined_df.columns)
-
-        if isinstance(combined_df.columns, pd.MultiIndex) or has_tuple_columns:
-            logger.info("Flattening MultiIndex/tuple columns...")
-            # Flatten the columns
-            # For tuples like ('Date', ''), just take the first element
-            # For tuples like ('Close', 'ASELS.IS'), join with underscore
-            new_columns = []
-            for col in combined_df.columns:
-                if isinstance(col, tuple):
-                    # Filter out empty strings and join
-                    parts = [str(p) for p in col if p != '']
-                    new_columns.append('_'.join(parts) if len(parts) > 1 else parts[0] if parts else 'unknown')
-                else:
-                    new_columns.append(col)
-            combined_df.columns = new_columns
-            logger.info(f"Flattened columns: {combined_df.columns.tolist()}")
-
-        # Now lowercase all columns
-        combined_df.columns = [col.lower() if isinstance(col, str) else col for col in combined_df.columns]
-        logger.info(f"Final columns (lowercase): {combined_df.columns.tolist()}")
-
-        logger.info(f"Sample rows:\n{combined_df.head()}")
-
-        # Verify required columns exist
-        if 'symbol' not in combined_df.columns:
-            raise ValueError(f"'symbol' column missing! Available columns: {combined_df.columns.tolist()}")
-        if 'date' not in combined_df.columns:
-            raise ValueError(f"'date' column missing! Available columns: {combined_df.columns.tolist()}")
-
-        # Set multi-index (symbol, date)
-        combined_df = combined_df.set_index(['symbol', 'date'])
+        logger.info(f"Combined data: {len(combined_df)} rows")
+        logger.info(f"Date range: {combined_df.index.get_level_values('date').min().date()} to {combined_df.index.get_level_values('date').max().date()}")
 
         # Add technical indicators
         logger.info("Calculating technical indicators...")
         combined_df = add_indicators_to_multi_symbol_df(combined_df)
 
-        logger.info(f"Market data fetched successfully: {len(combined_df)} rows")
+        # Simple date check - find actual available date closest to target
+        available_dates = combined_df.index.get_level_values('date').unique().sort_values()
+        target_dt = pd.to_datetime(target_date)
+
+        # Find closest available date (prefer exact match or most recent before target)
+        actual_date = None
+        for date in reversed(available_dates):
+            if date.date() <= target_dt.date():
+                actual_date = date
+                break
+
+        if actual_date is None:
+            # No data before target, use earliest available
+            actual_date = available_dates[0]
+            logger.warning(f"No data on or before {target_date}. Using earliest: {actual_date.date()}")
+        elif actual_date.date() != target_dt.date():
+            logger.warning(f"Target date {target_date} not available. Using closest: {actual_date.date()}")
+        else:
+            logger.info(f"Using exact target date: {target_date}")
+
+        # Store actual date used
+        combined_df.attrs['actual_date'] = actual_date.strftime("%Y-%m-%d")
+        combined_df.attrs['requested_date'] = target_date
 
         return combined_df
 
@@ -198,14 +174,16 @@ def build_live_state(
         balance: Current cash balance
         shares_owned: Dict of {symbol: shares}
         market_data: Market data with indicators
-        target_date: Target date
+        target_date: Target date (may be adjusted to latest available)
         initial_balance: Initial balance for normalization
         max_shares_per_trade: Max shares for normalization
 
     Returns:
         State vector (numpy array)
     """
-    logger.info(f"Building state for date: {target_date}")
+    # Use actual_date if target_date was not available
+    actual_date = market_data.attrs.get('actual_date', target_date)
+    logger.info(f"Building state for date: {actual_date}")
 
     symbols = list(shares_owned.keys())
     n_stocks = len(symbols)
@@ -219,12 +197,27 @@ def build_live_state(
 
     # 3. Market features
     features = []
-    target_dt = pd.to_datetime(target_date)
+
+    # Get the actual datetime from the index (with timezone if present)
+    available_dates = market_data.index.get_level_values('date').unique()
+    target_dt = pd.to_datetime(actual_date)
+
+    # Find matching date in index (handles timezone differences)
+    matching_date = None
+    for date in available_dates:
+        if date.date() == target_dt.date():
+            matching_date = date
+            break
+
+    if matching_date is None:
+        # Fallback to closest date
+        matching_date = available_dates[-1]
+        logger.warning(f"Exact date {actual_date} not found in index, using {matching_date}")
 
     for symbol in symbols:
         try:
-            # Get data for this symbol on target date
-            row = market_data.loc[(symbol, target_dt)]
+            # Get data for this symbol on target date using the actual index date
+            row = market_data.loc[(symbol, matching_date)]
 
             # OHLCV
             open_price = row.get('open', 0)
@@ -238,8 +231,7 @@ def build_live_state(
             rsi = row.get('rsi', 50)
             cci = row.get('cci', 0)
             adx = row.get('adx', 0)
-            turbulence = row.get('turbulence', 0)
-
+            turbulence = row.get('turbulence', 0) 
             # Normalize (same as training)
             volume_norm = np.log(volume / 1e6 + 1) / 3 if volume > 0 else 0
 
@@ -280,22 +272,38 @@ def get_current_prices(market_data: pd.DataFrame, target_date: str) -> Dict[str,
 
     Args:
         market_data: Market data
-        target_date: Target date
+        target_date: Target date (may be adjusted to latest available)
 
     Returns:
         Dict of {symbol: price}
     """
+    # Use actual_date if target_date was not available
+    actual_date = market_data.attrs.get('actual_date', target_date)
     prices = {}
-    target_dt = pd.to_datetime(target_date)
+
+    # Get the actual datetime from the index (with timezone if present)
+    available_dates = market_data.index.get_level_values('date').unique()
+    target_dt = pd.to_datetime(actual_date)
+
+    # Find matching date in index (handles timezone differences)
+    matching_date = None
+    for date in available_dates:
+        if date.date() == target_dt.date():
+            matching_date = date
+            break
+
+    if matching_date is None:
+        matching_date = available_dates[-1]
+        logger.warning(f"Date {actual_date} not found in index, using {matching_date}")
 
     symbols = market_data.index.get_level_values('symbol').unique()
 
     for symbol in symbols:
         try:
-            row = market_data.loc[(symbol, target_dt)]
+            row = market_data.loc[(symbol, matching_date)]
             prices[symbol] = float(row['close'])
         except KeyError:
-            logger.warning(f"No price for {symbol} on {target_date}")
+            logger.warning(f"No price for {symbol} on {actual_date}")
             prices[symbol] = 0.0
 
     return prices
@@ -527,7 +535,7 @@ def simulate_portfolio_after_trades(
 
     # Calculate new portfolio value
     portfolio_value = new_balance + sum(
-        new_shares.get(symbol, 0) * decision["price"]
+        new_shares.get(decision["symbol"], 0) * decision["price"]
         for decision in decisions
         if decision["symbol"] in new_shares
     )

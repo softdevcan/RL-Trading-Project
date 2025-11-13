@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     API_DESCRIPTION: str = "API for Reinforcement Learning Trading System"
 
     # Server Settings
-    HOST: str = "0.0.0.0"
+    HOST: str = "localhost"
     PORT: int = 8888
     DEBUG: bool = True
 

@@ -490,6 +490,15 @@ button:disabled {
     border: 1px solid #991b1b;
 }
 
+.success {
+    background: #064e3b;
+    color: #6ee7b7;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid #047857;
+}
+
 .info-text {
     color: #94a3b8;
     font-size: 14px;
