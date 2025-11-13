@@ -33,6 +33,18 @@ function switchTab(tabName, event) {
     // Load data for specific tabs
     if (tabName === 'models') {
         loadModelsComparison();
+    } else if (tabName === 'daily-trading') {
+        // Reload models when switching to daily trading tab
+        if (window.dailyTradingManager) {
+            console.log('Switching to daily-trading tab, reloading models...');
+            window.dailyTradingManager.loadModels();
+        }
+    } else if (tabName === 'academic') {
+        // Reload analysis when switching to academic tab
+        if (window.academicAnalysisManager) {
+            console.log('Switching to academic tab, reloading analysis...');
+            window.academicAnalysisManager.loadExistingResults();
+        }
     }
 }
 
@@ -722,7 +734,7 @@ function renderPortfolioChart(portfolioHistory) {
         data: {
             labels: steps,
             datasets: [{
-                label: 'Portfolio Value ($)',
+                label: 'Portfolio Value (₺)',
                 data: portfolioHistory,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -751,13 +763,13 @@ function renderPortfolioChart(portfolioHistory) {
                 y: {
                     title: {
                         display: true,
-                        text: 'Portfolio Value ($)',
+                        text: 'Portfolio Value (₺)',
                         color: '#94a3b8'
                     },
                     ticks: {
                         color: '#94a3b8',
                         callback: function(value) {
-                            return '$' + value.toLocaleString();
+                            return '₺' + value.toLocaleString();
                         }
                     },
                     grid: { color: '#334155' }
@@ -783,8 +795,8 @@ function renderTradesTable(trades) {
                 ${trade.action}
             </td>
             <td>${trade.shares}</td>
-            <td>$${trade.price.toFixed(2)}</td>
-            <td>$${trade.total_cost.toFixed(2)}</td>
+            <td>₺${trade.price.toFixed(2)}</td>
+            <td>₺${trade.total_cost.toFixed(2)}</td>
         </tr>
     `).join('');
 }

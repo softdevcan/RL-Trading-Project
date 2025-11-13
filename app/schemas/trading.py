@@ -117,3 +117,123 @@ class ModelInfo(BaseModel):
     path: str
     created_at: str
     metrics: Dict = {}
+
+
+# ==================== DAILY TRADING SCHEMAS ====================
+
+class DailyDecisionRequest(BaseModel):
+    """Request model for daily trading decision"""
+    model_name: str = Field(
+        description="Name of the trained model to use"
+    )
+    balance: float = Field(
+        description="Current cash balance",
+        gt=0
+    )
+    shares: Dict[str, int] = Field(
+        description="Current shares owned for each symbol"
+    )
+    risk_mode: str = Field(
+        default="moderate",
+        description="Risk mode: conservative, moderate, or aggressive"
+    )
+    max_shares_per_trade: int = Field(
+        default=100,
+        description="Maximum shares per trade",
+        gt=0
+    )
+    date: Optional[str] = Field(
+        default=None,
+        description="Target date (YYYY-MM-DD), default: today"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "model_name": "ppo_phase1_20241113_143022",
+                "balance": 1000000,
+                "shares": {
+                    "ASELS.IS": 100,
+                    "THYAO.IS": 50,
+                    "EREGL.IS": 200,
+                    "KCHOL.IS": 80,
+                    "SAHOL.IS": 120
+                },
+                "risk_mode": "moderate",
+                "max_shares_per_trade": 100,
+                "date": "2025-11-13"
+            }
+        }
+
+
+class TradeDecision(BaseModel):
+    """Single trade decision"""
+    symbol: str
+    action: str  # BUY, SELL, HOLD
+    raw_signal: float
+    shares: int
+    price: float
+    cost: Optional[float] = 0.0
+    revenue: Optional[float] = 0.0
+    commission: float = 0.0
+    reason: str
+    executed: bool
+
+
+class PortfolioSnapshot(BaseModel):
+    """Portfolio snapshot at a point in time"""
+    balance: float
+    shares: Dict[str, int]
+    portfolio_value: float
+
+
+class DailyDecisionResponse(BaseModel):
+    """Response model for daily trading decision"""
+    date: str
+    decisions: List[TradeDecision]
+    portfolio_before: PortfolioSnapshot
+    portfolio_after: PortfolioSnapshot
+    summary: Dict
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "date": "2025-11-13",
+                "decisions": [
+                    {
+                        "symbol": "ASELS.IS",
+                        "action": "BUY",
+                        "raw_signal": 0.87,
+                        "shares": 45,
+                        "price": 23.50,
+                        "cost": 1057.50,
+                        "commission": 1.06,
+                        "reason": "Strong buy signal (0.87)",
+                        "executed": True
+                    }
+                ],
+                "portfolio_before": {
+                    "balance": 1000000,
+                    "shares": {"ASELS.IS": 100},
+                    "portfolio_value": 1050000
+                },
+                "portfolio_after": {
+                    "balance": 998942.50,
+                    "shares": {"ASELS.IS": 145},
+                    "portfolio_value": 1052000
+                },
+                "summary": {
+                    "total_trades": 2,
+                    "total_commission": 5.75,
+                    "daily_return_pct": 1.45
+                }
+            }
+        }
+
+
+class PortfolioHistoryResponse(BaseModel):
+    """Portfolio history response"""
+    dates: List[str]
+    portfolio_values: List[float]
+    daily_returns: List[float]
+    balances: List[float]

@@ -286,6 +286,93 @@ Training Pipeline
 
 ---
 
+## 🎓 Akademik Analiz ve Raporlama
+
+### Tez ve Makale için Kapsamlı Analiz
+
+Projeye **akademik yayın kalitesinde** analiz ve görselleştirme sistemi eklenmiştir:
+
+```bash
+# Tüm modelleri karşılaştır ve akademik rapor oluştur
+python generate_academic_report.py
+```
+
+**Oluşturulan Çıktılar:**
+
+📁 **results/**
+├── **figures/** (Publication-ready, 300 DPI)
+│   ├── portfolio_comparison.pdf
+│   ├── drawdown_comparison.pdf
+│   ├── returns_distribution.pdf
+│   ├── risk_return_scatter.pdf
+│   └── performance_radar.pdf
+│
+├── **latex/** (Tez için hazır tablolar)
+│   └── model_comparison.tex
+│
+├── **data/** (CSV ve JSON)
+│   ├── model_comparison.csv
+│   └── detailed_results.json
+│
+└── **ANALYSIS_REPORT.txt** (Özet rapor)
+
+### Hesaplanan Metrikler (Akademik)
+
+**Return Metrikleri:**
+- Total Return
+- Annualized Return
+- Mean Daily Return
+
+**Risk Metrikleri:**
+- Volatility (std)
+- Annualized Volatility
+- Maximum Drawdown
+- Ulcer Index
+- Value at Risk (VaR 95%)
+- Conditional VaR (CVaR)
+
+**Risk-Adjusted Returns:**
+- Sharpe Ratio
+- Sortino Ratio
+- Calmar Ratio
+- Information Ratio
+- Recovery Factor
+
+**Trading Metrikleri:**
+- Win Rate
+- Profit Factor
+- Average Profit/Loss
+- Total Trades
+
+### İstatistiksel Testler
+
+- **T-test**: Modeller arası getiri karşılaştırması
+- **Wilcoxon test**: Non-parametrik alternatif
+- **p-value < 0.05**: İstatistiksel anlamlılık
+
+### API Endpoints (Akademik Analiz)
+
+```bash
+# Model karşılaştırma verilerini al
+GET /api/trading/analysis/model-comparison
+
+# En iyi modelleri metrik bazında al
+GET /api/trading/analysis/best-models
+
+# Arka planda kapsamlı rapor oluştur
+POST /api/trading/analysis/generate-report
+```
+
+### LaTeX Entegrasyonu
+
+Oluşturulan `.tex` dosyalarını doğrudan tezinize ekleyebilirsiniz:
+
+```latex
+\input{results/latex/model_comparison.tex}
+```
+
+---
+
 ## 📊 Trading Environment (Ansari et al. Metodolojisi)
 
 ### State Space (Faz 1)

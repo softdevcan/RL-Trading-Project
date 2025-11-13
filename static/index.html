@@ -24,6 +24,8 @@
                 <button class="tab-button" onclick="switchTab('training', event)">🎯 Model Eğitimi</button>
                 <button class="tab-button" onclick="switchTab('data', event)">📈 Veri İstatistikleri</button>
                 <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
+                <button class="tab-button" onclick="switchTab('daily-trading', event)">💼 Günlük Trading</button>
+                <button class="tab-button" onclick="switchTab('academic', event)">🎓 Akademik Analiz</button>
             </div>
         </div>
 
@@ -362,7 +364,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Model Details Modal -->
     <div id="modelDetailsModal" class="modal">
@@ -411,7 +412,371 @@
         </div>
     </div>
 
+    <!-- Daily Trading Tab -->
+    <div id="daily-trading" class="tab-content">
+            <div class="daily-trading-container">
+
+                <!-- Settings Panel -->
+                <div class="trading-settings-panel">
+                    <h3>⚙️ Trading Ayarları</h3>
+
+                    <!-- Model Selection -->
+                    <div class="form-group">
+                        <label>📦 Model Seçimi</label>
+                        <select id="live-model-select" class="form-control">
+                            <option value="">-- Model Seç --</option>
+                        </select>
+                    </div>
+
+                    <!-- Risk Mode -->
+                    <div class="form-group">
+                        <label>🎯 Risk Modu</label>
+                        <div class="risk-mode-selector">
+                            <label class="radio-option">
+                                <input type="radio" name="risk-mode" value="conservative">
+                                <div class="radio-content">
+                                    <strong>Konservatif</strong>
+                                    <small>Min sinyal: 0.5, Max pozisyon: 20%</small>
+                                </div>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="risk-mode" value="moderate" checked>
+                                <div class="radio-content">
+                                    <strong>Orta</strong>
+                                    <small>Min sinyal: 0.3, Max pozisyon: 30%</small>
+                                </div>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="risk-mode" value="aggressive">
+                                <div class="radio-content">
+                                    <strong>Agresif</strong>
+                                    <small>Min sinyal: 0.1, Max pozisyon: 40%</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Max Shares Per Trade -->
+                    <div class="form-group">
+                        <label>📊 Max İşlem Boyutu</label>
+                        <div class="slider-container">
+                            <input type="range" id="max-shares-slider" min="10" max="200" value="100" step="10" class="slider">
+                            <div class="slider-value">
+                                <span id="max-shares-value">100</span> hisse
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Portfolio -->
+                    <div class="form-group">
+                        <label>💰 Mevcut Portfolio</label>
+                        <div class="portfolio-input">
+                            <div class="input-row">
+                                <label>Nakit (₺):</label>
+                                <input type="number" id="current-balance" value="1000000" step="1000" class="form-control">
+                            </div>
+                            <div class="shares-grid">
+                                <div class="share-input">
+                                    <label>ASELS.IS:</label>
+                                    <input type="number" id="shares-ASELS" value="0" min="0" class="form-control">
+                                </div>
+                                <div class="share-input">
+                                    <label>THYAO.IS:</label>
+                                    <input type="number" id="shares-THYAO" value="0" min="0" class="form-control">
+                                </div>
+                                <div class="share-input">
+                                    <label>EREGL.IS:</label>
+                                    <input type="number" id="shares-EREGL" value="0" min="0" class="form-control">
+                                </div>
+                                <div class="share-input">
+                                    <label>KCHOL.IS:</label>
+                                    <input type="number" id="shares-KCHOL" value="0" min="0" class="form-control">
+                                </div>
+                                <div class="share-input">
+                                    <label>SAHOL.IS:</label>
+                                    <input type="number" id="shares-SAHOL" value="0" min="0" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="get-daily-decision">
+                            🎯 Günlük Karar Al
+                        </button>
+                        <button class="btn btn-secondary" id="load-last-portfolio">
+                            📂 Son Portfolio'yu Yükle
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="trading-results-panel">
+                    <h3>📋 Trading Kararları</h3>
+
+                    <!-- Loading State -->
+                    <div id="decision-loading" class="loading-state" style="display:none;">
+                        <div class="spinner"></div>
+                        <p>Piyasa verileri çekiliyor ve model analiz yapıyor...</p>
+                        <small>Bu işlem 30-60 saniye sürebilir</small>
+                    </div>
+
+                    <!-- Initial State -->
+                    <div id="decision-initial" class="initial-state">
+                        <div class="empty-state">
+                            <span style="font-size: 48px;">💼</span>
+                            <h4>Günlük Trading Kararı</h4>
+                            <p>Soldaki ayarları yapın ve "Günlük Karar Al" butonuna tıklayın</p>
+                        </div>
+                    </div>
+
+                    <!-- Decisions Container -->
+                    <div id="decisions-container" style="display:none;">
+                        <!-- Decision Header -->
+                        <div class="decision-header">
+                            <div class="decision-date">
+                                <strong>📅 Tarih:</strong> <span id="decision-date">-</span>
+                            </div>
+                            <div class="decision-summary">
+                                <div class="summary-item">
+                                    <span class="label">Portfolio (Önce):</span>
+                                    <strong id="portfolio-before">-</strong>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Portfolio (Sonra):</span>
+                                    <strong id="portfolio-after">-</strong>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Günlük Getiri:</span>
+                                    <strong id="daily-return-badge" class="return-badge">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decisions Table -->
+                        <div class="table-container">
+                            <table class="decisions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Hisse</th>
+                                        <th>Fiyat</th>
+                                        <th>Sinyal</th>
+                                        <th>Karar</th>
+                                        <th>Miktar</th>
+                                        <th>Tutar</th>
+                                        <th>Komisyon</th>
+                                        <th>Açıklama</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="decisions-tbody">
+                                    <!-- Dinamik olarak doldurulacak -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="apply-section">
+                            <button class="btn btn-success" id="apply-decisions">
+                                ✅ Kararları Uygula (Portfolio'yu Güncelle)
+                            </button>
+                            <button class="btn btn-info" id="export-decisions">
+                                💾 JSON Olarak Kaydet
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Performance Chart -->
+                    <div class="trading-history" id="portfolio-chart-container" style="display:none;">
+                        <h4>📊 Portfolio Performansı (Paper Trading)</h4>
+                        <div class="chart-container">
+                            <canvas id="portfolio-performance-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Academic Analysis Tab -->
+        <div id="academic" class="tab-content">
+            <h2>🎓 Akademik Analiz ve Raporlama</h2>
+            <p class="subtitle">Tez ve makale için kapsamlı model analizi ve karşılaştırması</p>
+
+            <!-- Control Panel -->
+            <div class="card">
+                <h3>📊 Analiz Kontrol Paneli</h3>
+                <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                    <button id="generate-report-btn" class="btn btn-primary" style="flex: 0 0 auto;">
+                        🔬 Kapsamlı Rapor Oluştur
+                    </button>
+                    <button id="refresh-analysis-btn" class="btn" style="flex: 0 0 auto;">
+                        🔄 Sonuçları Yenile
+                    </button>
+                    <div id="analysis-status" style="flex: 1; padding: 0.5rem; background: #1e293b; border-radius: 4px; display: none;">
+                        <span id="analysis-status-text"></span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: #94a3b8; font-size: 0.875rem;">
+                    💡 <strong>Not:</strong> Rapor oluşturma tüm eğitilmiş modelleri test seti üzerinde değerlendirir ve
+                    detaylı metrikler, grafikler ve LaTeX tabloları oluşturur.
+                </p>
+            </div>
+
+            <!-- Best Models Summary -->
+            <div class="card" id="best-models-card" style="display: none;">
+                <h3>🏆 En İyi Modeller</h3>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div class="metric-card">
+                        <div class="metric-label">📈 En Yüksek Sharpe Ratio</div>
+                        <div class="metric-value" id="best-sharpe-model">-</div>
+                        <div class="metric-sublabel" id="best-sharpe-value">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">💰 En Yüksek Getiri</div>
+                        <div class="metric-value" id="best-return-model">-</div>
+                        <div class="metric-sublabel" id="best-return-value">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">🛡️ En Düşük Drawdown</div>
+                        <div class="metric-value" id="best-drawdown-model">-</div>
+                        <div class="metric-sublabel" id="best-drawdown-value">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">🎯 En Yüksek Win Rate</div>
+                        <div class="metric-value" id="best-winrate-model">-</div>
+                        <div class="metric-sublabel" id="best-winrate-value">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Comparison Table -->
+            <div class="card" id="comparison-table-card" style="display: none;">
+                <h3>📋 Detaylı Model Karşılaştırması</h3>
+                <div style="overflow-x: auto; margin-top: 1rem;">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Total Return (%)</th>
+                                <th>Sharpe Ratio</th>
+                                <th>Sortino Ratio</th>
+                                <th>Max Drawdown (%)</th>
+                                <th>Win Rate (%)</th>
+                                <th>Profit Factor</th>
+                                <th>Total Trades</th>
+                                <th>Calmar Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-table-body">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div id="charts-grid" style="display: none;">
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.5rem;">
+                    <!-- Portfolio Comparison Chart -->
+                    <div class="card">
+                        <h3>📈 Portfolio Evrim Karşılaştırması</h3>
+                        <canvas id="portfolio-comparison-chart" style="max-height: 400px;"></canvas>
+                    </div>
+
+                    <!-- Risk-Return Scatter -->
+                    <div class="card">
+                        <h3>📊 Risk-Getiri Profili</h3>
+                        <canvas id="risk-return-chart" style="max-height: 400px;"></canvas>
+                    </div>
+
+                    <!-- Performance Metrics Bar Chart -->
+                    <div class="card">
+                        <h3>🎯 Performans Metrikleri</h3>
+                        <canvas id="metrics-bar-chart" style="max-height: 400px;"></canvas>
+                    </div>
+
+                    <!-- Win Rate Comparison -->
+                    <div class="card">
+                        <h3>🎲 Win Rate & Profit Factor</h3>
+                        <canvas id="winrate-chart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Links -->
+            <div class="card" id="download-links-card" style="display: none;">
+                <h3>📥 Tez için İndirilecek Dosyalar</h3>
+                <div style="margin-top: 1rem;">
+                    <h4 style="color: #94a3b8; margin-bottom: 0.5rem;">📊 Grafikler (Publication Quality - 300 DPI)</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/figures/portfolio_comparison.pdf</code> - Portfolio evrim karşılaştırması
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/figures/drawdown_comparison.pdf</code> - Drawdown analizi
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/figures/returns_distribution.pdf</code> - Getiri dağılımı
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/figures/risk_return_scatter.pdf</code> - Risk-getiri scatter
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/figures/performance_radar.pdf</code> - Performans radar grafiği
+                        </li>
+                    </ul>
+
+                    <h4 style="color: #94a3b8; margin: 1.5rem 0 0.5rem 0;">📝 LaTeX Tabloları</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/latex/model_comparison.tex</code> - Model karşılaştırma tablosu
+                            <br><span style="color: #64748b; font-size: 0.875rem; margin-left: 1.5rem;">
+                                Kullanım: <code>\input{results/latex/model_comparison.tex}</code>
+                            </span>
+                        </li>
+                    </ul>
+
+                    <h4 style="color: #94a3b8; margin: 1.5rem 0 0.5rem 0;">📊 Veri Dosyaları</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/data/model_comparison.csv</code> - Karşılaştırma verileri (CSV)
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/data/detailed_results.json</code> - Detaylı metrikler (JSON)
+                        </li>
+                        <li style="padding: 0.5rem; background: #1e293b; margin-bottom: 0.5rem; border-radius: 4px;">
+                            📄 <code>results/ANALYSIS_REPORT.txt</code> - Özet analiz raporu
+                        </li>
+                    </ul>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #1e293b; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                        <strong>📚 Kullanım Kılavuzu:</strong> Detaylı kullanım talimatları için
+                        <code>ACADEMIC_GUIDE.md</code> dosyasını inceleyin.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="card" id="academic-empty-state">
+                <div style="text-align: center; padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎓</div>
+                    <h3 style="color: #cbd5e1; margin-bottom: 0.5rem;">Henüz Analiz Yapılmadı</h3>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">
+                        Kapsamlı akademik analiz için yukarıdaki "Rapor Oluştur" butonuna tıklayın
+                    </p>
+                    <p style="color: #64748b; font-size: 0.875rem;">
+                        Analiz süreci tüm eğitilmiş modelleri değerlendirir ve publication-ready çıktılar üretir
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- Close container -->
+
     <!-- Custom JavaScript -->
     <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/daily-trading.js"></script>
+    <script src="/static/js/academic-analysis.js"></script>
 </body>
 </html>

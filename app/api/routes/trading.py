@@ -14,7 +14,9 @@ import logging
 
 from app.schemas.trading import (
     TrainingRequest, TrainingStatus, ModelMetrics,
-    ModelInfo, TrainingResponse
+    ModelInfo, TrainingResponse,
+    DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
+    PortfolioSnapshot, PortfolioHistoryResponse
 )
 
 # Setup logger
@@ -639,3 +641,433 @@ async def run_training(request: TrainingRequest):
         training_state["is_training"] = False
         training_state["error"] = str(e)
         raise
+
+
+# ==================== DAILY TRADING ENDPOINTS ====================
+
+@router.post("/daily-decision", response_model=DailyDecisionResponse)
+async def get_daily_decision(request: DailyDecisionRequest):
+    """
+    Get daily trading decision from trained model
+
+    This endpoint:
+    1. Loads the specified trained model
+    2. Fetches latest market data from yfinance
+    3. Builds state vector from current portfolio + market data
+    4. Runs model inference to get trading signals
+    5. Interprets signals with risk filtering
+    6. Returns trade recommendations with before/after portfolio
+
+    Args:
+        request: Daily decision request with model, portfolio, and risk params
+
+    Returns:
+        DailyDecisionResponse with trade decisions and portfolio snapshots
+    """
+    from app.services.daily_trading import (
+        get_risk_parameters,
+        fetch_latest_market_data,
+        build_live_state,
+        get_current_prices,
+        interpret_actions_with_risk,
+        calculate_portfolio_value,
+        simulate_portfolio_after_trades,
+        save_daily_decision
+    )
+    from stable_baselines3 import PPO, A2C, TD3, SAC
+
+    try:
+        logger.info(f"Daily decision request for model: {request.model_name}")
+
+        # 1. Load model
+        model_path = f"models/{request.model_name}"
+        if not os.path.exists(model_path + ".zip"):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model not found: {request.model_name}"
+            )
+
+        # Determine model type from name
+        model_name_lower = request.model_name.lower()
+        if "ppo" in model_name_lower:
+            model = PPO.load(model_path)
+            logger.info("Loaded PPO model")
+        elif "a2c" in model_name_lower:
+            model = A2C.load(model_path)
+            logger.info("Loaded A2C model")
+        elif "td3" in model_name_lower:
+            model = TD3.load(model_path)
+            logger.info("Loaded TD3 model")
+        elif "sac" in model_name_lower:
+            model = SAC.load(model_path)
+            logger.info("Loaded SAC model")
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Unknown model type. Model name must contain: ppo, a2c, td3, or sac"
+            )
+
+        # 2. Get risk parameters
+        risk_params = get_risk_parameters(request.risk_mode)
+        logger.info(f"Risk mode: {request.risk_mode} - {risk_params['description']}")
+
+        # 3. Fetch latest market data
+        target_date = request.date or datetime.now().strftime("%Y-%m-%d")
+        symbols = list(request.shares.keys())
+
+        market_data = await fetch_latest_market_data(
+            symbols=symbols,
+            target_date=target_date,
+            lookback_days=30
+        )
+
+        # 4. Build state
+        state = build_live_state(
+            balance=request.balance,
+            shares_owned=request.shares,
+            market_data=market_data,
+            target_date=target_date,
+            max_shares_per_trade=request.max_shares_per_trade
+        )
+
+        # 5. Model inference
+        logger.info("Running model inference...")
+        action, _states = model.predict(state, deterministic=True)
+        logger.info(f"Model output (raw action): {action}")
+
+        # 6. Get current prices
+        current_prices = get_current_prices(market_data, target_date)
+        logger.info(f"Current prices: {current_prices}")
+
+        # 7. Interpret actions with risk filtering
+        decisions = interpret_actions_with_risk(
+            action=action,
+            symbols=symbols,
+            current_prices=current_prices,
+            balance=request.balance,
+            shares_owned=request.shares,
+            risk_params=risk_params,
+            max_shares_per_trade=request.max_shares_per_trade
+        )
+
+        # 8. Calculate portfolio before/after
+        portfolio_before = calculate_portfolio_value(
+            balance=request.balance,
+            shares=request.shares,
+            prices=current_prices
+        )
+
+        portfolio_after = simulate_portfolio_after_trades(
+            balance=request.balance,
+            shares=request.shares,
+            decisions=decisions
+        )
+
+        # 9. Create summary
+        total_trades = len([d for d in decisions if d["executed"]])
+        total_commission = sum(d.get("commission", 0) for d in decisions)
+
+        daily_return_pct = 0.0
+        if portfolio_before["portfolio_value"] > 0:
+            daily_return_pct = (
+                (portfolio_after["portfolio_value"] - portfolio_before["portfolio_value"])
+                / portfolio_before["portfolio_value"] * 100
+            )
+
+        summary = {
+            "total_trades": total_trades,
+            "total_commission": round(total_commission, 2),
+            "daily_return_pct": round(daily_return_pct, 2),
+            "risk_mode": request.risk_mode,
+            "max_shares_per_trade": request.max_shares_per_trade
+        }
+
+        # 10. Save decision
+        save_daily_decision(
+            date=target_date,
+            decisions=decisions,
+            portfolio_before=portfolio_before,
+            portfolio_after=portfolio_after,
+            risk_mode=request.risk_mode,
+            max_shares_per_trade=request.max_shares_per_trade
+        )
+
+        logger.info(f"Daily decision generated successfully: {total_trades} trades, {daily_return_pct:.2f}% return")
+
+        # 11. Return response
+        return DailyDecisionResponse(
+            date=target_date,
+            decisions=[TradeDecision(**d) for d in decisions],
+            portfolio_before=PortfolioSnapshot(**portfolio_before),
+            portfolio_after=PortfolioSnapshot(**portfolio_after),
+            summary=summary
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Daily decision failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/apply-decision")
+async def apply_decision(date: str):
+    """
+    Apply a saved decision and update portfolio history
+
+    Args:
+        date: Date of the decision to apply (YYYY-MM-DD)
+
+    Returns:
+        Success message and updated portfolio
+    """
+    from app.services.daily_trading import append_to_portfolio_history
+
+    try:
+        logger.info(f"Applying decision for date: {date}")
+
+        # Load decision from file
+        decision_file = 'data/live_trading/trade_decisions.json'
+
+        if not os.path.exists(decision_file):
+            raise HTTPException(
+                status_code=404,
+                detail="No decisions found"
+            )
+
+        with open(decision_file, 'r') as f:
+            all_decisions = json.load(f)
+
+        if date not in all_decisions:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No decision found for date: {date}"
+            )
+
+        decision_data = all_decisions[date]
+
+        # Append to portfolio history
+        append_to_portfolio_history(
+            date=date,
+            portfolio_after=decision_data["portfolio_after"],
+            daily_return_pct=decision_data["summary"]["daily_return_pct"]
+        )
+
+        logger.info(f"Decision applied successfully for {date}")
+
+        return {
+            "message": f"Decision for {date} applied successfully",
+            "portfolio": decision_data["portfolio_after"],
+            "summary": decision_data["summary"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Apply decision failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/portfolio-history", response_model=PortfolioHistoryResponse)
+async def get_portfolio_history(days: int = 30):
+    """
+    Get portfolio history for the last N days
+
+    Args:
+        days: Number of days to retrieve (default: 30)
+
+    Returns:
+        Portfolio history with dates, values, returns, and balances
+    """
+    from app.services.daily_trading import load_portfolio_history
+
+    try:
+        logger.info(f"Loading portfolio history for last {days} days")
+
+        history = load_portfolio_history(days=days)
+
+        return PortfolioHistoryResponse(
+            dates=history["dates"],
+            portfolio_values=history["portfolio_values"],
+            daily_returns=history["daily_returns"],
+            balances=history["balances"]
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to load portfolio history: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/latest-portfolio")
+async def get_latest_portfolio():
+    """
+    Get the latest portfolio state from history
+
+    Returns:
+        Latest portfolio snapshot or default initial state
+    """
+    try:
+        history_file = 'data/live_trading/portfolio_history.csv'
+
+        if not os.path.exists(history_file):
+            # Return default initial state
+            return {
+                "balance": 1000000,
+                "shares": {
+                    "ASELS.IS": 0,
+                    "THYAO.IS": 0,
+                    "EREGL.IS": 0,
+                    "KCHOL.IS": 0,
+                    "SAHOL.IS": 0
+                },
+                "portfolio_value": 1000000,
+                "date": None
+            }
+
+        df = pd.read_csv(history_file)
+        if df.empty:
+            return {
+                "balance": 1000000,
+                "shares": {
+                    "ASELS.IS": 0,
+                    "THYAO.IS": 0,
+                    "EREGL.IS": 0,
+                    "KCHOL.IS": 0,
+                    "SAHOL.IS": 0
+                },
+                "portfolio_value": 1000000,
+                "date": None
+            }
+
+        latest = df.iloc[-1]
+
+        # Extract shares
+        shares = {}
+        for col in df.columns:
+            if col.endswith('_shares'):
+                symbol = col.replace('_shares', '.IS')
+                shares[symbol] = int(latest[col]) if not pd.isna(latest[col]) else 0
+
+        return {
+            "balance": float(latest['balance']),
+            "shares": shares,
+            "portfolio_value": float(latest['portfolio_value']),
+            "date": latest['date']
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to load latest portfolio: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== ACADEMIC ANALYSIS ENDPOINTS ====================
+
+@router.get("/analysis/model-comparison")
+async def get_model_comparison():
+    """
+    Get comprehensive model comparison for academic analysis
+
+    Returns:
+        Comparison table with all performance metrics
+    """
+    try:
+        results_file = 'results/data/detailed_results.json'
+
+        if not os.path.exists(results_file):
+            raise HTTPException(
+                status_code=404,
+                detail="No analysis results found. Please run generate_academic_report.py first"
+            )
+
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+
+        return {
+            "models": results,
+            "count": len(results)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to load model comparison: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/analysis/best-models")
+async def get_best_models():
+    """
+    Get best performing models by different metrics
+
+    Returns:
+        Dictionary with best models for each metric
+    """
+    try:
+        results_file = 'results/data/detailed_results.json'
+
+        if not os.path.exists(results_file):
+            raise HTTPException(
+                status_code=404,
+                detail="No analysis results found. Please run generate_academic_report.py first"
+            )
+
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+
+        # Find best models
+        best_models = {
+            "best_sharpe": max(results.items(), key=lambda x: x[1]['sharpe_ratio']),
+            "best_return": max(results.items(), key=lambda x: x[1]['total_return']),
+            "lowest_drawdown": max(results.items(), key=lambda x: x[1]['max_drawdown']),
+            "best_win_rate": max(results.items(), key=lambda x: x[1]['win_rate']),
+            "best_sortino": max(results.items(), key=lambda x: x[1]['sortino_ratio']),
+            "best_calmar": max(results.items(), key=lambda x: x[1]['calmar_ratio'])
+        }
+
+        return {
+            metric: {
+                "model": model_name,
+                "value": model_data[metric.replace("best_", "").replace("lowest_", "")]
+            }
+            for metric, (model_name, model_data) in best_models.items()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get best models: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analysis/generate-report")
+async def generate_analysis_report(background_tasks: BackgroundTasks):
+    """
+    Generate comprehensive academic analysis report
+
+    This runs the analysis in the background and generates:
+    - Model comparison tables
+    - Performance visualizations
+    - LaTeX tables for publications
+    - Statistical significance tests
+
+    Returns:
+        Status message
+    """
+    import subprocess
+
+    try:
+        # Run the analysis script in background
+        def run_analysis():
+            subprocess.run(['python', 'generate_academic_report.py'], check=True)
+
+        background_tasks.add_task(run_analysis)
+
+        return {
+            "message": "Analysis report generation started",
+            "status": "processing",
+            "note": "Check results/ directory for outputs when complete"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to start analysis: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
