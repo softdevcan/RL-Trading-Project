@@ -156,6 +156,12 @@ function initTrainingForm() {
             max_shares_per_trade: 100
         };
 
+        // Add hyperparameter study if selected
+        const hyperparamStudy = document.getElementById('hyperparameter_study').value;
+        if (hyperparamStudy) {
+            formData.hyperparameter_study = hyperparamStudy;
+        }
+
         try {
             const response = await fetch('/api/trading/train', {
                 method: 'POST',
@@ -493,6 +499,8 @@ function init() {
     loadModels();
     checkStatus();
     initDataForm();
+    // Load hyperparameter studies for the default selected algorithm
+    loadHyperparameterStudies();
     console.log('Dashboard initialized successfully!');
 }
 
@@ -1125,6 +1133,49 @@ function renderComparisonChart(models) {
             }
         }
     });
+}
+
+/**
+ * Load Hyperparameter Studies for Selected Algorithm
+ */
+async function loadHyperparameterStudies() {
+    const algorithm = document.getElementById('algorithm').value;
+    const hyperparamSelect = document.getElementById('hyperparameter_study');
+    const hyperparamSection = document.getElementById('hyperparameter-selection');
+
+    try {
+        const response = await fetch(`/api/trading/hyperparameters/${algorithm}`);
+        const data = await response.json();
+
+        // Clear existing options except the first one
+        hyperparamSelect.innerHTML = '<option value="">Varsayılan parametreleri kullan</option>';
+
+        if (data.studies && data.studies.length > 0) {
+            // Add studies as options
+            data.studies.forEach(study => {
+                const option = document.createElement('option');
+                option.value = study.filename;
+
+                // Format the option text
+                const date = new Date(study.timestamp);
+                const formattedDate = date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
+                const bestValue = study.best_value ? study.best_value.toFixed(3) : 'N/A';
+
+                option.textContent = `${study.study_name} (Best: ${bestValue}, Trials: ${study.n_trials}) - ${formattedDate}`;
+                hyperparamSelect.appendChild(option);
+            });
+
+            // Show the section
+            hyperparamSection.style.display = 'block';
+        } else {
+            // No studies found, hide the section
+            hyperparamSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading hyperparameter studies:', error);
+        // Hide section on error
+        hyperparamSection.style.display = 'none';
+    }
 }
 
 // Run on page load

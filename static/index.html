@@ -26,6 +26,7 @@
                 <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
                 <button class="tab-button" onclick="switchTab('daily-trading', event)">💼 Günlük Trading</button>
                 <button class="tab-button" onclick="switchTab('academic', event)">🎓 Akademik Analiz</button>
+                <a href="/static/hyperopt.html" class="tab-button" style="text-decoration:none; display: inline-block;">🔬 Hiper Parametre</a>
             </div>
         </div>
 
@@ -108,12 +109,22 @@
                     <form id="trainingForm">
                         <div class="form-group">
                             <label for="algorithm">Algoritma:</label>
-                            <select id="algorithm" name="algorithm">
+                            <select id="algorithm" name="algorithm" onchange="loadHyperparameterStudies()">
                                 <option value="A2C">A2C - Advantage Actor-Critic (Hızlı, trading-optimized)</option>
                                 <option value="PPO">PPO - Proximal Policy Optimization (Kararlı, yüksek exploration)</option>
                                 <option value="SAC" selected>SAC - Soft Actor-Critic (⭐ En İyi - Otomatik entropy tuning)</option>
                                 <option value="TD3">TD3 - Twin Delayed DDPG (Gelişmiş, noise-based exploration)</option>
                             </select>
+                        </div>
+
+                        <div class="form-group" id="hyperparameter-selection" style="display: none;">
+                            <label for="hyperparameter_study">🔬 Optimize Edilmiş Hiper Parametreler:</label>
+                            <select id="hyperparameter_study" name="hyperparameter_study">
+                                <option value="">Varsayılan parametreleri kullan</option>
+                            </select>
+                            <small style="color: #888; font-size: 0.85em; display: block; margin-top: 5px;">
+                                💡 Hiper parametre optimizasyonundan elde edilen en iyi parametreleri seçebilirsiniz
+                            </small>
                         </div>
 
                         <div class="form-group">

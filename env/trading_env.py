@@ -204,6 +204,11 @@ class TradingEnv(gym.Env):
             'trades_executed': trades_executed
         }
 
+        # Episode bittiğinde metrics ekle
+        if terminated:
+            metrics = self.get_metrics()
+            info.update(metrics)
+
         return obs, reward, terminated, truncated, info
 
     def _execute_trade(self, stock_idx: int, shares: int) -> tuple:

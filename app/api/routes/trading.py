@@ -44,6 +44,66 @@ async def health_check():
     }
 
 
+@router.get("/hyperparameters/{algorithm}")
+async def get_hyperparameter_studies(algorithm: str):
+    """
+    Get available hyperparameter study results for a specific algorithm
+
+    Args:
+        algorithm: Algorithm name (ppo, a2c, sac, td3)
+
+    Returns:
+        List of hyperparameter study files with metadata
+    """
+    try:
+        studies_dir = "results/hyperparameter_studies"
+
+        if not os.path.exists(studies_dir):
+            return {"studies": []}
+
+        studies = []
+        algorithm_lower = algorithm.lower()
+
+        # Search for JSON files matching the algorithm
+        for filename in os.listdir(studies_dir):
+            if filename.startswith(f"best_params_{algorithm_lower}_") and filename.endswith(".json"):
+                file_path = os.path.join(studies_dir, filename)
+
+                try:
+                    with open(file_path, 'r') as f:
+                        data = json.load(f)
+
+                    # Extract study info
+                    study_info = {
+                        "filename": filename,
+                        "file_path": file_path,
+                        "study_name": data.get("study_name", "Unknown"),
+                        "best_value": data.get("best_value", 0.0),
+                        "best_params": data.get("best_params", {}),
+                        "n_trials": data.get("n_trials", 0),
+                        "timestamp": data.get("timestamp", "Unknown"),
+                        "algorithm": data.get("algorithm", algorithm_lower)
+                    }
+
+                    studies.append(study_info)
+                except Exception as e:
+                    logger.error(f"Error reading {filename}: {e}")
+                    continue
+
+        # Sort by timestamp (newest first)
+        studies.sort(key=lambda x: x["timestamp"], reverse=True)
+
+        return {
+            "algorithm": algorithm,
+            "studies": studies,
+            "total": len(studies)
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching hyperparameter studies: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/train", response_model=TrainingResponse)
 async def start_training(
     request: TrainingRequest,
@@ -347,6 +407,10 @@ async def run_training(request: TrainingRequest):
         request: Training configuration
     """
     global training_state
+    import time
+
+    # Track total training time
+    training_start_time = time.time()
 
     try:
         # Import training modules
@@ -412,24 +476,37 @@ async def run_training(request: TrainingRequest):
         os.makedirs('logs', exist_ok=True)
         model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Load hyperparameters if study is specified
+        hyperparams = {}
+        if request.hyperparameter_study:
+            study_path = os.path.join("results/hyperparameter_studies", request.hyperparameter_study)
+            if os.path.exists(study_path):
+                with open(study_path, 'r') as f:
+                    study_data = json.load(f)
+                    hyperparams = study_data.get("best_params", {})
+                    logger.info(f"Loaded hyperparameters from {request.hyperparameter_study}")
+                    logger.info(f"Best params: {hyperparams}")
+            else:
+                logger.warning(f"Hyperparameter study file not found: {study_path}")
+
         # Algorithm-specific hyperparameters optimized for trading
         # Each algorithm has its own optimal learning rate
         if request.algorithm == "PPO":
             # PPO: Most stable for single-threaded training
-            # Optimal learning rate for PPO in trading: 0.0003
+            # Use hyperparameters from study or defaults
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0003,   # PPO-specific optimal LR
-                n_steps=2048,           # Number of steps to run for each environment per update
-                batch_size=64,          # Minibatch size
-                n_epochs=10,            # Number of epochs when optimizing surrogate loss
-                gamma=0.99,             # Discount factor
-                gae_lambda=0.95,        # Factor for trade-off of bias vs variance for GAE
-                clip_range=0.2,         # Clipping parameter for PPO
-                ent_coef=0.15,          # INCREASED from 0.05 to 0.15 for much more exploration!
-                vf_coef=0.5,            # Value function coefficient
-                max_grad_norm=0.5,      # Gradient clipping
+                learning_rate=hyperparams.get('learning_rate', 0.0003),
+                n_steps=hyperparams.get('n_steps', 2048),
+                batch_size=hyperparams.get('batch_size', 64),
+                n_epochs=hyperparams.get('n_epochs', 10),
+                gamma=hyperparams.get('gamma', 0.99),
+                gae_lambda=hyperparams.get('gae_lambda', 0.95),
+                clip_range=hyperparams.get('clip_range', 0.2),
+                ent_coef=hyperparams.get('ent_coef', 0.15),
+                vf_coef=hyperparams.get('vf_coef', 0.5),
+                max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
                 tensorboard_log='logs',
                 verbose=1
             )
@@ -613,6 +690,9 @@ async def run_training(request: TrainingRequest):
         # Save portfolio values history
         portfolio_history = [float(v) for v in actual_env.portfolio_values]
 
+        # Calculate total training time
+        total_training_time = time.time() - training_start_time
+
         # Save metrics
         os.makedirs('results', exist_ok=True)
         metrics_file = f'results/{model_name}_metrics.json'
@@ -624,12 +704,17 @@ async def run_training(request: TrainingRequest):
             "total_timesteps": request.total_timesteps,
             "learning_rate": request.learning_rate,
             "trained_at": datetime.now().isoformat(),
+            "training_time_seconds": total_training_time,
+            "training_time_minutes": total_training_time / 60,
+            "training_time_hours": total_training_time / 3600,
             "trades": trades_data,
             "portfolio_history": portfolio_history
         }
 
         with open(metrics_file, 'w') as f:
             json.dump(metrics_with_config, f, indent=2)
+
+        logger.info(f"✅ Training completed in {total_training_time/60:.2f} minutes ({total_training_time:.1f}s)")
 
         # Update training state
         training_state["is_training"] = False

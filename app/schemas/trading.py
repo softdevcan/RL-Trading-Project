@@ -12,7 +12,7 @@ class TrainingRequest(BaseModel):
     """Request model for starting training"""
     algorithm: str = Field(
         default="A2C",
-        description="RL algorithm to use (A2C, PPO, TD3)"
+        description="RL algorithm to use (A2C, PPO, TD3, SAC)"
     )
     phase: int = Field(
         default=1,
@@ -46,6 +46,10 @@ class TrainingRequest(BaseModel):
         description="Maximum shares per trade",
         gt=0
     )
+    hyperparameter_study: Optional[str] = Field(
+        default=None,
+        description="Name of hyperparameter study file to use (e.g., 'best_params_ppo_ppo_optimization_753db76c.json')"
+    )
 
     class Config:
         json_schema_extra = {
@@ -56,7 +60,8 @@ class TrainingRequest(BaseModel):
                 "learning_rate": 0.0007,
                 "initial_balance": 1000000,
                 "commission_rate": 0.001,
-                "max_shares_per_trade": 100
+                "max_shares_per_trade": 100,
+                "hyperparameter_study": None
             }
         }
 

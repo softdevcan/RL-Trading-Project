@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 class DataFetcher:
     """BIST-30 hisse verileri için veri çekici"""
 
+    # Class-level cache to share data across instances
+    _cache = {}
+
     def __init__(self, start_date: str = "2018-01-01", end_date: str = None):
         """
         Args:
@@ -43,6 +46,14 @@ class DataFetcher:
         Returns:
             Multi-index DataFrame (Date, Symbol)
         """
+        # Create cache key
+        cache_key = f"{'-'.join(sorted(symbols))}_{self.start_date}_{self.end_date}"
+
+        # Check cache first
+        if cache_key in DataFetcher._cache:
+            logger.info(f"✓ Using cached data for {len(symbols)} symbols ({self.start_date} to {self.end_date})")
+            return DataFetcher._cache[cache_key].copy()
+
         logger.info(f"Fetching data for {len(symbols)} symbols...")
         logger.info(f"Date range: {self.start_date} to {self.end_date}")
 
@@ -88,6 +99,10 @@ class DataFetcher:
 
         if save:
             self.save_data(combined_df, 'raw_stock_data.csv')
+
+        # Cache the result
+        DataFetcher._cache[cache_key] = combined_df.copy()
+        logger.info(f"✓ Data cached for future use")
 
         return combined_df
 
