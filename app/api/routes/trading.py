@@ -491,13 +491,16 @@ async def run_training(request: TrainingRequest):
 
         # Algorithm-specific hyperparameters optimized for trading
         # Each algorithm has its own optimal learning rate
+        actual_learning_rate = None  # Track actual LR used
+
         if request.algorithm == "PPO":
             # PPO: Most stable for single-threaded training
             # Use hyperparameters from study or defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0003)
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=hyperparams.get('learning_rate', 0.0003),
+                learning_rate=actual_learning_rate,
                 n_steps=hyperparams.get('n_steps', 2048),
                 batch_size=hyperparams.get('batch_size', 64),
                 n_epochs=hyperparams.get('n_epochs', 10),
@@ -515,85 +518,87 @@ async def run_training(request: TrainingRequest):
             # Best for: Fast training, stable convergence, trading environments
             # Paper: "Asynchronous Methods for Deep Reinforcement Learning" (Mnih et al., 2016)
 
-            # Trading-optimized hyperparameters based on quant research:
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0007)
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0007,   # Slightly higher than PPO (on-policy needs faster updates)
-                n_steps=256,            # REDUCED from 512: More frequent updates for volatile markets
-                                        # Lower n_steps = faster reaction to market changes
-                gamma=0.99,             # Standard discount factor for financial RL
-                gae_lambda=0.95,        # Generalized Advantage Estimation (bias-variance tradeoff)
-                ent_coef=0.01,          # REDUCED from 0.15: A2C needs LOWER entropy than PPO!
-                                        # A2C is naturally more explorative due to on-policy nature
-                                        # High entropy causes excessive random trading
-                vf_coef=0.25,           # REDUCED from 0.5: Lower value loss weight
-                                        # Prevents value function from dominating policy updates
-                max_grad_norm=0.5,      # Gradient clipping (prevents exploding gradients)
-                normalize_advantage=True,  # Critical for trading: normalizes profit/loss scales
-                use_rms_prop=True,      # RMSprop optimizer (original A2C paper)
-                                        # Better than Adam for on-policy algorithms
-                rms_prop_eps=1e-5,      # RMSprop epsilon for numerical stability
+                learning_rate=actual_learning_rate,
+                n_steps=hyperparams.get('n_steps', 256),
+                gamma=hyperparams.get('gamma', 0.99),
+                gae_lambda=hyperparams.get('gae_lambda', 0.95),
+                ent_coef=hyperparams.get('ent_coef', 0.01),
+                vf_coef=hyperparams.get('vf_coef', 0.25),
+                max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
+                normalize_advantage=True,
+                use_rms_prop=True,
+                rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
                 tensorboard_log='logs',
                 verbose=1
             )
         elif request.algorithm == "TD3":
             # TD3: Twin Delayed DDPG - for continuous action spaces
-            # Optimal learning rate for TD3: 0.001
             from stable_baselines3.common.noise import NormalActionNoise
 
-            # Add action noise for exploration - INCREASED for more aggressive trading
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.001)
+
+            # Action noise for exploration
             action_noise = NormalActionNoise(
-                mean=np.zeros(action_dim),  # Use dimension from base_env
-                sigma=0.2 * np.ones(action_dim)  # INCREASED from 0.1 to 0.2
+                mean=np.zeros(action_dim),
+                sigma=0.2 * np.ones(action_dim)
             )
 
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.001,    # TD3-specific optimal LR
-                buffer_size=100000,     # Replay buffer size
-                learning_starts=1000,   # Start learning after this many steps
-                batch_size=256,         # Larger batch for off-policy learning
-                tau=0.005,              # Soft update coefficient
-                gamma=0.99,
-                train_freq=1,           # Update the model every step
-                gradient_steps=1,
+                learning_rate=actual_learning_rate,
+                buffer_size=hyperparams.get('buffer_size', 100000),
+                learning_starts=hyperparams.get('learning_starts', 1000),
+                batch_size=hyperparams.get('batch_size', 256),
+                tau=hyperparams.get('tau', 0.005),
+                gamma=hyperparams.get('gamma', 0.99),
+                train_freq=hyperparams.get('train_freq', 1),
+                gradient_steps=hyperparams.get('gradient_steps', 1),
                 action_noise=action_noise,
-                policy_delay=2,         # Delay policy updates (TD3 feature)
-                target_policy_noise=0.3,  # INCREASED from 0.2 to 0.3 - Noise added to target policy
-                target_noise_clip=0.5,  # Clip the noise
+                policy_delay=hyperparams.get('policy_delay', 2),
+                target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
+                target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
                 tensorboard_log='logs',
                 verbose=1
             )
         elif request.algorithm == "SAC":
             # SAC: Soft Actor-Critic - State of the art for continuous control
-            # Generally the BEST algorithm for continuous action spaces like trading
-            # Optimal learning rate for SAC: 0.0003
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0003)
+
+            # Handle ent_coef: can be 'auto', 'auto_X', or float
+            ent_coef = hyperparams.get('ent_coef', 'auto_0.5')
+
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0003,   # SAC-specific optimal LR
-                buffer_size=100000,     # Replay buffer size
-                learning_starts=1000,   # Start learning after this many steps
-                batch_size=256,         # Batch size for each gradient update
-                tau=0.005,              # Soft update coefficient for target networks
-                gamma=0.99,             # Discount factor
-                train_freq=1,           # Update the model every step
-                gradient_steps=1,       # Number of gradient steps per update
-                ent_coef='auto_0.5',    # INCREASED initial entropy target (was 'auto')
-                                        # This will start with higher exploration
-                target_update_interval=1,  # Update target network every step
-                use_sde=False,          # Don't use State Dependent Exploration (we have entropy)
+                learning_rate=actual_learning_rate,
+                buffer_size=hyperparams.get('buffer_size', 100000),
+                learning_starts=hyperparams.get('learning_starts', 1000),
+                batch_size=hyperparams.get('batch_size', 256),
+                tau=hyperparams.get('tau', 0.005),
+                gamma=hyperparams.get('gamma', 0.99),
+                train_freq=hyperparams.get('train_freq', 1),
+                gradient_steps=hyperparams.get('gradient_steps', 1),
+                ent_coef=ent_coef,
+                target_update_interval=hyperparams.get('target_update_interval', 1),
+                use_sde=hyperparams.get('use_sde', False),
                 tensorboard_log='logs',
                 verbose=1
             )
         else:
             # Fallback to default settings with high exploration
+            actual_learning_rate = request.learning_rate
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=request.learning_rate,
+                learning_rate=actual_learning_rate,
                 tensorboard_log='logs',
                 verbose=1
             )
@@ -702,7 +707,10 @@ async def run_training(request: TrainingRequest):
             "algorithm": request.algorithm,
             "phase": request.phase,
             "total_timesteps": request.total_timesteps,
-            "learning_rate": request.learning_rate,
+            "learning_rate": actual_learning_rate,  # Actual LR used
+            "requested_learning_rate": request.learning_rate,  # Original request for reference
+            "hyperparameter_study": request.hyperparameter_study,  # Study file used (if any)
+            "hyperparameters_used": hyperparams if hyperparams else {},  # All hyperparams used
             "trained_at": datetime.now().isoformat(),
             "training_time_seconds": total_training_time,
             "training_time_minutes": total_training_time / 60,

@@ -159,19 +159,43 @@ class ModelAnalyzer:
         """
         comparison_data = []
 
-        for model_name, metrics in model_results.items():
-            comparison_data.append({
-                "Model": model_name,
-                "Total Return (%)": metrics["total_return"] * 100,
-                "Sharpe Ratio": metrics["sharpe_ratio"],
-                "Sortino Ratio": metrics["sortino_ratio"],
-                "Max Drawdown (%)": metrics["max_drawdown"] * 100,
-                "Win Rate (%)": metrics["win_rate"] * 100,
-                "Profit Factor": metrics["profit_factor"],
-                "Total Trades": metrics["total_trades"],
-                "Calmar Ratio": metrics["calmar_ratio"],
-                "VaR 95%": metrics["var_95"],
-            })
+        # Separate benchmarks and RL models for better organization
+        benchmarks = ['Buy-and-Hold', 'BIST-30']
+        rl_models = [name for name in model_results.keys() if name not in benchmarks]
+
+        # Add RL models first
+        for model_name in sorted(rl_models):
+            if model_name in model_results:
+                metrics = model_results[model_name]
+                comparison_data.append({
+                    "Model": model_name,
+                    "Total Return (%)": metrics["total_return"] * 100,
+                    "Annualized Return (%)": metrics["annualized_return"] * 100,
+                    "Sharpe Ratio": metrics["sharpe_ratio"],
+                    "Sortino Ratio": metrics["sortino_ratio"],
+                    "Max Drawdown (%)": metrics["max_drawdown"] * 100,
+                    "Win Rate (%)": metrics["win_rate"] * 100,
+                    "Profit Factor": metrics["profit_factor"],
+                    "Total Trades": metrics["total_trades"],
+                    "Calmar Ratio": metrics["calmar_ratio"],
+                })
+
+        # Add benchmarks at the end
+        for benchmark_name in benchmarks:
+            if benchmark_name in model_results:
+                metrics = model_results[benchmark_name]
+                comparison_data.append({
+                    "Model": benchmark_name,
+                    "Total Return (%)": metrics["total_return"] * 100,
+                    "Annualized Return (%)": metrics["annualized_return"] * 100,
+                    "Sharpe Ratio": metrics["sharpe_ratio"],
+                    "Sortino Ratio": metrics["sortino_ratio"],
+                    "Max Drawdown (%)": metrics["max_drawdown"] * 100,
+                    "Win Rate (%)": metrics.get("win_rate", 0) * 100,  # Benchmarks may not have win_rate
+                    "Profit Factor": metrics.get("profit_factor", 0),  # Benchmarks may not have profit_factor
+                    "Total Trades": metrics["total_trades"],
+                    "Calmar Ratio": metrics["calmar_ratio"],
+                })
 
         df = pd.DataFrame(comparison_data)
         df = df.round(4)
@@ -260,17 +284,28 @@ class ModelAnalyzer:
             model_portfolios: Dictionary with model_name -> portfolio_values array
             filename: Output filename
         """
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(14, 7))
+
+        # Separate benchmarks and RL models for different line styles
+        benchmarks = ['Buy-and-Hold', 'BIST-30']
 
         for model_name, values in model_portfolios.items():
             normalized = (values / values[0]) * 100  # Normalize to 100
-            ax.plot(normalized, label=model_name, linewidth=2)
+
+            if model_name in benchmarks:
+                # Benchmarks with thicker, dashed lines
+                ax.plot(normalized, label=model_name, linewidth=2.5,
+                       linestyle='--', alpha=0.8)
+            else:
+                # RL models with solid lines
+                ax.plot(normalized, label=model_name, linewidth=2, alpha=0.9)
 
         ax.set_xlabel('Trading Days', fontsize=12)
         ax.set_ylabel('Portfolio Value (Normalized to 100)', fontsize=12)
-        ax.set_title('Portfolio Evolution Comparison', fontsize=14, fontweight='bold')
-        ax.legend(loc='best', fontsize=10)
+        ax.set_title('Portfolio Evolution: RL Models vs Benchmarks', fontsize=14, fontweight='bold')
+        ax.legend(loc='best', fontsize=9, ncol=2)
         ax.grid(True, alpha=0.3)
+        ax.axhline(y=100, color='black', linestyle=':', linewidth=1, alpha=0.5)
 
         plt.tight_layout()
         plt.savefig(self.results_dir / "figures" / filename, dpi=300, bbox_inches='tight')
@@ -281,18 +316,24 @@ class ModelAnalyzer:
         """
         Plot drawdown comparison for multiple models
         """
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(14, 7))
+
+        benchmarks = ['Buy-and-Hold', 'BIST-30']
 
         for model_name, values in model_portfolios.items():
             cumulative = np.maximum.accumulate(values)
             drawdown = (values - cumulative) / cumulative * 100
-            ax.plot(drawdown, label=model_name, linewidth=2)
 
-        ax.fill_between(range(len(drawdown)), drawdown, 0, alpha=0.3)
+            if model_name in benchmarks:
+                ax.plot(drawdown, label=model_name, linewidth=2.5,
+                       linestyle='--', alpha=0.8)
+            else:
+                ax.plot(drawdown, label=model_name, linewidth=2, alpha=0.9)
+
         ax.set_xlabel('Trading Days', fontsize=12)
         ax.set_ylabel('Drawdown (%)', fontsize=12)
-        ax.set_title('Drawdown Comparison', fontsize=14, fontweight='bold')
-        ax.legend(loc='best', fontsize=10)
+        ax.set_title('Drawdown Comparison: RL Models vs Benchmarks', fontsize=14, fontweight='bold')
+        ax.legend(loc='best', fontsize=9, ncol=2)
         ax.grid(True, alpha=0.3)
         ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
 

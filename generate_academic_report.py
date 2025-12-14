@@ -1,6 +1,6 @@
 """
 Generate Comprehensive Academic Analysis Report
-Compares all trained models and generates publication-ready visualizations
+Compares all trained models with benchmarks and generates publication-ready visualizations
 """
 
 import os
@@ -11,6 +11,7 @@ from pathlib import Path
 from app.services.model_analysis import ModelAnalyzer
 from stable_baselines3 import PPO, A2C, TD3, SAC
 from app.environments.trading_env import MultiStockTradingEnv
+from benchmark_strategies import evaluate_benchmarks
 
 def load_data_for_testing():
     """Load preprocessed data for testing"""
@@ -131,6 +132,36 @@ def main():
     model_portfolios = {}
     model_returns = {}
 
+    # 1. First evaluate benchmark strategies
+    print("\n" + "=" * 80)
+    print("📊 EVALUATING BENCHMARK STRATEGIES")
+    print("=" * 80)
+
+    benchmark_results = evaluate_benchmarks(test_df)
+
+    for benchmark_name, (portfolio_values, returns, trades, base_metrics) in benchmark_results.items():
+        # Calculate advanced metrics using ModelAnalyzer
+        advanced_metrics = analyzer.calculate_advanced_metrics(
+            portfolio_values=portfolio_values,
+            returns=returns,
+            trades=trades,
+            risk_free_rate=0.02
+        )
+
+        # Store results
+        model_results[benchmark_name] = advanced_metrics
+        model_portfolios[benchmark_name] = portfolio_values
+        model_returns[benchmark_name] = returns
+
+        print(f"✅ {benchmark_name}: Sharpe={advanced_metrics['sharpe_ratio']:.4f}, "
+              f"Return={advanced_metrics['total_return']*100:.2f}%, "
+              f"Trades={advanced_metrics['total_trades']}")
+
+    # 2. Now evaluate RL models
+    print("\n" + "=" * 80)
+    print("🤖 EVALUATING RL MODELS")
+    print("=" * 80)
+
     for model_file in model_files:
         model_name = model_file.stem
         model_path = str(model_file.with_suffix(''))
@@ -161,9 +192,11 @@ def main():
             print(f"❌ Error evaluating {model_name}: {e}")
             continue
 
-    if not model_results:
-        print("\n❌ No models successfully evaluated!")
-        return
+    if len(model_results) <= 2:  # Only benchmarks, no RL models
+        print("\n⚠️  Warning: Only benchmark strategies were evaluated. No RL models found.")
+        if not model_results:
+            print("❌ No results to generate report!")
+            return
 
     # Generate comprehensive report
     print("\n" + "=" * 80)
@@ -189,7 +222,7 @@ def main():
 
     # Print best model summary
     print("\n" + "=" * 80)
-    print("🏆 BEST MODELS BY METRIC")
+    print("🏆 BEST PERFORMERS BY METRIC (Including Benchmarks)")
     print("=" * 80)
 
     best_sharpe = max(model_results.items(), key=lambda x: x[1]['sharpe_ratio'])
@@ -203,6 +236,42 @@ def main():
 
     best_winrate = max(model_results.items(), key=lambda x: x[1]['win_rate'])
     print(f"🎯 Best Win Rate: {best_winrate[0]} ({best_winrate[1]['win_rate']*100:.2f}%)")
+
+    # Separate RL models from benchmarks
+    rl_models = {k: v for k, v in model_results.items()
+                 if k not in ['Buy-and-Hold', 'BIST-30']}
+    benchmarks = {k: v for k, v in model_results.items()
+                  if k in ['Buy-and-Hold', 'BIST-30']}
+
+    if rl_models and benchmarks:
+        print("\n" + "=" * 80)
+        print("🎯 RL MODELS vs BENCHMARKS")
+        print("=" * 80)
+
+        # Compare best RL model with benchmarks
+        best_rl_model = max(rl_models.items(), key=lambda x: x[1]['sharpe_ratio'])
+        print(f"\n🏆 Best RL Model: {best_rl_model[0]}")
+        print(f"   Sharpe Ratio: {best_rl_model[1]['sharpe_ratio']:.4f}")
+        print(f"   Total Return: {best_rl_model[1]['total_return']*100:.2f}%")
+        print(f"   Max Drawdown: {best_rl_model[1]['max_drawdown']*100:.2f}%")
+
+        print("\n📊 Benchmark Performance:")
+        for bench_name, bench_metrics in benchmarks.items():
+            print(f"\n{bench_name}:")
+            print(f"   Sharpe Ratio: {bench_metrics['sharpe_ratio']:.4f}")
+            print(f"   Total Return: {bench_metrics['total_return']*100:.2f}%")
+            print(f"   Max Drawdown: {bench_metrics['max_drawdown']*100:.2f}%")
+
+        # Calculate outperformance
+        for bench_name, bench_metrics in benchmarks.items():
+            sharpe_improvement = ((best_rl_model[1]['sharpe_ratio'] - bench_metrics['sharpe_ratio'])
+                                 / abs(bench_metrics['sharpe_ratio']) * 100) if bench_metrics['sharpe_ratio'] != 0 else 0
+            return_improvement = ((best_rl_model[1]['total_return'] - bench_metrics['total_return'])
+                                 / abs(bench_metrics['total_return']) * 100) if bench_metrics['total_return'] != 0 else 0
+
+            print(f"\n✨ Best RL Model vs {bench_name}:")
+            print(f"   Sharpe Ratio: {sharpe_improvement:+.1f}% {'better' if sharpe_improvement > 0 else 'worse'}")
+            print(f"   Total Return: {return_improvement:+.1f}% {'better' if return_improvement > 0 else 'worse'}")
 
     print("\n✅ Analysis complete! Check the 'results' directory for all outputs.")
     print("\n📚 For your thesis/paper:")
