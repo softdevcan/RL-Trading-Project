@@ -128,6 +128,8 @@ class BaseHyperparameterOptimizer:
         sampler: Optional[optuna.samplers.BaseSampler] = None,
         pruner: Optional[optuna.pruners.BasePruner] = None,
         seed: Optional[int] = None,
+        phase: int = 2,
+        reward_type: str = 'psr'
     ):
         """
         Args:
@@ -139,11 +141,15 @@ class BaseHyperparameterOptimizer:
             sampler: Optuna sampler (None ise TPESampler)
             pruner: Optuna pruner (None ise MedianPruner)
             seed: Random seed
+            phase: 1=Faz1 (56 features), 2=Faz2 (97 features)
+            reward_type: 'simple' or 'psr'
         """
         self.algorithm_name = algorithm_name.lower()
         self.n_trials = n_trials
         self.n_jobs = n_jobs
         self.seed = seed
+        self.phase = phase
+        self.reward_type = reward_type
 
         # Study name
         if study_name is None:
@@ -222,7 +228,9 @@ class BaseHyperparameterOptimizer:
         self,
         stock_symbols: list,
         start_date: str,
-        end_date: str
+        end_date: str,
+        phase: int = 2,
+        reward_type: str = 'psr'
     ) -> gym.Env:
         """
         Trading environment oluşturur.
@@ -231,30 +239,63 @@ class BaseHyperparameterOptimizer:
             stock_symbols: Hisse senedi sembolleri
             start_date: Başlangıç tarihi
             end_date: Bitiş tarihi
+            phase: 1=Faz1 (56 features), 2=Faz2 (97 features with fundamental+macro)
+            reward_type: 'simple' (baseline) or 'psr' (risk-aware)
 
         Returns:
             Trading environment
         """
-        # Fetch data
+        # 1. Fetch market data
         data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
         df = data_fetcher.fetch_stock_data(stock_symbols)
 
         if df is None or df.empty:
             raise ValueError(f"No data fetched for {stock_symbols}")
 
-        # Create environment
+        # 2. Load Phase 2 data (fundamental + macro) if needed
+        fundamental_df = None
+        macro_df = None
+
+        if phase == 2:
+            from data.fundamental_fetcher import FundamentalDataFetcher
+            from data.macro_fetcher import MacroDataFetcher
+
+            # Load fundamental data
+            try:
+                fund_fetcher = FundamentalDataFetcher()
+                fundamental_df = fund_fetcher.load_data('fundamental_data.csv')
+                logger.info(f"✅ Loaded fundamental data: {len(fundamental_df)} symbols")
+            except FileNotFoundError:
+                logger.warning("⚠️  Fundamental data not found, fetching...")
+                fundamental_df = fund_fetcher.fetch_fundamental_data(stock_symbols, save=True)
+
+            # Load macro data
+            try:
+                macro_fetcher = MacroDataFetcher(api_key="tV4qq6RzPr")
+                macro_df = macro_fetcher.load_data('macro_data.csv')
+                logger.info(f"✅ Loaded macro data: {len(macro_df)} rows")
+            except FileNotFoundError:
+                logger.warning("⚠️  Macro data not found, fetching...")
+                macro_df = macro_fetcher.fetch_macro_data(save=True)
+
+        # 3. Create environment
         env = TradingEnv(
             df=df,
             initial_balance=1_000_000,
             commission_rate=0.001,
-            max_shares_per_trade=100
+            max_shares_per_trade=100,
+            phase=phase,
+            reward_type=reward_type,
+            fundamental_df=fundamental_df,
+            macro_df=macro_df
         )
 
-        # Monitor for statistics
-        log_dir = f"logs/hyperopt_{self.algorithm_name}"
+        # 4. Monitor for statistics
+        log_dir = f"logs/hyperopt_{self.algorithm_name}_phase{phase}"
         os.makedirs(log_dir, exist_ok=True)
         env = Monitor(env, log_dir)
 
+        logger.info(f"Environment created: Phase {phase}, Reward: {reward_type.upper()}")
         return env
 
     def create_model(self, trial: optuna.Trial, env: gym.Env, hyperparams: Dict[str, Any]):
@@ -359,9 +400,11 @@ class BaseHyperparameterOptimizer:
             for key, value in hyperparams.items():
                 logger.info(f"  {key}: {value}")
 
-            # Create environments
-            train_env = self.create_env(stock_symbols, train_start, train_end)
-            val_env = self.create_env(stock_symbols, val_start, val_end)
+            # Create environments with Phase and Reward Type
+            train_env = self.create_env(stock_symbols, train_start, train_end,
+                                       phase=self.phase, reward_type=self.reward_type)
+            val_env = self.create_env(stock_symbols, val_start, val_end,
+                                     phase=self.phase, reward_type=self.reward_type)
 
             # Create model
             model = self.create_model(trial, train_env, hyperparams)

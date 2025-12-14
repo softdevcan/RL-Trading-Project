@@ -220,8 +220,8 @@ async def get_model_metrics(model_name: str):
 @router.post("/data/generate")
 async def generate_data(
     phase: int = 1,
-    start_date: str = None,
-    end_date: str = None
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
 ):
     """
     Generate fresh stock data with indicators
@@ -242,7 +242,7 @@ async def generate_data(
         # Create fetcher with date range
         fetcher = DataFetcher(
             start_date=start_date or "2018-01-01",
-            end_date=end_date
+            end_date=end_date if end_date is not None else None
         )
 
         # Fetch data
@@ -446,18 +446,59 @@ async def run_training(request: TrainingRequest):
 
         train_df, val_df, test_df = fetcher.split_data(df)
 
+        # Load Phase 2 data if needed
+        fundamental_df = None
+        macro_df = None
+        reward_type = 'simple'  # Default
+        
+        if request.phase == 2:
+            try:
+                from data.fundamental_fetcher import FundamentalDataFetcher
+                from data.macro_fetcher import MacroDataFetcher
+                
+                # Load fundamental data
+                fund_fetcher = FundamentalDataFetcher()
+                try:
+                    fundamental_df = fund_fetcher.load_data('fundamental_data.csv')
+                    logger.info(f"Loaded fundamental data: {fundamental_df.shape}")
+                except FileNotFoundError:
+                    logger.warning("Fundamental data not found, fetching...")
+                    fundamental_df = fund_fetcher.fetch_fundamental_data(symbols, save=True)
+                
+                # Load macro data  
+                macro_fetcher = MacroDataFetcher(api_key="tV4qq6RzPr")
+                try:
+                    macro_df = macro_fetcher.load_data('macro_data.csv')
+                    logger.info(f"Loaded macro data: {macro_df.shape}")
+                except FileNotFoundError:
+                    logger.warning("Macro data not found, fetching...")
+                    macro_df = macro_fetcher.fetch_macro_data(save=True)
+                
+                # Phase 2 uses PSR reward
+                reward_type = 'psr'
+                logger.info("Phase 2: Using PSR reward with fundamental + macro data")
+                
+            except Exception as e:
+                logger.error(f"Error loading Phase 2 data: {e}")
+                raise
+
         # Create environment factory function
         def make_training_env():
             return make_env(
                 df=train_df,
                 initial_balance=request.initial_balance,
                 commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade
+                max_shares_per_trade=request.max_shares_per_trade,
+                phase=request.phase,
+                reward_type=reward_type,
+                fundamental_df=fundamental_df,
+                macro_df=macro_df
             )
 
         # Create one instance to get dimensions
         temp_env = make_training_env()
-        action_dim = temp_env.action_space.shape[0]
+        action_space_shape = temp_env.action_space.shape
+        action_dim = action_space_shape[0] if action_space_shape is not None else 0
         n_stocks = temp_env.n_stocks
         logger.info(f"Environment dimensions: action_dim={action_dim}, n_stocks={n_stocks}")
 
@@ -612,9 +653,12 @@ async def run_training(request: TrainingRequest):
         )
 
         # Log training environment metrics (for debugging)
-        train_metrics = env.envs[0].get_metrics()
-        logger.info(f"Training metrics: total_trades={train_metrics['total_trades']}, "
-                   f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
+        from env.trading_env import TradingEnv
+        train_env = env.envs[0]
+        if isinstance(train_env, TradingEnv):
+            train_metrics = train_env.get_metrics()
+            logger.info(f"Training metrics: total_trades={train_metrics['total_trades']}, "
+                       f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
 
         # Save model
         os.makedirs('models', exist_ok=True)
@@ -627,7 +671,11 @@ async def run_training(request: TrainingRequest):
                 df=test_df,
                 initial_balance=request.initial_balance,
                 commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade
+                max_shares_per_trade=request.max_shares_per_trade,
+                phase=request.phase,
+                reward_type=reward_type,
+                fundamental_df=fundamental_df,
+                macro_df=macro_df
             )
 
         test_env = DummyVecEnv([make_test_env])
@@ -637,7 +685,11 @@ async def run_training(request: TrainingRequest):
         test_step = 0
 
         # Track the actual environment instance
-        actual_env = test_env.envs[0]
+        from env.trading_env import TradingEnv
+        actual_env_raw = test_env.envs[0]
+        if not isinstance(actual_env_raw, TradingEnv):
+            raise TypeError("Expected TradingEnv instance")
+        actual_env: TradingEnv = actual_env_raw
 
         while not done[0]:  # DummyVecEnv returns array
             action, _states = model.predict(obs, deterministic=False)  # Stochastic for better exploration

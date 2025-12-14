@@ -151,6 +151,23 @@ def parse_args():
         help="Progress bar gösterme"
     )
 
+    # Phase 2 support
+    parser.add_argument(
+        "--phase",
+        type=int,
+        choices=[1, 2],
+        default=2,
+        help="Trading phase (1=56 features, 2=97 features with fundamental+macro, default: 2)"
+    )
+
+    parser.add_argument(
+        "--reward-type",
+        type=str,
+        choices=["simple", "psr"],
+        default="psr",
+        help="Reward function type (simple=baseline, psr=risk-aware, default: psr)"
+    )
+
     return parser.parse_args()
 
 
@@ -178,7 +195,9 @@ def get_optimizer(algorithm: str, args):
         study_name=args.study_name,
         n_trials=args.trials,
         n_jobs=args.jobs,
-        seed=args.seed
+        seed=args.seed,
+        phase=args.phase,
+        reward_type=args.reward_type
     )
 
 
@@ -197,6 +216,8 @@ def run_single_optimization(algorithm: str, args):
     print(f"  Stocks: {args.stocks}")
     print(f"  Train Period: {args.train_start} to {args.train_end}")
     print(f"  Val Period: {args.val_start} to {args.val_end}")
+    print(f"  Phase: {args.phase} ({'56 features' if args.phase == 1 else '97 features (Fundamental + Macro)'})")
+    print(f"  Reward Type: {args.reward_type.upper()}")
     print(f"  Trials: {args.trials}")
     print(f"  Jobs: {args.jobs}")
     print(f"  Timesteps per trial: {args.timesteps:,}")

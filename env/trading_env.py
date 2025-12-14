@@ -7,7 +7,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pandas as pd
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class TradingEnv(gym.Env):
     """
-    Multi-Stock Trading Environment (Faz 1: Basit versiyon)
+    Multi-Stock Trading Environment (Faz 2: Fundamental + Macro data)
 
-    State: [balance, shares_owned[N], OHLCV[N], technicals[N]]
+    State: [balance, shares_owned[N], OHLCV[N], technicals[N], fundamental[N], macro[6]]
     Action: [-100, ..., 0, ..., +100] per stock (shares to buy/sell)
-    Reward: Portfolio value change (Faz 1'de basitleştirilmiş)
+    Reward: Portfolio value change (Faz 1) or PSR reward (Faz 2)
     """
 
     metadata = {'render_modes': ['human']}
@@ -30,7 +30,12 @@ class TradingEnv(gym.Env):
         initial_balance: float = 1_000_000,
         commission_rate: float = 0.001,  # %0.1
         max_shares_per_trade: int = 100,
-        frame_bound: Tuple[int, int] = None
+        frame_bound: Optional[Tuple[int, int]] = None,
+        fundamental_df: Optional[pd.DataFrame] = None,  # Faz 2: Fundamental data
+        macro_df: Optional[pd.DataFrame] = None,         # Faz 2: Macro data
+        phase: int = 1,                        # 1=Basit, 2=Fundamental+Macro
+        reward_type: str = 'simple',           # 'simple' or 'psr'
+        reward_weights: Optional[Dict[str, float]] = None  # PSR weights (optional)
     ):
         """
         Args:
@@ -39,6 +44,11 @@ class TradingEnv(gym.Env):
             commission_rate: Transaction cost (default 0.1%)
             max_shares_per_trade: Maximum shares to trade per action
             frame_bound: (start_idx, end_idx) for episode
+            fundamental_df: Fundamental ratios per symbol (Faz 2)
+            macro_df: Macro indicators per date (Faz 2)
+            phase: 1=Faz1 (56 features), 2=Faz2 (97 features)
+            reward_type: 'simple' (Faz 1) or 'psr' (Faz 2)
+            reward_weights: PSR weights dict (w1-w5), None uses defaults
         """
         super().__init__()
 
@@ -46,6 +56,32 @@ class TradingEnv(gym.Env):
         self.initial_balance = initial_balance
         self.commission_rate = commission_rate
         self.max_shares_per_trade = max_shares_per_trade
+        self.phase = phase
+        self.reward_type = reward_type
+
+        # Faz 2 data
+        self.fundamental_df = fundamental_df
+        self.macro_df = macro_df
+
+        # Reward calculator instance
+        from env.reward_functions import RewardCalculator, SimpleRewardCalculator
+
+        if reward_type == 'psr':
+            if reward_weights:
+                # Convert float values to int where needed for RewardCalculator
+                int_weights = {}
+                for k, v in reward_weights.items():
+                    if k in ['rolling_window', 'target_trades_per_100']:
+                        int_weights[k] = int(v)
+                    else:
+                        int_weights[k] = v
+                self.reward_calculator = RewardCalculator(**int_weights)
+            else:
+                self.reward_calculator = RewardCalculator()  # Use defaults
+            logger.info(f"Using PSR reward with weights: {self.reward_calculator.get_weights()}")
+        else:
+            self.reward_calculator = SimpleRewardCalculator()
+            logger.info("Using Simple reward (baseline)")
 
         # Semboller
         self.symbols = df.index.get_level_values('symbol').unique().tolist()
@@ -60,12 +96,19 @@ class TradingEnv(gym.Env):
         else:
             self.frame_bound = frame_bound
 
-        # Feature sayısı (Faz 1: sadece OHLCV + technical indicators)
-        # Features per stock: open, high, low, close, volume + 5 technicals = 10
-        self.features_per_stock = 10
-
-        # State space: balance (1) + shares_owned (N) + features (N * features_per_stock)
-        state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock)
+        # Feature sayısı hesapla (phase'e göre)
+        if phase == 1:
+            # Faz 1: OHLCV (5) + Technical (5) = 10 per stock
+            self.features_per_stock = 10
+            # State: balance (1) + shares (N) + features (N*10)
+            state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock)
+        else:  # phase == 2
+            # Faz 2: OHLCV (5) + Technical (5) + Fundamental (7) = 17 per stock
+            # Plus Macro (6) shared across all stocks
+            self.features_per_stock = 17  # Per stock: 10 + 7
+            self.macro_features = 6        # Economy-wide
+            # State: balance (1) + shares (N) + features (N*17) + macro (6)
+            state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock) + self.macro_features
 
         # Observation space: continuous
         self.observation_space = spaces.Box(
@@ -84,17 +127,21 @@ class TradingEnv(gym.Env):
         )
 
         # Trading variables
-        self.current_step = None
-        self.balance = None
-        self.shares_owned = None
-        self.portfolio_values = []
-        self.trades_history = []
+        self.current_step: int = 0
+        self.balance: float = initial_balance
+        self.shares_owned: np.ndarray = np.zeros(self.n_stocks)
+        self.portfolio_values: List[float] = []
+        self.trades_history: List[Dict] = []
+        self.returns_history: List[float] = []  # For PSR reward
 
-        logger.info(f"TradingEnv initialized:")
+        logger.info(f"TradingEnv initialized (Phase {phase}, Reward: {reward_type.upper()}):")
         logger.info(f"  Stocks: {self.n_stocks} ({', '.join(self.symbols)})")
         logger.info(f"  Trading days: {self.frame_bound[1] - self.frame_bound[0] + 1}")
         logger.info(f"  State dimension: {state_dim}")
         logger.info(f"  Action dimension: {self.n_stocks}")
+        if phase == 2:
+            logger.info(f"  Fundamental data: {'✓' if fundamental_df is not None else '✗'}")
+            logger.info(f"  Macro data: {'✓' if macro_df is not None else '✗'}")
 
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict]:
         """Environment'ı başlangıç durumuna döndür"""
@@ -105,6 +152,10 @@ class TradingEnv(gym.Env):
         self.shares_owned = np.zeros(self.n_stocks)
         self.portfolio_values = [self.initial_balance]
         self.trades_history = []
+        self.returns_history = []
+
+        # Reset reward calculator state (DSR için gerekli)
+        self.reward_calculator.reset()
 
         state = self._get_observation()
 
@@ -177,15 +228,37 @@ class TradingEnv(gym.Env):
         current_portfolio_value = self._get_portfolio_value()
         self.portfolio_values.append(current_portfolio_value)
 
-        # Reward hesapla (Faz 1: portfolio value değişimi - komisyon cezası)
-        # Portfolio change as percentage
-        portfolio_change_pct = ((current_portfolio_value - prev_portfolio_value) / prev_portfolio_value) * 100
+        # Günlük getiriyi hesapla ve kaydet
+        portfolio_return = ((current_portfolio_value - prev_portfolio_value) / prev_portfolio_value) * 100
+        self.returns_history.append(portfolio_return)
 
-        # Commission penalty as percentage of initial balance
-        commission_penalty = (total_commission_cost / self.initial_balance) * 100
-
-        # Final reward: portfolio gain minus commission cost
-        reward = portfolio_change_pct - commission_penalty
+        # Reward hesapla (reward type'a göre)
+        if self.reward_type == 'psr':
+            # PSR Reward
+            from env.reward_functions import RewardCalculator
+            if isinstance(self.reward_calculator, RewardCalculator):
+                reward, reward_components = self.reward_calculator.calculate_psr_reward(
+                    portfolio_values=self.portfolio_values,
+                    returns=self.returns_history,
+                    current_step=self.current_step - self.frame_bound[0],  # Relative step
+                    trades_executed=len(self.trades_history),
+                    commission_cost=total_commission_cost,
+                    initial_balance=self.initial_balance
+                )
+            else:
+                reward, reward_components = 0.0, {}
+        else:
+            # Simple Reward (Faz 1 baseline)
+            from env.reward_functions import SimpleRewardCalculator
+            if isinstance(self.reward_calculator, SimpleRewardCalculator):
+                reward, reward_components = self.reward_calculator.calculate_reward(
+                    prev_portfolio_value=prev_portfolio_value,
+                    current_portfolio_value=current_portfolio_value,
+                    commission_cost=total_commission_cost,
+                    initial_balance=self.initial_balance
+                )
+            else:
+                reward, reward_components = 0.0, {}
 
         # Episode sonu kontrolü
         terminated = self.current_step >= self.frame_bound[1]
@@ -201,7 +274,8 @@ class TradingEnv(gym.Env):
             'portfolio_value': current_portfolio_value,
             'shares_owned': self.shares_owned.copy(),
             'action': action,
-            'trades_executed': trades_executed
+            'trades_executed': trades_executed,
+            'reward_components': reward_components  # PSR breakdown için
         }
 
         # Episode bittiğinde metrics ekle
@@ -270,14 +344,14 @@ class TradingEnv(gym.Env):
         """
         Current state'i döndür
 
-        State: [balance, shares_owned[N], features[N*10]]
-        Features per stock: open, high, low, close, volume, macd, rsi, cci, adx, turbulence
+        Faz 1: [balance, shares_owned[N], OHLCV+Technical[N*10]]
+        Faz 2: [balance, shares_owned[N], OHLCV+Technical+Fundamental[N*17], Macro[6]]
         """
         # Balance (normalize with log scale for better range)
-        balance_norm = np.log(self.balance / self.initial_balance + 1)
+        balance_norm = np.log(float(self.balance) / self.initial_balance + 1)
 
         # Shares owned (normalize relative to max possible)
-        shares_norm = self.shares_owned / self.max_shares_per_trade
+        shares_norm = self.shares_owned.astype(np.float32) / self.max_shares_per_trade
 
         # Market features
         features = []
@@ -304,9 +378,17 @@ class TradingEnv(gym.Env):
 
                 # Improved normalization for better neural network learning
                 # Use log-scale for volume to handle large variance
-                volume_norm = np.log(volume / 1e6 + 1) / 3 if volume > 0 else 0
+                # Convert pandas scalar to Python float
+                if isinstance(volume, (int, float, np.integer, np.floating)):
+                    volume_val = float(volume)
+                else:
+                    try:
+                        volume_val = float(volume)  # type: ignore
+                    except:
+                        volume_val = 0.0
+                volume_norm = np.log(volume_val / 1e6 + 1) / 3 if volume_val > 0 else 0.0
 
-                features.extend([
+                stock_features = [
                     (open_price - 50) / 50,      # Center around typical BIST price
                     (high_price - 50) / 50,
                     (low_price - 50) / 50,
@@ -317,18 +399,71 @@ class TradingEnv(gym.Env):
                     np.tanh(cci / 100),          # Bounded CCI
                     (adx - 25) / 25,             # Center ADX around 25
                     np.tanh(turbulence / 2)      # Bounded turbulence
-                ])
+                ]
+
+                # Faz 2: Fundamental ratios ekle
+                if self.phase == 2 and self.fundamental_df is not None:
+                    try:
+                        fund_row = self.fundamental_df.loc[symbol]
+
+                        # 7 fundamental ratios (normalized)
+                        roe = np.tanh(fund_row.get('roe', 0) / 50)           # ROE normalize
+                        roa = np.tanh(fund_row.get('roa', 0) / 20)           # ROA normalize
+                        debt_eq = np.tanh(fund_row.get('debt_to_equity', 0) / 100)
+                        curr_ratio = (fund_row.get('current_ratio', 1.5) - 1.5) / 2
+                        pe_ratio = np.tanh(fund_row.get('pe_ratio', 10) / 30)
+                        pb_ratio = np.tanh(fund_row.get('pb_ratio', 2) / 10)
+                        profit_m = np.tanh(fund_row.get('profit_margin', 0) / 50)
+
+                        stock_features.extend([roe, roa, debt_eq, curr_ratio, pe_ratio, pb_ratio, profit_m])
+                    except KeyError:
+                        # Fundamental data yok, 0 ile doldur
+                        stock_features.extend([0] * 7)
+
+                features.extend(stock_features)
 
             except KeyError:
                 # Veri yoksa 0 ile doldur
-                features.extend([0] * self.features_per_stock)
+                if self.phase == 1:
+                    features.extend([0] * 10)  # OHLCV + Technical
+                else:
+                    features.extend([0] * 17)  # OHLCV + Technical + Fundamental
 
         # State vector oluştur
-        state = np.concatenate([
-            [balance_norm],
-            shares_norm,
-            features
-        ]).astype(np.float32)
+        state_components = [[balance_norm], shares_norm, features]
+
+        # Faz 2: Macro features ekle (tüm stocks için paylaşılan)
+        if self.phase == 2 and self.macro_df is not None:
+            try:
+                # Timezone-aware comparison için current_date'i normalize et
+                current_date_norm = pd.Timestamp(current_date).tz_localize(None)
+
+                # Macro data için current date'e en yakın tarihi bul (forward fill)
+                macro_dates = self.macro_df.index[self.macro_df.index <= current_date_norm]
+                if len(macro_dates) > 0:
+                    macro_date = macro_dates[-1]
+                    macro_row = self.macro_df.loc[macro_date]
+
+                    # 6 macro indicators (normalized)
+                    policy_rate = np.tanh(macro_row.get('policy_rate', 0) / 50)
+                    cpi = np.tanh(macro_row.get('cpi_inflation', 0) / 100)
+                    ppi = np.tanh(macro_row.get('ppi_inflation', 0) / 100)
+                    usd = np.tanh(macro_row.get('usd_try', 30) / 50)
+                    eur = np.tanh(macro_row.get('eur_try', 35) / 50)
+                    bist100 = np.tanh(macro_row.get('bist100_index', 5000) / 10000)
+
+                    macro_features = [policy_rate, cpi, ppi, usd, eur, bist100]
+                else:
+                    # Tarih çok erken, 0 kullan
+                    macro_features = [0] * 6
+
+                state_components.append(macro_features)
+            except Exception as e:
+                logger.warning(f"Macro data error at {current_date}: {e}")
+                state_components.append([0] * 6)
+
+        # Final state vector
+        state = np.concatenate(state_components).astype(np.float32)
 
         return state
 
@@ -336,9 +471,22 @@ class TradingEnv(gym.Env):
         """Hissenin güncel fiyatını döndür (close price)"""
         current_date = self._get_current_date()
         try:
-            return self.df.loc[(symbol, current_date), 'close']
+            price = self.df.loc[(symbol, current_date), 'close']
+            # Convert to float, handling various pandas types
+            if isinstance(price, (int, float, np.integer, np.floating)):
+                return float(price)
+            else:
+                # Try conversion, this handles most pandas scalar types
+                try:
+                    return float(price)  # type: ignore
+                except:
+                    logger.warning(f"Could not convert price to float: {type(price)}")
+                    return 0.0
         except KeyError:
             logger.warning(f"Price not found for {symbol} on {current_date}")
+            return 0.0
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Price conversion error for {symbol} on {current_date}: {e}")
             return 0.0
 
     def _get_current_date(self):

@@ -454,6 +454,24 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="phase">Phase *</label>
+                        <select id="phase" required>
+                            <option value="2" selected>Phase 2 (97 features - Fundamental + Macro)</option>
+                            <option value="1">Phase 1 (56 features - Baseline)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reward_type">Reward Function *</label>
+                        <select id="reward_type" required>
+                            <option value="psr" selected>PSR (Risk-Aware)</option>
+                            <option value="simple">Simple (Baseline)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="n_trials">Trial Sayısı *</label>
                         <input type="number" id="n_trials" value="50" min="1" max="200" required>
                     </div>
@@ -539,6 +557,8 @@
 
                 const data = {
                     algorithm: document.getElementById('algorithm').value,
+                    phase: parseInt(document.getElementById('phase').value),
+                    reward_type: document.getElementById('reward_type').value,
                     n_trials: parseInt(document.getElementById('n_trials').value),
                     total_timesteps: parseInt(document.getElementById('timesteps').value),
                     train_start: document.getElementById('train_start').value,
@@ -652,6 +672,10 @@
                         <strong>Hisseler:</strong> ${study.stock_symbols.join(', ')}
                     </div>
 
+                    <div class="study-info">
+                        <strong>Phase:</strong> ${study.phase || 2} | <strong>Reward:</strong> ${(study.reward_type || 'psr').toUpperCase()}
+                    </div>
+
                     ${study.status === 'running' ? `
                         <div class="progress-bar">
                             <div class="progress-fill" id="progress-${study.study_id}"
@@ -700,6 +724,8 @@
 
                 modalContent.innerHTML = `
                     <div class="study-info"><strong>Algoritma:</strong> ${study.algorithm.toUpperCase()}</div>
+                    <div class="study-info"><strong>Phase:</strong> ${study.phase || 2} (${study.phase === 1 ? '56 features' : '97 features - Fundamental + Macro'})</div>
+                    <div class="study-info"><strong>Reward Function:</strong> ${(study.reward_type || 'psr').toUpperCase()} (${study.reward_type === 'simple' ? 'Baseline' : 'Risk-Aware'})</div>
                     <div class="study-info"><strong>Durum:</strong> ${study.status}</div>
                     <div class="study-info"><strong>Trial Sayısı:</strong> ${study.n_trials}</div>
                     <div class="study-info"><strong>Tamamlanan:</strong> ${study.trials_completed}</div>

@@ -88,6 +88,8 @@ def create_study_info_from_request(
         train_end=request.train_end,
         val_start=request.val_start,
         val_end=request.val_end,
+        phase=request.phase,
+        reward_type=request.reward_type,
         created_at=datetime.now(),
     )
 
@@ -138,9 +140,11 @@ async def run_optimization_background(
             n_trials=request.n_trials,
             n_jobs=1,  # Parallelization handled by PyTorch/TF, not Optuna
             seed=None,  # No seed for better exploration across different algorithms
+            phase=request.phase,  # Phase 2 support
+            reward_type=request.reward_type,  # PSR or simple reward
         )
 
-        logger.info(f"Starting optimization for study {study_id}")
+        logger.info(f"Starting optimization for study {study_id} (Phase {request.phase}, Reward: {request.reward_type.upper()})")
 
         # Run optimization with callback for progress
         def trial_callback(study: optuna.Study, trial: optuna.trial.FrozenTrial):
@@ -363,11 +367,12 @@ async def get_study_detail(study_id: str):
 
             if completed_values:
                 import numpy as np
-                mean_value = float(np.mean(completed_values))
-                median_value = float(np.median(completed_values))
-                std_value = float(np.std(completed_values))
-                min_value = float(np.min(completed_values))
-                max_value = float(np.max(completed_values))
+                values_array = np.array(completed_values)
+                mean_value = float(np.mean(values_array))
+                median_value = float(np.median(values_array))
+                std_value = float(np.std(values_array))
+                min_value = float(np.min(values_array))
+                max_value = float(np.max(values_array))
             else:
                 mean_value = median_value = std_value = min_value = max_value = None
 

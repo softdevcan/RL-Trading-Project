@@ -219,19 +219,24 @@ def build_live_state(
             # Get data for this symbol on target date using the actual index date
             row = market_data.loc[(symbol, matching_date)]
 
-            # OHLCV
-            open_price = row.get('open', 0)
-            high_price = row.get('high', 0)
-            low_price = row.get('low', 0)
-            close_price = row.get('close', 0)
-            volume = row.get('volume', 0)
+            # OHLCV - Convert Series to dict if needed
+            if isinstance(row, pd.Series):
+                row_dict = row.to_dict()
+            else:
+                row_dict = row  # type: ignore
+
+            open_price = row_dict.get('open', 0)  # type: ignore
+            high_price = row_dict.get('high', 0)  # type: ignore
+            low_price = row_dict.get('low', 0)  # type: ignore
+            close_price = row_dict.get('close', 0)  # type: ignore
+            volume = row_dict.get('volume', 0)  # type: ignore
 
             # Technical indicators
-            macd = row.get('macd', 0)
-            rsi = row.get('rsi', 50)
-            cci = row.get('cci', 0)
-            adx = row.get('adx', 0)
-            turbulence = row.get('turbulence', 0) 
+            macd = row_dict.get('macd', 0)  # type: ignore
+            rsi = row_dict.get('rsi', 50)  # type: ignore
+            cci = row_dict.get('cci', 0)  # type: ignore
+            adx = row_dict.get('adx', 0)  # type: ignore
+            turbulence = row_dict.get('turbulence', 0)  # type: ignore 
             # Normalize (same as training)
             volume_norm = np.log(volume / 1e6 + 1) / 3 if volume > 0 else 0
 
@@ -301,7 +306,12 @@ def get_current_prices(market_data: pd.DataFrame, target_date: str) -> Dict[str,
     for symbol in symbols:
         try:
             row = market_data.loc[(symbol, matching_date)]
-            prices[symbol] = float(row['close'])
+            close_price = row['close']
+            # Handle pandas scalar types
+            if isinstance(close_price, (int, float, np.integer, np.floating)):
+                prices[symbol] = float(close_price)
+            else:
+                prices[symbol] = float(close_price)  # type: ignore
         except KeyError:
             logger.warning(f"No price for {symbol} on {actual_date}")
             prices[symbol] = 0.0

@@ -100,6 +100,18 @@ class OptimizationRequest(BaseModel):
         description="Özel study ismi (None ise otomatik)"
     )
 
+    phase: int = Field(
+        2,
+        ge=1,
+        le=2,
+        description="Trading phase (1=56 features, 2=97 features with fundamental+macro)"
+    )
+
+    reward_type: str = Field(
+        "psr",
+        description="Reward function type (simple or psr)"
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -169,6 +181,8 @@ class StudyInfo(BaseModel):
     train_end: str
     val_start: str
     val_end: str
+    phase: int = 2
+    reward_type: str = "psr"
 
     # Progress
     trials_completed: int = 0

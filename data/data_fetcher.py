@@ -7,7 +7,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import os
 import logging
 
@@ -22,7 +22,7 @@ class DataFetcher:
     # Class-level cache to share data across instances
     _cache = {}
 
-    def __init__(self, start_date: str = "2018-01-01", end_date: str = None):
+    def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None):
         """
         Args:
             start_date: Başlangıç tarihi (YYYY-MM-DD)
