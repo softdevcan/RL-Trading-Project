@@ -1,0 +1,96 @@
+{
+  "2025-11-12": {
+    "timestamp": "2025-11-14T00:41:12.264761",
+    "portfolio_before": {
+      "balance": 1000000.0,
+      "shares": {
+        "AKBNK.IS": 0,
+        "THYAO.IS": 0,
+        "TUPRS.IS": 0,
+        "BIMAS.IS": 0,
+        "ASELS.IS": 0
+      },
+      "portfolio_value": 1000000.0
+    },
+    "decisions": [
+      {
+        "symbol": "AKBNK.IS",
+        "action": "BUY",
+        "raw_signal": 0.9854604005813599,
+        "shares": 99,
+        "price": 58.900001525878906,
+        "cost": 5836.931251213073,
+        "revenue": 0.0,
+        "commission": 5.831100151062012,
+        "reason": "Strong buy signal (0.99)",
+        "executed": true
+      },
+      {
+        "symbol": "THYAO.IS",
+        "action": "HOLD",
+        "raw_signal": -1.0,
+        "shares": 0,
+        "price": 268.0,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "No shares to sell",
+        "executed": false
+      },
+      {
+        "symbol": "TUPRS.IS",
+        "action": "HOLD",
+        "raw_signal": -1.0,
+        "shares": 0,
+        "price": 195.10000610351562,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "No shares to sell",
+        "executed": false
+      },
+      {
+        "symbol": "BIMAS.IS",
+        "action": "BUY",
+        "raw_signal": 0.7710517644882202,
+        "shares": 77,
+        "price": 561.5,
+        "cost": 43278.735499999995,
+        "revenue": 0.0,
+        "commission": 43.2355,
+        "reason": "Strong buy signal (0.77)",
+        "executed": true
+      },
+      {
+        "symbol": "ASELS.IS",
+        "action": "BUY",
+        "raw_signal": 1.0,
+        "shares": 100,
+        "price": 183.60000610351562,
+        "cost": 18378.36061096191,
+        "revenue": 0.0,
+        "commission": 18.360000610351562,
+        "reason": "Strong buy signal (1.00)",
+        "executed": true
+      }
+    ],
+    "portfolio_after": {
+      "balance": 932505.9726378251,
+      "shares": {
+        "AKBNK.IS": 99,
+        "THYAO.IS": 0,
+        "TUPRS.IS": 0,
+        "BIMAS.IS": 77,
+        "ASELS.IS": 100
+      },
+      "portfolio_value": 999932.5733992386
+    },
+    "summary": {
+      "total_trades": 3,
+      "total_commission": 67.42660076141358,
+      "daily_return_pct": -0.0067426600761362355,
+      "risk_mode": "aggressive",
+      "max_shares_per_trade": 100
+    }
+  }
+}

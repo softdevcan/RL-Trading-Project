@@ -16,6 +16,33 @@ class DailyTradingManager {
         this.loadModels();
         this.setupEventListeners();
         this.loadLatestPortfolio();
+        this.setDefaultDate();
+    }
+
+    setDefaultDate() {
+        // Set trading date to last weekday (more likely to have data)
+        const date = new Date();
+
+        // Go back until we find a weekday (Mon-Fri)
+        while (date.getDay() === 0 || date.getDay() === 6) {
+            date.setDate(date.getDate() - 1);
+        }
+
+        // Go back 1-2 more days to ensure market data is available
+        date.setDate(date.getDate() - 2);
+
+        // Skip weekend again if needed
+        while (date.getDay() === 0 || date.getDay() === 6) {
+            date.setDate(date.getDate() - 1);
+        }
+
+        const dateStr = date.toISOString().split('T')[0];
+
+        const dateInput = document.getElementById('trading-date');
+        if (dateInput) {
+            dateInput.value = dateStr;
+            console.log('Default trading date set to:', dateStr);
+        }
     }
 
     setupEventListeners() {
@@ -148,12 +175,20 @@ class DailyTradingManager {
             const maxShares = parseInt(document.getElementById('max-shares-slider')?.value || 100);
             console.log('Max shares:', maxShares);
 
+            // Get trading date
+            const tradingDate = document.getElementById('trading-date')?.value;
+            if (!tradingDate) {
+                this.showError('Lütfen bir işlem tarihi seçin');
+                return;
+            }
+            console.log('Trading date:', tradingDate);
+
             // Get balance - FIX: Use correct ID 'current-balance'
             const balance = parseFloat(document.getElementById('current-balance')?.value || 1000000);
             console.log('Balance:', balance);
 
-            // Get shares
-            const symbols = ['ASELS', 'THYAO', 'EREGL', 'KCHOL', 'SAHOL'];
+            // Get shares - PHASE1_SYMBOLS (must match training data)
+            const symbols = ['AKBNK', 'THYAO', 'TUPRS', 'BIMAS', 'ASELS'];
             const shares = {};
             symbols.forEach(symbol => {
                 const input = document.getElementById(`shares-${symbol}`);
@@ -174,7 +209,8 @@ class DailyTradingManager {
                     balance: balance,
                     shares: shares,
                     risk_mode: riskMode,
-                    max_shares_per_trade: maxShares
+                    max_shares_per_trade: maxShares,
+                    date: tradingDate
                 })
             });
 
@@ -205,12 +241,28 @@ class DailyTradingManager {
 
         // Update header
         const dateElement = document.getElementById('decision-date');
-        const portfolioValueElement = document.getElementById('decision-portfolio-value');
-        const returnElement = document.getElementById('decision-return');
+        const portfolioBeforeElement = document.getElementById('portfolio-before');
+        const portfolioAfterElement = document.getElementById('portfolio-after');
+        const returnElement = document.getElementById('daily-return-badge');
 
-        if (dateElement) dateElement.textContent = data.date;
-        if (portfolioValueElement) {
-            portfolioValueElement.textContent =
+        // Show date (with warning if actual_date differs from requested)
+        if (dateElement) {
+            let dateText = data.date;
+            if (data.summary?.actual_date && data.summary.actual_date !== data.summary.requested_date) {
+                dateText += ` (⚠️ ${data.summary.requested_date} için veri yok, ${data.summary.actual_date} kullanıldı)`;
+            }
+            dateElement.textContent = dateText;
+        }
+        if (portfolioBeforeElement) {
+            portfolioBeforeElement.textContent =
+                data.portfolio_before.portfolio_value.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 2
+                });
+        }
+        if (portfolioAfterElement) {
+            portfolioAfterElement.textContent =
                 data.portfolio_after.portfolio_value.toLocaleString('tr-TR', {
                     style: 'currency',
                     currency: 'TRY',
@@ -220,20 +272,34 @@ class DailyTradingManager {
         if (returnElement) {
             const returnPct = data.summary.daily_return_pct || 0;
             returnElement.textContent = returnPct.toFixed(2) + '%';
-            returnElement.className = 'metric-value ' + (returnPct >= 0 ? 'positive' : 'negative');
+            returnElement.className = 'return-badge ' + (returnPct >= 0 ? 'positive' : 'negative');
         }
 
-        // Update summary stats
-        document.getElementById('summary-total-trades').textContent =
-            data.summary.total_trades || 0;
-        document.getElementById('summary-total-commission').textContent =
-            (data.summary.total_commission || 0).toFixed(2) + ' ₺';
-        document.getElementById('summary-buys').textContent =
-            data.summary.buys || 0;
-        document.getElementById('summary-sells').textContent =
-            data.summary.sells || 0;
-        document.getElementById('summary-holds').textContent =
-            data.summary.holds || 0;
+        // Update summary stats (with null checks)
+        const totalTradesEl = document.getElementById('summary-total-trades');
+        const commissionEl = document.getElementById('summary-total-commission');
+
+        if (totalTradesEl) {
+            totalTradesEl.textContent = data.summary.total_trades || 0;
+        }
+        if (commissionEl) {
+            commissionEl.textContent = (data.summary.total_commission || 0).toFixed(2) + ' ₺';
+        }
+
+        // Optional stats (may not exist in HTML or backend)
+        const buysEl = document.getElementById('summary-buys');
+        const sellsEl = document.getElementById('summary-sells');
+        const holdsEl = document.getElementById('summary-holds');
+
+        if (buysEl && data.summary.buys !== undefined) {
+            buysEl.textContent = data.summary.buys;
+        }
+        if (sellsEl && data.summary.sells !== undefined) {
+            sellsEl.textContent = data.summary.sells;
+        }
+        if (holdsEl && data.summary.holds !== undefined) {
+            holdsEl.textContent = data.summary.holds;
+        }
 
         // Update table
         this.updateDecisionsTable(data.decisions);

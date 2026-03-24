@@ -163,8 +163,8 @@ class TechnicalIndicators:
 
         # NaN değerleri forward fill
         indicator_cols = ['macd', 'rsi', 'cci', 'adx', 'turbulence']
-        df[indicator_cols] = df[indicator_cols].fillna(method='ffill')
-        df[indicator_cols] = df[indicator_cols].fillna(method='bfill')
+        df[indicator_cols] = df[indicator_cols].ffill()  # Forward fill
+        df[indicator_cols] = df[indicator_cols].bfill()  # Backward fill
         df[indicator_cols] = df[indicator_cols].fillna(0)
 
         return df

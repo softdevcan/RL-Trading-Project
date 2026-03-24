@@ -44,6 +44,66 @@ async def health_check():
     }
 
 
+@router.get("/hyperparameters/{algorithm}")
+async def get_hyperparameter_studies(algorithm: str):
+    """
+    Get available hyperparameter study results for a specific algorithm
+
+    Args:
+        algorithm: Algorithm name (ppo, a2c, sac, td3)
+
+    Returns:
+        List of hyperparameter study files with metadata
+    """
+    try:
+        studies_dir = "results/hyperparameter_studies"
+
+        if not os.path.exists(studies_dir):
+            return {"studies": []}
+
+        studies = []
+        algorithm_lower = algorithm.lower()
+
+        # Search for JSON files matching the algorithm
+        for filename in os.listdir(studies_dir):
+            if filename.startswith(f"best_params_{algorithm_lower}_") and filename.endswith(".json"):
+                file_path = os.path.join(studies_dir, filename)
+
+                try:
+                    with open(file_path, 'r') as f:
+                        data = json.load(f)
+
+                    # Extract study info
+                    study_info = {
+                        "filename": filename,
+                        "file_path": file_path,
+                        "study_name": data.get("study_name", "Unknown"),
+                        "best_value": data.get("best_value", 0.0),
+                        "best_params": data.get("best_params", {}),
+                        "n_trials": data.get("n_trials", 0),
+                        "timestamp": data.get("timestamp", "Unknown"),
+                        "algorithm": data.get("algorithm", algorithm_lower)
+                    }
+
+                    studies.append(study_info)
+                except Exception as e:
+                    logger.error(f"Error reading {filename}: {e}")
+                    continue
+
+        # Sort by timestamp (newest first)
+        studies.sort(key=lambda x: x["timestamp"], reverse=True)
+
+        return {
+            "algorithm": algorithm,
+            "studies": studies,
+            "total": len(studies)
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching hyperparameter studies: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/train", response_model=TrainingResponse)
 async def start_training(
     request: TrainingRequest,
@@ -160,8 +220,8 @@ async def get_model_metrics(model_name: str):
 @router.post("/data/generate")
 async def generate_data(
     phase: int = 1,
-    start_date: str = None,
-    end_date: str = None
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
 ):
     """
     Generate fresh stock data with indicators
@@ -182,7 +242,7 @@ async def generate_data(
         # Create fetcher with date range
         fetcher = DataFetcher(
             start_date=start_date or "2018-01-01",
-            end_date=end_date
+            end_date=end_date if end_date is not None else None
         )
 
         # Fetch data
@@ -347,6 +407,10 @@ async def run_training(request: TrainingRequest):
         request: Training configuration
     """
     global training_state
+    import time
+
+    # Track total training time
+    training_start_time = time.time()
 
     try:
         # Import training modules
@@ -382,18 +446,59 @@ async def run_training(request: TrainingRequest):
 
         train_df, val_df, test_df = fetcher.split_data(df)
 
+        # Load Phase 2 data if needed
+        fundamental_df = None
+        macro_df = None
+        reward_type = 'simple'  # Default
+        
+        if request.phase == 2:
+            try:
+                from data.fundamental_fetcher import FundamentalDataFetcher
+                from data.macro_fetcher import MacroDataFetcher
+                
+                # Load fundamental data
+                fund_fetcher = FundamentalDataFetcher()
+                try:
+                    fundamental_df = fund_fetcher.load_data('fundamental_data.csv')
+                    logger.info(f"Loaded fundamental data: {fundamental_df.shape}")
+                except FileNotFoundError:
+                    logger.warning("Fundamental data not found, fetching...")
+                    fundamental_df = fund_fetcher.fetch_fundamental_data(symbols, save=True)
+                
+                # Load macro data  
+                macro_fetcher = MacroDataFetcher(api_key="tV4qq6RzPr")
+                try:
+                    macro_df = macro_fetcher.load_data('macro_data.csv')
+                    logger.info(f"Loaded macro data: {macro_df.shape}")
+                except FileNotFoundError:
+                    logger.warning("Macro data not found, fetching...")
+                    macro_df = macro_fetcher.fetch_macro_data(save=True)
+                
+                # Phase 2 uses PSR reward
+                reward_type = 'psr'
+                logger.info("Phase 2: Using PSR reward with fundamental + macro data")
+                
+            except Exception as e:
+                logger.error(f"Error loading Phase 2 data: {e}")
+                raise
+
         # Create environment factory function
         def make_training_env():
             return make_env(
                 df=train_df,
                 initial_balance=request.initial_balance,
                 commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade
+                max_shares_per_trade=request.max_shares_per_trade,
+                phase=request.phase,
+                reward_type=reward_type,
+                fundamental_df=fundamental_df,
+                macro_df=macro_df
             )
 
         # Create one instance to get dimensions
         temp_env = make_training_env()
-        action_dim = temp_env.action_space.shape[0]
+        action_space_shape = temp_env.action_space.shape
+        action_dim = action_space_shape[0] if action_space_shape is not None else 0
         n_stocks = temp_env.n_stocks
         logger.info(f"Environment dimensions: action_dim={action_dim}, n_stocks={n_stocks}")
 
@@ -412,24 +517,40 @@ async def run_training(request: TrainingRequest):
         os.makedirs('logs', exist_ok=True)
         model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Load hyperparameters if study is specified
+        hyperparams = {}
+        if request.hyperparameter_study:
+            study_path = os.path.join("results/hyperparameter_studies", request.hyperparameter_study)
+            if os.path.exists(study_path):
+                with open(study_path, 'r') as f:
+                    study_data = json.load(f)
+                    hyperparams = study_data.get("best_params", {})
+                    logger.info(f"Loaded hyperparameters from {request.hyperparameter_study}")
+                    logger.info(f"Best params: {hyperparams}")
+            else:
+                logger.warning(f"Hyperparameter study file not found: {study_path}")
+
         # Algorithm-specific hyperparameters optimized for trading
         # Each algorithm has its own optimal learning rate
+        actual_learning_rate = None  # Track actual LR used
+
         if request.algorithm == "PPO":
             # PPO: Most stable for single-threaded training
-            # Optimal learning rate for PPO in trading: 0.0003
+            # Use hyperparameters from study or defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0003)
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0003,   # PPO-specific optimal LR
-                n_steps=2048,           # Number of steps to run for each environment per update
-                batch_size=64,          # Minibatch size
-                n_epochs=10,            # Number of epochs when optimizing surrogate loss
-                gamma=0.99,             # Discount factor
-                gae_lambda=0.95,        # Factor for trade-off of bias vs variance for GAE
-                clip_range=0.2,         # Clipping parameter for PPO
-                ent_coef=0.15,          # INCREASED from 0.05 to 0.15 for much more exploration!
-                vf_coef=0.5,            # Value function coefficient
-                max_grad_norm=0.5,      # Gradient clipping
+                learning_rate=actual_learning_rate,
+                n_steps=hyperparams.get('n_steps', 2048),
+                batch_size=hyperparams.get('batch_size', 64),
+                n_epochs=hyperparams.get('n_epochs', 10),
+                gamma=hyperparams.get('gamma', 0.99),
+                gae_lambda=hyperparams.get('gae_lambda', 0.95),
+                clip_range=hyperparams.get('clip_range', 0.2),
+                ent_coef=hyperparams.get('ent_coef', 0.15),
+                vf_coef=hyperparams.get('vf_coef', 0.5),
+                max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
                 tensorboard_log='logs',
                 verbose=1
             )
@@ -438,85 +559,87 @@ async def run_training(request: TrainingRequest):
             # Best for: Fast training, stable convergence, trading environments
             # Paper: "Asynchronous Methods for Deep Reinforcement Learning" (Mnih et al., 2016)
 
-            # Trading-optimized hyperparameters based on quant research:
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0007)
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0007,   # Slightly higher than PPO (on-policy needs faster updates)
-                n_steps=256,            # REDUCED from 512: More frequent updates for volatile markets
-                                        # Lower n_steps = faster reaction to market changes
-                gamma=0.99,             # Standard discount factor for financial RL
-                gae_lambda=0.95,        # Generalized Advantage Estimation (bias-variance tradeoff)
-                ent_coef=0.01,          # REDUCED from 0.15: A2C needs LOWER entropy than PPO!
-                                        # A2C is naturally more explorative due to on-policy nature
-                                        # High entropy causes excessive random trading
-                vf_coef=0.25,           # REDUCED from 0.5: Lower value loss weight
-                                        # Prevents value function from dominating policy updates
-                max_grad_norm=0.5,      # Gradient clipping (prevents exploding gradients)
-                normalize_advantage=True,  # Critical for trading: normalizes profit/loss scales
-                use_rms_prop=True,      # RMSprop optimizer (original A2C paper)
-                                        # Better than Adam for on-policy algorithms
-                rms_prop_eps=1e-5,      # RMSprop epsilon for numerical stability
+                learning_rate=actual_learning_rate,
+                n_steps=hyperparams.get('n_steps', 256),
+                gamma=hyperparams.get('gamma', 0.99),
+                gae_lambda=hyperparams.get('gae_lambda', 0.95),
+                ent_coef=hyperparams.get('ent_coef', 0.01),
+                vf_coef=hyperparams.get('vf_coef', 0.25),
+                max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
+                normalize_advantage=True,
+                use_rms_prop=True,
+                rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
                 tensorboard_log='logs',
                 verbose=1
             )
         elif request.algorithm == "TD3":
             # TD3: Twin Delayed DDPG - for continuous action spaces
-            # Optimal learning rate for TD3: 0.001
             from stable_baselines3.common.noise import NormalActionNoise
 
-            # Add action noise for exploration - INCREASED for more aggressive trading
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.001)
+
+            # Action noise for exploration
             action_noise = NormalActionNoise(
-                mean=np.zeros(action_dim),  # Use dimension from base_env
-                sigma=0.2 * np.ones(action_dim)  # INCREASED from 0.1 to 0.2
+                mean=np.zeros(action_dim),
+                sigma=0.2 * np.ones(action_dim)
             )
 
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.001,    # TD3-specific optimal LR
-                buffer_size=100000,     # Replay buffer size
-                learning_starts=1000,   # Start learning after this many steps
-                batch_size=256,         # Larger batch for off-policy learning
-                tau=0.005,              # Soft update coefficient
-                gamma=0.99,
-                train_freq=1,           # Update the model every step
-                gradient_steps=1,
+                learning_rate=actual_learning_rate,
+                buffer_size=hyperparams.get('buffer_size', 100000),
+                learning_starts=hyperparams.get('learning_starts', 1000),
+                batch_size=hyperparams.get('batch_size', 256),
+                tau=hyperparams.get('tau', 0.005),
+                gamma=hyperparams.get('gamma', 0.99),
+                train_freq=hyperparams.get('train_freq', 1),
+                gradient_steps=hyperparams.get('gradient_steps', 1),
                 action_noise=action_noise,
-                policy_delay=2,         # Delay policy updates (TD3 feature)
-                target_policy_noise=0.3,  # INCREASED from 0.2 to 0.3 - Noise added to target policy
-                target_noise_clip=0.5,  # Clip the noise
+                policy_delay=hyperparams.get('policy_delay', 2),
+                target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
+                target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
                 tensorboard_log='logs',
                 verbose=1
             )
         elif request.algorithm == "SAC":
             # SAC: Soft Actor-Critic - State of the art for continuous control
-            # Generally the BEST algorithm for continuous action spaces like trading
-            # Optimal learning rate for SAC: 0.0003
+            # Use hyperparameters from study or trading-optimized defaults
+            actual_learning_rate = hyperparams.get('learning_rate', 0.0003)
+
+            # Handle ent_coef: can be 'auto', 'auto_X', or float
+            ent_coef = hyperparams.get('ent_coef', 'auto_0.5')
+
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=0.0003,   # SAC-specific optimal LR
-                buffer_size=100000,     # Replay buffer size
-                learning_starts=1000,   # Start learning after this many steps
-                batch_size=256,         # Batch size for each gradient update
-                tau=0.005,              # Soft update coefficient for target networks
-                gamma=0.99,             # Discount factor
-                train_freq=1,           # Update the model every step
-                gradient_steps=1,       # Number of gradient steps per update
-                ent_coef='auto_0.5',    # INCREASED initial entropy target (was 'auto')
-                                        # This will start with higher exploration
-                target_update_interval=1,  # Update target network every step
-                use_sde=False,          # Don't use State Dependent Exploration (we have entropy)
+                learning_rate=actual_learning_rate,
+                buffer_size=hyperparams.get('buffer_size', 100000),
+                learning_starts=hyperparams.get('learning_starts', 1000),
+                batch_size=hyperparams.get('batch_size', 256),
+                tau=hyperparams.get('tau', 0.005),
+                gamma=hyperparams.get('gamma', 0.99),
+                train_freq=hyperparams.get('train_freq', 1),
+                gradient_steps=hyperparams.get('gradient_steps', 1),
+                ent_coef=ent_coef,
+                target_update_interval=hyperparams.get('target_update_interval', 1),
+                use_sde=hyperparams.get('use_sde', False),
                 tensorboard_log='logs',
                 verbose=1
             )
         else:
             # Fallback to default settings with high exploration
+            actual_learning_rate = request.learning_rate
             model = model_class(
                 'MlpPolicy',
                 env,
-                learning_rate=request.learning_rate,
+                learning_rate=actual_learning_rate,
                 tensorboard_log='logs',
                 verbose=1
             )
@@ -530,9 +653,12 @@ async def run_training(request: TrainingRequest):
         )
 
         # Log training environment metrics (for debugging)
-        train_metrics = env.envs[0].get_metrics()
-        logger.info(f"Training metrics: total_trades={train_metrics['total_trades']}, "
-                   f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
+        from env.trading_env import TradingEnv
+        train_env = env.envs[0]
+        if isinstance(train_env, TradingEnv):
+            train_metrics = train_env.get_metrics()
+            logger.info(f"Training metrics: total_trades={train_metrics['total_trades']}, "
+                       f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
 
         # Save model
         os.makedirs('models', exist_ok=True)
@@ -545,7 +671,11 @@ async def run_training(request: TrainingRequest):
                 df=test_df,
                 initial_balance=request.initial_balance,
                 commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade
+                max_shares_per_trade=request.max_shares_per_trade,
+                phase=request.phase,
+                reward_type=reward_type,
+                fundamental_df=fundamental_df,
+                macro_df=macro_df
             )
 
         test_env = DummyVecEnv([make_test_env])
@@ -555,7 +685,11 @@ async def run_training(request: TrainingRequest):
         test_step = 0
 
         # Track the actual environment instance
-        actual_env = test_env.envs[0]
+        from env.trading_env import TradingEnv
+        actual_env_raw = test_env.envs[0]
+        if not isinstance(actual_env_raw, TradingEnv):
+            raise TypeError("Expected TradingEnv instance")
+        actual_env: TradingEnv = actual_env_raw
 
         while not done[0]:  # DummyVecEnv returns array
             action, _states = model.predict(obs, deterministic=False)  # Stochastic for better exploration
@@ -613,6 +747,9 @@ async def run_training(request: TrainingRequest):
         # Save portfolio values history
         portfolio_history = [float(v) for v in actual_env.portfolio_values]
 
+        # Calculate total training time
+        total_training_time = time.time() - training_start_time
+
         # Save metrics
         os.makedirs('results', exist_ok=True)
         metrics_file = f'results/{model_name}_metrics.json'
@@ -622,14 +759,22 @@ async def run_training(request: TrainingRequest):
             "algorithm": request.algorithm,
             "phase": request.phase,
             "total_timesteps": request.total_timesteps,
-            "learning_rate": request.learning_rate,
+            "learning_rate": actual_learning_rate,  # Actual LR used
+            "requested_learning_rate": request.learning_rate,  # Original request for reference
+            "hyperparameter_study": request.hyperparameter_study,  # Study file used (if any)
+            "hyperparameters_used": hyperparams if hyperparams else {},  # All hyperparams used
             "trained_at": datetime.now().isoformat(),
+            "training_time_seconds": total_training_time,
+            "training_time_minutes": total_training_time / 60,
+            "training_time_hours": total_training_time / 3600,
             "trades": trades_data,
             "portfolio_history": portfolio_history
         }
 
         with open(metrics_file, 'w') as f:
             json.dump(metrics_with_config, f, indent=2)
+
+        logger.info(f"✅ Training completed in {total_training_time/60:.2f} minutes ({total_training_time:.1f}s)")
 
         # Update training state
         training_state["is_training"] = False
@@ -774,12 +919,17 @@ async def get_daily_decision(request: DailyDecisionRequest):
                 / portfolio_before["portfolio_value"] * 100
             )
 
+        # Get actual date used (may differ from requested date)
+        actual_date = market_data.attrs.get('actual_date', target_date)
+
         summary = {
             "total_trades": total_trades,
             "total_commission": round(total_commission, 2),
             "daily_return_pct": round(daily_return_pct, 2),
             "risk_mode": request.risk_mode,
-            "max_shares_per_trade": request.max_shares_per_trade
+            "max_shares_per_trade": request.max_shares_per_trade,
+            "actual_date": actual_date,
+            "requested_date": target_date
         }
 
         # 10. Save decision

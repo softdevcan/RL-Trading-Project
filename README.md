@@ -130,16 +130,20 @@ tensorboard --logdir=logs
 ### Test Scriptleri
 
 ```bash
-# Tüm testler tests/ klasöründe
-
-# Environment testi (48 işlem)
+# Environment testi
 python tests/test_env.py
 
-# PPO algoritması testi (67 işlem, 39.59% return)
+# PPO algoritması testi
 python tests/test_ppo.py
 
 # Tüm algoritmaları karşılaştır
 python tests/test_all_algorithms.py
+
+# Benchmark stratejileri
+python scripts/benchmarking/test_benchmarks.py
+
+# Akademik rapor oluştur
+python scripts/analysis/generate_academic_report.py
 ```
 
 ---
@@ -247,11 +251,11 @@ RL-Trading-Project/
 │   └── main.py                 # FastAPI app
 │
 ├── 📁 static/                   # Frontend
-│   ├── index.html              # Ana sayfa (292 satır)
-│   ├── css/styles.css          # Stiller (392 satır)
-│   └── js/dashboard.js         # JavaScript (465 satır)
+│   ├── index.html              # Ana sayfa
+│   ├── css/styles.css          # Stiller
+│   └── js/dashboard.js         # JavaScript
 │
-├── 📁 data/                     # Veri işleme
+├── 📁 data/                     # Veri İşleme
 │   ├── bist30_symbols.py       # Hisse listesi
 │   ├── data_fetcher.py         # Veri çekme (yfinance)
 │   └── technical_indicators.py # Teknik indikatörler
@@ -259,22 +263,25 @@ RL-Trading-Project/
 ├── 📁 env/                      # RL Environment
 │   └── trading_env.py          # Gymnasium environment
 │
-├── 📁 models/                   # Eğitilmiş modeller (.zip)
-├── 📁 results/                  # Metrikler (.json)
-│
-├── 📁 scripts/                  # Utility scripts
-│   ├── train_a2c_phase1.py    # Standalone eğitim
-│   ├── debug_model_actions.py # Model debug aracı
-│   └── generate_academic_report.py # Akademik rapor
+├── 📁 scripts/                  # Utility Scripts
+│   ├── training/               # Model eğitimi
+│   ├── benchmarking/           # Performans testleri
+│   ├── analysis/               # Analiz ve raporlama
+│   └── debug/                  # Debug araçları
 │
 ├── 📁 docs/                     # Dokümantasyon
-│   ├── development.md         # Geliştirme planı
-│   ├── ACADEMIC_GUIDE.md      # Akademik kullanım rehberi
-│   └── ALGORITHMS.md          # Algoritma karşılaştırması
+│   ├── guides/                 # Kullanım kılavuzları
+│   ├── development/            # Geliştirme notları
+│   └── phase2/                 # Faz 2 dokümanları
 │
-├── run_server.py               # Server launcher
-├── requirements.txt            # Dependencies
-└── README.md                   # Bu dosya
+├── 📁 models/                   # Eğitilmiş modeller (.zip)
+├── 📁 results/                  # Metrikler ve raporlar
+├── 📁 logs/                     # TensorBoard logs
+├── 📁 tests/                    # Unit tests
+│
+├── 📄 run_server.py            # Server launcher
+├── 📄 requirements.txt         # Dependencies
+└── 📄 README.md                # Ana README
 ```
 
 ### Modül Bağımlılıkları
@@ -302,7 +309,7 @@ Projeye **akademik yayın kalitesinde** analiz ve görselleştirme sistemi eklen
 
 ```bash
 # Tüm modelleri karşılaştır ve akademik rapor oluştur
-python scripts/generate_academic_report.py
+python generate_academic_report.py
 ```
 
 **Oluşturulan Çıktılar:**
@@ -548,6 +555,22 @@ Bu proje akademik bir çalışmadır. Katkılarınız için:
 
 ---
 
+## 📚 Dokümantasyon
+
+Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın:
+
+### Kullanım Kılavuzları
+- [**Algoritma Karşılaştırması**](docs/guides/ALGORITHMS.md) - PPO, A2C, TD3
+- [**Akademik Analiz**](docs/guides/ACADEMIC_GUIDE.md) - Raporlama ve metrikler
+- [**Hyperparameter Optimization**](docs/guides/API_HYPEROPT_GUIDE.md) - Optuna entegrasyonu
+- [**GPU Performans**](docs/guides/GPU_PERFORMANCE_GUIDE.md) - GPU testleri
+
+### Geliştirme
+- [**Geliştirme Planı**](docs/development/development.md) - Roadmap ve sprint planı
+- [**Hyperopt İyileştirmeleri**](docs/development/HYPEROPT_IMPROVEMENTS_SUMMARY.md)
+
+---
+
 ## 📚 Referanslar
 
 **Ana Makale:**
@@ -580,7 +603,7 @@ MIT License - Eğitim amaçlı kullanım için serbesttir.
 
 ## 📞 İletişim
 
-Sorularınız için: docs/development.md dosyasına bakın veya issue açın.
+Sorularınız için: development.md dosyasına bakın veya issue açın.
 
 ---
 

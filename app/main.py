@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.api.routes import health, items, trading
+from app.api.routes import health, items, trading, hyperopt
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import os
@@ -34,6 +34,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(items.router)
 app.include_router(trading.router, prefix="/api")
+app.include_router(hyperopt.router, prefix="/api")
 
 # Serve static files (for web UI)
 if not os.path.exists("static"):
@@ -58,6 +59,25 @@ async def serve_ui():
         </body>
     </html>
     """
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Serve favicon to prevent 404 errors"""
+    from fastapi.responses import FileResponse
+    favicon_path = "static/favicon.ico"
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    # Return 204 No Content instead of 404
+    from fastapi.responses import Response
+    return Response(status_code=204)
+
+
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools():
+    """Chrome DevTools metadata endpoint"""
+    from fastapi.responses import Response
+    return Response(status_code=204)
 
 
 @app.on_event("startup")

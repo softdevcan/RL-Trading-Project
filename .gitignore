@@ -39,14 +39,37 @@ Thumbs.db
 
 # Logs
 *.log
+logs/tensorboard/
+logs/*.txt
 logs/
+models/
 
 # Models and Data (RL Trading specific)
-models/
-*.zip
+models/*.zip
+models/*.pt
+models/*.pth
+results/figures/
+results/latex/
+results/data/*.csv
+results/data/*.json
 results/
 *.csv
+data/raw/
+data/processed/
 data/*.csv
 
 # Tensorboard
 runs/
+
+# Temporary files
+*.tmp
+*.bak
+.~*
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Project specific
+reviews/
+PROJECT_STRUCTURE.md

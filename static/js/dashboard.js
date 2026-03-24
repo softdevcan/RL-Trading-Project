@@ -156,6 +156,12 @@ function initTrainingForm() {
             max_shares_per_trade: 100
         };
 
+        // Add hyperparameter study if selected
+        const hyperparamStudy = document.getElementById('hyperparameter_study').value;
+        if (hyperparamStudy) {
+            formData.hyperparameter_study = hyperparamStudy;
+        }
+
         try {
             const response = await fetch('/api/trading/train', {
                 method: 'POST',
@@ -165,21 +171,43 @@ function initTrainingForm() {
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            // Try to parse JSON response
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                showError('❌ Sunucu yanıt hatası. Lütfen tekrar deneyin.');
+                return;
+            }
 
             if (response.ok) {
-                // Training started - just wait for completion
-                document.getElementById('trainButton').disabled = true;
-                document.getElementById('trainButton').textContent = '⏳ Eğitim Devam Ediyor...';
+                // Training started - set state and start polling
+                isTraining = true;
+                const trainButton = document.getElementById('trainButton');
+                if (trainButton) {
+                    trainButton.disabled = true;
+                    trainButton.textContent = '⏳ Eğitim Devam Ediyor...';
+                }
+
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.style.display = 'block';
+                }
+
                 updateStatus('training');
+
+                // Start polling for status updates
+                startStatusCheck();
 
                 // Show success message
                 showError('✅ Eğitim başlatıldı! Bu işlem birkaç dakika sürebilir. Model eğitimi tamamlandığında bu sayfa otomatik olarak güncellenecek.', 'success');
             } else {
-                showError(data.detail || 'Eğitim başlatılamadı');
+                showError('❌ ' + (data.detail || 'Eğitim başlatılamadı'));
             }
         } catch (error) {
-            showError('API bağlantı hatası: ' + error.message);
+            console.error('Training request error:', error);
+            showError('❌ API bağlantı hatası: ' + error.message);
         }
     });
 }
@@ -194,10 +222,17 @@ async function checkStatus() {
 
         if (data.is_training) {
             const progress = (data.progress * 100).toFixed(1);
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressBar').textContent = progress + '%';
-            document.getElementById('stepInfo').textContent =
-                `Step: ${data.current_step.toLocaleString()} / ${data.total_steps.toLocaleString()}`;
+
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+            }
+
+            const stepInfo = document.getElementById('stepInfo');
+            if (stepInfo) {
+                stepInfo.textContent = `Step: ${data.current_step.toLocaleString()} / ${data.total_steps.toLocaleString()}`;
+            }
 
             // Update training progress chart
             updateTrainingChart(data.current_step, data.progress);
@@ -206,12 +241,22 @@ async function checkStatus() {
                 // Training just finished
                 isTraining = false;
                 updateStatus('idle');
-                document.getElementById('trainButton').disabled = false;
-                document.getElementById('progressContainer').style.display = 'none';
+
+                const trainButton = document.getElementById('trainButton');
+                if (trainButton) {
+                    trainButton.disabled = false;
+                    trainButton.textContent = '🚀 Eğitimi Başlat';
+                }
+
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
 
                 if (data.error) {
-                    showError('Eğitim hatası: ' + data.error);
+                    showError('❌ Eğitim hatası: ' + data.error);
                 } else if (data.metrics) {
+                    showError('✅ Eğitim başarıyla tamamlandı! Model kaydedildi.', 'success');
                     updateMetrics(data.metrics);
                     loadModels();
                 }
@@ -435,9 +480,10 @@ function updateComparisonChart(models) {
 /**
  * Error Handling
  */
-function showError(message) {
+function showError(message, type = 'error') {
     const errorContainer = document.getElementById('errorContainer');
-    errorContainer.innerHTML = `<div class="error">${message}</div>`;
+    const className = type === 'success' ? 'success' : 'error';
+    errorContainer.innerHTML = `<div class="${className}">${message}</div>`;
     setTimeout(() => {
         errorContainer.innerHTML = '';
     }, 5000);
@@ -453,6 +499,8 @@ function init() {
     loadModels();
     checkStatus();
     initDataForm();
+    // Load hyperparameter studies for the default selected algorithm
+    loadHyperparameterStudies();
     console.log('Dashboard initialized successfully!');
 }
 
@@ -1085,6 +1133,49 @@ function renderComparisonChart(models) {
             }
         }
     });
+}
+
+/**
+ * Load Hyperparameter Studies for Selected Algorithm
+ */
+async function loadHyperparameterStudies() {
+    const algorithm = document.getElementById('algorithm').value;
+    const hyperparamSelect = document.getElementById('hyperparameter_study');
+    const hyperparamSection = document.getElementById('hyperparameter-selection');
+
+    try {
+        const response = await fetch(`/api/trading/hyperparameters/${algorithm}`);
+        const data = await response.json();
+
+        // Clear existing options except the first one
+        hyperparamSelect.innerHTML = '<option value="">Varsayılan parametreleri kullan</option>';
+
+        if (data.studies && data.studies.length > 0) {
+            // Add studies as options
+            data.studies.forEach(study => {
+                const option = document.createElement('option');
+                option.value = study.filename;
+
+                // Format the option text
+                const date = new Date(study.timestamp);
+                const formattedDate = date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
+                const bestValue = study.best_value ? study.best_value.toFixed(3) : 'N/A';
+
+                option.textContent = `${study.study_name} (Best: ${bestValue}, Trials: ${study.n_trials}) - ${formattedDate}`;
+                hyperparamSelect.appendChild(option);
+            });
+
+            // Show the section
+            hyperparamSection.style.display = 'block';
+        } else {
+            // No studies found, hide the section
+            hyperparamSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading hyperparameter studies:', error);
+        // Hide section on error
+        hyperparamSection.style.display = 'none';
+    }
 }
 
 // Run on page load
