@@ -97,7 +97,7 @@ state = [
 
 ### 1.4 İlk RL Modeli ✅
 
-- [x] A2C model eğitimi ✅ `train_a2c_phase1.py`
+- [x] A2C model eğitimi ✅ `scripts/train_a2c_phase1.py`
 - [x] PPO model eğitimi ✅ (En kararlı - önerilen)
 - [x] TD3 model eğitimi ✅ (Experience replay ile)
 - [x] Stable-Baselines3 entegrasyonu ✅

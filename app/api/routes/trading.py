@@ -976,7 +976,7 @@ async def get_model_comparison():
         if not os.path.exists(results_file):
             raise HTTPException(
                 status_code=404,
-                detail="No analysis results found. Please run generate_academic_report.py first"
+                detail="No analysis results found. Please run scripts/generate_academic_report.py first"
             )
 
         with open(results_file, 'r') as f:
@@ -1008,7 +1008,7 @@ async def get_best_models():
         if not os.path.exists(results_file):
             raise HTTPException(
                 status_code=404,
-                detail="No analysis results found. Please run generate_academic_report.py first"
+                detail="No analysis results found. Please run scripts/generate_academic_report.py first"
             )
 
         with open(results_file, 'r') as f:
@@ -1058,7 +1058,7 @@ async def generate_analysis_report(background_tasks: BackgroundTasks):
     try:
         # Run the analysis script in background
         def run_analysis():
-            subprocess.run(['python', 'generate_academic_report.py'], check=True)
+            subprocess.run(['python', 'scripts/generate_academic_report.py'], check=True)
 
         background_tasks.add_task(run_analysis)
 

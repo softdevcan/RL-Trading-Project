@@ -32,7 +32,7 @@ python run_server.py
 ### 2. Akademik Raporu Oluşturun
 
 ```bash
-python generate_academic_report.py
+python scripts/generate_academic_report.py
 ```
 
 **Çıktı:**
@@ -446,7 +446,7 @@ MDD = \min_{t \in [0,T]} \left( \frac{V_t - \max_{s \leq t} V_s}{\max_{s \leq t}
 
 Sorularınız için:
 - README.md dosyasını inceleyin
-- generate_academic_report.py scriptini çalıştırın
+- scripts/generate_academic_report.py scriptini çalıştırın
 - results/ANALYSIS_REPORT.txt dosyasını okuyun
 
 **Başarılar dilerim! 🎓**

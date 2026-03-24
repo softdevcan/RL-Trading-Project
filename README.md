@@ -262,11 +262,19 @@ RL-Trading-Project/
 ├── 📁 models/                   # Eğitilmiş modeller (.zip)
 ├── 📁 results/                  # Metrikler (.json)
 │
-├── train_a2c_phase1.py         # Standalone eğitim
+├── 📁 scripts/                  # Utility scripts
+│   ├── train_a2c_phase1.py    # Standalone eğitim
+│   ├── debug_model_actions.py # Model debug aracı
+│   └── generate_academic_report.py # Akademik rapor
+│
+├── 📁 docs/                     # Dokümantasyon
+│   ├── development.md         # Geliştirme planı
+│   ├── ACADEMIC_GUIDE.md      # Akademik kullanım rehberi
+│   └── ALGORITHMS.md          # Algoritma karşılaştırması
+│
 ├── run_server.py               # Server launcher
 ├── requirements.txt            # Dependencies
-├── README.md                   # Bu dosya
-└── development.md              # Geliştirme planı
+└── README.md                   # Bu dosya
 ```
 
 ### Modül Bağımlılıkları
@@ -294,7 +302,7 @@ Projeye **akademik yayın kalitesinde** analiz ve görselleştirme sistemi eklen
 
 ```bash
 # Tüm modelleri karşılaştır ve akademik rapor oluştur
-python generate_academic_report.py
+python scripts/generate_academic_report.py
 ```
 
 **Oluşturulan Çıktılar:**
@@ -572,7 +580,7 @@ MIT License - Eğitim amaçlı kullanım için serbesttir.
 
 ## 📞 İletişim
 
-Sorularınız için: development.md dosyasına bakın veya issue açın.
+Sorularınız için: docs/development.md dosyasına bakın veya issue açın.
 
 ---
 
