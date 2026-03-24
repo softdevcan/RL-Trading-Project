@@ -20,7 +20,7 @@ class TechnicalIndicators:
     """Ansari et al. teknik indikatörleri"""
 
     @staticmethod
-    def calculate_macd(df: pd.DataFrame, fast=12, slow=26, signal=9) -> pd.Series:
+    def calculate_macd(df: pd.DataFrame, fast=12, slow=26, signal=9):
         """
         MACD (Moving Average Convergence Divergence)
 
@@ -28,15 +28,17 @@ class TechnicalIndicators:
             df: DataFrame with 'close' column
             fast: Fast EMA period (default 12)
             slow: Slow EMA period (default 26)
-            signal: Signal line period (default 9)
+            signal: Signal line EMA period (default 9)
 
         Returns:
-            MACD line (fast EMA - slow EMA)
+            Tuple of (macd_line, signal_line, histogram)
         """
         ema_fast = df['close'].ewm(span=fast, adjust=False).mean()
         ema_slow = df['close'].ewm(span=slow, adjust=False).mean()
         macd = ema_fast - ema_slow
-        return macd
+        signal_line = macd.ewm(span=signal, adjust=False).mean()
+        histogram = macd - signal_line
+        return macd, signal_line, histogram
 
     @staticmethod
     def calculate_rsi(df: pd.DataFrame, period=14) -> pd.Series:
@@ -55,10 +57,11 @@ class TechnicalIndicators:
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
 
-        avg_gain = gain.rolling(window=period, min_periods=1).mean()
-        avg_loss = loss.rolling(window=period, min_periods=1).mean()
+        # Wilder's EMA (Wilder 1978)
+        avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
 
-        rs = avg_gain / avg_loss
+        rs = avg_gain / avg_loss.replace(0, np.nan)
         rsi = 100 - (100 / (1 + rs))
 
         return rsi
@@ -108,39 +111,37 @@ class TechnicalIndicators:
         plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0)
         minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0)
 
-        # Smoothed values
-        atr = pd.Series(tr).rolling(window=period).mean()
-        plus_di = 100 * pd.Series(plus_dm).rolling(window=period).mean() / atr
-        minus_di = 100 * pd.Series(minus_dm).rolling(window=period).mean() / atr
+        # Wilder's EMA smoothing (Wilder 1978)
+        atr = pd.Series(tr).ewm(alpha=1/period, adjust=False).mean()
+        plus_di = 100 * pd.Series(plus_dm).ewm(alpha=1/period, adjust=False).mean() / atr
+        minus_di = 100 * pd.Series(minus_dm).ewm(alpha=1/period, adjust=False).mean() / atr
 
-        # DX and ADX
-        dx = 100 * np.abs(plus_di - minus_di) / (plus_di + minus_di)
-        adx = dx.rolling(window=period).mean()
+        # DX and ADX — guard against division by zero (#8)
+        denominator = plus_di + minus_di
+        dx = pd.Series(np.where(denominator > 0,
+                                100 * np.abs(plus_di - minus_di) / denominator,
+                                0))
+        adx = dx.ewm(alpha=1/period, adjust=False).mean()
 
         return adx
 
     @staticmethod
     def calculate_turbulence(df: pd.DataFrame, window=252) -> pd.Series:
         """
-        Turbulence Index (Ansari et al.)
-        Measures market volatility/turbulence
+        Turbulence Index — symbol-level fallback (rolling volatility).
+        For the proper cross-sectional Mahalanobis turbulence, use
+        add_indicators_to_multi_symbol_df() which operates on all symbols.
 
         Args:
             df: DataFrame with 'close' column
             window: Rolling window (default 252 = 1 year)
 
         Returns:
-            Turbulence values
+            Turbulence values (normalised rolling volatility * 100)
         """
-        # Basit volatilite metriği olarak rolling std kullanıyoruz
-        # Normalize edilmiş volatilite
         returns = df['close'].pct_change()
         volatility = returns.rolling(window=window, min_periods=20).std()
-
-        # Turbulence = volatility * 100
-        turbulence = volatility * 100
-
-        return turbulence.fillna(0)
+        return (volatility * 100).fillna(0)
 
     def add_all_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -155,19 +156,67 @@ class TechnicalIndicators:
         df = df.copy()
 
         # Her indikatörü hesapla
-        df['macd'] = self.calculate_macd(df)
+        macd, macd_signal, macd_hist = self.calculate_macd(df)
+        df['macd'] = macd
+        df['macd_signal'] = macd_signal
+        df['macd_hist'] = macd_hist
         df['rsi'] = self.calculate_rsi(df)
         df['cci'] = self.calculate_cci(df)
         df['adx'] = self.calculate_adx(df)
         df['turbulence'] = self.calculate_turbulence(df)
 
         # NaN değerleri forward fill
-        indicator_cols = ['macd', 'rsi', 'cci', 'adx', 'turbulence']
+        indicator_cols = ['macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence']
         df[indicator_cols] = df[indicator_cols].ffill()  # Forward fill
         df[indicator_cols] = df[indicator_cols].bfill()  # Backward fill
         df[indicator_cols] = df[indicator_cols].fillna(0)
 
         return df
+
+
+def _calculate_mahalanobis_turbulence(df: pd.DataFrame, window: int = 252) -> pd.Series:
+    """
+    Cross-sectional Mahalanobis turbulence index (Liu et al. 2020, Kritzman & Li 2010).
+
+    Formula: turb_t = (r_t - mu)^T * Sigma^{-1} * (r_t - mu)
+    where r_t is the vector of daily returns across all symbols on date t,
+    mu and Sigma are rolling mean and covariance over `window` days.
+
+    Args:
+        df: Multi-index DataFrame (symbol, date) with 'close' column
+        window: Rolling lookback period (default 252)
+
+    Returns:
+        Series indexed by date with turbulence values
+    """
+    # Build a (date x symbol) returns matrix
+    close_pivot = df['close'].unstack(level='symbol')
+    returns = close_pivot.pct_change()
+
+    turbulence_values = pd.Series(index=returns.index, dtype=float)
+
+    for i in range(window, len(returns)):
+        hist = returns.iloc[i - window:i].dropna(axis=1)
+        if hist.shape[1] < 2:
+            turbulence_values.iloc[i] = 0.0
+            continue
+
+        current = returns.iloc[i][hist.columns].values
+        if np.any(np.isnan(current)):
+            turbulence_values.iloc[i] = 0.0
+            continue
+
+        mu = hist.mean().values
+        try:
+            cov = hist.cov().values
+            cov_inv = np.linalg.pinv(cov)  # pseudo-inverse handles near-singular matrices
+            diff = current - mu
+            turb = float(diff @ cov_inv @ diff)
+            turbulence_values.iloc[i] = max(turb, 0.0)
+        except np.linalg.LinAlgError:
+            turbulence_values.iloc[i] = 0.0
+
+    return turbulence_values.fillna(0)
 
 
 def add_indicators_to_multi_symbol_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -192,16 +241,22 @@ def add_indicators_to_multi_symbol_df(df: pd.DataFrame) -> pd.DataFrame:
         # İndikatörleri ekle
         symbol_df = calculator.add_all_indicators(symbol_df)
 
-        # Symbol bilgisini geri ekleme - concat keys parametresi ile eklenecek
-        # symbol_df['symbol'] = symbol  # REMOVED - causes duplicate
-
         result_dfs.append((symbol, symbol_df))
 
     # Birleştir
     result_df = pd.concat([df for _, df in result_dfs], keys=[s for s, _ in result_dfs])
     result_df.index.names = ['symbol', 'date']
 
-    logger.info(f"Technical indicators added for all symbols")
+    # Cross-sectional Mahalanobis turbulence — overwrite symbol-level fallback
+    logger.info("Calculating cross-sectional Mahalanobis turbulence...")
+    turb_by_date = _calculate_mahalanobis_turbulence(result_df)
+
+    # Broadcast back to every symbol row
+    for symbol in result_df.index.get_level_values('symbol').unique():
+        symbol_dates = result_df.loc[symbol].index
+        result_df.loc[symbol, 'turbulence'] = turb_by_date.reindex(symbol_dates).values
+
+    logger.info("Technical indicators added for all symbols")
 
     return result_df
 
