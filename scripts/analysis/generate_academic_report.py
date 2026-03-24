@@ -3,30 +3,30 @@ Generate Comprehensive Academic Analysis Report
 Compares all trained models with benchmarks and generates publication-ready visualizations
 """
 
-import os
 import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from app.services.model_analysis import ModelAnalyzer
 from stable_baselines3 import PPO, A2C, TD3, SAC
-from app.environments.trading_env import MultiStockTradingEnv
-from benchmark_strategies import evaluate_benchmarks
+from env.trading_env import TradingEnv
+from scripts.benchmarking.benchmark_strategies import evaluate_benchmarks
 
 def load_data_for_testing():
     """Load preprocessed data for testing"""
-    data_file = 'data/preprocessed/train_val_test_data.pkl'
+    from data.data_fetcher import DataFetcher
+    from data.technical_indicators import add_indicators_to_multi_symbol_df
 
-    if not os.path.exists(data_file):
-        print(f"❌ Data file not found: {data_file}")
-        print("Please run data preprocessing first!")
+    fetcher = DataFetcher()
+    try:
+        df = fetcher.load_data()
+    except FileNotFoundError:
+        print("❌ Data file not found. Please run data fetching first (DataFetcher.fetch_and_save()).")
         return None
 
-    import pickle
-    with open(data_file, 'rb') as f:
-        data = pickle.load(f)
-
-    return data['test']
+    df = add_indicators_to_multi_symbol_df(df)
+    _, _, test_df = fetcher.split_data(df)
+    return test_df
 
 def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
                                 initial_balance: float = 1_000_000,
@@ -54,7 +54,7 @@ def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
         raise ValueError(f"Unknown model type in: {model_path}")
 
     # Create test environment
-    env = MultiStockTradingEnv(
+    env = TradingEnv(
         df=test_df,
         initial_balance=initial_balance,
         commission_rate=commission_rate,
@@ -73,14 +73,14 @@ def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
         action, _ = model.predict(obs, deterministic=True)
         obs, reward, done, truncated, info = env.step(action)
 
-        portfolio_values.append(env.portfolio_value)
+        portfolio_values.append(env._get_portfolio_value())
         if len(portfolio_values) > 1:
             daily_return = (portfolio_values[-1] - portfolio_values[-2]) / portfolio_values[-2]
             returns.append(daily_return)
 
     # Get final metrics and trades
     metrics = env.get_metrics()
-    trades = env.trade_history
+    trades = env.trades_history
 
     # Add PnL to trades
     for trade in trades:

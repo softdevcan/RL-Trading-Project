@@ -162,7 +162,7 @@ class AcademicAnalysisManager {
             const row = document.createElement('tr');
 
             row.innerHTML = `
-                <td style="font-weight: bold;">${modelName}</td>
+                <td style="font-weight: bold;">${AcademicAnalysisManager.escapeHtml(modelName)}</td>
                 <td>${(metrics.total_return * 100).toFixed(2)}</td>
                 <td>${metrics.sharpe_ratio.toFixed(4)}</td>
                 <td>${metrics.sortino_ratio.toFixed(4)}</td>
@@ -472,6 +472,15 @@ class AcademicAnalysisManager {
         document.getElementById('charts-grid').style.display = 'none';
         document.getElementById('download-links-card').style.display = 'none';
         console.log('AcademicAnalysisManager: All result cards hidden');
+    }
+
+    static escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 }
 

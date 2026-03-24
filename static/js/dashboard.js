@@ -3,6 +3,15 @@
  * Handles all dashboard functionality, API calls, and chart updates
  */
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Global state
 let isTraining = false;
 let statusCheckInterval = null;
@@ -362,7 +371,7 @@ async function loadModels() {
 
         modelsList.innerHTML = models.map((model, idx) => `
             <div class="model-item" onclick="selectModel(${idx})">
-                <div class="model-name">${model.name}</div>
+                <div class="model-name">${escapeHtml(model.name)}</div>
                 <div class="model-meta">
                     Oluşturulma: ${new Date(model.created_at).toLocaleString('tr-TR')}
                 </div>
@@ -373,7 +382,7 @@ async function loadModels() {
                         Trades: ${model.metrics.total_trades || 0}
                     </div>
                 ` : ''}
-                <button onclick="event.stopPropagation(); showModelDetails('${model.name}')"
+                <button onclick="event.stopPropagation(); showModelDetails('${escapeHtml(model.name)}')"
                         class="btn-secondary" style="margin-top: 10px; width: 100%;">
                     📊 Detayları Gör
                 </button>
@@ -398,9 +407,9 @@ function selectModel(idx) {
     const activeModelInfo = document.getElementById('activeModelInfo');
     activeModelInfo.innerHTML = `
         <div style="padding: 10px;">
-            <div style="font-weight: 600; margin-bottom: 10px;">${selectedModel.name}</div>
+            <div style="font-weight: 600; margin-bottom: 10px;">${escapeHtml(selectedModel.name)}</div>
             <div style="font-size: 14px; color: #666;">
-                Algoritma: ${selectedModel.metrics.algorithm || 'N/A'}<br>
+                Algoritma: ${escapeHtml(selectedModel.metrics.algorithm || 'N/A')}<br>
                 Oluşturulma: ${new Date(selectedModel.created_at).toLocaleString('tr-TR')}
             </div>
         </div>
@@ -438,8 +447,8 @@ async function loadModelsComparison() {
 
         tbody.innerHTML = models.map(model => `
             <tr>
-                <td>${model.name}</td>
-                <td>${model.metrics.algorithm || 'N/A'}</td>
+                <td>${escapeHtml(model.name)}</td>
+                <td>${escapeHtml(model.metrics.algorithm || 'N/A')}</td>
                 <td>${model.metrics.cumulative_return ? (model.metrics.cumulative_return * 100).toFixed(2) : '-'}</td>
                 <td>${model.metrics.sharpe_ratio ? model.metrics.sharpe_ratio.toFixed(4) : '-'}</td>
                 <td>${model.metrics.max_drawdown ? (model.metrics.max_drawdown * 100).toFixed(2) : '-'}</td>
@@ -938,10 +947,10 @@ async function loadAvailableModels() {
         }
 
         container.innerHTML = models.map(model => `
-            <div class="model-selection-item" onclick="toggleModelSelection('${model.name}')" id="select-${model.name}">
-                <div class="model-selection-name">${model.name}</div>
+            <div class="model-selection-item" onclick="toggleModelSelection('${escapeHtml(model.name)}')" id="select-${escapeHtml(model.name)}">
+                <div class="model-selection-name">${escapeHtml(model.name)}</div>
                 <div class="model-selection-info">
-                    <span><strong>Algoritma:</strong> ${model.metrics.algorithm || 'N/A'}</span>
+                    <span><strong>Algoritma:</strong> ${escapeHtml(model.metrics.algorithm || 'N/A')}</span>
                     <span><strong>Return:</strong> ${model.metrics.cumulative_return ? (model.metrics.cumulative_return * 100).toFixed(2) + '%' : 'N/A'}</span>
                     <span><strong>Sharpe:</strong> ${model.metrics.sharpe_ratio?.toFixed(2) || 'N/A'}</span>
                     <span><strong>Trades:</strong> ${model.metrics.total_trades || 0}</span>

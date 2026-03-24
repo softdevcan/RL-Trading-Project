@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # CORS Settings
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000",
+                                "http://localhost:8888", "http://127.0.0.1:8888"]
     CORS_CREDENTIALS: bool = True
     CORS_METHODS: list[str] = ["*"]
     CORS_HEADERS: list[str] = ["*"]

@@ -6,6 +6,7 @@ FastAPI endpoints for RL trading system
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import Dict, List, Optional
 import os
+import re
 import json
 from datetime import datetime
 import numpy as np
@@ -33,6 +34,16 @@ training_state = {
     "metrics": {},
     "error": None
 }
+
+_SAFE_MODEL_NAME = re.compile(r'^[a-zA-Z0-9_.-]+$')
+
+
+def sanitize_model_name(name: str) -> str:
+    """Prevent path traversal: accept only safe filename characters."""
+    name = os.path.basename(name)
+    if not _SAFE_MODEL_NAME.match(name):
+        raise HTTPException(status_code=400, detail="Invalid model name")
+    return name
 
 
 @router.get("/health")
@@ -203,6 +214,7 @@ async def list_models():
 @router.get("/models/{model_name}/metrics", response_model=ModelMetrics)
 async def get_model_metrics(model_name: str):
     """Get metrics for a specific model"""
+    model_name = sanitize_model_name(model_name)
     metrics_file = f"results/{model_name}_metrics.json"
 
     if not os.path.exists(metrics_file):
@@ -380,6 +392,7 @@ async def list_all_datasets():
 @router.delete("/models/{model_name}")
 async def delete_model(model_name: str):
     """Delete a trained model"""
+    model_name = sanitize_model_name(model_name)
     model_path = f"models/{model_name}.zip"
 
     if not os.path.exists(model_path):
@@ -825,7 +838,8 @@ async def get_daily_decision(request: DailyDecisionRequest):
         logger.info(f"Daily decision request for model: {request.model_name}")
 
         # 1. Load model
-        model_path = f"models/{request.model_name}"
+        safe_model_name = sanitize_model_name(request.model_name)
+        model_path = f"models/{safe_model_name}"
         if not os.path.exists(model_path + ".zip"):
             raise HTTPException(
                 status_code=404,
