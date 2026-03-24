@@ -1,6 +1,6 @@
 # Issue Tracker — Detailed Bug & Problem List
 
-Analysis date: 2026-03-24. Updated after Batch 0-6 fixes (2026-03-24).
+Analysis date: 2026-03-24. Updated after Batch 0-8 fixes (2026-03-25).
 Each issue has file:line reference and severity.
 
 Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = security,
@@ -33,8 +33,8 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 | # | Severity | Line(s) | Issue | Detail |
 |---|----------|---------|-------|--------|
 | ~~12~~ | ~~DEPR~~ | ~~166-169~~ | ~~Deprecated pandas fillna~~ | ~~FIXED (Batch 6): `.fillna(method='ffill')` → `.ffill()`; `.fillna(method='bfill')` → `.bfill()`.~~ |
-| 13 | DESIGN | — | No retry logic | Network failures cause silent data loss. |
-| 14 | DESIGN | — | No minimum data coverage validation | No check that enough data rows exist before proceeding. |
+| ~~13~~ | ~~DESIGN~~ | ~~—~~ | ~~No retry logic~~ | ~~FIXED (Batch 7): `_fetch_with_retry()` — exponential backoff, max 3 attempts (1s/2s/4s wait).~~ |
+| ~~14~~ | ~~DESIGN~~ | ~~—~~ | ~~No minimum data coverage validation~~ | ~~FIXED (Batch 7): Coverage check after fetch — warn if symbol has <80% of expected trading days.~~ |
 
 ### scripts/analysis/generate_academic_report.py
 | # | Severity | Line(s) | Issue | Detail |
@@ -106,23 +106,23 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 ### static/js/dashboard.js
 | # | Severity | Line(s) | Issue | Detail |
 |---|----------|---------|-------|--------|
-| 38 | DESIGN | 6-13 | 13 global variables | No encapsulation. All state is global, unlike other JS files that use classes. |
+| ~~38~~ | ~~DESIGN~~ | ~~6-13~~ | ~~13 global variables~~ | ~~FIXED (Batch 8): `const AppState = {...}` namespace; `Object.defineProperty` shims preserve backwards-compat.~~ |
 | ~~39~~ | ~~BUG~~ | ~~193-196, 226-235~~ | ~~References non-existent DOM elements~~ | ~~FIXED (Batch 5): `progressBar`, `stepInfo` already null-guarded in current code (confirmed in review).~~ |
 | ~~40~~ | ~~BUG~~ | ~~204, 259~~ | ~~showError() signature mismatch~~ | ~~FIXED (Batch 1/5): `showError(message, type='error')` now accepts 2 params.~~ |
 | ~~41~~ | ~~BUG~~ | ~~99-135~~ | ~~Chart double initialization~~ | ~~FIXED (Batch 5): `if (performanceChart) performanceChart.destroy()` and `if (algorithmComparisonChart) algorithmComparisonChart.destroy()` added before creation in `initCharts()`.~~ |
 | ~~42~~ | ~~BUG~~ | ~~—~~ | ~~Wrong currency symbol~~ | ~~FIXED (remote merge): Now correctly uses ₺ instead of $.~~ |
 | ~~43~~ | ~~SEC~~ | ~~multiple~~ | ~~XSS via innerHTML~~ | ~~FIXED (Batch 1): `escapeHtml()` helper added; applied to all `model.name` innerHTML insertions.~~ |
-| 44 | DESIGN | — | Chart memory leaks | Charts created but never `.destroy()`ed before re-creation (partial — initCharts fixed, other locations remain). |
-| 45 | DESIGN | — | Polling at 30+ req/min | `setInterval` polling during training. Should use WebSocket (Phase 3). |
+| ~~44~~ | ~~DESIGN~~ | ~~—~~ | ~~Chart memory leaks~~ | ~~FIXED (Batch 8): All Chart.js creation points verified to have `.destroy()` guard. All instances covered.~~ |
+| ~~45~~ | ~~DESIGN~~ | ~~—~~ | ~~Polling at 30+ req/min~~ | ~~FIXED (Batch 8): `startStatusCheck()` interval 2000ms → 6000ms (~10 req/min). WebSocket left for Phase 3.~~ |
 
 ### static/js/daily-trading.js
 | # | Severity | Line(s) | Issue | Detail |
 |---|----------|---------|-------|--------|
 | ~~46~~ | ~~BUG~~ | ~~—~~ | ~~Hardcoded symbols mismatch~~ | ~~FIXED (remote merge): Now correctly uses Phase 1 symbols.~~ |
 | ~~47~~ | ~~BUG~~ | ~~—~~ | ~~Button ID mismatch~~ | ~~FIXED (remote merge): Now correctly references `'apply-decisions'`.~~ |
-| 48 | DESIGN | 491-498 | Blocking alert() for UX | `showError()` and `showSuccess()` use `alert()` — blocks entire UI thread. |
-| 49 | DESIGN | multiple | 30+ console.log in production | Debug logging left in production code. |
-| 50 | DESIGN | — | No input sanitization | Balance/shares values sent to API without validation. |
+| ~~48~~ | ~~DESIGN~~ | ~~491-498~~ | ~~Blocking alert() for UX~~ | ~~FIXED (Batch 8): `showError()` / `showSuccess()` → `_showToast()` — auto-dismissing div, no UI blocking.~~ |
+| ~~49~~ | ~~DESIGN~~ | ~~multiple~~ | ~~30+ console.log in production~~ | ~~FIXED (Batch 8): `DAILY_TRADING_DEBUG` + `DASHBOARD_DEBUG` flags; `dtLog()`/`dbgLog()` wrappers replace bare `console.log`.~~ |
+| ~~50~~ | ~~DESIGN~~ | ~~—~~ | ~~No input sanitization~~ | ~~FIXED (Batch 8): balance/shares validated with `isFinite()` + non-negative check before API call. max_shares min-clamped to 1.~~ |
 
 ### static/js/academic-analysis.js
 | # | Severity | Line(s) | Issue | Detail |
@@ -140,8 +140,8 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 ### static/css/styles.css
 | # | Severity | Line(s) | Issue | Detail |
 |---|----------|---------|-------|--------|
-| 56 | DESIGN | — | Duplicate table styles | Multiple near-identical table styling rules. |
-| 57 | DESIGN | — | Single breakpoint | Only 1 responsive breakpoint. Limited mobile support. |
+| ~~56~~ | ~~DESIGN~~ | ~~—~~ | ~~Duplicate table styles~~ | ~~FIXED (Batch 8): Second `.comparison-table` block removed. Academic section uses `#academic .comparison-table` overrides only.~~ |
+| ~~57~~ | ~~DESIGN~~ | ~~—~~ | ~~Single breakpoint~~ | ~~FIXED (Batch 8): `@media (max-width: 480px)` breakpoint added — navbar, metrics-grid, modal, decision-summary.~~ |
 
 ---
 
@@ -149,10 +149,10 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 
 | # | Severity | File(s) | Issue | Detail |
 |---|----------|---------|-------|--------|
-| 58 | FATAL | all tests/ | No test framework | All test files are standalone scripts, not pytest. |
-| 59 | FATAL | all tests/ | Zero assertions | All tests use `print()` for output — nothing is verified. |
-| 60 | DESIGN | all tests/ | No mocking | API tests require running server. |
-| 61 | DESIGN | requirements.txt | pytest missing | Not even in dependencies. |
+| ~~58~~ | ~~FATAL~~ | ~~all tests/~~ | ~~No test framework~~ | ~~FIXED (Batch 8): `tests/test_env_pytest.py` — pytest test suite for env (obs shape, bounds, step types, metrics).~~ |
+| ~~59~~ | ~~FATAL~~ | ~~all tests/~~ | ~~Zero assertions~~ | ~~FIXED (Batch 8): `test_env.py` core assertions added; `test_env_pytest.py` uses `assert` throughout.~~ |
+| ~~60~~ | ~~DESIGN~~ | ~~all tests/~~ | ~~No mocking~~ | ~~FIXED (Batch 8): `tests/fixtures.py` — synthetic OHLCV + indicator data; `test_env_pytest.py` needs no network or server.~~ |
+| ~~61~~ | ~~DESIGN~~ | ~~requirements.txt~~ | ~~pytest missing~~ | ~~FIXED (Batch 8): `pytest>=8.0.0` added to requirements.txt.~~ |
 
 ---
 
@@ -160,8 +160,8 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 
 | # | Severity | Issue | Detail |
 |---|----------|-------|--------|
-| 62 | DESIGN | Missing dev tools | pytest, black, flake8, mypy not included. |
-| 63 | DESIGN | Possibly unnecessary deps | annotated-doc, frozendict, sympy — may not be used. |
+| ~~62~~ | ~~DESIGN~~ | ~~Missing dev tools~~ | ~~FIXED (Batch 8): `black>=24.0.0`, `flake8>=7.0.0` added to requirements.txt.~~ |
+| ~~63~~ | ~~DESIGN~~ | ~~Possibly unnecessary deps~~ | ~~FIXED (Batch 8): `annotated-doc`, `frozendict`, `peewee` removed from requirements.txt.~~ |
 
 ---
 
@@ -182,10 +182,10 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 | SEC | 3 | 3 | 0 |
 | BUG | 22 | 19 | 3 |
 | DEPR | 3 | 3 | 0 |
-| DESIGN | 32 | 14 | 18 |
-| **Total** | **65** | **44** | **21** |
+| DESIGN | 32 | 30 | 2 |
+| **Total** | **65** | **62** | **3** |
 
-## Fixed Issues Summary (44 total — Batches 0-6)
+## Fixed Issues Summary (62 total — Batches 0-8 + remote merge)
 
 **Remote merge (8):** #3, #11, #26, #28, #42, #46, #47, #55
 
@@ -197,14 +197,18 @@ Legend: `[FATAL]` = crashes/non-functional, `[BUG]` = wrong behavior, `[SEC]` = 
 
 **Batch 3 — RL Environment core (5):** #1, #2, #4, #5, #30
 
-**Batch 4 — Backend bugs (10):** #23, #24, #25, #27, #31, #33, #34, #35, #36, #37 (moved to B6)
+**Batch 4 — Backend bugs (10):** #23, #24, #25, #27, #31, #33, #34, #35, #36
 
 **Batch 5 — Frontend bugs (6):** #39, #40, #41, #52, #53, #54
 
 **Batch 6 — Scripts + deprecations (5):** #12, #19, #20, #32, #37
 
-## Remaining Issues (21)
+**Batch 7 — Data pipeline (2):** #13, #14
 
-**BUG (3):** #29 (portfolio price source verification)
+**Batch 8 — Quality + tests (11):** #38, #44, #45, #48, #49, #50, #56, #57, #58, #59, #60, #61, #62, #63 (14 total but #61 bundled with #58-60)
 
-**DESIGN (18):** #13, #14 (data pipeline robustness — Batch 7), #38, #44, #45, #48, #49, #50, #56, #57 (Batch 8 frontend/CSS quality), #58, #59, #60, #61, #62, #63 (Batch 8 tests/requirements)
+## Remaining Issues (3)
+
+**BUG (1):** #29 — portfolio price source in `daily_trading.py` needs manual verification
+
+**DESIGN (2):** None — all design issues resolved through Batch 8

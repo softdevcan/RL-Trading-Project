@@ -3,7 +3,7 @@
 ## Context
 ISSUES.md'de belgelenen 65 sorundan 7'si remote merge ile çözüldü. Kalan 58 sorun (4 FATAL, 3 SEC, 17 BUG, 2 DEPR, 32 DESIGN) 8 batch halinde sırayla çözüldü / çözülüyor. Öncelik: Fatal > Security > RL Core > Backend > Frontend > Polish. Her batch bağımsız test edilebilir.
 
-**Güncel durum (2026-03-24): Batch 0-6 tamamlandı (44 issue çözüldü). Batch 7-8 bekliyor.**
+**Güncel durum (2026-03-25): Tüm Batch 0-8 tamamlandı (62 issue çözüldü). Yalnızca #29 açık.**
 
 ### Çözülen Sorunlar (merge ile) ✅
 - ~~#3~~ Reward function → `env/reward_functions.py` (PSR)
@@ -157,42 +157,46 @@ ISSUES.md'de belgelenen 65 sorundan 7'si remote merge ile çözüldü. Kalan 58 
 
 ---
 
-## 🔄 Batch 7: Data Pipeline Robustness — BEKLIYOR
-**Issues: #13-14 (2 issue) | Durum: ⏳ Yapılmadı**
+## ✅ Batch 7: Data Pipeline Robustness — TAMAMLANDI
+**Issues: #13-14 (2 issue) | Durum: ✅ Committed**
 
-### Planlanan Değişiklikler:
+### Yapılan Değişiklikler:
 
 **data/data_fetcher.py**
-- **#13**: Exponential backoff retry (max 3 deneme, 2^n saniye bekleme) — yfinance geçici hatalarında çökme yerine retry
-- **#14**: Minimum veri kapsamı doğrulama — symbol başına %80+ coverage gerekli, aksi halde uyarı/hata
+- **#13**: `_fetch_with_retry(symbol, max_retries=3)` metodu eklendi — 1s/2s/4s exponential backoff, tüm denemeler başarısız olursa `None` döner
+- **#14**: `fetch_stock_data()` içinde coverage check — expected ~252 gün/yıl, gerçek veri %80 altındaysa `logger.warning()`
 
 ---
 
-## 🔄 Batch 8: Kod Kalitesi ve Test Altyapısı — BEKLIYOR
-**Issues: #38, #44-45, #48-50, #56-63 (16 issue) | Durum: ⏳ Yapılmadı**
+## ✅ Batch 8: Kod Kalitesi ve Test Altyapısı — TAMAMLANDI
+**Issues: #38, #44-45, #48-50, #56-63 (16 issue) | Durum: ✅ Committed**
 
-### Planlanan Değişiklikler:
+### Yapılan Değişiklikler:
 
-**Frontend (#38, #44, #45, #48, #49, #50):**
-- #38: `dashboard.js` global değişkenler → `const AppState = {...}` namespace
-- #44: Tüm chart re-creation'larda `.destroy()` (Batch 5'in genişlemesi — diğer chartlar)
-- #45: Polling frekansını 10 req/min'e düşür (şu an sınırsız)
-- #48: `daily-trading.js` `alert()` → toast notification div
-- #49: `console.log`'ları `if (DEBUG)` içine al
-- #50: Input sanitization (balance, shares input'ları)
+**static/js/dashboard.js (#38, #44, #45, #49)**
+- **#38**: `const AppState = {...}` namespace — 7 global değişken kapsüllendi; `Object.defineProperty` shims ile geriye uyumluluk korundu
+- **#44**: Tüm Chart.js oluşturma noktaları `.destroy()` guard ile korundu (tüm instancelar doğrulandı)
+- **#45**: `startStatusCheck()` interval 2000ms → 6000ms (~10 req/min)
+- **#49**: `DASHBOARD_DEBUG` flag; `dbgLog()` wrapper ile tüm `console.log` çağrıları korundu
 
-**CSS (#56, #57):**
-- #56: Duplicate table style'ları birleştir
-- #57: Responsive breakpoint ekle (768px, 480px)
+**static/js/daily-trading.js (#48, #49, #50)**
+- **#48**: `showError()` / `showSuccess()` → `_showToast()` — 4 saniye sonra auto-dismiss, UI-blocking değil
+- **#49**: `DAILY_TRADING_DEBUG` flag; `dtLog()` / `dtError()` wrappers ile 30+ `console.log` korundu
+- **#50**: `loadLatestPortfolio()` ve `getDecision()` içinde balance/shares için `isFinite()` + non-negative sanitization
 
-**Tests (#58, #59, #60):**
-- #58-59: Test script'lerine assertion ekle (`assert obs.shape == (56,)` vb.)
-- #60: Mock data fixture'ları ekle (offline test için)
+**static/css/styles.css (#56, #57)**
+- **#56**: Duplicate `.comparison-table` bloğu kaldırıldı; academic bölüm için `#academic .comparison-table` override'ları eklendi
+- **#57**: `@media (max-width: 480px)` breakpoint eklendi — navbar, metric-value, metrics-grid, modal, decision-summary
 
-**Requirements (#61, #62, #63):**
-- #61: `pytest` ekle
-- #62: `black`, `flake8`, `filelock` ekle
-- #63: Kullanılmayan dep'leri temizle (`peewee`, `annotated-doc`, `frozendict`)
+**tests/ (#58, #59, #60, #61)**
+- **#58-59**: `tests/test_env.py` — obs.shape, bounds, obs_space.contains assertions eklendi
+- **#58-59**: `tests/test_env_pytest.py` — tam pytest suite (6 test: obs shape, bounds, step types, random steps, balance, metrics)
+- **#60**: `tests/fixtures.py` — `make_mock_ohlcv()` + `make_mock_df_with_indicators()` — ağ gerektirmeyen sentetik veri
+- **#61**: `pytest>=8.0.0` requirements.txt'e eklendi
+
+**requirements.txt (#62, #63)**
+- **#62**: `black>=24.0.0`, `flake8>=7.0.0` eklendi
+- **#63**: `peewee`, `frozendict`, `annotated-doc` kaldırıldı
 
 ---
 
@@ -203,7 +207,7 @@ ISSUES.md'de belgelenen 65 sorundan 7'si remote merge ile çözüldü. Kalan 58 
                                                                                                               |
                            ✅ Batch 6 (Scripts) ← ✅ Batch 3                                           ✅ Batch 5 (Frontend)
                                  |                                                                             |
-                          🔄 Batch 7 (Data)                                                           🔄 Batch 8 (Kalite)
+                          ✅ Batch 7 (Data)                                                           ✅ Batch 8 (Kalite)
 ```
 
 ## Toplam Özet
@@ -217,8 +221,8 @@ ISSUES.md'de belgelenen 65 sorundan 7'si remote merge ile çözüldü. Kalan 58 
 | 4 Backend | 10 | ✅ Tamamlandı | trading.py, daily_trading.py, model_analysis.py, schemas |
 | 5 Frontend | 6 | ✅ Tamamlandı | dashboard.js, academic-analysis.js |
 | 6 Scripts | 5 | ✅ Tamamlandı | train_a2c_phase1.py, data_fetcher.py, main.py, run_server.py |
-| 7 Data | 2 | 🔄 Bekliyor | data_fetcher.py |
-| 8 Kalite | 16 | 🔄 Bekliyor | tests/*, requirements.txt, styles.css, JS dosyaları |
-| **Tamamlanan** | **41** (+3 merge=44 fix) | ✅ | — |
-| **Bekleyen** | **18** | 🔄 | — |
+| 7 Data | 2 | ✅ Tamamlandı | data_fetcher.py |
+| 8 Kalite | 16 | ✅ Tamamlandı | tests/*, requirements.txt, styles.css, JS dosyaları |
+| **Tamamlanan** | **54** (+8 merge=62 fix) | ✅ | — |
+| **Açık** | **1** (#29 BUG) | ⚠️ | daily_trading.py |
 | **Toplam** | **58** (+7 merge=65) | | |
