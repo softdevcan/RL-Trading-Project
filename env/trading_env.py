@@ -110,10 +110,10 @@ class TradingEnv(gym.Env):
             # State: balance (1) + shares (N) + features (N*17) + macro (6)
             state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock) + self.macro_features
 
-        # Observation space: continuous
+        # Observation space: bounded for gradient stability (#1)
         self.observation_space = spaces.Box(
-            low=-np.inf,
-            high=np.inf,
+            low=-10.0,
+            high=10.0,
             shape=(state_dim,),
             dtype=np.float32
         )
@@ -125,6 +125,11 @@ class TradingEnv(gym.Env):
             shape=(self.n_stocks,),
             dtype=np.float32
         )
+
+        # Price normalization stats — per symbol, computed from training data (#2)
+        # price_stats[symbol] = {'mean': float, 'std': float}
+        self.price_stats: Dict[str, Dict[str, float]] = {}
+        self._compute_price_stats()
 
         # Trading variables
         self.current_step: int = 0
@@ -142,6 +147,24 @@ class TradingEnv(gym.Env):
         if phase == 2:
             logger.info(f"  Fundamental data: {'✓' if fundamental_df is not None else '✗'}")
             logger.info(f"  Macro data: {'✓' if macro_df is not None else '✗'}")
+
+    def _compute_price_stats(self):
+        """Compute per-symbol price mean/std from the full df for dynamic normalization (#2)."""
+        for symbol in self.symbols:
+            try:
+                prices = self.df.xs(symbol, level='symbol')['close'].astype(float)
+                mean = float(prices.mean())
+                std = float(prices.std())
+                self.price_stats[symbol] = {
+                    'mean': mean,
+                    'std': std if std > 1e-8 else 1.0
+                }
+            except Exception:
+                self.price_stats[symbol] = {'mean': 50.0, 'std': 50.0}
+
+    def get_price_stats(self) -> Dict[str, Dict[str, float]]:
+        """Return price normalization stats (save these for inference)."""
+        return self.price_stats
 
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict]:
         """Environment'ı başlangıç durumuna döndür"""
@@ -193,14 +216,11 @@ class TradingEnv(gym.Env):
         scaled_action = np.round(action * self.max_shares_per_trade).astype(int)
         scaled_action = np.clip(scaled_action, -self.max_shares_per_trade, self.max_shares_per_trade)
 
-        # THRESHOLD REMOVED FOR TESTING!
-        # Let ANY non-zero action through to see if model is producing actions
-        # Previously: min_threshold = 1 share (1% of 100)
-        # Now: NO THRESHOLD - even 1 share will execute
-        min_threshold = 0  # DISABLED!
-        # for i in range(len(scaled_action)):
-        #     if abs(scaled_action[i]) < min_threshold:
-        #         scaled_action[i] = 0
+        # Minimum trade threshold: filter out near-zero actions (#5)
+        min_threshold = 1
+        for i in range(len(scaled_action)):
+            if abs(scaled_action[i]) < min_threshold:
+                scaled_action[i] = 0
 
         # Önceki portfolio değeri
         prev_portfolio_value = self._get_portfolio_value()
@@ -388,17 +408,21 @@ class TradingEnv(gym.Env):
                         volume_val = 0.0
                 volume_norm = np.log(volume_val / 1e6 + 1) / 3 if volume_val > 0 else 0.0
 
+                # Dynamic z-score normalization using per-symbol price stats (#2)
+                stats = self.price_stats.get(symbol, {'mean': 50.0, 'std': 50.0})
+                p_mean, p_std = stats['mean'], stats['std']
+
                 stock_features = [
-                    (open_price - 50) / 50,      # Center around typical BIST price
-                    (high_price - 50) / 50,
-                    (low_price - 50) / 50,
-                    (close_price - 50) / 50,
-                    volume_norm,                  # Log-scaled volume
-                    np.tanh(macd / 0.1),         # Bounded to [-1, 1]
-                    (rsi - 50) / 50,             # Center RSI around 50
-                    np.tanh(cci / 100),          # Bounded CCI
-                    (adx - 25) / 25,             # Center ADX around 25
-                    np.tanh(turbulence / 2)      # Bounded turbulence
+                    (float(open_price) - p_mean) / p_std,
+                    (float(high_price) - p_mean) / p_std,
+                    (float(low_price) - p_mean) / p_std,
+                    (float(close_price) - p_mean) / p_std,
+                    volume_norm,
+                    np.tanh(macd / 0.1),
+                    (rsi - 50) / 50,
+                    np.tanh(cci / 100),
+                    (adx - 25) / 25,
+                    np.tanh(turbulence / 2)
                 ]
 
                 # Faz 2: Fundamental ratios ekle
@@ -423,11 +447,15 @@ class TradingEnv(gym.Env):
                 features.extend(stock_features)
 
             except KeyError:
-                # Veri yoksa 0 ile doldur
-                if self.phase == 1:
-                    features.extend([0] * 10)  # OHLCV + Technical
+                # Missing data: forward-fill from last known step, then warn (#4)
+                logger.warning(f"Missing data for {symbol} on {current_date} — "
+                               f"filling with last known observation features.")
+                n_features = 10 if self.phase == 1 else 17
+                if len(features) >= n_features:
+                    # repeat last symbol's feature block
+                    features.extend(features[-n_features:])
                 else:
-                    features.extend([0] * 17)  # OHLCV + Technical + Fundamental
+                    features.extend([0.0] * n_features)
 
         # State vector oluştur
         state_components = [[balance_norm], shares_norm, features]
@@ -462,8 +490,9 @@ class TradingEnv(gym.Env):
                 logger.warning(f"Macro data error at {current_date}: {e}")
                 state_components.append([0] * 6)
 
-        # Final state vector
+        # Final state vector — clip to observation space bounds (#1)
         state = np.concatenate(state_components).astype(np.float32)
+        state = np.clip(state, -10.0, 10.0)
 
         return state
 

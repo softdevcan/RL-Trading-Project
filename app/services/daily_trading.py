@@ -165,7 +165,8 @@ def build_live_state(
     market_data: pd.DataFrame,
     target_date: str,
     initial_balance: float = 1_000_000,
-    max_shares_per_trade: int = 100
+    max_shares_per_trade: int = 100,
+    price_stats: Optional[Dict[str, Dict[str, float]]] = None
 ) -> np.ndarray:
     """
     Build state vector for inference
@@ -237,14 +238,20 @@ def build_live_state(
             cci = row_dict.get('cci', 0)  # type: ignore
             adx = row_dict.get('adx', 0)  # type: ignore
             turbulence = row_dict.get('turbulence', 0)  # type: ignore 
-            # Normalize (same as training)
+            # Dynamic z-score normalization — same as training env (#30)
+            if price_stats and symbol in price_stats:
+                p_mean = price_stats[symbol]['mean']
+                p_std = price_stats[symbol]['std']
+            else:
+                p_mean, p_std = 50.0, 50.0  # fallback
+
             volume_norm = np.log(volume / 1e6 + 1) / 3 if volume > 0 else 0
 
             features.extend([
-                (open_price - 50) / 50,
-                (high_price - 50) / 50,
-                (low_price - 50) / 50,
-                (close_price - 50) / 50,
+                (open_price - p_mean) / p_std,
+                (high_price - p_mean) / p_std,
+                (low_price - p_mean) / p_std,
+                (close_price - p_mean) / p_std,
                 volume_norm,
                 np.tanh(macd / 0.1),
                 (rsi - 50) / 50,
