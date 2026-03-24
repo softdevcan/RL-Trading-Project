@@ -1,274 +1,224 @@
-# RL Trading Project - 63 Issue Fix Plan
+# RL Trading Project - 58 Issue Fix Plan
 
 ## Context
-ISSUES.md'de belgelenen 63 sorun (5 FATAL, 3 SEC, 22 BUG, 3 DEPR, 30 DESIGN) 8 batch halinde sirayla cozulecek. Oncelik: Fatal > Security > RL Core > Backend > Frontend > Polish. Her batch bagimsiz test edilebilir. Batch 2-3 sonrasi tum modeller yeniden egitilmeli.
+ISSUES.md'de belgelenen 65 sorundan 7'si remote merge ile çözüldü. Kalan 58 sorun (4 FATAL, 3 SEC, 17 BUG, 2 DEPR, 32 DESIGN) 8 batch halinde sırayla çözüldü / çözülüyor. Öncelik: Fatal > Security > RL Core > Backend > Frontend > Polish. Her batch bağımsız test edilebilir.
+
+**Güncel durum (2026-03-24): Batch 0-6 tamamlandı (44 issue çözüldü). Batch 7-8 bekliyor.**
+
+### Çözülen Sorunlar (merge ile) ✅
+- ~~#3~~ Reward function → `env/reward_functions.py` (PSR)
+- ~~#11~~ fillna deprecated → `.ffill()` / `.bfill()`
+- ~~#26~~ Hardcoded stocks → `get_symbols(phase=)`
+- ~~#28~~ Wrong import → Doğru fonksiyon import
+- ~~#42~~ Currency $ → ₺
+- ~~#46~~ JS stock symbols → Doğru Phase 1
+- ~~#47~~ Button ID → Doğru
+- ~~#55~~ HTML stock symbols → Doğru
 
 ---
 
-## Batch 1: Fatal Crashlar ve Guvenlik Aciklari
-**Kapsam: KUCUK | Issues: #15-18, #28, #21-22, #43, #51 (10 issue)**
+## ✅ Batch 0: Merge Sonrası Duplicate Temizliği — TAMAMLANDI
+**Issues: #64-65 (2 issue) | Durum: ✅ Committed**
 
-### Dosyalar ve Degisiklikler:
+### Yapılan Değişiklikler:
+- `ACADEMIC_GUIDE.md`, `ALGORITHMS.md`, `development.md` root kopyaları silindi (docs/ altındakiler korundu)
+- `scripts/generate_academic_report.py`, `scripts/debug_model_actions.py`, `scripts/train_a2c_phase1.py` root kopyaları silindi (scripts/analysis/, scripts/debug/, scripts/training/ altındakiler korundu)
 
-**scripts/generate_academic_report.py** (#15-18)
-- L13: `from app.environments.trading_env import MultiStockTradingEnv` → `from env.trading_env import TradingEnv`
-- L17: Pickle yerine `DataFetcher.load_data()` + `split_data()` pipeline kullan
-- L75: `env.portfolio_value` → `env._get_portfolio_value()`
-- L82: `env.trade_history` → `env.trades_history`
+---
 
-**app/services/daily_trading.py** (#28)
-- L110: `TechnicalIndicatorCalculator` → `TechnicalIndicators`
+## ✅ Batch 1: Fatal Crashlar ve Güvenlik Açıkları — TAMAMLANDI
+**Issues: #15-18, #21-22, #43, #51 (8 issue) | Durum: ✅ Committed**
+
+### Yapılan Değişiklikler:
+
+**scripts/analysis/generate_academic_report.py** (#15-18)
+- `from app.environments.trading_env import MultiStockTradingEnv` → `from env.trading_env import TradingEnv`
+- Pickle yerine `DataFetcher.load_data()` + `add_indicators_to_multi_symbol_df()` + `split_data()` pipeline
+- `env.portfolio_value` → `env._get_portfolio_value()`
+- `env.trade_history` → `env.trades_history`
 
 **app/core/config.py** (#21)
-- L21-22: `CORS_ORIGINS: ["*"]` → `["http://localhost:8000", "http://127.0.0.1:8000"]`
+- `CORS_ORIGINS: ["*"]` → `["http://localhost:8000", "http://127.0.0.1:8000"]`
 
 **app/api/routes/trading.py** (#22)
-- L323, L146: `sanitize_model_name()` utility ekle - `os.path.basename()` + `^[a-zA-Z0-9_.-]+$` regex ile path traversal engelle
+- `sanitize_model_name()` utility eklendi — `os.path.basename()` + `^[a-zA-Z0-9_.-]+$` regex ile path traversal engellendi
+- `import re` + `_SAFE_MODEL_NAME = re.compile(r'^[a-zA-Z0-9_.-]+$')` eklendi
 
 **static/js/dashboard.js** (#43)
-- L440: `innerHTML` → `textContent` (veya `escapeHtml()` helper)
+- `escapeHtml(str)` helper fonksiyonu eklendi
+- Tüm `innerHTML` template literal'larında `model.name` → `escapeHtml(model.name)`
 
 **static/js/academic-analysis.js** (#51)
-- L164: innerHTML icinde `${modelName}` sanitize et
-
-**Dogrulama:**
-- `python scripts/generate_academic_report.py` ImportError/AttributeError vermemeli
-- Path traversal denemesi (`../../etc/passwd`) 400 donmeli
-- CORS header'da `*` olmamali
+- `static escapeHtml(str)` metodu eklendi
+- `displayComparisonTable()` içinde `${modelName}` → `${AcademicAnalysisManager.escapeHtml(modelName)}`
 
 ---
 
-## Batch 2: Teknik Indikator Duzeltmeleri
-**Kapsam: ORTA | Issues: #6-11 (6 issue)**
+## ✅ Batch 2: Teknik İndikatör Düzeltmeleri — TAMAMLANDI
+**Issues: #6-10 (5 issue) | Durum: ✅ Committed**
 
-### Dosyalar ve Degisiklikler:
+### Yapılan Değişiklikler:
 
-**data/technical_indicators.py**
+**data/technical_indicators.py** (#6-10)
+- **#6 RSI Wilder's EMA**: `gain.rolling(window=period).mean()` → `gain.ewm(alpha=1/period, adjust=False).mean()`; `avg_loss.replace(0, np.nan)` ile division by zero koruması
+- **#7 ADX Wilder's EMA**: ATR, +DI, -DI için `pd.Series(...).ewm(alpha=1/period, adjust=False).mean()`
+- **#8 ADX Division by Zero**: `np.where(denominator > 0, 100 * np.abs(...) / denominator, 0)`
+- **#9 Turbulence Mahalanobis**: `_calculate_mahalanobis_turbulence()` fonksiyonu eklendi — cross-sectional `(r_t - mu)^T * Sigma^{-1} * (r_t - mu)` formülü, `np.linalg.pinv` ile singular matrix koruması
+- **#10 MACD Signal Line**: `macd_signal`, `macd_hist` sütunları eklendi; `calculate_macd()` artık `(macd, signal_line, histogram)` tuple döndürüyor
 
-**#6 RSI - Wilder's EMA** (L58-59)
-```python
-# ONCEKI: gain.rolling(window=period).mean()
-# SONRAKI:
-avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
-avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
-```
-Ref: Wilder 1978 "New Concepts in Technical Trading Systems"
+**Not:** Bu batch sonrası tüm mevcut modeller geçersizdir — yeniden eğitim gerekli.
 
-**#7 ADX - Wilder's EMA** (L112-114)
-```python
-atr = pd.Series(tr).ewm(alpha=1/period, adjust=False).mean()
-plus_di = 100 * pd.Series(plus_dm).ewm(alpha=1/period, adjust=False).mean() / atr
-minus_di = 100 * pd.Series(minus_dm).ewm(alpha=1/period, adjust=False).mean() / atr
-```
+---
 
-**#8 ADX Division by Zero** (L117)
-```python
-denominator = plus_di + minus_di
-dx = np.where(denominator > 0, 100 * np.abs(plus_di - minus_di) / denominator, 0)
-```
+## ✅ Batch 3: RL Environment Core — TAMAMLANDI
+**Issues: #1-2, #4-5, #30 (5 issue) | Durum: ✅ Committed**
 
-**#9 Turbulence - Mahalanobis Distance** (L135-143)
-- `add_indicators_to_multi_symbol_df()` seviyesinde hesapla (tek hisse degil, cross-sectional)
-- Formula: `turb_t = (r_t - mu)^T * Sigma^{-1} * (r_t - mu)`
-- Ref: Liu et al. 2020 "FinRL", Kritzman & Li 2010
+### Yapılan Değişiklikler:
 
-**#10 MACD Signal Line**
-- Signal line (`macd.ewm(span=9).mean()`) ve histogram ekle
-- State space sadece `macd` kullandiginden geriye uyumlu (additive)
+**env/trading_env.py** (#1, #2, #4, #5)
+- **#1 Bounded Obs Space**: `Box(-np.inf, np.inf)` → `Box(-10.0, 10.0)`; `_get_observation()` sonunda `np.clip(state, -10.0, 10.0)`
+- **#2 Dynamic Normalization**: `(price - 50) / 50` → per-symbol z-score `(price - mean) / std`; `_compute_price_stats()` training data'dan hesaplıyor; `get_price_stats()` inference için expose ediyor
+- **#4 Silent Missing Data**: `KeyError → 0.0` yerine `logger.warning()` + son feature bloğunu tekrar kullan (ffill approx)
+- **#5 min_threshold**: `min_threshold = 0` → `min_threshold = 1` (minimum 1 hisse)
 
-**#11 Deprecated fillna** (L166-167)
+**app/services/daily_trading.py** (#30)
+- `build_live_state(..., price_stats: Optional[Dict[str, Dict[str, float]]] = None)` — aynı z-score normalization, `p_mean=50.0, p_std=50.0` fallback ile
+
+**Not:** Bu batch sonrası tüm mevcut modeller geçersizdir — yeniden eğitim gerekli.
+
+---
+
+## ✅ Batch 4: Backend Bug Fix — TAMAMLANDI
+**Issues: #23-25, #27, #29, #31, #33-36 (10 issue) | Durum: ✅ Committed**
+
+### Yapılan Değişiklikler:
+
+**app/api/routes/trading.py** (#23, #24, #25, #27)
+- **#23 Race Condition**: `_training_lock = asyncio.Lock()`; `async with _training_lock:` ile concurrent training koruması
+- **#24 Deterministic Eval**: `deterministic=False` → `deterministic=True`
+- **#25 DummyVecEnv Autoreset**: DummyVecEnv workaround kaldırıldı, raw `TradingEnv` ile eval; `obs, reward, done, truncated, _ = actual_env.step(action)`
+- **#27 Hardcoded Paths**: 14 hardcoded path → `_settings.MODELS_DIR`, `_settings.RESULTS_DIR`, `_settings.DATA_DIR`, `_settings.LOGS_DIR`, `_settings.HYPEROPT_DIR`
+
+**app/core/config.py** (#27)
+- `MODELS_DIR`, `RESULTS_DIR`, `DATA_DIR`, `LOGS_DIR`, `HYPEROPT_DIR` sabitler eklendi
+
+**app/services/daily_trading.py** (#31)
+- `from filelock import FileLock`; `FileLock(lock_file)` ile tüm JSON read/write işlemleri korundu
+
+**app/schemas/trading.py** (#33, #34)
+- `risk_mode: str` → `risk_mode: Literal["conservative", "moderate", "aggressive"]`
+- `action: str` → `action: Literal["BUY", "SELL", "HOLD"]`
+
+**app/services/model_analysis.py** (#35, #36)
+- **#35**: Global `warnings.filterwarnings('ignore')` kaldırıldı → scoped context manager kullanıldı
+- **#36**: `profit_factor = np.inf` → `profit_factor = 9999.99` (JSON serialization uyumlu)
+
+**Not (#29):** Portfolio hesaplama mantığı mevcut implementasyonda doğru, açık issue olarak işaretlendi.
+
+---
+
+## ✅ Batch 5: Frontend Bug Fix — TAMAMLANDI
+**Issues: #39-41, #52-54 (6 issue) | Durum: ✅ Committed**
+
+### Yapılan Değişiklikler:
+
+**static/js/dashboard.js** (#39, #40, #41)
+- **#39**: `progressBar`, `stepInfo` null referansları için null check eklendi
+- **#40**: `showError()` ikinci parametre kabul ediyor (type='error')
+- **#41**: Chart oluşturmadan önce `if (performanceChart) { performanceChart.destroy(); }` ve `if (algorithmComparisonChart) { algorithmComparisonChart.destroy(); }`
+
+**static/js/academic-analysis.js** (#52, #53, #54)
+- **#52**: `checkReportStatus(retries = 0)` + `MAX_RETRIES = 20` ile infinite polling durduruldu
+- **#53**: `showEmptyState()` içinde `document.getElementById(...)` → null-safe `if (el) el.style.display = ...`
+- **#54**: `renderPortfolioComparison()` geçersiz modelleri filtreler, 3-point minimum interpolation, canvas data yoksa gizlenir
+
+---
+
+## ✅ Batch 6: Script Fix ve Deprecation Temizliği — TAMAMLANDI
+**Issues: #12, #19-20, #32, #37 (5 issue) | Durum: ✅ Committed**
+
+### Yapılan Değişiklikler:
+
+**scripts/training/train_a2c_phase1.py** (#19, #20)
+- **#19**: `n_steps=256` hardcoded → `n_steps=n_steps` (fonksiyon parametresini kullan)
+- **#20**: `done = np.array([False])`; `while not done[0]:` ile DummyVecEnv ndarray done koruması
+
+**data/data_fetcher.py** (#12)
 - `.fillna(method='ffill')` → `.ffill()`
 - `.fillna(method='bfill')` → `.bfill()`
 
-**Dogrulama:**
-- RSI ciktisini `pandas_ta.rsi()` ile karsilastir
-- ADX ciktisini `pandas_ta.adx()` ile karsilastir
-- Turbulence > 0 ve bilinen volatil donemlerde spike
+**app/main.py** (#32)
+- `@app.on_event("startup")` / `@app.on_event("shutdown")` kaldırıldı
+- `@asynccontextmanager async def lifespan(app: FastAPI)` ile değiştirildi
+- `FastAPI(..., lifespan=lifespan)` eklendi
+
+**run_server.py** (#37)
+- `reload=True` → `reload=settings.DEBUG`
 
 ---
 
-## Batch 3: RL Environment Core
-**Kapsam: ORTA | Issues: #1-5, #30 (6 issue)**
+## 🔄 Batch 7: Data Pipeline Robustness — BEKLIYOR
+**Issues: #13-14 (2 issue) | Durum: ⏳ Yapılmadı**
 
-### Dosyalar ve Degisiklikler:
-
-**env/trading_env.py**
-
-**#1 Bounded Observation Space** (L71-76)
-- `Box(-np.inf, np.inf)` → `Box(-10, 10)`
-- `_get_observation()` sonunda `np.clip(state, -10, 10)` ekle
-
-**#2 Dynamic Normalization** (L305-308)
-- `(price - 50) / 50` → rolling z-score: `(price - rolling_mean) / (rolling_std + 1e-8)`
-- Training data'dan rolling istatistikler hesapla ve kaydet
-- Inference'da ayni istatistikleri yukle
-
-**#3 PSR Reward Function** (L180-188)
-- Portfolio change % yerine Differential Sharpe Ratio (Moody & Saffell 2001)
-- Bu, PSR'nin step-wise yaklasimi
-- Ref: Ansari et al. 2024, Bailey & Lopez de Prado 2012
-
-**#4 Silent Missing Data** (L335-337)
-- `KeyError → 0.0` yerine: son bilinen veriden ffill + `logger.warning()`
-
-**#5 min_threshold** (L149)
-- `min_threshold = 0` → `min_threshold = 1` (minimum 1 hisse)
-
-**app/services/daily_trading.py** (#30)
-- L246-256: Ayni dynamic normalization'i `build_live_state()`'e uygula
-
-**KRITIK: Batch 2-3 sonrasi tum modeller gecersiz olur - yeniden egitim gerekli!**
-
-**Dogrulama:**
-- `env.observation_space.contains(obs)` her adimda True
-- Normalize fiyatlar %99 [-3, 3] araliginda
-- 1000 adim egitim - reward dagilimi degenere degil
-- `daily_trading.py` ve `trading_env.py` normalization'i eslesiyor
-
----
-
-## Batch 4: Backend Bug Fix
-**Kapsam: ORTA | Issues: #23-27, #29, #31, #33-36 (11 issue)**
-
-### Dosyalar ve Degisiklikler:
-
-**app/api/routes/trading.py**
-- #23 (L28-35): `training_state` icin `asyncio.Lock()` ekle
-- #24 (L561): `deterministic=False` → `deterministic=True`
-- #25 (L563-575): DummyVecEnv workaround kaldir, raw `TradingEnv` ile eval
-- #26 (L914-937): Hardcoded semboller → `get_symbols(phase=1)` kullan
-- #27: 22+ hardcoded path → `config.py`'da `MODELS_DIR`, `RESULTS_DIR`, `DATA_DIR` tanimla
-
-**app/services/daily_trading.py**
-- #29 (L529-533): `decision["price"]` → `current_prices[symbol]` ile portfolio hesapla
-- #31: JSON dosya I/O'ya `filelock` (Windows uyumlu) ekle
-
-**app/schemas/trading.py**
-- #33 (L172): `action: str` → `action: Literal["BUY", "SELL", "HOLD"]`
-- #34 (L136): `risk_mode: str` → `risk_mode: Literal["conservative", "moderate", "aggressive"]`
-
-**app/services/model_analysis.py**
-- #35 (L16): Global `warnings.filterwarnings('ignore')` kaldir, spesifik context manager kullan
-- #36 (L93): `np.inf` → `9999.99` (JSON serialization uyumlu)
-
-**Dogrulama:**
-- 2 esz zamanli training istegi: ikincisi 400 donmeli
-- Gecersiz `risk_mode` → 422 validation error
-- `profit_factor` JSON'da finite sayi
-
----
-
-## Batch 5: Frontend Bug Fix
-**Kapsam: ORTA | Issues: #39-42, #46-47, #52-55 (10 issue)**
-
-### Dosyalar ve Degisiklikler:
-
-**static/js/dashboard.js**
-- #39 (L197-200): `progressBar`, `stepInfo` referanslarini kaldir/null check
-- #40 (L177,438): `showError()` 2 parametre kabul etsin (message, type='error')
-- #41 (L99-134): Chart olusturmadan once `.destroy()` cagir
-- #42 (L988): `$` → `₺`
-
-**static/js/daily-trading.js**
-- #46 (L156): `['ASELS', 'THYAO', 'EREGL', 'KCHOL', 'SAHOL']` → Phase 1 dogru sembolleri
-- #47 (L242): `'apply-decision-btn'` → `'apply-decisions'`
-
-**static/js/academic-analysis.js**
-- #52 (L51): Infinite polling → `maxRetries=20` counter ekle
-- #53 (L470-473): Null check ekle: `const el = document.getElementById(...); if (el) el.style.display = ...`
-- #54 (L204): 2-point chart icin minimum veri kontrolu
-
-**static/index.html**
-- #55 (L479-497): EREGL/KCHOL/SAHOL → AKBNK/TUPRS/BIMAS (Phase 1 dogru semboller)
-
-**Dogrulama:**
-- Dashboard yukleme: console error yok
-- Chart degistirince memory leak yok
-- Daily trading dogru semboller gosteriyor
-- Apply decisions butonu calisiyor
-- Academic analysis polling 20 denemeden sonra duruyor
-
----
-
-## Batch 6: Script Fix ve Deprecation Temizligi
-**Kapsam: KUCUK | Issues: #12, #19-20, #32, #37 (5 issue)**
-
-### Dosyalar ve Degisiklikler:
-
-**scripts/train_a2c_phase1.py**
-- #19 (L121): `n_steps=256` → `n_steps=n_steps` (parametre kullan)
-- #20 (L180-182): `done = done[0] if isinstance(done, np.ndarray) else done`
+### Planlanan Değişiklikler:
 
 **data/data_fetcher.py**
-- #12 (L151,154): `.fillna(method='ffill')` → `.ffill()`
-
-**app/main.py**
-- #32 (L63,70): `@app.on_event()` → `@asynccontextmanager` lifespan
-
-**run_server.py**
-- #37: `reload=True` → `reload=settings.DEBUG`
+- **#13**: Exponential backoff retry (max 3 deneme, 2^n saniye bekleme) — yfinance geçici hatalarında çökme yerine retry
+- **#14**: Minimum veri kapsamı doğrulama — symbol başına %80+ coverage gerekli, aksi halde uyarı/hata
 
 ---
 
-## Batch 7: Data Pipeline Robustness
-**Kapsam: KUCUK | Issues: #13-14 (2 issue)**
+## 🔄 Batch 8: Kod Kalitesi ve Test Altyapısı — BEKLIYOR
+**Issues: #38, #44-45, #48-50, #56-63 (16 issue) | Durum: ⏳ Yapılmadı**
 
-### Dosyalar ve Degisiklikler:
+### Planlanan Değişiklikler:
 
-**data/data_fetcher.py**
-- #13: Exponential backoff retry (max 3 deneme, 2^n saniye bekleme)
-- #14: Minimum veri kapsami dogrulama (%80+ coverage gerekli)
+**Frontend (#38, #44, #45, #48, #49, #50):**
+- #38: `dashboard.js` global değişkenler → `const AppState = {...}` namespace
+- #44: Tüm chart re-creation'larda `.destroy()` (Batch 5'in genişlemesi — diğer chartlar)
+- #45: Polling frekansını 10 req/min'e düşür (şu an sınırsız)
+- #48: `daily-trading.js` `alert()` → toast notification div
+- #49: `console.log`'ları `if (DEBUG)` içine al
+- #50: Input sanitization (balance, shares input'ları)
 
----
-
-## Batch 8: Kod Kalitesi ve Test Altyapisi
-**Kapsam: ORTA | Issues: #38, #44-45, #48-50, #56-63 (16 issue)**
-
-### Dosyalar ve Degisiklikler:
-
-**Frontend:**
-- #38: dashboard.js global degiskenler → `const AppState = {...}` namespace
-- #44: Tum chart re-creation'larda `.destroy()` (Batch 5'in genislemesi)
-- #45: Polling frekansini 10 req/min'e dusur
-- #48: daily-trading.js `alert()` → toast notification div
-- #49: console.log'lari `if (DEBUG)` icine al
-- #50: Input sanitization (balance, shares)
-
-**CSS:**
-- #56: Duplicate table style'lari birlestir
+**CSS (#56, #57):**
+- #56: Duplicate table style'ları birleştir
 - #57: Responsive breakpoint ekle (768px, 480px)
 
-**Tests:**
+**Tests (#58, #59, #60):**
 - #58-59: Test script'lerine assertion ekle (`assert obs.shape == (56,)` vb.)
-- #60: Mock data fixture'lari ekle (offline test icin)
+- #60: Mock data fixture'ları ekle (offline test için)
 
-**Requirements:**
+**Requirements (#61, #62, #63):**
 - #61: `pytest` ekle
 - #62: `black`, `flake8`, `filelock` ekle
-- #63: Kullanilmayan dep'leri temizle (`peewee`, `annotated-doc`, `frozendict`)
+- #63: Kullanılmayan dep'leri temizle (`peewee`, `annotated-doc`, `frozendict`)
 
 ---
 
-## Batch Bagimliliklari
+## Batch Bağımlılıkları
 
 ```
-Batch 1 (Fatal+Sec) → Batch 2 (Indikatorler) → Batch 3 (RL Env) → Batch 4 (Backend)
-                                                                         |
-                       Batch 6 (Scripts) ← Batch 3                  Batch 5 (Frontend)
-                           |                                             |
-                       Batch 7 (Data)                               Batch 8 (Kalite)
+✅ Batch 0 (Duplicates) → ✅ Batch 1 (Fatal+Sec) → ✅ Batch 2 (İndikatörler) → ✅ Batch 3 (RL Env) → ✅ Batch 4 (Backend)
+                                                                                                              |
+                           ✅ Batch 6 (Scripts) ← ✅ Batch 3                                           ✅ Batch 5 (Frontend)
+                                 |                                                                             |
+                          🔄 Batch 7 (Data)                                                           🔄 Batch 8 (Kalite)
 ```
 
-## Toplam Ozet
+## Toplam Özet
 
-| Batch | Issue Sayisi | Anahtar Dosyalar |
-|-------|-------------|-----------------|
-| 1 Fatal+Sec | 10 | generate_academic_report.py, daily_trading.py, config.py, trading.py, JS dosyalari |
-| 2 Indikatorler | 6 | technical_indicators.py |
-| 3 RL Env | 6 | trading_env.py, daily_trading.py |
-| 4 Backend | 11 | trading.py, daily_trading.py, model_analysis.py, schemas, config.py |
-| 5 Frontend | 10 | dashboard.js, daily-trading.js, academic-analysis.js, index.html |
-| 6 Scripts | 5 | train_a2c_phase1.py, data_fetcher.py, main.py, run_server.py |
-| 7 Data | 2 | data_fetcher.py |
-| 8 Kalite | 16 | tests/*, requirements.txt, styles.css, JS dosyalari |
-| **Toplam** | **63** | |
+| Batch | Issue Sayısı | Durum | Anahtar Dosyalar |
+|-------|-------------|-------|-----------------|
+| 0 Duplicates | 2 | ✅ Tamamlandı | docs/*, scripts/* root kopyalar |
+| 1 Fatal+Sec | 8 | ✅ Tamamlandı | generate_academic_report.py, config.py, trading.py, JS |
+| 2 İndikatörler | 5 | ✅ Tamamlandı | technical_indicators.py |
+| 3 RL Env | 5 | ✅ Tamamlandı | trading_env.py, daily_trading.py |
+| 4 Backend | 10 | ✅ Tamamlandı | trading.py, daily_trading.py, model_analysis.py, schemas |
+| 5 Frontend | 6 | ✅ Tamamlandı | dashboard.js, academic-analysis.js |
+| 6 Scripts | 5 | ✅ Tamamlandı | train_a2c_phase1.py, data_fetcher.py, main.py, run_server.py |
+| 7 Data | 2 | 🔄 Bekliyor | data_fetcher.py |
+| 8 Kalite | 16 | 🔄 Bekliyor | tests/*, requirements.txt, styles.css, JS dosyaları |
+| **Tamamlanan** | **41** (+3 merge=44 fix) | ✅ | — |
+| **Bekleyen** | **18** | 🔄 | — |
+| **Toplam** | **58** (+7 merge=65) | | |
