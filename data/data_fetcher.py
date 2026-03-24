@@ -3,6 +3,7 @@ Veri Çekme Modülü
 BIST-30 hisseleri için Yahoo Finance'den günlük OHLCV verisi çeker
 """
 
+import time
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -35,6 +36,33 @@ class DataFetcher:
         # Veri dizinini oluştur
         os.makedirs(self.data_dir, exist_ok=True)
 
+    def _fetch_with_retry(self, symbol: str, max_retries: int = 3) -> Optional[pd.DataFrame]:
+        """
+        (#13) Single symbol fetch with exponential backoff retry.
+        Returns DataFrame or None if all attempts fail.
+        """
+        for attempt in range(max_retries):
+            try:
+                ticker = yf.Ticker(symbol)
+                df = ticker.history(start=self.start_date, end=self.end_date)
+
+                if df.empty:
+                    logger.warning(f"No data found for {symbol}")
+                    return None
+
+                df.columns = df.columns.str.lower()
+                df = df[['open', 'high', 'low', 'close', 'volume']]
+                return df
+
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait = 2 ** attempt  # 1s, 2s, 4s
+                    logger.warning(f"  Attempt {attempt + 1}/{max_retries} failed for {symbol}: {e}. Retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    logger.error(f"Error fetching {symbol} after {max_retries} attempts: {e}")
+                    return None
+
     def fetch_stock_data(self, symbols: List[str], save=True) -> pd.DataFrame:
         """
         Birden fazla hisse için OHLCV verisi çek
@@ -57,34 +85,30 @@ class DataFetcher:
         logger.info(f"Fetching data for {len(symbols)} symbols...")
         logger.info(f"Date range: {self.start_date} to {self.end_date}")
 
+        # Calculate expected trading days for coverage check (#14)
+        start_dt = datetime.strptime(self.start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(self.end_date, "%Y-%m-%d")
+        calendar_days = (end_dt - start_dt).days
+        # ~252 trading days/year; approximate expected rows
+        expected_rows = int(calendar_days * 252 / 365)
+
         all_data = {}
 
         for symbol in symbols:
-            try:
-                logger.info(f"Downloading {symbol}...")
-                ticker = yf.Ticker(symbol)
-                df = ticker.history(start=self.start_date, end=self.end_date)
-
-                if df.empty:
-                    logger.warning(f"No data found for {symbol}")
-                    continue
-
-                # Sütun isimlerini küçük harfe çevir
-                df.columns = df.columns.str.lower()
-
-                # Sadece ihtiyacımız olan sütunları al
-                df = df[['open', 'high', 'low', 'close', 'volume']]
-
-                # DON'T add symbol column here - it will be added by concat with keys
-                # df['symbol'] = symbol  # REMOVED - causes duplicate column!
-
-                all_data[symbol] = df
-
-                logger.info(f"  ✓ {symbol}: {len(df)} rows ({df.index[0].date()} to {df.index[-1].date()})")
-
-            except Exception as e:
-                logger.error(f"Error fetching {symbol}: {e}")
+            df = self._fetch_with_retry(symbol)  # (#13) retry logic
+            if df is None:
                 continue
+
+            # (#14) Minimum coverage check: require ≥80% of expected trading days
+            if expected_rows > 0 and len(df) < expected_rows * 0.8:
+                coverage_pct = len(df) / expected_rows * 100
+                logger.warning(
+                    f"  ⚠ {symbol}: low coverage {coverage_pct:.0f}% "
+                    f"({len(df)} rows, expected ~{expected_rows})"
+                )
+
+            all_data[symbol] = df
+            logger.info(f"  ✓ {symbol}: {len(df)} rows ({df.index[0].date()} to {df.index[-1].date()})")
 
         if not all_data:
             raise ValueError("No data was fetched for any symbol")
