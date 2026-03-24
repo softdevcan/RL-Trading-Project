@@ -12,14 +12,30 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// Global state
-let isTraining = false;
-let statusCheckInterval = null;
-let selectedModel = null;
-let performanceChart = null;
-let trainingProgressChart = null;
-let algorithmComparisonChart = null;
-let allModels = [];
+// (#49) Debug guard
+const DASHBOARD_DEBUG = false;
+function dbgLog(...args) { if (DASHBOARD_DEBUG) console.log(...args); }
+
+// (#38) Namespaced global state — replaces bare module-level lets
+const AppState = {
+    isTraining: false,
+    statusCheckInterval: null,
+    selectedModel: null,
+    performanceChart: null,
+    trainingProgressChart: null,
+    algorithmComparisonChart: null,
+    allModels: [],
+    lastStatusCheck: 0  // (#45) timestamp for polling throttle
+};
+
+// Backwards-compat shims so existing call sites work without bulk-rename
+// (each property delegates through AppState)
+Object.defineProperty(window, 'isTraining',   { get: () => AppState.isTraining,   set: v => { AppState.isTraining = v; } });
+Object.defineProperty(window, 'selectedModel',{ get: () => AppState.selectedModel, set: v => { AppState.selectedModel = v; } });
+Object.defineProperty(window, 'allModels',    { get: () => AppState.allModels,     set: v => { AppState.allModels = v; } });
+Object.defineProperty(window, 'performanceChart', { get: () => AppState.performanceChart, set: v => { AppState.performanceChart = v; } });
+Object.defineProperty(window, 'algorithmComparisonChart', { get: () => AppState.algorithmComparisonChart, set: v => { AppState.algorithmComparisonChart = v; } });
+Object.defineProperty(window, 'statusCheckInterval', { get: () => AppState.statusCheckInterval, set: v => { AppState.statusCheckInterval = v; } });
 
 /**
  * Tab Management
@@ -45,13 +61,13 @@ function switchTab(tabName, event) {
     } else if (tabName === 'daily-trading') {
         // Reload models when switching to daily trading tab
         if (window.dailyTradingManager) {
-            console.log('Switching to daily-trading tab, reloading models...');
+            dbgLog('Switching to daily-trading tab, reloading models...');
             window.dailyTradingManager.loadModels();
         }
     } else if (tabName === 'academic') {
         // Reload analysis when switching to academic tab
         if (window.academicAnalysisManager) {
-            console.log('Switching to academic tab, reloading analysis...');
+            dbgLog('Switching to academic tab, reloading analysis...');
             window.academicAnalysisManager.loadExistingResults();
         }
     }
@@ -286,7 +302,8 @@ function updateTrainingChart(step, progress) {
 }
 
 function startStatusCheck() {
-    statusCheckInterval = setInterval(checkStatus, 2000);
+    // (#45) Throttle to ~10 req/min — interval 6000ms instead of 2000ms
+    statusCheckInterval = setInterval(checkStatus, 6000);
 }
 
 function stopStatusCheck() {
@@ -504,7 +521,7 @@ function showError(message, type = 'error') {
  * Initialization
  */
 function init() {
-    console.log('Initializing RL Trading Dashboard...');
+    dbgLog('Initializing RL Trading Dashboard...');
     initCharts();
     initTrainingForm();
     loadModels();
@@ -512,7 +529,7 @@ function init() {
     initDataForm();
     // Load hyperparameter studies for the default selected algorithm
     loadHyperparameterStudies();
-    console.log('Dashboard initialized successfully!');
+    dbgLog('Dashboard initialized successfully!');
 }
 
 function initDataForm() {
@@ -752,8 +769,7 @@ async function showModelDetails(modelName) {
         document.getElementById('modelDetailsModal').style.display = 'block';
 
     } catch (error) {
-        console.error('Error loading model details:', error);
-        alert('❌ Model detayları yüklenemedi: ' + error.message);
+        showError('❌ Model detayları yüklenemedi: ' + error.message);
     }
 }
 

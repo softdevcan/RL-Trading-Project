@@ -3,16 +3,21 @@
  * Handles UI interactions and API calls for daily trading decisions
  */
 
+// (#49) Debug guard — set DEBUG=true in console to enable verbose logging
+const DAILY_TRADING_DEBUG = false;
+function dtLog(...args) { if (DAILY_TRADING_DEBUG) console.log(...args); }
+function dtError(...args) { if (DAILY_TRADING_DEBUG) console.error(...args); }
+
 class DailyTradingManager {
     constructor() {
-        console.log('DailyTradingManager: Initializing...');
+        dtLog('DailyTradingManager: Initializing...');
         this.currentDecision = null;
         this.portfolioChart = null;
         this.init();
     }
 
     init() {
-        console.log('DailyTradingManager: Running init...');
+        dtLog('DailyTradingManager: Running init...');
         this.loadModels();
         this.setupEventListeners();
         this.loadLatestPortfolio();
@@ -41,67 +46,67 @@ class DailyTradingManager {
         const dateInput = document.getElementById('trading-date');
         if (dateInput) {
             dateInput.value = dateStr;
-            console.log('Default trading date set to:', dateStr);
+            dtLog('Default trading date set to:', dateStr);
         }
     }
 
     setupEventListeners() {
-        console.log('DailyTradingManager: Setting up event listeners...');
+        dtLog('DailyTradingManager: Setting up event listeners...');
 
-        // Slider update - FIX: Use correct ID 'max-shares-value' instead of 'max-shares-display'
+        // Slider update
         const slider = document.getElementById('max-shares-slider');
         const display = document.getElementById('max-shares-value');
         if (slider && display) {
             slider.addEventListener('input', (e) => {
                 display.textContent = e.target.value;
-                console.log('Slider value updated:', e.target.value);
+                dtLog('Slider value updated:', e.target.value);
             });
-            console.log('Slider event listener attached');
+            dtLog('Slider event listener attached');
         } else {
-            console.error('Slider or display element not found!', {slider, display});
+            dtError('Slider or display element not found!', {slider, display});
         }
 
-        // Get Decision button - FIX: Use correct ID 'get-daily-decision'
+        // Get Decision button
         const getDecisionBtn = document.getElementById('get-daily-decision');
         if (getDecisionBtn) {
             getDecisionBtn.addEventListener('click', () => this.getDecision());
-            console.log('Get decision button listener attached');
+            dtLog('Get decision button listener attached');
         } else {
-            console.error('Get decision button not found!');
+            dtError('Get decision button not found!');
         }
 
-        // Load Portfolio button - FIX: Use correct ID 'load-last-portfolio'
+        // Load Portfolio button
         const loadPortfolioBtn = document.getElementById('load-last-portfolio');
         if (loadPortfolioBtn) {
             loadPortfolioBtn.addEventListener('click', () => this.loadLatestPortfolio());
-            console.log('Load portfolio button listener attached');
+            dtLog('Load portfolio button listener attached');
         } else {
-            console.error('Load portfolio button not found!');
+            dtError('Load portfolio button not found!');
         }
 
         // Apply Decision button
         const applyDecisionBtn = document.getElementById('apply-decisions');
         if (applyDecisionBtn) {
             applyDecisionBtn.addEventListener('click', () => this.applyDecision());
-            console.log('Apply decisions button listener attached');
+            dtLog('Apply decisions button listener attached');
         }
 
         // Export button
         const exportBtn = document.getElementById('export-decisions');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportDecision());
-            console.log('Export button listener attached');
+            dtLog('Export button listener attached');
         }
     }
 
     async loadModels() {
         try {
-            console.log('DailyTradingManager: Loading models...');
+            dtLog('DailyTradingManager: Loading models...');
             const response = await fetch('/api/trading/models');
             const data = await response.json();
-            console.log('Models data received:', data);
+            dtLog('Models data received:', data);
 
-            // FIX: API returns array directly, not {models: [...]}
+            // API returns array directly
             const select = document.getElementById('live-model-select');
             if (select && Array.isArray(data) && data.length > 0) {
                 select.innerHTML = '<option value="">-- Model Seç --</option>';
@@ -111,57 +116,59 @@ class DailyTradingManager {
                     option.textContent = model.name;
                     select.appendChild(option);
                 });
-                console.log(`✅ Loaded ${data.length} models into select`);
+                dtLog(`✅ Loaded ${data.length} models into select`);
             } else {
-                console.error('Model select element not found or no models in data!', {select, data});
+                dtError('Model select element not found or no models in data!', {select, data});
             }
         } catch (error) {
-            console.error('Error loading models:', error);
+            dtError('Error loading models:', error);
             this.showError('Modeller yüklenirken hata oluştu');
         }
     }
 
     async loadLatestPortfolio() {
         try {
-            console.log('Loading latest portfolio...');
+            dtLog('Loading latest portfolio...');
             const response = await fetch('/api/trading/latest-portfolio');
             const data = await response.json();
-            console.log('Portfolio data received:', data);
+            dtLog('Portfolio data received:', data);
 
             if (data.portfolio) {
-                // Update balance - FIX: Use correct ID 'current-balance'
                 const balanceInput = document.getElementById('current-balance');
                 if (balanceInput) {
-                    balanceInput.value = data.portfolio.balance;
-                    console.log('Balance updated:', data.portfolio.balance);
+                    // (#50) Sanitize: ensure balance is a non-negative finite number
+                    const rawBalance = parseFloat(data.portfolio.balance);
+                    balanceInput.value = (isFinite(rawBalance) && rawBalance >= 0) ? rawBalance : 0;
+                    dtLog('Balance updated:', balanceInput.value);
                 } else {
-                    console.error('Balance input element not found!');
+                    dtError('Balance input element not found!');
                 }
 
                 // Update shares
                 Object.entries(data.portfolio.shares).forEach(([symbol, shares]) => {
                     const input = document.getElementById(`shares-${symbol.replace('.IS', '')}`);
                     if (input) {
-                        input.value = shares;
-                        console.log(`${symbol} shares updated:`, shares);
+                        // (#50) Sanitize: ensure shares is a non-negative integer
+                        const rawShares = parseInt(shares, 10);
+                        input.value = (isFinite(rawShares) && rawShares >= 0) ? rawShares : 0;
+                        dtLog(`${symbol} shares updated:`, input.value);
                     } else {
-                        console.error(`Shares input not found for ${symbol}`);
+                        dtError(`Shares input not found for ${symbol}`);
                     }
                 });
 
                 this.showSuccess('Portfolio yüklendi');
             }
         } catch (error) {
-            console.error('Error loading portfolio:', error);
+            dtError('Error loading portfolio:', error);
             this.showError('Portfolio yüklenirken hata oluştu');
         }
     }
 
     async getDecision() {
         try {
-            // Validate inputs - FIX: Use correct ID 'live-model-select'
             const modelName = document.getElementById('live-model-select')?.value;
-            console.log('Selected model:', modelName);
+            dtLog('Selected model:', modelName);
             if (!modelName) {
                 this.showError('Lütfen bir model seçin');
                 return;
@@ -169,11 +176,11 @@ class DailyTradingManager {
 
             // Get risk mode
             const riskMode = document.querySelector('input[name="risk-mode"]:checked')?.value || 'moderate';
-            console.log('Risk mode:', riskMode);
+            dtLog('Risk mode:', riskMode);
 
             // Get max shares
-            const maxShares = parseInt(document.getElementById('max-shares-slider')?.value || 100);
-            console.log('Max shares:', maxShares);
+            const maxShares = Math.max(1, parseInt(document.getElementById('max-shares-slider')?.value || 100, 10));
+            dtLog('Max shares:', maxShares);
 
             // Get trading date
             const tradingDate = document.getElementById('trading-date')?.value;
@@ -181,18 +188,21 @@ class DailyTradingManager {
                 this.showError('Lütfen bir işlem tarihi seçin');
                 return;
             }
-            console.log('Trading date:', tradingDate);
+            dtLog('Trading date:', tradingDate);
 
-            // Get balance - FIX: Use correct ID 'current-balance'
-            const balance = parseFloat(document.getElementById('current-balance')?.value || 1000000);
-            console.log('Balance:', balance);
+            // (#50) Sanitize balance: non-negative finite number, min 1000
+            const rawBalance = parseFloat(document.getElementById('current-balance')?.value || 1000000);
+            const balance = (isFinite(rawBalance) && rawBalance >= 0) ? rawBalance : 1000000;
+            dtLog('Balance:', balance);
 
             // Get shares - PHASE1_SYMBOLS (must match training data)
             const symbols = ['AKBNK', 'THYAO', 'TUPRS', 'BIMAS', 'ASELS'];
             const shares = {};
             symbols.forEach(symbol => {
                 const input = document.getElementById(`shares-${symbol}`);
-                shares[`${symbol}.IS`] = parseInt(input?.value || 0);
+                // (#50) Sanitize shares: non-negative integer
+                const rawVal = parseInt(input?.value || 0, 10);
+                shares[`${symbol}.IS`] = (isFinite(rawVal) && rawVal >= 0) ? rawVal : 0;
             });
 
             // Show loading state
@@ -224,7 +234,7 @@ class DailyTradingManager {
             this.displayDecision(data);
 
         } catch (error) {
-            console.error('Error getting decision:', error);
+            dtError('Error getting decision:', error);
             this.showError('Karar alınırken hata oluştu: ' + error.message);
             this.hideLoading();
         }
@@ -430,7 +440,7 @@ class DailyTradingManager {
             await this.loadPortfolioHistory();
 
         } catch (error) {
-            console.error('Error applying decision:', error);
+            dtError('Error applying decision:', error);
             this.showError('Karar uygulanırken hata oluştu: ' + error.message);
         }
     }
@@ -444,7 +454,7 @@ class DailyTradingManager {
                 this.renderPortfolioChart(data);
             }
         } catch (error) {
-            console.error('Error loading portfolio history:', error);
+            dtError('Error loading portfolio history:', error);
         }
     }
 
@@ -554,14 +564,37 @@ class DailyTradingManager {
         if (loadingState) loadingState.style.display = 'none';
     }
 
+    // (#48) Toast notification — replaces blocking alert()
+    _showToast(message, type = 'error') {
+        let container = document.getElementById('dt-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'dt-toast-container';
+            container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        const bg = type === 'success' ? '#064e3b' : '#7f1d1d';
+        const border = type === 'success' ? '#047857' : '#991b1b';
+        const color = type === 'success' ? '#6ee7b7' : '#fca5a5';
+        toast.style.cssText = `background:${bg};border:1px solid ${border};color:${color};padding:12px 16px;border-radius:8px;font-size:14px;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,0.4);`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
     showError(message) {
-        // Simple alert for now - could be replaced with a toast notification
-        alert('❌ ' + message);
+        this._showToast(message, 'error');
     }
 
     showSuccess(message) {
-        // Simple alert for now - could be replaced with a toast notification
-        alert('✅ ' + message);
+        this._showToast(message, 'success');
     }
 }
 

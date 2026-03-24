@@ -45,6 +45,13 @@ print(f"  Portfolio Value: ₺{info['portfolio_value']:,.2f}")
 print(f"  Observation shape: {obs.shape}")
 print(f"  Observation range: [{obs.min():.4f}, {obs.max():.4f}]")
 
+# (#58) Core assertions
+assert obs.shape == (56,), f"Expected obs shape (56,), got {obs.shape}"
+assert obs.min() >= -10.0 and obs.max() <= 10.0, f"Obs out of bounds: [{obs.min()}, {obs.max()}]"
+assert info['balance'] > 0, "Initial balance must be positive"
+assert env.observation_space.contains(obs), "Initial obs not in observation_space"
+print("  ✅ Assertions passed: shape, bounds, balance, obs_space")
+
 # Test with manual actions
 print("\n" + "=" * 60)
 print("TESTING MANUAL ACTIONS")
@@ -61,6 +68,11 @@ print(f"  Reward: {reward:.6f}")
 print(f"  Total trades: {len(env.trades_history)}")
 if env.trades_history:
     print(f"  Last trade: {env.trades_history[-1]}")
+
+# (#58) Step assertions
+assert obs.shape == (56,), f"Step obs shape wrong: {obs.shape}"
+assert isinstance(reward, float), f"Reward must be float, got {type(reward)}"
+assert env.observation_space.contains(obs), "Step obs not in observation_space"
 
 # Test 2: Try to buy multiple stocks
 print("\nTest 2: Action = [0.5, 0.5, 0.3, 0, 0] (buy different amounts)")

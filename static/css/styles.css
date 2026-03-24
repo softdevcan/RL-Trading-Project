@@ -603,6 +603,36 @@ button:disabled {
     }
 }
 
+/* (#57) Small screen breakpoint */
+@media (max-width: 480px) {
+    .navbar-title {
+        min-width: unset;
+    }
+
+    .navbar-logo {
+        font-size: 1em;
+    }
+
+    .metric-value {
+        font-size: 20px;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-content {
+        margin: 0;
+        border-radius: 0;
+        width: 100%;
+        max-height: 100vh;
+    }
+
+    .decision-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ==================== DAILY TRADING STYLES ==================== */
 
 .daily-trading-container {
@@ -1080,36 +1110,19 @@ button:disabled {
 }
 
 /* ==================== Academic Analysis Styles ==================== */
-
-.comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
+/* (#56) Duplicate .comparison-table removed — base definition reused.
+   Override only what differs for academic context: looser padding on th/td. */
+#academic .comparison-table th,
+#academic .comparison-table td {
+    padding: 0.75rem 1rem;
 }
 
-.comparison-table th {
+#academic .comparison-table th {
     background: #1e293b;
     color: #cbd5e1;
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 2px solid #334155;
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
-.comparison-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #1e293b;
-    color: #e2e8f0;
-}
-
-.comparison-table tr:hover {
-    background: #1e293b;
-}
-
-.comparison-table tr:last-child td {
+#academic .comparison-table tr:last-child td {
     border-bottom: none;
 }
 

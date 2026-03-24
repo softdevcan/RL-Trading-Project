@@ -1,4 +1,3 @@
-annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.11.0
 beautifulsoup4==4.14.2
@@ -15,7 +14,6 @@ Farama-Notifications==0.0.4
 fastapi==0.121.1
 filelock==3.20.0
 fonttools==4.60.1
-frozendict==2.4.6
 fsspec==2025.10.0
 gymnasium==1.2.2
 h11==0.16.0
@@ -35,7 +33,6 @@ numpy==2.2.6
 packaging==25.0
 pandas==2.3.3
 pandas-ta==0.4.71b0
-peewee==3.18.3
 pillow==12.0.0
 platformdirs==4.5.0
 protobuf==6.33.0
@@ -84,3 +81,8 @@ nvidia-ml-py3==7.352.0  # For detailed GPU monitoring
 
 # TCMB EVDS API (Phase 2 - Macro Data)
 evds>=0.3.2  # TCMB Elektronik Veri Dağıtım Sistemi
+
+# Development & Testing (#61, #62)
+pytest>=8.0.0
+black>=24.0.0
+flake8>=7.0.0
