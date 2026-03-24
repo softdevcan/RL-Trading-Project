@@ -5,6 +5,7 @@ FastAPI endpoints for RL trading system
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import Dict, List, Optional
+import asyncio
 import os
 import re
 import json
@@ -19,13 +20,17 @@ from app.schemas.trading import (
     DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
     PortfolioSnapshot, PortfolioHistoryResponse
 )
+from app.core.config import get_settings
+
+_settings = get_settings()
 
 # Setup logger
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trading", tags=["Trading"])
 
-# Global training state
+# Global training state — guarded by _training_lock (#23)
+_training_lock = asyncio.Lock()
 training_state = {
     "is_training": False,
     "current_step": 0,
@@ -67,7 +72,7 @@ async def get_hyperparameter_studies(algorithm: str):
         List of hyperparameter study files with metadata
     """
     try:
-        studies_dir = "results/hyperparameter_studies"
+        studies_dir = f"{_settings.RESULTS_DIR}/hyperparameter_studies"
 
         if not os.path.exists(studies_dir):
             return {"studies": []}
@@ -129,24 +134,25 @@ async def start_training(
     """
     global training_state
 
-    if training_state["is_training"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Training already in progress"
-        )
+    async with _training_lock:  # (#23) prevent race between concurrent requests
+        if training_state["is_training"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Training already in progress"
+            )
 
-    # Reset training state
-    training_state = {
-        "is_training": True,
-        "current_step": 0,
-        "total_steps": request.total_timesteps,
-        "start_time": datetime.now().isoformat(),
-        "metrics": {},
-        "error": None,
-        "config": request.dict()
-    }
+        # Reset training state inside lock
+        training_state = {
+            "is_training": True,
+            "current_step": 0,
+            "total_steps": request.total_timesteps,
+            "start_time": datetime.now().isoformat(),
+            "metrics": {},
+            "error": None,
+            "config": request.dict()
+        }
 
-    # Start training in background
+    # Start training in background (outside lock — long-running)
     background_tasks.add_task(run_training, request)
 
     return TrainingResponse(
@@ -179,7 +185,7 @@ async def get_training_status():
 @router.get("/models", response_model=List[ModelInfo])
 async def list_models():
     """List all trained models"""
-    models_dir = "models"
+    models_dir = _settings.MODELS_DIR
 
     if not os.path.exists(models_dir):
         return []
@@ -192,7 +198,7 @@ async def list_models():
 
             # Try to load metrics from results
             model_name = filename.replace(".zip", "")
-            metrics_file = f"results/{model_name}_metrics.json"
+            metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
 
             metrics = {}
             if os.path.exists(metrics_file):
@@ -215,7 +221,7 @@ async def list_models():
 async def get_model_metrics(model_name: str):
     """Get metrics for a specific model"""
     model_name = sanitize_model_name(model_name)
-    metrics_file = f"results/{model_name}_metrics.json"
+    metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
 
     if not os.path.exists(metrics_file):
         raise HTTPException(
@@ -299,7 +305,7 @@ async def get_data_info():
         fetcher = DataFetcher()
 
         # Try to load existing data
-        if not os.path.exists('data/stock_data_with_indicators.csv'):
+        if not os.path.exists(f'{_settings.DATA_DIR}/stock_data_with_indicators.csv'):
             return {
                 "status": "no_data",
                 "message": "No data found. Please generate data first."
@@ -393,7 +399,7 @@ async def list_all_datasets():
 async def delete_model(model_name: str):
     """Delete a trained model"""
     model_name = sanitize_model_name(model_name)
-    model_path = f"models/{model_name}.zip"
+    model_path = f"{_settings.MODELS_DIR}/{model_name}.zip"
 
     if not os.path.exists(model_path):
         raise HTTPException(
@@ -405,7 +411,7 @@ async def delete_model(model_name: str):
     os.remove(model_path)
 
     # Delete metrics if exists
-    metrics_file = f"results/{model_name}_metrics.json"
+    metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
     if os.path.exists(metrics_file):
         os.remove(metrics_file)
 
@@ -527,13 +533,13 @@ async def run_training(request: TrainingRequest):
         }.get(request.algorithm, PPO)  # Default to PPO instead of A2C
 
         # Setup TensorBoard logging
-        os.makedirs('logs', exist_ok=True)
+        os.makedirs(_settings.LOGS_DIR, exist_ok=True)
         model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # Load hyperparameters if study is specified
         hyperparams = {}
         if request.hyperparameter_study:
-            study_path = os.path.join("results/hyperparameter_studies", request.hyperparameter_study)
+            study_path = os.path.join(f"{_settings.RESULTS_DIR}/hyperparameter_studies", request.hyperparameter_study)
             if os.path.exists(study_path):
                 with open(study_path, 'r') as f:
                     study_data = json.load(f)
@@ -564,7 +570,7 @@ async def run_training(request: TrainingRequest):
                 ent_coef=hyperparams.get('ent_coef', 0.15),
                 vf_coef=hyperparams.get('vf_coef', 0.5),
                 max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
-                tensorboard_log='logs',
+                tensorboard_log=_settings.LOGS_DIR,
                 verbose=1
             )
         elif request.algorithm == "A2C":
@@ -587,7 +593,7 @@ async def run_training(request: TrainingRequest):
                 normalize_advantage=True,
                 use_rms_prop=True,
                 rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
-                tensorboard_log='logs',
+                tensorboard_log=_settings.LOGS_DIR,
                 verbose=1
             )
         elif request.algorithm == "TD3":
@@ -618,7 +624,7 @@ async def run_training(request: TrainingRequest):
                 policy_delay=hyperparams.get('policy_delay', 2),
                 target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
                 target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
-                tensorboard_log='logs',
+                tensorboard_log=_settings.LOGS_DIR,
                 verbose=1
             )
         elif request.algorithm == "SAC":
@@ -643,7 +649,7 @@ async def run_training(request: TrainingRequest):
                 ent_coef=ent_coef,
                 target_update_interval=hyperparams.get('target_update_interval', 1),
                 use_sde=hyperparams.get('use_sde', False),
-                tensorboard_log='logs',
+                tensorboard_log=_settings.LOGS_DIR,
                 verbose=1
             )
         else:
@@ -653,7 +659,7 @@ async def run_training(request: TrainingRequest):
                 'MlpPolicy',
                 env,
                 learning_rate=actual_learning_rate,
-                tensorboard_log='logs',
+                tensorboard_log=_settings.LOGS_DIR,
                 verbose=1
             )
 
@@ -674,8 +680,8 @@ async def run_training(request: TrainingRequest):
                        f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
 
         # Save model
-        os.makedirs('models', exist_ok=True)
-        model_path = f'models/{model_name}'
+        os.makedirs(_settings.MODELS_DIR, exist_ok=True)
+        model_path = f'{_settings.MODELS_DIR}/{model_name}'
         model.save(model_path)
 
         # Evaluate on test set
@@ -691,43 +697,23 @@ async def run_training(request: TrainingRequest):
                 macro_df=macro_df
             )
 
-        test_env = DummyVecEnv([make_test_env])
+        # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
+        from env.trading_env import TradingEnv
+        actual_env: TradingEnv = make_test_env()
 
-        obs = test_env.reset()
-        done = np.array([False])
+        obs, _ = actual_env.reset()
+        done = False
         test_step = 0
 
-        # Track the actual environment instance
-        from env.trading_env import TradingEnv
-        actual_env_raw = test_env.envs[0]
-        if not isinstance(actual_env_raw, TradingEnv):
-            raise TypeError("Expected TradingEnv instance")
-        actual_env: TradingEnv = actual_env_raw
-
-        while not done[0]:  # DummyVecEnv returns array
-            action, _states = model.predict(obs, deterministic=False)  # Stochastic for better exploration
-
-            # CRITICAL: Save state BEFORE step (which may autoreset)
-            pre_step_trades = len(actual_env.trades_history)
-            pre_step_trades_copy = actual_env.trades_history.copy()
-            pre_step_portfolio_values = actual_env.portfolio_values.copy()
-
-            obs, reward, done, info = test_env.step(action)
+        while not done:
+            action, _states = model.predict(obs, deterministic=True)  # (#24) reproducible eval
+            obs, reward, done, truncated, _ = actual_env.step(action)
             test_step += 1
-
-            # IMMEDIATELY restore if autoreset happened (trades_history cleared)
-            if len(actual_env.trades_history) == 0 and pre_step_trades > 0:
-                logger.info(f"Autoreset detected! Restoring {pre_step_trades} trades")
-                actual_env.trades_history = pre_step_trades_copy
-                actual_env.portfolio_values = pre_step_portfolio_values
-
-            if done[0]:
-                logger.info(f"Episode done at step {test_step}")
+            if done or truncated:
                 break
 
         logger.info(f"Test evaluation: {test_step} steps completed")
 
-        # Get metrics (from restored state if episode ended)
         metrics = actual_env.get_metrics()
 
         # Convert numpy types to Python types and handle NaN
@@ -764,8 +750,8 @@ async def run_training(request: TrainingRequest):
         total_training_time = time.time() - training_start_time
 
         # Save metrics
-        os.makedirs('results', exist_ok=True)
-        metrics_file = f'results/{model_name}_metrics.json'
+        os.makedirs(_settings.RESULTS_DIR, exist_ok=True)
+        metrics_file = f'{_settings.RESULTS_DIR}/{model_name}_metrics.json'
 
         metrics_with_config = {
             **metrics,
@@ -839,7 +825,7 @@ async def get_daily_decision(request: DailyDecisionRequest):
 
         # 1. Load model
         safe_model_name = sanitize_model_name(request.model_name)
-        model_path = f"models/{safe_model_name}"
+        model_path = f"{_settings.MODELS_DIR}/{safe_model_name}"
         if not os.path.exists(model_path + ".zip"):
             raise HTTPException(
                 status_code=404,
@@ -991,7 +977,7 @@ async def apply_decision(date: str):
         logger.info(f"Applying decision for date: {date}")
 
         # Load decision from file
-        decision_file = 'data/live_trading/trade_decisions.json'
+        decision_file = f'{_settings.DATA_DIR}/live_trading/trade_decisions.json'
 
         if not os.path.exists(decision_file):
             raise HTTPException(
@@ -1071,7 +1057,7 @@ async def get_latest_portfolio():
         Latest portfolio snapshot or default initial state
     """
     try:
-        history_file = 'data/live_trading/portfolio_history.csv'
+        history_file = f'{_settings.DATA_DIR}/live_trading/portfolio_history.csv'
 
         if not os.path.exists(history_file):
             # Return default initial state
@@ -1135,7 +1121,7 @@ async def get_model_comparison():
         Comparison table with all performance metrics
     """
     try:
-        results_file = 'results/data/detailed_results.json'
+        results_file = f'{_settings.RESULTS_DIR}/data/detailed_results.json'
 
         if not os.path.exists(results_file):
             raise HTTPException(
@@ -1167,7 +1153,7 @@ async def get_best_models():
         Dictionary with best models for each metric
     """
     try:
-        results_file = 'results/data/detailed_results.json'
+        results_file = f'{_settings.RESULTS_DIR}/data/detailed_results.json'
 
         if not os.path.exists(results_file):
             raise HTTPException(

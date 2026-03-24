@@ -13,7 +13,6 @@ import json
 from datetime import datetime
 from scipy import stats
 import warnings
-warnings.filterwarnings('ignore')
 
 # Set publication-quality plot style
 plt.style.use('seaborn-v0_8-paper')
@@ -90,7 +89,7 @@ class ModelAnalyzer:
 
         total_profit = sum(t.get('pnl', 0) for t in winning_trades)
         total_loss = abs(sum(t.get('pnl', 0) for t in losing_trades))
-        profit_factor = total_profit / total_loss if total_loss > 0 else np.inf
+        profit_factor = total_profit / total_loss if total_loss > 0 else 9999.99
 
         # Average trade metrics
         avg_profit = total_profit / len(winning_trades) if winning_trades else 0
@@ -461,6 +460,8 @@ class ModelAnalyzer:
             model_returns: Dictionary with model_name -> returns
         """
         print("🔬 Generating Comprehensive Academic Analysis Report...")
+        # Suppress matplotlib/seaborn UserWarnings only during plot generation (#35)
+        warnings.filterwarnings('ignore', category=UserWarning)
 
         # 1. Generate comparison table
         comparison_df = self.compare_models(model_results)
@@ -516,6 +517,8 @@ class ModelAnalyzer:
             f.write(f"Highest Total Return: {comparison_df.loc[comparison_df['Total Return (%)'].idxmax(), 'Model']}\n")
             f.write(f"Lowest Drawdown: {comparison_df.loc[comparison_df['Max Drawdown (%)'].idxmax(), 'Model']}\n")
             f.write(f"Highest Win Rate: {comparison_df.loc[comparison_df['Win Rate (%)'].idxmax(), 'Model']}\n")
+
+        warnings.resetwarnings()  # restore warning filters after plot generation
 
         print(f"\n✅ Analysis complete! Results saved to: {self.results_dir}")
         print(f"   📁 Figures: {self.results_dir / 'figures'}")

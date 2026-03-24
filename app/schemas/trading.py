@@ -4,7 +4,7 @@ Pydantic models for API request/response validation
 """
 
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Literal
 from datetime import datetime
 
 
@@ -138,7 +138,7 @@ class DailyDecisionRequest(BaseModel):
     shares: Dict[str, int] = Field(
         description="Current shares owned for each symbol"
     )
-    risk_mode: str = Field(
+    risk_mode: Literal["conservative", "moderate", "aggressive"] = Field(
         default="moderate",
         description="Risk mode: conservative, moderate, or aggressive"
     )
@@ -174,7 +174,7 @@ class DailyDecisionRequest(BaseModel):
 class TradeDecision(BaseModel):
     """Single trade decision"""
     symbol: str
-    action: str  # BUY, SELL, HOLD
+    action: Literal["BUY", "SELL", "HOLD"]
     raw_signal: float
     shares: int
     price: float

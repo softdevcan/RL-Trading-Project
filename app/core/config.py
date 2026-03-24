@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     CORS_METHODS: list[str] = ["*"]
     CORS_HEADERS: list[str] = ["*"]
 
+    # Directory paths (#27)
+    MODELS_DIR: str = "models"
+    RESULTS_DIR: str = "results"
+    DATA_DIR: str = "data"
+    LOGS_DIR: str = "logs"
+    HYPEROPT_DIR: str = "hyperparameter_optimization/results"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

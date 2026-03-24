@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
+from filelock import FileLock
 
 from data.technical_indicators import add_indicators_to_multi_symbol_df
 
@@ -590,36 +591,36 @@ def save_daily_decision(
     os.makedirs('data/live_trading', exist_ok=True)
 
     decision_file = 'data/live_trading/trade_decisions.json'
+    lock_file = decision_file + '.lock'
 
-    # Load existing decisions
-    if os.path.exists(decision_file):
-        with open(decision_file, 'r') as f:
-            all_decisions = json.load(f)
-    else:
-        all_decisions = {}
+    # File-level lock for concurrent access safety (#31)
+    with FileLock(lock_file):
+        if os.path.exists(decision_file):
+            with open(decision_file, 'r') as f:
+                all_decisions = json.load(f)
+        else:
+            all_decisions = {}
 
-    # Add new decision
-    all_decisions[date] = {
-        "timestamp": datetime.now().isoformat(),
-        "portfolio_before": portfolio_before,
-        "decisions": decisions,
-        "portfolio_after": portfolio_after,
-        "summary": {
-            "total_trades": len([d for d in decisions if d["executed"]]),
-            "total_commission": sum(d.get("commission", 0) for d in decisions),
-            "daily_return_pct": (
-                (portfolio_after["portfolio_value"] - portfolio_before["portfolio_value"])
-                / portfolio_before["portfolio_value"] * 100
-                if portfolio_before["portfolio_value"] > 0 else 0
-            ),
-            "risk_mode": risk_mode,
-            "max_shares_per_trade": max_shares_per_trade
+        all_decisions[date] = {
+            "timestamp": datetime.now().isoformat(),
+            "portfolio_before": portfolio_before,
+            "decisions": decisions,
+            "portfolio_after": portfolio_after,
+            "summary": {
+                "total_trades": len([d for d in decisions if d["executed"]]),
+                "total_commission": sum(d.get("commission", 0) for d in decisions),
+                "daily_return_pct": (
+                    (portfolio_after["portfolio_value"] - portfolio_before["portfolio_value"])
+                    / portfolio_before["portfolio_value"] * 100
+                    if portfolio_before["portfolio_value"] > 0 else 0
+                ),
+                "risk_mode": risk_mode,
+                "max_shares_per_trade": max_shares_per_trade
+            }
         }
-    }
 
-    # Save back
-    with open(decision_file, 'w') as f:
-        json.dump(all_decisions, f, indent=2)
+        with open(decision_file, 'w') as f:
+            json.dump(all_decisions, f, indent=2)
 
     logger.info(f"Decision saved to {decision_file}")
 
