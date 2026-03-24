@@ -162,11 +162,11 @@ class DataFetcher:
         for symbol in df.index.get_level_values('symbol').unique():
             symbol_df = df.xs(symbol, level='symbol').copy()
 
-            # Forward fill NaN değerler
-            symbol_df = symbol_df.fillna(method='ffill')
+            # Forward fill NaN değerler (#12)
+            symbol_df = symbol_df.ffill()
 
             # Geriye kalan NaN'ları backward fill
-            symbol_df = symbol_df.fillna(method='bfill')
+            symbol_df = symbol_df.bfill()
 
             # Hala NaN varsa 0 ile doldur (volume için)
             symbol_df = symbol_df.fillna(0)

@@ -118,7 +118,7 @@ def train_a2c(
         'MlpPolicy',
         env,
         learning_rate=learning_rate,
-        n_steps=256,  # CHANGED: Lower for faster market reaction (was n_steps param)
+        n_steps=n_steps,  # (#19) use the passed parameter, not hardcoded 256
         verbose=1,
         tensorboard_log="./logs/tensorboard/",
         ent_coef=0.01,  # REDUCED: A2C needs less entropy (0.01 vs PPO's 0.15)
@@ -174,12 +174,13 @@ def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1):
 
     for episode in range(n_episodes):
         obs = env.reset()
-        done = False
+        done = np.array([False])
         episode_reward = 0
 
-        while not done:
+        while not done[0]:  # (#20) DummyVecEnv returns done as ndarray
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
+            # done is np.ndarray from DummyVecEnv — index [0] for scalar
             episode_reward += reward[0]
 
         # Metrics al

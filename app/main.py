@@ -1,5 +1,6 @@
 """Main FastAPI application"""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +12,15 @@ import os
 
 settings = get_settings()
 
+
+@asynccontextmanager  # (#32) replaces deprecated @app.on_event
+async def lifespan(app: FastAPI):
+    print(f"Starting {settings.API_TITLE} v{settings.API_VERSION}")
+    print(f"Docs available at: http://{settings.HOST}:{settings.PORT}/docs")
+    yield
+    print(f"Shutting down {settings.API_TITLE}")
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.API_TITLE,
@@ -18,7 +28,8 @@ app = FastAPI(
     description=settings.API_DESCRIPTION,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -80,14 +91,3 @@ async def chrome_devtools():
     return Response(status_code=204)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup"""
-    print(f"Starting {settings.API_TITLE} v{settings.API_VERSION}")
-    print(f"Docs available at: http://{settings.HOST}:{settings.PORT}/docs")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Run on application shutdown"""
-    print(f"Shutting down {settings.API_TITLE}")
