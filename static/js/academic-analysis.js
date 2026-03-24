@@ -47,8 +47,8 @@ class AcademicAnalysisManager {
 
             this.showStatus('✅ Rapor oluşturma başlatıldı! Birkaç dakika sürebilir...', 'success');
 
-            // Poll for results
-            setTimeout(() => this.checkReportStatus(), 5000);
+            // Poll for results — max 20 retries (#52)
+            setTimeout(() => this.checkReportStatus(0), 5000);
 
         } catch (error) {
             console.error('Error generating report:', error);
@@ -56,22 +56,26 @@ class AcademicAnalysisManager {
         }
     }
 
-    async checkReportStatus() {
+    async checkReportStatus(retries = 0) {
+        const MAX_RETRIES = 20;  // (#52) prevent infinite polling
         try {
             const response = await fetch('/api/trading/analysis/model-comparison');
 
             if (response.ok) {
                 this.showStatus('✅ Rapor oluşturuldu! Sonuçlar yükleniyor...', 'success');
                 await this.loadExistingResults();
-                setTimeout(() => {
-                    document.getElementById('analysis-status').style.display = 'none';
-                }, 3000);
+                const statusEl = document.getElementById('analysis-status');
+                if (statusEl) setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+            } else if (retries < MAX_RETRIES) {
+                setTimeout(() => this.checkReportStatus(retries + 1), 5000);
             } else {
-                // Still processing, check again
-                setTimeout(() => this.checkReportStatus(), 5000);
+                this.showStatus('⏳ Rapor oluşturma zaman aşımına uğradı. Lütfen tekrar deneyin.', 'error');
             }
         } catch (error) {
             console.error('Error checking report status:', error);
+            if (retries < MAX_RETRIES) {
+                setTimeout(() => this.checkReportStatus(retries + 1), 5000);
+            }
         }
     }
 
@@ -193,15 +197,27 @@ class AcademicAnalysisManager {
             canvas.chart.destroy();
         }
 
+        // (#54) Require at least 1 model with meaningful return data
+        const validModels = Object.entries(models).filter(
+            ([, metrics]) => metrics.total_return !== undefined && metrics.total_return !== null
+        );
+        if (validModels.length === 0) {
+            canvas.style.display = 'none';
+            return;
+        }
+        canvas.style.display = '';
+
         const ctx = canvas.getContext('2d');
 
-        // For simplicity, we'll show final portfolio values
-        // (In real implementation, you'd show portfolio evolution over time)
-        const datasets = Object.entries(models).map(([name, metrics], index) => {
+        // Show normalised portfolio growth: Start=100, End=100*(1+return)
+        // Three interpolated points to make chart more readable than bare 2-point line
+        const datasets = validModels.map(([name, metrics], index) => {
             const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            const endVal = (1 + metrics.total_return) * 100;
+            const midVal = (100 + endVal) / 2;
             return {
                 label: name,
-                data: [100, (1 + metrics.total_return) * 100], // Simplified
+                data: [100, midVal, endVal],
                 borderColor: colors[index % colors.length],
                 backgroundColor: 'transparent',
                 borderWidth: 2,
@@ -212,7 +228,7 @@ class AcademicAnalysisManager {
         canvas.chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Start', 'End'],
+                labels: ['Start', 'Mid', 'End'],
                 datasets: datasets
             },
             options: {
@@ -467,10 +483,11 @@ class AcademicAnalysisManager {
             console.error('AcademicAnalysisManager: Empty state element not found!');
         }
 
-        document.getElementById('best-models-card').style.display = 'none';
-        document.getElementById('comparison-table-card').style.display = 'none';
-        document.getElementById('charts-grid').style.display = 'none';
-        document.getElementById('download-links-card').style.display = 'none';
+        // (#53) null-safe style.display access
+        ['best-models-card', 'comparison-table-card', 'charts-grid', 'download-links-card'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
         console.log('AcademicAnalysisManager: All result cards hidden');
     }
 

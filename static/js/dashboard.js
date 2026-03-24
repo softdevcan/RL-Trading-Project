@@ -63,6 +63,7 @@ function switchTab(tabName, event) {
 function initCharts() {
     // Performance Chart
     const perfCtx = document.getElementById('performanceChart');
+    if (performanceChart) { performanceChart.destroy(); }  // (#41)
     performanceChart = new Chart(perfCtx, {
         type: 'line',
         data: {
@@ -106,6 +107,7 @@ function initCharts() {
 
     // Algorithm Comparison Chart
     const algoCtx = document.getElementById('algorithmComparisonChart');
+    if (algorithmComparisonChart) { algorithmComparisonChart.destroy(); }  // (#41)
     algorithmComparisonChart = new Chart(algoCtx, {
         type: 'bar',
         data: {
