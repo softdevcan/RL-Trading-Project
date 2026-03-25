@@ -18,6 +18,9 @@ from typing import Dict, List, Optional
 import logging
 import os
 import yfinance as yf
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # EVDS API için
 try:
@@ -49,14 +52,16 @@ class MacroDataFetcher:
         'bist100_index': 'XU100.IS'
     }
 
-    def __init__(self, api_key: str, start_date: str = "2018-01-01", end_date: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, start_date: str = "2018-01-01", end_date: Optional[str] = None):
         """
         Args:
-            api_key: TCMB EVDS API anahtarı
+            api_key: TCMB EVDS API anahtarı. None ise EVDS_API_KEY env değişkeninden okunur.
             start_date: Başlangıç tarihi (DD-MM-YYYY veya YYYY-MM-DD)
             end_date: Bitiş tarihi (DD-MM-YYYY veya YYYY-MM-DD), None ise bugün
         """
-        self.api_key = api_key
+        self.api_key = api_key or os.getenv("EVDS_API_KEY")
+        if not self.api_key:
+            raise ValueError("EVDS_API_KEY bulunamadı. .env dosyasına ekleyin veya api_key parametresi geçin.")
         self.start_date_evds = self._convert_date_format(start_date, to_evds=True)
         self.end_date_evds = self._convert_date_format(end_date, to_evds=True) if end_date else datetime.now().strftime("%d-%m-%Y")
         
@@ -64,8 +69,8 @@ class MacroDataFetcher:
         self.start_date_yf = self._convert_date_format(start_date, to_evds=False)
         self.end_date_yf = self._convert_date_format(end_date, to_evds=False) if end_date else datetime.now().strftime("%Y-%m-%d")
 
-        self.data_dir = "data"
-        
+        self.data_dir = "data/macro"
+
         # EVDS API client oluştur
         if EVDS_AVAILABLE:
             self.evds = evdsAPI(self.api_key)
@@ -232,9 +237,7 @@ class MacroDataFetcher:
 
 def main():
     """Test script"""
-    API_KEY = "tV4qq6RzPr"  # User's key
-    
-    fetcher = MacroDataFetcher(api_key=API_KEY, start_date="2018-01-01")
+    fetcher = MacroDataFetcher(start_date="2018-01-01")  # api_key .env'den okunur
     try:
         df = fetcher.fetch_macro_data(save=True)
         print("\nFirst 5 rows:")

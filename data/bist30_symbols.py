@@ -58,18 +58,21 @@ STOCK_INFO = {
 }
 
 # Altın ve döviz sembolleri
-GOLD_SYMBOLS = ['GC=F']
-FX_SYMBOLS = ['USDTRY=X']
-SYNTHETIC_SYMBOLS = ['GOLD_GRAM_TRY']
+GOLD_SYMBOLS = ['GC=F', 'GOLD_GRAM_USD', 'GOLD_ONS_TRY']
+FX_SYMBOLS   = ['USDTRY=X', 'EURTRY=X']
+SYNTHETIC_SYMBOLS = ['GOLD_GRAM_TRY', 'GOLD_ONS_TRY', 'GOLD_GRAM_USD']
 
 # Faz 3: BIST-30 + gram altın
 PHASE3_SYMBOLS = PHASE1_SYMBOLS + ['GOLD_GRAM_TRY']
 
 # Varlık bilgileri (altın ve döviz dahil)
 ASSET_INFO = {
-    'GC=F': {'name': 'Altin Ons (USD)', 'type': 'commodity', 'currency': 'USD'},
-    'USDTRY=X': {'name': 'USD/TRY', 'type': 'fx', 'currency': 'TRY'},
-    'GOLD_GRAM_TRY': {'name': 'Gram Altin (TRY)', 'type': 'commodity', 'currency': 'TRY'},
+    'GC=F':          {'name': 'Altin Ons (USD)',   'type': 'commodity', 'currency': 'USD'},
+    'USDTRY=X':      {'name': 'USD/TRY',           'type': 'fx',        'currency': 'TRY'},
+    'EURTRY=X':      {'name': 'EUR/TRY',           'type': 'fx',        'currency': 'TRY'},
+    'GOLD_GRAM_TRY': {'name': 'Gram Altin (TRY)',  'type': 'commodity', 'currency': 'TRY'},
+    'GOLD_ONS_TRY':  {'name': 'Ons Altin (TRY)',   'type': 'commodity', 'currency': 'TRY'},
+    'GOLD_GRAM_USD': {'name': 'Gram Altin (USD)',   'type': 'commodity', 'currency': 'USD'},
 }
 
 
@@ -98,8 +101,14 @@ def get_symbols(phase=1, include_gold=False):
 
 
 def get_all_tradeable_symbols():
-    """Tüm işlem yapılabilir sembolleri döndür (hisse + altın)."""
-    return BIST30_SYMBOLS + SYNTHETIC_SYMBOLS
+    """Tüm işlem yapılabilir sembolleri döndür (hisse + altın + döviz)."""
+    seen = set()
+    result = []
+    for s in BIST30_SYMBOLS + GOLD_SYMBOLS + FX_SYMBOLS + SYNTHETIC_SYMBOLS:
+        if s not in seen:
+            seen.add(s)
+            result.append(s)
+    return result
 
 
 if __name__ == '__main__':

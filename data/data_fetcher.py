@@ -31,7 +31,7 @@ class DataFetcher:
         """
         self.start_date = start_date
         self.end_date = end_date or datetime.now().strftime("%Y-%m-%d")
-        self.data_dir = "data"
+        self.data_dir = "data/bist"
 
         # Veri dizinini oluştur
         os.makedirs(self.data_dir, exist_ok=True)

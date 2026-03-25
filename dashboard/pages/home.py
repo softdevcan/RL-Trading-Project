@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER,
-    GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN,
+    GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN, GOLD,
     DARK_TEMPLATE, ALGO_COLORS, empty_figure, apply_dark_template,
 )
 from dashboard.components.metric_card import create_metric_card
@@ -65,14 +65,20 @@ def layout():
             ], md=4, className="mb-4"),
         ]),
 
-        # Models list
+        # Models row: RL models + Prediction models side by side
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Egitilmis Modeller", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("RL Modeller", style={"color": TEXT, "fontWeight": "600"})),
                     dbc.CardBody(html.Div(id="home-models-list", children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}))),
                 ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
-            ]),
+            ], md=6, className="mb-4"),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardBody(html.Div(id="home-pred-models-list", children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}))),
+                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+            ], md=6, className="mb-4"),
         ]),
     ])
 
@@ -104,6 +110,7 @@ def register_callbacks(app):
             Output("home-portfolio-chart", "figure"),
             Output("home-algo-chart", "figure"),
             Output("home-models-list", "children"),
+            Output("home-pred-models-list", "children"),
         ],
         Input("home-interval", "n_intervals"),
     )
@@ -144,13 +151,20 @@ def register_callbacks(app):
         # ── Algorithm comparison chart ─────────────────────────────────────
         algo_fig = _build_algo_chart(models)
 
-        # ── Models list ────────────────────────────────────────────────────
+        # ── RL Models list ─────────────────────────────────────────────────
         models_list = _build_models_list(models)
+
+        # ── Prediction models list ──────────────────────────────────────────
+        try:
+            pred_models = api.get_prediction_models() or []
+        except Exception:
+            pred_models = []
+        pred_models_list = _build_pred_models_list(pred_models)
 
         return (
             metric_return, metric_sharpe, metric_drawdown,
             metric_portfolio, metric_trades,
-            portfolio_fig, algo_fig, models_list,
+            portfolio_fig, algo_fig, models_list, pred_models_list,
         )
 
 
@@ -210,6 +224,51 @@ def _build_algo_chart(models):
     apply_dark_template(fig)
     fig.update_layout(showlegend=False, height=280, margin={"l": 40, "r": 10, "t": 10, "b": 40})
     return fig
+
+
+def _build_pred_models_list(models):
+    """XGBoost prediction modelleri listesi."""
+    if not models:
+        return html.P("Egitilmis tahmin modeli yok. Tahmin sayfasindan model egitebilirsiniz.",
+                      style={"color": TEXT_MUTED, "fontSize": "13px"})
+
+    rows = []
+    for m in sorted(models, key=lambda x: (x.get("symbol", ""), x.get("horizon", ""))):
+        sym     = m.get("symbol", "?")
+        horizon = m.get("horizon", "?")
+        saved   = (m.get("saved_at", "") or "")[:10] or "—"
+        n_feat  = len(m.get("feature_cols", []))
+        mape    = m.get("test_mape")
+        dir_acc = m.get("test_direction_accuracy")
+
+        h_badge = dbc.Badge(
+            "Gunluk" if horizon == "daily" else "Haftalik",
+            color="primary" if horizon == "daily" else "info",
+            pill=True, className="me-2",
+        )
+        perf_parts = []
+        if mape is not None:
+            clr = GREEN if mape < 3 else (YELLOW if mape < 7 else RED)
+            perf_parts.append(html.Small(f"MAPE {mape:.1f}%", style={"color": clr, "marginRight": "8px"}))
+        if dir_acc is not None:
+            clr = GREEN if dir_acc >= 55 else RED
+            perf_parts.append(html.Small(f"Yon {dir_acc:.0f}%", style={"color": clr}))
+        if not perf_parts:
+            perf_parts = [html.Small(f"{n_feat} ozellik", style={"color": TEXT_MUTED})]
+
+        rows.append(
+            dbc.Row([
+                dbc.Col(html.Span(sym, style={"color": GOLD, "fontWeight": "600", "fontSize": "13px"}), width=3),
+                dbc.Col(h_badge, width="auto"),
+                dbc.Col(html.Span(perf_parts), width=4),
+                dbc.Col(html.Small(saved, style={"color": TEXT_MUTED}), width="auto", className="ms-auto"),
+            ], className="align-items-center py-2", style={"borderBottom": f"1px solid {CARD2}"})
+        )
+    return html.Div([
+        html.P(f"{len(models)} model egitildi",
+               style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "8px"}),
+        *rows,
+    ])
 
 
 def _build_models_list(models):

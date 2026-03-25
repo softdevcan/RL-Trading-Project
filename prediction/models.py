@@ -111,7 +111,7 @@ class PricePredictor:
             f"Test Dir Acc: {test_metrics['direction_accuracy']:.1f}%"
         )
 
-        self.save(symbol)
+        self.save(symbol, test_metrics=test_metrics)
 
         return {
             'symbol': symbol,
@@ -192,7 +192,7 @@ class PricePredictor:
         safe = symbol.replace('/', '_').replace('=', '_').replace('.', '_')
         return os.path.join(MODELS_DIR, f'{safe}_{self.horizon}_xgb.json')
 
-    def save(self, symbol: str):
+    def save(self, symbol: str, test_metrics: Dict[str, float] = None):
         """Modeli JSON formatında kaydet."""
         model = self._models.get(symbol)
         if model is None:
@@ -201,14 +201,19 @@ class PricePredictor:
         path = self._model_path(symbol)
         model.save_model(path)
 
+        meta: Dict[str, Any] = {
+            'symbol': symbol,
+            'horizon': self.horizon,
+            'feature_cols': self._feature_cols.get(symbol, []),
+            'saved_at': datetime.now().isoformat(),
+        }
+        if test_metrics:
+            meta['test_mape'] = test_metrics.get('mape')
+            meta['test_direction_accuracy'] = test_metrics.get('direction_accuracy')
+
         meta_path = path.replace('.json', '_meta.json')
         with open(meta_path, 'w', encoding='utf-8') as f:
-            json.dump({
-                'symbol': symbol,
-                'horizon': self.horizon,
-                'feature_cols': self._feature_cols.get(symbol, []),
-                'saved_at': datetime.now().isoformat(),
-            }, f, indent=2)
+            json.dump(meta, f, indent=2)
 
         logger.info(f"  Model kaydedildi: {path}")
 

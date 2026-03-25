@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Body
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 import asyncio
+import glob
 import os
 import re
 import json
@@ -337,54 +338,57 @@ async def list_all_datasets():
     """List all available datasets in data folder"""
     try:
         from data.data_fetcher import DataFetcher
-        import glob
-        from datetime import datetime
 
         data_dir = "data"
         if not os.path.exists(data_dir):
             return {"datasets": []}
 
-        # Find all CSV files in data directory
-        csv_files = glob.glob(os.path.join(data_dir, "*.csv"))
+        # Scan all CSV files in subdirectories
+        csv_files = glob.glob(os.path.join(data_dir, "**", "*.csv"), recursive=True)
 
         datasets = []
         for csv_path in csv_files:
             try:
-                filename = os.path.basename(csv_path)
                 file_stat = os.stat(csv_path)
+                rel_path = os.path.relpath(csv_path, data_dir)
+                subdir = os.path.basename(os.path.dirname(csv_path))
 
-                # Try to load and get info
-                fetcher = DataFetcher()
-                df = fetcher.load_data(filename)
-
-                if df is not None and len(df) > 0:
-                    train_df, val_df, test_df = fetcher.split_data(df)
-
-                    datasets.append({
-                        "filename": filename,
-                        "size_mb": round(file_stat.st_size / (1024 * 1024), 2),
-                        "created_at": datetime.fromtimestamp(file_stat.st_ctime).isoformat(),
-                        "modified_at": datetime.fromtimestamp(file_stat.st_mtime).isoformat(),
-                        "total_rows": len(df),
-                        "train_rows": len(train_df),
-                        "val_rows": len(val_df),
-                        "test_rows": len(test_df),
-                        "symbols": df.index.get_level_values('symbol').unique().tolist(),
-                        "date_range": {
-                            "start": str(df.index.get_level_values('date').min().date()),
-                            "end": str(df.index.get_level_values('date').max().date())
-                        },
-                        "columns_count": len(df.columns)
-                    })
-            except Exception as e:
-                # If file can't be loaded, just add basic info
-                datasets.append({
+                entry = {
+                    "filepath": csv_path,
                     "filename": os.path.basename(csv_path),
+                    "subdir": subdir,
                     "size_mb": round(file_stat.st_size / (1024 * 1024), 2),
                     "created_at": datetime.fromtimestamp(file_stat.st_ctime).isoformat(),
                     "modified_at": datetime.fromtimestamp(file_stat.st_mtime).isoformat(),
-                    "error": str(e)
-                })
+                }
+
+                # Try to get row/date info from BIST files
+                if subdir == "bist":
+                    fetcher = DataFetcher()
+                    df = fetcher.load_data(os.path.basename(csv_path))
+                    if df is not None and len(df) > 0:
+                        entry.update({
+                            "total_rows": len(df),
+                            "symbols": df.index.get_level_values('symbol').unique().tolist(),
+                            "date_range": {
+                                "start": str(df.index.get_level_values('date').min().date()),
+                                "end": str(df.index.get_level_values('date').max().date()),
+                            },
+                        })
+
+                datasets.append(entry)
+            except Exception as e:
+                try:
+                    file_stat = os.stat(csv_path)
+                    datasets.append({
+                        "filepath": csv_path,
+                        "filename": os.path.basename(csv_path),
+                        "subdir": os.path.basename(os.path.dirname(csv_path)),
+                        "size_mb": round(file_stat.st_size / (1024 * 1024), 2),
+                        "error": str(e),
+                    })
+                except Exception:
+                    pass
 
         return {
             "status": "success",
@@ -400,7 +404,9 @@ class DataUpdateRequest(BaseModel):
     sources: List[str]
     mode: str = "incremental"
     start_date: Optional[str] = None
-    symbols: Optional[List[str]] = None  # BIST hisse listesi; None → varsayılan faz sembolleri
+    symbols: Optional[List[str]] = None        # BIST hisse listesi; None → varsayılan faz sembolleri
+    gold_source: str = "borsapy"               # "borsapy" veya "yfinance"
+    gold_metrics: Optional[List[str]] = None   # None → GoldFetcher.DEFAULT_METRICS
 
 
 def _count_missing_trading_days(last_date_str: str) -> int:
@@ -421,7 +427,7 @@ async def get_data_status():
         status = {}
 
         # BIST hisseleri
-        bist_file = os.path.join(_settings.DATA_DIR, 'raw_stock_data.csv')
+        bist_file = os.path.join(_settings.BIST_DIR, 'raw_stock_data.csv')
         if os.path.exists(bist_file):
             try:
                 from data.data_fetcher import DataFetcher
@@ -433,7 +439,7 @@ async def get_data_status():
                 last_date = dates.max().strftime('%Y-%m-%d')
                 status['bist_stocks'] = {
                     'exists': True,
-                    'file': 'raw_stock_data.csv',
+                    'file': bist_file,
                     'last_date': last_date,
                     'missing_days': _count_missing_trading_days(last_date),
                     'symbols': df.index.get_level_values('symbol').unique().tolist(),
@@ -441,49 +447,50 @@ async def get_data_status():
                 }
             except Exception as exc:
                 status['bist_stocks'] = {
-                    'exists': True, 'file': 'raw_stock_data.csv',
+                    'exists': True, 'file': bist_file,
                     'error': str(exc), 'label': 'BIST-30 Hisseleri',
                 }
         else:
             status['bist_stocks'] = {
-                'exists': False, 'file': 'raw_stock_data.csv',
+                'exists': False, 'file': bist_file,
                 'last_date': None, 'missing_days': None,
                 'symbols': [], 'label': 'BIST-30 Hisseleri',
             }
 
-        # Altın & döviz
-        gold_file = os.path.join(_settings.DATA_DIR, 'gold_data.csv')
-        if os.path.exists(gold_file):
-            try:
-                from data.gold_fetcher import GoldFetcher
-                df = GoldFetcher.load_gold_data(gold_file)
-                if df is not None and not df.empty:
-                    dates = pd.to_datetime(df.index.get_level_values('date'))
-                    last_date = dates.max().strftime('%Y-%m-%d')
-                    status['gold'] = {
-                        'exists': True,
-                        'file': 'gold_data.csv',
-                        'last_date': last_date,
-                        'missing_days': _count_missing_trading_days(last_date),
-                        'symbols': df.index.get_level_values('symbol').unique().tolist(),
-                        'label': 'Altın & Döviz (GC=F, USD/TRY, Gram Altın)',
-                    }
-                else:
-                    raise ValueError("Dosya boş")
-            except Exception as exc:
-                status['gold'] = {
-                    'exists': True, 'file': 'gold_data.csv',
-                    'error': str(exc), 'label': 'Altın & Döviz',
-                }
+        # Altın & döviz — her kaynak için ayrı dosya taranır
+        from data.gold_fetcher import GoldFetcher, GOLD_DIR
+        gold_files = glob.glob(os.path.join(GOLD_DIR, 'gold_*.csv'))
+        if gold_files:
+            gold_status_list = []
+            for gf in sorted(gold_files):
+                try:
+                    df = GoldFetcher.load_data(gf)
+                    if df is not None and not df.empty:
+                        dates = pd.to_datetime(df.index.get_level_values('date'))
+                        last_date = dates.max().strftime('%Y-%m-%d')
+                        gold_status_list.append({
+                            'exists': True,
+                            'file': gf,
+                            'last_date': last_date,
+                            'missing_days': _count_missing_trading_days(last_date),
+                            'symbols': df.index.get_level_values('symbol').unique().tolist(),
+                        })
+                except Exception as exc:
+                    gold_status_list.append({'exists': True, 'file': gf, 'error': str(exc)})
+            status['gold'] = {
+                'exists': True,
+                'files': gold_status_list,
+                'label': 'Altın & Döviz',
+            }
         else:
             status['gold'] = {
-                'exists': False, 'file': 'gold_data.csv',
+                'exists': False, 'files': [],
                 'last_date': None, 'missing_days': None,
-                'symbols': [], 'label': 'Altın & Döviz (GC=F, USD/TRY, Gram Altın)',
+                'symbols': [], 'label': 'Altın & Döviz',
             }
 
-        # Makro veri (EUR/TRY, BIST-100, enflasyon)
-        macro_file = os.path.join(_settings.DATA_DIR, 'macro_data.csv')
+        # Makro veri / EVDS (Faiz, CPI, PPI) + yfinance (EUR/TRY, BIST-100)
+        macro_file = os.path.join(_settings.MACRO_DIR, 'macro_data.csv')
         if os.path.exists(macro_file):
             try:
                 df = pd.read_csv(macro_file)
@@ -492,22 +499,47 @@ async def get_data_status():
                 last_date = dates.max().strftime('%Y-%m-%d')
                 status['macro'] = {
                     'exists': True,
-                    'file': 'macro_data.csv',
+                    'file': macro_file,
                     'last_date': last_date,
                     'missing_days': _count_missing_trading_days(last_date),
                     'symbols': [c for c in df.columns if c != date_col],
-                    'label': 'Makro Veri (EUR/TRY, BIST-100, Enflasyon)',
+                    'label': 'EVDS + Makro (Faiz · CPI · PPI · EUR/TRY · BIST-100)',
                 }
             except Exception as exc:
                 status['macro'] = {
-                    'exists': True, 'file': 'macro_data.csv',
-                    'error': str(exc), 'label': 'Makro Veri',
+                    'exists': True, 'file': macro_file,
+                    'error': str(exc), 'label': 'EVDS + Makro',
                 }
         else:
             status['macro'] = {
-                'exists': False, 'file': 'macro_data.csv',
+                'exists': False, 'file': macro_file,
                 'last_date': None, 'missing_days': None,
-                'symbols': [], 'label': 'Makro Veri (EUR/TRY, BIST-100, Enflasyon)',
+                'symbols': [], 'label': 'EVDS + Makro (Faiz · CPI · PPI · EUR/TRY · BIST-100)',
+            }
+
+        # Fundamental veri (yfinance — ROE, ROA, P/E, P/B vb.)
+        fund_file = os.path.join(_settings.FUNDAMENTAL_DIR, 'fundamental_data.csv')
+        if os.path.exists(fund_file):
+            try:
+                df = pd.read_csv(fund_file, index_col='symbol')
+                status['fundamental'] = {
+                    'exists': True,
+                    'file': fund_file,
+                    'last_date': None,   # fundamental veri tarihsiz (snapshot)
+                    'missing_days': None,
+                    'symbols': df.index.tolist(),
+                    'label': 'Fundamental (ROE · ROA · P/E · P/B · D/E)',
+                }
+            except Exception as exc:
+                status['fundamental'] = {
+                    'exists': True, 'file': fund_file,
+                    'error': str(exc), 'label': 'Fundamental',
+                }
+        else:
+            status['fundamental'] = {
+                'exists': False, 'file': fund_file,
+                'last_date': None, 'missing_days': None,
+                'symbols': [], 'label': 'Fundamental (ROE · ROA · P/E · P/B · D/E)',
             }
 
         return {'status': status, 'as_of': datetime.now().strftime('%Y-%m-%d')}
@@ -554,16 +586,18 @@ async def update_data(request: DataUpdateRequest):
         if 'gold' in request.sources:
             from data.gold_fetcher import GoldFetcher
 
-            gold_file = os.path.join(_settings.DATA_DIR, 'gold_data.csv')
-            fetcher = GoldFetcher(start_date=start_date)
+            fetcher = GoldFetcher(
+                source=request.gold_source,
+                metrics=request.gold_metrics or None,
+                start_date=start_date,
+            )
 
             if mode == 'full':
-                df = fetcher.fetch_all_gold_data(save=False)
-                df = GoldFetcher._normalize_df_index(df)
-                fetcher.save_gold_data(df, gold_file)
+                df = fetcher.fetch_all(save=False)
+                fetcher.save_data(df)  # saves to data/gold/gold_{source}.csv
                 results['gold'] = {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df)}
             else:
-                result = fetcher.fetch_incremental(gold_file)
+                result = fetcher.fetch_incremental()  # uses default_filepath()
                 results['gold'] = result
 
         if 'macro' in request.sources:
@@ -579,10 +613,109 @@ async def update_data(request: DataUpdateRequest):
             except Exception as exc:
                 results['macro'] = {'error': str(exc)}
 
+        if 'fundamental' in request.sources:
+            from data.fundamental_fetcher import FundamentalDataFetcher
+            from data.bist30_symbols import get_symbols
+            symbols = request.symbols if request.symbols else get_symbols(phase=2)
+            fund_fetcher = FundamentalDataFetcher()
+            try:
+                df = fund_fetcher.fetch_fundamental_data(symbols, save=True)
+                results['fundamental'] = {
+                    'mode': 'full',
+                    'rows': len(df),
+                    'symbols': df.index.tolist(),
+                }
+            except Exception as exc:
+                results['fundamental'] = {'error': str(exc)}
+
         return {'status': 'success', 'results': results}
 
     except Exception as exc:
         logger.error(f"Veri güncelleme hatası: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/data/earliest")
+def get_earliest_date(source: str = "borsapy"):
+    """
+    Belirtilen kaynak için her metrikte mevcut en eski veri tarihini döndür.
+
+    source: "borsapy" | "yfinance"
+
+    Yanıt:
+      {
+        "source": "borsapy",
+        "earliest": "2010-01-04",          # tüm metrikler arasındaki en erken tarih
+        "per_metric": {
+          "gram_altin_try": "2010-01-04",
+          "usd_try":        "2010-01-04",
+          ...
+        }
+      }
+    """
+    per_metric: Dict[str, str] = {}
+
+    try:
+        if source == "borsapy":
+            from borsapy import FX
+            checks = {
+                "gram_altin_try": "gram-altin",
+                "ons_altin_try":  "ons-altin",
+                "usd_try":        "USD",
+                "eur_try":        "EUR",
+            }
+            for metric, symbol in checks.items():
+                try:
+                    df = FX(symbol).history(period="max")
+                    if df is not None and not df.empty:
+                        idx = pd.to_datetime(df.index)
+                        if idx.tz is not None:
+                            idx = idx.tz_localize(None)
+                        per_metric[metric] = str(idx.min().date())
+                except Exception as exc:
+                    per_metric[metric] = f"hata: {str(exc)[:60]}"
+
+        elif source == "yfinance":
+            import yfinance as yf
+            checks = {
+                "ons_altin_usd":  "GC=F",
+                "gram_altin_usd": "GC=F",   # aynı kaynak, GC=F / 31.1
+                "usd_try":        "TRY=X",
+                "eur_try":        "EURTRY=X",
+                "bist_stocks":    "THYAO.IS",
+            }
+            seen: Dict[str, str] = {}
+            for metric, symbol in checks.items():
+                if symbol in seen:
+                    per_metric[metric] = seen[symbol]
+                    continue
+                try:
+                    df = yf.Ticker(symbol).history(period="max")
+                    if df is not None and not df.empty:
+                        idx = pd.to_datetime(df.index)
+                        if idx.tz is not None:
+                            idx = idx.tz_localize(None)
+                        date_str = str(idx.min().date())
+                        per_metric[metric] = date_str
+                        seen[symbol] = date_str
+                except Exception as exc:
+                    per_metric[metric] = f"hata: {str(exc)[:60]}"
+        else:
+            raise HTTPException(status_code=400, detail=f"Geçersiz kaynak: {source!r}")
+
+        # Hata içermeyen tarihlerden en eskiyi bul
+        valid_dates = [v for v in per_metric.values() if not v.startswith("hata")]
+        earliest = min(valid_dates) if valid_dates else None
+
+        return {
+            "source":     source,
+            "earliest":   earliest,
+            "per_metric": per_metric,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -676,7 +809,7 @@ async def run_training(request: TrainingRequest):
                     fundamental_df = fund_fetcher.fetch_fundamental_data(symbols, save=True)
                 
                 # Load macro data  
-                macro_fetcher = MacroDataFetcher(api_key=_settings.EVDS_API_KEY or "tV4qq6RzPr")
+                macro_fetcher = MacroDataFetcher(api_key=_settings.EVDS_API_KEY or None)
                 try:
                     macro_df = macro_fetcher.load_data('macro_data.csv')
                     logger.info(f"Loaded macro data: {macro_df.shape}")

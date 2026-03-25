@@ -12,6 +12,8 @@ API endpoint'leri:
   POST /api/trading/data/generate  (legacy)
 """
 
+import os
+from typing import Any
 from datetime import date, timedelta
 
 from dash import html, dcc, ctx
@@ -60,10 +62,30 @@ PHASE1_SYMBOLS = ["AKBNK.IS", "THYAO.IS", "TUPRS.IS", "BIMAS.IS", "ASELS.IS"]
 ALL_BIST_VALUES = [s for s, _ in BIST30_SYMBOLS]
 
 ALL_SOURCES = [
-    {"value": "bist_stocks", "label": "BIST-30 Hisseleri"},
-    {"value": "gold",        "label": "Altın & Döviz (GC=F · USD/TRY · Gram Altın)"},
-    {"value": "macro",       "label": "Makro Veri (EUR/TRY · BIST-100 · Enflasyon)"},
+    {"value": "bist_stocks",  "label": "BIST-30 Hisseleri"},
+    {"value": "gold",         "label": "Altın & Döviz"},
+    {"value": "macro",        "label": "EVDS + Makro  (Faiz · CPI · PPI · EUR/TRY · BIST-100)"},
+    {"value": "fundamental",  "label": "Fundamental  (ROE · ROA · P/E · P/B · D/E)"},
 ]
+
+# Gold kaynak seçenekleri
+GOLD_SOURCES = [
+    {"label": "borsapy  (canlidoviz.com — TRY metrikler direkt)", "value": "borsapy"},
+    {"label": "yfinance (USD ons direkt, TRY hesaplanmış)",        "value": "yfinance"},
+]
+
+# Metrik tanımları: value, label, borsapy_ok
+GOLD_METRICS = [
+    {"value": "gram_altin_try", "label": "Gram Altın (TRY)",  "borsapy": True},
+    {"value": "ons_altin_try",  "label": "Ons Altın (TRY)",   "borsapy": True},
+    {"value": "usd_try",        "label": "USD / TRY",          "borsapy": True},
+    {"value": "eur_try",        "label": "EUR / TRY",          "borsapy": True},
+    {"value": "ons_altin_usd",  "label": "Ons Altın (USD)",   "borsapy": False},
+    {"value": "gram_altin_usd", "label": "Gram Altın (USD)",  "borsapy": False},
+]
+
+GOLD_DEFAULT_METRICS_BORSAPY  = ["gram_altin_try", "ons_altin_try", "usd_try", "eur_try"]
+GOLD_DEFAULT_METRICS_YFINANCE = ["ons_altin_usd", "gram_altin_usd", "usd_try", "eur_try"]
 
 SOURCE_VALUES = [s["value"] for s in ALL_SOURCES]
 
@@ -82,6 +104,7 @@ def layout():
         ),
 
         dcc.Store(id="data-status-store"),
+        dcc.Store(id="data-earliest-store"),
 
         # ── Kaynak seçim + durum kartı ─────────────────────────────────────
         dbc.Card([
@@ -192,6 +215,61 @@ def layout():
                     is_open=True,
                 ),
 
+                # Gold seçenekleri paneli (gold seçili olduğunda açılır)
+                dbc.Collapse(
+                    html.Div([
+                        dbc.Row([
+                            # Sol: kaynak seçimi
+                            dbc.Col([
+                                html.Small(
+                                    "Veri Kaynağı",
+                                    style={"color": TEXT_MUTED, "fontWeight": "600",
+                                           "textTransform": "uppercase",
+                                           "fontSize": "11px", "letterSpacing": "0.05em",
+                                           "display": "block", "marginBottom": "8px"},
+                                ),
+                                dbc.RadioItems(
+                                    id="data-gold-source",
+                                    options=list(GOLD_SOURCES),  # type: ignore[arg-type]
+                                    value="borsapy",
+                                    inputStyle={"marginRight": "6px"},
+                                ),
+                            ], md=5),
+                            # Sağ: metrik seçimi
+                            dbc.Col([
+                                html.Small(
+                                    "Metrikler",
+                                    style={"color": TEXT_MUTED, "fontWeight": "600",
+                                           "textTransform": "uppercase",
+                                           "fontSize": "11px", "letterSpacing": "0.05em",
+                                           "display": "block", "marginBottom": "8px"},
+                                ),
+                                dbc.Checklist(
+                                    id="data-gold-metrics",
+                                    options=[
+                                        {
+                                            "label": m["label"],
+                                            "value": m["value"],
+                                            "disabled": False,
+                                        }
+                                        for m in GOLD_METRICS
+                                    ],
+                                    value=GOLD_DEFAULT_METRICS_BORSAPY,
+                                    inputStyle={"marginRight": "6px"},
+                                ),
+                            ], md=7),
+                        ]),
+                    ], style={
+                        "backgroundColor": CARD2,
+                        "borderRadius": "6px",
+                        "padding": "14px 16px",
+                        "marginTop": "8px",
+                        "marginBottom": "4px",
+                    }),
+                    id="data-gold-collapse",
+                    is_open=False,
+                ),
+
                 html.Hr(style={"borderColor": CARD2}),
 
                 # Aksiyon butonları + tarih aralığı
@@ -212,10 +290,20 @@ def layout():
                             className="dark-datepicker",
                         ),
                         dbc.ButtonGroup([
-                            dbc.Button("1Y", id="data-btn-1y", size="sm", outline=True, color="primary"),
-                            dbc.Button("3Y", id="data-btn-3y", size="sm", outline=True, color="primary"),
-                            dbc.Button("5Y", id="data-btn-5y", size="sm", outline=True, color="primary"),
+                            dbc.Button("1Y",  id="data-btn-1y",  size="sm", outline=True, color="primary"),
+                            dbc.Button("3Y",  id="data-btn-3y",  size="sm", outline=True, color="primary"),
+                            dbc.Button("5Y",  id="data-btn-5y",  size="sm", outline=True, color="primary"),
+                            dbc.Button(
+                                [html.I(className="bi bi-calendar-range me-1"), "En Eski"],
+                                id="data-btn-earliest",
+                                size="sm", outline=True, color="info",
+                            ),
                         ], className="mt-2"),
+                        dcc.Loading(
+                            html.Div(id="data-earliest-result", className="mt-2"),
+                            type="dot",
+                            color="#0dcaf0",
+                        ),
                     ], md=5),
 
                     dbc.Col([
@@ -312,6 +400,68 @@ def register_callbacks(app):
             start = today - timedelta(days=5 * 365)
         return str(start), str(today)
 
+    # En eski tarih sorgulama
+    @app.callback(
+        [
+            Output("data-earliest-store",  "data"),
+            Output("data-earliest-result", "children"),
+            Output("data-date-range",      "start_date", allow_duplicate=True),
+        ],
+        Input("data-btn-earliest", "n_clicks"),
+        State("data-gold-source", "value"),
+        prevent_initial_call=True,
+    )
+    def fetch_earliest(n, gold_source):
+        if not n:
+            return None, "", ""
+
+        source = gold_source or "borsapy"
+        result = api.get_earliest_date(source=source)
+
+        if not result or not result.get("earliest"):
+            return None, dbc.Alert(
+                "En eski tarih alınamadı. Sunucu yanıtı yok.",
+                color="warning", dismissable=True, className="py-1 mb-0",
+            ), ""
+
+        earliest   = result["earliest"]
+        per_metric = result.get("per_metric", {})
+
+        # Metrik detay satırları
+        rows = []
+        for metric, dt in per_metric.items():
+            is_error = dt.startswith("hata")
+            rows.append(
+                html.Span([
+                    html.Small(metric, style={"color": TEXT_MUTED, "marginRight": "6px"}),
+                    dbc.Badge(
+                        dt,
+                        color="danger" if is_error else "secondary",
+                        pill=True,
+                        style={"fontSize": "11px"},
+                    ),
+                ], style={"marginRight": "12px", "display": "inline-block",
+                          "marginBottom": "4px"}),
+            )
+
+        info = html.Div([
+            html.Div([
+                html.Small(
+                    f"En eski tarih ({source}): ",
+                    style={"color": TEXT_MUTED},
+                ),
+                dbc.Badge(earliest, color="info", pill=True,
+                          style={"fontSize": "12px", "fontWeight": "600"}),
+                html.Small(
+                    " → başlangıç tarihine ayarlandı",
+                    style={"color": TEXT_MUTED, "marginLeft": "6px"},
+                ),
+            ], className="mb-1"),
+            html.Div(rows),
+        ])
+
+        return result, info, earliest
+
     # BIST collapse açma/kapama
     @app.callback(
         Output("data-bist-collapse", "is_open"),
@@ -320,6 +470,37 @@ def register_callbacks(app):
     )
     def toggle_bist_collapse(selected):
         return "bist_stocks" in (selected or [])
+
+    # Gold collapse açma/kapama
+    @app.callback(
+        Output("data-gold-collapse", "is_open"),
+        Input("data-source-checklist", "value"),
+        prevent_initial_call=False,
+    )
+    def toggle_gold_collapse(selected):
+        return "gold" in (selected or [])
+
+    # Gold kaynak değişince: metrikleri güncelle (disabled + default değerler)
+    @app.callback(
+        [
+            Output("data-gold-metrics", "options"),
+            Output("data-gold-metrics", "value"),
+        ],
+        Input("data-gold-source", "value"),
+        prevent_initial_call=False,
+    )
+    def update_gold_metric_options(source):
+        is_borsapy = source == "borsapy"
+        options = [
+            {
+                "label": m["label"] + ("" if m["borsapy"] or not is_borsapy else "  (sadece yfinance)"),
+                "value": m["value"],
+                "disabled": is_borsapy and not m["borsapy"],
+            }
+            for m in GOLD_METRICS
+        ]
+        default = GOLD_DEFAULT_METRICS_BORSAPY if is_borsapy else GOLD_DEFAULT_METRICS_YFINANCE
+        return options, default
 
     # BIST hisse sayacı
     @app.callback(
@@ -401,10 +582,12 @@ def register_callbacks(app):
         [
             State("data-source-checklist", "value"),
             State("data-bist-symbols", "value"),
+            State("data-gold-source", "value"),
+            State("data-gold-metrics", "value"),
         ],
         prevent_initial_call=True,
     )
-    def incremental_update(n, selected, bist_symbols):
+    def incremental_update(n, selected, bist_symbols, gold_source, gold_metrics):
         if not n:
             return ""
         if not selected:
@@ -414,6 +597,9 @@ def register_callbacks(app):
         payload = {"sources": selected, "mode": "incremental"}
         if "bist_stocks" in selected and bist_symbols:
             payload["symbols"] = bist_symbols
+        if "gold" in selected:
+            payload["gold_source"] = gold_source or "borsapy"
+            payload["gold_metrics"] = gold_metrics or GOLD_DEFAULT_METRICS_BORSAPY
         result = api.update_data(payload)
         return _render_update_result(result)
 
@@ -425,10 +611,12 @@ def register_callbacks(app):
             State("data-source-checklist", "value"),
             State("data-bist-symbols", "value"),
             State("data-date-range", "start_date"),
+            State("data-gold-source", "value"),
+            State("data-gold-metrics", "value"),
         ],
         prevent_initial_call=True,
     )
-    def full_download(n, selected, bist_symbols, start):
+    def full_download(n, selected, bist_symbols, start, gold_source, gold_metrics):
         if not n:
             return ""
         if not selected:
@@ -438,6 +626,9 @@ def register_callbacks(app):
         payload = {"sources": selected, "mode": "full", "start_date": start}
         if "bist_stocks" in selected and bist_symbols:
             payload["symbols"] = bist_symbols
+        if "gold" in selected:
+            payload["gold_source"] = gold_source or "borsapy"
+            payload["gold_metrics"] = gold_metrics or GOLD_DEFAULT_METRICS_BORSAPY
         result = api.update_data(payload)
         return _render_update_result(result)
 
@@ -467,7 +658,7 @@ def register_callbacks(app):
 
 # ── Render yardımcıları ────────────────────────────────────────────────────────
 
-def _render_status_badges(source_status: dict) -> html.Div:
+def _render_status_badges(source_status: dict) -> Any:
     """Her kaynak için durum badge'i döndür (checklist satırlarıyla hizalı)."""
     if not source_status:
         return html.P(
@@ -480,11 +671,29 @@ def _render_status_badges(source_status: dict) -> html.Div:
         key = src["value"]
         info = source_status.get(key, {})
         exists = info.get("exists", False)
-        last_date = info.get("last_date")
-        missing = info.get("missing_days")
         error = info.get("error")
 
-        if error:
+        # Gold uses 'files' list — aggregate
+        if key == "gold" and exists:
+            gold_files = info.get("files", [])
+            last_dates = [f["last_date"] for f in gold_files if f.get("last_date")]
+            last_date = max(last_dates) if last_dates else None
+            missings = [f["missing_days"] for f in gold_files if f.get("missing_days") is not None]
+            missing = min(missings) if missings else None
+        else:
+            last_date = info.get("last_date")
+            missing = info.get("missing_days")
+
+        # Fundamental verisi tarihsiz snapshot
+        if key == "fundamental":
+            symbols_f = info.get("symbols", [])
+            if error:
+                badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
+            elif not exists:
+                badge = dbc.Badge("Veri yok", color="secondary", pill=True)
+            else:
+                badge = dbc.Badge(f"Snapshot · {len(symbols_f)} hisse", color="info", pill=True)
+        elif error:
             badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
         elif not exists or last_date is None:
             badge = dbc.Badge("Veri yok", color="secondary", pill=True)
@@ -501,7 +710,7 @@ def _render_status_badges(source_status: dict) -> html.Div:
     return html.Div(rows)
 
 
-def _render_source_details(source_status: dict) -> html.Div:
+def _render_source_details(source_status: dict) -> Any:
     """Tüm kaynakların özet bilgilerini göster (kaynak seçiminden bağımsız)."""
     cards = []
 
@@ -513,28 +722,56 @@ def _render_source_details(source_status: dict) -> html.Div:
             continue
 
         exists = info.get("exists", False)
-        last_date = info.get("last_date", "—")
-        missing = info.get("missing_days")
-        symbols = info.get("symbols", [])
         error = info.get("error")
-        file_name = info.get("file", "—")
 
-        if error:
-            status_badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
-        elif not exists:
-            status_badge = dbc.Badge("Veri yok", color="secondary", pill=True)
-        elif missing == 0:
-            status_badge = dbc.Badge("Güncel ✓", color="success", pill=True)
+        # Gold has a list of files — aggregate for display
+        if key == "gold" and exists:
+            gold_files = info.get("files", [])
+            last_dates = [f["last_date"] for f in gold_files if f.get("last_date")]
+            last_date = max(last_dates) if last_dates else None
+            missings = [f["missing_days"] for f in gold_files if f.get("missing_days") is not None]
+            missing = min(missings) if missings else None
+            all_symbols = []
+            for f in gold_files:
+                all_symbols += f.get("symbols", [])
+            symbols = list(dict.fromkeys(all_symbols))
+            file_names = [os.path.basename(f["file"]) for f in gold_files if f.get("file")]
+            file_name = ", ".join(file_names) if file_names else "—"
         else:
-            status_badge = dbc.Badge(
-                f"{missing} iş günü eksik", color="warning", pill=True,
-            )
+            last_date = info.get("last_date", "—")
+            missing = info.get("missing_days")
+            symbols = info.get("symbols", [])
+            file_name = info.get("file", "—")
+            if isinstance(file_name, str) and file_name not in ("—", ""):
+                file_name = os.path.basename(file_name)
+
+        # fundamental verisi tarihsiz (snapshot); özel badge
+        if key == "fundamental":
+            if error:
+                status_badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
+            elif not exists:
+                status_badge = dbc.Badge("Veri yok", color="secondary", pill=True)
+            else:
+                status_badge = dbc.Badge(f"Snapshot · {len(symbols)} hisse", color="info", pill=True)
+        else:
+            if error:
+                status_badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
+            elif not exists:
+                status_badge = dbc.Badge("Veri yok", color="secondary", pill=True)
+            elif missing == 0:
+                status_badge = dbc.Badge("Güncel ✓", color="success", pill=True)
+            else:
+                status_badge = dbc.Badge(
+                    f"{missing} iş günü eksik" if missing else "Var", color="warning", pill=True,
+                )
 
         rows = [
             ("Durum", status_badge),
             ("Dosya", html.Small(file_name, style={"color": TEXT, "fontSize": "12px"})),
-            ("Son Tarih", last_date or "—"),
         ]
+        if key != "fundamental":
+            rows.append(("Son Tarih", last_date or "—"))
+
         if key == "bist_stocks" and symbols:
             rows.append(("Hisseler", f"{len(symbols)} adet"))
             rows.append(("Semboller", html.Small(
@@ -546,6 +783,12 @@ def _render_source_details(source_status: dict) -> html.Div:
             rows.append(("Seriler", ", ".join(symbols)))
         elif key == "macro" and symbols:
             rows.append(("Sütunlar", f"{len(symbols)} adet"))
+        elif key == "fundamental" and symbols:
+            rows.append(("Hisseler", html.Small(
+                ", ".join(s.replace(".IS", "") for s in symbols[:10])
+                + ("…" if len(symbols) > 10 else ""),
+                style={"color": TEXT, "fontSize": "11px"},
+            )))
 
         detail_rows = []
         for label, value in rows:
@@ -576,7 +819,7 @@ def _render_source_details(source_status: dict) -> html.Div:
     return html.Div(cards)
 
 
-def _render_update_result(result: dict) -> html.Div:
+def _render_update_result(result: dict) -> Any:
     if not result or result.get("status") != "success":
         err = result.get("detail", str(result)) if result else "Sunucu yanıt vermedi"
         return dbc.Alert(
@@ -619,7 +862,7 @@ def _render_update_result(result: dict) -> html.Div:
     )
 
 
-def _render_dataset_list(datasets: list) -> html.Div:
+def _render_dataset_list(datasets: list) -> Any:
     if not datasets:
         return html.P("Kayıtlı veri seti yok.", style={"color": TEXT_MUTED})
 

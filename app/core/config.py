@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     PREDICTIONS_DIR: str = "data/predictions"
     PREDICTION_MODELS_DIR: str = "models/prediction"
 
+    # Data subdirectories
+    BIST_DIR: str = "data/bist"
+    GOLD_DIR: str = "data/gold"
+    MACRO_DIR: str = "data/macro"
+    FUNDAMENTAL_DIR: str = "data/fundamental"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

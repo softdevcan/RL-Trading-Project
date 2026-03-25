@@ -13,6 +13,7 @@ API endpoints used:
   GET  /api/prediction/gold/history
 """
 
+from typing import Any
 from dash import html, dcc
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -24,7 +25,10 @@ from dashboard.theme import (
 )
 import dashboard.api_client as api
 
-HORIZONS = [1, 3, 5, 7, 14, 30]
+HORIZONS = [
+    {"label": "Gunluk (1 gun sonrasi)",  "value": "daily"},
+    {"label": "Haftalik (5 gun sonrasi)", "value": "weekly"},
+]
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -68,11 +72,11 @@ def layout():
                                      placeholder="Sembol sec...", clearable=False,
                                      style={"marginBottom": "16px"}),
 
-                        html.Label("Tahmin Ufku (gun)", className="section-title"),
+                        html.Label("Tahmin Ufku", className="section-title"),
                         dcc.Dropdown(
                             id="pred-horizon",
-                            options=[{"label": f"{h} gun", "value": h} for h in HORIZONS],
-                            value=5, clearable=False,
+                            options=HORIZONS,
+                            value="daily", clearable=False,
                             style={"marginBottom": "24px"},
                         ),
 
@@ -120,6 +124,13 @@ def layout():
         dbc.Card([
             dbc.CardHeader(html.Span("Tahmin Gecmisi", style={"color": TEXT, "fontWeight": "600"})),
             dbc.CardBody(html.Div(id="pred-history-table")),
+        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+
+        # ── Trained models list ───────────────────────────────────────────────
+        dbc.Card([
+            dbc.CardHeader(html.Span("Egitilmis Modeller", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardBody(html.Div(id="pred-models-list",
+                                  children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}))),
         ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
     ])
 
@@ -130,41 +141,104 @@ def register_callbacks(app):
 
     @app.callback(
         [Output("pred-symbol", "options"), Output("pred-gold-cards", "children"),
-         Output("pred-gold-chart", "figure")],
+         Output("pred-gold-chart", "figure"), Output("pred-models-list", "children")],
         Input("pred-refresh", "n_intervals"),
         prevent_initial_call=False,
     )
     def refresh_gold_and_symbols(n):
-        # Symbols
-        syms = api.get_prediction_symbols()
-        opts = [{"label": s, "value": s} for s in syms] if syms else []
+        # Symbols — kullanıcı dostu label'lar
+        from data.bist30_symbols import STOCK_INFO, ASSET_INFO
+        _info = {**STOCK_INFO, **ASSET_INFO}
+        syms = api.get_prediction_symbols() or []
+        opts = [
+            {"label": f"{_info[s]['name']} ({s})" if s in _info else s, "value": s}
+            for s in syms
+        ]
 
-        # Gold prices
-        gold = api.get_gold_prices()
-        cards = _render_gold_cards(gold)
+        # Gold prices (isolated — failure should not block other outputs)
+        try:
+            gold = api.get_gold_prices()
+            cards = _render_gold_cards(gold)
+        except Exception:
+            cards = [dbc.Col(html.P("Altin verisi alinamadi.", style={"color": TEXT_MUTED}))]
 
-        # Gold history chart
-        history = api.get_gold_history()
-        gold_fig = _build_gold_chart(history)
+        # Gold history chart (isolated)
+        try:
+            history = api.get_gold_history()
+            gold_fig = _build_gold_chart(history)
+        except Exception:
+            gold_fig = empty_figure("Veri alinamadi")
 
-        return opts, cards, gold_fig
+        # Trained models list (isolated)
+        try:
+            models_ui = _render_models_list(api.get_prediction_models() or [])
+        except Exception:
+            models_ui = html.P("Model listesi alinamadi.", style={"color": TEXT_MUTED})
+
+        return opts, cards, gold_fig, models_ui
 
     @app.callback(
-        Output("pred-action-result", "children"),
+        [Output("pred-action-result", "children"),
+         Output("pred-models-list", "children", allow_duplicate=True)],
         Input("pred-train-btn", "n_clicks"),
         [State("pred-symbol", "value"), State("pred-horizon", "value")],
         prevent_initial_call=True,
     )
     def train_prediction(n, symbol, horizon):
+        models_ui = _render_models_list(api.get_prediction_models())
         if not n or not symbol:
-            return ""
-        result = api.train_prediction({"symbol": symbol, "horizon": int(horizon or 5)})
-        if result:
-            return dbc.Alert(
-                [html.I(className="bi bi-check-circle me-2"), f"{symbol} modeli egitildi."],
-                color="success", dismissable=True,
-            )
-        return dbc.Alert("Egitim basarisiz.", color="danger", dismissable=True)
+            return "", models_ui
+        result = api.train_prediction({"symbol": symbol, "horizon": horizon or "daily"})
+        if not result or result.get("detail"):
+            err = result.get("detail", "Bilinmeyen hata") if result else "Sunucu yanit vermedi"
+            return (dbc.Alert([html.I(className="bi bi-x-circle me-2"), f"Egitim basarisiz: {err}"],
+                              color="danger", dismissable=True), models_ui)
+
+        test_m = result.get("test_metrics", {})
+        train_m = result.get("train_metrics", {})
+        rows = [
+            dbc.Row([
+                dbc.Col(html.Small("Sembol",      style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Strong(result.get("symbol", symbol), style={"color": TEXT}), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Horizon",     style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Span(result.get("horizon", horizon), style={"color": TEXT}), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Egitim seti", style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Span(f"{result.get('n_train', '?')} satir", style={"color": TEXT}), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Test seti",   style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Span(f"{result.get('n_test', '?')} satir", style={"color": TEXT}), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Train MAPE",  style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Span(f"{train_m.get('mape', 0):.2f}%", style={"color": TEXT}), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Test MAPE",   style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Strong(
+                    f"{test_m.get('mape', 0):.2f}%",
+                    style={"color": "#f0c27a" if test_m.get("mape", 99) > 5 else "#5cb85c"}
+                ), width=7),
+            ], className="mb-1"),
+            dbc.Row([
+                dbc.Col(html.Small("Yon Acc.",    style={"color": TEXT_MUTED}), width=5),
+                dbc.Col(html.Strong(
+                    f"{test_m.get('direction_accuracy', 0):.1f}%",
+                    style={"color": "#5cb85c" if test_m.get("direction_accuracy", 0) >= 55 else "#e07b54"}
+                ), width=7),
+            ], className="mb-1"),
+        ]
+        alert = dbc.Alert([
+            html.Div([html.I(className="bi bi-check-circle me-2"),
+                      html.Strong("Model egitildi")], className="mb-2"),
+            html.Hr(style={"borderColor": "rgba(255,255,255,0.2)", "margin": "6px 0"}),
+            *rows,
+        ], color="success", dismissable=True)
+        return alert, _render_models_list(api.get_prediction_models())
 
     @app.callback(
         [
@@ -184,9 +258,13 @@ def register_callbacks(app):
         if not n or not symbol:
             return blank
 
-        result = api.make_prediction({"symbol": symbol, "horizon": int(horizon or 5)})
-        if not result:
-            return (dbc.Alert("Tahmin alinamadi.", color="danger"),) + blank[1:]
+        resp = api.make_prediction({"symbols": [symbol], "horizon": horizon or "daily"})
+        predictions = resp.get("predictions", []) if isinstance(resp, dict) else []
+        if not predictions:
+            err = resp.get("detail", "Model egitilmemis olabilir.") if isinstance(resp, dict) else "Tahmin alinamadi."
+            return (dbc.Alert([html.I(className="bi bi-x-circle me-2"), err], color="danger"),) + blank[1:]
+
+        result = predictions[0]  # ilk (tek) tahmin
 
         # Chart data
         chart_data = api.get_prediction_chart_data(symbol) or {}
@@ -210,11 +288,41 @@ def register_callbacks(app):
     def evaluate_model(n, symbol, horizon):
         if not n or not symbol:
             return html.Span()
-        result = api.evaluate_prediction({"symbol": symbol, "horizon": int(horizon or 5)})
+        result = api.evaluate_prediction({"symbol": symbol, "horizon": horizon or "daily"})
         return _render_performance(result or {})
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _render_models_list(models: list) -> Any:
+    if not models:
+        return html.P("Henuz egitilmis model yok. Sembol secip 'Model Egit' butonuna basin.",
+                      style={"color": TEXT_MUTED, "fontSize": "13px"})
+
+    rows = []
+    for m in sorted(models, key=lambda x: (x.get("symbol", ""), x.get("horizon", ""))):
+        sym      = m.get("symbol", "?")
+        horizon  = m.get("horizon", "?")
+        saved_at = m.get("saved_at", "")[:10] if m.get("saved_at") else "—"
+        n_feat   = len(m.get("feature_cols", []))
+        h_badge  = dbc.Badge("Gunluk" if horizon == "daily" else "Haftalik",
+                             color="primary" if horizon == "daily" else "info",
+                             pill=True, className="me-2")
+        rows.append(
+            dbc.Row([
+                dbc.Col(html.Span(sym, style={"color": TEXT, "fontWeight": "600"}), width=3),
+                dbc.Col(h_badge, width=2),
+                dbc.Col(html.Small(f"{n_feat} ozellik", style={"color": TEXT_MUTED}), width=2),
+                dbc.Col(html.Small(f"Kaydedildi: {saved_at}", style={"color": TEXT_MUTED}), width=5),
+            ], className="mb-2 align-items-center")
+        )
+
+    return html.Div([
+        html.P(f"{len(models)} egitilmis model",
+               style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "12px"}),
+        *rows,
+    ])
+
 
 def _render_gold_cards(gold):
     if not gold:
@@ -266,31 +374,88 @@ def _build_gold_chart(history):
 
 
 def _render_result_card(result, symbol):
-    price = result.get("predicted_price", result.get("price", 0)) or 0
-    direction = result.get("direction", result.get("trend", "neutral")).upper()
-    confidence = result.get("confidence", result.get("confidence_score", 0)) or 0
+    # SinglePrediction field adları: predicted_close, predicted_direction, confidence,
+    # current_close, predicted_change_pct, prediction_date
+    price      = result.get("predicted_close", 0) or 0
+    current    = result.get("current_close", 0) or 0
+    change_pct = result.get("predicted_change_pct", 0) or 0
+    direction  = result.get("predicted_direction", "NEUTRAL").upper()
+    confidence = result.get("confidence", 0) or 0
+    pred_date  = result.get("prediction_date", "—")
+    horizon    = result.get("horizon", "daily")
 
-    dir_color = GREEN if "UP" in direction or "YUKARI" in direction else RED if "DOWN" in direction or "ASAGI" in direction else YELLOW
-    dir_icon = "bi bi-arrow-up-circle-fill" if "UP" in direction else "bi bi-arrow-down-circle-fill" if "DOWN" in direction else "bi bi-dash-circle"
+    dir_color = GREEN if "UP" in direction else RED if "DOWN" in direction else YELLOW
+    dir_icon  = ("bi bi-arrow-up-circle-fill" if "UP" in direction
+                 else "bi bi-arrow-down-circle-fill" if "DOWN" in direction
+                 else "bi bi-dash-circle")
+    conf_pct  = int(confidence * 100) if confidence <= 1 else int(confidence)
+
+    currency_symbol = "$" if symbol in ("GC=F", "GOLD_GRAM_USD") else "₺"
+    horizon_label = "1 gun sonrasi" if horizon == "daily" else "5 gun sonrasi"
+
+    # Model kalite bilgisi (meta'dan gelir; tahmin endpoint test_mape döndürmüyor,
+    # bu yüzden api ile model listesinden çekiyoruz)
+    model_quality_parts = []
+    try:
+        all_models = api.get_prediction_models() or []
+        meta = next((m for m in all_models
+                     if m.get("symbol") == symbol and m.get("horizon") == horizon), None)
+        if meta:
+            mape = meta.get("test_mape")
+            dir_acc = meta.get("test_direction_accuracy")
+            if mape is not None:
+                q_color = GREEN if mape < 3 else (YELLOW if mape < 7 else RED)
+                model_quality_parts.append(
+                    html.Span(f"MAPE {mape:.1f}%", style={"color": q_color, "marginRight": "10px",
+                                                           "fontSize": "12px", "fontWeight": "600"}))
+            if dir_acc is not None:
+                q_color = GREEN if dir_acc >= 55 else RED
+                model_quality_parts.append(
+                    html.Span(f"Yon Acc {dir_acc:.0f}%", style={"color": q_color,
+                                                                  "fontSize": "12px", "fontWeight": "600"}))
+    except Exception:
+        pass
 
     return dbc.Card([
+        dbc.CardHeader(
+            dbc.Row([
+                dbc.Col(html.Span(f"{symbol}  ·  {pred_date} tahmini ({horizon_label})",
+                                  style={"color": TEXT_MUTED, "fontSize": "13px"})),
+                dbc.Col(html.Span(model_quality_parts),
+                        width="auto", className="ms-auto d-flex align-items-center"),
+            ], className="align-items-center"),
+        ),
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
-                    html.H6(f"{symbol} Tahmini", style={"color": TEXT_MUTED}),
-                    html.H3(f"₺{price:,.2f}", style={"color": TEXT, "fontWeight": "700"}),
+                    html.Small("Mevcut Fiyat", style={"color": TEXT_MUTED}),
+                    html.H5(f"{currency_symbol}{current:,.4f}", style={"color": TEXT}),
+                    html.Small("Tahmini Fiyat", style={"color": TEXT_MUTED, "marginTop": "8px", "display": "block"}),
+                    html.H3(f"{currency_symbol}{price:,.4f}", style={"color": TEXT, "fontWeight": "700"}),
+                    dbc.Badge(
+                        f"{'▲' if change_pct >= 0 else '▼'} {abs(change_pct):.2f}%",
+                        color="success" if change_pct >= 0 else "danger",
+                        className="mt-1",
+                    ),
                 ], md=5),
                 dbc.Col([
                     html.Div([
-                        html.I(className=f"{dir_icon} me-2", style={"color": dir_color, "fontSize": "24px"}),
-                        html.Span(direction, style={"color": dir_color, "fontWeight": "700", "fontSize": "18px"}),
-                    ], className="d-flex align-items-center mb-2"),
-                    html.Small("Guven", style={"color": TEXT_MUTED}),
+                        html.I(className=f"{dir_icon} me-2",
+                               style={"color": dir_color, "fontSize": "24px"}),
+                        html.Span(direction,
+                                  style={"color": dir_color, "fontWeight": "700", "fontSize": "18px"}),
+                    ], className="d-flex align-items-center mb-3"),
+                    html.Small("Model Guveni", style={"color": TEXT_MUTED}),
                     dbc.Progress(
-                        value=int(confidence * 100) if confidence <= 1 else int(confidence),
-                        label=f"{int(confidence * 100) if confidence <= 1 else int(confidence)}%",
-                        color="success" if confidence > 0.7 else "warning",
-                        style={"height": "8px"},
+                        value=conf_pct,
+                        label=f"{conf_pct}%",
+                        color="success" if conf_pct >= 70 else "warning" if conf_pct >= 50 else "danger",
+                        style={"height": "12px", "marginTop": "4px"},
+                    ),
+                    html.Small(
+                        "Guven: ozellik onemi yogunluguna gore hesaplanir.",
+                        style={"color": TEXT_MUTED, "fontSize": "10px", "marginTop": "6px",
+                               "display": "block"},
                     ),
                 ], md=7),
             ]),

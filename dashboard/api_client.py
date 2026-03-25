@@ -13,10 +13,10 @@ import logging as _logging
 _api_log = _logging.getLogger(__name__)
 
 
-def _get(path: str, params: Optional[Dict] = None) -> Any:
+def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> Any:
     """GET request, returns parsed JSON or None on error."""
     try:
-        resp = requests.get(f"{API_BASE}{path}", params=params, timeout=TIMEOUT)
+        resp = requests.get(f"{API_BASE}{path}", params=params, timeout=timeout)
         resp.raise_for_status()
         return resp.json()
     except Exception as exc:
@@ -89,6 +89,12 @@ def update_data(payload: Dict) -> Dict:
     return _post("/trading/data/update", json=payload) or {}
 
 
+def get_earliest_date(source: str = "borsapy") -> Dict:
+    """Belirtilen kaynak için en eski mevcut veri tarihini döndür.
+    Uzun sürebilir (period='max' sorgusu), timeout=90s."""
+    return _get("/trading/data/earliest", params={"source": source}, timeout=90) or {}
+
+
 def get_daily_decision(payload: Dict) -> Dict:
     return _post("/trading/daily-decision", json=payload) or {}
 
@@ -146,12 +152,20 @@ def get_search_spaces(algorithm: str) -> Dict:
 
 # ── Prediction ─────────────────────────────────────────────────────────────
 
+def get_prediction_models() -> List[Dict]:
+    data = _get("/prediction/models")
+    if isinstance(data, dict):
+        return data.get("models", [])
+    return []
+
+
 def get_prediction_symbols() -> List[str]:
     data = _get("/prediction/symbols")
     if isinstance(data, list):
         return data
     if isinstance(data, dict):
-        return data.get("symbols", [])
+        # Response has 'all' key from TradableSymbolsResponse
+        return data.get("all", data.get("symbols", []))
     return []
 
 

@@ -266,10 +266,11 @@ async def get_symbols():
         get_all_tradeable_symbols
     )
 
+    all_syms = list(dict.fromkeys(get_all_tradeable_symbols()))  # deduplicate, preserve order
     return TradableSymbolsResponse(
         bist30=BIST30_SYMBOLS,
         gold=GOLD_SYMBOLS,
         fx=FX_SYMBOLS,
         synthetic=SYNTHETIC_SYMBOLS,
-        all=get_all_tradeable_symbols(),
+        all=all_syms,
     )

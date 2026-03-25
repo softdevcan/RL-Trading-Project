@@ -41,7 +41,7 @@ class FundamentalDataFetcher:
 
     def __init__(self):
         """Initialize fundamental data fetcher"""
-        self.data_dir = "data"
+        self.data_dir = "data/fundamental"
         os.makedirs(self.data_dir, exist_ok=True)
         logger.info("FundamentalDataFetcher initialized")
 
