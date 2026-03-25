@@ -1,0 +1,173 @@
+"""HTTP client wrappers for all FastAPI backend endpoints."""
+
+import os
+import requests
+from typing import Any, Dict, List, Optional
+
+# Base URL - can be overridden via environment variable
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8888/api")
+TIMEOUT = 30  # seconds
+
+
+def _get(path: str, params: Optional[Dict] = None) -> Any:
+    """GET request, returns parsed JSON or None on error."""
+    try:
+        resp = requests.get(f"{API_BASE}{path}", params=params, timeout=TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return None
+
+
+def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None) -> Any:
+    """POST request, returns parsed JSON or None on error."""
+    try:
+        resp = requests.post(
+            f"{API_BASE}{path}", json=json, params=params, timeout=TIMEOUT
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return None
+
+
+# ── Trading ────────────────────────────────────────────────────────────────
+
+def get_health() -> Dict:
+    return _get("/trading/health") or {}
+
+
+def get_models() -> List[Dict]:
+    data = _get("/trading/models")
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get("models", [])
+    return []
+
+
+def get_model_metrics(model_name: str) -> Dict:
+    return _get(f"/trading/models/{model_name}/metrics") or {}
+
+
+def start_training(payload: Dict) -> Dict:
+    return _post("/trading/train", json=payload) or {}
+
+
+def get_training_status() -> Dict:
+    return _get("/trading/train/status") or {}
+
+
+def get_data_info() -> Dict:
+    return _get("/trading/data/info") or {}
+
+
+def get_data_list() -> List[Dict]:
+    data = _get("/trading/data/list")
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get("datasets", [])
+    return []
+
+
+def generate_data(payload: Optional[Dict] = None) -> Dict:
+    return _post("/trading/data/generate", json=payload or {}) or {}
+
+
+def get_daily_decision(payload: Dict) -> Dict:
+    return _post("/trading/daily-decision", json=payload) or {}
+
+
+def apply_decision(payload: Dict) -> Dict:
+    return _post("/trading/apply-decision", json=payload) or {}
+
+
+def get_latest_portfolio() -> Dict:
+    return _get("/trading/latest-portfolio") or {}
+
+
+def get_portfolio_history() -> Dict:
+    return _get("/trading/portfolio-history") or {}
+
+
+def generate_report() -> Dict:
+    return _get("/trading/analysis/generate-report") or {}
+
+
+def get_model_comparison() -> Dict:
+    return _get("/trading/analysis/model-comparison") or {}
+
+
+def get_best_models() -> Dict:
+    return _get("/trading/analysis/best-models") or {}
+
+
+# ── Hyperopt ───────────────────────────────────────────────────────────────
+
+def start_hyperopt(payload: Dict) -> Dict:
+    return _post("/hyperopt/start", json=payload) or {}
+
+
+def get_hyperopt_studies() -> List[Dict]:
+    data = _get("/hyperopt/studies")
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get("studies", [])
+    return []
+
+
+def get_hyperopt_study(study_id: str) -> Dict:
+    return _get(f"/hyperopt/studies/{study_id}") or {}
+
+
+def get_hyperopt_progress(study_id: str) -> Dict:
+    return _get(f"/hyperopt/studies/{study_id}/progress") or {}
+
+
+def get_search_spaces(algorithm: str) -> Dict:
+    return _get(f"/hyperopt/search-spaces/{algorithm}") or {}
+
+
+# ── Prediction ─────────────────────────────────────────────────────────────
+
+def get_prediction_symbols() -> List[str]:
+    data = _get("/prediction/symbols")
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get("symbols", [])
+    return []
+
+
+def train_prediction(payload: Dict) -> Dict:
+    return _post("/prediction/train", json=payload) or {}
+
+
+def make_prediction(payload: Dict) -> Dict:
+    return _post("/prediction/predict", json=payload) or {}
+
+
+def evaluate_prediction(payload: Dict) -> Dict:
+    return _post("/prediction/evaluate", json=payload) or {}
+
+
+def get_prediction_performance(symbol: str) -> Dict:
+    return _get(f"/prediction/performance/{symbol}") or {}
+
+
+def get_prediction_history(symbol: str) -> Dict:
+    return _get(f"/prediction/predictions/{symbol}") or {}
+
+
+def get_prediction_chart_data(symbol: str) -> Dict:
+    return _get(f"/prediction/chart-data/{symbol}") or {}
+
+
+def get_gold_prices() -> Dict:
+    return _get("/prediction/gold/prices") or {}
+
+
+def get_gold_history() -> Dict:
+    return _get("/prediction/gold/history") or {}

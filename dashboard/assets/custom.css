@@ -1,0 +1,174 @@
+/* RL Trading Dashboard – dark theme overrides */
+
+/* ── Reset & base ──────────────────────────────────────────────────────── */
+body {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+#sidebar .nav-link {
+  color: #94a3b8 !important;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+#sidebar .nav-link:hover {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+#sidebar .nav-link.active {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+}
+.card-body {
+  color: #e2e8f0;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+  border-bottom: 2px solid #475569 !important;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid #334155 !important;
+  font-size: 13px;
+}
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover td {
+  background-color: #334155 !important;
+}
+
+/* ── Inputs & dropdowns ─────────────────────────────────────────────────── */
+.form-control,
+.form-select,
+.Select-control {
+  background-color: #334155 !important;
+  border: 1px solid #475569 !important;
+  color: #e2e8f0 !important;
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Dash dcc.Dropdown */
+.Select-menu-outer {
+  background-color: #1e293b !important;
+  border: 1px solid #475569 !important;
+}
+.Select-option {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+.Select-option:hover,
+.Select-option.is-focused {
+  background-color: #334155 !important;
+}
+.Select-value-label,
+.Select-placeholder {
+  color: #e2e8f0 !important;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+.btn-primary:hover {
+  background-color: #1e40af !important;
+}
+.btn-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+.btn-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+.progress {
+  background-color: #334155 !important;
+  border-radius: 4px;
+}
+.progress-bar {
+  border-radius: 4px;
+}
+
+/* ── Modal ──────────────────────────────────────────────────────────────── */
+.modal-content {
+  background-color: #1e293b !important;
+  border: 1px solid #475569 !important;
+  color: #e2e8f0 !important;
+}
+.modal-header {
+  border-bottom: 1px solid #334155 !important;
+}
+.modal-footer {
+  border-top: 1px solid #334155 !important;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+.nav-tabs .nav-link {
+  color: #94a3b8;
+  border: 1px solid transparent;
+}
+.nav-tabs .nav-link.active {
+  background-color: #1e293b;
+  border-color: #475569 #475569 #1e293b;
+  color: #e2e8f0;
+}
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+.toast {
+  background-color: #1e293b !important;
+  border: 1px solid #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* ── Plotly chart ───────────────────────────────────────────────────────── */
+.js-plotly-plot .plotly .modebar {
+  background: transparent !important;
+}
+.js-plotly-plot .plotly .modebar-btn path {
+  fill: #94a3b8 !important;
+}
+
+/* ── Utility ────────────────────────────────────────────────────────────── */
+.text-muted { color: #94a3b8 !important; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 12px;
+}

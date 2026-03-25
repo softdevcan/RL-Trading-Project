@@ -3,11 +3,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from app.core.config import get_settings
 from app.api.routes import health, items, trading, hyperopt, prediction
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
 import os
 
 settings = get_settings()
@@ -16,7 +16,8 @@ settings = get_settings()
 @asynccontextmanager  # (#32) replaces deprecated @app.on_event
 async def lifespan(app: FastAPI):
     print(f"Starting {settings.API_TITLE} v{settings.API_VERSION}")
-    print(f"Docs available at: http://{settings.HOST}:{settings.PORT}/docs")
+    print(f"Dashboard:  http://{settings.HOST}:{settings.PORT}/dash/")
+    print(f"API docs:   http://{settings.HOST}:{settings.PORT}/docs")
     yield
     print(f"Shutting down {settings.API_TITLE}")
 
@@ -48,47 +49,39 @@ app.include_router(trading.router, prefix="/api")
 app.include_router(hyperopt.router, prefix="/api")
 app.include_router(prediction.router, prefix="/api")
 
-# Serve static files (for web UI)
+# Serve static files (legacy UI kept as reference)
 if not os.path.exists("static"):
     os.makedirs("static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Serve web UI
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui():
-    """Serve the web UI"""
-    ui_path = "static/index.html"
-    if os.path.exists(ui_path):
-        with open(ui_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    return """
-    <html>
-        <head><title>RL Trading System</title></head>
-        <body>
-            <h1>RL Trading System</h1>
-            <p>Web UI not found. Please create static/index.html</p>
-            <p><a href="/docs">API Documentation</a></p>
-        </body>
-    </html>
-    """
+# ── Dash frontend ──────────────────────────────────────────────────────────
+from starlette.middleware.wsgi import WSGIMiddleware
+from dashboard.app import create_dash_app, PrefixMiddleware
+
+_DASH_PREFIX = "/dash/"
+_dash_app = create_dash_app(_DASH_PREFIX)
+_prefix_mw = PrefixMiddleware(_dash_app.server, "/dash")
+app.mount("/dash", WSGIMiddleware(_prefix_mw))
+
+# ── Root redirect ──────────────────────────────────────────────────────────
+@app.get("/")
+async def root():
+    """Redirect root to Dash dashboard."""
+    return RedirectResponse(url="/dash/")
 
 
 @app.get("/favicon.ico")
 async def favicon():
-    """Serve favicon to prevent 404 errors"""
-    from fastapi.responses import FileResponse
+    """Serve favicon to prevent 404 errors."""
+    from fastapi.responses import FileResponse, Response
     favicon_path = "static/favicon.ico"
     if os.path.exists(favicon_path):
         return FileResponse(favicon_path)
-    # Return 204 No Content instead of 404
-    from fastapi.responses import Response
     return Response(status_code=204)
 
 
 @app.get("/.well-known/appspecific/com.chrome.devtools.json")
 async def chrome_devtools():
-    """Chrome DevTools metadata endpoint"""
+    """Chrome DevTools metadata endpoint."""
     from fastapi.responses import Response
     return Response(status_code=204)
-
-
