@@ -1,174 +1,480 @@
-/* RL Trading Dashboard – dark theme overrides */
+/* RL Trading Dashboard – comprehensive dark theme */
 
-/* ── Reset & base ──────────────────────────────────────────────────────── */
+/* ── Google Font ────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── CSS variables ──────────────────────────────────────────────────────── */
+:root {
+  --bg:      #0f172a;
+  --card:    #1e293b;
+  --card2:   #334155;
+  --border:  #475569;
+  --text:    #e2e8f0;
+  --muted:   #94a3b8;
+  --blue:    #3b82f6;
+  --blue-d:  #1d4ed8;
+  --green:   #22c55e;
+  --red:     #ef4444;
+  --yellow:  #eab308;
+  --radius:  8px;
+  --radius-sm: 6px;
+}
+
+/* ── Reset & base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
-  background-color: #0f172a !important;
-  color: #e2e8f0 !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  background-color: var(--card) !important;
+  border: 1px solid var(--card2) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+.card-header {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--card2) !important;
+  padding: 14px 18px !important;
+}
+.card-body {
+  color: var(--text) !important;
+  padding: 16px 18px !important;
 }
 
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
 #sidebar .nav-link {
-  color: #94a3b8 !important;
-  border-radius: 6px;
+  color: var(--muted) !important;
+  border-radius: var(--radius-sm);
   transition: background 0.15s, color 0.15s;
+  font-size: 13px;
+  font-weight: 500;
 }
 #sidebar .nav-link:hover {
-  background-color: #334155 !important;
-  color: #e2e8f0 !important;
+  background-color: var(--card2) !important;
+  color: var(--text) !important;
 }
 #sidebar .nav-link.active {
-  background-color: #1d4ed8 !important;
-  color: #ffffff !important;
+  background-color: var(--blue-d) !important;
+  color: #fff !important;
 }
 
-/* ── Cards ──────────────────────────────────────────────────────────────── */
-.card {
-  background-color: #1e293b !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.15s !important;
 }
-.card-body {
-  color: #e2e8f0;
+.btn-primary  { background-color: var(--blue-d) !important; border-color: var(--blue-d) !important; }
+.btn-primary:hover  { background-color: #1e40af !important; border-color: #1e40af !important; }
+.btn-success  { background-color: #16a34a !important; border-color: #16a34a !important; }
+.btn-success:hover  { background-color: #15803d !important; }
+.btn-warning  { color: #fbbf24 !important; border-color: #fbbf24 !important; }
+.btn-warning:hover  { background-color: rgba(251,191,36,0.12) !important; }
+.btn-danger   { background-color: #dc2626 !important; border-color: #dc2626 !important; }
+.btn-secondary { background-color: var(--card2) !important; border-color: var(--border) !important; color: var(--text) !important; }
+.btn-secondary:hover { background-color: var(--border) !important; }
+.btn-outline-primary { color: var(--blue) !important; border-color: var(--blue) !important; }
+.btn-outline-primary:hover { background-color: rgba(59,130,246,0.15) !important; color: var(--blue) !important; }
+.btn-outline-secondary { color: var(--muted) !important; border-color: var(--border) !important; }
+.btn-outline-secondary:hover { background-color: var(--card2) !important; color: var(--text) !important; }
+.btn-outline-danger { color: var(--red) !important; border-color: var(--red) !important; }
+.btn-outline-danger:hover { background-color: rgba(239,68,68,0.12) !important; }
+
+/* ── Form controls ──────────────────────────────────────────────────────── */
+.form-control,
+.form-select {
+  background-color: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 13px !important;
+}
+.form-control::placeholder { color: var(--muted) !important; }
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
+  background-color: var(--card2) !important;
+  color: var(--text) !important;
+}
+
+/* ── Checklist & Switch ─────────────────────────────────────────────────── */
+.form-check-label { color: var(--text) !important; font-size: 13px; cursor: pointer; }
+.form-check-input {
+  background-color: var(--card2) !important;
+  border-color: var(--border) !important;
+}
+.form-check-input:checked {
+  background-color: var(--blue-d) !important;
+  border-color: var(--blue-d) !important;
+}
+.form-switch .form-check-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e") !important;
+}
+.form-switch .form-check-input:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+}
+
+/* ── dcc.Dropdown (Dash v2 – react-select based) ────────────────────────── */
+.dash-dropdown .Select-control,
+.Select-control {
+  background-color: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text) !important;
+  min-height: 38px;
+}
+.Select-control:hover { border-color: var(--blue) !important; }
+.Select-multi-value-wrapper,
+.Select-value { background-color: transparent !important; }
+.Select-value-label,
+.Select-placeholder,
+.Select--multi .Select-value-label {
+  color: var(--text) !important;
+}
+.Select-input > input { color: var(--text) !important; background: transparent !important; }
+.Select-menu-outer,
+.Select-menu {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  z-index: 9999 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+.Select-option { background-color: var(--card) !important; color: var(--text) !important; font-size: 13px; }
+.Select-option:hover,
+.Select-option.is-focused { background-color: var(--card2) !important; }
+.Select-option.is-selected { background-color: var(--blue-d) !important; color: #fff !important; }
+.Select-arrow-zone { color: var(--muted) !important; }
+.Select-clear-zone,
+.Select-clear { color: var(--muted) !important; }
+
+/* Multi-value chips inside dropdown */
+.Select--multi .Select-value {
+  background-color: var(--blue-d) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+}
+.Select--multi .Select-value-label { color: #fff !important; font-size: 12px !important; }
+.Select--multi .Select-value-icon {
+  color: rgba(255,255,255,0.7) !important;
+  border-right: 1px solid rgba(255,255,255,0.2) !important;
+}
+.Select--multi .Select-value-icon:hover {
+  background-color: rgba(0,0,0,0.2) !important;
+  color: #fff !important;
+}
+
+/* Newer Dash react-select v5 class overrides */
+[class*="-control"] {
+  background-color: var(--card2) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+[class*="-menu"] {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  z-index: 9999 !important;
+}
+[class*="-option"] { background-color: var(--card) !important; color: var(--text) !important; }
+[class*="-option"]:hover { background-color: var(--card2) !important; }
+[class*="-placeholder"] { color: var(--muted) !important; }
+[class*="-singleValue"] { color: var(--text) !important; }
+[class*="-Input"] input { color: var(--text) !important; }
+[class*="-multiValue"] { background-color: var(--blue-d) !important; border-radius: 4px !important; }
+[class*="-multiValueLabel"] { color: #fff !important; font-size: 12px !important; }
+[class*="-multiValueRemove"]:hover { background-color: rgba(0,0,0,0.2) !important; color: #fff !important; }
+[class*="-indicatorSeparator"] { background-color: var(--border) !important; }
+[class*="-dropdownIndicator"] { color: var(--muted) !important; }
+[class*="-clearIndicator"] { color: var(--muted) !important; }
+
+/* ── DatePickerRange (Dash 2.x – new component with dash-datepicker-* classes) ── */
+
+/* Input wrapper (the visible field) */
+.dash-datepicker-input-wrapper {
+  background-color: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 5px 10px !important;
+  gap: 4px !important;
+  width: 100% !important;
+  cursor: text !important;
+  transition: border-color 0.15s !important;
+}
+.dash-datepicker-input-wrapper:hover,
+.dash-datepicker-input-wrapper:focus-within {
+  border-color: var(--blue) !important;
+  outline: none !important;
+}
+
+/* Actual text inputs inside the wrapper */
+body .dash-datepicker-input-wrapper .dash-datepicker-input,
+body .dash-datepicker-input,
+.dash-datepicker-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  font-weight: 400 !important;
+  caret-color: #e2e8f0 !important;
+  min-width: 75px !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
+.dash-datepicker-input::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* Arrow between start/end and the dropdown caret */
+.dash-datepicker-range-arrow,
+.dash-datepicker-caret-icon {
+  color: var(--muted) !important;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Calendar popup – Radix popover */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+[data-radix-popper-content-wrapper] > div,
+.dash-datepicker-calendar {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+  color: var(--text) !important;
+  padding: 12px !important;
+}
+
+/* Day cells */
+[data-radix-popper-content-wrapper] [role="gridcell"] button {
+  color: var(--text) !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button:hover {
+  background-color: var(--card2) !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
+[data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
+  background-color: var(--blue-d) !important;
+  color: #fff !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
+  color: var(--border) !important;
+  cursor: not-allowed;
+}
+
+/* Column headers (Mon, Tue…) */
+[data-radix-popper-content-wrapper] [role="columnheader"] {
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Month/year caption & all text inside popup */
+[data-radix-popper-content-wrapper] * {
+  color: #e2e8f0 !important;
+}
+
+/* Month select & year input inside calendar navigation */
+[data-radix-popper-content-wrapper] select,
+[data-radix-popper-content-wrapper] input[type="number"],
+[data-radix-popper-content-wrapper] input[type="text"] {
+  background-color: #334155 !important;
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 4px !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+[data-radix-popper-content-wrapper] select option {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Nav buttons (prev/next month) */
+[data-radix-popper-content-wrapper] button {
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+}
+[data-radix-popper-content-wrapper] button:hover {
+  background-color: #334155 !important;
+}
+
+/* Day numbers — override DARKLY blue/purple link colors */
+[data-radix-popper-content-wrapper] [role="gridcell"] button {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
+[data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+  cursor: not-allowed;
 }
 
 /* ── Tables ─────────────────────────────────────────────────────────────── */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
-  background-color: #334155 !important;
-  color: #94a3b8 !important;
-  border-bottom: 2px solid #475569 !important;
-  font-size: 12px;
+  background-color: var(--card2) !important;
+  color: var(--muted) !important;
+  border-bottom: 2px solid var(--border) !important;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-bottom: 1px solid #334155 !important;
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--card2) !important;
   font-size: 13px;
 }
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover td {
-  background-color: #334155 !important;
-}
-
-/* ── Inputs & dropdowns ─────────────────────────────────────────────────── */
-.form-control,
-.form-select,
-.Select-control {
-  background-color: #334155 !important;
-  border: 1px solid #475569 !important;
-  color: #e2e8f0 !important;
-}
-.form-control:focus,
-.form-select:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Dash dcc.Dropdown */
-.Select-menu-outer {
-  background-color: #1e293b !important;
-  border: 1px solid #475569 !important;
-}
-.Select-option {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-}
-.Select-option:hover,
-.Select-option.is-focused {
-  background-color: #334155 !important;
-}
-.Select-value-label,
-.Select-placeholder {
-  color: #e2e8f0 !important;
-}
-
-/* ── Buttons ────────────────────────────────────────────────────────────── */
-.btn-primary {
-  background-color: #1d4ed8 !important;
-  border-color: #1d4ed8 !important;
-}
-.btn-primary:hover {
-  background-color: #1e40af !important;
-}
-.btn-success {
-  background-color: #16a34a !important;
-  border-color: #16a34a !important;
-}
-.btn-danger {
-  background-color: #dc2626 !important;
-  border-color: #dc2626 !important;
+  background-color: var(--card2) !important;
 }
 
 /* ── Badges ─────────────────────────────────────────────────────────────── */
 .badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  border-radius: 20px !important;
 }
+
+/* ── Alerts ─────────────────────────────────────────────────────────────── */
+.alert { border-radius: var(--radius) !important; font-size: 13px !important; }
+.alert-success { background-color: rgba(34,197,94,0.12) !important; border-color: rgba(34,197,94,0.3) !important; color: #86efac !important; }
+.alert-warning { background-color: rgba(234,179,8,0.12) !important; border-color: rgba(234,179,8,0.3) !important; color: #fde68a !important; }
+.alert-danger  { background-color: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.3) !important; color: #fca5a5 !important; }
+.alert-info    { background-color: rgba(59,130,246,0.12) !important; border-color: rgba(59,130,246,0.3) !important; color: #93c5fd !important; }
+.alert .btn-close { filter: invert(1); }
 
 /* ── Progress bar ───────────────────────────────────────────────────────── */
-.progress {
-  background-color: #334155 !important;
-  border-radius: 4px;
-}
-.progress-bar {
-  border-radius: 4px;
-}
+.progress { background-color: var(--card2) !important; border-radius: 4px; height: 6px; }
+.progress-bar { border-radius: 4px; }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
-.modal-content {
-  background-color: #1e293b !important;
-  border: 1px solid #475569 !important;
-  color: #e2e8f0 !important;
-}
-.modal-header {
-  border-bottom: 1px solid #334155 !important;
-}
-.modal-footer {
-  border-top: 1px solid #334155 !important;
-}
+.modal-content  { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
+.modal-header   { border-bottom: 1px solid var(--card2) !important; }
+.modal-footer   { border-top: 1px solid var(--card2) !important; }
+.modal-title    { color: var(--text) !important; }
+.modal-backdrop { background-color: rgba(0,0,0,0.7) !important; }
 
 /* ── Tabs ───────────────────────────────────────────────────────────────── */
-.nav-tabs .nav-link {
-  color: #94a3b8;
-  border: 1px solid transparent;
-}
-.nav-tabs .nav-link.active {
-  background-color: #1e293b;
-  border-color: #475569 #475569 #1e293b;
-  color: #e2e8f0;
-}
+.nav-tabs { border-bottom: 1px solid var(--card2) !important; }
+.nav-tabs .nav-link { color: var(--muted); border: 1px solid transparent; font-size: 13px; }
+.nav-tabs .nav-link:hover { color: var(--text); border-color: var(--card2); }
+.nav-tabs .nav-link.active { background-color: var(--card); border-color: var(--card2) var(--card2) var(--card); color: var(--text); }
 
 /* ── Toast ──────────────────────────────────────────────────────────────── */
-.toast {
-  background-color: #1e293b !important;
-  border: 1px solid #475569 !important;
-  color: #e2e8f0 !important;
-}
+.toast { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0f172a; }
-::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #64748b; }
+/* ── Plotly modebar ─────────────────────────────────────────────────────── */
+.js-plotly-plot .plotly .modebar { background: transparent !important; }
+.js-plotly-plot .plotly .modebar-btn path { fill: var(--muted) !important; }
 
-/* ── Plotly chart ───────────────────────────────────────────────────────── */
-.js-plotly-plot .plotly .modebar {
-  background: transparent !important;
-}
-.js-plotly-plot .plotly .modebar-btn path {
-  fill: #94a3b8 !important;
-}
+/* ── HR ─────────────────────────────────────────────────────────────────── */
+hr { border-color: var(--card2) !important; opacity: 1 !important; }
 
-/* ── Utility ────────────────────────────────────────────────────────────── */
-.text-muted { color: #94a3b8 !important; }
+/* ── Utility classes ────────────────────────────────────────────────────── */
+.text-muted { color: var(--muted) !important; }
 .section-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #64748b;
-  margin-bottom: 12px;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+  margin-bottom: 10px !important;
+  display: block;
 }
+
+/* ── BIST Chip Selector ─────────────────────────────────────────────────── */
+.bist-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0;
+}
+.bist-chip-list .form-check {
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex;
+}
+.bist-chip-list .form-check-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.bist-chip-list .form-check-label {
+  cursor: pointer;
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background-color: var(--card2);
+  color: var(--muted);
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.bist-chip-list .form-check-label:hover {
+  border-color: var(--blue);
+  color: var(--text);
+  background-color: rgba(59,130,246,0.1);
+}
+.bist-chip-list .form-check-input:checked + .form-check-label {
+  background-color: var(--blue-d);
+  border-color: var(--blue-d);
+  color: #ffffff;
+}
+.bist-chip-list .form-check-input:checked + .form-check-label:hover {
+  background-color: #1e40af;
+  border-color: #1e40af;
+}
+
+/* ── Source status rows ─────────────────────────────────────────────────── */
+.source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card2);
+}
+.source-row:last-child { border-bottom: none; }
+
+/* ── Collapse transition ────────────────────────────────────────────────── */
+.collapsing { transition: height 0.25s ease !important; }

@@ -1,9 +1,10 @@
 """
 Altın Veri Çekme Modülü
 Ons altın (USD) ve gram altın (TRY) için veri sağlar.
-Birincil kaynak: borsapy, fallback: yfinance
+Birincil kaynak: yfinance, opsiyonel: borsapy
 """
 
+import os
 import time
 import logging
 import pandas as pd
@@ -14,13 +15,13 @@ from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
 
-# Troy ons → gram dönüşüm sabiti
 TROY_OZ_TO_GRAM = 31.1035
 
-# Desteklenen semboller
 GOLD_OZ_SYMBOL = 'GC=F'
 USDTRY_SYMBOL = 'USDTRY=X'
 GOLD_GRAM_SYMBOL = 'GOLD_GRAM_TRY'
+
+GOLD_DATA_FILE = os.path.join('data', 'gold_data.csv')
 
 
 class GoldFetcher:
@@ -34,6 +35,8 @@ class GoldFetcher:
     def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None):
         self.start_date = start_date
         self.end_date = end_date or datetime.now().strftime("%Y-%m-%d")
+        self.data_dir = 'data'
+        os.makedirs(self.data_dir, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Yardımcı metotlar
@@ -44,16 +47,30 @@ class GoldFetcher:
         for attempt in range(max_retries):
             try:
                 ticker = yf.Ticker(symbol)
-                df = ticker.history(start=self.start_date, end=self.end_date)
+                df = ticker.history(
+                    start=self.start_date,
+                    end=self.end_date,
+                    auto_adjust=True,
+                    back_adjust=False,
+                )
 
-                if df.empty:
+                if df is None or df.empty:
                     logger.warning(f"yfinance: {symbol} için veri bulunamadı")
                     return None
 
                 df.columns = df.columns.str.lower()
-                df = df[['open', 'high', 'low', 'close', 'volume']]
+                available = [c for c in ['open', 'high', 'low', 'close', 'volume'] if c in df.columns]
+                df = df[available]
+                for col in ['open', 'high', 'low', 'close']:
+                    if col not in df.columns:
+                        df[col] = np.nan
+                if 'volume' not in df.columns:
+                    df['volume'] = 0
                 df['volume'] = df['volume'].fillna(0)
-                return df
+                # Strip timezone from index
+                if df.index.tz is not None:
+                    df.index = df.index.tz_localize(None)
+                return df[['open', 'high', 'low', 'close', 'volume']]
 
             except Exception as exc:
                 if attempt < max_retries - 1:
@@ -167,8 +184,12 @@ class GoldFetcher:
         usd_close = usdtry_df['close'].rename('usdtry_close')
 
         # İndeks timezone'u normalize et
-        gold_close.index = pd.to_datetime(gold_close.index).tz_localize(None)
-        usd_close.index = pd.to_datetime(usd_close.index).tz_localize(None)
+        def _strip_idx(s):
+            idx = pd.to_datetime(s.index)
+            s.index = idx.tz_localize(None) if idx.tz is not None else idx
+            return s
+        gold_close = _strip_idx(gold_close)
+        usd_close = _strip_idx(usd_close)
 
         merged = pd.concat([gold_close, usd_close], axis=1).dropna()
 
@@ -178,10 +199,13 @@ class GoldFetcher:
         gram_close = (merged['gold_oz_close'] * merged['usdtry_close']) / TROY_OZ_TO_GRAM
 
         # OHLCV formatı oluştur
-        gold_oz_df_aligned = gold_oz_df.copy()
-        gold_oz_df_aligned.index = pd.to_datetime(gold_oz_df_aligned.index).tz_localize(None)
-        usdtry_df_aligned = usdtry_df.copy()
-        usdtry_df_aligned.index = pd.to_datetime(usdtry_df_aligned.index).tz_localize(None)
+        def _aligned(df):
+            df = df.copy()
+            idx = pd.to_datetime(df.index)
+            df.index = idx.tz_localize(None) if idx.tz is not None else idx
+            return df
+        gold_oz_df_aligned = _aligned(gold_oz_df)
+        usdtry_df_aligned = _aligned(usdtry_df)
 
         gram_df = pd.DataFrame(index=merged.index)
         gram_df['close'] = gram_close
@@ -212,10 +236,17 @@ class GoldFetcher:
 
         all_data: dict = {}
 
+        def _strip(df: pd.DataFrame) -> pd.DataFrame:
+            idx = pd.to_datetime(df.index)
+            if idx.tz is not None:
+                idx = idx.tz_localize(None)
+            df.index = idx
+            return df
+
         # 1. Ons altın
         gold_oz = self.fetch_gold_oz()
         if gold_oz is not None:
-            gold_oz.index = pd.to_datetime(gold_oz.index).tz_localize(None)
+            gold_oz = _strip(gold_oz)
             all_data[GOLD_OZ_SYMBOL] = gold_oz
         else:
             logger.error("Ons altın verisi çekilemedi!")
@@ -223,7 +254,7 @@ class GoldFetcher:
         # 2. USD/TRY
         usdtry = self.fetch_usdtry()
         if usdtry is not None:
-            usdtry.index = pd.to_datetime(usdtry.index).tz_localize(None)
+            usdtry = _strip(usdtry)
             all_data[USDTRY_SYMBOL] = usdtry
         else:
             logger.error("USD/TRY verisi çekilemedi!")
@@ -252,6 +283,107 @@ class GoldFetcher:
 
         GoldFetcher._cache[cache_key] = combined.copy()
         return combined
+
+    # ------------------------------------------------------------------
+    # Persistence ve incremental metodları
+    # ------------------------------------------------------------------
+
+    def save_gold_data(self, df: pd.DataFrame, filepath: str = GOLD_DATA_FILE) -> None:
+        """Multi-index DataFrame'i CSV olarak kaydet."""
+        os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+        df.to_csv(filepath, index=True)
+        logger.info(f"Altın verisi kaydedildi: {filepath} ({len(df)} satır)")
+
+    @staticmethod
+    def load_gold_data(filepath: str = GOLD_DATA_FILE) -> Optional[pd.DataFrame]:
+        """Kaydedilmiş altın verisini yükle. Multi-index (symbol, date) döner."""
+        if not os.path.exists(filepath):
+            return None
+        try:
+            df = pd.read_csv(filepath)
+            dates = pd.to_datetime(df['date'])
+            if getattr(dates.dt, 'tz', None) is not None:
+                dates = dates.dt.tz_localize(None)
+            df['date'] = dates
+            df = df.set_index(['symbol', 'date'])
+            logger.info(f"Altın verisi yüklendi: {filepath} ({len(df)} satır)")
+            return df
+        except Exception as exc:
+            logger.error(f"Altın verisi yüklenemedi: {exc}")
+            return None
+
+    @staticmethod
+    def _normalize_df_index(df: pd.DataFrame) -> pd.DataFrame:
+        """Multi-index'teki tarih timezone bilgisini kaldır."""
+        df = df.reset_index()
+        dates = pd.to_datetime(df['date'])
+        if getattr(dates.dt, 'tz', None) is not None:
+            dates = dates.dt.tz_localize(None)
+        df['date'] = dates
+        return df.set_index(['symbol', 'date'])
+
+    def get_source_status(self, filepath: str = GOLD_DATA_FILE) -> dict:
+        """Dosyadaki mevcut veri durumunu raporla."""
+        today = datetime.now().date()
+        df = GoldFetcher.load_gold_data(filepath)
+        if df is None or df.empty:
+            return {
+                'exists': False,
+                'last_date': None,
+                'missing_days': None,
+                'symbols': [],
+            }
+        all_dates = pd.to_datetime(df.index.get_level_values('date'))
+        last_date = all_dates.max().date()
+        missing = sum(
+            1 for i in range(1, (today - last_date).days + 1)
+            if (last_date + timedelta(days=i)).weekday() < 5
+        )
+        symbols = df.index.get_level_values('symbol').unique().tolist()
+        return {
+            'exists': True,
+            'last_date': str(last_date),
+            'missing_days': missing,
+            'symbols': symbols,
+        }
+
+    def fetch_incremental(self, filepath: str = GOLD_DATA_FILE) -> dict:
+        """Sadece eksik günleri çek ve mevcut dosyaya ekle."""
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        existing = GoldFetcher.load_gold_data(filepath)
+
+        if existing is None or existing.empty:
+            logger.info("Altın verisi bulunamadı, tam çekme yapılıyor...")
+            df = self.fetch_all_gold_data(save=False)
+            df = GoldFetcher._normalize_df_index(df)
+            self.save_gold_data(df, filepath)
+            return {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df)}
+
+        all_dates = pd.to_datetime(existing.index.get_level_values('date'))
+        min_last_date = all_dates.max().date()
+        fetch_from = (datetime.combine(min_last_date, datetime.min.time()) + timedelta(days=1)).strftime('%Y-%m-%d')
+
+        if fetch_from > today_str:
+            logger.info("Altın verisi güncel, çekme gerekmez")
+            return {'mode': 'skip', 'new_rows': 0, 'total_rows': len(existing)}
+
+        logger.info(f"Eksik altın verisi çekiliyor: {fetch_from} → {today_str}")
+        delta_fetcher = GoldFetcher(start_date=fetch_from, end_date=today_str)
+        new_data = delta_fetcher.fetch_all_gold_data(save=False)
+        new_data = GoldFetcher._normalize_df_index(new_data)
+
+        combined = pd.concat([existing, new_data])
+        combined = combined[~combined.index.duplicated(keep='last')]
+        combined = combined.sort_index()
+
+        self.save_gold_data(combined, filepath)
+        return {
+            'mode': 'incremental',
+            'new_rows': len(new_data),
+            'total_rows': len(combined),
+            'fetch_from': fetch_from,
+            'fetch_to': today_str,
+        }
 
     def get_latest_prices(self) -> dict:
         """Güncel ons altın, gram altın ve USD/TRY fiyatlarını döndür."""

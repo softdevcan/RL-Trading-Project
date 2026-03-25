@@ -9,13 +9,18 @@ API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8888/api")
 TIMEOUT = 30  # seconds
 
 
+import logging as _logging
+_api_log = _logging.getLogger(__name__)
+
+
 def _get(path: str, params: Optional[Dict] = None) -> Any:
     """GET request, returns parsed JSON or None on error."""
     try:
         resp = requests.get(f"{API_BASE}{path}", params=params, timeout=TIMEOUT)
         resp.raise_for_status()
         return resp.json()
-    except Exception:
+    except Exception as exc:
+        _api_log.warning("GET %s%s failed: %s", API_BASE, path, exc)
         return None
 
 
@@ -27,7 +32,8 @@ def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None)
         )
         resp.raise_for_status()
         return resp.json()
-    except Exception:
+    except Exception as exc:
+        _api_log.warning("POST %s%s failed: %s", API_BASE, path, exc)
         return None
 
 
@@ -73,6 +79,14 @@ def get_data_list() -> List[Dict]:
 
 def generate_data(payload: Optional[Dict] = None) -> Dict:
     return _post("/trading/data/generate", json=payload or {}) or {}
+
+
+def get_data_status() -> Dict:
+    return _get("/trading/data/status") or {}
+
+
+def update_data(payload: Dict) -> Dict:
+    return _post("/trading/data/update", json=payload) or {}
 
 
 def get_daily_decision(payload: Dict) -> Dict:

@@ -7,7 +7,7 @@ import time
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple, Optional
 import os
 import logging
@@ -215,6 +215,107 @@ class DataFetcher:
         logger.info(f"Cleaned: {removed_rows} rows removed ({len(cleaned_df)} rows remaining)")
 
         return cleaned_df
+
+    def get_source_status(self, symbols: List[str], filename: str = 'raw_stock_data.csv') -> dict:
+        """Dosyadaki mevcut veri durumunu raporla."""
+        today = datetime.now().date()
+        filepath = os.path.join(self.data_dir, filename)
+
+        if not os.path.exists(filepath):
+            return {
+                'exists': False,
+                'last_date': None,
+                'missing_days': None,
+                'symbols': [],
+            }
+
+        try:
+            df = self.load_data(filename)
+            all_dates = pd.to_datetime(df.index.get_level_values('date'))
+            if all_dates.tz is not None:
+                all_dates = all_dates.tz_localize(None)
+            last_date = all_dates.max().date()
+            missing = sum(
+                1 for i in range(1, (today - last_date).days + 1)
+                if (last_date + timedelta(days=i)).weekday() < 5
+            )
+            existing_symbols = df.index.get_level_values('symbol').unique().tolist()
+            return {
+                'exists': True,
+                'last_date': str(last_date),
+                'missing_days': missing,
+                'symbols': existing_symbols,
+            }
+        except Exception as exc:
+            return {
+                'exists': True,
+                'last_date': None,
+                'missing_days': None,
+                'error': str(exc),
+                'symbols': [],
+            }
+
+    def fetch_incremental(self, symbols: List[str], filename: str = 'raw_stock_data.csv') -> dict:
+        """Sadece eksik günleri çek ve mevcut dosyaya ekle.
+
+        Mevcut dosyadan son tarihi okur, sadece eksik delta'yı çeker ve append eder.
+        """
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        filepath = os.path.join(self.data_dir, filename)
+
+        existing = None
+        if os.path.exists(filepath):
+            try:
+                existing = self.load_data(filename)
+            except Exception as exc:
+                logger.warning(f"Mevcut veri yüklenemedi, tam çekme yapılıyor: {exc}")
+
+        if existing is None or existing.empty:
+            logger.info(f"Mevcut {filename} bulunamadı, tam çekme yapılıyor...")
+            df = self.fetch_stock_data(symbols, save=True)
+            return {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df)}
+
+        all_dates = pd.to_datetime(existing.index.get_level_values('date'))
+        if all_dates.tz is not None:
+            all_dates = all_dates.tz_localize(None)
+        min_last_date = all_dates.max().date()
+        fetch_from = (datetime.combine(min_last_date, datetime.min.time()) + timedelta(days=1)).strftime('%Y-%m-%d')
+
+        if fetch_from > today_str:
+            logger.info(f"{filename} güncel, çekme gerekmez")
+            return {'mode': 'skip', 'new_rows': 0, 'total_rows': len(existing)}
+
+        logger.info(f"Eksik BIST verisi çekiliyor: {fetch_from} → {today_str}")
+        delta_fetcher = DataFetcher(start_date=fetch_from, end_date=today_str)
+        new_data = delta_fetcher.fetch_stock_data(symbols, save=False)
+
+        # Normalize timezone
+        new_data = new_data.reset_index()
+        dates = pd.to_datetime(new_data['date'])
+        if getattr(dates.dt, 'tz', None) is not None:
+            dates = dates.dt.tz_localize(None)
+        new_data['date'] = dates
+        new_data = new_data.set_index(['symbol', 'date'])
+
+        existing = existing.reset_index()
+        dates_ex = pd.to_datetime(existing['date'])
+        if getattr(dates_ex.dt, 'tz', None) is not None:
+            dates_ex = dates_ex.dt.tz_localize(None)
+        existing['date'] = dates_ex
+        existing = existing.set_index(['symbol', 'date'])
+
+        combined = pd.concat([existing, new_data])
+        combined = combined[~combined.index.duplicated(keep='last')]
+        combined = combined.sort_index()
+
+        self.save_data(combined, filename)
+        return {
+            'mode': 'incremental',
+            'new_rows': len(new_data),
+            'total_rows': len(combined),
+            'fetch_from': fetch_from,
+            'fetch_to': today_str,
+        }
 
     def split_data(self, df: pd.DataFrame, train_ratio=0.7, val_ratio=0.15) \
             -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     CORS_METHODS: list[str] = ["*"]
     CORS_HEADERS: list[str] = ["*"]
 
+    # External API Keys
+    EVDS_API_KEY: str = ""
+
     # Directory paths (#27)
     MODELS_DIR: str = "models"
     RESULTS_DIR: str = "results"

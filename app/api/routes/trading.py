@@ -3,13 +3,14 @@ Trading API Routes
 FastAPI endpoints for RL trading system
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Body
 from typing import Dict, List, Optional
+from pydantic import BaseModel
 import asyncio
 import os
 import re
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import logging
@@ -395,6 +396,196 @@ async def list_all_datasets():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class DataUpdateRequest(BaseModel):
+    sources: List[str]
+    mode: str = "incremental"
+    start_date: Optional[str] = None
+    symbols: Optional[List[str]] = None  # BIST hisse listesi; None → varsayılan faz sembolleri
+
+
+def _count_missing_trading_days(last_date_str: str) -> int:
+    """Verilen tarihten bugüne kadar iş günü sayısını döndür."""
+    today = datetime.now().date()
+    last = datetime.strptime(last_date_str, '%Y-%m-%d').date()
+    return sum(
+        1 for i in range(1, (today - last).days + 1)
+        if (last + timedelta(days=i)).weekday() < 5
+    )
+
+
+@router.get("/data/status")
+async def get_data_status():
+    """Tüm veri kaynaklarının mevcut durumunu döndür (son tarih, eksik gün)."""
+    logger.info("GET /data/status çağrıldı")
+    try:
+        status = {}
+
+        # BIST hisseleri
+        bist_file = os.path.join(_settings.DATA_DIR, 'raw_stock_data.csv')
+        if os.path.exists(bist_file):
+            try:
+                from data.data_fetcher import DataFetcher
+                fetcher = DataFetcher()
+                df = fetcher.load_data('raw_stock_data.csv')
+                dates = pd.to_datetime(df.index.get_level_values('date'))
+                if dates.tz is not None:
+                    dates = dates.tz_localize(None)
+                last_date = dates.max().strftime('%Y-%m-%d')
+                status['bist_stocks'] = {
+                    'exists': True,
+                    'file': 'raw_stock_data.csv',
+                    'last_date': last_date,
+                    'missing_days': _count_missing_trading_days(last_date),
+                    'symbols': df.index.get_level_values('symbol').unique().tolist(),
+                    'label': 'BIST-30 Hisseleri',
+                }
+            except Exception as exc:
+                status['bist_stocks'] = {
+                    'exists': True, 'file': 'raw_stock_data.csv',
+                    'error': str(exc), 'label': 'BIST-30 Hisseleri',
+                }
+        else:
+            status['bist_stocks'] = {
+                'exists': False, 'file': 'raw_stock_data.csv',
+                'last_date': None, 'missing_days': None,
+                'symbols': [], 'label': 'BIST-30 Hisseleri',
+            }
+
+        # Altın & döviz
+        gold_file = os.path.join(_settings.DATA_DIR, 'gold_data.csv')
+        if os.path.exists(gold_file):
+            try:
+                from data.gold_fetcher import GoldFetcher
+                df = GoldFetcher.load_gold_data(gold_file)
+                if df is not None and not df.empty:
+                    dates = pd.to_datetime(df.index.get_level_values('date'))
+                    last_date = dates.max().strftime('%Y-%m-%d')
+                    status['gold'] = {
+                        'exists': True,
+                        'file': 'gold_data.csv',
+                        'last_date': last_date,
+                        'missing_days': _count_missing_trading_days(last_date),
+                        'symbols': df.index.get_level_values('symbol').unique().tolist(),
+                        'label': 'Altın & Döviz (GC=F, USD/TRY, Gram Altın)',
+                    }
+                else:
+                    raise ValueError("Dosya boş")
+            except Exception as exc:
+                status['gold'] = {
+                    'exists': True, 'file': 'gold_data.csv',
+                    'error': str(exc), 'label': 'Altın & Döviz',
+                }
+        else:
+            status['gold'] = {
+                'exists': False, 'file': 'gold_data.csv',
+                'last_date': None, 'missing_days': None,
+                'symbols': [], 'label': 'Altın & Döviz (GC=F, USD/TRY, Gram Altın)',
+            }
+
+        # Makro veri (EUR/TRY, BIST-100, enflasyon)
+        macro_file = os.path.join(_settings.DATA_DIR, 'macro_data.csv')
+        if os.path.exists(macro_file):
+            try:
+                df = pd.read_csv(macro_file)
+                date_col = 'date' if 'date' in df.columns else df.columns[0]
+                dates = pd.to_datetime(df[date_col])
+                last_date = dates.max().strftime('%Y-%m-%d')
+                status['macro'] = {
+                    'exists': True,
+                    'file': 'macro_data.csv',
+                    'last_date': last_date,
+                    'missing_days': _count_missing_trading_days(last_date),
+                    'symbols': [c for c in df.columns if c != date_col],
+                    'label': 'Makro Veri (EUR/TRY, BIST-100, Enflasyon)',
+                }
+            except Exception as exc:
+                status['macro'] = {
+                    'exists': True, 'file': 'macro_data.csv',
+                    'error': str(exc), 'label': 'Makro Veri',
+                }
+        else:
+            status['macro'] = {
+                'exists': False, 'file': 'macro_data.csv',
+                'last_date': None, 'missing_days': None,
+                'symbols': [], 'label': 'Makro Veri (EUR/TRY, BIST-100, Enflasyon)',
+            }
+
+        return {'status': status, 'as_of': datetime.now().strftime('%Y-%m-%d')}
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/data/update")
+async def update_data(request: DataUpdateRequest):
+    """Seçili veri kaynaklarını güncelle (incremental veya tam)."""
+    try:
+        results = {}
+        mode = request.mode
+        start_date = request.start_date or '2018-01-01'
+
+        if 'bist_stocks' in request.sources:
+            from data.data_fetcher import DataFetcher
+            from data.bist30_symbols import get_symbols
+            from data.technical_indicators import add_indicators_to_multi_symbol_df
+
+            symbols = request.symbols if request.symbols else get_symbols(phase=2)
+            fetcher = DataFetcher(start_date=start_date)
+
+            if mode == 'full':
+                df = fetcher.fetch_stock_data(symbols, save=True)
+                df = fetcher.clean_data(df)
+                df = add_indicators_to_multi_symbol_df(df)
+                fetcher.save_data(df, 'stock_data_with_indicators.csv')
+                results['bist_stocks'] = {
+                    'mode': 'full', 'new_rows': len(df), 'total_rows': len(df),
+                }
+            else:
+                result = fetcher.fetch_incremental(symbols, 'raw_stock_data.csv')
+                try:
+                    df = fetcher.load_data('raw_stock_data.csv')
+                    df = fetcher.clean_data(df)
+                    df = add_indicators_to_multi_symbol_df(df)
+                    fetcher.save_data(df, 'stock_data_with_indicators.csv')
+                except Exception as exc:
+                    logger.warning(f"İndikatörler yeniden hesaplanamadı: {exc}")
+                results['bist_stocks'] = result
+
+        if 'gold' in request.sources:
+            from data.gold_fetcher import GoldFetcher
+
+            gold_file = os.path.join(_settings.DATA_DIR, 'gold_data.csv')
+            fetcher = GoldFetcher(start_date=start_date)
+
+            if mode == 'full':
+                df = fetcher.fetch_all_gold_data(save=False)
+                df = GoldFetcher._normalize_df_index(df)
+                fetcher.save_gold_data(df, gold_file)
+                results['gold'] = {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df)}
+            else:
+                result = fetcher.fetch_incremental(gold_file)
+                results['gold'] = result
+
+        if 'macro' in request.sources:
+            from data.macro_fetcher import MacroDataFetcher
+            macro_api_key = _settings.EVDS_API_KEY or os.environ.get('EVDS_API_KEY', '')
+            macro_fetcher = MacroDataFetcher(api_key=macro_api_key, start_date=start_date)
+            try:
+                df = macro_fetcher.fetch_macro_data(save=True)
+                results['macro'] = {
+                    'mode': 'full',
+                    'rows': len(df) if df is not None else 0,
+                }
+            except Exception as exc:
+                results['macro'] = {'error': str(exc)}
+
+        return {'status': 'success', 'results': results}
+
+    except Exception as exc:
+        logger.error(f"Veri güncelleme hatası: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.delete("/models/{model_name}")
 async def delete_model(model_name: str):
     """Delete a trained model"""
@@ -485,7 +676,7 @@ async def run_training(request: TrainingRequest):
                     fundamental_df = fund_fetcher.fetch_fundamental_data(symbols, save=True)
                 
                 # Load macro data  
-                macro_fetcher = MacroDataFetcher(api_key="tV4qq6RzPr")
+                macro_fetcher = MacroDataFetcher(api_key=_settings.EVDS_API_KEY or "tV4qq6RzPr")
                 try:
                     macro_df = macro_fetcher.load_data('macro_data.csv')
                     logger.info(f"Loaded macro data: {macro_df.shape}")
