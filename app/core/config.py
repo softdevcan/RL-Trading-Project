@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     DATA_DIR: str = "data"
     LOGS_DIR: str = "logs"
     HYPEROPT_DIR: str = "hyperparameter_optimization/results"
+    PREDICTIONS_DIR: str = "data/predictions"
+    PREDICTION_MODELS_DIR: str = "models/prediction"
 
     class Config:
         env_file = ".env"

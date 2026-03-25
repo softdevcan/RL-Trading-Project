@@ -46,8 +46,8 @@ class TradingEnv(gym.Env):
             frame_bound: (start_idx, end_idx) for episode
             fundamental_df: Fundamental ratios per symbol (Faz 2)
             macro_df: Macro indicators per date (Faz 2)
-            phase: 1=Faz1 (56 features), 2=Faz2 (97 features)
-            reward_type: 'simple' (Faz 1) or 'psr' (Faz 2)
+            phase: 1=Faz1 (56 features), 2=Faz2 (97 features), 3=Faz3 (67 features, +gold)
+            reward_type: 'simple' (Faz 1/3) or 'psr' (Faz 2)
             reward_weights: PSR weights dict (w1-w5), None uses defaults
         """
         super().__init__()
@@ -97,8 +97,9 @@ class TradingEnv(gym.Env):
             self.frame_bound = frame_bound
 
         # Feature sayısı hesapla (phase'e göre)
-        if phase == 1:
-            # Faz 1: OHLCV (5) + Technical (5) = 10 per stock
+        if phase in (1, 3):
+            # Faz 1/3: OHLCV (5) + Technical (5) = 10 per stock/asset
+            # Faz 3 adds GOLD_GRAM_TRY to symbols (handled in df)
             self.features_per_stock = 10
             # State: balance (1) + shares (N) + features (N*10)
             state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock)
@@ -147,6 +148,9 @@ class TradingEnv(gym.Env):
         if phase == 2:
             logger.info(f"  Fundamental data: {'✓' if fundamental_df is not None else '✗'}")
             logger.info(f"  Macro data: {'✓' if macro_df is not None else '✗'}")
+        elif phase == 3:
+            gold_assets = [s for s in self.symbols if s in ('GOLD_GRAM_TRY', 'GC=F')]
+            logger.info(f"  Gold assets: {gold_assets if gold_assets else 'none in df'}")
 
     def _compute_price_stats(self):
         """Compute per-symbol price mean/std from the full df for dynamic normalization (#2)."""

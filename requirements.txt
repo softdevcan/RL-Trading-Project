@@ -82,6 +82,10 @@ nvidia-ml-py3==7.352.0  # For detailed GPU monitoring
 # TCMB EVDS API (Phase 2 - Macro Data)
 evds>=0.3.2  # TCMB Elektronik Veri Dağıtım Sistemi
 
+# Price Prediction Module
+xgboost>=2.0.0
+borsapy>=0.1.0
+
 # Development & Testing (#61, #62)
 pytest>=8.0.0
 black>=24.0.0

@@ -25,6 +25,7 @@
                 <button class="tab-button" onclick="switchTab('data', event)">📈 Veri İstatistikleri</button>
                 <button class="tab-button" onclick="switchTab('models', event)">🤖 Model Karşılaştırma</button>
                 <button class="tab-button" onclick="switchTab('daily-trading', event)">💼 Günlük Trading</button>
+                <button class="tab-button" onclick="switchTab('prediction', event)">📉 Fiyat Tahmini</button>
                 <button class="tab-button" onclick="switchTab('academic', event)">🎓 Akademik Analiz</button>
                 <a href="/static/hyperopt.html" class="tab-button" style="text-decoration:none; display: inline-block;">🔬 Hiper Parametre</a>
             </div>
@@ -804,11 +805,140 @@
             </div>
         </div>
 
+        <!-- Fiyat Tahmini Tab -->
+        <div id="prediction" class="tab-content">
+
+            <!-- Altın Fiyat Kartları -->
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h2>Altin &amp; Doviz Fiyatlari</h2>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select id="gold-symbol-select" style="padding:6px 10px; background:#1e293b; border:1px solid #334155; color:#e2e8f0; border-radius:4px; font-size:0.9em;" onchange="window.predictionManager && window.predictionManager._loadGoldHistoryChart()">
+                            <option value="GOLD_GRAM_TRY">Gram Altin (TRY)</option>
+                            <option value="GC=F">Ons Altin (USD)</option>
+                            <option value="USDTRY=X">USD/TRY</option>
+                        </select>
+                        <button id="gold-refresh-btn">Yenile</button>
+                    </div>
+                </div>
+                <div id="gold-prices-container" class="gold-prices-grid">
+                    <p class="info-text">Yukluyor...</p>
+                </div>
+                <div class="chart-container" style="margin-top:16px;">
+                    <canvas id="gold-price-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tahmin Kontrol Paneli -->
+            <div class="grid">
+                <!-- Sol: Sembol + Egitim -->
+                <div class="card">
+                    <h2>Model Egitimi &amp; Tahmin</h2>
+
+                    <div class="form-group">
+                        <label for="pred-symbol">Sembol:</label>
+                        <select id="pred-symbol">
+                            <option>Yukluyor...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Horizon:</label>
+                        <div style="display:flex; gap:16px; margin-top:6px;">
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                                <input type="radio" name="pred-horizon" value="daily" checked> Gunluk (yarin)
+                            </label>
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                                <input type="radio" name="pred-horizon" value="weekly"> Haftalik (7 gun)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pred-start-date">Egitim Baslangic Tarihi:</label>
+                        <input type="date" id="pred-start-date" value="2018-01-01">
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+                        <button id="pred-train-btn">Model Egit</button>
+                        <button id="pred-predict-btn">Tahmin Yap</button>
+                        <button id="pred-eval-btn" style="background:#374151;">Bekleyenleri Degerlendir</button>
+                    </div>
+
+                    <div id="pred-error" style="margin-top:10px;"></div>
+
+                    <!-- Egitim Sonucu -->
+                    <div id="pred-train-result" style="display:none; margin-top:16px;"></div>
+                </div>
+
+                <!-- Sag: Tahmin Kartı -->
+                <div class="card">
+                    <h2>Tahmin Sonucu</h2>
+                    <div id="pred-result-card">
+                        <p class="info-text">Tahmin yapmak icin sol taraftan sembol secin ve "Tahmin Yap" butonuna basin.</p>
+                    </div>
+
+                    <!-- Performans Metrikleri -->
+                    <h3 style="margin-top:20px; color:#94a3b8; font-size:0.95em;">Performans Metrikleri (Son 30 Tahmin)</h3>
+                    <div id="pred-performance-card">
+                        <p class="info-text">Metrik yok</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tahmin vs Gerçek Grafikler -->
+            <div class="grid">
+                <div class="card">
+                    <h2>Tahmin vs Gercek</h2>
+                    <div class="chart-container">
+                        <canvas id="pred-vs-actual-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Dogruluk Trendi</h2>
+                    <div class="chart-container">
+                        <canvas id="pred-accuracy-trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tahmin Geçmişi Tablosu -->
+            <div class="card">
+                <h2>Tahmin Gecmisi</h2>
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tahmin Tarihi</th>
+                                <th>Tahmin Fiyat</th>
+                                <th>Yon</th>
+                                <th>Gercek Fiyat</th>
+                                <th>Hata %</th>
+                                <th>Yon Dogru mu</th>
+                                <th>Guven</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pred-history-tbody">
+                            <tr><td colspan="7" style="text-align:center">Henuz tahmin yok</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div> <!-- End prediction tab -->
+
     </div> <!-- Close container -->
 
     <!-- Custom JavaScript -->
     <script src="/static/js/dashboard.js"></script>
     <script src="/static/js/daily-trading.js"></script>
     <script src="/static/js/academic-analysis.js"></script>
+    <script src="/static/js/prediction.js"></script>
+    <script>
+        // Prediction tab: PredictionManager'ı sayfa yüklenince başlat
+        document.addEventListener('DOMContentLoaded', function () {
+            window.predictionManager = new PredictionManager();
+        });
+    </script>
 </body>
 </html>

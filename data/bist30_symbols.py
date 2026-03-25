@@ -57,20 +57,50 @@ STOCK_INFO = {
     'TUPRS.IS': {'name': 'Tüpraş', 'sector': 'Energy'},
 }
 
-def get_symbols(phase=1):
+# Altın ve döviz sembolleri
+GOLD_SYMBOLS = ['GC=F']
+FX_SYMBOLS = ['USDTRY=X']
+SYNTHETIC_SYMBOLS = ['GOLD_GRAM_TRY']
+
+# Faz 3: BIST-30 + gram altın
+PHASE3_SYMBOLS = PHASE1_SYMBOLS + ['GOLD_GRAM_TRY']
+
+# Varlık bilgileri (altın ve döviz dahil)
+ASSET_INFO = {
+    'GC=F': {'name': 'Altin Ons (USD)', 'type': 'commodity', 'currency': 'USD'},
+    'USDTRY=X': {'name': 'USD/TRY', 'type': 'fx', 'currency': 'TRY'},
+    'GOLD_GRAM_TRY': {'name': 'Gram Altin (TRY)', 'type': 'commodity', 'currency': 'TRY'},
+}
+
+
+def get_symbols(phase=1, include_gold=False):
     """
     Faz numarasına göre hisse listesi döndür
 
     Args:
-        phase (int): 1 = 5 hisse, 2-3 = tüm BIST-30
+        phase (int): 1 = 5 hisse, 2 = tüm BIST-30, 3 = BIST-30 + altın
+        include_gold (bool): Altın sembollerini de ekle (phase bağımsız)
 
     Returns:
-        list: Hisse sembolleri
+        list: Hisse/varlık sembolleri
     """
     if phase == 1:
-        return PHASE1_SYMBOLS
+        symbols = PHASE1_SYMBOLS
+    elif phase == 3:
+        symbols = PHASE3_SYMBOLS
     else:
-        return BIST30_SYMBOLS
+        symbols = BIST30_SYMBOLS
+
+    if include_gold and 'GOLD_GRAM_TRY' not in symbols:
+        symbols = symbols + ['GOLD_GRAM_TRY']
+
+    return symbols
+
+
+def get_all_tradeable_symbols():
+    """Tüm işlem yapılabilir sembolleri döndür (hisse + altın)."""
+    return BIST30_SYMBOLS + SYNTHETIC_SYMBOLS
+
 
 if __name__ == '__main__':
     print(f"BIST-30 toplam hisse sayısı: {len(BIST30_SYMBOLS)}")
