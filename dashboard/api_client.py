@@ -193,6 +193,18 @@ def get_prediction_chart_data(symbol: str) -> Dict:
     return _get(f"/prediction/chart-data/{symbol}") or {}
 
 
+def train_ensemble(payload: Dict) -> Dict:
+    return _post("/prediction/train-ensemble", json=payload) or {}
+
+
+def cross_validate(payload: Dict) -> Dict:
+    return _post("/prediction/cross-validate", json=payload) or {}
+
+
+def optimize_prediction(payload: Dict) -> Dict:
+    return _post("/prediction/optimize", json=payload) or {}
+
+
 def get_gold_prices() -> Dict:
     return _get("/prediction/gold/prices") or {}
 

@@ -167,7 +167,8 @@ def build_live_state(
     target_date: str,
     initial_balance: float = 1_000_000,
     max_shares_per_trade: int = 100,
-    price_stats: Optional[Dict[str, Dict[str, float]]] = None
+    price_stats: Optional[Dict[str, Dict[str, float]]] = None,
+    prediction_data: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> np.ndarray:
     """
     Build state vector for inference
@@ -179,6 +180,9 @@ def build_live_state(
         target_date: Target date (may be adjusted to latest available)
         initial_balance: Initial balance for normalization
         max_shares_per_trade: Max shares for normalization
+        price_stats: Per-symbol price normalization stats
+        prediction_data: {symbol: {predicted_return, predicted_direction, confidence,
+            ensemble_agreement}} — ensemble tahmin verileri (opsiyonel)
 
     Returns:
         State vector (numpy array)
@@ -265,12 +269,24 @@ def build_live_state(
             logger.warning(f"No data for {symbol} on {target_date}, using zeros")
             features.extend([0] * 10)
 
+    # Prediction features (4 per stock)
+    pred_features = []
+    if prediction_data:
+        for symbol in symbols:
+            sym_pred = prediction_data.get(symbol, {})
+            pred_features.extend([
+                np.tanh(sym_pred.get('predicted_return', 0.0) * 10),
+                sym_pred.get('predicted_direction', 0.0) * 2 - 1,
+                sym_pred.get('confidence', 0.5) * 2 - 1,
+                sym_pred.get('ensemble_agreement', 0.5) * 2 - 1,
+            ])
+
     # Combine all parts
-    state = np.concatenate([
-        [balance_norm],
-        shares_norm,
-        features
-    ]).astype(np.float32)
+    components = [[balance_norm], shares_norm, features]
+    if pred_features:
+        components.append(pred_features)
+
+    state = np.concatenate(components).astype(np.float32)
 
     logger.info(f"State built: shape={state.shape}")
 

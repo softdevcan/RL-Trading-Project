@@ -35,7 +35,8 @@ class TradingEnv(gym.Env):
         macro_df: Optional[pd.DataFrame] = None,         # Faz 2: Macro data
         phase: int = 1,                        # 1=Basit, 2=Fundamental+Macro
         reward_type: str = 'simple',           # 'simple' or 'psr'
-        reward_weights: Optional[Dict[str, float]] = None  # PSR weights (optional)
+        reward_weights: Optional[Dict[str, float]] = None,  # PSR weights (optional)
+        prediction_features: Optional[Dict[str, Dict[str, Dict[str, float]]]] = None,
     ):
         """
         Args:
@@ -49,6 +50,8 @@ class TradingEnv(gym.Env):
             phase: 1=Faz1 (56 features), 2=Faz2 (97 features), 3=Faz3 (67 features, +gold)
             reward_type: 'simple' (Faz 1/3) or 'psr' (Faz 2)
             reward_weights: PSR weights dict (w1-w5), None uses defaults
+            prediction_features: {date_str: {symbol: {predicted_return, predicted_direction,
+                confidence, ensemble_agreement}}} — ensemble tahmin verileri
         """
         super().__init__()
 
@@ -62,6 +65,11 @@ class TradingEnv(gym.Env):
         # Faz 2 data
         self.fundamental_df = fundamental_df
         self.macro_df = macro_df
+
+        # Prediction features (4 per stock: predicted_return, direction, confidence, agreement)
+        self.prediction_features = prediction_features
+        self.use_predictions = prediction_features is not None
+        self.prediction_features_per_stock = 4
 
         # Reward calculator instance
         from env.reward_functions import RewardCalculator, SimpleRewardCalculator
@@ -98,18 +106,16 @@ class TradingEnv(gym.Env):
 
         # Feature sayısı hesapla (phase'e göre)
         if phase in (1, 3):
-            # Faz 1/3: OHLCV (5) + Technical (5) = 10 per stock/asset
-            # Faz 3 adds GOLD_GRAM_TRY to symbols (handled in df)
             self.features_per_stock = 10
-            # State: balance (1) + shares (N) + features (N*10)
             state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock)
         else:  # phase == 2
-            # Faz 2: OHLCV (5) + Technical (5) + Fundamental (7) = 17 per stock
-            # Plus Macro (6) shared across all stocks
-            self.features_per_stock = 17  # Per stock: 10 + 7
-            self.macro_features = 6        # Economy-wide
-            # State: balance (1) + shares (N) + features (N*17) + macro (6)
+            self.features_per_stock = 17
+            self.macro_features = 6
             state_dim = 1 + self.n_stocks + (self.n_stocks * self.features_per_stock) + self.macro_features
+
+        # Prediction features: 4 per stock (predicted_return, direction, confidence, agreement)
+        if self.use_predictions:
+            state_dim += self.n_stocks * self.prediction_features_per_stock
 
         # Observation space: bounded for gradient stability (#1)
         self.observation_space = spaces.Box(
@@ -145,6 +151,8 @@ class TradingEnv(gym.Env):
         logger.info(f"  Trading days: {self.frame_bound[1] - self.frame_bound[0] + 1}")
         logger.info(f"  State dimension: {state_dim}")
         logger.info(f"  Action dimension: {self.n_stocks}")
+        if self.use_predictions:
+            logger.info(f"  Prediction features: ✓ (+{self.n_stocks * self.prediction_features_per_stock} features)")
         if phase == 2:
             logger.info(f"  Fundamental data: {'✓' if fundamental_df is not None else '✗'}")
             logger.info(f"  Macro data: {'✓' if macro_df is not None else '✗'}")
@@ -463,6 +471,23 @@ class TradingEnv(gym.Env):
 
         # State vector oluştur
         state_components = [[balance_norm], shares_norm, features]
+
+        # Prediction features: 4 per stock
+        if self.use_predictions and self.prediction_features is not None:
+            pred_features = []
+            current_date_str = str(current_date)[:10]
+            date_preds = self.prediction_features.get(current_date_str, {})
+
+            for symbol in self.symbols:
+                sym_pred = date_preds.get(symbol, {})
+                pred_features.extend([
+                    np.tanh(sym_pred.get('predicted_return', 0.0) * 10),
+                    sym_pred.get('predicted_direction', 0.0) * 2 - 1,
+                    sym_pred.get('confidence', 0.5) * 2 - 1,
+                    sym_pred.get('ensemble_agreement', 0.5) * 2 - 1,
+                ])
+
+            state_components.append(pred_features)
 
         # Faz 2: Macro features ekle (tüm stocks için paylaşılan)
         if self.phase == 2 and self.macro_df is not None:

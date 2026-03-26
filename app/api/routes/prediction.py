@@ -18,6 +18,8 @@ from app.schemas.prediction import (
     GoldPricesResponse, GoldPriceItem, GoldHistoryResponse,
     EvaluatePendingResponse, TradableSymbolsResponse,
     ModelPerformanceMetrics,
+    EnsembleTrainRequest, EnsembleTrainResponse,
+    CrossValidateRequest, HyperOptRequest,
 )
 from app.core.config import get_settings
 
@@ -49,7 +51,7 @@ def _validate_horizon(horizon: str) -> str:
 
 @router.post("/train", response_model=PredictionTrainResponse)
 async def train_model(request: PredictionTrainRequest):
-    """Sembol ve horizon için XGBoost modeli eğit."""
+    """Sembol icin ensemble modeli egit (XGBoost + LightGBM + CatBoost + BiLSTM + TFT)."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
 
@@ -77,7 +79,90 @@ async def train_model(request: PredictionTrainRequest):
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
-        logger.error(f"Model eğitimi başarısız: {exc}", exc_info=True)
+        logger.error(f"Model egitimi basarisiz: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/train-ensemble", response_model=EnsembleTrainResponse)
+async def train_ensemble(request: EnsembleTrainRequest):
+    """Sembol icin ensemble modeli egit (detayli sonuc)."""
+    symbol = _validate_symbol(request.symbol)
+    horizon = _validate_horizon(request.horizon)
+
+    from app.services.prediction_service import PredictionService
+    svc = PredictionService()
+
+    try:
+        result = svc.train_model(
+            symbol=symbol,
+            horizon=horizon,
+            start_date=request.start_date,
+            test_ratio=request.test_ratio,
+            optimize=request.optimize,
+            n_hpo_trials=request.n_hpo_trials,
+        )
+        return EnsembleTrainResponse(
+            symbol=result['symbol'],
+            horizon=result['horizon'],
+            n_total=result.get('n_train', 0) + result.get('n_test', 0),
+            n_train=result.get('n_train', 0),
+            n_test=result.get('n_test', 0),
+            n_features=result.get('n_features', 0),
+            n_models=result.get('n_models', 0),
+            models_trained=result.get('models_trained', []),
+            model_results=result.get('model_results', {}),
+            ensemble_test_metrics=result.get('ensemble_test_metrics', {}),
+            trained_at=result.get('trained_at', ''),
+            training_time_seconds=result.get('training_time_seconds'),
+        )
+    except Exception as exc:
+        logger.error(f"Ensemble egitimi basarisiz: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/cross-validate")
+async def cross_validate(request: CrossValidateRequest):
+    """Walk-forward cross-validation ile model karsilastirma."""
+    symbol = _validate_symbol(request.symbol)
+    horizon = _validate_horizon(request.horizon)
+
+    from app.services.prediction_service import PredictionService
+    svc = PredictionService()
+
+    try:
+        result = svc.cross_validate(
+            symbol=symbol,
+            horizon=horizon,
+            start_date=request.start_date,
+            model_types=request.model_types,
+            n_splits=request.n_splits,
+        )
+        return result
+    except Exception as exc:
+        logger.error(f"Cross-validation basarisiz: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/optimize")
+async def optimize_hyperparameters(request: HyperOptRequest):
+    """Tum modeller icin Optuna hiperparametre optimizasyonu."""
+    symbol = _validate_symbol(request.symbol)
+    horizon = _validate_horizon(request.horizon)
+
+    from app.services.prediction_service import PredictionService
+    svc = PredictionService()
+
+    try:
+        result = svc.optimize_hyperparameters(
+            symbol=symbol,
+            horizon=horizon,
+            start_date=request.start_date,
+            model_types=request.model_types,
+            n_trials=request.n_trials,
+        )
+        return result
+    except Exception as exc:
+        logger.error(f"HPO basarisiz: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(exc))
 
 

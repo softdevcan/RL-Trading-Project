@@ -453,14 +453,68 @@ def _render_result_card(result, symbol):
                         style={"height": "12px", "marginTop": "4px"},
                     ),
                     html.Small(
-                        "Guven: ozellik onemi yogunluguna gore hesaplanir.",
+                        "Guven: ensemble model uzlasmasina gore hesaplanir.",
                         style={"color": TEXT_MUTED, "fontSize": "10px", "marginTop": "6px",
                                "display": "block"},
                     ),
+
+                    # Ensemble agreement
+                    *(_render_ensemble_agreement(result) if result.get("ensemble_agreement") is not None else []),
                 ], md=7),
             ]),
+
+            # Model predictions breakdown
+            *(_render_model_predictions(result) if result.get("model_predictions") else []),
         ])
     ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+
+
+def _render_ensemble_agreement(result):
+    """Ensemble model uzlasma gosterimi."""
+    agreement = result.get("ensemble_agreement", 0)
+    n_models = result.get("n_models", 0)
+    agreement_pct = int(agreement * 100) if agreement <= 1 else int(agreement)
+
+    return [
+        html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "10px 0"}),
+        html.Small("Ensemble Uzlasma", style={"color": TEXT_MUTED}),
+        dbc.Progress(
+            value=agreement_pct,
+            label=f"{agreement_pct}% ({n_models} model)",
+            color="success" if agreement_pct >= 80 else "warning" if agreement_pct >= 60 else "danger",
+            style={"height": "10px", "marginTop": "4px"},
+        ),
+    ]
+
+
+def _render_model_predictions(result):
+    """Her modelin tahminini goster."""
+    model_preds = result.get("model_predictions", {})
+    if not model_preds:
+        return []
+
+    current = result.get("current_close", 0)
+    items = []
+    for model_name, pred_price in sorted(model_preds.items()):
+        change = (pred_price - current) / current * 100 if current > 0 else 0
+        dir_color = GREEN if change > 0 else RED
+        items.append(
+            dbc.Col(
+                html.Div([
+                    html.Small(model_name.upper(), style={"color": TEXT_MUTED, "fontSize": "10px"}),
+                    html.Div(f"{pred_price:,.2f}", style={"color": TEXT, "fontWeight": "600", "fontSize": "13px"}),
+                    html.Small(f"{'▲' if change >= 0 else '▼'}{abs(change):.1f}%",
+                               style={"color": dir_color, "fontSize": "10px"}),
+                ], style={"textAlign": "center"}),
+                width=True,
+            )
+        )
+
+    return [
+        html.Hr(style={"borderColor": "rgba(255,255,255,0.1)", "margin": "12px 0"}),
+        html.Small("Model Tahminleri", style={"color": TEXT_MUTED, "display": "block", "marginBottom": "8px"}),
+        dbc.Row(items, className="g-2"),
+    ]
 
 
 def _build_vs_actual_chart(chart_data):
@@ -514,9 +568,11 @@ def _render_performance(perf):
     if not perf:
         return html.Span()
     metrics = [
-        ("MAE", perf.get("mae")), ("RMSE", perf.get("rmse")),
-        ("R²", perf.get("r2")), ("Yon Dogrulugu", perf.get("direction_accuracy")),
-        ("Hit Rate", perf.get("hit_rate")),
+        ("MAPE", perf.get("mape")),
+        ("MAE", perf.get("mae")),
+        ("RMSE", perf.get("rmse")),
+        ("Yon Dogrulugu", perf.get("direction_accuracy")),
+        ("Tahmin Sayisi", perf.get("n_predictions")),
     ]
     items = []
     for label, val in metrics:

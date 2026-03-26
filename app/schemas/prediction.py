@@ -67,11 +67,81 @@ class SinglePrediction(BaseModel):
     confidence: float
     current_close: float
     made_at: str
+    model_predictions: Optional[Dict[str, float]] = None
+    ensemble_agreement: Optional[float] = None
+    n_models: Optional[int] = None
 
 
 class PredictionResponse(BaseModel):
     predictions: List[SinglePrediction]
     count: int
+
+
+class EnsembleTrainRequest(BaseModel):
+    symbol: str = Field(description="Tahmin yapilacak sembol")
+    horizon: str = Field(default='daily', description="'daily' veya 'weekly'")
+    start_date: str = Field(default='2018-01-01')
+    test_ratio: float = Field(default=0.2, ge=0.05, le=0.4)
+    optimize: bool = Field(default=False, description="Oncelikle HPO calistir")
+    n_hpo_trials: int = Field(default=30, ge=5, le=200)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AKBNK.IS",
+                "horizon": "daily",
+                "optimize": False
+            }
+        }
+
+
+class EnsembleTrainResponse(BaseModel):
+    symbol: str
+    horizon: str
+    n_total: int
+    n_train: int
+    n_test: int
+    n_features: int
+    n_models: int
+    models_trained: List[str]
+    model_results: Dict[str, Any]
+    ensemble_test_metrics: Dict[str, Any]
+    trained_at: str
+    training_time_seconds: Optional[float] = None
+
+
+class CrossValidateRequest(BaseModel):
+    symbol: str
+    horizon: str = 'daily'
+    start_date: str = '2018-01-01'
+    model_types: Optional[List[str]] = None
+    n_splits: int = Field(default=5, ge=2, le=10)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AKBNK.IS",
+                "horizon": "daily",
+                "n_splits": 5
+            }
+        }
+
+
+class HyperOptRequest(BaseModel):
+    symbol: str
+    horizon: str = 'daily'
+    start_date: str = '2018-01-01'
+    model_types: Optional[List[str]] = None
+    n_trials: int = Field(default=50, ge=10, le=500)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AKBNK.IS",
+                "horizon": "daily",
+                "n_trials": 50
+            }
+        }
 
 
 class PerformanceMetricsResponse(BaseModel):
