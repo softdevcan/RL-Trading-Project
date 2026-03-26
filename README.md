@@ -19,7 +19,7 @@ Deep Reinforcement Learning kullanarak BIST-30 hisseleri için algoritmik ticare
 Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL tabanlı trading sistemi geliştirmeyi hedefler:
 
 - **Faz 1 (POC)**: 5 hisse ile temel sistem (✅ Tamamlandı)
-- **Faz 2**: Multifaceted approach (Fundamental data + PSR reward)
+- **Faz 2**: Advanced Prediction System — Ensemble tahmin + RL entegrasyonu (✅ Tamamlandı)
 - **Faz 3**: Production-ready sistem
 
 ### Temel Özellikler
@@ -30,6 +30,9 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 ✅ **FastAPI Backend**: Model eğitimi ve yönetimi
 ✅ **Web Dashboard**: Dinamik görselleştirme (Chart.js)
 ✅ **Real-time Training**: Background task ile eğitim
+✅ **Ensemble Tahmin Sistemi**: XGBoost + LightGBM + CatBoost + BiLSTM + TFT
+✅ **Hiperparametre Optimizasyonu**: Optuna + Walk-forward CV + purge/embargo
+✅ **Çoklu Veri Kaynağı**: yfinance (OHLCV), TCMB EVDS (makro), fundamental, altın/döviz
 
 ### Teknoloji Stack
 
@@ -47,6 +50,10 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 **Data & ML:**
 - pandas, numpy, scikit-learn
 - pandas-ta (Teknik indikatörler)
+- XGBoost, LightGBM, CatBoost
+- Optuna (Hiperparametre optimizasyonu)
+- evds (TCMB EVDS API — faiz, enflasyon)
+- borsapy (Altın/döviz verisi)
 
 ---
 
@@ -257,11 +264,30 @@ RL-Trading-Project/
 │
 ├── 📁 data/                     # Veri İşleme
 │   ├── bist30_symbols.py       # Hisse listesi
-│   ├── data_fetcher.py         # Veri çekme (yfinance)
-│   └── technical_indicators.py # Teknik indikatörler
+│   ├── data_fetcher.py         # OHLCV (yfinance, retry + incremental)
+│   ├── technical_indicators.py # Teknik indikatörler
+│   ├── macro_fetcher.py        # TCMB EVDS (faiz, enflasyon) + yfinance (döviz, BIST100)
+│   ├── fundamental_fetcher.py  # Fundamental oranlar (ROE, ROA, P/E, P/B, ...)
+│   └── gold_fetcher.py         # Altın/döviz (borsapy veya yfinance)
+│
+├── 📁 prediction/               # Gelişmiş Tahmin Sistemi (Faz 2)
+│   ├── feature_engineer.py     # 10 özellik grubu (getiri, volatilite, makro, fundamental, rejim)
+│   ├── feature_selector.py     # Otomatik feature selection (MI + permutation importance)
+│   ├── models/                 # Multi-model mimarisi
+│   │   ├── base.py             # BasePredictionModel ABC
+│   │   ├── xgboost_model.py
+│   │   ├── lightgbm_model.py
+│   │   ├── catboost_model.py
+│   │   ├── lstm_model.py       # BiLSTM (PyTorch, CUDA)
+│   │   ├── tft_model.py        # Temporal Fusion Transformer
+│   │   └── ensemble.py         # Stacking meta-learner (Ridge + XGBoost)
+│   ├── hyperopt.py             # Optuna HPO
+│   ├── trainer.py              # Walk-forward + purge gap (5g) + embargo (3g)
+│   ├── evaluator.py            # Direction acc, Profit Factor, IC, Diebold-Mariano
+│   └── tracker.py              # Experiment tracking (JSON log)
 │
 ├── 📁 env/                      # RL Environment
-│   └── trading_env.py          # Gymnasium environment
+│   └── trading_env.py          # Gymnasium environment (Phase 2: +4×N prediction features)
 │
 ├── 📁 scripts/                  # Utility Scripts
 │   ├── training/               # Model eğitimi
@@ -291,12 +317,28 @@ Web UI (static/)
     ↓ API calls
 FastAPI Backend (app/)
     ↓ Background tasks
-Training Pipeline
-    ├─► data_fetcher.py → yfinance
+RL Training Pipeline
+    ├─► data_fetcher.py → yfinance (OHLCV, incremental)
     ├─► technical_indicators.py → pandas-ta
     ├─► trading_env.py → Gymnasium
     └─► Stable-Baselines3 → A2C/PPO/TD3
         └─► Modeller (.zip) + Metrikler (.json)
+
+Tahmin Pipeline (prediction/)
+    ├─► data_fetcher.py      (OHLCV)
+    ├─► macro_fetcher.py     (EVDS faiz/enflasyon + yfinance döviz)
+    ├─► fundamental_fetcher.py (yfinance ROE/ROA/P/E/P/B)
+    ├─► gold_fetcher.py      (borsapy/yfinance altın+döviz)
+    ↓
+    feature_engineer.py → feature_selector.py
+    ↓
+    trainer.py (walk-forward + purge/embargo)
+    ↓
+    XGBoost + LightGBM + CatBoost + BiLSTM + TFT
+    ↓
+    ensemble.py (stacking meta-learner)
+    ↓
+    trading_env.py (RL obs: +predicted_return/direction/confidence/agreement)
 ```
 
 ---
@@ -483,12 +525,14 @@ tensorboard --logdir logs/tensorboard/
 | Reward | PSR | Basit (portfolio change) | ⚠️ Faz 2 |
 | Fundamental Data | ✅ 11 ratios | ❌ | 🔜 Faz 2 |
 
-### Faz 2 - Gelecek
+### Faz 2 - Tamamlandı ✅
 
-- [ ] Fundamental data (Alpha Vantage API)
-- [ ] PSR Reward function
-- [ ] Ablation studies (DTF vs DT vs TF)
-- [ ] Full BIST-30 (30 hisse)
+- [x] Gelişmiş Feature Engineering (10 grup: log return, volatilite, momentum, makro, fundamental, rejim)
+- [x] Multi-model ensemble (XGBoost + LightGBM + CatBoost + BiLSTM + TFT + Stacking)
+- [x] Optuna HPO (walk-forward CV, purge gap 5 gün, embargo 3 gün)
+- [x] Çoklu veri kaynağı (OHLCV + makro EVDS + fundamental + altın/döviz)
+- [x] RL entegrasyonu (observation space'e 4×N tahmin özellikleri eklendi)
+- [x] API endpoints + dashboard (train-all, optimize, ensemble-predict)
 
 ### Faz 3 - Production
 
@@ -607,4 +651,4 @@ Sorularınız için: development.md dosyasına bakın veya issue açın.
 
 ---
 
-**Son Güncelleme:** Faz 1 Tamamlandı ✅ (2024)
+**Son Güncelleme:** Faz 2 Tamamlandı ✅ (2026-03-26)

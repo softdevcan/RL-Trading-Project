@@ -1,111 +1,144 @@
----
-name: Advanced Prediction System
-overview: Mevcut XGBoost-only tahmin sistemini, multi-model ensemble mimarisine (XGBoost + LightGBM + CatBoost + BiLSTM + TFT), gelismis feature engineering, Optuna HPO ve RL entegrasyonu ile yeniden yapilandirma.
-todos:
-  - id: phase1-feature-engineering
-    content: "Phase 1: Gelismis Feature Engineering - feature_engineer.py yeniden yazimi + feature_selector.py"
-    status: completed
-  - id: phase2-multi-model
-    content: "Phase 2: Multi-Model Mimarisi - prediction/models/ dizini (base, xgboost, lightgbm, catboost, lstm, tft, ensemble)"
-    status: completed
-  - id: phase3-hyperopt
-    content: "Phase 3: Hiperparametre Optimizasyonu - prediction/hyperopt.py + Optuna entegrasyonu"
-    status: completed
-  - id: phase4-training-pipeline
-    content: "Phase 4: Egitim Pipeline - trainer.py yeniden yazimi (walk-forward, purge gap, multi-model)"
-    status: completed
-  - id: phase5-evaluation
-    content: "Phase 5: Degerlendirme Cercevesi - evaluator.py genisletme (direction acc, profit factor, IC, backtest)"
-    status: completed
-  - id: phase6-rl-integration
-    content: "Phase 6: RL Entegrasyonu - trading_env.py + daily_trading.py observation space genisletme"
-    status: completed
-  - id: phase7-api-dashboard
-    content: "Phase 7: API ve Dashboard - yeni endpoint'ler + dashboard guncelleme"
-    status: completed
-isProject: false
+# Gelişmiş Tahmin Sistemi — Mimari Referans
+
+**Durum:** Tamamlandı (Faz 2)
+**Donanım:** RTX 4060 8GB + Ryzen 7 7800X3D
+
 ---
 
-# Gelismis Tahmin Sistemi - Uygulama Plani
+## Mimari Özet
 
-## Mevcut Durum
+```
+Veri Katmanı → Feature Engineering v2 → Multi-Model (5 base) → Stacking Ensemble
+    → Fiyat + Yön + Güven → RL Observation Space
+```
 
-- Tek XGBoost modeli, sabit hiperparametrelerle (`prediction/models.py`)
-- Basit feature engineering: lagged close, rolling stats, volume, calendar (`prediction/feature_engineer.py`)
-- Walk-forward CV mevcut ama basic (`prediction/trainer.py`)
-- RL ile entegrasyon yok
-- Makro/fundamental veriler tahmin pipeline'inda kullanilmiyor
+---
 
-## Hedef Mimari
+## Veri Katmanı
 
-**Data Layer** -> **Feature Engineering v2** -> **Multi-Model (5 base model)** -> **Stacking Ensemble** -> **Fiyat + Yon + Guven** -> **RL Observation Space**
+| Modül | Kaynak | Çıktı |
+|---|---|---|
+| `data/data_fetcher.py` | yfinance | OHLCV (multi-index: symbol × date), retry + incremental + cache |
+| `data/macro_fetcher.py` | TCMB EVDS + yfinance | policy_rate, cpi_inflation, ppi_inflation, usd_try, eur_try, bist100_index |
+| `data/fundamental_fetcher.py` | yfinance | ROE, ROA, debt_to_equity, current_ratio, P/E, P/B, profit_margin |
+| `data/gold_fetcher.py` | borsapy / yfinance | gram_altin_try, ons_altin_usd, usd_try, eur_try |
 
-## Phase 1: Gelismis Feature Engineering
+### data_fetcher.py — Önemli Özellikler
+- `fetch_incremental()`: Son tarihi okur, sadece delta'yı çeker, mevcut CSV'ye append eder
+- `get_source_status()`: Eksik gün sayısı ve son tarih raporu
+- `_fetch_with_retry()`: Exponential backoff (1s → 2s → 4s), max 3 deneme
+- Coverage check: Beklenen trading günlerinin %80'inden azsa uyarı verir
+- Class-level cache: Aynı sembol/tarih için tekrar çekim yapmaz
 
-- **Dosya:** `prediction/feature_engineer.py` (yeniden yazim)
-- **Yeni dosya:** `prediction/feature_selector.py`
-- Log returns, Parkinson/Garman-Klass volatilite, momentum divergence
-- Cross-asset features (BIST-100, USD/TRY korelasyonu)
-- Makro entegrasyon (EVDS: faiz, enflasyon, doviz)
-- Fundamental features (P/E, P/B degisim)
-- Market regime detection (volatilite + trend rejimi)
-- Mutual information + permutation importance ile otomatik feature selection
+---
 
-## Phase 2: Multi-Model Mimarisi
+## Feature Engineering (`prediction/feature_engineer.py`)
 
-- **Yeni dizin:** `prediction/models/` (mevcut `models.py` refactor)
-- `base.py` - BasePredictionModel ABC
-- `xgboost_model.py` - Gelistirilmis XGBoost
-- `lightgbm_model.py` - LightGBM
-- `catboost_model.py` - CatBoost
-- `lstm_model.py` - BiLSTM (PyTorch, CUDA)
-- `tft_model.py` - Temporal Fusion Transformer (PyTorch, CUDA)
-- `ensemble.py` - Stacking meta-learner (Ridge + XGBoost)
-- Her model: train, predict -> (price, direction, confidence), HPO, save/load
+Tüm özellikler en az 1 gün gecikmeli (shift) — data leakage önlenir.
 
-## Phase 3: Hiperparametre Optimizasyonu
+| Grup | Özellikler |
+|---|---|
+| Getiri | log return, basit return, çoklu gecikme (1/5/10/20 gün) |
+| Volatilite | Parkinson, Garman-Klass, realized vol (5/10/20 gün) |
+| Momentum | RSI türevleri, MACD histogram gradyanı |
+| Hacim | Hacim oranları, hacim-fiyat korelasyonu |
+| Takvim | Gün, ay, çeyrek (cyclical encoding) |
+| Teknik | Gecikmeli indikatörler + türevler |
+| Cross-asset | BIST-100 ve USD/TRY korelasyonu |
+| Makro | Faiz değişimi, enflasyon trendi |
+| Fundamental | P/E, P/B değişim |
+| Rejim | Volatilite rejimi, trend rejimi |
 
-- **Yeni dosya:** `prediction/hyperopt.py`
-- Optuna + TimeSeriesSplit + TPESampler + MedianPruner
-- Model-bazli arama uzaylari (XGB, LGBM, CatBoost, BiLSTM, TFT)
-- Optuna Dashboard entegrasyonu (mevcut)
+---
 
-## Phase 4: Egitim Pipeline
+## Feature Selector (`prediction/feature_selector.py`)
 
-- **Dosya:** `prediction/trainer.py` (yeniden yazim)
-- Expanding window walk-forward + purge gap (5 gun) + embargo (3 gun)
-- Multi-model paralel egitim
-- GPU otomatik algilama (CUDA)
-- Experiment tracking (JSON log)
+- Mutual information ile ilk eleme
+- Permutation importance ile final seçim
+- TimeSeriesSplit ile overfitting önleme
 
-## Phase 5: Degerlendirme Cercevesi
+---
 
-- **Dosya:** `prediction/evaluator.py` (genisletme)
-- Direction accuracy, Profit Factor, Information Coefficient
-- Calibration metrikleri, regime-based evaluation
-- Diebold-Mariano testi, backtest simulasyonu
+## Multi-Model Mimarisi (`prediction/models/`)
 
-## Phase 6: RL Entegrasyonu
+| Model | Dosya | Donanım | Notlar |
+|---|---|---|---|
+| XGBoost | `xgboost_model.py` | CPU | Geliştirilmiş, Optuna HPO |
+| LightGBM | `lightgbm_model.py` | CPU | lightgbm>=4.0.0 |
+| CatBoost | `catboost_model.py` | CPU | catboost>=1.2.0 |
+| BiLSTM | `lstm_model.py` | GPU ~200MB | PyTorch, CUDA otomatik algılar |
+| TFT | `tft_model.py` | GPU ~500MB–1GB | Temporal Fusion Transformer |
+| Stacking | `ensemble.py` | CPU | Ridge + XGBoost meta-learner |
 
-- **Dosyalar:** `env/trading_env.py`, `app/services/daily_trading.py`
-- Observation space'e: predicted_return, predicted_direction, prediction_confidence, ensemble_agreement (4 x N sembol)
+Her model çıktısı: `(predicted_price, predicted_direction, confidence)`
 
-## Phase 7: API ve Dashboard
+`prediction/legacy_models.py` — Eski tek-XGBoost implementasyonu (referans/arşiv).
 
-- **Dosyalar:** `app/api/routes/prediction.py`, `app/services/prediction_service.py`, `dashboard/pages/prediction.py`
-- Yeni endpoint'ler: train-all, optimize, ensemble-predict, model karsilastirma
-- Dashboard: performans karsilastirma grafikleri, ensemble weights, egitim ilerleme
+---
 
-## Yeni Bagimliliklar
+## Hiperparametre Optimizasyonu (`prediction/hyperopt.py`)
 
-- `lightgbm>=4.0.0`
-- `catboost>=1.2.0`
-- PyTorch ve Optuna zaten mevcut
+- Optuna TPESampler + MedianPruner
+- TimeSeriesSplit ile zaman serisi güvenli CV
+- Model bazlı arama uzayları (XGB / LGBM / CatBoost / BiLSTM / TFT)
+- Optuna Dashboard entegrasyonu
 
-## Donanim (RTX 4060 8GB + Ryzen 7 7800X3D)
+---
 
-- Gradient Boosting: CPU, cok hizli
-- BiLSTM: ~200MB VRAM
-- TFT: ~500MB-1GB VRAM
-- Toplam egitim: ~2-4 saat (HPO dahil)
+## Eğitim Pipeline (`prediction/trainer.py`)
 
+- **Expanding window walk-forward**: Her fold önceki tüm veriden öğrenir
+- **Purge gap**: 5 gün (train-val arası sızıntı önleme)
+- **Embargo**: 3 gün (validation sonrası bekleme)
+- Multi-model paralel eğitim
+- GPU otomatik algılama (CUDA)
+- Experiment tracking: JSON log (`prediction/tracker.py`)
+
+---
+
+## Değerlendirme (`prediction/evaluator.py`)
+
+| Metrik | Açıklama |
+|---|---|
+| Direction Accuracy | Yön doğruluğu (%) |
+| Profit Factor | Kazanç/kayıp oranı |
+| Information Coefficient (IC) | Tahmin-gerçek korelasyonu |
+| Calibration | Güven skorunun güvenilirliği |
+| Regime-based | Boğa/ayı/yatay piyasa ayrımı |
+| Diebold-Mariano | Modeller arası istatistiksel fark testi |
+| Backtest simülasyonu | Gerçekçi komisyon + slippage ile |
+
+---
+
+## RL Entegrasyonu (`env/trading_env.py`)
+
+Observation space'e eklenen özellikler (N sembol başına):
+
+| Özellik | Açıklama |
+|---|---|
+| `predicted_return` | Tahmin edilen günlük getiri |
+| `predicted_direction` | 1=yukarı, -1=aşağı, 0=yatay |
+| `prediction_confidence` | Ensemble güven skoru [0,1] |
+| `ensemble_agreement` | 5 modelin uzlaşı oranı [0,1] |
+
+**Toplam state space (Faz 2):** 56 (Faz 1) + 4×N (tahmin) features
+
+---
+
+## Bağımlılıklar
+
+```
+lightgbm>=4.0.0
+catboost>=1.2.0
+optuna
+evds          # TCMB EVDS API (pip install evds)
+borsapy       # Borsa verileri (opsiyonel, gold_fetcher için)
+torch         # PyTorch (CUDA önerilir)
+```
+
+---
+
+## İlgili Dokümanlar
+
+- [docs/PHASE2_HYPEROPT_UPDATE.md](PHASE2_HYPEROPT_UPDATE.md) — HPO detayları
+- [docs/SPRINT2_COMPLETE.md](SPRINT2_COMPLETE.md) — Sprint tamamlanma notu
