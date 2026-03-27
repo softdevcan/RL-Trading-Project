@@ -440,14 +440,154 @@ class PredictionEvaluator:
 
         return {'dates': dates, 'mape': mapes, 'direction_accuracy': dir_accs}
 
+    # ------------------------------------------------------------------
+    # Gelismis Risk Metrikleri  (Faz 3.4.2)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def compute_sortino_ratio(
+        returns: np.ndarray,
+        risk_free_rate: float = 0.0,
+        periods_per_year: int = 252,
+    ) -> float:
+        """Sortino Ratio: sadece asagi yonlu volatiliteyi cezalandirir.
+
+        Sharpe'dan farklı olarak pozitif volatilite cezalandirilmaz.
+        > 1.0 = kabul edilebilir, > 2.0 = iyi.
+        """
+        r = np.asarray(returns, dtype=float)
+        r = r[np.isfinite(r)]
+        if len(r) < 2:
+            return 0.0
+
+        excess = r - risk_free_rate / periods_per_year
+        downside = excess[excess < 0]
+        downside_std = float(np.sqrt(np.mean(downside ** 2))) if len(downside) > 0 else 1e-9
+        if downside_std < 1e-9:
+            return 0.0
+        return round(float(np.mean(excess) / downside_std * np.sqrt(periods_per_year)), 4)
+
+    @staticmethod
+    def compute_calmar_ratio(
+        equity_curve: np.ndarray,
+        periods_per_year: int = 252,
+    ) -> float:
+        """Calmar Ratio: yillik getiri / maksimum drawdown.
+
+        > 1.0 = kabul edilebilir, > 3.0 = iyi.
+        """
+        eq = np.asarray(equity_curve, dtype=float)
+        if len(eq) < 2 or eq[0] <= 0:
+            return 0.0
+
+        total_return = (eq[-1] - eq[0]) / eq[0]
+        annual_return = (1 + total_return) ** (periods_per_year / len(eq)) - 1
+
+        peak = np.maximum.accumulate(eq)
+        drawdowns = (eq - peak) / np.where(peak > 0, peak, 1)
+        max_dd = abs(float(np.min(drawdowns)))
+
+        if max_dd < 1e-9:
+            return 0.0
+        return round(float(annual_return / max_dd), 4)
+
+    @staticmethod
+    def compute_deflated_sharpe_ratio(
+        returns: np.ndarray,
+        n_trials: int = 1,
+        periods_per_year: int = 252,
+    ) -> Dict[str, float]:
+        """Deflated Sharpe Ratio (DSR): coklu test ile sisman kuyruk etkisini duzeltir.
+
+        Bailey & Lopez de Prado (2014) formulu.
+        DSR > 0.95 ise strateji anlamli kabul edilir.
+
+        Args:
+            returns: Strateji getirileri
+            n_trials: Test edilen strateji sayisi (daha fazla = daha siki duzeltme)
+        """
+        from scipy.stats import norm as sp_norm
+
+        r = np.asarray(returns, dtype=float)
+        r = r[np.isfinite(r)]
+        n = len(r)
+        if n < 10:
+            return {'dsr': 0.0, 'psr': 0.0, 'sr': 0.0}
+
+        sr = float(np.mean(r) / (np.std(r, ddof=1) + 1e-9) * np.sqrt(periods_per_year))
+
+        skew = float(pd.Series(r).skew())
+        kurt = float(pd.Series(r).kurtosis())  # excess kurtosis
+
+        # SR* benchmark (en iyi beklenen SR n_trials denemeden)
+        gamma = 0.5772156649  # Euler-Mascheroni sabiti
+        sr_star = (1 - gamma) * sp_norm.ppf(1 - 1 / n_trials) + gamma * sp_norm.ppf(
+            1 - 1 / (n_trials * np.e)
+        ) if n_trials > 1 else 0.0
+
+        # PSR: SR'nin benchmark'i gecme olasiligi
+        sigma_sr = np.sqrt((1 - skew * sr + (kurt / 4) * sr ** 2) / (n - 1))
+        if sigma_sr < 1e-9:
+            psr = 0.0
+        else:
+            psr = float(sp_norm.cdf((sr - sr_star) / sigma_sr))
+
+        return {
+            'sr': round(sr, 4),
+            'sr_benchmark': round(sr_star, 4),
+            'psr': round(psr, 4),
+            'dsr': round(psr, 4),  # DSR ~ PSR bu formülasyonda
+        }
+
+    @staticmethod
+    def compute_turnover(
+        y_pred: np.ndarray,
+        current_prices: np.ndarray,
+        threshold: float = 0.0,
+    ) -> Dict[str, float]:
+        """Yon degisikliklerine dayali turnover analizi.
+
+        Args:
+            y_pred: Tahmin edilen fiyatlar
+            current_prices: Guncel kapanış fiyatları
+            threshold: Islem icin minimum tahmin degisimi (orani)
+
+        Returns:
+            turnover_rate: Yon degistiren gun orani
+            avg_trade_size: Ortalama tahmin degisimi
+            n_trades: Toplam islem sayisi
+        """
+        if len(y_pred) < 2:
+            return {'turnover_rate': 0.0, 'avg_trade_size': 0.0, 'n_trades': 0}
+
+        pred_returns = np.where(
+            current_prices != 0,
+            (y_pred - current_prices) / current_prices,
+            0.0
+        )
+        positions = np.where(pred_returns > threshold, 1, np.where(pred_returns < -threshold, -1, 0))
+
+        position_changes = np.diff(positions)
+        n_trades = int(np.sum(position_changes != 0))
+        turnover_rate = round(float(n_trades / max(len(positions) - 1, 1)), 4)
+        avg_trade_size = round(float(np.mean(np.abs(pred_returns[np.abs(pred_returns) > threshold]))), 6) \
+            if np.any(np.abs(pred_returns) > threshold) else 0.0
+
+        return {
+            'turnover_rate': turnover_rate,
+            'n_trades': n_trades,
+            'avg_trade_size': avg_trade_size,
+        }
+
     @staticmethod
     def compute_comprehensive_metrics(
         y_true: np.ndarray,
         y_pred: np.ndarray,
         current_prices: np.ndarray,
         volatility: Optional[np.ndarray] = None,
+        n_trials: int = 1,
     ) -> Dict[str, Any]:
-        """Tum metrikleri tek seferde hesapla."""
+        """Tum metrikleri tek seferde hesapla (Faz 3.4.2 ile genisletildi)."""
         from prediction.models.base import BasePredictionModel
 
         basic = BasePredictionModel.compute_metrics(y_true, y_pred)
@@ -456,10 +596,23 @@ class PredictionEvaluator:
         regime = PredictionEvaluator.compute_regime_metrics(y_true, y_pred, current_prices, volatility)
         backtest = PredictionEvaluator.backtest_simulation(y_true, y_pred, current_prices)
 
+        # Faz 3.4.2: Gelismis risk metrikleri
+        equity = np.array(backtest['equity_curve'], dtype=float)
+        bt_returns = np.diff(equity) / np.where(equity[:-1] != 0, equity[:-1], 1)
+
+        sortino = PredictionEvaluator.compute_sortino_ratio(bt_returns)
+        calmar = PredictionEvaluator.compute_calmar_ratio(equity)
+        dsr = PredictionEvaluator.compute_deflated_sharpe_ratio(bt_returns, n_trials=n_trials)
+        turnover = PredictionEvaluator.compute_turnover(y_pred, current_prices)
+
         return {
             'basic_metrics': basic,
             'information_coefficient': ic,
             'profit_factor': profit_factor,
             'regime_metrics': regime,
             'backtest': backtest,
+            'sortino_ratio': sortino,
+            'calmar_ratio': calmar,
+            'deflated_sharpe': dsr,
+            'turnover': turnover,
         }

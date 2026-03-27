@@ -20,7 +20,7 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 
 - **Faz 1 (POC)**: 5 hisse ile temel sistem (✅ Tamamlandı)
 - **Faz 2**: Advanced Prediction System — Ensemble tahmin + RL entegrasyonu (✅ Tamamlandı)
-- **Faz 3**: Production-ready sistem
+- **Faz 3**: Production improvements — Bug fixes, kalite, risk yönetimi, explainability (✅ Tamamlandı)
 
 ### Temel Özellikler
 
@@ -28,11 +28,16 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 ✅ **3 RL Algoritması**: A2C, PPO, TD3 (Stable-Baselines3)
 ✅ **5 Teknik İndikatör**: MACD, RSI, CCI, ADX, Turbulence
 ✅ **FastAPI Backend**: Model eğitimi ve yönetimi
-✅ **Web Dashboard**: Dinamik görselleştirme (Chart.js)
+✅ **Dash Dashboard**: Plotly Dash + dash-bootstrap-components, /dash/ altında mount
 ✅ **Real-time Training**: Background task ile eğitim
-✅ **Ensemble Tahmin Sistemi**: XGBoost + LightGBM + CatBoost + BiLSTM + TFT
+✅ **Ensemble Tahmin Sistemi**: XGBoost + LightGBM + CatBoost + BiLSTM + TFT + Stacking (OOF, 3-way split)
 ✅ **Hiperparametre Optimizasyonu**: Optuna + Walk-forward CV + purge/embargo
-✅ **Çoklu Veri Kaynağı**: yfinance (OHLCV), TCMB EVDS (makro), fundamental, altın/döviz
+✅ **Çoklu Veri Kaynağı**: yfinance (OHLCV), TCMB EVDS (makro), fundamental, altın/döviz, VIX/US10Y/DXY
+✅ **ICEEMDAN Gürültü Filtresi**: EMD tabanlı fiyat serisi temizleme
+✅ **TATS Trend Düzeltici**: XGBoost trend classifier ile tahmin düzeltme
+✅ **ATR Pozisyon Boyutlandırma**: Dinamik risk-bazlı pozisyon + Kelly Criterion
+✅ **SHAP Explainability**: Feature importance açıklamaları (Tree/Linear/Kernel)
+✅ **Gelişmiş Metrikler**: Sortino, Calmar, Deflated Sharpe Ratio, Turnover
 
 ### Teknoloji Stack
 
@@ -43,9 +48,8 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 - yfinance (BIST verileri)
 
 **Frontend:**
-- Vanilla JavaScript (ES6+)
-- Chart.js 4.4.0
-- Responsive CSS Grid
+- Plotly Dash + dash-bootstrap-components
+- FastAPI üzerinde `/dash/` path'inde mount edilmiş
 
 **Data & ML:**
 - pandas, numpy, scikit-learn
@@ -54,6 +58,8 @@ Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL taba
 - Optuna (Hiperparametre optimizasyonu)
 - evds (TCMB EVDS API — faiz, enflasyon)
 - borsapy (Altın/döviz verisi)
+- shap (Explainability — TreeExplainer/LinearExplainer/KernelExplainer)
+- EMD-signal (ICEEMDAN gürültü filtreleme)
 
 ---
 
@@ -112,9 +118,10 @@ Tarayıcınızda açın: **http://localhost:8000/**
 **Dashboard Özellikleri:**
 - 📊 Model eğitimi (A2C/PPO/TD3)
 - ⏱️ Gerçek zamanlı progress tracking
-- 📈 Performans metrikleri (Sharpe, Return, Drawdown)
-- 🤖 Model karşılaştırma
-- 📉 Chart.js grafikleri
+- 📈 Performans metrikleri (Sharpe, Sortino, Calmar, Drawdown)
+- 🤖 Model karşılaştırma + SHAP feature importance
+- 📉 Plotly interaktif grafikler
+- Dashboard: **http://localhost:8000/dash/**
 
 ### TensorBoard ile İzleme
 
@@ -157,41 +164,31 @@ python scripts/analysis/generate_academic_report.py
 
 ## 🎨 Web Dashboard
 
-### 4 Ana Sekme
+### Sayfalar
 
-#### 1️⃣ Dashboard
-- Sistem durumu (eğitim/hazır)
-- Aktif model bilgisi
-- 5 metrik kartı (Return, Sharpe, Drawdown, Portfolio, Trades)
-- Portfolio performans grafiği
-- Model listesi (tıklanabilir)
+| Sayfa | URL | İçerik |
+|-------|-----|--------|
+| Home | `/dash/` | Sistem durumu, aktif model, metrik kartları |
+| Training | `/dash/training` | A2C/PPO/TD3 eğitimi, real-time progress |
+| Data | `/dash/data` | BIST-30 veri durumu, indikatörler |
+| Models | `/dash/models` | Eğitilmiş model listesi, karşılaştırma |
+| Daily Trading | `/dash/daily-trading` | Günlük sinyal üretimi |
+| Prediction | `/dash/prediction` | Ensemble tahmin, SHAP açıklamaları |
+| Academic | `/dash/academic` | Akademik metrikler, LaTeX tablo |
+| Hyperopt | `/dash/hyperopt` | Optuna optimizasyon sonuçları |
 
-#### 2️⃣ Model Eğitimi
-- Algoritma seçimi (A2C, PPO, TD3)
-- Faz seçimi (1, 2, 3)
-- Hyperparameter ayarları
-- Real-time eğitim progress grafiği
-
-#### 3️⃣ Veri İstatistikleri
-- BIST-30 hisse bilgileri
-- Sektör dağılımı
-- Teknik indikatörler özeti
-- Veri periyodu istatistikleri
-
-#### 4️⃣ Model Karşılaştırma
-- Tüm modellerin karşılaştırma tablosu
-- Algoritma performans grafiği (bar chart)
-- Ortalama Sharpe Ratio karşılaştırması
-
-### Frontend Yapısı
+### Dashboard Yapısı
 
 ```
-static/
-├── index.html          # Temiz HTML yapısı
-├── css/
-│   └── styles.css     # Tüm CSS stilleri
-└── js/
-    └── dashboard.js   # Tüm JavaScript logic
+dashboard/
+├── app.py              # Dash factory, PrefixMiddleware, routing callback
+├── theme.py            # Renk teması (BG, CARD, CONTENT_STYLE)
+├── api_client.py       # FastAPI backend'e HTTP çağrıları
+├── components/
+│   ├── sidebar.py      # Sol navigasyon
+│   └── metric_card.py  # Metrik kartı bileşeni
+└── pages/              # home, training, data, models, daily_trading,
+                        # prediction, academic, hyperopt
 ```
 
 ---
@@ -257,10 +254,14 @@ RL-Trading-Project/
 │   ├── core/config.py          # Konfigürasyon
 │   └── main.py                 # FastAPI app
 │
-├── 📁 static/                   # Frontend
-│   ├── index.html              # Ana sayfa
-│   ├── css/styles.css          # Stiller
-│   └── js/dashboard.js         # JavaScript
+├── 📁 dashboard/                # Dash Frontend (/dash/)
+│   ├── app.py                  # Dash factory + PrefixMiddleware
+│   ├── theme.py                # Renk teması
+│   ├── api_client.py           # Backend HTTP client
+│   ├── components/             # sidebar, metric_card
+│   └── pages/                  # 8 sayfa (home, training, data, ...)
+│
+├── 📁 static/                   # Sadece favicon
 │
 ├── 📁 data/                     # Veri İşleme
 │   ├── bist30_symbols.py       # Hisse listesi
@@ -271,23 +272,27 @@ RL-Trading-Project/
 │   └── gold_fetcher.py         # Altın/döviz (borsapy veya yfinance)
 │
 ├── 📁 prediction/               # Gelişmiş Tahmin Sistemi (Faz 2)
-│   ├── feature_engineer.py     # 10 özellik grubu (getiri, volatilite, makro, fundamental, rejim)
-│   ├── feature_selector.py     # Otomatik feature selection (MI + permutation importance)
+│   ├── feature_engineer.py     # 10 özellik grubu + ICEEMDAN + VIX/US10Y/DXY
+│   ├── feature_selector.py     # MI + permutation importance (3 aşamalı)
+│   ├── iceemdan_processor.py   # ICEEMDAN gürültü filtreleme
+│   ├── tats.py                 # TATS trend-adjusted düzeltici
+│   ├── explainability.py       # SHAP (Tree/Linear/Kernel)
 │   ├── models/                 # Multi-model mimarisi
-│   │   ├── base.py             # BasePredictionModel ABC
+│   │   ├── base.py             # BasePredictionModel ABC + _predict_direction_raw()
 │   │   ├── xgboost_model.py
 │   │   ├── lightgbm_model.py
 │   │   ├── catboost_model.py
-│   │   ├── lstm_model.py       # BiLSTM (PyTorch, CUDA)
-│   │   ├── tft_model.py        # Temporal Fusion Transformer
-│   │   └── ensemble.py         # Stacking meta-learner (Ridge + XGBoost)
+│   │   ├── lstm_model.py       # BiLSTM (PyTorch, CUDA) + direction head
+│   │   ├── tft_model.py        # Temporal Fusion Transformer + direction head
+│   │   └── ensemble.py         # Stacking (OOF, 3-way split, Ridge/XGB, TATS)
 │   ├── hyperopt.py             # Optuna HPO
-│   ├── trainer.py              # Walk-forward + purge gap (5g) + embargo (3g)
-│   ├── evaluator.py            # Direction acc, Profit Factor, IC, Diebold-Mariano
+│   ├── trainer.py              # Walk-forward + purge (5g) + embargo (3g, prev_test_end takibi)
+│   ├── evaluator.py            # Direction acc, Profit Factor, IC, Sortino, Calmar, DSR, Turnover
 │   └── tracker.py              # Experiment tracking (JSON log)
 │
 ├── 📁 env/                      # RL Environment
-│   └── trading_env.py          # Gymnasium environment (Phase 2: +4×N prediction features)
+│   ├── trading_env.py          # Gymnasium env (+4×N prediction, ATR sizing, Kelly)
+│   └── reward_functions.py     # PSR reward function
 │
 ├── 📁 scripts/                  # Utility Scripts
 │   ├── training/               # Model eğitimi
@@ -532,14 +537,31 @@ tensorboard --logdir logs/tensorboard/
 - [x] Optuna HPO (walk-forward CV, purge gap 5 gün, embargo 3 gün)
 - [x] Çoklu veri kaynağı (OHLCV + makro EVDS + fundamental + altın/döviz)
 - [x] RL entegrasyonu (observation space'e 4×N tahmin özellikleri eklendi)
-- [x] API endpoints + dashboard (train-all, optimize, ensemble-predict)
+- [x] API endpoints + Dash dashboard (train-all, optimize, ensemble-predict)
 
-### Faz 3 - Production
+### Faz 3 - Tamamlandı ✅
 
-- [ ] Real-time trading signals
-- [ ] WebSocket updates
-- [ ] Docker deployment
-- [ ] Model versioning
+#### 3.1 — Bug Fixes
+- [x] PSR reward: `total_trades` sayım hatası düzeltildi
+- [x] Meta-learner data leakage: 2-split → 3-way split (OOF) ile giderildi
+- [x] Embargo: `prev_test_end` takibi ile her fold'da doğru uygulanıyor
+- [x] TFT VSN: `min(input_size, 50)` cap kaldırıldı, feature selector zaten 80 ile sınırlar
+- [x] Direction head: BiLSTM/TFT çıktısı artık confidence hesabında kullanılıyor
+- [x] Permutation importance: feature_selector'a 3. aşama olarak eklendi
+
+#### 3.2 — Tahmin Kalitesi
+- [x] ICEEMDAN gürültü filtreleme (`prediction/iceemdan_processor.py`)
+- [x] TATS trend-adjusted düzeltici (`prediction/tats.py`)
+- [x] Global makro göstergeler: VIX, US10Y, DXY (macro_fetcher + feature_engineer)
+
+#### 3.3 — Risk Yönetimi
+- [x] ATR tabanlı dinamik pozisyon boyutlandırma (`use_atr_sizing=True`)
+- [x] Kelly Criterion pozisyon boyutlandırma (`use_kelly=True`, quarter-Kelly)
+
+#### 3.4 — Explainability & Monitoring
+- [x] SHAP explainability (`prediction/explainability.py`, `/prediction/explain/{symbol}` API)
+- [x] Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio, Turnover metrikleri
+- [x] `GET /prediction/explain/{symbol}` endpoint (single + global SHAP)
 
 ---
 
@@ -651,4 +673,4 @@ Sorularınız için: development.md dosyasına bakın veya issue açın.
 
 ---
 
-**Son Güncelleme:** Faz 2 Tamamlandı ✅ (2026-03-26)
+**Son Güncelleme:** Faz 3 Tamamlandı ✅ (2026-03-27)

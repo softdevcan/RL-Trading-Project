@@ -123,12 +123,19 @@ class WalkForwardTrainer:
 
         all_results = {mt: [] for mt in model_types}
 
+        prev_test_end = 0  # Onceki fold'un test_end'i (embargo icin)
         for fold in range(self.n_splits):
+            # Expanding window: fold_size * (fold+1) noktasina kadar egit
+            # Embargo: bir onceki fold'un test bolgesi bitmeden train setine ekleme
             train_end = fold_size * (fold + 1)
-            test_start = train_end + self.purge_days
+            if prev_test_end > 0:
+                embargo_boundary = prev_test_end + self.embargo_days
+                train_end = min(train_end, embargo_boundary)
+
+            test_start = fold_size * (fold + 1) + self.purge_days
             test_end = min(test_start + fold_size, n)
 
-            if test_start >= n or test_end - test_start < 20:
+            if test_start >= n or test_end - test_start < 20 or train_end < 20:
                 continue
 
             X_train, y_train = X[:train_end], y[:train_end]
@@ -140,9 +147,11 @@ class WalkForwardTrainer:
 
             logger.info(
                 f"  Fold {fold + 1}/{self.n_splits}: "
-                f"train={len(X_tr)}, val={len(X_val)}, test={len(X_test)} "
-                f"(purge={self.purge_days}d)"
+                f"train=[0:{train_end}], purge={self.purge_days}d, "
+                f"test=[{test_start}:{test_end}], embargo={self.embargo_days}d"
             )
+
+            prev_test_end = test_end
 
             for model_type in model_types:
                 try:

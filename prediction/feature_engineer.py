@@ -23,7 +23,11 @@ from typing import Optional, List, Dict, Any
 import numpy as np
 import pandas as pd
 
+from prediction.iceemdan_processor import ICEEMDANProcessor
+
 logger = logging.getLogger(__name__)
+
+_iceemdan_processor = ICEEMDANProcessor()
 
 
 class PredictionFeatureEngineer:
@@ -47,6 +51,7 @@ class PredictionFeatureEngineer:
         macro_df: Optional[pd.DataFrame] = None,
         fundamental_df: Optional[pd.DataFrame] = None,
         cross_asset_df: Optional[pd.DataFrame] = None,
+        use_iceemdan: bool = False,
     ) -> pd.DataFrame:
         """Tek sembol icin ozellik matrisi olustur.
 
@@ -65,6 +70,14 @@ class PredictionFeatureEngineer:
         data = df.copy()
         data.index = pd.to_datetime(data.index)
         data = data.sort_index()
+
+        if use_iceemdan and _iceemdan_processor.is_available():
+            filtered_close = _iceemdan_processor.filter_noise(data['close'])
+            data['close'] = filtered_close
+            imf_feats = _iceemdan_processor.extract_imf_features(filtered_close)
+            for col in imf_feats.columns:
+                data[col] = imf_feats[col]
+            logger.info(f"[{symbol}] ICEEMDAN filtreleme uygulandi")
 
         self._add_return_features(data)
         self._add_volatility_features(data)
@@ -322,6 +335,10 @@ class PredictionFeatureEngineer:
             'usd_try': 'macro_usdtry',
             'eur_try': 'macro_eurtry',
             'bist100_index': 'macro_bist100',
+            # Faz 3.4.3: Global gostergeler
+            'vix': 'macro_vix',
+            'us10y': 'macro_us10y',
+            'dxy': 'macro_dxy',
         }
 
         for src_col, dst_col in macro_cols.items():

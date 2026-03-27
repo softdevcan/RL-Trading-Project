@@ -359,3 +359,92 @@ async def get_symbols():
         synthetic=SYNTHETIC_SYMBOLS,
         all=all_syms,
     )
+
+
+# ------------------------------------------------------------------
+# SHAP Aciklanabilirlik  (Faz 3.4.1)
+# ------------------------------------------------------------------
+
+@router.get("/explain/{symbol}")
+async def explain_prediction(
+    symbol: str,
+    horizon: str = Query(default='daily'),
+    model_type: str = Query(default='xgboost', description="xgboost, lightgbm, catboost"),
+    n_background: int = Query(default=100, ge=10, le=500),
+):
+    """Sembol tahmini icin SHAP feature importance aciklamasi uret.
+
+    Returns:
+        {
+            'symbol': str,
+            'model_type': str,
+            'shap_available': bool,
+            'single_prediction': {shap_values, base_value, top_positive, top_negative},
+            'global_importance': {feature: mean_abs_shap},
+        }
+    """
+    symbol = _validate_symbol(symbol)
+    horizon = _validate_horizon(horizon)
+
+    from prediction.explainability import ModelExplainer
+    from prediction.models.ensemble import StackingEnsemble
+    from app.services.prediction_service import PredictionService
+
+    explainer = ModelExplainer(n_background=n_background)
+
+    if not explainer.is_available():
+        return {
+            'symbol': symbol,
+            'model_type': model_type,
+            'shap_available': False,
+            'message': "shap paketi kurulu degil. 'pip install shap' ile kurun.",
+        }
+
+    try:
+        svc = PredictionService()
+        df = svc._fetch_data(symbol)
+        if df is None or df.empty:
+            raise HTTPException(status_code=404, detail=f"Veri bulunamadi: {symbol}")
+
+        ensemble = StackingEnsemble(horizon=horizon)
+        ensemble.load(symbol)
+
+        if model_type not in ensemble.base_models:
+            raise HTTPException(
+                status_code=404,
+                detail=f"'{model_type}' modeli '{symbol}' icin yuklenemedi. "
+                       f"Mevcut modeller: {list(ensemble.base_models.keys())}"
+            )
+
+        model = ensemble.base_models[model_type]
+
+        from prediction.feature_engineer import PredictionFeatureEngineer
+        import numpy as np
+        fe = PredictionFeatureEngineer(horizon)
+        feat_df = fe.build_features(df, symbol)
+        feature_cols = ensemble.feature_cols or fe.get_feature_columns(feat_df)
+
+        X = feat_df[feature_cols].values.astype(np.float32)
+        X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+
+        background = X[:-1] if len(X) > 1 else X
+        last_row = X[-1:]
+
+        single = explainer.explain_prediction(model, last_row, feature_cols, background)
+        global_imp = explainer.explain_global(model, background, feature_cols)
+
+        return {
+            'symbol': symbol,
+            'model_type': model_type,
+            'horizon': horizon,
+            'shap_available': True,
+            'n_features': len(feature_cols),
+            'single_prediction': single,
+            'global_importance': global_imp,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"SHAP aciklama hatasi [{symbol}]: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))

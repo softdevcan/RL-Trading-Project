@@ -118,7 +118,7 @@ class RewardCalculator:
         # 5. Trade Frequency Bonus/Penalty
         trade_freq_component = self._calculate_trade_frequency_component(
             current_step=current_step,
-            total_trades=sum(1 for _ in range(len(portfolio_values)))  # Simplified
+            total_trades=trades_executed
         )
         components['trade_frequency'] = trade_freq_component
 

@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_selection import mutual_info_regression
 from sklearn.inspection import permutation_importance
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import TimeSeriesSplit
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ class FeatureSelector:
         X: pd.DataFrame,
         y: pd.Series,
         feature_cols: List[str],
+        use_permutation_importance: bool = False,
     ) -> Dict[str, Any]:
         """Ozellik secimi pipeline'ini calistir.
 
@@ -92,6 +94,22 @@ class FeatureSelector:
             X_feat = X_feat[top_cols]
             logger.info(f"  Max features siniri: {len(X_feat.columns)} ozellik")
 
+        pi_scores: Dict[str, float] = {}
+        pi_dropped: List[str] = []
+
+        if use_permutation_importance and len(X_feat.columns) > 1:
+            surrogate = Ridge(alpha=1.0)
+            surrogate.fit(X_feat.fillna(0), y.fillna(0))
+            pi_scores = self.compute_permutation_importance(surrogate, X_feat.fillna(0), y.fillna(0))
+            pi_threshold = 0.0  # Negatif onem skorlu ozellikleri at (performansi dusuruyorlar)
+            pi_survivors = [c for c, s in pi_scores.items() if s >= pi_threshold]
+            pi_dropped = [c for c, s in pi_scores.items() if s < pi_threshold]
+            if pi_dropped:
+                X_feat = X_feat[pi_survivors]
+                logger.info(
+                    f"  PI filtresi: {len(pi_survivors)} kaldi, {len(pi_dropped)} atildi"
+                )
+
         selected = X_feat.columns.tolist()
         logger.info(f"  Sonuc: {len(selected)} ozellik secildi")
 
@@ -103,6 +121,8 @@ class FeatureSelector:
             'dropped_correlation': corr_dropped,
             'dropped_mi': mi_dropped,
             'mi_scores': mi_scores,
+            'pi_scores': pi_scores,
+            'dropped_pi': pi_dropped,
         }
 
     def _correlation_filter(self, X: pd.DataFrame) -> Tuple[List[str], List[str]]:

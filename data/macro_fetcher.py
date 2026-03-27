@@ -49,7 +49,11 @@ class MacroDataFetcher:
     YF_SYMBOLS = {
         'usd_try': 'TRY=X',
         'eur_try': 'EURTRY=X',
-        'bist100_index': 'XU100.IS'
+        'bist100_index': 'XU100.IS',
+        # Faz 3.4.3: Global gostergeler
+        'vix': '^VIX',          # CBOE Volatility Index (korku endeksi)
+        'us10y': '^TNX',        # ABD 10-Yil Hazine Getirisi
+        'dxy': 'DX-Y.NYB',     # ABD Dolar Endeksi
     }
 
     def __init__(self, api_key: Optional[str] = None, start_date: str = "2018-01-01", end_date: Optional[str] = None):

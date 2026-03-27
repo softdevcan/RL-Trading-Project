@@ -37,6 +37,15 @@ class TradingEnv(gym.Env):
         reward_type: str = 'simple',           # 'simple' or 'psr'
         reward_weights: Optional[Dict[str, float]] = None,  # PSR weights (optional)
         prediction_features: Optional[Dict[str, Dict[str, Dict[str, float]]]] = None,
+        # Faz 3.3: ATR-tabanli pozisyon boyutlandirma
+        use_atr_sizing: bool = False,
+        risk_per_trade: float = 0.02,       # Portfolio degerinin %2'si
+        atr_multiplier: float = 2.0,        # ATR stop mesafesi katsayisi
+        max_position_pct: float = 0.20,     # Tek pozisyonun maks portfolio payi
+        atr_period: int = 14,               # ATR hesaplama periyodu
+        # Faz 3.3.2: Kelly fraksiyonel boyutlandirma
+        use_kelly: bool = False,
+        kelly_fraction: float = 0.25,       # Quarter-Kelly (muhafazakar)
     ):
         """
         Args:
@@ -61,6 +70,15 @@ class TradingEnv(gym.Env):
         self.max_shares_per_trade = max_shares_per_trade
         self.phase = phase
         self.reward_type = reward_type
+
+        # ATR-tabanlı pozisyon boyutlandirma (Faz 3.3)
+        self.use_atr_sizing = use_atr_sizing
+        self.risk_per_trade = risk_per_trade
+        self.atr_multiplier = atr_multiplier
+        self.max_position_pct = max_position_pct
+        self.atr_period = atr_period
+        self.use_kelly = use_kelly
+        self.kelly_fraction = kelly_fraction
 
         # Faz 2 data
         self.fundamental_df = fundamental_df
@@ -224,9 +242,28 @@ class TradingEnv(gym.Env):
             raise ValueError(f"Action must have length {self.n_stocks}, got {len(action)}")
 
         # Scale continuous actions [-1, 1] to integer shares
-        # Use np.round() instead of astype(int) to avoid truncating small actions to zero
-        scaled_action = np.round(action * self.max_shares_per_trade).astype(int)
-        scaled_action = np.clip(scaled_action, -self.max_shares_per_trade, self.max_shares_per_trade)
+        if self.use_kelly:
+            # Kelly fraksiyonel boyutlandirma (Faz 3.3.2)
+            current_date_str = str(self._get_current_date())[:10]
+            date_preds = (self.prediction_features or {}).get(current_date_str, {})
+            scaled_action = np.array([
+                self._kelly_position_size(
+                    self.symbols[i],
+                    float(action[i]),
+                    win_prob=float(date_preds.get(self.symbols[i], {}).get('confidence', 0.5 + abs(float(action[i])) * 0.3)),
+                )
+                for i in range(self.n_stocks)
+            ], dtype=int)
+        elif self.use_atr_sizing:
+            # ATR-tabanli dinamik pozisyon boyutlandirma (Faz 3.3.1)
+            scaled_action = np.array([
+                self._atr_position_size(self.symbols[i], float(action[i]))
+                for i in range(self.n_stocks)
+            ], dtype=int)
+        else:
+            # Sabit lot: orijinal davranis (geriye uyumlu)
+            scaled_action = np.round(action * self.max_shares_per_trade).astype(int)
+            scaled_action = np.clip(scaled_action, -self.max_shares_per_trade, self.max_shares_per_trade)
 
         # Minimum trade threshold: filter out near-zero actions (#5)
         min_threshold = 1
@@ -524,6 +561,122 @@ class TradingEnv(gym.Env):
         state = np.clip(state, -10.0, 10.0)
 
         return state
+
+    def _get_atr(self, symbol: str) -> float:
+        """Sembol icin ATR_N hesapla (son atr_period gun).
+
+        Veri yetersizse 0.0 dondurur; caller None gibi yorumlamalı.
+        """
+        current_date = self._get_current_date()
+        try:
+            sym_df = self.df.xs(symbol, level='symbol')
+            sym_df = sym_df[sym_df.index <= current_date].tail(self.atr_period + 1)
+            if len(sym_df) < 2:
+                return 0.0
+
+            high = sym_df['high'].astype(float).values
+            low = sym_df['low'].astype(float).values
+            close = sym_df['close'].astype(float).values
+
+            # True Range: max(H-L, |H-Cprev|, |L-Cprev|)
+            tr = np.maximum(
+                high[1:] - low[1:],
+                np.maximum(
+                    np.abs(high[1:] - close[:-1]),
+                    np.abs(low[1:] - close[:-1]),
+                )
+            )
+            return float(np.mean(tr))
+        except Exception:
+            return 0.0
+
+    def _atr_position_size(self, symbol: str, action_signal: float) -> int:
+        """ATR-tabanlı pozisyon boyutu hesapla.
+
+        Args:
+            symbol: Hisse sembolü
+            action_signal: Ham model çıktısı [-1, +1]
+
+        Returns:
+            İşlem yapılacak lot sayısı (pozitif=alım, negatif=satış)
+        """
+        current_price = self._get_current_price(symbol)
+        if current_price <= 0:
+            return 0
+
+        atr = self._get_atr(symbol)
+        atr_stop = atr * self.atr_multiplier if atr > 0 else 0.0
+
+        portfolio_value = self._get_portfolio_value()
+        position_value = portfolio_value * self.risk_per_trade * abs(action_signal)
+
+        if atr_stop > 0:
+            shares = position_value / (current_price * atr_stop / current_price)
+        else:
+            # ATR hesaplanamadıysa sabit lot'a düş
+            shares = abs(action_signal) * self.max_shares_per_trade
+
+        # Maksimum pozisyon sınırı: portfolio'nun max_position_pct'i
+        max_shares_by_pct = (portfolio_value * self.max_position_pct) / current_price
+        shares = min(shares, max_shares_by_pct)
+
+        # Mutlak üst sınır
+        shares = min(shares, self.max_shares_per_trade * 10)
+
+        shares_int = max(1, int(round(shares))) if shares >= 0.5 else 0
+        return int(np.sign(action_signal)) * shares_int
+
+    def _kelly_position_size(self, symbol: str, action_signal: float, win_prob: float) -> int:
+        """Kelly Kriteri ile pozisyon boyutu hesapla.
+
+        f* = (p*b - q*a) / (a*b)
+        position = f* * kelly_fraction
+
+        Args:
+            symbol: Hisse sembolü
+            action_signal: Ham model çıktısı [-1, +1]
+            win_prob: Kazanma olasılığı (direction confidence, 0-1)
+
+        Returns:
+            İşlem yapılacak lot sayısı
+        """
+        if win_prob <= 0 or win_prob >= 1:
+            # Geçersiz olasılık — sabit lot'a düş
+            return int(np.sign(action_signal)) * max(1, int(abs(action_signal) * self.max_shares_per_trade))
+
+        current_price = self._get_current_price(symbol)
+        if current_price <= 0:
+            return 0
+
+        p = win_prob
+        q = 1.0 - p
+        # Basitleştirilmiş Kelly: ort. kazanç/kayıp oranı ATR'den türet
+        atr = self._get_atr(symbol)
+        if atr > 0 and current_price > 0:
+            b = atr / current_price   # ort. kazanç (ATR oranı)
+            a = atr / current_price   # ort. kayıp (simetrik varsayım)
+        else:
+            b = 0.05   # %5 ort. kazanç (varsayılan)
+            a = 0.05
+
+        if a <= 0 or b <= 0:
+            return 0
+
+        kelly_f = (p * b - q * a) / (a * b)
+        kelly_f = max(0.0, kelly_f)  # negatif Kelly = işlem yapma
+
+        position_fraction = kelly_f * self.kelly_fraction * abs(action_signal)
+
+        portfolio_value = self._get_portfolio_value()
+        position_value = portfolio_value * position_fraction
+        max_value = portfolio_value * self.max_position_pct
+
+        position_value = min(position_value, max_value)
+        shares = position_value / current_price if current_price > 0 else 0.0
+        shares = min(shares, self.max_shares_per_trade * 10)
+
+        shares_int = max(1, int(round(shares))) if shares >= 0.5 else 0
+        return int(np.sign(action_signal)) * shares_int
 
     def _get_current_price(self, symbol: str) -> float:
         """Hissenin güncel fiyatını döndür (close price)"""
