@@ -8,6 +8,7 @@ Bu klasör, **RL Trading System** projesinin tüm dokümantasyonunu içerir. Faz
 docs/
 ├── guides/            # Kullanım kılavuzları (aktif)
 ├── development/       # Geliştirme notları ve mimari (aktif)
+├── thesis/            # Tez vizyonu, kapsam ve yol haritası (aktif)
 ├── reference/         # Harici referans materyaller (PDF'ler, tez)
 └── archive/           # Tamamlanmış faz/sprint dokümanları (arşiv)
 ```
@@ -32,6 +33,14 @@ Proje mimarisi ve roadmap:
 - [**roadmap.md**](development/roadmap.md) — Geliştirme planı ve faz takibi (Faz 1 → Faz 3 tamamlandı)
 - [**prediction-system.md**](development/prediction-system.md) — Gelişmiş tahmin sistemi mimarisi (ensemble, feature engineering, veri katmanı)
 - [**phase3-implementation.md**](development/phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
+
+---
+
+## 🎓 Thesis — Tez Vizyonu ve Yol Haritası
+
+Tez kapsamını, akademik konumu ve süreç planını içeren dokümanlar:
+
+- [**vision-and-scope.md**](thesis/vision-and-scope.md) — Tez vizyonu, literatür konumu, tasarım seçenekleri değerlendirmesi, kapsam (in/out), başarı kriterleri, milestone haritası ve makale hedefleri
 
 ---
 
