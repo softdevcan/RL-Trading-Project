@@ -140,5 +140,8 @@ torch         # PyTorch (CUDA önerilir)
 
 ## İlgili Dokümanlar
 
-- [docs/PHASE2_HYPEROPT_UPDATE.md](PHASE2_HYPEROPT_UPDATE.md) — HPO detayları
-- [docs/SPRINT2_COMPLETE.md](SPRINT2_COMPLETE.md) — Sprint tamamlanma notu
+- [roadmap.md](roadmap.md) — Geliştirme planı
+- [phase3-implementation.md](phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
+- [../guides/API_HYPEROPT_GUIDE.md](../guides/API_HYPEROPT_GUIDE.md) — HPO kullanım kılavuzu
+- [../archive/sprint-notes/PHASE2_HYPEROPT_UPDATE.md](../archive/sprint-notes/PHASE2_HYPEROPT_UPDATE.md) — HPO tarihsel notlar (arşiv)
+- [../archive/sprint-notes/SPRINT2_COMPLETE.md](../archive/sprint-notes/SPRINT2_COMPLETE.md) — Sprint tamamlanma notu (arşiv)

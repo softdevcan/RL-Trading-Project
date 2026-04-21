@@ -1,42 +1,85 @@
 # 📚 Dokümantasyon
 
-Bu klasör tüm proje dokümantasyonunu içerir.
+Bu klasör, **RL Trading System** projesinin tüm dokümantasyonunu içerir. Faz 1 → Faz 3 süreci tamamlandıktan sonra yeniden organize edilmiştir.
 
 ## 📁 Klasör Yapısı
 
-### `/guides` - Kullanım Kılavuzları
-- [**ALGORITHMS.md**](guides/ALGORITHMS.md) - RL algoritmaları karşılaştırması (PPO, A2C, TD3)
-- [**ACADEMIC_GUIDE.md**](guides/ACADEMIC_GUIDE.md) - Akademik analiz ve raporlama
-- [**API_HYPEROPT_GUIDE.md**](guides/API_HYPEROPT_GUIDE.md) - Hyperparameter optimization
-- [**GPU_PERFORMANCE_GUIDE.md**](guides/GPU_PERFORMANCE_GUIDE.md) - GPU performans testleri
+```
+docs/
+├── guides/            # Kullanım kılavuzları (aktif)
+├── development/       # Geliştirme notları ve mimari (aktif)
+├── reference/         # Harici referans materyaller (PDF'ler, tez)
+└── archive/           # Tamamlanmış faz/sprint dokümanları (arşiv)
+```
 
-### `/development` - Geliştirme Notları
-- [**development.md**](development/development.md) - Geliştirme planı ve roadmap
-- [**HYPEROPT_IMPROVEMENTS_SUMMARY.md**](development/HYPEROPT_IMPROVEMENTS_SUMMARY.md) - Hyperopt iyileştirmeleri
+---
 
-### `/phase2` - Faz 2 Dokümantasyonu
-- [**FAZ2_REQUIREMENTS.md**](phase2/FAZ2_REQUIREMENTS.md) - Faz 2 gereksinimleri (✅ Tamamlandı)
-- [**FAZ2_ANALYSIS.md**](phase2/FAZ2_ANALYSIS.md) - Faz 2 analiz raporu (✅ Tamamlandı)
-- **FAZ2_IMPLEMENTATION_PLAN.md** - Faz 2 uygulama planı (🔜 Yakında)
+## 📖 Guides — Kullanım Kılavuzları
 
-## 🔗 Hızlı Bağlantılar
+Günlük kullanım için başvuru dokümanları:
 
-### Yeni Başlayanlar İçin
-1. Ana README dosyasını okuyun: [../README.md](../README.md)
-2. Algoritma karşılaştırmasına bakın: [guides/ALGORITHMS.md](guides/ALGORITHMS.md)
-3. Geliştirme planını inceleyin: [development/development.md](development/development.md)
+- [**ALGORITHMS.md**](guides/ALGORITHMS.md) — RL algoritma karşılaştırması (A2C, PPO, TD3, SAC)
+- [**ACADEMIC_GUIDE.md**](guides/ACADEMIC_GUIDE.md) — Akademik analiz, metrik hesaplamaları, LaTeX çıktısı
+- [**API_HYPEROPT_GUIDE.md**](guides/API_HYPEROPT_GUIDE.md) — Hiperparametre optimizasyonu (Optuna + RL algoritmaları)
+- [**GPU_PERFORMANCE_GUIDE.md**](guides/GPU_PERFORMANCE_GUIDE.md) — GPU performans testleri ve ipuçları
 
-### Akademik Kullanım İçin
-1. Akademik kılavuzu okuyun: [guides/ACADEMIC_GUIDE.md](guides/ACADEMIC_GUIDE.md)
-2. Rapor oluşturma scriptini çalıştırın: `python scripts/analysis/generate_academic_report.py`
+---
 
-### Hyperparameter Tuning İçin
-1. API kılavuzunu okuyun: [guides/API_HYPEROPT_GUIDE.md](guides/API_HYPEROPT_GUIDE.md)
-2. GPU performans testini yapın: [guides/GPU_PERFORMANCE_GUIDE.md](guides/GPU_PERFORMANCE_GUIDE.md)
+## 🔧 Development — Geliştirme Dokümanları
+
+Proje mimarisi ve roadmap:
+
+- [**roadmap.md**](development/roadmap.md) — Geliştirme planı ve faz takibi (Faz 1 → Faz 3 tamamlandı)
+- [**prediction-system.md**](development/prediction-system.md) — Gelişmiş tahmin sistemi mimarisi (ensemble, feature engineering, veri katmanı)
+- [**phase3-implementation.md**](development/phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
+
+---
+
+## 📑 Reference — Referans Materyaller
+
+Harici dokümanlar ve tez:
+
+- [**tez-final.pdf**](reference/tez-final.pdf) — Tez final sürümü
+- [**evds-python-kilavuz.pdf**](reference/evds-python-kilavuz.pdf) — TCMB EVDS Python kılavuzu
+- [**evds-web-servis-kilavuz.pdf**](reference/evds-web-servis-kilavuz.pdf) — TCMB EVDS Web Servis kılavuzu
+
+---
+
+## 🗄️ Archive — Arşivlenmiş Dokümanlar
+
+Tamamlanmış faz/sprint dokümanları. Güncel geliştirmede referans için saklanır; **günlük kullanımda bu klasöre bakmayın.**
+
+- [archive/phase2/](archive/phase2/) — Faz 2 sprint dokümanları (gereksinimler, analiz)
+- [archive/sprint-notes/](archive/sprint-notes/) — Faz 2 sprint tamamlama notları (PSR reward, hyperopt, UI updates)
+- [archive/issues/](archive/issues/) — Issue tracker (Batch 0-8 sırasında kullanıldı, 62/63 issue kapatıldı)
+
+---
+
+## 🔗 Hızlı Başlangıç
+
+**Yeni başlayanlar:**
+1. Ana [README.md](../README.md) — proje genel tanıtımı ve kurulum
+2. [guides/ALGORITHMS.md](guides/ALGORITHMS.md) — RL algoritmalarını tanıyın
+3. [development/roadmap.md](development/roadmap.md) — proje yol haritası
+
+**Akademik kullanım:**
+1. [guides/ACADEMIC_GUIDE.md](guides/ACADEMIC_GUIDE.md) — metrik ve rapor üretimi
+2. `python scripts/analysis/generate_academic_report.py`
+
+**Hiperparametre optimizasyonu:**
+1. [guides/API_HYPEROPT_GUIDE.md](guides/API_HYPEROPT_GUIDE.md)
+2. [guides/GPU_PERFORMANCE_GUIDE.md](guides/GPU_PERFORMANCE_GUIDE.md)
+
+**Tahmin sistemi (Faz 2/3):**
+1. [development/prediction-system.md](development/prediction-system.md) — mimari
+2. [development/phase3-implementation.md](development/phase3-implementation.md) — uygulama detayları
+
+---
 
 ## 📝 Katkı
 
-Dokümantasyon eklemek veya güncellemek için:
-1. İlgili klasöre uygun .md dosyası ekleyin
-2. Bu README'yi güncelleyin
-3. Ana README'deki referansları kontrol edin
+Yeni dokümantasyon eklerken:
+
+1. **Aktif mi arşiv mi?** Belirli bir faz/sprint'e özgü notlarsa `archive/` altına; kalıcı referanssa `guides/` veya `development/` altına.
+2. **İndeksi güncelleyin** — bu dosyaya (`docs/README.md`) eklediğiniz dosyanın linkini koyun.
+3. **Ana README'deki referansları** kontrol edin.

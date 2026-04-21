@@ -295,15 +295,20 @@ RL-Trading-Project/
 │   └── reward_functions.py     # PSR reward function
 │
 ├── 📁 scripts/                  # Utility Scripts
-│   ├── training/               # Model eğitimi
-│   ├── benchmarking/           # Performans testleri
-│   ├── analysis/               # Analiz ve raporlama
+│   ├── training/               # Model eğitimi (train_a2c_phase1.py)
+│   ├── benchmarking/           # Performans testleri (benchmark_strategies, test_benchmarks)
+│   ├── analysis/               # Analiz ve raporlama (generate_academic_report, extract_comparison_table)
+│   ├── optimization/           # Reward ağırlık optimizasyonu + A/B test
 │   └── debug/                  # Debug araçları
 │
-├── 📁 docs/                     # Dokümantasyon
-│   ├── guides/                 # Kullanım kılavuzları
-│   ├── development/            # Geliştirme notları
-│   └── phase2/                 # Faz 2 dokümanları
+├── 📁 hyperparameter_optimization/ # RL algoritma HPO (Optuna + A2C/PPO/TD3/SAC)
+│                               # Not: prediction/hyperopt.py ise prediction modelleri için ayrı HPO'dur
+│
+├── 📁 docs/                     # Dokümantasyon (indeks: docs/README.md)
+│   ├── guides/                 # Kullanım kılavuzları (algorithms, academic, hyperopt, gpu)
+│   ├── development/            # Mimari + roadmap + phase3 detayları
+│   ├── reference/              # Tez + EVDS kılavuzları
+│   └── archive/                # Tamamlanmış faz/sprint dokümanları
 │
 ├── 📁 models/                   # Eğitilmiş modeller (.zip)
 ├── 📁 results/                  # Metrikler ve raporlar
@@ -318,8 +323,8 @@ RL-Trading-Project/
 ### Modül Bağımlılıkları
 
 ```
-Web UI (static/)
-    ↓ API calls
+Web UI (dashboard/ — Plotly Dash, /dash/ altında mount)
+    ↓ API calls (dashboard/api_client.py)
 FastAPI Backend (app/)
     ↓ Background tasks
 RL Training Pipeline
@@ -356,7 +361,7 @@ Projeye **akademik yayın kalitesinde** analiz ve görselleştirme sistemi eklen
 
 ```bash
 # Tüm modelleri karşılaştır ve akademik rapor oluştur
-python generate_academic_report.py
+python scripts/analysis/generate_academic_report.py
 ```
 
 **Oluşturulan Çıktılar:**
@@ -460,17 +465,23 @@ action = [-100, ..., 0, ..., +100]  # Her hisse için
 # Zero: Hold
 ```
 
-### Reward Function (Faz 1 - Basit)
+### Reward Function
 
+`env/reward_functions.py` üzerinden iki reward tipi desteklenir (`reward_type` parametresi):
+
+**1. Simple Reward (opt-in):**
 ```python
 reward = (current_portfolio - previous_portfolio) / previous_portfolio
 ```
 
-**Faz 2'de PSR Reward:**
+**2. PSR Reward (default — Ansari et al. Eq. 1):**
 ```python
-# Ansari et al. Equation (1)
-reward = ΔPortfolio + Sharpe + α * DailyReturn
+# RewardCalculator: ΔPortfolio + Sharpe + DailyReturn
+# w1-w5 ağırlıkları Optuna ile optimize edilmiş
+reward = w1·ΔPortfolio + w2·Sharpe + w3·DailyReturn + w4·DrawdownPenalty + w5·TradeFrequency
 ```
+
+> **Faz 3 düzeltmesi:** `total_trades` sayımındaki bug giderildi ([env/reward_functions.py:119-121](env/reward_functions.py#L119-L121)). Artık `trades_executed` parametresi doğru sayılıyor.
 
 ---
 
@@ -527,8 +538,8 @@ tensorboard --logdir logs/tensorboard/
 | Technical Indicators | MACD, RSI, CCI, ADX, Turbulence | ✅ Aynısı | ✅ |
 | RL Algorithms | A2C, PPO, TD3 | ✅ Aynısı | ✅ |
 | Environment | Custom Gym | Gymnasium | ✅ |
-| Reward | PSR | Basit (portfolio change) | ⚠️ Faz 2 |
-| Fundamental Data | ✅ 11 ratios | ❌ | 🔜 Faz 2 |
+| Reward | PSR | ✅ PSR (Faz 2'de entegre, Faz 3'te bug fix) | ✅ |
+| Fundamental Data | ✅ 11 ratios | ✅ ROE, ROA, D/E, P/E, P/B, profit margin (Faz 2) | ✅ |
 
 ### Faz 2 - Tamamlandı ✅
 
@@ -623,17 +634,25 @@ Bu proje akademik bir çalışmadır. Katkılarınız için:
 
 ## 📚 Dokümantasyon
 
-Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın:
+Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın. Dokümantasyon indeksi: [docs/README.md](docs/README.md).
 
 ### Kullanım Kılavuzları
-- [**Algoritma Karşılaştırması**](docs/guides/ALGORITHMS.md) - PPO, A2C, TD3
-- [**Akademik Analiz**](docs/guides/ACADEMIC_GUIDE.md) - Raporlama ve metrikler
-- [**Hyperparameter Optimization**](docs/guides/API_HYPEROPT_GUIDE.md) - Optuna entegrasyonu
-- [**GPU Performans**](docs/guides/GPU_PERFORMANCE_GUIDE.md) - GPU testleri
+- [**Algoritma Karşılaştırması**](docs/guides/ALGORITHMS.md) — PPO, A2C, TD3, SAC
+- [**Akademik Analiz**](docs/guides/ACADEMIC_GUIDE.md) — Raporlama ve metrikler
+- [**Hyperparameter Optimization**](docs/guides/API_HYPEROPT_GUIDE.md) — Optuna entegrasyonu
+- [**GPU Performans**](docs/guides/GPU_PERFORMANCE_GUIDE.md) — GPU testleri
 
 ### Geliştirme
-- [**Geliştirme Planı**](docs/development/development.md) - Roadmap ve sprint planı
-- [**Hyperopt İyileştirmeleri**](docs/development/HYPEROPT_IMPROVEMENTS_SUMMARY.md)
+- [**Roadmap**](docs/development/roadmap.md) — Proje yol haritası (Faz 1 → Faz 3 tamamlandı)
+- [**Tahmin Sistemi Mimarisi**](docs/development/prediction-system.md) — Ensemble, feature engineering, veri katmanı
+- [**Faz 3 Uygulama Detayları**](docs/development/phase3-implementation.md) — Bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP
+
+### Referans
+- [**Tez (final)**](docs/reference/tez-final.pdf)
+- [**EVDS Python Kılavuzu**](docs/reference/evds-python-kilavuz.pdf) · [**EVDS Web Servis Kılavuzu**](docs/reference/evds-web-servis-kilavuz.pdf)
+
+### Arşiv
+Tamamlanmış faz/sprint dokümanları için: [docs/archive/](docs/archive/)
 
 ---
 
@@ -646,7 +665,9 @@ Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın:
 - [Stable-Baselines3](https://stable-baselines3.readthedocs.io/)
 - [Gymnasium](https://gymnasium.farama.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
-- [Chart.js](https://www.chartjs.org/)
+- [Plotly Dash](https://dash.plotly.com/)
+- [Optuna](https://optuna.org/)
+- [SHAP](https://shap.readthedocs.io/)
 
 ---
 
@@ -669,8 +690,8 @@ MIT License - Eğitim amaçlı kullanım için serbesttir.
 
 ## 📞 İletişim
 
-Sorularınız için: development.md dosyasına bakın veya issue açın.
+Sorularınız için: [docs/development/roadmap.md](docs/development/roadmap.md) dosyasına bakın veya issue açın.
 
 ---
 
-**Son Güncelleme:** Faz 3 Tamamlandı ✅ (2026-03-27)
+**Son Güncelleme:** 2026-04-21 — Dokümantasyon yeniden organize edildi. Faz 3 tamamlandı (2026-03-27).

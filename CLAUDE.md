@@ -142,4 +142,4 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - 3.2: Tahmin kalitesi (ICEEMDAN gürültü filtresi, TATS trend düzeltici, VIX/US10Y/DXY global makro)
   - 3.3: Risk yönetimi (ATR tabanlı pozisyon boyutlandırma, Kelly Criterion)
   - 3.4: Explainability & monitoring (SHAP, Sortino/Calmar/DSR/Turnover metrikleri, /explain API)
-- Detaylar için: `docs/development.md`, `docs/advanced_prediction_system.md`
+- Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`. Dokümantasyon indeksi: `docs/README.md`.
