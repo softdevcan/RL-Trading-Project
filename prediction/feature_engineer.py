@@ -43,6 +43,7 @@ class PredictionFeatureEngineer:
         if horizon not in self.HORIZONS:
             raise ValueError(f"horizon {self.HORIZONS} icinden biri olmali")
         self.horizon = horizon
+        self._active_groups: list = []  # build_features cagrisi sonrasi dolar
 
     def build_features(
         self,
@@ -52,26 +53,37 @@ class PredictionFeatureEngineer:
         fundamental_df: Optional[pd.DataFrame] = None,
         cross_asset_df: Optional[pd.DataFrame] = None,
         use_iceemdan: bool = False,
+        feature_groups: Optional[List[str]] = None,
+        target_type: str = 'log_return',
     ) -> pd.DataFrame:
         """Tek sembol icin ozellik matrisi olustur.
 
         Args:
             df: OHLCV + teknik indikatorlu tek-sembol DataFrame (tarih index)
             symbol: Sembol adi
-            macro_df: Makroekonomik veriler (tarih index, kolonlar: policy_rate, cpi_inflation, vb.)
-            fundamental_df: Fundamental oranlar (sembol index, kolonlar: pe_ratio, pb_ratio, vb.)
-            cross_asset_df: Capraz varlik verileri (tarih index, kolonlar: bist100, usdtry)
+            macro_df: Makroekonomik veriler
+            fundamental_df: Fundamental oranlar
+            cross_asset_df: Capraz varlik verileri
+            use_iceemdan: ICEEMDAN gurultu filtresi uygula (yavas)
+            feature_groups: Aktif grup id listesi (None = registry default'lari)
+            target_type: 'log_return' (onerilen) veya 'abs_price'
 
         Returns:
             Ozellik kolonlari + hedef degisken iceren DataFrame
         """
-        logger.info(f"[{symbol}] Gelismis ozellikler olusturuluyor (horizon={self.horizon})...")
+        from prediction.feature_groups import resolve_groups
+        active = resolve_groups(feature_groups)
+        self._active_groups = active
+
+        logger.info(f"[{symbol}] Gelismis ozellikler olusturuluyor "
+                    f"(horizon={self.horizon}, target={target_type}, "
+                    f"{len(active)} grup)...")
 
         data = df.copy()
         data.index = pd.to_datetime(data.index)
         data = data.sort_index()
 
-        if use_iceemdan and _iceemdan_processor.is_available():
+        if (use_iceemdan or 'iceemdan' in active) and _iceemdan_processor.is_available():
             filtered_close = _iceemdan_processor.filter_noise(data['close'])
             data['close'] = filtered_close
             imf_feats = _iceemdan_processor.extract_imf_features(filtered_close)
@@ -79,32 +91,52 @@ class PredictionFeatureEngineer:
                 data[col] = imf_feats[col]
             logger.info(f"[{symbol}] ICEEMDAN filtreleme uygulandi")
 
-        self._add_return_features(data)
-        self._add_volatility_features(data)
-        self._add_momentum_features(data)
-        self._add_volume_features(data)
-        self._add_calendar_features(data)
-        self._add_technical_features(data)
+        if 'returns'      in active: self._add_return_features(data)
+        if 'volatility'   in active: self._add_volatility_features(data)
+        if 'momentum'     in active: self._add_momentum_features(data)
+        if 'volume'       in active: self._add_volume_features(data)
+        if 'calendar'     in active: self._add_calendar_features(data)
+        if 'technicals'   in active: self._add_technical_features(data)
 
-        if cross_asset_df is not None and not cross_asset_df.empty:
+        # Yeni teknik gruplar
+        if 'fibonacci'      in active: self._add_fibonacci_features(data)
+        if 'donchian'       in active: self._add_donchian_features(data)
+        if 'rolling_zscore' in active: self._add_rolling_zscore_features(data)
+        if 'obv'            in active: self._add_obv_features(data)
+        if 'seasonality'    in active: self._add_seasonality_features(data, symbol)
+
+        if 'cross_asset' in active and cross_asset_df is not None and not cross_asset_df.empty:
             self._add_cross_asset_features(data, cross_asset_df)
 
         if macro_df is not None and not macro_df.empty:
-            self._add_macro_features(data, macro_df)
+            if 'macro_tr'     in active: self._add_macro_features(data, macro_df)
+            if 'macro_global' in active: self._add_global_macro_features(data, macro_df)
 
-        if fundamental_df is not None and not fundamental_df.empty:
+        if 'fundamental' in active and fundamental_df is not None and not fundamental_df.empty:
             self._add_fundamental_features(data, fundamental_df, symbol)
 
-        self._add_market_regime_features(data)
+        if 'market_regime' in active: self._add_market_regime_features(data)
 
         if self.horizon == 'weekly':
             self._add_weekly_features(data)
 
-        self._build_targets(data)
+        self._build_targets(data, target_type=target_type)
 
         initial_len = len(data)
         data = data.dropna(subset=['target_price'])
         feature_cols = self.get_feature_columns(data)
+
+        # Tamamen NaN olan feature kolonlarini tani: dropna tum satirlari uçuruyorsa
+        # kullaniciya hangi kolonun sorumlu oldugunu göster.
+        all_nan_cols = [c for c in feature_cols if data[c].notna().sum() == 0]
+        if all_nan_cols:
+            logger.warning(
+                f"[{symbol}] {len(all_nan_cols)} feature tamamen NaN, atlanıyor: "
+                f"{all_nan_cols[:10]}{'...' if len(all_nan_cols) > 10 else ''}"
+            )
+            feature_cols = [c for c in feature_cols if c not in all_nan_cols]
+            data = data.drop(columns=all_nan_cols)
+
         data = data.dropna(subset=feature_cols)
         logger.info(f"  {initial_len} -> {len(data)} satir ({len(feature_cols)} ozellik)")
 
@@ -345,6 +377,10 @@ class PredictionFeatureEngineer:
             if src_col not in macro.columns:
                 continue
             aligned = macro[src_col].reindex(data.index, method='ffill')
+            # Tamamen NaN ise (kaynak tarih araligiyla cakismiyor) kolonu atla —
+            # aksi halde dropna(subset=feature_cols) tum satirlari uçurur.
+            if aligned.notna().sum() == 0:
+                continue
             data[dst_col] = aligned.shift(1)
 
             if src_col in ('policy_rate', 'cpi_inflation', 'ppi_inflation'):
@@ -440,17 +476,182 @@ class PredictionFeatureEngineer:
     # Hedef Degiskenler
     # ------------------------------------------------------------------
 
-    def _build_targets(self, data: pd.DataFrame):
-        """Fiyat tahmini, getiri tahmini ve yon tahmini hedefleri."""
+    def _build_targets(self, data: pd.DataFrame, target_type: str = 'log_return'):
+        """Fiyat tahmini, getiri tahmini ve yon tahmini hedefleri.
+
+        Args:
+            target_type: 'log_return' (onerilen, stationarity saglar) veya
+                         'abs_price' (mutlak fiyat, eski davranis)
+        """
         close = data['close']
+        shift_n = -1 if self.horizon == 'daily' else -5
 
-        if self.horizon == 'daily':
-            shift_n = -1
+        if target_type == 'log_return':
+            # log(P_{t+H} / P_t) — buyume olceginden bagimsiz, daha stasyoner
+            data['target_price'] = np.log(close.shift(shift_n) / close)
         else:
-            shift_n = -5
+            data['target_price'] = close.shift(shift_n)
 
-        data['target_price'] = close.shift(shift_n)
         data['target_return'] = (close.shift(shift_n) / close - 1)
         data['target_direction'] = (close.shift(shift_n) > close).astype(float)
-
         data['target'] = data['target_price']
+        data['_target_type'] = target_type   # predict asamasinda geri donusum icin
+
+    # ------------------------------------------------------------------
+    # Yeni Feature Metodlari (Faz 4)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _add_fibonacci_features(data: pd.DataFrame):
+        """Fibonacci retracement seviyeleri.
+
+        Son 50 / 100 / 200 gunluk swing high-low'dan %23.6, %38.2, %50, %61.8
+        uzakligi — gunluk fiyatin bu seviyelere goreceli konumu.
+        """
+        close = data['close']
+        for window in (50, 100, 200):
+            rolling_high = close.rolling(window, min_periods=window // 2).max()
+            rolling_low  = close.rolling(window, min_periods=window // 2).min()
+            rng = (rolling_high - rolling_low).replace(0, np.nan)
+            for level, pct in [('236', 0.236), ('382', 0.382),
+                                ('500', 0.500), ('618', 0.618)]:
+                fib_val = rolling_high - rng * pct
+                col = f'fib_{window}_{level}'
+                # Fiyatin fib seviyesinin kac % uzaginda
+                data[col] = ((close - fib_val) / close).shift(1)
+        # Fiyatin son 50g range icindeki normalized konumu (0-1)
+        data['price_position_50'] = (
+            (close - close.rolling(50, min_periods=20).min()) /
+            (close.rolling(50, min_periods=20).max() -
+             close.rolling(50, min_periods=20).min() + 1e-9)
+        ).shift(1)
+
+    @staticmethod
+    def _add_donchian_features(data: pd.DataFrame):
+        """Donchian kanalı ve Chandelier Exit."""
+        close  = data['close']
+        high   = data.get('high', close)
+        low    = data.get('low', close)
+
+        for w in (20, 55):
+            dc_high = high.rolling(w, min_periods=w // 2).max()
+            dc_low  = low.rolling(w,  min_periods=w // 2).min()
+            dc_mid  = (dc_high + dc_low) / 2
+            dc_width = ((dc_high - dc_low) / close.replace(0, np.nan))
+            data[f'dc_{w}_width']    = dc_width.shift(1)
+            data[f'dc_{w}_position'] = (
+                (close - dc_low) / (dc_high - dc_low + 1e-9)
+            ).shift(1)
+            data[f'dc_{w}_mid_dist'] = ((close - dc_mid) / close.replace(0, np.nan)).shift(1)
+
+        # Chandelier Exit (22-gun, 3xATR)
+        atr_22 = (high - low).rolling(22, min_periods=10).mean()
+        chandelier_long  = high.rolling(22, min_periods=10).max() - atr_22 * 3
+        chandelier_short = low.rolling(22,  min_periods=10).min() + atr_22 * 3
+        data['chandelier_long_dist']  = ((close - chandelier_long)  / close.replace(0, np.nan)).shift(1)
+        data['chandelier_short_dist'] = ((close - chandelier_short) / close.replace(0, np.nan)).shift(1)
+
+    @staticmethod
+    def _add_rolling_zscore_features(data: pd.DataFrame):
+        """Rolling Z-score — ortalamaya donus ve momentum sinyali."""
+        close = data['close']
+        log_ret = np.log(close / close.shift(1))
+
+        for w in (20, 60, 252):
+            mu  = log_ret.rolling(w, min_periods=w // 2).mean()
+            std = log_ret.rolling(w, min_periods=w // 2).std()
+            data[f'zscore_ret_{w}'] = ((log_ret - mu) / std.replace(0, np.nan)).shift(1)
+
+        # Fiyatin kendi hareketli ortalamasina gore Z-score
+        for w in (20, 50):
+            mu_p  = close.rolling(w, min_periods=w // 2).mean()
+            std_p = close.rolling(w, min_periods=w // 2).std()
+            data[f'zscore_price_{w}'] = ((close - mu_p) / std_p.replace(0, np.nan)).shift(1)
+
+    @staticmethod
+    def _add_obv_features(data: pd.DataFrame):
+        """On Balance Volume ve Chaikin Money Flow."""
+        close  = data['close']
+        volume = data.get('volume', pd.Series(1, index=data.index))
+
+        # OBV
+        direction = np.sign(close.diff())
+        obv = (direction * volume).fillna(0).cumsum()
+        obv_ma20 = obv.rolling(20, min_periods=5).mean()
+        data['obv_ma_ratio'] = (obv / obv_ma20.replace(0, np.nan)).shift(1)
+        data['obv_slope_5']  = obv.diff(5).shift(1)
+
+        # CMF (Chaikin Money Flow)
+        high = data.get('high', close)
+        low  = data.get('low', close)
+        mfm  = ((close - low) - (high - close)) / (high - low + 1e-9)
+        mfv  = mfm * volume
+        for w in (20, 40):
+            cmf = mfv.rolling(w, min_periods=w // 2).sum() / \
+                  volume.rolling(w, min_periods=w // 2).sum().replace(0, np.nan)
+            data[f'cmf_{w}'] = cmf.shift(1)
+
+    @staticmethod
+    def _add_global_macro_features(data: pd.DataFrame, macro_df: pd.DataFrame):
+        """Global makro feature'lari: petrol, GVZ, reel faiz, altin-gumus orani."""
+        aligned = macro_df.reindex(data.index, method='ffill')
+
+        global_cols = {
+            'oil_wti':      'oil_wti',
+            'gold_vix':     'gold_vix',
+            'silver':       'silver',
+            'us_real_rate': 'us_real_rate',
+        }
+        for src_col, feat_name in global_cols.items():
+            if src_col in aligned.columns:
+                series = aligned[src_col]
+                # Seviye
+                data[feat_name] = series.shift(1)
+                # Normalize degisim (1g, 5g)
+                data[f'{feat_name}_chg1'] = series.pct_change(1).shift(1)
+                data[f'{feat_name}_chg5'] = series.pct_change(5).shift(1)
+
+        # Altin/Gumus orani (silver varsa)
+        if 'silver' in aligned.columns:
+            silver_s = aligned['silver'].replace(0, np.nan)
+            # close = gold price (bu fonksiyon gold dataframe'i uzerinde cagriliyor olabilir)
+            gold_silver_ratio = data['close'] / silver_s
+            data['gold_silver_ratio']      = gold_silver_ratio.shift(1)
+            data['gold_silver_ratio_chg5'] = gold_silver_ratio.pct_change(5).shift(1)
+
+    @staticmethod
+    def _add_seasonality_features(data: pd.DataFrame, symbol: str = ''):
+        """Mevsimsellik ve takvim etki ozellikleri.
+
+        - Hindistan dugun sezonu (Ekim-Kasim) — altin icin pozitif sezonalite
+        - Cin Yeni Yili (Ocak-Subat)
+        - Merkez bankasi alim donemleri (1. ve 3. ceyrek)
+        - Aylik ve ceyrek siklik encoding (sin/cos)
+        """
+        idx = data.index
+        month   = idx.month
+        quarter = idx.quarter
+
+        # Siklik encoding
+        data['month_sin'] = np.sin(2 * np.pi * month / 12)
+        data['month_cos'] = np.cos(2 * np.pi * month / 12)
+        data['quarter_sin'] = np.sin(2 * np.pi * quarter / 4)
+        data['quarter_cos'] = np.cos(2 * np.pi * quarter / 4)
+
+        # Ozel donem bayraklari (gold-specific; diger varliklar icin nortral)
+        data['indian_wedding_season'] = month.isin([10, 11]).astype(float)
+        data['chinese_new_year']      = month.isin([1, 2]).astype(float)
+        data['cb_buying_season']      = quarter.isin([1, 3]).astype(float)
+
+        # Yil ici gun konumu (0-1)
+        data['year_progress'] = (idx.dayofyear / 365.0)
+
+        # Gecikme uygulama (data leakage onleme) — bu ozellikler gelecege bakmiyor
+        # ama tutarlilik icin shift(1) uygulariz
+        for col in ['month_sin', 'month_cos', 'quarter_sin', 'quarter_cos',
+                    'indian_wedding_season', 'chinese_new_year',
+                    'cb_buying_season', 'year_progress']:
+            if col in data.columns:
+                data[col] = data[col].shift(1)
+
+

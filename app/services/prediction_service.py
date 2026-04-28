@@ -14,30 +14,71 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def _fetch_symbol_data(symbol: str, start_date: str) -> pd.DataFrame:
-    """Sembol icin OHLCV + teknik indikator verisi cek."""
-    from data.technical_indicators import add_indicators_to_multi_symbol_df
+def is_gold_symbol(symbol: str) -> bool:
+    """Sembol gold/FX kategorisinde mi?"""
     from data.gold_fetcher import BORSAPY_SYMBOLS, YFINANCE_SYMBOLS, OUTPUT_SYMBOL
-
     _gold_output = set(OUTPUT_SYMBOL.values())
     _gold_raw = set(BORSAPY_SYMBOLS.values()) | set(YFINANCE_SYMBOLS.values())
-    is_gold = symbol in _gold_output or symbol in _gold_raw
+    return symbol in _gold_output or symbol in _gold_raw
 
-    if is_gold:
-        from data.gold_fetcher import GoldFetcher, METRIC_INFO, OUTPUT_SYMBOL as _OUT
 
-        metric = next(
-            (m for m, out in _OUT.items() if out == symbol),
-            None,
+def get_supported_sources(symbol: str) -> List[str]:
+    """Sembol icin desteklenen kaynaklar (yfinance, borsapy)."""
+    from data.gold_fetcher import OUTPUT_SYMBOL, METRIC_INFO
+
+    if not is_gold_symbol(symbol):
+        return ['yfinance']
+
+    metric = next((m for m, out in OUTPUT_SYMBOL.items() if out == symbol), None)
+    if metric is None:
+        return ['yfinance']
+
+    info = METRIC_INFO.get(metric, {})
+    sources = []
+    if info.get('borsapy'):
+        sources.append('borsapy')
+    if info.get('yfinance') in ('direct', 'computed'):
+        sources.append('yfinance')
+    return sources or ['yfinance']
+
+
+def _resolve_source(symbol: str, source: Optional[str]) -> Optional[str]:
+    """Kullanicinin verdigi source'u dogrula; gold dis sembollerde None doner."""
+    if not is_gold_symbol(symbol):
+        return None  # hisse sembolleri icin source ayrimi yok
+    supported = get_supported_sources(symbol)
+    if source is None:
+        return supported[0]  # default: ilk desteklenen
+    if source not in supported:
+        raise ValueError(
+            f"'{symbol}' icin '{source}' kaynagi desteklenmiyor. "
+            f"Desteklenen: {supported}"
         )
+    return source
+
+
+def _fetch_symbol_data(
+    symbol: str,
+    start_date: str,
+    source: Optional[str] = None,
+) -> pd.DataFrame:
+    """Sembol icin OHLCV + teknik indikator verisi cek.
+
+    Args:
+        symbol: Sembol adi
+        start_date: Baslangic tarihi
+        source: Gold/FX icin 'borsapy' veya 'yfinance'. Hisse icin yoksayilir.
+    """
+    from data.technical_indicators import add_indicators_to_multi_symbol_df
+
+    if is_gold_symbol(symbol):
+        from data.gold_fetcher import GoldFetcher, OUTPUT_SYMBOL as _OUT
+
+        resolved = _resolve_source(symbol, source)
+        metric = next((m for m, out in _OUT.items() if out == symbol), None)
         metrics = [metric] if metric else None
 
-        if metric and not METRIC_INFO[metric]["borsapy"]:
-            source = "yfinance"
-        else:
-            source = "borsapy"
-
-        fetcher = GoldFetcher(source=source, metrics=metrics, start_date=start_date)
+        fetcher = GoldFetcher(source=resolved, metrics=metrics, start_date=start_date)
         df_multi = fetcher.fetch_all()
     else:
         from data.data_fetcher import DataFetcher
@@ -134,6 +175,254 @@ def _fetch_cross_asset_data(start_date: str = '2018-01-01') -> Optional[pd.DataF
         return None
 
 
+# ------------------------------------------------------------------
+# Faz 4: Veri tazelik orkestratoru
+# ------------------------------------------------------------------
+# Sabah eğit -> gün sonu tahmin akışı için: tahmin günü T olduğunda
+# eğitim/tahmin verisi T-1 işgünü kapsamalı. Saat-aware (BIST 18:00,
+# US 22:00) hedef tarih hesaplanır; her veri kaynağı incremental
+# güncellenir. Sessiz fail kabul edilmez — durum response'a yansır.
+
+_BIST_CLOSE_HOUR_LOCAL = 18  # BIST kapanış (Europe/Istanbul)
+_US_CLOSE_HOUR_LOCAL = 22    # ABD kapanış (yaklaşık, yerel saat)
+
+
+def _previous_business_day(dt: datetime) -> datetime:
+    """Verilen tarihten onceki ilk isgunu (hafta sonu atla)."""
+    d = dt - timedelta(days=1)
+    while d.weekday() >= 5:  # 5=Cmt, 6=Pzr
+        d -= timedelta(days=1)
+    return d
+
+
+def _resolve_target_date(asset_type: str, now: Optional[datetime] = None) -> datetime:
+    """Saat-aware T-1 isgunu hedefi.
+
+    - stock_bist: yerel saat 18:00+ ise today-1 BDay; oncesinde today-2 BDay
+                  (BIST henuz kapanmadan T-1 garantisi yok)
+    - gold/fx:    24x5 piyasa, today-1 BDay (saatten bagimsiz)
+    - macro:      US ufku icin 22:00+ ise today-1 BDay; oncesinde today-2 BDay
+
+    Hafta sonu cagirildiginda en yakin onceki Cuma'ya duser.
+    """
+    now = now or datetime.now()
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Hafta sonu cagirildiysa en yakin Cuma
+    if today.weekday() >= 5:
+        return _previous_business_day(today + timedelta(days=1))
+
+    if asset_type == 'stock_bist':
+        if now.hour >= _BIST_CLOSE_HOUR_LOCAL:
+            return _previous_business_day(today + timedelta(days=1))  # = today (BDay)
+        return _previous_business_day(today)  # T-1 BDay
+
+    if asset_type == 'macro':
+        if now.hour >= _US_CLOSE_HOUR_LOCAL:
+            return _previous_business_day(today + timedelta(days=1))
+        return _previous_business_day(today)
+
+    # gold, fx: 24x5 piyasa, ama T-1 isgunu hedeflenir
+    # (T gunu icinde piyasa hala acik, kapanis verisi yok)
+    return _previous_business_day(today)
+
+
+def _classify_asset(symbol: str) -> str:
+    """Sembol -> asset_type. ASSET_PROFILES anahtari."""
+    if not is_gold_symbol(symbol):
+        return 'stock_bist'
+    # Gold/FX ayrımı: USDTRY=X, EURTRY=X => fx; geri kalan => gold
+    fx_symbols = {'USDTRY=X', 'EURTRY=X', 'TRY=X'}
+    if symbol in fx_symbols:
+        return 'fx'
+    return 'gold'
+
+
+def _gold_metrics_for(symbol: str) -> Optional[List[str]]:
+    """Verilen output sembol icin GoldFetcher metric listesi."""
+    from data.gold_fetcher import OUTPUT_SYMBOL
+    metric = next((m for m, out in OUTPUT_SYMBOL.items() if out == symbol), None)
+    return [metric] if metric else None
+
+
+def _refresh_stock_bist(symbol: str, source: Optional[str], target: datetime) -> dict:
+    """BIST hisse fiyat verisini incremental guncelle."""
+    from data.data_fetcher import DataFetcher
+    fetcher = DataFetcher()
+    status = fetcher.get_source_status([symbol])
+    last = status.get('last_date')
+    if last and pd.to_datetime(last).date() >= target.date():
+        return {'mode': 'skip', 'last_date': last, 'target': str(target.date())}
+    return fetcher.fetch_incremental([symbol])
+
+
+def _refresh_gold(symbol: str, source: Optional[str], target: datetime) -> dict:
+    """Gold (USD/TRY/ons/gram) fiyat verisini incremental guncelle."""
+    from data.gold_fetcher import GoldFetcher
+    resolved = _resolve_source(symbol, source) or 'yfinance'
+    metrics = _gold_metrics_for(symbol)
+    fetcher = GoldFetcher(source=resolved, metrics=metrics)
+    status = fetcher.get_source_status()
+    last = status.get('last_date')
+    if last and pd.to_datetime(last).date() >= target.date():
+        return {'mode': 'skip', 'last_date': last, 'target': str(target.date()),
+                'source': resolved}
+    return {**fetcher.fetch_incremental(), 'source': resolved}
+
+
+def _refresh_fx(symbol: str, source: Optional[str], target: datetime) -> dict:
+    """FX (USDTRY, EURTRY) — Gold pipeline'ini kullanir (ayni fetcher)."""
+    return _refresh_gold(symbol, source, target)
+
+
+def _refresh_macro(target: datetime) -> dict:
+    """Makro veriyi incremental guncelle (yfinance + EVDS)."""
+    try:
+        from data.macro_fetcher import MacroDataFetcher
+        fetcher = MacroDataFetcher()
+        status = fetcher.get_source_status()
+        last = status.get('last_date')
+        if last and pd.to_datetime(last).date() >= target.date():
+            return {'mode': 'skip', 'last_date': last, 'target': str(target.date())}
+        return fetcher.fetch_incremental()
+    except Exception as exc:
+        logger.warning(f"Makro tazeleme basarisiz: {exc}")
+        return {'mode': 'error', 'error': str(exc)}
+
+
+def _refresh_fundamental(symbol: str, asset_type: str,
+                         max_staleness_days: int = 30) -> dict:
+    """Fundamental verisi (sirket bilanco) — sadece BIST hisse, 30g esigi."""
+    if asset_type != 'stock_bist':
+        return {'mode': 'n/a', 'reason': f'asset_type={asset_type} icin sirket fundamentali yok'}
+    try:
+        from data.fundamental_fetcher import FundamentalDataFetcher
+        fetcher = FundamentalDataFetcher()
+        # Basit yas kontrolu: load deneyip CSV mtime'a bak
+        import os
+        filepath = os.path.join('data', 'fundamental', 'fundamental_data.csv')
+        if os.path.exists(filepath):
+            age_days = (datetime.now()
+                        - datetime.fromtimestamp(os.path.getmtime(filepath))).days
+            if age_days < max_staleness_days:
+                return {'mode': 'skip', 'age_days': age_days}
+        df = fetcher.fetch_fundamental_data([symbol], save=True)
+        return {'mode': 'refresh', 'rows': len(df) if df is not None else 0}
+    except Exception as exc:
+        logger.warning(f"Fundamental tazeleme basarisiz: {exc}")
+        return {'mode': 'error', 'error': str(exc)}
+
+
+# Asset tipi profilleri — yeni varlik tipi eklemek icin tek nokta
+ASSET_PROFILES: Dict[str, Dict[str, Any]] = {
+    'stock_bist': {
+        'price_refresher': _refresh_stock_bist,
+        'needs_company_fundamental': True,
+        'needs_macro_tr': True,
+        'needs_macro_global': True,
+    },
+    'gold': {
+        'price_refresher': _refresh_gold,
+        'needs_company_fundamental': False,  # emtia — sirket fundamentali yok
+        'needs_macro_tr': True,   # GOLD_GRAM_TRY vb. icin TRY bagi
+        'needs_macro_global': True,  # reel faiz, DXY, oil — altin icin kritik
+    },
+    'fx': {
+        'price_refresher': _refresh_fx,
+        'needs_company_fundamental': False,
+        'needs_macro_tr': True,
+        'needs_macro_global': True,
+    },
+}
+
+
+def ensure_fresh_data(
+    symbol: str,
+    source: Optional[str] = None,
+    now: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    """Egitim/tahmin oncesi tum veri kaynaklarini T-1 isgunu hedefine guncelle.
+
+    Bir sembol icin:
+      1. Asset tipini belirle
+      2. Hedef tarih = T-1 BDay (saat-aware)
+      3. Fiyat verisini incremental cek (asset adapter)
+      4. Makro veriyi incremental cek
+      5. Fundamental (varsa) yas kontrolu yap
+
+    Returns:
+        {asset_type, target_date, price, macro, fundamental}
+    """
+    asset_type = _classify_asset(symbol)
+    profile = ASSET_PROFILES.get(asset_type)
+    if profile is None:
+        return {'asset_type': asset_type, 'error': f'unknown asset_type'}
+
+    target = _resolve_target_date(asset_type, now=now)
+    macro_target = _resolve_target_date('macro', now=now)
+    logger.info(f"ensure_fresh_data | symbol={symbol} | asset={asset_type} | target={target.date()}")
+
+    report: Dict[str, Any] = {
+        'symbol': symbol,
+        'source': source,
+        'asset_type': asset_type,
+        'target_date': str(target.date()),
+        'macro_target_date': str(macro_target.date()),
+    }
+
+    try:
+        report['price'] = profile['price_refresher'](symbol, source, target)
+    except Exception as exc:
+        logger.error(f"Fiyat tazeleme basarisiz: {exc}")
+        report['price'] = {'mode': 'error', 'error': str(exc)}
+
+    if profile.get('needs_macro_tr') or profile.get('needs_macro_global'):
+        report['macro'] = _refresh_macro(macro_target)
+    else:
+        report['macro'] = {'mode': 'n/a'}
+
+    report['fundamental'] = _refresh_fundamental(
+        symbol, asset_type,
+    ) if profile.get('needs_company_fundamental') else {'mode': 'n/a'}
+
+    return report
+
+
+# ------------------------------------------------------------------
+# Arka plan egitim durum takibi
+# ------------------------------------------------------------------
+# Basit in-memory store: {(symbol, horizon): {state, started_at, finished_at, error, result}}
+# Tek islemli uvicorn icin yeterli; cok-worker kurulumda Redis/DB'ye tasinmali.
+_training_state: Dict[tuple, Dict[str, Any]] = {}
+
+
+def get_training_state(
+    symbol: Optional[str] = None,
+    horizon: Optional[str] = None,
+    source: Optional[str] = None,
+):
+    """Egitim durumlarini raporla. symbol+horizon (+source) verilirse tek kayit, yoksa tumu."""
+    if symbol and horizon:
+        # source verilmediyse en yenisi (varsa) doner
+        if source is not None:
+            return _training_state.get((symbol, horizon, source))
+        # source belirtilmediyse: o symbol+horizon icin running olan varsa onu, yoksa en son baslayan
+        candidates = [
+            (k, v) for k, v in _training_state.items()
+            if k[0] == symbol and k[1] == horizon
+        ]
+        if not candidates:
+            return None
+        running = [(k, v) for k, v in candidates if v.get('state') == 'running']
+        if running:
+            return running[0][1]
+        return max(candidates, key=lambda kv: kv[1].get('started_at', ''))[1]
+    return [
+        {'symbol': s, 'horizon': h, 'source': src, **info}
+        for (s, h, src), info in _training_state.items()
+    ]
+
+
 class PredictionService:
     """Gelismis tahmin pipeline'i servis katmani.
 
@@ -141,22 +430,70 @@ class PredictionService:
     Eski API'yi koruyarak geriye uyumlu calisir.
     """
 
+    def train_model_async(
+        self, symbol: str, horizon: str = 'daily',
+        start_date: str = '2018-01-01', test_ratio: float = 0.2,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
+    ) -> None:
+        """Arka plan egitimi: BackgroundTasks ile cagrilir, sonucu _training_state'e yazar."""
+        resolved = _resolve_source(symbol, source)
+        key = (symbol, horizon, resolved)
+        _training_state[key] = {
+            'state': 'running',
+            'source': resolved,
+            'started_at': datetime.now().isoformat(),
+            'finished_at': None,
+            'error': None,
+            'result': None,
+        }
+        try:
+            result = self.train_model(
+                symbol, horizon,
+                start_date=start_date, test_ratio=test_ratio,
+                source=resolved,
+                feature_groups=feature_groups,
+                target_type=target_type,
+            )
+            _training_state[key].update({
+                'state': 'completed',
+                'finished_at': datetime.now().isoformat(),
+                'result': result,
+            })
+        except Exception as exc:
+            logger.error(f"[{symbol} {horizon} {resolved}] Arka plan egitimi basarisiz: {exc}", exc_info=True)
+            _training_state[key].update({
+                'state': 'error',
+                'finished_at': datetime.now().isoformat(),
+                'error': str(exc),
+            })
+
     def train_model(
         self, symbol: str, horizon: str = 'daily',
         start_date: str = '2018-01-01', test_ratio: float = 0.2,
         optimize: bool = False, n_hpo_trials: int = 30,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
     ) -> Dict[str, Any]:
         """Sembol icin ensemble modeli egit."""
         from prediction.trainer import WalkForwardTrainer
 
-        logger.info(f"Ensemble egitimi basliyor: {symbol} {horizon}")
+        resolved = _resolve_source(symbol, source)
+        logger.info(f"Ensemble egitimi basliyor: {symbol} {horizon} source={resolved}")
 
-        df = _fetch_symbol_data(symbol, start_date)
+        df = _fetch_symbol_data(symbol, start_date, source=resolved)
         macro_df = _fetch_macro_data(start_date)
         fundamental_df = _fetch_fundamental_data([symbol])
         cross_asset_df = _fetch_cross_asset_data(start_date)
 
-        trainer = WalkForwardTrainer(horizon=horizon)
+        trainer = WalkForwardTrainer(
+            horizon=horizon,
+            source=resolved,
+            feature_groups=feature_groups,
+            target_type=target_type,
+        )
         result = trainer.train_final_models(
             df, symbol,
             test_ratio=test_ratio,
@@ -167,19 +504,20 @@ class PredictionService:
             cross_asset_df=cross_asset_df,
         )
 
-        logger.info(f"  Egitim tamamlandi: {symbol} {horizon}")
+        logger.info(f"  Egitim tamamlandi: {symbol} {horizon} source={resolved}")
 
-        # Geriye uyumluluk: eski API formatinda sonuc dondur
+        suffix = f'__{resolved}' if resolved else ''
         test_metrics = result.get('ensemble_test_metrics', {})
         return {
             'symbol': result.get('symbol', symbol),
+            'source': resolved,
             'horizon': result.get('horizon', horizon),
             'n_train': result.get('n_train', 0),
             'n_test': result.get('n_test', 0),
             'n_features': result.get('n_features', 0),
             'train_metrics': test_metrics,
             'test_metrics': test_metrics,
-            'model_path': f'models/prediction/{symbol}_{horizon}_ensemble',
+            'model_path': f'models/prediction/{symbol}{suffix}_{horizon}_ensemble',
             'trained_at': result.get('trained_at', datetime.now().isoformat()),
             'n_models': result.get('n_models', 0),
             'models_trained': result.get('models_trained', []),
@@ -190,27 +528,59 @@ class PredictionService:
 
     def predict(
         self, symbols: List[str], horizon: str = 'daily',
-        save: bool = True
+        save: bool = True,
+        source: Optional[str] = None,
+        targets: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, Any]]:
-        """Sembol listesi icin tahmin uret ve tracker'a kaydet."""
+        """Sembol listesi icin tahmin uret.
+
+        Args:
+            symbols: Tahmin yapilacak sembol listesi (basit kullanim)
+            horizon: 'daily' veya 'weekly'
+            save: Tracker'a yaz
+            source: Tum sembollerde ayni source kullan (ops.); gold disinda yoksayilir
+            targets: Detayli kullanim — her oge {symbol, source} icerir.
+                     Verilirse symbols+source goz ardi edilir.
+        """
         from prediction.models import PricePredictor
         from prediction.tracker import PredictionTracker
 
-        predictor = PricePredictor(horizon)
         tracker = PredictionTracker()
+
+        # Hedef listesini normalize et
+        if targets:
+            jobs = [{'symbol': t['symbol'], 'source': t.get('source')} for t in targets]
+        else:
+            jobs = [{'symbol': s, 'source': source} for s in symbols]
 
         predictions = []
         today = datetime.now()
-        start = (today - timedelta(days=120)).strftime('%Y-%m-%d')
+        start = (today - timedelta(days=365)).strftime('%Y-%m-%d')
 
-        for symbol in symbols:
+        macro_df = _fetch_macro_data(start)
+        cross_asset_df = _fetch_cross_asset_data(start)
+        fundamental_df = _fetch_fundamental_data([j['symbol'] for j in jobs])
+
+        for job in jobs:
+            symbol = job['symbol']
             try:
+                resolved = _resolve_source(symbol, job.get('source'))
+                predictor = PricePredictor(horizon, source=resolved)
+
                 if not predictor.is_trained(symbol):
-                    logger.warning(f"  {symbol} icin egitilmis model yok, atlaniyor")
+                    logger.warning(
+                        f"  {symbol} (source={resolved}) icin egitilmis model yok, atlaniyor"
+                    )
                     continue
 
-                df = _fetch_symbol_data(symbol, start)
-                pred = predictor.predict_next(df, symbol)
+                df = _fetch_symbol_data(symbol, start, source=resolved)
+                pred = predictor.predict_next(
+                    df, symbol,
+                    macro_df=macro_df,
+                    fundamental_df=fundamental_df,
+                    cross_asset_df=cross_asset_df,
+                )
+                pred['source'] = resolved
                 predictions.append(pred)
 
                 if save:
@@ -226,11 +596,13 @@ class PredictionService:
         start_date: str = '2018-01-01',
         model_types: Optional[List[str]] = None,
         n_splits: int = 5,
+        source: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Walk-forward cross-validation ile model degerlendirme."""
         from prediction.trainer import WalkForwardTrainer
 
-        df = _fetch_symbol_data(symbol, start_date)
+        resolved = _resolve_source(symbol, source)
+        df = _fetch_symbol_data(symbol, start_date, source=resolved)
         macro_df = _fetch_macro_data(start_date)
         fundamental_df = _fetch_fundamental_data([symbol])
         cross_asset_df = _fetch_cross_asset_data(start_date)
@@ -238,6 +610,7 @@ class PredictionService:
         trainer = WalkForwardTrainer(
             horizon=horizon,
             n_splits=n_splits,
+            source=resolved,
         )
         return trainer.cross_validate(
             df, symbol,
@@ -252,13 +625,15 @@ class PredictionService:
         start_date: str = '2018-01-01',
         model_types: Optional[List[str]] = None,
         n_trials: int = 50,
+        source: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Tum modeller icin hiperparametre optimizasyonu."""
         from prediction.hyperopt import PredictionHyperOptimizer
         from prediction.feature_engineer import PredictionFeatureEngineer
         import numpy as np
 
-        df = _fetch_symbol_data(symbol, start_date)
+        resolved = _resolve_source(symbol, source)
+        df = _fetch_symbol_data(symbol, start_date, source=resolved)
         macro_df = _fetch_macro_data(start_date)
         fundamental_df = _fetch_fundamental_data([symbol])
         cross_asset_df = _fetch_cross_asset_data(start_date)

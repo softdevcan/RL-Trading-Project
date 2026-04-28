@@ -202,8 +202,10 @@ def register_callbacks(app):
         for s in studies:
             s_algo = s.get("algorithm", "").upper()
             if s_algo == (algo or "").upper():
-                sid = s.get("id", s.get("study_name", ""))
-                label = f"{s.get('study_name', sid)} (en iyi: {s.get('best_value', 0):.3f})"
+                sid = s.get("study_id") or s.get("study_name", "")
+                best = s.get("best_value")
+                best_txt = f"{best:.3f}" if isinstance(best, (int, float)) else "—"
+                label = f"{s.get('study_name', sid)} (en iyi: {best_txt})"
                 opts.append({"label": label, "value": str(sid)})
         return opts
 
@@ -229,7 +231,7 @@ def register_callbacks(app):
             "initial_balance": float(balance or 100_000),
         }
         if study:
-            payload["hyperopt_study_id"] = study
+            payload["hyperparameter_study"] = study
         result = api.start_training(payload)
         return False, result or {}
 

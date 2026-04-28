@@ -60,10 +60,10 @@ def layout():
                             id="dt-risk-mode",
                             options=[
                                 {"label": "Dusuk Risk", "value": "conservative"},
-                                {"label": "Orta Risk", "value": "balanced"},
+                                {"label": "Orta Risk", "value": "moderate"},
                                 {"label": "Yuksek Risk", "value": "aggressive"},
                             ],
-                            value="balanced",
+                            value="moderate",
                             inline=True,
                             className="mb-3",
                         ),
@@ -212,13 +212,11 @@ def register_callbacks(app):
 
         payload = {
             "model_name": model,
-            "risk_mode": risk or "balanced",
+            "risk_mode": risk or "moderate",
             "date": str(dt) if dt else str(date.today()),
-            "max_shares_per_stock": int(max_shares or 5),
-            "portfolio": {
-                "balance": float(balance or 100_000),
-                "holdings": holdings,
-            },
+            "max_shares_per_trade": int(max_shares or 5),
+            "balance": float(balance or 100_000),
+            "shares": holdings,
         }
 
         result = api.get_daily_decision(payload)
@@ -240,7 +238,10 @@ def register_callbacks(app):
     def apply_decision(n, decision):
         if not n or not decision:
             return [html.Span()]
-        result = api.apply_decision(decision)
+        decision_date = decision.get("date") if isinstance(decision, dict) else None
+        if not decision_date:
+            return [dbc.Alert("Once 'Karar Al' ile bir karar uretilmeli.", color="warning", dismissable=True)]
+        result = api.apply_decision(decision_date)
         if result:
             return [dbc.Alert(
                 [html.I(className="bi bi-check-circle me-2"), "Karar basariyla uygulandı."],

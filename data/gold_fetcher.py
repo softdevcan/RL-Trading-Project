@@ -305,8 +305,52 @@ class GoldFetcher:
         """Bu fetcher için varsayılan dosya yolu."""
         return gold_filepath(self.source, name)
 
+    def _try_load_local(self) -> Optional[pd.DataFrame]:
+        """Yerel CSV'den yukle; gerekli sembolleri ve tarih araligini kapsiyorsa dondur.
+
+        Kapsama yetersizse None doner (cagiran taraf internetten ceker).
+        """
+        filepath = self.default_filepath()
+        if not os.path.exists(filepath):
+            return None
+
+        df = GoldFetcher.load_data(filepath)
+        if df is None or df.empty:
+            return None
+
+        # Gereken sembollerin hepsi var mi?
+        needed_symbols = {OUTPUT_SYMBOL[m] for m in self.metrics if m in OUTPUT_SYMBOL}
+        available = set(df.index.get_level_values("symbol").unique())
+        if not needed_symbols.issubset(available):
+            logger.debug(f"Yerel CSV eksik sembol(ler): {needed_symbols - available}")
+            return None
+
+        # Tarih araligini kontrol et
+        start = pd.to_datetime(self.start_date)
+        end = pd.to_datetime(self.end_date)
+        dates = pd.to_datetime(df.index.get_level_values("date"))
+        if dates.min() > start or dates.max() < (end - pd.Timedelta(days=7)):
+            # 7 gunluk tolerans — hafta sonu/tatil bosluklarini kabul et
+            logger.debug(
+                f"Yerel CSV tarih araligi yetersiz: "
+                f"istenen {start.date()}..{end.date()}, mevcut {dates.min().date()}..{dates.max().date()}"
+            )
+            return None
+
+        # Gereken sembolleri ve tarih araligini filtrele
+        mask = np.asarray((dates >= start) & (dates <= end))
+        filtered = df[mask]
+        filtered = filtered[filtered.index.get_level_values("symbol").isin(needed_symbols)]
+        return filtered
+
     def fetch_all(self, save: bool = False) -> pd.DataFrame:
         """Seçili metriklerin tamamını çek.
+
+        Oncelik sirasi:
+          1. Memory cache (ayni sorgu tekrar)
+          2. Yerel CSV (source bazli dosya) — gerekli metrikleri ve tarih
+             araligini kapsiyorsa kullanilir, internet istegi yapilmaz.
+          3. Uzak kaynak (borsapy/yfinance) — eksik ise buradan cekilir.
 
         Returns:
             Multi-index DataFrame (symbol, date) — DataFetcher ile aynı format
@@ -318,6 +362,14 @@ class GoldFetcher:
         if cache_key in GoldFetcher._cache:
             logger.info("Altın verisi cache'den alınıyor")
             return GoldFetcher._cache[cache_key].copy()
+
+        # Yerel CSV'den yuklemeyi dene — internet olmadiginda veya offline
+        # calismak icin kritik. Gereken metrikler + tarih araligi kapsaniyorsa kullan.
+        local = self._try_load_local()
+        if local is not None:
+            logger.info(f"Yerel CSV kullaniliyor: {self.default_filepath()} ({len(local)} satır)")
+            GoldFetcher._cache[cache_key] = local.copy()
+            return local
 
         pool: Dict[str, pd.DataFrame] = {}   # çekilen veriler (computed metrikler için)
         all_data: Dict[str, pd.DataFrame] = {}

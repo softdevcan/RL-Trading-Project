@@ -44,6 +44,9 @@ class WalkForwardTrainer:
         embargo_days: int = 3,
         select_features: bool = True,
         max_features: Optional[int] = 80,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
     ):
         """
         Args:
@@ -53,8 +56,13 @@ class WalkForwardTrainer:
             embargo_days: Test seti sonrasi gun boşlugu
             select_features: Otomatik ozellik secimi uygula
             max_features: Maksimum ozellik sayisi
+            feature_groups: Aktif feature grup id listesi (None = registry default)
+            target_type: 'log_return' (onerilen) veya 'abs_price'
         """
         self.horizon = horizon
+        self.source = source
+        self.feature_groups = feature_groups
+        self.target_type = target_type
         self.n_splits = n_splits
         self.purge_days = purge_days
         self.embargo_days = embargo_days
@@ -214,10 +222,17 @@ class WalkForwardTrainer:
         if optimize_first:
             self._run_hpo(df, symbol, n_hpo_trials, macro_df, fundamental_df, cross_asset_df)
 
-        ensemble = StackingEnsemble(horizon=self.horizon)
+        # NOTE: test_ratio parametresi StackingEnsemble'in 3-way 60/20/20 split'ine
+        # gecilmesiyle devre disi kaldi; imzada tutuluyor ki upstream callers kirilmasin.
+        _ = test_ratio
+        ensemble = StackingEnsemble(
+            horizon=self.horizon,
+            source=self.source,
+            feature_groups=self.feature_groups,
+            target_type=self.target_type,
+        )
         result = ensemble.train(
             df, symbol,
-            test_ratio=test_ratio,
             macro_df=macro_df,
             fundamental_df=fundamental_df,
             cross_asset_df=cross_asset_df,

@@ -1,0 +1,16 @@
+{
+  "2026-04-28": {
+    "daily": {
+      "predicted_close": 4741.7472,
+      "predicted_direction": "UP",
+      "predicted_change_pct": 0.41,
+      "confidence": 1.0,
+      "current_close": 4722.2998,
+      "source": "yfinance",
+      "made_at": "2026-04-27T17:51:11.474445",
+      "actual_close": null,
+      "error_pct": null,
+      "direction_correct": null
+    }
+  }
+}

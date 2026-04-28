@@ -76,6 +76,7 @@ class TrainingResponse(BaseModel):
 class TrainingStatus(BaseModel):
     """Training status model"""
     is_training: bool
+    state: Literal["idle", "running", "completed", "error"] = "idle"
     current_step: int
     total_steps: int
     progress: float = Field(ge=0, le=1)
@@ -121,6 +122,8 @@ class ModelInfo(BaseModel):
     name: str
     path: str
     created_at: str
+    algorithm: Optional[str] = None
+    phase: Optional[int] = None
     metrics: Dict = {}
 
 

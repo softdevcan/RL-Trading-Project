@@ -32,9 +32,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/trading", tags=["Trading"])
 
 # Global training state — guarded by _training_lock (#23)
+# state semantics: "idle" → never ran / cleared
+#                  "running" → is_training=True
+#                  "completed" → finished OK
+#                  "error" → raised exception (detail in .error)
 _training_lock = asyncio.Lock()
 training_state = {
     "is_training": False,
+    "state": "idle",
     "current_step": 0,
     "total_steps": 0,
     "start_time": None,
@@ -146,6 +151,7 @@ async def start_training(
         # Reset training state inside lock
         training_state = {
             "is_training": True,
+            "state": "running",
             "current_step": 0,
             "total_steps": request.total_timesteps,
             "start_time": datetime.now().isoformat(),
@@ -175,6 +181,7 @@ async def get_training_status():
 
     return TrainingStatus(
         is_training=training_state["is_training"],
+        state=training_state.get("state", "idle"),
         current_step=training_state["current_step"],
         total_steps=training_state["total_steps"],
         progress=progress,
@@ -207,12 +214,29 @@ async def list_models():
                 with open(metrics_file, 'r') as f:
                     metrics = json.load(f)
 
+            # Algorithm/phase precedence: metrics.json → filename prefix
+            algorithm = metrics.get("algorithm")
+            phase = metrics.get("phase")
+            if algorithm is None or phase is None:
+                parts = model_name.split("_")
+                if algorithm is None and parts:
+                    first = parts[0].lower()
+                    if first in {"ppo", "a2c", "td3", "sac"}:
+                        algorithm = first.upper()
+                if phase is None:
+                    for p in parts:
+                        if p.startswith("phase") and p[5:].isdigit():
+                            phase = int(p[5:])
+                            break
+
             models.append(ModelInfo(
                 name=model_name,
                 path=model_path,
                 created_at=datetime.fromtimestamp(
                     os.path.getctime(model_path)
                 ).isoformat(),
+                algorithm=algorithm,
+                phase=phase,
                 metrics=metrics
             ))
 
@@ -1101,12 +1125,14 @@ async def run_training(request: TrainingRequest):
 
         # Update training state
         training_state["is_training"] = False
+        training_state["state"] = "completed"
         training_state["metrics"] = metrics_with_config
         training_state["current_step"] = request.total_timesteps
 
     except Exception as e:
         logger.error(f"Training failed with error: {str(e)}", exc_info=True)
         training_state["is_training"] = False
+        training_state["state"] = "error"
         training_state["error"] = str(e)
         raise
 

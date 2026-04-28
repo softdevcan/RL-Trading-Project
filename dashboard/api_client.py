@@ -99,8 +99,9 @@ def get_daily_decision(payload: Dict) -> Dict:
     return _post("/trading/daily-decision", json=payload) or {}
 
 
-def apply_decision(payload: Dict) -> Dict:
-    return _post("/trading/apply-decision", json=payload) or {}
+def apply_decision(date: str) -> Dict:
+    """Backend bekler: POST /trading/apply-decision?date=YYYY-MM-DD (query param)."""
+    return _post("/trading/apply-decision", params={"date": date}) or {}
 
 
 def get_latest_portfolio() -> Dict:
@@ -159,18 +160,31 @@ def get_prediction_models() -> List[Dict]:
     return []
 
 
-def get_prediction_symbols() -> List[str]:
+def get_prediction_symbols() -> List[Dict]:
+    """Egitilebilir sembolleri ve her sembolun desteklenen kaynaklarini dondur.
+
+    Returns: List[{symbol, name, category, sources}]
+    """
     data = _get("/prediction/symbols")
+    if isinstance(data, dict):
+        return data.get("symbols", [])
     if isinstance(data, list):
         return data
-    if isinstance(data, dict):
-        # Response has 'all' key from TradableSymbolsResponse
-        return data.get("all", data.get("symbols", []))
     return []
 
 
 def train_prediction(payload: Dict) -> Dict:
+    """Arka plan egitimi tetikle; 202 Accepted hemen doner."""
     return _post("/prediction/train", json=payload) or {}
+
+
+def get_prediction_train_status(
+    symbol: str, horizon: str = "daily", source: Optional[str] = None,
+) -> Dict:
+    params: Dict[str, Any] = {"symbol": symbol, "horizon": horizon}
+    if source:
+        params["source"] = source
+    return _get("/prediction/train/status", params=params) or {}
 
 
 def make_prediction(payload: Dict) -> Dict:
@@ -191,6 +205,14 @@ def get_prediction_history(symbol: str) -> Dict:
 
 def get_prediction_chart_data(symbol: str) -> Dict:
     return _get(f"/prediction/chart-data/{symbol}") or {}
+
+
+def get_price_history(symbol: str, source: Optional[str] = None, days: int = 90) -> Dict:
+    """Sembol icin tarihsel fiyat verisi (OHLCV + MA + BB)."""
+    params: Dict = {"symbol": symbol, "days": days}
+    if source:
+        params["source"] = source
+    return _get("/prediction/price-history", params=params) or {}
 
 
 def train_ensemble(payload: Dict) -> Dict:

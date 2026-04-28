@@ -13,7 +13,7 @@ Göstergeler:
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
 import os
@@ -54,6 +54,10 @@ class MacroDataFetcher:
         'vix': '^VIX',          # CBOE Volatility Index (korku endeksi)
         'us10y': '^TNX',        # ABD 10-Yil Hazine Getirisi
         'dxy': 'DX-Y.NYB',     # ABD Dolar Endeksi
+        # Faz 4: Global makro genisleme
+        'oil_wti': 'CL=F',     # Ham petrol (WTI vadeli)
+        'gold_vix': '^GVZ',    # Altin volatilite endeksi
+        'silver': 'SI=F',      # Gumus vadeli (altin/gumus orani icin)
     }
 
     def __init__(self, api_key: Optional[str] = None, start_date: str = "2018-01-01", end_date: Optional[str] = None):
@@ -203,7 +207,25 @@ class MacroDataFetcher:
 
         # DataFrame oluştur
         macro_df = pd.DataFrame(data_dict)
-        
+
+        # Faz 4: Turetilmis global makro sütunlari
+        # Reel faiz = US 10Y nominal getiri - ABD CPI enflasyon (tahmini)
+        # CPI olarak TR enflasyon yerine sabit %3 ABD ortalamasi kullaniriz;
+        # gerçek ABD CPI FRED API'sinden çekilebilir, simdilik yaklaşik.
+        if 'us10y' in macro_df.columns:
+            # ABD CPI yillık ~ long-run ortalama 3%; daha iyi bir kaynaktan beslenebilir
+            us_cpi_approx = 3.0
+            macro_df['us_real_rate'] = macro_df['us10y'] - us_cpi_approx
+            logger.info("  ✓ us_real_rate: us10y - 3.0 (US CPI approx)")
+
+        # Altin/Gumus orani
+        if 'silver' in macro_df.columns:
+            # Altin fiyati cross_asset verisinde degil; makro'da silver var,
+            # gold_silver_ratio = GC/SI. GC makroda yok ama approximation olarak
+            # dxy ile iliski kurabiliriz. Simdilik silver serisini birakalim,
+            # feature_engineer gold/silver oranini hesaplar.
+            pass
+
         # Eksik verileri doldur (Forward fill sonra Backward fill)
         macro_df = macro_df.ffill().bfill()
         
@@ -234,10 +256,110 @@ class MacroDataFetcher:
         filepath = os.path.join(self.data_dir, filename)
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"File not found: {filepath}")
-            
+
         df = pd.read_csv(filepath, index_col=0, parse_dates=True)
         logger.info(f"Loaded macro data: {len(df)} rows")
         return df
+
+    # ------------------------------------------------------------------ #
+    # Faz 4: Incremental veri akisi
+    # ------------------------------------------------------------------ #
+
+    def get_source_status(self, filename: str = 'macro_data.csv') -> dict:
+        """Mevcut makro dosyanin tarih durumunu raporla."""
+        today = datetime.now().date()
+        filepath = os.path.join(self.data_dir, filename)
+
+        if not os.path.exists(filepath):
+            return {'exists': False, 'last_date': None, 'missing_days': None,
+                    'columns': []}
+
+        try:
+            df = self.load_data(filename)
+            idx = pd.to_datetime(df.index)
+            if idx.tz is not None:
+                idx = idx.tz_localize(None)
+            last_date = idx.max().date()
+            missing = sum(
+                1 for i in range(1, (today - last_date).days + 1)
+                if (last_date + timedelta(days=i)).weekday() < 5
+            )
+            return {
+                'exists': True,
+                'last_date': str(last_date),
+                'missing_days': missing,
+                'columns': df.columns.tolist(),
+            }
+        except Exception as exc:
+            return {'exists': True, 'last_date': None, 'missing_days': None,
+                    'error': str(exc), 'columns': []}
+
+    def fetch_incremental(self, filename: str = 'macro_data.csv') -> dict:
+        """Eksik gunleri cek, mevcut makro dosyasina ekle.
+
+        - yfinance kismi: son tarihten bugune incremental
+        - EVDS kismi: aylik veri (CPI/PPI) ucuz, faiz gunluk -> tum aralik
+          tekrar cekilir; sonuc mevcutla birlestirilir.
+        """
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        filepath = os.path.join(self.data_dir, filename)
+
+        existing: Optional[pd.DataFrame] = None
+        if os.path.exists(filepath):
+            try:
+                existing = self.load_data(filename)
+            except Exception as exc:
+                logger.warning(f"Mevcut makro yuklenemedi, tam cekme yapilacak: {exc}")
+
+        if existing is None or existing.empty:
+            logger.info("Mevcut macro_data.csv yok, tam cekme yapiliyor...")
+            df = self.fetch_macro_data(save=True)
+            return {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df),
+                    'last_date': str(df.index.max().date())}
+
+        idx = pd.to_datetime(existing.index)
+        if idx.tz is not None:
+            idx = idx.tz_localize(None)
+            existing.index = idx
+        last_date = idx.max().date()
+        fetch_from = (datetime.combine(last_date, datetime.min.time())
+                      + timedelta(days=1)).strftime('%Y-%m-%d')
+
+        if fetch_from > today_str:
+            logger.info("Macro veri guncel, cekme gerekmez")
+            return {'mode': 'skip', 'new_rows': 0, 'total_rows': len(existing),
+                    'last_date': str(last_date)}
+
+        logger.info(f"Eksik macro verisi cekiliyor: {fetch_from} -> {today_str}")
+        delta_fetcher = MacroDataFetcher(
+            api_key=self.api_key,
+            start_date=fetch_from,
+            end_date=today_str,
+        )
+        try:
+            new_data = delta_fetcher.fetch_macro_data(save=False)
+        except Exception as exc:
+            logger.error(f"Delta makro cekimi basarisiz: {exc}")
+            return {'mode': 'error', 'new_rows': 0, 'total_rows': len(existing),
+                    'last_date': str(last_date), 'error': str(exc)}
+
+        # Birlestir: yeni satirlar onceligi alir
+        combined = pd.concat([existing, new_data])
+        combined = combined[~combined.index.duplicated(keep='last')].sort_index()
+        # Ileri/geri doldurma — yfinance hafta sonu, EVDS aylik
+        combined = combined.ffill().bfill()
+
+        self.save_data(combined, filename)
+        new_rows = len(combined) - len(existing)
+        return {
+            'mode': 'incremental',
+            'new_rows': max(0, new_rows),
+            'total_rows': len(combined),
+            'fetch_from': fetch_from,
+            'fetch_to': today_str,
+            'last_date': str(combined.index.max().date()),
+        }
+
 
 def main():
     """Test script"""

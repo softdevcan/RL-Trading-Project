@@ -39,23 +39,45 @@ class PredictionTracker:
     # Dosya yolları
     # ------------------------------------------------------------------
 
-    def _filepath(self, symbol: str) -> str:
+    def _filepath(self, symbol: str, source: Optional[str] = None) -> str:
         safe = symbol.replace('/', '_').replace('=', '_').replace('.', '_')
-        return os.path.join(self.predictions_dir, f'{safe}_predictions.json')
+        suffix = f'__{source}' if source else ''
+        return os.path.join(self.predictions_dir, f'{safe}{suffix}_predictions.json')
 
     # ------------------------------------------------------------------
     # Okuma / Yazma
     # ------------------------------------------------------------------
 
-    def _load(self, symbol: str) -> Dict:
-        path = self._filepath(symbol)
-        if not os.path.exists(path):
-            return {}
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    def _load(self, symbol: str, source: Optional[str] = None) -> Dict:
+        if source is not None:
+            path = self._filepath(symbol, source)
+            if not os.path.exists(path):
+                return {}
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
 
-    def _save(self, symbol: str, data: Dict):
-        path = self._filepath(symbol)
+        # source verilmediyse: bu sembolun tum kaynak dosyalarini birlestir.
+        # Aynı (date, horizon) carpışırsa source basina ayri tutulamaz; bu durumda
+        # son yazilan kazanir (degerlendirme amacli okumada problem olmaz).
+        safe = symbol.replace('/', '_').replace('=', '_').replace('.', '_')
+        merged: Dict = {}
+        if not os.path.exists(self.predictions_dir):
+            return merged
+        for fname in os.listdir(self.predictions_dir):
+            if not fname.endswith('_predictions.json'):
+                continue
+            stem = fname[:-len('_predictions.json')]
+            # Eslesme: '{safe}' veya '{safe}__{source}'
+            if stem != safe and not stem.startswith(safe + '__'):
+                continue
+            with open(os.path.join(self.predictions_dir, fname), 'r', encoding='utf-8') as f:
+                file_data = json.load(f)
+            for pred_date, horizons in file_data.items():
+                merged.setdefault(pred_date, {}).update(horizons)
+        return merged
+
+    def _save(self, symbol: str, data: Dict, source: Optional[str] = None):
+        path = self._filepath(symbol, source)
         lock = FileLock(path + '.lock')
         with lock:
             with open(path, 'w', encoding='utf-8') as f:
@@ -68,13 +90,14 @@ class PredictionTracker:
     def store_prediction(self, prediction: Dict[str, Any]):
         """Tahmini JSON dosyasına yaz.
 
-        prediction dict formatı: predict_next() çıktısı
+        prediction dict formatı: predict_next() çıktısı (source ops.)
         """
         symbol = prediction['symbol']
+        source = prediction.get('source')
         horizon = prediction['horizon']
         pred_date = prediction['prediction_date']
 
-        data = self._load(symbol)
+        data = self._load(symbol, source)
 
         if pred_date not in data:
             data[pred_date] = {}
@@ -85,14 +108,15 @@ class PredictionTracker:
             'predicted_change_pct': prediction['predicted_change_pct'],
             'confidence': prediction['confidence'],
             'current_close': prediction['current_close'],
+            'source': source,
             'made_at': prediction['made_at'],
             'actual_close': None,
             'error_pct': None,
             'direction_correct': None,
         }
 
-        self._save(symbol, data)
-        logger.info(f"  Tahmin kaydedildi: {symbol} {horizon} {pred_date}")
+        self._save(symbol, data, source)
+        logger.info(f"  Tahmin kaydedildi: {symbol} src={source} {horizon} {pred_date}")
 
     # ------------------------------------------------------------------
     # Değerlendirme
@@ -100,13 +124,13 @@ class PredictionTracker:
 
     def evaluate_prediction(
         self, symbol: str, pred_date: str, actual_close: float,
-        horizon: str = 'daily'
+        horizon: str = 'daily', source: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Belirtilen tarih/sembol tahminine gerçek fiyatı yaz ve hata hesapla."""
-        data = self._load(symbol)
+        data = self._load(symbol, source)
 
         if pred_date not in data or horizon not in data[pred_date]:
-            logger.warning(f"Tahmin bulunamadı: {symbol} {horizon} {pred_date}")
+            logger.warning(f"Tahmin bulunamadı: {symbol} src={source} {horizon} {pred_date}")
             return None
 
         entry = data[pred_date][horizon]
@@ -124,7 +148,7 @@ class PredictionTracker:
         entry['evaluated_at'] = datetime.now().isoformat()
 
         data[pred_date][horizon] = entry
-        self._save(symbol, data)
+        self._save(symbol, data, source)
 
         logger.info(
             f"  {symbol} {horizon} {pred_date}: "
@@ -138,17 +162,20 @@ class PredictionTracker:
         """Gerçek fiyatı bilinmeyen bekleyen tahminleri değerlendir.
 
         Bugünden önceki tarihli tahminler için yfinance'dan fiyat çeker.
+        Her dosya (symbol+source) ayri ayri taranir.
         """
         import yfinance as yf
 
-        if symbols is None:
-            symbols = self.list_symbols()
+        files = self._list_prediction_files()
+        if symbols is not None:
+            sym_set = set(symbols)
+            files = [(s, src, p) for (s, src, p) in files if s in sym_set]
 
         today = datetime.now().date()
         evaluated_count = 0
 
-        for symbol in symbols:
-            data = self._load(symbol)
+        for symbol, source, _path in files:
+            data = self._load(symbol, source)
 
             for pred_date, horizons in data.items():
                 try:
@@ -172,12 +199,12 @@ class PredictionTracker:
                             continue
 
                         actual = float(hist['Close'].iloc[-1])
-                        self.evaluate_prediction(symbol, pred_date, actual, horizon)
+                        self.evaluate_prediction(symbol, pred_date, actual, horizon, source=source)
                         evaluated_count += 1
 
                     except Exception as exc:
                         logger.warning(
-                            f"  {symbol} {horizon} {pred_date} değerlendirilemedi: {exc}"
+                            f"  {symbol} src={source} {horizon} {pred_date} değerlendirilemedi: {exc}"
                         )
 
         logger.info(f"Toplam {evaluated_count} tahmin değerlendirildi")
@@ -224,17 +251,27 @@ class PredictionTracker:
                     summary.append(metrics)
         return summary
 
-    def list_symbols(self) -> List[str]:
-        """Kayıtlı sembol listesi."""
-        symbols = []
+    def _list_prediction_files(self) -> List:
+        """Tum tahmin dosyalarini (symbol, source, path) ucluleri olarak dondur."""
+        if not os.path.exists(self.predictions_dir):
+            return []
+        triples = []
         for fname in os.listdir(self.predictions_dir):
-            if fname.endswith('_predictions.json'):
-                safe = fname[:-len('_predictions.json')]
-                # ters dönüşüm: _IS → .IS, GC_F → GC=F, USDTRY_X → USDTRY=X
-                symbol = safe.replace('_IS', '.IS').replace('GC_F', 'GC=F').replace('USDTRY_X', 'USDTRY=X')
-                symbols.append(symbol)
-        return symbols
+            if not fname.endswith('_predictions.json'):
+                continue
+            stem = fname[:-len('_predictions.json')]
+            if '__' in stem:
+                safe, source = stem.rsplit('__', 1)
+            else:
+                safe, source = stem, None
+            symbol = safe.replace('_IS', '.IS').replace('GC_F', 'GC=F').replace('USDTRY_X', 'USDTRY=X')
+            triples.append((symbol, source, os.path.join(self.predictions_dir, fname)))
+        return triples
 
-    def get_prediction_history(self, symbol: str) -> Dict[str, Any]:
+    def list_symbols(self) -> List[str]:
+        """Kayitli sembol listesi (deduplicated)."""
+        return sorted({s for s, _src, _p in self._list_prediction_files()})
+
+    def get_prediction_history(self, symbol: str, source: Optional[str] = None) -> Dict[str, Any]:
         """Ham tahmin geçmişini döndür."""
-        return self._load(symbol)
+        return self._load(symbol, source)

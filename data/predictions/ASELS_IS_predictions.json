@@ -1,0 +1,16 @@
+{
+  "2026-04-28": {
+    "daily": {
+      "predicted_close": 385.2056,
+      "predicted_direction": "DOWN",
+      "predicted_change_pct": -1.73,
+      "confidence": 1.0,
+      "current_close": 392.0,
+      "source": null,
+      "made_at": "2026-04-27T18:00:23.292222",
+      "actual_close": null,
+      "error_pct": null,
+      "direction_correct": null
+    }
+  }
+}

@@ -5,18 +5,35 @@ Fiyat tahmini ve altın verisi için FastAPI endpoint'leri
 
 import re
 import os
+import math
 import logging
 from datetime import datetime
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from typing import Any, Optional
+import pandas as pd
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, status
 from pydantic import BaseModel
+
+
+def _strip_nonfinite(obj: Any) -> Any:
+    """JSON'a gidecek degerlerden NaN/Inf'i temizle (None'a cevir)."""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: _strip_nonfinite(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_nonfinite(v) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(_strip_nonfinite(v) for v in obj)
+    return obj
 
 from app.schemas.prediction import (
     PredictionTrainRequest, PredictionTrainResponse,
+    PredictionTrainAcceptedResponse, PredictionTrainStatusResponse,
     PredictionRequest, PredictionResponse, SinglePrediction,
     PerformanceMetricsResponse, PredictionHistoryResponse,
     GoldPricesResponse, GoldPriceItem, GoldHistoryResponse,
-    EvaluatePendingResponse, TradableSymbolsResponse,
+    EvaluatePendingResponse, TradableSymbolsResponse, SymbolEntry,
+    TrainedModelEntry, TrainedModelsResponse,
     ModelPerformanceMetrics,
     EnsembleTrainRequest, EnsembleTrainResponse,
     CrossValidateRequest, HyperOptRequest,
@@ -45,42 +62,146 @@ def _validate_horizon(horizon: str) -> str:
     return horizon
 
 
+def _validate_source(symbol: str, source: Optional[str]) -> Optional[str]:
+    """Kaynak gold/FX icin zorunlu degerse de None gelebilir (default'a duser)."""
+    from app.services.prediction_service import _resolve_source
+    try:
+        return _resolve_source(symbol, source)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
 # ------------------------------------------------------------------
 # Model Eğitimi
 # ------------------------------------------------------------------
 
-@router.post("/train", response_model=PredictionTrainResponse)
-async def train_model(request: PredictionTrainRequest):
-    """Sembol icin ensemble modeli egit (XGBoost + LightGBM + CatBoost + BiLSTM + TFT)."""
+@router.post("/train", status_code=status.HTTP_202_ACCEPTED)
+async def train_model(
+    request: PredictionTrainRequest,
+    background_tasks: BackgroundTasks,
+    response: Response,
+    sync: bool = Query(default=False, description="true ise senkron egitim (timeout riski)"),
+):
+    """Ensemble modeli egit (XGBoost + LightGBM + CatBoost + BiLSTM + TFT).
+
+    Varsayilan davranis: egitim arka planda baslatilir, 202 Accepted doner.
+    Ilerleme `/train/status`, sonuclar `/models` endpoint'inden izlenir.
+    sync=true verilirse eski davranis: senkron egitim, 200 + tam sonuc (uzun surebilir).
+    """
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
+    source = _validate_source(symbol, request.source)
 
-    from app.services.prediction_service import PredictionService
+    from app.services.prediction_service import (
+        PredictionService, get_training_state, ensure_fresh_data
+    )
     svc = PredictionService()
 
+    # Faz 4: Egitim oncesi T-1 isgunu hedefli veri tazeleme
     try:
-        result = svc.train_model(
+        freshness = ensure_fresh_data(symbol, source=source)
+        logger.info(f"Veri tazelik raporu: {freshness}")
+    except Exception as exc:
+        logger.warning(f"ensure_fresh_data basarisiz, mevcut veriyle devam: {exc}")
+        freshness = {'error': str(exc)}
+
+    if sync:
+        try:
+            result = svc.train_model(
+                symbol=symbol,
+                horizon=horizon,
+                start_date=request.start_date,
+                test_ratio=request.test_ratio,
+                source=source,
+                feature_groups=(request.feature_config.enabled_groups
+                                if request.feature_config else None),
+                target_type=(request.feature_config.target_type
+                             if request.feature_config else 'log_return'),
+            )
+            response.status_code = status.HTTP_200_OK
+            payload = PredictionTrainResponse(
+                symbol=result['symbol'],
+                horizon=result['horizon'],
+                n_train=result['n_train'],
+                n_test=result['n_test'],
+                n_features=result['n_features'],
+                train_metrics=ModelPerformanceMetrics(**_strip_nonfinite(result['train_metrics'])),
+                test_metrics=ModelPerformanceMetrics(**_strip_nonfinite(result['test_metrics'])),
+                model_path=result['model_path'],
+                trained_at=result['trained_at'],
+                data_freshness=freshness,
+            ).model_dump()
+            return payload
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc))
+        except ValueError as exc:
+            logger.warning(f"Model egitimi basarisiz (veri yetersiz): {exc}")
+            raise HTTPException(status_code=422, detail=str(exc))
+        except Exception as exc:
+            logger.error(f"Model egitimi basarisiz: {exc}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(exc))
+
+    # Arka plan yolu: ayni (symbol, horizon, source) icin egitim zaten calisiyorsa yenisini baslatma
+    current = get_training_state(symbol, horizon, source)
+    if current and current.get('state') == 'running':
+        return PredictionTrainAcceptedResponse(
             symbol=symbol,
             horizon=horizon,
-            start_date=request.start_date,
-            test_ratio=request.test_ratio,
+            source=source,
+            state='running',
+            started_at=current.get('started_at', ''),
+            message="Bu sembol+kaynak icin egitim zaten calisiyor.",
+            data_freshness=freshness,
         )
-        return PredictionTrainResponse(
-            symbol=result['symbol'],
-            horizon=result['horizon'],
-            n_train=result['n_train'],
-            n_test=result['n_test'],
-            n_features=result['n_features'],
-            train_metrics=ModelPerformanceMetrics(**result['train_metrics']),
-            test_metrics=ModelPerformanceMetrics(**result['test_metrics']),
-            model_path=result['model_path'],
-            trained_at=result['trained_at'],
+
+    background_tasks.add_task(
+        svc.train_model_async,
+        symbol=symbol,
+        horizon=horizon,
+        start_date=request.start_date,
+        test_ratio=request.test_ratio,
+        source=source,
+        feature_groups=(request.feature_config.enabled_groups
+                        if request.feature_config else None),
+        target_type=(request.feature_config.target_type
+                     if request.feature_config else 'log_return'),
+    )
+    return PredictionTrainAcceptedResponse(
+        symbol=symbol,
+        horizon=horizon,
+        source=source,
+        state='running',
+        started_at=datetime.now().isoformat(),
+        data_freshness=freshness,
+    )
+
+
+@router.get("/train/status", response_model=PredictionTrainStatusResponse)
+async def get_train_status(
+    symbol: str = Query(..., description="Sembol"),
+    horizon: str = Query(default='daily'),
+    source: Optional[str] = Query(default=None, description="Veri kaynagi"),
+):
+    """Arka plan egitimin durumunu dondur."""
+    symbol = _validate_symbol(symbol)
+    horizon = _validate_horizon(horizon)
+    resolved_source = _validate_source(symbol, source) if source is not None else None
+
+    from app.services.prediction_service import get_training_state
+    info = get_training_state(symbol, horizon, resolved_source)
+    if info is None:
+        return PredictionTrainStatusResponse(
+            symbol=symbol, horizon=horizon, source=resolved_source, state='idle',
         )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except Exception as exc:
-        logger.error(f"Model egitimi basarisiz: {exc}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(exc))
+    return PredictionTrainStatusResponse(
+        symbol=symbol,
+        horizon=horizon,
+        source=info.get('source', resolved_source),
+        state=info['state'],
+        started_at=info.get('started_at'),
+        finished_at=info.get('finished_at'),
+        error=info.get('error'),
+    )
 
 
 @router.post("/train-ensemble", response_model=EnsembleTrainResponse)
@@ -166,15 +287,38 @@ async def optimize_hyperparameters(request: HyperOptRequest):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.get("/models")
+@router.get("/models", response_model=TrainedModelsResponse)
 async def list_models():
-    """Eğitilmiş tahmin modellerini listele."""
+    """Egitilmis tahmin modellerini listele (sembol + source + horizon + metrikler)."""
     from app.services.prediction_service import PredictionService
+    from data.bist30_symbols import STOCK_INFO, ASSET_INFO
+
     svc = PredictionService()
+    info_map = {**STOCK_INFO, **ASSET_INFO}
+
     try:
-        return {"models": svc.list_trained_models()}
+        raw = svc.list_trained_models()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+    models: list = []
+    for m in raw:
+        m = _strip_nonfinite(m)
+        sym = m.get('symbol', '')
+        src = m.get('source')
+        test_metrics = m.get('test_metrics') or {}
+        models.append(TrainedModelEntry(
+            symbol=sym,
+            source=src,
+            horizon=m.get('horizon', 'daily'),
+            name=info_map.get(sym, {}).get('name'),
+            n_features=len(m.get('feature_cols', []) or []),
+            saved_at=m.get('saved_at'),
+            test_mape=test_metrics.get('mape'),
+            test_direction_accuracy=test_metrics.get('direction_accuracy'),
+            models_trained=m.get('models_trained', []) or [],
+        ))
+    return TrainedModelsResponse(models=models)
 
 
 # ------------------------------------------------------------------
@@ -183,17 +327,64 @@ async def list_models():
 
 @router.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
-    """Sembol listesi için günlük/haftalık fiyat tahmini üret."""
-    symbols = [_validate_symbol(s) for s in request.symbols]
+    """Sembol+source listesi icin gunluk/haftalik fiyat tahmini uret."""
     horizon = _validate_horizon(request.horizon)
 
-    from app.services.prediction_service import PredictionService
+    if not request.targets and not request.symbols:
+        raise HTTPException(
+            status_code=400,
+            detail="'targets' veya 'symbols' alanlarindan biri gerekli."
+        )
+
+    targets_norm = None
+    symbols_norm = None
+    if request.targets:
+        targets_norm = []
+        for t in request.targets:
+            sym = _validate_symbol(t.symbol)
+            src = _validate_source(sym, t.source)
+            targets_norm.append({'symbol': sym, 'source': src})
+    else:
+        symbols_norm = [_validate_symbol(s) for s in request.symbols]
+        # Tek bir source butun sembollerde geciyorsa once dogrula
+        if request.source is not None:
+            for s in symbols_norm:
+                _validate_source(s, request.source)
+
+    from app.services.prediction_service import PredictionService, ensure_fresh_data
     svc = PredictionService()
 
+    # Faz 4: Tahmin oncesi T-1 isgunu hedefli veri tazeleme (her sembol icin)
+    freshness_per_symbol = {}
+    target_list = (
+        targets_norm
+        if targets_norm
+        else [{'symbol': s, 'source': request.source} for s in (symbols_norm or [])]
+    )
+    for t in target_list:
+        try:
+            freshness_per_symbol[t['symbol']] = ensure_fresh_data(
+                t['symbol'], source=t.get('source'),
+            )
+        except Exception as exc:
+            logger.warning(f"ensure_fresh_data {t['symbol']}: {exc}")
+            freshness_per_symbol[t['symbol']] = {'error': str(exc)}
+
     try:
-        preds = svc.predict(symbols, horizon, save=True)
+        preds = svc.predict(
+            symbols=symbols_norm or [],
+            horizon=horizon,
+            save=True,
+            source=request.source,
+            targets=targets_norm,
+        )
         items = [SinglePrediction(**p) for p in preds]
-        return PredictionResponse(predictions=items, count=len(items))
+        return PredictionResponse(
+            predictions=items, count=len(items),
+            data_freshness=freshness_per_symbol,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.error(f"Tahmin başarısız: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(exc))
@@ -345,20 +536,112 @@ async def get_gold_history(
 
 @router.get("/symbols", response_model=TradableSymbolsResponse)
 async def get_symbols():
-    """Tahmin yapılabilir tüm sembolleri döndür."""
+    """Egitim icin secilebilecek sembolleri ve her sembolun desteklenen kaynaklarini dondur."""
     from data.bist30_symbols import (
         BIST30_SYMBOLS, GOLD_SYMBOLS, FX_SYMBOLS, SYNTHETIC_SYMBOLS,
-        get_all_tradeable_symbols
+        STOCK_INFO, ASSET_INFO,
     )
+    from app.services.prediction_service import get_supported_sources
+    from prediction.feature_groups import default_groups
 
-    all_syms = list(dict.fromkeys(get_all_tradeable_symbols()))  # deduplicate, preserve order
-    return TradableSymbolsResponse(
-        bist30=BIST30_SYMBOLS,
-        gold=GOLD_SYMBOLS,
-        fx=FX_SYMBOLS,
-        synthetic=SYNTHETIC_SYMBOLS,
-        all=all_syms,
-    )
+    info_map = {**STOCK_INFO, **ASSET_INFO}
+    default_grp = default_groups()
+
+    def _entry(sym: str, category: str) -> SymbolEntry:
+        meta = info_map.get(sym, {})
+        return SymbolEntry(
+            symbol=sym,
+            name=meta.get('name', sym),
+            category=category,
+            sources=get_supported_sources(sym),
+            available_feature_groups=default_grp,
+        )
+
+    entries: list = []
+    seen = set()
+
+    for s in BIST30_SYMBOLS:
+        if s not in seen:
+            entries.append(_entry(s, 'bist30'))
+            seen.add(s)
+    for s in GOLD_SYMBOLS + SYNTHETIC_SYMBOLS:
+        if s not in seen:
+            entries.append(_entry(s, 'gold'))
+            seen.add(s)
+    for s in FX_SYMBOLS:
+        if s not in seen:
+            entries.append(_entry(s, 'fx'))
+            seen.add(s)
+
+    return TradableSymbolsResponse(symbols=entries)
+
+
+# ------------------------------------------------------------------
+# Fiyat Geçmisi (interaktif grafik icin)
+# ------------------------------------------------------------------
+
+@router.get("/price-history")
+async def get_price_history(
+    symbol: str = Query(..., description="Sembol (ör: GC=F, GOLD_GRAM_TRY, AKBNK.IS)"),
+    source: Optional[str] = Query(default=None, description="Veri kaynagi"),
+    days: int = Query(default=90, ge=10, le=1825, description="Son kac gun"),
+):
+    """Sembol icin tarihsel fiyat verisi (OHLCV + MA20/MA50 + BB) dondur.
+
+    Tracker'a bagimli olmayan dogrudan veri okuma endpoint'i.
+    Dashboard interaktif grafigi bu endpoint'i kullanir.
+    """
+    from app.services.prediction_service import _fetch_symbol_data, _resolve_source
+    import math
+    from datetime import datetime, timedelta
+
+    try:
+        resolved = _resolve_source(symbol, source)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    start_date = (datetime.now() - timedelta(days=days + 30)).strftime('%Y-%m-%d')
+
+    try:
+        df = _fetch_symbol_data(symbol, start_date=start_date, source=resolved)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Veri cekilemedi: {exc}")
+
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail=f"{symbol} icin veri bulunamadi")
+
+    df = df.tail(days)
+
+    close = df['close']
+    ma20 = close.rolling(20, min_periods=5).mean()
+    ma50 = close.rolling(50, min_periods=10).mean()
+
+    # Bollinger Bands (20g, 2 std)
+    std20 = close.rolling(20, min_periods=5).std()
+    bb_upper = (ma20 + 2 * std20)
+    bb_lower = (ma20 - 2 * std20)
+
+    def _safe(v):
+        if v is None or (isinstance(v, float) and math.isnan(v)):
+            return None
+        return round(float(v), 4)
+
+    dates = [str(d)[:10] for d in df.index]
+    result = {
+        "symbol": symbol,
+        "source": resolved,
+        "dates": dates,
+        "open":     [_safe(v) for v in df.get('open', close).values],
+        "high":     [_safe(v) for v in df.get('high', close).values],
+        "low":      [_safe(v) for v in df.get('low', close).values],
+        "close":    [_safe(v) for v in close.values],
+        "volume":   [_safe(v) for v in df.get('volume', pd.Series(index=df.index)).values],
+        "ma20":     [_safe(v) for v in ma20.values],
+        "ma50":     [_safe(v) for v in ma50.values],
+        "bb_upper": [_safe(v) for v in bb_upper.values],
+        "bb_lower": [_safe(v) for v in bb_lower.values],
+    }
+    return result
 
 
 # ------------------------------------------------------------------
@@ -371,6 +654,7 @@ async def explain_prediction(
     horizon: str = Query(default='daily'),
     model_type: str = Query(default='xgboost', description="xgboost, lightgbm, catboost"),
     n_background: int = Query(default=100, ge=10, le=500),
+    source: Optional[str] = Query(default=None, description="Veri kaynagi (gold/FX icin)"),
 ):
     """Sembol tahmini icin SHAP feature importance aciklamasi uret.
 
@@ -385,28 +669,31 @@ async def explain_prediction(
     """
     symbol = _validate_symbol(symbol)
     horizon = _validate_horizon(horizon)
+    resolved_source = _validate_source(symbol, source)
 
     from prediction.explainability import ModelExplainer
     from prediction.models.ensemble import StackingEnsemble
-    from app.services.prediction_service import PredictionService
+    from app.services.prediction_service import _fetch_symbol_data
 
     explainer = ModelExplainer(n_background=n_background)
 
     if not explainer.is_available():
         return {
             'symbol': symbol,
+            'source': resolved_source,
             'model_type': model_type,
             'shap_available': False,
             'message': "shap paketi kurulu degil. 'pip install shap' ile kurun.",
         }
 
     try:
-        svc = PredictionService()
-        df = svc._fetch_data(symbol)
+        from datetime import timedelta as _td
+        start = (datetime.now() - _td(days=365)).strftime('%Y-%m-%d')
+        df = _fetch_symbol_data(symbol, start, source=resolved_source)
         if df is None or df.empty:
             raise HTTPException(status_code=404, detail=f"Veri bulunamadi: {symbol}")
 
-        ensemble = StackingEnsemble(horizon=horizon)
+        ensemble = StackingEnsemble(horizon=horizon, source=resolved_source)
         ensemble.load(symbol)
 
         if model_type not in ensemble.base_models:
@@ -435,6 +722,7 @@ async def explain_prediction(
 
         return {
             'symbol': symbol,
+            'source': resolved_source,
             'model_type': model_type,
             'horizon': horizon,
             'shap_available': True,
