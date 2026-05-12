@@ -52,7 +52,7 @@ def layout():
                         html.Label("Model", className="section-title"),
                         dcc.Dropdown(id="dt-model-select", options=[], value=None,
                                      placeholder="Model sec...", clearable=False,
-                                     style={"marginBottom": "16px"}),
+                                     style={"marginBottom": "16px", "color": CARD}),
 
                         # Risk mode
                         html.Label("Risk Modu", className="section-title"),
@@ -103,6 +103,7 @@ def layout():
                                         options=[{"label": s, "value": s} for s in BIST30_SYMBOLS],
                                         value=DEFAULT_SYMBOLS[i] if i < len(DEFAULT_SYMBOLS) else None,
                                         clearable=True,
+                                        style={"color": CARD},
                                     ), width=7),
                                     dbc.Col(dbc.Input(id=f"dt-qty-{i}", type="number", value=0, min=0,
                                                       placeholder="Adet"), width=5),

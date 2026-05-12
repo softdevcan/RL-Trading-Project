@@ -4,7 +4,7 @@ Pydantic models for API request/response validation
 """
 
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, List, Literal
+from typing import Any, Dict, Optional, List, Literal
 from datetime import datetime
 
 
@@ -245,3 +245,9 @@ class PortfolioHistoryResponse(BaseModel):
     portfolio_values: List[float]
     daily_returns: List[float]
     balances: List[float]
+
+
+class ModelComparisonResponse(BaseModel):
+    """Akademik analiz: model karşılaştırma sonuçları."""
+    models: Dict[str, Any]
+    count: int

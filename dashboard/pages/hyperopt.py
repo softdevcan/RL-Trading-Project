@@ -13,6 +13,7 @@ import json
 from datetime import date, timedelta
 
 from dash import html, dcc
+from dash import ALL as _ALL
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
@@ -22,9 +23,36 @@ from dashboard.theme import (
 )
 import dashboard.api_client as api
 
-ALGORITHMS = ["PPO", "A2C", "SAC", "TD3"]
-PHASES = [1, 2]
-REWARD_TYPES = ["sharpe", "sortino", "total_return", "risk_adjusted"]
+# Backend /config/* ulasilamadiginda kullanilan emniyet listeleri.
+_FALLBACK_ALGORITHMS = [
+    {"value": "ppo", "label": "PPO"},
+    {"value": "a2c", "label": "A2C"},
+    {"value": "td3", "label": "TD3"},
+    {"value": "sac", "label": "SAC"},
+]
+_FALLBACK_PHASES = [
+    {"value": 1, "label": "Faz 1"},
+    {"value": 2, "label": "Faz 2"},
+]
+_FALLBACK_REWARD_TYPES = [
+    {"value": "psr", "label": "PSR"},
+    {"value": "simple", "label": "Simple"},
+]
+
+
+def _algo_options():
+    items = api.get_config_algorithms() or _FALLBACK_ALGORITHMS
+    return [{"label": it.get("label", it.get("value")), "value": it.get("value")} for it in items]
+
+
+def _phase_options():
+    items = api.get_config_phases() or _FALLBACK_PHASES
+    return [{"label": it.get("label", f"Faz {it.get('value')}"), "value": it.get("value")} for it in items]
+
+
+def _reward_options():
+    items = api.get_config_reward_types() or _FALLBACK_REWARD_TYPES
+    return [{"label": it.get("label", it.get("value", "").upper()), "value": it.get("value")} for it in items]
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -50,24 +78,24 @@ def layout():
                         html.Label("Algoritma", className="section-title"),
                         dcc.Dropdown(
                             id="hyperopt-algo",
-                            options=[{"label": a, "value": a} for a in ALGORITHMS],
-                            value="PPO", clearable=False,
-                            style={"marginBottom": "16px"},
+                            options=_algo_options(),
+                            value="ppo", clearable=False,
+                            style={"marginBottom": "16px", "color": CARD},
                         ),
                         # Phase
                         html.Label("Faz", className="section-title"),
                         dbc.RadioItems(
                             id="hyperopt-phase",
-                            options=[{"label": f"Faz {p}", "value": p} for p in PHASES],
+                            options=_phase_options(),
                             value=1, inline=True, className="mb-3",
                         ),
                         # Reward type
-                        html.Label("Odul Tipi", className="section-title"),
+                        html.Label("Ödül Tipi", className="section-title"),
                         dcc.Dropdown(
                             id="hyperopt-reward",
-                            options=[{"label": r.replace("_", " ").title(), "value": r} for r in REWARD_TYPES],
-                            value="sharpe", clearable=False,
-                            style={"marginBottom": "16px"},
+                            options=_reward_options(),
+                            value="psr", clearable=False,
+                            style={"marginBottom": "16px", "color": CARD},
                         ),
                         # n_trials
                         html.Label("Deneme Sayisi (n_trials)", className="section-title"),
@@ -241,10 +269,6 @@ def register_callbacks(app):
     def auto_stop_poll(n):
         # Stop after 100 polls (5 minutes)
         return (n or 0) >= 100
-
-
-# Needed for pattern-matching callbacks
-from dash import ALL as _ALL
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

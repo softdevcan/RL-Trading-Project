@@ -14,8 +14,28 @@ import dash_bootstrap_components as dbc
 from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, ORANGE, RED, YELLOW, empty_figure
 import dashboard.api_client as api
 
-ALGORITHMS = ["PPO", "A2C", "SAC", "TD3"]
-PHASES = [1, 2]
+# Backend /config/* endpoint'leri ulasilamadiginda kullanilan emniyet listeleri.
+# Normalde layout() acilisi /config/algorithms ve /config/phases'ten dinamik yukler.
+_FALLBACK_ALGORITHMS = [
+    {"value": "ppo", "label": "PPO"},
+    {"value": "a2c", "label": "A2C"},
+    {"value": "td3", "label": "TD3"},
+    {"value": "sac", "label": "SAC"},
+]
+_FALLBACK_PHASES = [
+    {"value": 1, "label": "Faz 1"},
+    {"value": 2, "label": "Faz 2"},
+]
+
+
+def _algo_options():
+    items = api.get_config_algorithms() or _FALLBACK_ALGORITHMS
+    return [{"label": it.get("label", it.get("value")), "value": it.get("value")} for it in items]
+
+
+def _phase_options():
+    items = api.get_config_phases() or _FALLBACK_PHASES
+    return [{"label": it.get("label", f"Faz {it.get('value')}"), "value": it.get("value")} for it in items]
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -40,16 +60,16 @@ def layout():
                         html.Label("Algoritma", className="section-title"),
                         dcc.Dropdown(
                             id="training-algo",
-                            options=[{"label": a, "value": a} for a in ALGORITHMS],
-                            value="PPO",
+                            options=_algo_options(),
+                            value="ppo",
                             clearable=False,
-                            style={"marginBottom": "16px"},
+                            style={"marginBottom": "16px", "color": CARD},
                         ),
                         # Phase
                         html.Label("Faz", className="section-title"),
                         dbc.RadioItems(
                             id="training-phase",
-                            options=[{"label": f"Faz {p}", "value": p} for p in PHASES],
+                            options=_phase_options(),
                             value=1,
                             inline=True,
                             className="mb-3",
@@ -82,7 +102,7 @@ def layout():
                             value="",
                             clearable=False,
                             placeholder="Calisma sec (opsiyonel)...",
-                            style={"marginBottom": "24px"},
+                            style={"marginBottom": "24px", "color": CARD},
                         ),
                         # Start button
                         dbc.Button(

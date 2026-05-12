@@ -41,6 +41,8 @@ Proje mimarisi ve roadmap:
 Tez kapsamını, akademik konumu ve süreç planını içeren dokümanlar:
 
 - [**vision-and-scope.md**](thesis/vision-and-scope.md) — Tez vizyonu, literatür konumu, tasarım seçenekleri değerlendirmesi, kapsam (in/out), başarı kriterleri, milestone haritası ve makale hedefleri
+- [**seminar-overview.md**](thesis/seminar-overview.md) — Danışman görüşmesi / seminer için proje tanıtım belgesi (Faz 1-3 özeti + tez vizyonu + tartışma noktaları)
+- [**seminar-presentation.md**](thesis/seminar-presentation.md) — 10 slaytlık seminer sunumu içeriği (her slayt: başlık + maddeler + konuşma metni + görsel önerisi; Notebook LM için)
 
 ---
 

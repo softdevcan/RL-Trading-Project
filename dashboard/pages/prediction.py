@@ -105,13 +105,13 @@ def _train_tab():
                                 {"label": "Doviz",             "value": "fx"},
                             ],
                             value="gold", clearable=False,
-                            style={"marginBottom": "12px"},
+                            style={"marginBottom": "12px", "color": CARD},
                         ),
 
                         html.Label("Sembol", className="section-title"),
                         dcc.Dropdown(id="train-symbol", options=[], value=None,
                                      placeholder="Sembol sec...", clearable=False,
-                                     style={"marginBottom": "12px"}),
+                                     style={"marginBottom": "12px", "color": CARD}),
 
                         html.Div(id="train-source-wrapper", children=[
                             html.Label("Veri Kaynagi", className="section-title"),
@@ -133,7 +133,7 @@ def _train_tab():
                         dcc.Dropdown(
                             id="train-horizon", options=HORIZONS,
                             value="daily", clearable=False,
-                            style={"marginBottom": "20px"},
+                            style={"marginBottom": "20px", "color": CARD},
                         ),
 
                         dbc.Button(
@@ -292,7 +292,7 @@ def _predict_tab():
                         dcc.Dropdown(
                             id="predict-model", options=[], value=None,
                             placeholder="Egitilmis bir model sec...",
-                            clearable=False, style={"marginBottom": "16px"},
+                            clearable=False, style={"marginBottom": "16px", "color": CARD},
                         ),
                         html.Small(
                             "Yalnizca egitilmis modeller listelenir. "

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.core.config import get_settings
-from app.api.routes import health, items, trading, hyperopt, prediction
+from app.api.routes import health, items, trading, hyperopt, prediction, config
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -48,6 +48,7 @@ app.include_router(items.router)
 app.include_router(trading.router, prefix="/api")
 app.include_router(hyperopt.router, prefix="/api")
 app.include_router(prediction.router, prefix="/api")
+app.include_router(config.router, prefix="/api")
 
 # Serve static files (legacy UI kept as reference)
 if not os.path.exists("static"):

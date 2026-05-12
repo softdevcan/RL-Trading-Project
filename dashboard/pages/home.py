@@ -8,10 +8,14 @@ API endpoints used:
   GET /api/trading/portfolio-history
 """
 
+import logging
+
 from dash import html, dcc
 from dash import Input, Output
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
+
+_log = logging.getLogger(__name__)
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER,
@@ -157,9 +161,13 @@ def register_callbacks(app):
         # ── Prediction models list ──────────────────────────────────────────
         try:
             pred_models = api.get_prediction_models() or []
-        except Exception:
-            pred_models = []
-        pred_models_list = _build_pred_models_list(pred_models)
+            pred_models_list = _build_pred_models_list(pred_models)
+        except Exception as exc:
+            _log.warning("get_prediction_models failed: %s", exc)
+            pred_models_list = dbc.Alert(
+                "Tahmin modelleri yuklenemedi (backend ulasilamiyor olabilir).",
+                color="warning", dismissable=True, className="mb-0",
+            )
 
         return (
             metric_return, metric_sharpe, metric_drawdown,

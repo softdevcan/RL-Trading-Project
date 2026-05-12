@@ -4,13 +4,14 @@ FastAPI endpoints for RL trading system
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Body
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 import asyncio
 import glob
 import os
 import re
 import json
+import time
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -20,7 +21,8 @@ from app.schemas.trading import (
     TrainingRequest, TrainingStatus, ModelMetrics,
     ModelInfo, TrainingResponse,
     DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
-    PortfolioSnapshot, PortfolioHistoryResponse
+    PortfolioSnapshot, PortfolioHistoryResponse,
+    ModelComparisonResponse
 )
 from app.core.config import get_settings
 
@@ -659,6 +661,11 @@ async def update_data(request: DataUpdateRequest):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+# /data/earliest icin in-memory TTL cache (kaynak basina, 24h)
+_EARLIEST_CACHE: Dict[str, Dict[str, Any]] = {}
+_EARLIEST_TTL_SEC = 24 * 60 * 60
+
+
 @router.get("/data/earliest")
 def get_earliest_date(source: str = "borsapy"):
     """
@@ -677,6 +684,11 @@ def get_earliest_date(source: str = "borsapy"):
         }
       }
     """
+    # Cache hit: TTL icinde olan kayitlari direkt dondur
+    cached = _EARLIEST_CACHE.get(source)
+    if cached and (time.time() - cached["ts"]) < _EARLIEST_TTL_SEC:
+        return cached["payload"]
+
     per_metric: Dict[str, str] = {}
 
     try:
@@ -731,11 +743,14 @@ def get_earliest_date(source: str = "borsapy"):
         valid_dates = [v for v in per_metric.values() if not v.startswith("hata")]
         earliest = min(valid_dates) if valid_dates else None
 
-        return {
+        payload = {
             "source":     source,
             "earliest":   earliest,
             "per_metric": per_metric,
         }
+        # Cache'e yaz (sadece basarili sonuclar — hata-only durumda da yazariz, TTL sonrasi yeniden dener)
+        _EARLIEST_CACHE[source] = {"ts": time.time(), "payload": payload}
+        return payload
 
     except HTTPException:
         raise
@@ -1462,7 +1477,7 @@ async def get_latest_portfolio():
 
 # ==================== ACADEMIC ANALYSIS ENDPOINTS ====================
 
-@router.get("/analysis/model-comparison")
+@router.get("/analysis/model-comparison", response_model=ModelComparisonResponse)
 async def get_model_comparison():
     """
     Get comprehensive model comparison for academic analysis

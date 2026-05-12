@@ -113,7 +113,7 @@ def get_portfolio_history() -> Dict:
 
 
 def generate_report() -> Dict:
-    return _get("/trading/analysis/generate-report") or {}
+    return _post("/trading/analysis/generate-report", json={}) or {}
 
 
 def get_model_comparison() -> Dict:
@@ -122,6 +122,27 @@ def get_model_comparison() -> Dict:
 
 def get_best_models() -> Dict:
     return _get("/trading/analysis/best-models") or {}
+
+
+# ── Config ─────────────────────────────────────────────────────────────────
+
+def get_config_algorithms() -> List[Dict]:
+    data = _get("/config/algorithms") or {}
+    return data.get("algorithms", [])
+
+
+def get_config_phases() -> List[Dict]:
+    data = _get("/config/phases") or {}
+    return data.get("phases", [])
+
+
+def get_config_reward_types() -> List[Dict]:
+    data = _get("/config/reward-types") or {}
+    return data.get("reward_types", [])
+
+
+def get_config_feature_groups() -> Dict:
+    return _get("/config/feature-groups") or {}
 
 
 # ── Hyperopt ───────────────────────────────────────────────────────────────
