@@ -129,6 +129,67 @@ async def get_hyperparameter_studies(algorithm: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _check_training_data_freshness(phase: int, stale_threshold: int = 10) -> None:
+    """
+    Pre-flight check: refuse to start training when the underlying data is
+    missing or badly stale. Without this guard the trainer happily produces a
+    flat-equity model on empty/old data and the user only finds out an hour
+    later.
+
+    Raises HTTPException(400) when the situation looks unrecoverable.
+    """
+    # BIST data must exist and be reasonably fresh.
+    bist_file = os.path.join(_settings.BIST_DIR, 'raw_stock_data.csv')
+    if not os.path.exists(bist_file):
+        raise HTTPException(
+            status_code=400,
+            detail="BIST hisse verisi yok. Önce 'Veri' sayfasından güncelleyin."
+        )
+    try:
+        from data.data_fetcher import DataFetcher
+        fetcher = DataFetcher()
+        df = fetcher.load_data('raw_stock_data.csv')
+        dates = pd.to_datetime(df.index.get_level_values('date'))
+        if dates.tz is not None:
+            dates = dates.tz_localize(None)
+        last_date_str = dates.max().strftime('%Y-%m-%d')
+        missing = _count_missing_trading_days(last_date_str)
+        if missing > stale_threshold:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"BIST verisi bayat: son tarih {last_date_str}, "
+                    f"{missing} iş günü eksik. 'Veri' sayfasından güncelleyin."
+                )
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:  # corrupt CSV, unreadable, etc.
+        raise HTTPException(
+            status_code=400,
+            detail=f"BIST verisi okunamadı: {exc}"
+        )
+
+    # Phase 2 additionally needs fundamental + macro CSVs.
+    if phase == 2:
+        fund_file = os.path.join(_settings.FUNDAMENTAL_DIR, 'fundamental_data.csv')
+        macro_file = os.path.join(_settings.MACRO_DIR, 'macro_data.csv')
+        missing_sources = []
+        if not os.path.exists(fund_file):
+            missing_sources.append('fundamental_data.csv')
+        if not os.path.exists(macro_file):
+            missing_sources.append('macro_data.csv')
+        if missing_sources:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Faz 2 için eksik veri: "
+                    + ", ".join(missing_sources)
+                    + ". 'Veri' sayfasından güncelleyin."
+                )
+            )
+
+
 @router.post("/train", response_model=TrainingResponse)
 async def start_training(
     request: TrainingRequest,
@@ -142,6 +203,9 @@ async def start_training(
         background_tasks: FastAPI background tasks
     """
     global training_state
+
+    # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
+    _check_training_data_freshness(request.phase)
 
     async with _training_lock:  # (#23) prevent race between concurrent requests
         if training_state["is_training"]:

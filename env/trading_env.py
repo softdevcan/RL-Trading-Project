@@ -329,6 +329,16 @@ class TradingEnv(gym.Env):
             else:
                 reward, reward_components = 0.0, {}
 
+        # Reward sanity check — the reward calculators already clip and guard,
+        # but assert here so any future regression that emits NaN/Inf surfaces
+        # immediately rather than silently diverging SB3 training.
+        if not np.isfinite(reward):
+            logger.error(
+                f"Non-finite reward at step {self.current_step}: {reward} "
+                f"(components={reward_components})"
+            )
+            reward = 0.0
+
         # Episode sonu kontrolü
         terminated = self.current_step >= self.frame_bound[1]
         truncated = False

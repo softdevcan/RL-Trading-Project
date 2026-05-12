@@ -22,6 +22,16 @@
 
 **Başlamadan önce teyit edilecek açık soru:** Demo daily-decision/portföy sayfasını içeriyor mu, yoksa sadece RL eğitimi + metrikler mi? Daily-decision dahilse, `build_live_state` (`app/services/daily_trading.py`) bugünün yfinance verisine karşı temiz çalışıyor mu da doğrula — sessizce yanlış tarihe fallback yapabilir.
 
+### Uygulama durumu (2026-05-12 — bu turda yapıldı)
+
+§0'daki 1–4. maddeler tamamlandı:
+- **Reward NaN/Inf koruması** — `env/reward_functions.py`: DSR `sqrt(max(var,1e-9))` + DSR non-finite ise 0; `calculate_psr_reward` ve `SimpleRewardCalculator.calculate_reward` final reward'da non-finite guard + `clip(-100,100)`. `env/trading_env.py` `step()`: reward non-finite ise error log + 0.0.
+- **DSR ölçeği clamp'lendi** — `tanh(dsr/2)·100` → `tanh(dsr/2)` (~±1), `portfolio_return` ile aynı büyüklükte; DSR artık reward'ı domine etmiyor.
+- **`/train` veri-tazeliği ön kontrolü** — `app/api/routes/trading.py` → `_check_training_data_freshness()`: BIST CSV yok/okunamıyor/>10 iş günü bayat ise `400`; Faz 2 için `fundamental_data.csv` + `macro_data.csv` varlık kontrolü. `start_training` başında çağrılıyor.
+- **Smoke-test** — `test_env.py` ✅, `test_ppo.py` ✅ (Sharpe 2.45, %124 test getirisi, NaN reward yok), `test_psr_integration.py` ✅. `python run_server.py` + `tests/test_smoke.py` → **17/17 PASS**. Tüm dashboard sayfaları (data/training/models/daily-trading/prediction) HTTP 200. `/train` ön kontrolü bayat veriyi (son tarih 2023-12-29) doğru reddetti — UI'dan kısa eğitim koşumu için **önce 'Veri' sayfasından güncelleme gerekir**.
+
+**Smoke-test sırasında bulunan, kapsam-dışı pre-existing breakage (kısmen ele alındı):** `prediction/models/` Python paketi (`PricePredictor`, `StackingEnsemble`, `MODEL_REGISTRY`, model sınıfları) bu repo kopyasında **yok**. Commit `25518b6` eski tek-dosya `prediction/models.py`'ı sildi ve `prediction/__init__.py` + `trainer.py` + `hyperopt.py` + `prediction_service.py` + `routes/prediction.py`'ı yeni `prediction/models/` paketini import edecek şekilde bağladı — ama o paket **hiç commit edilmedi** (git history'de yok). Bu, CLAUDE.md/`roadmap.md`'nin "Faz 2 tamamlandı" anlatımıyla çelişiyor. RL'den bağımsız. Yapılan geçici onarım: `prediction/__init__.py` paket eksikse import zincirini çökertmeden uyarı verip devam ediyor (`PricePredictor=None`, `MODEL_REGISTRY={}`, `_MODELS_AVAILABLE=False`); `prediction_service.list_trained_models()` paket yoksa boş liste dönüyor. Sonuç: server açılıyor, RL hattı tam çalışıyor, tahmin altsistemi devre dışı ama net uyarıyla. **Kalıcı çözüm (ileri çalışma):** `prediction/models/` paketini yeniden oluştur — `base.py` (`BasePredictionModel` ABC + `_predict_direction_raw()`) + `xgboost_model.py`/`lightgbm_model.py`/`catboost_model.py`/`lstm_model.py`/`tft_model.py` + `ensemble.py` (stacking, 3-way split, OOF, TATS) + `MODEL_REGISTRY`. Eski tek-dosya sürümü referans için: `git show 8bc3726:prediction/models.py`.
+
 ---
 
 ## 1. "Veri indir → eğit → analiz et" akışı arayüzden çalışıyor mu?

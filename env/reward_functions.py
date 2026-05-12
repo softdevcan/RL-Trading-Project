@@ -136,6 +136,18 @@ class RewardCalculator:
             commission_penalty
         )
 
+        # Guard against NaN/Inf creeping in from any component and clip the
+        # reward to a sane range. SB3 policy gradients can diverge if a single
+        # step emits a huge or non-finite reward, so this is the last line of
+        # defense before the value is returned to the trainer.
+        if not np.isfinite(total_reward):
+            logger.warning(
+                f"Non-finite PSR reward (return={portfolio_return}, dsr={dsr}, "
+                f"mdd={mdd_penalty}, vol={volatility_penalty}); clamped to 0.0"
+            )
+            total_reward = 0.0
+        total_reward = float(np.clip(total_reward, -100.0, 100.0))
+
         components['total_reward'] = total_reward
 
         return total_reward, components
@@ -166,17 +178,23 @@ class RewardCalculator:
         self.dsr_b = self.dsr_b + self.dsr_eta * (current_return**2 - self.dsr_b)
 
         # Calculate DSR
+        # NOTE: variance can briefly go negative due to float precision in the EMA
+        # update of B vs A^2 — clamp to a positive floor before sqrt or DSR can
+        # become NaN and propagate through training, diverging the policy.
         excess_return = self.dsr_a - daily_rf
         variance = self.dsr_b - self.dsr_a**2
-        std_dev = np.sqrt(max(variance, 1e-9))  # Avoid division by zero
+        std_dev = np.sqrt(max(variance, 1e-9))
 
         dsr = excess_return / std_dev
 
-        # Normalize DSR to [-1, 1] range for stability
-        # Tipik Sharpe oranları -2 ile +4 arasında olur
-        dsr_normalized = np.tanh(dsr / 2)  # Soft bound to [-1, 1]
+        if not np.isfinite(dsr):
+            dsr = 0.0
 
-        return dsr_normalized * 100  # Scale to match portfolio_return range
+        # Tanh soft-bounds DSR to [-1, 1]; scale to roughly match portfolio_return
+        # magnitude (~±1) so reward components stay on comparable scales.
+        dsr_normalized = np.tanh(dsr / 2)
+
+        return float(dsr_normalized)
 
     def _calculate_mdd_penalty(self, portfolio_values: List[float]) -> float:
         """
@@ -348,6 +366,15 @@ class SimpleRewardCalculator:
 
         # Total reward
         reward = portfolio_change_pct - commission_penalty
+
+        # NaN/Inf guard + clip — see RewardCalculator for rationale.
+        if not np.isfinite(reward):
+            logger.warning(
+                f"Non-finite simple reward (change={portfolio_change_pct}, "
+                f"commission={commission_penalty}); clamped to 0.0"
+            )
+            reward = 0.0
+        reward = float(np.clip(reward, -100.0, 100.0))
 
         components = {
             'portfolio_change': portfolio_change_pct,

@@ -674,8 +674,20 @@ class PredictionService:
         return tracker.get_summary()
 
     def list_trained_models(self) -> List[Dict[str, Any]]:
-        """Egitilmis modelleri listele."""
-        from prediction.models import PricePredictor
+        """Egitilmis modelleri listele.
+
+        `prediction/models/` paketi eksikse (bilinen eksiklik, bkz.
+        prediction/__init__.py) bos liste doner — tahmin altsistemi devre disi
+        olsa da bu endpoint 500 yerine "egitilmis model yok" anlamiyla yanit
+        verir.
+        """
+        try:
+            from prediction.models import PricePredictor
+        except ImportError:
+            logger.warning(
+                "prediction.models paketi yok — list_trained_models() bos liste donduruyor."
+            )
+            return []
         models = []
         for horizon in ('daily', 'weekly'):
             p = PricePredictor(horizon)

@@ -42,21 +42,23 @@ Thumbs.db
 logs/tensorboard/
 logs/*.txt
 logs/
-models/
 
 # Models and Data (RL Trading specific)
-models/*.zip
-models/*.pt
-models/*.pth
+# NOTE: anchor to repo root with a leading slash. A bare `models/` also matches
+# `prediction/models/` (a SOURCE package!) — that bug silently kept the Phase-2
+# ensemble code out of git. Same applies to `results/` and `*.csv` below.
+/models/
+/results/
 results/figures/
 results/latex/
 results/data/*.csv
 results/data/*.json
-results/
-*.csv
 data/raw/
 data/processed/
 data/*.csv
+data/**/*.csv
+# Stray CSVs at repo root, but never under prediction/ (that's source, not data).
+/*.csv
 
 # Tensorboard
 runs/
