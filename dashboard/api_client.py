@@ -26,6 +26,7 @@ def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> An
 
 def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None) -> Any:
     """POST request, returns parsed JSON or None on error."""
+    resp = None
     try:
         resp = requests.post(
             f"{API_BASE}{path}", json=json, params=params, timeout=TIMEOUT
@@ -33,7 +34,18 @@ def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None)
         resp.raise_for_status()
         return resp.json()
     except Exception as exc:
-        _api_log.warning("POST %s%s failed: %s", API_BASE, path, exc)
+        # FastAPI 422 (validation) bodies carry the actual fault — log them
+        # otherwise debugging is a guessing game.
+        body = None
+        if resp is not None:
+            try:
+                body = resp.json()
+            except Exception:
+                body = resp.text[:500] if resp.text else None
+        _api_log.warning(
+            "POST %s%s failed: %s | request=%s | response=%s",
+            API_BASE, path, exc, json, body,
+        )
         return None
 
 
@@ -112,6 +124,11 @@ def get_portfolio_history() -> Dict:
     return _get("/trading/portfolio-history") or {}
 
 
+def get_decisions_history() -> Dict:
+    """All saved daily decisions, newest first."""
+    return _get("/trading/decisions-history") or {"dates": [], "decisions": {}}
+
+
 def generate_report() -> Dict:
     return _post("/trading/analysis/generate-report", json={}) or {}
 
@@ -170,6 +187,11 @@ def get_hyperopt_progress(study_id: str) -> Dict:
 
 def get_search_spaces(algorithm: str) -> Dict:
     return _get(f"/hyperopt/search-spaces/{algorithm}") or {}
+
+
+def get_hyperopt_data_range() -> Dict:
+    """Returns {available, min_date, max_date, symbols, total_rows} from cached CSV."""
+    return _get("/hyperopt/data-range") or {"available": False, "symbols": []}
 
 
 # ── Prediction ─────────────────────────────────────────────────────────────

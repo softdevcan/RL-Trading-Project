@@ -12,6 +12,7 @@ API endpoints used:
 import json
 from datetime import date
 
+import dash
 from dash import html, dcc
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -25,10 +26,10 @@ from dashboard.theme import (
 import dashboard.api_client as api
 
 BIST30_SYMBOLS = [
-    "AKBNK","ARCLK","ASELS","BIMAS","EKGYO","EREGL","FROTO","GARAN",
-    "HALKB","ISCTR","KCHOL","KOZAL","KRDMD","MGROS","ODAS","PETKM",
-    "PGSUS","SAHOL","SASA","SISE","SKBNK","TAVHL","TCELL","THYAO",
-    "TKFEN","TOASO","TSKB","TUPRS","VAKBN","YKBNK",
+    "AKBNK.IS","ARCLK.IS","ASELS.IS","BIMAS.IS","EKGYO.IS","EREGL.IS","FROTO.IS","GARAN.IS",
+    "HALKB.IS","ISCTR.IS","KCHOL.IS","KOZAL.IS","KRDMD.IS","MGROS.IS","ODAS.IS","PETKM.IS",
+    "PGSUS.IS","SAHOL.IS","SASA.IS","SISE.IS","SKBNK.IS","TAVHL.IS","TCELL.IS","THYAO.IS",
+    "TKFEN.IS","TOASO.IS","TSKB.IS","TUPRS.IS","VAKBN.IS","YKBNK.IS",
 ]
 DEFAULT_SYMBOLS = BIST30_SYMBOLS[:5]
 
@@ -143,6 +144,30 @@ def layout():
 
             # ── Right panel: results ─────────────────────────────────────────
             dbc.Col([
+                # History selector — gecmis kararlari gormek icin tarih dropdown.
+                dbc.Card([
+                    dbc.CardHeader(html.Span("Gecmis Kararlar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col(dcc.Dropdown(
+                                id="dt-history-select",
+                                options=[],
+                                value=None,
+                                placeholder="Onceki bir karari yukle...",
+                                clearable=True,
+                                style={"color": CARD},
+                            ), width=9),
+                            dbc.Col(dbc.Button(
+                                [html.I(className="bi bi-arrow-clockwise me-2"), "Yenile"],
+                                id="dt-history-refresh",
+                                color="secondary",
+                                outline=True,
+                                className="w-100",
+                            ), width=3),
+                        ]),
+                    ]),
+                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "16px"}),
+
                 # Summary cards
                 dbc.Row([
                     dbc.Col(html.Div(id="dt-summary-cards"), className="mb-4"),
@@ -150,7 +175,10 @@ def layout():
 
                 # Decision table
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Trading Kararlari", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader([
+                        html.Span("Trading Kararlari", style={"color": TEXT, "fontWeight": "600"}),
+                        html.Span(id="dt-decision-date-badge", style={"color": TEXT_MUTED, "marginLeft": "12px", "fontSize": "13px"}),
+                    ]),
                     dbc.CardBody(html.Div(id="dt-decision-table")),
                 ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
 
@@ -170,13 +198,24 @@ def layout():
 def register_callbacks(app):
 
     @app.callback(
-        Output("dt-model-select", "options"),
+        [
+            Output("dt-model-select", "options"),
+            Output("dt-history-select", "options", allow_duplicate=True),
+        ],
         Input("dt-decide-btn", "id"),  # fire once on load
-        prevent_initial_call=False,
+        prevent_initial_call="initial_duplicate",
     )
     def load_models(_):
         models = api.get_models()
-        return [{"label": f"[{m.get('algorithm','').upper()}] {m.get('name','')}", "value": m.get("name", "")} for m in models]
+        model_opts = [
+            {"label": f"[{m.get('algorithm','').upper()}] {m.get('name','')}", "value": m.get("name", "")}
+            for m in models
+        ]
+        # Populate history dropdown at page load so the user can pick a past
+        # decision without having to click "Karar Al" first.
+        hist = api.get_decisions_history() or {"dates": []}
+        hist_opts = [{"label": d, "value": d} for d in (hist.get("dates") or [])]
+        return model_opts, hist_opts
 
     @app.callback(
         [
@@ -184,6 +223,8 @@ def register_callbacks(app):
             Output("dt-summary-cards", "children"),
             Output("dt-portfolio-chart", "figure"),
             Output("dt-decision-store", "data"),
+            Output("dt-decision-date-badge", "children"),
+            Output("dt-history-select", "options"),
         ],
         Input("dt-decide-btn", "n_clicks"),
         [
@@ -200,16 +241,17 @@ def register_callbacks(app):
         ],
         prevent_initial_call=True,
     )
-    def get_decision(n, model, risk, dt, max_shares, balance,
+    def get_decision(decide_n, model, risk, dt, max_shares, balance,
                      s0, q0, s1, q1, s2, q2, s3, q3, s4, q4):
-        if not n or not model:
-            return html.P("Model secin ve 'Karar Al' butonuna basin.", style={"color": TEXT_MUTED}), html.Span(), empty_figure(), {}
+        if not decide_n or not model:
+            empty_msg = html.P("Model secin ve 'Karar Al' butonuna basin.", style={"color": TEXT_MUTED})
+            return empty_msg, html.Span(), empty_figure(), {}, html.Span(), dash.no_update
 
-        # Build portfolio snapshot
         holdings = {}
         for sym, qty in [(s0, q0), (s1, q1), (s2, q2), (s3, q3), (s4, q4)]:
             if sym and qty:
-                holdings[sym] = int(qty)
+                normalized = sym if "." in sym else f"{sym}.IS"
+                holdings[normalized] = int(qty)
 
         payload = {
             "model_name": model,
@@ -222,13 +264,64 @@ def register_callbacks(app):
 
         result = api.get_daily_decision(payload)
         if not result:
-            return dbc.Alert("Karar alinamadi.", color="danger"), html.Span(), empty_figure(), {}
+            return (
+                dbc.Alert("Karar alinamadi.", color="danger"),
+                html.Span(), empty_figure(), {},
+                html.Span(), dash.no_update,
+            )
 
         table = _render_decision_table(result)
         cards = _render_summary_cards(result)
-        history = api.get_portfolio_history()
-        chart = _build_portfolio_chart(history)
-        return table, cards, chart, result
+        chart = _build_portfolio_chart(api.get_portfolio_history())
+        # Yeni karar kaydedildi — dropdown listesini yenile ki hemen gorunsun.
+        refreshed = api.get_decisions_history() or {"dates": [], "decisions": {}}
+        history_options = [{"label": d, "value": d} for d in (refreshed.get("dates") or [])]
+        badge = f"({result.get('date', payload['date'])})"
+        return table, cards, chart, result, badge, history_options
+
+    # Gecmis karar yuklemesi ayri callback — boylece options refresh edilince
+    # dropdown.value=None firing'i karar tablosunu silmez.
+    @app.callback(
+        [
+            Output("dt-decision-table", "children", allow_duplicate=True),
+            Output("dt-summary-cards", "children", allow_duplicate=True),
+            Output("dt-decision-store", "data", allow_duplicate=True),
+            Output("dt-decision-date-badge", "children", allow_duplicate=True),
+        ],
+        Input("dt-history-select", "value"),
+        prevent_initial_call=True,
+    )
+    def load_history(hist_date):
+        if not hist_date:
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        history_doc = api.get_decisions_history() or {"decisions": {}}
+        entry = (history_doc.get("decisions") or {}).get(hist_date)
+        if not entry:
+            return (
+                dbc.Alert("Secili tarih icin kayit bulunamadi.", color="warning"),
+                html.Span(), {}, html.Span(),
+            )
+        result = {
+            "date": hist_date,
+            "decisions": entry.get("decisions", []),
+            "portfolio_before": entry.get("portfolio_before", {}),
+            "portfolio_after": entry.get("portfolio_after", {}),
+            "summary": entry.get("summary", {}),
+        }
+        table = _render_decision_table(result)
+        cards = _render_summary_cards(result)
+        badge = f"({hist_date} - arsivden)"
+        return table, cards, result, badge
+
+    # Yenile butonu sadece dropdown options'u tazeler — kararlari etkilemez.
+    @app.callback(
+        Output("dt-history-select", "options", allow_duplicate=True),
+        Input("dt-history-refresh", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def refresh_history_options(_n):
+        hist = api.get_decisions_history() or {"dates": []}
+        return [{"label": d, "value": d} for d in (hist.get("dates") or [])]
 
     @app.callback(
         [Output("dt-action-result", "children", allow_duplicate=True)],
@@ -270,37 +363,73 @@ def _render_decision_table(result):
         return html.P("Karar yok.", style={"color": TEXT_MUTED})
 
     header = dbc.Row([
-        dbc.Col(html.Small("Sembol", className="section-title"), width=3),
+        dbc.Col(html.Small("Sembol", className="section-title"), width=2),
         dbc.Col(html.Small("Islem", className="section-title"), width=2),
-        dbc.Col(html.Small("Adet", className="section-title"), width=2),
+        dbc.Col(html.Small("Adet", className="section-title"), width=1),
         dbc.Col(html.Small("Fiyat", className="section-title"), width=2),
-        dbc.Col(html.Small("Toplam", className="section-title"), width=3),
+        dbc.Col(html.Small("Toplam", className="section-title"), width=2),
+        dbc.Col(html.Small("Sebep", className="section-title"), width=3),
     ])
     rows = [header]
     for d in decisions:
         action = str(d.get("action", d.get("type", "—"))).upper()
-        color = GREEN if "BUY" in action or "AL" in action else RED if "SELL" in action or "SAT" in action else TEXT_MUTED
+        is_buy = "BUY" in action or "AL" == action
+        is_sell = "SELL" in action or "SAT" == action
+        color = GREEN if is_buy else RED if is_sell else TEXT_MUTED
+        # Backend dondurur: cost (BUY), revenue (SELL); 0 ise diger taraf.
+        total_val = d.get("total", d.get("amount"))
+        if total_val is None:
+            total_val = d.get("cost", 0) if is_buy else d.get("revenue", 0) if is_sell else 0
+        shares_val = d.get("quantity", d.get("shares", 0))
         rows.append(dbc.Row([
-            dbc.Col(html.Span(d.get("symbol", "—"), style={"color": TEXT, "fontWeight": "600"}), width=3),
+            dbc.Col(html.Span(d.get("symbol", "—"), style={"color": TEXT, "fontWeight": "600"}), width=2),
             dbc.Col(dbc.Badge(action, style={"backgroundColor": color}, pill=True), width=2),
-            dbc.Col(html.Span(str(d.get("quantity", d.get("shares", "—"))), style={"color": TEXT}), width=2),
+            dbc.Col(html.Span(str(shares_val), style={"color": TEXT}), width=1),
             dbc.Col(html.Span(f"₺{d.get('price', 0):,.2f}", style={"color": TEXT}), width=2),
-            dbc.Col(html.Span(f"₺{d.get('total', d.get('amount', 0)):,.2f}", style={"color": TEXT}), width=3),
+            dbc.Col(html.Span(f"₺{total_val:,.2f}", style={"color": TEXT}), width=2),
+            dbc.Col(html.Span(d.get("reason", ""), style={"color": TEXT_MUTED, "fontSize": "12px"}), width=3),
         ], className="py-2 border-bottom"))
     return html.Div(rows)
 
 
 def _render_summary_cards(result):
-    total_buy = result.get("total_buy_amount", 0) or 0
-    total_sell = result.get("total_sell_amount", 0) or 0
-    net = result.get("net_change", total_buy - total_sell)
-    n_decisions = len(result.get("decisions", result.get("trades", [])))
+    """Backend response field names: decisions[].cost / .revenue / .executed; summary.daily_return_pct."""
+    decisions = result.get("decisions", result.get("trades", []))
+    total_buy = 0.0
+    total_sell = 0.0
+    n_executed = 0
+    for d in decisions:
+        if not d.get("executed", False):
+            continue
+        action = str(d.get("action", "")).upper()
+        if "BUY" in action or action == "AL":
+            total_buy += float(d.get("cost", d.get("total", 0)) or 0)
+            n_executed += 1
+        elif "SELL" in action or action == "SAT":
+            total_sell += float(d.get("revenue", d.get("total", 0)) or 0)
+            n_executed += 1
+
+    # API zaten net_change vs. donerse onlari kullan (custom override icin).
+    total_buy = result.get("total_buy_amount") or total_buy
+    total_sell = result.get("total_sell_amount") or total_sell
+    net = result.get("net_change")
+    if net is None:
+        net = total_sell - total_buy  # nakit akisi: satistan giren - alima cikan
+
+    # Negatif = nakit cikisi (alim agirligi), pozitif = nakit girisi (satis
+    # agirligi). Renkle ayirt et, sifirken notr goster.
+    if net > 0:
+        net_color, net_prefix = GREEN, "+"
+    elif net < 0:
+        net_color, net_prefix = RED, ""
+    else:
+        net_color, net_prefix = BLUE, ""
 
     return dbc.Row([
-        dbc.Col(_mini_card("Al Toplam", f"₺{total_buy:,.0f}", GREEN), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Sat Toplam", f"₺{total_sell:,.0f}", RED), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Net Degisim", f"₺{net:,.0f}", BLUE), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Islem Sayisi", str(n_decisions), PURPLE), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Al Toplam", f"₺{total_buy:,.2f}", GREEN), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Sat Toplam", f"₺{total_sell:,.2f}", RED), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Net Nakit Akisi", f"{net_prefix}₺{net:,.2f}", net_color), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Islem Sayisi", str(n_executed), PURPLE), xs=6, md=3, className="mb-3"),
     ])
 
 

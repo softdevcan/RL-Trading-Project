@@ -15,6 +15,7 @@ import json
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import optuna
 from optuna.pruners import MedianPruner, SuccessiveHalvingPruner
 from optuna.samplers import TPESampler
@@ -159,10 +160,14 @@ class BaseHyperparameterOptimizer:
 
         # Storage
         if storage is None:
-            # Default: SQLite database
-            db_path = Path("results/hyperparameter_studies/optuna_studies.db")
+            # Anchor to repo root so the path is independent of the caller's CWD
+            # (the FastAPI server is launched from various scripts/IDEs). Use an
+            # absolute path with forward slashes so the SQLAlchemy URI parses
+            # correctly on Windows — `sqlite:///C:\a\b.db` mishandles backslashes.
+            project_root = Path(__file__).resolve().parent.parent
+            db_path = project_root / "results" / "hyperparameter_studies" / "optuna_studies.db"
             db_path.parent.mkdir(parents=True, exist_ok=True)
-            storage = f"sqlite:///{db_path}"
+            storage = f"sqlite:///{db_path.as_posix()}"
         self.storage = storage
 
         # Sampler (Bayesian Optimization)
@@ -230,7 +235,8 @@ class BaseHyperparameterOptimizer:
         start_date: str,
         end_date: str,
         phase: int = 2,
-        reward_type: str = 'psr'
+        reward_type: str = 'psr',
+        use_cached_data: bool = True,
     ) -> gym.Env:
         """
         Trading environment oluşturur.
@@ -241,13 +247,57 @@ class BaseHyperparameterOptimizer:
             end_date: Bitiş tarihi
             phase: 1=Faz1 (56 features), 2=Faz2 (97 features with fundamental+macro)
             reward_type: 'simple' (baseline) or 'psr' (risk-aware)
+            use_cached_data: True ise data/bist/raw_stock_data.csv'den okur (CSV
+                ezilmez, yfinance çağrısı yok). Dosya yoksa fallback yfinance.
 
         Returns:
             Trading environment
         """
         # 1. Fetch market data
-        data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
-        df = data_fetcher.fetch_stock_data(stock_symbols)
+        df = None
+        if use_cached_data:
+            try:
+                data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
+                full_df = data_fetcher.load_data('raw_stock_data.csv')
+
+                # The CSV stores ALL cached symbols/dates — filter to the requested
+                # symbols and date window. Match the user-supplied date strings to
+                # the index's tz (naive vs aware) to avoid an incompatible-compare
+                # error when the CSV was saved from a tz-aware yfinance pull.
+                full_df = full_df[full_df.index.get_level_values('symbol').isin(stock_symbols)]
+                idx_dates = full_df.index.get_level_values('date')
+                start_ts = pd.Timestamp(start_date)
+                end_ts = pd.Timestamp(end_date)
+                if idx_dates.tz is not None:
+                    start_ts = start_ts.tz_localize(idx_dates.tz)
+                    end_ts = end_ts.tz_localize(idx_dates.tz)
+                mask = (idx_dates >= start_ts) & (idx_dates <= end_ts)
+                df = full_df[mask]
+                missing = set(stock_symbols) - set(df.index.get_level_values('symbol').unique())
+                if missing:
+                    logger.warning(
+                        f"Cached CSV missing symbols {missing}; falling back to yfinance"
+                    )
+                    df = None
+                elif df.empty:
+                    logger.warning(
+                        f"Cached CSV has no rows for {start_date}..{end_date}; "
+                        f"falling back to yfinance"
+                    )
+                    df = None
+                else:
+                    logger.info(
+                        f"📂 Loaded cached data: {len(df)} rows, "
+                        f"{df.index.get_level_values('date').min().date()} to "
+                        f"{df.index.get_level_values('date').max().date()}"
+                    )
+            except FileNotFoundError:
+                logger.warning("Cached CSV not found; falling back to yfinance")
+                df = None
+
+        if df is None:
+            data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
+            df = data_fetcher.fetch_stock_data(stock_symbols)
 
         if df is None or df.empty:
             raise ValueError(f"No data fetched for {stock_symbols}")
@@ -372,6 +422,7 @@ class BaseHyperparameterOptimizer:
         total_timesteps: int = 100_000,
         eval_freq: int = 5000,
         n_eval_episodes: int = 5,
+        use_cached_data: bool = True,
     ) -> float:
         """
         Optuna objective function.
@@ -402,9 +453,11 @@ class BaseHyperparameterOptimizer:
 
             # Create environments with Phase and Reward Type
             train_env = self.create_env(stock_symbols, train_start, train_end,
-                                       phase=self.phase, reward_type=self.reward_type)
+                                       phase=self.phase, reward_type=self.reward_type,
+                                       use_cached_data=use_cached_data)
             val_env = self.create_env(stock_symbols, val_start, val_end,
-                                     phase=self.phase, reward_type=self.reward_type)
+                                     phase=self.phase, reward_type=self.reward_type,
+                                     use_cached_data=use_cached_data)
 
             # Create model
             model = self.create_model(trial, train_env, hyperparams)
@@ -477,6 +530,7 @@ class BaseHyperparameterOptimizer:
         eval_freq: int = 5000,
         n_eval_episodes: int = 5,
         show_progress_bar: bool = True,
+        use_cached_data: bool = True,
     ) -> optuna.Study:
         """
         Hiper parametre optimizasyonu çalıştırır.
@@ -522,6 +576,7 @@ class BaseHyperparameterOptimizer:
                 total_timesteps,
                 eval_freq,
                 n_eval_episodes,
+                use_cached_data,
             ),
             n_trials=self.n_trials,
             n_jobs=self.n_jobs,

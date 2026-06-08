@@ -186,5 +186,193 @@
       "risk_mode": "moderate",
       "max_shares_per_trade": 100
     }
+  },
+  "2026-05-13": {
+    "timestamp": "2026-05-13T23:55:20.104406",
+    "portfolio_before": {
+      "balance": 99999.0,
+      "shares": {
+        "AKBNK.IS": 10,
+        "THYAO.IS": 0,
+        "TUPRS.IS": 5,
+        "BIMAS.IS": 0,
+        "ASELS.IS": 10
+      },
+      "portfolio_value": 106095.75003051758
+    },
+    "decisions": [
+      {
+        "symbol": "AKBNK.IS",
+        "action": "HOLD",
+        "raw_signal": -0.019121941179037094,
+        "shares": 0,
+        "price": 71.55000305175781,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (-0.02), below threshold (0.1)",
+        "executed": false
+      },
+      {
+        "symbol": "THYAO.IS",
+        "action": "HOLD",
+        "raw_signal": -0.07138653844594955,
+        "shares": 0,
+        "price": 304.0,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (-0.07), below threshold (0.1)",
+        "executed": false
+      },
+      {
+        "symbol": "TUPRS.IS",
+        "action": "HOLD",
+        "raw_signal": -0.08984716981649399,
+        "shares": 0,
+        "price": 250.75,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (-0.09), below threshold (0.1)",
+        "executed": false
+      },
+      {
+        "symbol": "BIMAS.IS",
+        "action": "HOLD",
+        "raw_signal": 0.09148292243480682,
+        "shares": 0,
+        "price": 813.0,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (0.09), below threshold (0.1)",
+        "executed": false
+      },
+      {
+        "symbol": "ASELS.IS",
+        "action": "BUY",
+        "raw_signal": 0.14664055407047272,
+        "shares": 1,
+        "price": 412.75,
+        "cost": 413.16274999999996,
+        "revenue": 0.0,
+        "commission": 0.41275,
+        "reason": "Strong buy signal (0.15)",
+        "executed": true
+      }
+    ],
+    "portfolio_after": {
+      "balance": 99585.83725,
+      "shares": {
+        "AKBNK.IS": 10,
+        "THYAO.IS": 0,
+        "TUPRS.IS": 5,
+        "BIMAS.IS": 0,
+        "ASELS.IS": 11
+      },
+      "portfolio_value": 106095.33728051757
+    },
+    "summary": {
+      "total_trades": 1,
+      "total_commission": 0.41275,
+      "daily_return_pct": -0.00038903537595466267,
+      "risk_mode": "aggressive",
+      "max_shares_per_trade": 5
+    }
+  },
+  "2026-05-14": {
+    "timestamp": "2026-05-14T11:32:36.444862",
+    "portfolio_before": {
+      "balance": 100000.0,
+      "shares": {
+        "AKBNK.IS": 10,
+        "THYAO.IS": 10,
+        "TUPRS.IS": 0,
+        "BIMAS.IS": 0,
+        "ASELS.IS": 0
+      },
+      "portfolio_value": 103779.00001525879
+    },
+    "decisions": [
+      {
+        "symbol": "AKBNK.IS",
+        "action": "HOLD",
+        "raw_signal": 0.10376015305519104,
+        "shares": 0,
+        "price": 71.6500015258789,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (0.10), below threshold (0.3)",
+        "executed": false
+      },
+      {
+        "symbol": "THYAO.IS",
+        "action": "HOLD",
+        "raw_signal": -0.20779883861541748,
+        "shares": 0,
+        "price": 306.25,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (-0.21), below threshold (0.3)",
+        "executed": false
+      },
+      {
+        "symbol": "TUPRS.IS",
+        "action": "HOLD",
+        "raw_signal": 0.09849592298269272,
+        "shares": 0,
+        "price": 254.25,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (0.10), below threshold (0.3)",
+        "executed": false
+      },
+      {
+        "symbol": "BIMAS.IS",
+        "action": "HOLD",
+        "raw_signal": 0.0879545509815216,
+        "shares": 0,
+        "price": 419.5,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (0.09), below threshold (0.3)",
+        "executed": false
+      },
+      {
+        "symbol": "ASELS.IS",
+        "action": "HOLD",
+        "raw_signal": 0.08775068819522858,
+        "shares": 0,
+        "price": 418.75,
+        "cost": 0.0,
+        "revenue": 0.0,
+        "commission": 0.0,
+        "reason": "Weak signal (0.09), below threshold (0.3)",
+        "executed": false
+      }
+    ],
+    "portfolio_after": {
+      "balance": 100000.0,
+      "shares": {
+        "AKBNK.IS": 10,
+        "THYAO.IS": 10,
+        "TUPRS.IS": 0,
+        "BIMAS.IS": 0,
+        "ASELS.IS": 0
+      },
+      "portfolio_value": 103779.00001525879
+    },
+    "summary": {
+      "total_trades": 0,
+      "total_commission": 0.0,
+      "daily_return_pct": 0.0,
+      "risk_mode": "moderate",
+      "max_shares_per_trade": 5
+    }
   }
 }

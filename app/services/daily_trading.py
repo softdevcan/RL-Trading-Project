@@ -80,34 +80,82 @@ async def fetch_latest_market_data(
         end_date = datetime.strptime(target_date, "%Y-%m-%d")
         start_date = end_date - timedelta(days=lookback_days + 30)
 
-        # Fetch data from yfinance - same pattern as data_fetcher.py
-        all_data = {}
+        # Normalize tickers up front (BIST `.IS` suffix).
+        norm_symbols = [s if "." in s else f"{s}.IS" for s in symbols]
 
-        for symbol in symbols:
+        all_data: Dict[str, pd.DataFrame] = {}
+
+        # 1) CSV-first: try the local cache; covers the common case where the
+        # `Veri` page already pulled fresh data this morning. yfinance is only
+        # used when the CSV is missing, lacks a symbol, or doesn't cover the
+        # required date range.
+        try:
+            from data.data_fetcher import DataFetcher
+            cached = DataFetcher().load_data('raw_stock_data.csv')
+            idx_dates = cached.index.get_level_values('date')
+            start_ts = pd.Timestamp(start_date)
+            end_ts = pd.Timestamp(end_date) + pd.Timedelta(days=1)
+            if idx_dates.tz is not None:
+                start_ts = start_ts.tz_localize(idx_dates.tz)
+                end_ts = end_ts.tz_localize(idx_dates.tz)
+
+            for symbol in norm_symbols:
+                if symbol not in cached.index.get_level_values('symbol').unique():
+                    continue
+                sub = cached.xs(symbol, level='symbol')
+                sub = sub[(sub.index >= start_ts) & (sub.index <= end_ts)]
+                if sub.empty:
+                    continue
+                # Match the yfinance Ticker.history() shape: lowercase OHLCV cols
+                sub = sub[['open', 'high', 'low', 'close', 'volume']]
+                all_data[symbol] = sub
+                logger.info(f"  📂 {symbol}: {len(sub)} rows from CSV "
+                            f"({sub.index[0].date()} → {sub.index[-1].date()})")
+        except FileNotFoundError:
+            logger.info("Cached CSV not found; using yfinance only")
+        except Exception as exc:
+            logger.warning(f"CSV read failed ({exc}); falling back to yfinance")
+
+        # 2) yfinance fallback for any symbol still missing or with stale data
+        # (last cached date older than target_date).
+        for symbol in norm_symbols:
+            cached_last = all_data[symbol].index[-1].date() if symbol in all_data else None
+            needs_refresh = (
+                symbol not in all_data
+                or (cached_last is not None and cached_last < end_date.date())
+            )
+            if not needs_refresh:
+                continue
             try:
-                logger.info(f"Downloading {symbol}...")
-
-                # Use Ticker().history() - same as data_fetcher.py
+                logger.info(f"Downloading {symbol} from yfinance...")
                 ticker = yf.Ticker(symbol)
                 df = ticker.history(
                     start=start_date.strftime("%Y-%m-%d"),
                     end=(end_date + timedelta(days=1)).strftime("%Y-%m-%d")
                 )
-
                 if df.empty:
                     logger.warning(f"No data found for {symbol}")
                     continue
-
-                # Lowercase column names - same as data_fetcher.py
                 df.columns = df.columns.str.lower()
-
-                # Keep only OHLCV columns - same as data_fetcher.py
                 df = df[['open', 'high', 'low', 'close', 'volume']]
-
-                all_data[symbol] = df
-
-                logger.info(f"  ✓ {symbol}: {len(df)} rows ({df.index[0].date()} to {df.index[-1].date()})")
-
+                # Drop stub rows yfinance emits for the current trading day
+                # before market close (close=NaN). These poison both the state
+                # vector and the JSON response.
+                before = len(df)
+                df = df.dropna(subset=['close'])
+                df = df[df['close'] > 0]
+                if len(df) < before:
+                    logger.info(f"  {symbol}: dropped {before - len(df)} NaN/zero-close rows")
+                # Merge with whatever we already have from CSV (yfinance wins
+                # on overlapping dates because it's fresher).
+                if symbol in all_data:
+                    combined_sym = pd.concat([all_data[symbol], df])
+                    combined_sym = combined_sym[~combined_sym.index.duplicated(keep='last')]
+                    combined_sym = combined_sym.sort_index()
+                    all_data[symbol] = combined_sym
+                else:
+                    all_data[symbol] = df
+                logger.info(f"  ✓ {symbol}: {len(all_data[symbol])} rows total")
             except Exception as e:
                 logger.error(f"Error fetching {symbol}: {e}")
                 continue
@@ -222,8 +270,20 @@ def build_live_state(
 
     for symbol in symbols:
         try:
-            # Get data for this symbol on target date using the actual index date
-            row = market_data.loc[(symbol, matching_date)]
+            # Walk back to the most recent date with a non-NaN close — yfinance
+            # sometimes hands back a stub row for the live trading day.
+            symbol_df = market_data.xs(symbol, level='symbol')
+            row = None
+            for d in [matching_date] + [x for x in available_dates[::-1] if x < matching_date]:
+                try:
+                    candidate = symbol_df.loc[d]
+                except KeyError:
+                    continue
+                if pd.notna(candidate.get('close')) and float(candidate.get('close', 0)) > 0:
+                    row = candidate
+                    break
+            if row is None:
+                raise KeyError(f"no valid row for {symbol}")
 
             # OHLCV - Convert Series to dict if needed
             if isinstance(row, pd.Series):
@@ -288,6 +348,17 @@ def build_live_state(
 
     state = np.concatenate(components).astype(np.float32)
 
+    # Guard: SB3 policies emit NaN actions when the obs contains NaN/Inf.
+    # Lookback windows (ADX 14, CCI 20, Mahalanobis 252) can leave NaN on
+    # short live windows; coerce to safe scalars before inference.
+    nan_count = int(np.isnan(state).sum())
+    inf_count = int(np.isinf(state).sum())
+    if nan_count or inf_count:
+        logger.warning(
+            f"State has {nan_count} NaN and {inf_count} Inf values — replacing with 0"
+        )
+        state = np.nan_to_num(state, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+
     logger.info(f"State built: shape={state.shape}")
 
     return state
@@ -328,17 +399,34 @@ def get_current_prices(market_data: pd.DataFrame, target_date: str) -> Dict[str,
     symbols = market_data.index.get_level_values('symbol').unique()
 
     for symbol in symbols:
+        # yfinance occasionally returns a row for the current day with NaN
+        # close (market still open). Walk back through available dates until
+        # we find a valid close — downstream JSON serialisation rejects NaN.
+        close_price = float('nan')
         try:
-            row = market_data.loc[(symbol, matching_date)]
-            close_price = row['close']
-            # Handle pandas scalar types
-            if isinstance(close_price, (int, float, np.integer, np.floating)):
-                prices[symbol] = float(close_price)
-            else:
-                prices[symbol] = float(close_price)  # type: ignore
+            symbol_df = market_data.xs(symbol, level='symbol')
+            valid_dates = [d for d in available_dates[::-1] if d <= matching_date]
+            for d in valid_dates:
+                try:
+                    candidate = symbol_df.loc[d, 'close']
+                except KeyError:
+                    continue
+                if pd.notna(candidate) and float(candidate) > 0:
+                    close_price = float(candidate)
+                    if d != matching_date:
+                        logger.warning(
+                            f"{symbol}: close NaN on {matching_date.date()}, "
+                            f"falling back to {d.date()}"
+                        )
+                    break
         except KeyError:
-            logger.warning(f"No price for {symbol} on {actual_date}")
+            pass
+
+        if pd.isna(close_price) or close_price <= 0:
+            logger.warning(f"No valid price for {symbol} on or before {actual_date}")
             prices[symbol] = 0.0
+        else:
+            prices[symbol] = close_price
 
     return prices
 

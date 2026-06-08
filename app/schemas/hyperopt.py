@@ -112,6 +112,15 @@ class OptimizationRequest(BaseModel):
         description="Reward function type (simple or psr)"
     )
 
+    use_cached_data: bool = Field(
+        True,
+        description=(
+            "True ise data/bist/raw_stock_data.csv'den okur (yfinance çağrısı yok, "
+            "CSV ezilmez). False ise yfinance'tan tazeler. CSV bulunmazsa otomatik "
+            "fallback yfinance."
+        )
+    )
+
     class Config:
         json_schema_extra = {
             "example": {

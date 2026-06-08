@@ -61,9 +61,31 @@ def layout():
     today = date.today()
     default_start = today - timedelta(days=365)
 
+    # CSV mevcut ise tarih/sembol sınırlarını oradan dolduralım; yoksa
+    # makul fallback (son 1 yıl, sembol seçici boş).
+    data_range = api.get_hyperopt_data_range() or {"available": False, "symbols": []}
+    cached_available = bool(data_range.get("available"))
+    csv_min = data_range.get("min_date") or str(default_start)
+    csv_max = data_range.get("max_date") or str(today)
+    csv_symbols = data_range.get("symbols", []) or []
+
+    # Default penceresi: train = ilk %80, val = son %20
+    csv_min_d = date.fromisoformat(csv_min)
+    csv_max_d = date.fromisoformat(csv_max)
+    total_days = (csv_max_d - csv_min_d).days
+    split_d = csv_min_d + timedelta(days=int(total_days * 0.8))
+
+    csv_status_msg = (
+        f"CSV: {csv_min} → {csv_max} • {data_range.get('total_rows', 0)} satır • "
+        f"{len(csv_symbols)} sembol"
+        if cached_available
+        else "CSV yok — 'yfinance'tan tazele' otomatik açık."
+    )
+
     return html.Div([
         dcc.Interval(id="hyperopt-poll", interval=3_000, disabled=True, n_intervals=0),
         dcc.Store(id="hyperopt-modal-study-id", data=None),
+        dcc.Store(id="hyperopt-data-range", data=data_range),
 
         html.H4("Hiper Parametre Optimizasyonu", style={"color": TEXT, "marginBottom": "4px"}),
         html.P("Optuna ile otomatik hiper parametre arama", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
@@ -101,18 +123,50 @@ def layout():
                         html.Label("Deneme Sayisi (n_trials)", className="section-title"),
                         dbc.Input(id="hyperopt-trials", type="number", value=20, min=1, max=500,
                                   className="mb-3"),
-                        # timesteps
-                        html.Label("Timestep / Trial", className="section-title"),
-                        dbc.Input(id="hyperopt-timesteps", type="number", value=10_000, min=1_000,
+                        # timesteps (schema: ge=10_000, le=1_000_000)
+                        html.Label("Timestep / Trial (min 10000)", className="section-title"),
+                        dbc.Input(id="hyperopt-timesteps", type="number", value=10_000,
+                                  min=10_000, max=1_000_000, step=1_000,
                                   className="mb-3"),
-                        # Date range
-                        html.Label("Egitim Tarihleri", className="section-title"),
+
+                        # Data source
+                        html.Label("Veri Kaynağı", className="section-title"),
+                        dbc.Checklist(
+                            id="hyperopt-refresh-data",
+                            options=[{"label": " yfinance'tan tazele (CSV ezilir)", "value": "refresh"}],
+                            value=[] if cached_available else ["refresh"],
+                            switch=True,
+                            className="mb-2",
+                        ),
+                        html.Small(csv_status_msg, id="hyperopt-csv-status",
+                                   style={"color": TEXT_MUTED, "display": "block", "marginBottom": "12px"}),
+
+                        # Symbols
+                        html.Label("Semboller", className="section-title"),
+                        dcc.Dropdown(
+                            id="hyperopt-symbols",
+                            options=[{"label": s, "value": s} for s in csv_symbols],
+                            value=csv_symbols,
+                            multi=True,
+                            placeholder="Boş = PHASE1_SYMBOLS (default)",
+                            style={"marginBottom": "12px", "color": CARD},
+                        ),
+
+                        # Train date range (val = train_end +1 → csv_max)
+                        html.Label("Eğitim Aralığı (val otomatik son %20)", className="section-title"),
                         dbc.Row([
-                            dbc.Col(dcc.DatePickerSingle(id="hyperopt-start-date", date=str(default_start),
-                                                          display_format="YYYY-MM-DD"), width=6),
-                            dbc.Col(dcc.DatePickerSingle(id="hyperopt-end-date", date=str(today),
-                                                          display_format="YYYY-MM-DD"), width=6),
-                        ], className="mb-3"),
+                            dbc.Col(dcc.DatePickerSingle(
+                                id="hyperopt-train-start",
+                                date=str(csv_min_d), min_date_allowed=csv_min, max_date_allowed=csv_max,
+                                display_format="YYYY-MM-DD"), width=6),
+                            dbc.Col(dcc.DatePickerSingle(
+                                id="hyperopt-train-end",
+                                date=str(split_d), min_date_allowed=csv_min, max_date_allowed=csv_max,
+                                display_format="YYYY-MM-DD"), width=6),
+                        ], className="mb-2"),
+                        html.Small(id="hyperopt-val-preview",
+                                   style={"color": TEXT_MUTED, "display": "block", "marginBottom": "12px"}),
+
                         # Search space info
                         html.Div(id="hyperopt-space-info", className="mb-3"),
                         # Start button
@@ -185,6 +239,31 @@ def register_callbacks(app):
         return html.Small(f"{algo} icin {n} hiper parametre aranacak.", style={"color": TEXT_MUTED})
 
     @app.callback(
+        Output("hyperopt-val-preview", "children"),
+        [Input("hyperopt-train-end", "date"),
+         Input("hyperopt-data-range", "data")],
+    )
+    def update_val_preview(train_end, data_range):
+        """Val = train_end+1 → csv_max. Görsel feedback."""
+        if not train_end:
+            return ""
+        try:
+            te = date.fromisoformat(str(train_end)[:10])
+            csv_max = (data_range or {}).get("max_date")
+            if not csv_max:
+                return f"Val: {te + timedelta(days=1)} → (CSV yok)"
+            vmax = date.fromisoformat(csv_max)
+            vmin = te + timedelta(days=1)
+            if vmin >= vmax:
+                return html.Span(
+                    f"⚠ train_end ({te}) çok geç — val aralığı boş",
+                    style={"color": RED}
+                )
+            return f"Val: {vmin} → {vmax} ({(vmax - vmin).days} gün)"
+        except Exception:
+            return ""
+
+    @app.callback(
         [Output("hyperopt-poll", "disabled"), Output("hyperopt-start-result", "children")],
         Input("hyperopt-start-btn", "n_clicks"),
         [
@@ -193,27 +272,63 @@ def register_callbacks(app):
             State("hyperopt-reward", "value"),
             State("hyperopt-trials", "value"),
             State("hyperopt-timesteps", "value"),
-            State("hyperopt-start-date", "date"),
-            State("hyperopt-end-date", "date"),
+            State("hyperopt-train-start", "date"),
+            State("hyperopt-train-end", "date"),
+            State("hyperopt-refresh-data", "value"),
+            State("hyperopt-symbols", "value"),
+            State("hyperopt-data-range", "data"),
         ],
         prevent_initial_call=True,
     )
-    def start_optimization(n, algo, phase, reward, trials, timesteps, start_date, end_date):
+    def start_optimization(n, algo, phase, reward, trials, timesteps,
+                           train_start, train_end, refresh, symbols, data_range):
         if not n:
             return True, html.Span()
+
+        if not train_start or not train_end:
+            return True, dbc.Alert("Eğitim tarihleri eksik.", color="danger", dismissable=True)
+
+        # val = train_end+1 → csv_max
+        try:
+            te = date.fromisoformat(str(train_end)[:10])
+        except Exception:
+            return True, dbc.Alert("Train end tarihi geçersiz.", color="danger", dismissable=True)
+        val_start_d = te + timedelta(days=1)
+        csv_max = (data_range or {}).get("max_date") or str(date.today())
+        try:
+            val_end_d = date.fromisoformat(csv_max)
+        except Exception:
+            val_end_d = date.today()
+        if val_start_d >= val_end_d:
+            return True, dbc.Alert(
+                "Val aralığı boş — train_end'i öne çekin veya veri çekin.",
+                color="danger", dismissable=True,
+            )
+
         payload = {
             "algorithm": algo,
             "phase": int(phase or 1),
-            "reward_type": reward,
+            "reward_type": reward or "psr",
             "n_trials": int(trials or 20),
-            "timesteps_per_trial": int(timesteps or 10_000),
-            "start_date": start_date,
-            "end_date": end_date,
+            "total_timesteps": int(timesteps or 10_000),
+            "train_start": str(train_start)[:10],
+            "train_end": str(train_end)[:10],
+            "val_start": str(val_start_d),
+            "val_end": str(val_end_d),
+            "use_cached_data": "refresh" not in (refresh or []),
+            "stock_symbols": symbols or None,
         }
         result = api.start_hyperopt(payload)
         if result:
+            sid = result.get('study_id', result.get('id', 'OK'))
+            info = (
+                f"Train {payload['train_start']}→{payload['train_end']} • "
+                f"Val {payload['val_start']}→{payload['val_end']} • "
+                f"Kaynak: {'CSV' if payload['use_cached_data'] else 'yfinance'}"
+            )
             return False, dbc.Alert(
-                [html.I(className="bi bi-check-circle me-2"), f"Optimizasyon baslatildi: {result.get('study_id', result.get('id', 'OK'))}"],
+                [html.I(className="bi bi-check-circle me-2"),
+                 f"Optimizasyon baslatildi: {sid}", html.Br(), html.Small(info)],
                 color="success", dismissable=True,
             )
         return True, dbc.Alert("Optimizasyon baslatılamadı.", color="danger", dismissable=True)
@@ -252,12 +367,24 @@ def register_callbacks(app):
             return False, "", html.Span(), "", html.Span(), None
 
         study_id = triggered.get("index")
-        study = api.get_hyperopt_study(str(study_id)) or {}
+        detail = api.get_hyperopt_study(str(study_id)) or {}
 
-        title = study.get("study_name", study.get("name", str(study_id)))
-        info_div = _render_modal_info(study)
-        params_str = json.dumps(study.get("best_params", {}), indent=2, ensure_ascii=False)
-        trials_div = _render_trials_table(study.get("trials", []))
+        # Backend StudyDetailResponse: { study: {...}, trials: [...], mean_value, ... }
+        # Fall back to flat shape if a caller ever returns one.
+        study_obj = detail.get("study") if isinstance(detail.get("study"), dict) else detail
+        trials = detail.get("trials", []) or []
+        stats = {
+            "mean_value": detail.get("mean_value"),
+            "median_value": detail.get("median_value"),
+            "std_value": detail.get("std_value"),
+            "min_value": detail.get("min_value"),
+            "max_value": detail.get("max_value"),
+        }
+
+        title = study_obj.get("study_name", study_obj.get("name", str(study_id)))
+        info_div = _render_modal_info(study_obj, stats, total_trials=len(trials))
+        params_str = json.dumps(study_obj.get("best_params") or {}, indent=2, ensure_ascii=False) or "{}"
+        trials_div = _render_trials_table(trials)
 
         return True, title, info_div, params_str, trials_div, study_id
 
@@ -276,7 +403,7 @@ def register_callbacks(app):
 def _render_studies_grid(studies):
     cols = []
     for s in studies:
-        sid = s.get("id", s.get("study_name", "unknown"))
+        sid = s.get("study_id") or s.get("id") or s.get("study_name") or "unknown"
         algo = str(s.get("algorithm", "—")).upper()
         status = str(s.get("status", s.get("state", "unknown"))).lower()
         best = s.get("best_value", s.get("best_sharpe", 0)) or 0
@@ -313,16 +440,31 @@ def _render_studies_grid(studies):
     return dbc.Row(cols)
 
 
-def _render_modal_info(study):
+def _render_modal_info(study, stats=None, total_trials=None):
+    stats = stats or {}
+    best_val = study.get("best_value")
     fields = [
         ("Calisma Adi", study.get("study_name", "—")),
         ("Algoritma", str(study.get("algorithm", "—")).upper()),
         ("Durum", str(study.get("status", study.get("state", "—"))).upper()),
-        ("Tamamlanan", str(study.get("completed_trials", study.get("n_trials", "—")))),
-        ("En Iyi Deger", f"{study.get('best_value', 0):.4f}" if study.get("best_value") else "—"),
-        ("Odul Tipi", study.get("reward_type", "—")),
-        ("Baslangic", str(study.get("created_at", study.get("start_time", "—")))[:16]),
+        ("Faz", str(study.get("phase", "—"))),
+        ("Odul Tipi", str(study.get("reward_type", "—")).upper()),
+        ("Tamamlanan", f"{study.get('trials_completed', 0)}/{study.get('n_trials', total_trials or '—')}"),
+        ("Pruned/Failed", f"{study.get('trials_pruned', 0)}/{study.get('trials_failed', 0)}"),
+        ("En Iyi Deger", f"{best_val:.4f}" if isinstance(best_val, (int, float)) else "—"),
+        ("En Iyi Trial #", str(study.get("best_trial")) if study.get("best_trial") is not None else "—"),
+        ("Train Aralığı", f"{study.get('train_start', '—')} → {study.get('train_end', '—')}"),
+        ("Val Aralığı", f"{study.get('val_start', '—')} → {study.get('val_end', '—')}"),
+        ("Olusturuldu", str(study.get("created_at", "—"))[:19]),
     ]
+    # Stats only when present (running studies have None)
+    if stats.get("mean_value") is not None:
+        fields.extend([
+            ("Ort. Deger", f"{stats['mean_value']:.4f}"),
+            ("Medyan", f"{stats.get('median_value', 0):.4f}"),
+            ("Std", f"{stats.get('std_value', 0):.4f}"),
+            ("Min / Max", f"{stats.get('min_value', 0):.4f} / {stats.get('max_value', 0):.4f}"),
+        ])
     rows = []
     for label, val in fields:
         rows.append(dbc.Row([
@@ -344,18 +486,31 @@ def _render_trials_table(trials):
         dbc.Col(html.Small("Parametreler", className="section-title"), width=5),
     ])
     rows = [header]
-    for t in trials[:15]:
-        val = t.get("value", t.get("score", 0)) or 0
+    # Schema: trial_number, state (TrialState enum string), value, params, duration_seconds
+    for t in trials[:25]:
+        val = t.get("value") if t.get("value") is not None else 0
+        try:
+            val = float(val)
+        except (TypeError, ValueError):
+            val = 0.0
         status = str(t.get("state", t.get("status", "—"))).lower()
-        status_color = "success" if status == "complete" else "danger" if "fail" in status else "secondary"
-        duration = t.get("duration", t.get("elapsed", "—"))
-        params_str = json.dumps(t.get("params", {}), ensure_ascii=False)[:60] + "..."
+        status_color = "success" if status == "complete" else "warning" if status == "pruned" else "danger" if "fail" in status else "secondary"
+        duration = t.get("duration_seconds", t.get("duration", t.get("elapsed")))
+        duration_str = f"{float(duration):.1f}" if duration not in (None, "—", "") else "—"
+        try:
+            params_str = json.dumps(t.get("params", {}), ensure_ascii=False)
+            if len(params_str) > 80:
+                params_str = params_str[:77] + "..."
+        except Exception:
+            params_str = str(t.get("params", ""))[:80]
+
+        trial_num = t.get("trial_number", t.get("number", t.get("id", "—")))
 
         rows.append(dbc.Row([
-            dbc.Col(html.Small(str(t.get("number", t.get("id", "—"))), style={"color": TEXT_MUTED}), width=1),
+            dbc.Col(html.Small(str(trial_num), style={"color": TEXT_MUTED}), width=1),
             dbc.Col(html.Small(f"{val:.4f}", style={"color": GREEN if val > 0 else RED}), width=2),
             dbc.Col(dbc.Badge(status.upper(), color=status_color, pill=True, style={"fontSize": "10px"}), width=2),
-            dbc.Col(html.Small(str(duration)[:8] if duration else "—", style={"color": TEXT_MUTED}), width=2),
+            dbc.Col(html.Small(duration_str, style={"color": TEXT_MUTED}), width=2),
             dbc.Col(html.Small(params_str, style={"color": TEXT_MUTED, "fontSize": "11px"}), width=5),
         ], className="py-1 border-bottom"))
     return html.Div(rows)

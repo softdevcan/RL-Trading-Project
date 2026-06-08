@@ -1287,7 +1287,30 @@ async def get_daily_decision(request: DailyDecisionRequest):
 
         # 3. Fetch latest market data
         target_date = request.date or datetime.now().strftime("%Y-%m-%d")
-        symbols = list(request.shares.keys())
+
+        # The trade universe MUST match what the model saw during training,
+        # otherwise the state vector size mismatches the obs space. Derive it
+        # from the model name (phase1/phase2) instead of trusting whatever
+        # set the UI happened to send. The user-supplied `shares` is treated
+        # as a sparse declaration of current holdings — missing entries are
+        # filled with 0.
+        # Phase 1 and 2 share the same 5-symbol universe; phase 2 only adds
+        # fundamental/macro features on top. Phase 3 adds GOLD_GRAM_TRY.
+        from data.bist30_symbols import PHASE1_SYMBOLS, PHASE3_SYMBOLS
+        if "phase3" in model_name_lower:
+            trade_universe = list(PHASE3_SYMBOLS)
+        else:
+            trade_universe = list(PHASE1_SYMBOLS)
+
+        # Normalize whatever shares the client sent to BIST `.IS` form.
+        user_shares = {
+            (k if "." in k else f"{k}.IS"): int(v)
+            for k, v in (request.shares or {}).items()
+        }
+        # Align portfolio to the trade universe (fill missing with 0).
+        normalized_shares = {sym: user_shares.get(sym, 0) for sym in trade_universe}
+        symbols = list(normalized_shares.keys())
+        logger.info(f"Trade universe ({len(symbols)} symbols): {symbols}")
 
         market_data = await fetch_latest_market_data(
             symbols=symbols,
@@ -1298,7 +1321,7 @@ async def get_daily_decision(request: DailyDecisionRequest):
         # 4. Build state
         state = build_live_state(
             balance=request.balance,
-            shares_owned=request.shares,
+            shares_owned=normalized_shares,
             market_data=market_data,
             target_date=target_date,
             max_shares_per_trade=request.max_shares_per_trade
@@ -1319,7 +1342,7 @@ async def get_daily_decision(request: DailyDecisionRequest):
             symbols=symbols,
             current_prices=current_prices,
             balance=request.balance,
-            shares_owned=request.shares,
+            shares_owned=normalized_shares,
             risk_params=risk_params,
             max_shares_per_trade=request.max_shares_per_trade
         )
@@ -1327,13 +1350,13 @@ async def get_daily_decision(request: DailyDecisionRequest):
         # 8. Calculate portfolio before/after
         portfolio_before = calculate_portfolio_value(
             balance=request.balance,
-            shares=request.shares,
+            shares=normalized_shares,
             prices=current_prices
         )
 
         portfolio_after = simulate_portfolio_after_trades(
             balance=request.balance,
-            shares=request.shares,
+            shares=normalized_shares,
             decisions=decisions
         )
 
@@ -1445,6 +1468,42 @@ async def apply_decision(date: str):
     except Exception as e:
         logger.error(f"Apply decision failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/decisions-history")
+async def get_decisions_history():
+    """
+    Return all saved daily decisions (trade_decisions.json) sorted by date desc.
+    Used by the dashboard to browse past decisions, not just the most recent one.
+    """
+    decision_file = f'{_settings.DATA_DIR}/live_trading/trade_decisions.json'
+    if not os.path.exists(decision_file):
+        return {"dates": [], "decisions": {}}
+
+    def _sanitize(obj):
+        # Older entries may contain NaN floats that the std json encoder
+        # accepts on read but FastAPI's response serializer rejects. Coerce
+        # them to None recursively before returning.
+        if isinstance(obj, float):
+            if obj != obj or obj in (float('inf'), float('-inf')):  # NaN/Inf
+                return None
+            return obj
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_sanitize(v) for v in obj]
+        return obj
+
+    try:
+        with open(decision_file, 'r') as f:
+            all_decisions = json.load(f)
+        all_decisions = _sanitize(all_decisions)
+        # Newest first so the UI dropdown shows recent dates at the top.
+        dates = sorted(all_decisions.keys(), reverse=True)
+        return {"dates": dates, "decisions": all_decisions}
+    except Exception as exc:
+        logger.error(f"Failed to load decisions history: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get("/portfolio-history", response_model=PortfolioHistoryResponse)

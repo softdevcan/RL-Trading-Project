@@ -54,8 +54,14 @@ router = APIRouter(prefix="/hyperopt", tags=["Hyperparameter Optimization"])
 active_studies: Dict[str, Dict] = {}  # study_id -> study info
 websocket_connections: Dict[str, List[WebSocket]] = {}  # study_id -> websocket list
 
-# Optuna storage
-OPTUNA_STORAGE = "sqlite:///results/hyperparameter_studies/optuna_studies.db"
+# Optuna storage — anchor to repo root (CWD-independent) and use forward
+# slashes so the SQLAlchemy URI parses correctly on Windows.
+_HYPEROPT_DB = (
+    Path(__file__).resolve().parents[3]
+    / "results" / "hyperparameter_studies" / "optuna_studies.db"
+)
+_HYPEROPT_DB.parent.mkdir(parents=True, exist_ok=True)
+OPTUNA_STORAGE = f"sqlite:///{_HYPEROPT_DB.as_posix()}"
 
 
 def get_optimizer_class(algorithm: AlgorithmType):
@@ -191,6 +197,7 @@ async def run_optimization_background(
             total_timesteps=request.total_timesteps,
             eval_freq=request.eval_freq,
             n_eval_episodes=request.n_eval_episodes,
+            use_cached_data=request.use_cached_data,
             show_progress_bar=False,  # Disable for background
         )
 
@@ -246,6 +253,46 @@ async def run_optimization_background(
 
 # ==================== Endpoints ====================
 
+@router.get("/data-range")
+async def get_cached_data_range():
+    """
+    Mevcut data/bist/raw_stock_data.csv'nin tarih aralığını ve sembol listesini
+    döner. UI hyperopt sayfasındaki DatePicker'ın min/max sınırlarını ve
+    sembol seçicisini buradan dolduruyor.
+    """
+    try:
+        from data.data_fetcher import DataFetcher
+        import pandas as pd
+
+        fetcher = DataFetcher()
+        df = fetcher.load_data('raw_stock_data.csv')
+        dates = df.index.get_level_values('date')
+        if dates.tz is not None:
+            dates = dates.tz_localize(None)
+        symbols = sorted(df.index.get_level_values('symbol').unique().tolist())
+
+        return {
+            "available": True,
+            "min_date": dates.min().strftime("%Y-%m-%d"),
+            "max_date": dates.max().strftime("%Y-%m-%d"),
+            "symbols": symbols,
+            "total_rows": int(len(df)),
+        }
+    except FileNotFoundError:
+        return {
+            "available": False,
+            "min_date": None,
+            "max_date": None,
+            "symbols": [],
+            "total_rows": 0,
+            "message": (
+                "data/bist/raw_stock_data.csv bulunamadı. 'Veri' sayfasından "
+                "veri çekin veya hyperopt için 'yfinance'tan tazele' seçeneğini "
+                "işaretleyin."
+            ),
+        }
+
+
 @router.post("/start", response_model=OptimizationStartResponse)
 async def start_optimization(
     request: OptimizationRequest,
@@ -298,8 +345,54 @@ async def list_studies(
     Optimization studies'i listeler
     """
     try:
-        # Get from active studies
-        studies = list(active_studies.values())
+        # 1) In-memory studies (current process)
+        in_mem = {sid: dict(s) for sid, s in active_studies.items()}
+
+        # 2) Merge SQLite-persisted studies the process never started (e.g.
+        #    after a server restart). Without this the grid silently goes
+        #    empty even though all results are still on disk.
+        known_names = {s.get("study_name") for s in in_mem.values()}
+        try:
+            for summary in optuna.get_all_study_summaries(storage=OPTUNA_STORAGE):
+                if summary.study_name in known_names:
+                    continue
+                # Use study_name as the id surrogate so the detail endpoint
+                # can find it (it accepts study_name fallback).
+                algo_guess = summary.study_name.split("_")[0].lower()
+                try:
+                    algo_enum = AlgorithmType(algo_guess)
+                except ValueError:
+                    algo_enum = AlgorithmType.PPO
+                best_value = summary.best_trial.value if summary.best_trial else None
+                best_params = summary.best_trial.params if summary.best_trial else None
+                best_trial_num = summary.best_trial.number if summary.best_trial else None
+                in_mem[summary.study_name] = {
+                    "study_id": summary.study_name,
+                    "study_name": summary.study_name,
+                    "algorithm": algo_enum.value,
+                    "status": StudyStatus.COMPLETED.value,
+                    "n_trials": summary.n_trials,
+                    "total_timesteps": 0,
+                    "stock_symbols": [],
+                    "train_start": "—",
+                    "train_end": "—",
+                    "val_start": "—",
+                    "val_end": "—",
+                    "phase": 1,
+                    "reward_type": "psr",
+                    "trials_completed": summary.n_trials,
+                    "trials_pruned": 0,
+                    "trials_failed": 0,
+                    "progress_percentage": 100.0,
+                    "best_value": best_value,
+                    "best_params": best_params,
+                    "best_trial": best_trial_num,
+                    "created_at": summary.datetime_start or datetime.now(),
+                }
+        except Exception as exc:
+            logger.warning(f"Could not enumerate SQLite studies: {exc}")
+
+        studies = list(in_mem.values())
 
         # Filter by algorithm
         if algorithm:
@@ -332,14 +425,65 @@ async def list_studies(
 @router.get("/studies/{study_id}", response_model=StudyDetailResponse)
 async def get_study_detail(study_id: str):
     """
-    Study detaylarını getirir
+    Study detaylarını getirir.
+
+    `active_studies` is process-memory only — after a server restart the
+    in-memory record is gone but the Optuna SQLite DB still has all trials.
+    Fall back to building a minimal StudyInfo straight from the DB so detail
+    pages keep working across restarts.
     """
     try:
         # Check if study exists
-        if study_id not in active_studies:
-            raise HTTPException(status_code=404, detail="Study not found")
+        if study_id in active_studies:
+            study_info = StudyInfo(**active_studies[study_id])
+        else:
+            # Cold-load from SQLite. `study_id` here is either the UUID or
+            # the study_name; we try both since the grid uses whichever is
+            # present.
+            summaries = optuna.get_all_study_summaries(storage=OPTUNA_STORAGE)
+            match = None
+            for s in summaries:
+                if s.study_name == study_id or s.study_name.endswith(study_id[:8]):
+                    match = s
+                    break
+            if match is None:
+                raise HTTPException(status_code=404, detail="Study not found")
 
-        study_info = StudyInfo(**active_studies[study_id])
+            best_trial = None
+            best_value = None
+            best_params = None
+            if match.best_trial is not None:
+                best_trial = match.best_trial.number
+                best_value = match.best_trial.value
+                best_params = match.best_trial.params
+
+            algo_guess = match.study_name.split("_")[0].lower()
+            try:
+                algo_enum = AlgorithmType(algo_guess)
+            except ValueError:
+                algo_enum = AlgorithmType.PPO
+
+            n_complete = match.n_trials  # total trials in DB
+            study_info = StudyInfo(
+                study_id=study_id,
+                study_name=match.study_name,
+                algorithm=algo_enum,
+                status=StudyStatus.COMPLETED,
+                n_trials=n_complete,
+                total_timesteps=0,
+                stock_symbols=[],
+                train_start="—",
+                train_end="—",
+                val_start="—",
+                val_end="—",
+                phase=1,
+                reward_type="psr",
+                trials_completed=n_complete,
+                best_value=best_value,
+                best_params=best_params,
+                best_trial=best_trial,
+                created_at=match.datetime_start or datetime.now(),
+            )
 
         # Load study from Optuna
         try:
