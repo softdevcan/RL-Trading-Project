@@ -256,8 +256,9 @@ class StackingEnsemble:
             return self._build_result(symbol, model_results, test_metrics, n, split)
 
         # Meta-learner: X_meta OOF tahminleri uzerinde egit
-        meta_X_train = np.column_stack([meta_predictions[m] for m in sorted(meta_predictions.keys())])
-        meta_y_train = y_meta[:meta_X_train.shape[0]]
+        # Sondan hizala: DL modelleri kisa OOF dondurur, hepsini min_len'e indir.
+        meta_X_train, meta_min_len = self._stack_aligned(meta_predictions)
+        meta_y_train = y_meta[-meta_min_len:]
 
         self.meta_learner = self._build_meta_learner()
         self.meta_learner.fit(meta_X_train, meta_y_train)
@@ -277,12 +278,11 @@ class StackingEnsemble:
                 logger.warning(f"  [{model_type}] test tahmin hatasi: {exc}")
 
         if len(test_preds_per_model) >= 2:
-            test_meta_X = np.column_stack(
-                [test_preds_per_model[m] for m in sorted(test_preds_per_model.keys())]
-            )
+            test_meta_X, _ = self._stack_aligned(test_preds_per_model)
             ensemble_pred = self.meta_learner.predict(test_meta_X)
         elif test_preds_per_model:
-            ensemble_pred = np.mean(list(test_preds_per_model.values()), axis=0)
+            only = list(test_preds_per_model.values())[0]
+            ensemble_pred = only
         else:
             ensemble_pred = np.zeros_like(y_test)
 
@@ -299,11 +299,10 @@ class StackingEnsemble:
         # TATS: meta-train seti uzerinde trend siniflandirici egit
         if self.use_tats and len(meta_predictions) >= 1:
             self.tats_corrector = TATSCorrector()
-            meta_X_for_tats = np.column_stack(
-                [meta_predictions[m] for m in sorted(meta_predictions.keys())]
-            )
-            current_prices_meta = y_base[-len(meta_y_train):]
-            tats_result = self.tats_corrector.fit(meta_X_for_tats, meta_y_train, current_prices_meta)
+            meta_X_for_tats, tats_min_len = self._stack_aligned(meta_predictions)
+            tats_y = y_meta[-tats_min_len:]
+            current_prices_meta = y_base[-tats_min_len:]
+            tats_result = self.tats_corrector.fit(meta_X_for_tats, tats_y, current_prices_meta)
             test_metrics['tats_trained'] = tats_result.get('trained', False)
 
         # ------------------------------------------------------------------
@@ -342,17 +341,30 @@ class StackingEnsemble:
 
         # Meta-learner'i yeni base model tahminleri uzerinde yeniden fit et
         if len(new_meta_preds) >= 2:
-            new_meta_X = np.column_stack(
-                [new_meta_preds[m] for m in sorted(new_meta_preds.keys())]
-            )
+            new_meta_X, new_min_len = self._stack_aligned(new_meta_preds)
             self.meta_learner = self._build_meta_learner()
-            self.meta_learner.fit(new_meta_X, y_meta[:new_meta_X.shape[0]])
+            self.meta_learner.fit(new_meta_X, y_meta[-new_min_len:])
             logger.info("  [META] Meta-learner %80-trained modeller ile yeniden egitildi")
 
         self._is_trained = True
         self._save_ensemble_meta(symbol, model_results, test_metrics)
 
         return self._build_result(symbol, model_results, test_metrics, n, split)
+
+    @staticmethod
+    def _stack_aligned(predictions: Dict[str, np.ndarray]):
+        """Model tahminlerini ortak minimum uzunluga (sondan) hizalayip stack'le.
+
+        Sekans modelleri (BiLSTM/TFT) lookback yuzunden agac modellerinden kisa
+        OOF tahmini dondurur; `column_stack` esit uzunluk ister. Hepsini sondan
+        `min_len` kadar kirparak hizalar ve (stacked_X, min_len) dondururuz.
+        Bu olmadan DL modelleri meta-katmanda column_stack'i patlatir ve sessizce
+        duserler (bkz. Faz 6 R1).
+        """
+        keys = sorted(predictions.keys())
+        min_len = min(len(predictions[k]) for k in keys)
+        stacked = np.column_stack([predictions[k][-min_len:] for k in keys])
+        return stacked, min_len
 
     def _compute_model_agreement(self, predictions: Dict[str, np.ndarray]) -> float:
         """Modellerin yon tahmini uzerindeki uzlasma orani."""
@@ -485,13 +497,13 @@ class StackingEnsemble:
         direction = 'UP' if change_pct > 0 else 'DOWN'
 
         # Confidence: direction head varsa ondan, yoksa fiyat oylamasiyla
+        total_models = len(model_predictions)
         if direction_probs:
             mean_dir_prob = float(np.mean(list(direction_probs.values())))
             confidence = round(max(mean_dir_prob, 1 - mean_dir_prob), 4)
             agreement = mean_dir_prob if direction == 'UP' else (1 - mean_dir_prob)
         else:
             up_votes = sum(1 for p in model_predictions.values() if p > current_close)
-            total_models = len(model_predictions)
             agreement = up_votes / total_models if total_models > 0 else 0.5
             confidence = round(max(agreement, 1 - agreement), 4)
         agreement = round(float(agreement), 4)

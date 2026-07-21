@@ -229,6 +229,15 @@ class BasePredictionModel(ABC):
         if y_true.size == 0 or y_pred.size == 0:
             return {'mape': 0.0, 'rmse': 0.0, 'mae': 0.0, 'direction_accuracy': 0.0}
 
+        # Sekans-tabanli modeller (BiLSTM/TFT) lookback yuzunden y_true'dan kisa
+        # bir tahmin dizisi dondurur. Son-N hizalama ile uzunlugu esitle —
+        # aksi halde bool maske uyumsuzlugu IndexError firlatir ve ensemble bu
+        # modelleri sessizce duser (bkz. Faz 6 R1).
+        if len(y_true) != len(y_pred):
+            m = min(len(y_true), len(y_pred))
+            y_true = y_true[-m:]
+            y_pred = y_pred[-m:]
+
         mask = y_true != 0
         if mask.sum() > 0:
             mape = float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100)

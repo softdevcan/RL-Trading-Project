@@ -66,8 +66,9 @@ class BiLSTMModel(BasePredictionModel):
 
     MODEL_TYPE = 'bilstm'
 
-    def __init__(self, horizon: str = 'daily', params: Optional[Dict] = None):
-        super().__init__(horizon, params)
+    def __init__(self, horizon: str = 'daily', params: Optional[Dict] = None,
+                 source: Optional[str] = None):
+        super().__init__(horizon, params, source)
         self.device = _get_device()
         self.net: Optional[_BiLSTMNet] = None
         self.scaler_mean: Optional[np.ndarray] = None
