@@ -1,0 +1,63 @@
+# ── Never copy the local virtualenv (≈2 GB) or VCS history (≈51 MB) ──────────
+# NOTE: `venv/` is the Python virtualenv (ignore). `env/` is PROJECT CODE
+# (the Gymnasium trading environment) and must stay in the image — do not
+# add it here.
+venv/
+.git/
+.gitignore
+
+# ── Python bytecode / build artifacts ───────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Runtime state — comes in as bind-mounted volumes, not baked into image ───
+models/
+results/
+logs/
+data/*.csv
+data/**/*.csv
+data/predictions/
+data/raw/
+data/processed/
+hyperparameter_optimization/
+runs/
+
+# ── Secrets — passed at runtime via env_file, never in the image ─────────────
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# ── IDE / OS noise ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Not needed to run the server ─────────────────────────────────────────────
+tests/
+scripts/
+docs/
+*.ipynb
+.ipynb_checkpoints/
+reviews/
+*.md
+!README.md
+
+# ── Docker files themselves ──────────────────────────────────────────────────
+Dockerfile
+.dockerignore
+docker-compose*.yml
+Makefile
