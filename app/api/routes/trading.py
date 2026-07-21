@@ -257,6 +257,23 @@ async def get_training_status():
     )
 
 
+# /models cache — the home page polls this every 30s and it re-reads the
+# whole models dir plus every metrics JSON each time. Invalidate on either
+# a dir-mtime change (new/re-trained model) or a short TTL, so an in-place
+# metrics rewrite that doesn't bump the dir mtime is still picked up soon.
+_models_cache: Dict[str, Any] = {"key": None, "value": None, "ts": 0.0}
+_MODELS_CACHE_TTL_SEC = 10
+
+
+def _models_cache_key() -> tuple:
+    def _mtime(path):
+        try:
+            return os.path.getmtime(path)
+        except OSError:
+            return None
+    return (_mtime(_settings.MODELS_DIR), _mtime(_settings.RESULTS_DIR))
+
+
 @router.get("/models", response_model=List[ModelInfo])
 async def list_models():
     """List all trained models"""
@@ -264,6 +281,11 @@ async def list_models():
 
     if not os.path.exists(models_dir):
         return []
+
+    cache_key = _models_cache_key()
+    fresh = (time.time() - _models_cache["ts"]) < _MODELS_CACHE_TTL_SEC
+    if _models_cache["key"] == cache_key and _models_cache["value"] is not None and fresh:
+        return _models_cache["value"]
 
     models = []
 
@@ -306,6 +328,9 @@ async def list_models():
                 metrics=metrics
             ))
 
+    _models_cache["key"] = cache_key
+    _models_cache["value"] = models
+    _models_cache["ts"] = time.time()
     return models
 
 
@@ -1218,6 +1243,41 @@ async def run_training(request: TrainingRequest):
 
 # ==================== DAILY TRADING ENDPOINTS ====================
 
+# SB3 model cache — .load() deserializes the whole policy net from disk
+# (torch import + weight loading), so a cold call costs real time. Cache
+# per model file, keyed on the .zip's mtime so a re-trained model (same
+# filename, new weights) is picked up without a server restart.
+_sb3_model_cache: Dict[str, Any] = {}  # model_path -> (model, mtime)
+
+
+def _load_sb3_model(model_path: str, model_name_lower: str):
+    """Load (or reuse a cached) SB3 model, matching algorithm by filename convention."""
+    from stable_baselines3 import PPO, A2C, TD3, SAC
+
+    mtime = os.path.getmtime(model_path + ".zip")
+    cached = _sb3_model_cache.get(model_path)
+    if cached is not None and cached[1] == mtime:
+        return cached[0]
+
+    if "ppo" in model_name_lower:
+        model = PPO.load(model_path)
+        logger.info("Loaded PPO model")
+    elif "a2c" in model_name_lower:
+        model = A2C.load(model_path)
+        logger.info("Loaded A2C model")
+    elif "td3" in model_name_lower:
+        model = TD3.load(model_path)
+        logger.info("Loaded TD3 model")
+    elif "sac" in model_name_lower:
+        model = SAC.load(model_path)
+        logger.info("Loaded SAC model")
+    else:
+        return None
+
+    _sb3_model_cache[model_path] = (model, mtime)
+    return model
+
+
 @router.post("/daily-decision", response_model=DailyDecisionResponse)
 async def get_daily_decision(request: DailyDecisionRequest):
     """
@@ -1247,8 +1307,6 @@ async def get_daily_decision(request: DailyDecisionRequest):
         simulate_portfolio_after_trades,
         save_daily_decision
     )
-    from stable_baselines3 import PPO, A2C, TD3, SAC
-
     try:
         logger.info(f"Daily decision request for model: {request.model_name}")
 
@@ -1261,21 +1319,10 @@ async def get_daily_decision(request: DailyDecisionRequest):
                 detail=f"Model not found: {request.model_name}"
             )
 
-        # Determine model type from name
+        # Determine model type from name (cached — see _load_sb3_model)
         model_name_lower = request.model_name.lower()
-        if "ppo" in model_name_lower:
-            model = PPO.load(model_path)
-            logger.info("Loaded PPO model")
-        elif "a2c" in model_name_lower:
-            model = A2C.load(model_path)
-            logger.info("Loaded A2C model")
-        elif "td3" in model_name_lower:
-            model = TD3.load(model_path)
-            logger.info("Loaded TD3 model")
-        elif "sac" in model_name_lower:
-            model = SAC.load(model_path)
-            logger.info("Loaded SAC model")
-        else:
+        model = _load_sb3_model(model_path, model_name_lower)
+        if model is None:
             raise HTTPException(
                 status_code=400,
                 detail="Unknown model type. Model name must contain: ppo, a2c, td3, or sac"
