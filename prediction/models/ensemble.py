@@ -73,6 +73,7 @@ class StackingEnsemble:
         source: Optional[str] = None,
         feature_groups: Optional[List] = None,
         target_type: str = 'log_return',
+        strict: bool = False,
     ):
         if horizon not in ('daily', 'weekly'):
             raise ValueError("horizon 'daily' veya 'weekly' olmali")
@@ -87,6 +88,11 @@ class StackingEnsemble:
         self.n_folds = n_folds
         self.meta_learner_type = meta_learner_type
         self.use_tats = use_tats
+        # Faz 6 (G.1): strict=True ise bir base model egitimde patlayinca fail-fast
+        # (sessiz dusme yerine). Varsayilan False — geriye uyumlu; result nesnesi
+        # her durumda failed_models + status tasir.
+        self.strict = strict
+        self.failed_models: Dict[str, str] = {}
 
         self.feature_engineer = PredictionFeatureEngineer(horizon)
         self.base_models: Dict[str, BasePredictionModel] = {}
@@ -236,7 +242,13 @@ class StackingEnsemble:
                     f"Dir Acc: {result['val_metrics']['direction_accuracy']:.1f}%"
                 )
             except Exception as exc:
+                # Faz 6 (G.1): sessiz dusme yerine kaydet; strict ise fail-fast
+                self.failed_models[model_type] = str(exc)
                 logger.error(f"  [{model_type}] egitim hatasi: {exc}")
+                if self.strict:
+                    raise RuntimeError(
+                        f"[{symbol}] strict mod: '{model_type}' base modeli egitilemedi: {exc}"
+                    ) from exc
                 continue
 
         if len(meta_predictions) < 2:
@@ -382,9 +394,17 @@ class StackingEnsemble:
         return round(float(agreement), 4)
 
     def _build_result(self, symbol, model_results, test_metrics, n, split):
+        # Faz 6 (G.1): eksik model varsa status='degraded' — sessiz "basarili" yok
+        expected = {m for m, cfg in self.model_configs.items() if cfg.get('enabled', True)}
+        trained = set(model_results.keys())
+        missing = sorted(expected - trained)
+        status = 'ok' if not missing else 'degraded'
         return {
             'symbol': symbol,
             'horizon': self.horizon,
+            'status': status,
+            'missing_models': missing,
+            'failed_models': dict(self.failed_models),
             'n_total': n,
             'n_train': split,
             'n_test': n - split,

@@ -23,15 +23,19 @@ class DataFetcher:
     # Class-level cache to share data across instances
     _cache = {}
 
-    def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None):
+    def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None,
+                 max_workers: int = 8):
         """
         Args:
             start_date: Başlangıç tarihi (YYYY-MM-DD)
             end_date: Bitiş tarihi (YYYY-MM-DD), None ise bugün
+            max_workers: Paralel sembol çekme için thread sayısı (Faz 6, 1.1).
+                         yfinance rate-limit'ine saygılı; 1 = seri (eski davranış).
         """
         self.start_date = start_date
         self.end_date = end_date or datetime.now().strftime("%Y-%m-%d")
         self.data_dir = "data/bist"
+        self.max_workers = max(1, int(max_workers))
 
         # Veri dizinini oluştur
         os.makedirs(self.data_dir, exist_ok=True)
@@ -92,13 +96,11 @@ class DataFetcher:
         # ~252 trading days/year; approximate expected rows
         expected_rows = int(calendar_days * 252 / 365)
 
-        all_data = {}
-
-        for symbol in symbols:
+        def _fetch_one(symbol):
+            """Tek sembol çek + coverage kontrolü. (symbol, df|None) döndürür."""
             df = self._fetch_with_retry(symbol)  # (#13) retry logic
             if df is None:
-                continue
-
+                return symbol, None
             # (#14) Minimum coverage check: require ≥80% of expected trading days
             if expected_rows > 0 and len(df) < expected_rows * 0.8:
                 coverage_pct = len(df) / expected_rows * 100
@@ -106,7 +108,27 @@ class DataFetcher:
                     f"  ⚠ {symbol}: low coverage {coverage_pct:.0f}% "
                     f"({len(df)} rows, expected ~{expected_rows})"
                 )
+            return symbol, df
 
+        # Faz 6 (1.1): Sembolleri paralel çek (I/O-bound → ThreadPool, GIL salınır).
+        # Sonuçları symbols sırasına göre topla — concat deterministik kalsın.
+        results = {}
+        if self.max_workers == 1 or len(symbols) == 1:
+            for symbol in symbols:
+                sym, df = _fetch_one(symbol)
+                results[sym] = df
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            workers = min(self.max_workers, len(symbols))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                for sym, df in pool.map(_fetch_one, symbols):
+                    results[sym] = df
+
+        all_data = {}
+        for symbol in symbols:  # deterministik sıra
+            df = results.get(symbol)
+            if df is None:
+                continue
             all_data[symbol] = df
             logger.info(f"  ✓ {symbol}: {len(df)} rows ({df.index[0].date()} to {df.index[-1].date()})")
 

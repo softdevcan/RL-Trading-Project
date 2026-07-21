@@ -88,6 +88,11 @@ class MacroDataFetcher:
         # Veri dizini oluştur
         os.makedirs(self.data_dir, exist_ok=True)
 
+        # Faz 6 (G.2): Veri kalite bayraklari — fallback/sabit-deger kullanildiginda
+        # isaretlenir. Egitim manifesti bunu kaydeder ki yanlis veriyle egitim
+        # sessizce gerceklesmesin (bkz. R3). fetch_macro_data basinda sifirlanir.
+        self.data_quality: Dict[str, str] = {}
+
         logger.info(f"MacroDataFetcher initialized")
         logger.info(f"Date range: {self.start_date_evds} to {self.end_date_evds}")
 
@@ -118,6 +123,7 @@ class MacroDataFetcher:
     def fetch_macro_data(self, save=True) -> pd.DataFrame:
         """Tüm makro verileri çek ve birleştir"""
         data_dict = {}
+        self.data_quality = {}  # Faz 6 (G.2): bu cekimde fallback kullanildi mi
 
         # 1. yfinance verilerini çek (Döviz + BIST100)
         logger.info("Fetching market data from yfinance...")
@@ -200,6 +206,8 @@ class MacroDataFetcher:
                 end = self.end_date_yf or datetime.now().strftime("%Y-%m-%d")
                 dates = pd.date_range(start=start, end=end, freq='D')
                 data_dict['policy_rate'] = pd.Series(50.0, index=dates)
+                # Faz 6 (G.2): sabit-deger fallback isaretle — egitim manifestine gecer
+                self.data_quality['policy_rate'] = 'fallback_constant_50.0'
 
         # 3. Verileri Birleştir
         if not data_dict:
@@ -235,11 +243,18 @@ class MacroDataFetcher:
             if col not in macro_df.columns:
                 logger.warning(f"Missing column {col}, filling with 0")
                 macro_df[col] = 0.0
+                # Faz 6 (G.2): eksik zorunlu kolon sifirla dolduruldu — isaretle
+                self.data_quality[col] = 'fallback_zero'
 
         logger.info(f"\nMacro Data Summary:")
         logger.info(f"Rows: {len(macro_df)}")
         logger.info(f"Columns: {macro_df.columns.tolist()}")
-        
+        if self.data_quality:
+            logger.warning(f"⚠ Veri kalite uyarisi (fallback kullanildi): {self.data_quality}")
+
+        # Faz 6 (G.2): kalite bayraklarini DataFrame'e ilistir (downstream/manifest erisimi)
+        macro_df.attrs['data_quality'] = dict(self.data_quality)
+
         if save:
             self.save_data(macro_df, 'macro_data.csv')
 
