@@ -1,0 +1,56 @@
+# RL Trading — single-node serving stack (dashboard + prediction API).
+#
+# Usage:
+#   cp .env.production.example .env      # then fill in EVDS_API_KEY etc.
+#   docker compose up -d --build
+#
+# Trained models live on the host and are bind-mounted in (see volumes),
+# so you train on your own machine and copy models/ to the server.
+
+services:
+  rltrading:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rltrading:latest
+    container_name: rltrading
+
+    # Host:container. Put a reverse proxy (nginx/Caddy) in front for HTTPS —
+    # see docs/deployment/docker.md. To keep it off the public internet and
+    # only reachable by the proxy, change to "127.0.0.1:8000:8000".
+    ports:
+      - "8000:8000"
+
+    # Secrets and config at runtime — never baked into the image.
+    env_file:
+      - .env
+
+    # Force the container port regardless of what .env's PORT says, so it
+    # always matches the published port above.
+    environment:
+      PORT: "8000"
+      HOST: "0.0.0.0"
+
+    # Persist state across restarts/rebuilds. These are the app's writable
+    # dirs (config.py: MODELS_DIR/DATA_DIR/RESULTS_DIR/LOGS_DIR).
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./logs:/app/logs
+
+    # Self-healing: restart on crash and on server reboot, but not if you
+    # deliberately `docker compose stop`.
+    restart: unless-stopped
+
+    # 8 GB host → cap at 6 GB, leaving room for the OS. Single uvicorn worker
+    # (see Dockerfile CMD) keeps the in-process model caches coherent.
+    mem_limit: 6g
+    mem_reservation: 2g
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
