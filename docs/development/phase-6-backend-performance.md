@@ -62,6 +62,21 @@
 - `catboost_info/` yanlışlıkla git-tracked; her CatBoost eğitiminde kirleniyor → `.gitignore`'a eklenmeli.
 - `lightgbm`/`catboost` venv'de eksikti (requirements'ta vardı) → kuruldu; ortam kurulum notu.
 
+### 🖥️ Ortam notları (bu sprint bu geliştirici makinesinde yürütüldü — iş bilgisayarında değişebilir)
+
+- **Bağımlılık:** `lightgbm` ve `catboost` `requirements.txt`'te tanımlı ama bu venv'de kurulu değildi (ortam bug'ı). Yeni bir makinede: `pip install -r requirements.txt` ile tam kurulum yapılmalı, yoksa ensemble yine 3 modele düşer.
+- **GPU:** Bu makinede CUDA RTX 4060 (8.6 GB) doğrulandı. DL eğitimleri GPU'da; iş bilgisayarında GPU yoksa BiLSTM/TFT CPU'da çok yavaş olur — Epic 3.1 (AMP) ve 2.2 (paralellik) kararları GPU varlığına göre yeniden değerlendirilmeli.
+- **Baseline karşılaştırması:** `phase6_baseline.md` bu makinenin donanımına özgü. İş bilgisayarında optimizasyon ölçmeden önce o makinede yeni bir baseline alınmalı (`python scripts/benchmarking/profile_training.py --stage all --symbols 5 --cached --out results/benchmarks/phase6_baseline_<makine>.md`).
+- **Terminal:** Bu makinede cp1254 (unicode ✓/❌ yazdıramıyor) → test/script çıktıları ASCII tutuldu.
+- **Uzun eğitim koşumları:** Windows'ta `nohup &` + CUDA arka plan süreçleri güvenilmez (bir baseline koşumu sessizce öldü). Uzun eğitimleri senkron veya harness'in kendi background task mekanizmasıyla çalıştır.
+
+### 🔁 Yarın devam etmek için (iş bilgisayarında)
+
+1. `git checkout fix/dl-models-ensemble-integration` (3 commit: `9dcb277`, `bc31b37`, `ee7a0f1` + bu doküman commit'i)
+2. `pip install -r requirements.txt` (lightgbm/catboost dahil tam kurulum)
+3. `python tests/test_prediction_regression.py` — güvenlik ağının o makinede de yeşil olduğunu doğrula (golden yeniden üretmen gerekebilir: `--update`, çünkü donanım farkı DL non-determinizmini etkiler)
+4. Epic 2.1 (warm-start) ile devam — yukarıdaki "KALDIĞIMIZ YER" bölümüne göre.
+
 ---
 
 ## Context
