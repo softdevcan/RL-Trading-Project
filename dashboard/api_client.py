@@ -1,24 +1,53 @@
-"""HTTP client wrappers for all FastAPI backend endpoints."""
+"""In-process ASGI client wrappers for all FastAPI backend endpoints.
 
+Dash and FastAPI share one Python process (Dash is mounted under /dash via
+WSGIMiddleware), so routing calls through a real TCP/HTTP round-trip was
+pure overhead. This module instead talks to the FastAPI `app` object
+directly over httpx's ASGI transport: same routing/validation/exception
+behavior as a real request, no socket involved.
+"""
+
+import asyncio
 import os
-import requests
 from typing import Any, Dict, List, Optional
 
-# Base URL - can be overridden via environment variable
+import httpx
+
+# Base path for API routes (kept for compatibility with callers/logging).
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8888/api")
 TIMEOUT = 30  # seconds
 
-
 import logging as _logging
 _api_log = _logging.getLogger(__name__)
+# Every Dash callback makes an in-process ASGI call now; httpx's default
+# INFO-level "HTTP Request: ..." line per call would otherwise flood logs.
+_logging.getLogger("httpx").setLevel(_logging.WARNING)
+
+def _asgi_transport() -> httpx.ASGITransport:
+    """Lazily resolve the FastAPI app (avoids circular import at module load)."""
+    from app.main import app as _fastapi_app
+    return httpx.ASGITransport(app=_fastapi_app)
+
+
+def _run(coro):
+    """Run an async call from Dash's synchronous callback context.
+
+    A fresh client/loop per call keeps this safe to invoke from any thread
+    Dash schedules callbacks on, at the cost of the (cheap, in-process)
+    ASGI handshake each time — no TCP socket, no connection pool to manage.
+    """
+    return asyncio.run(coro)
 
 
 def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> Any:
     """GET request, returns parsed JSON or None on error."""
     try:
-        resp = requests.get(f"{API_BASE}{path}", params=params, timeout=timeout)
-        resp.raise_for_status()
-        return resp.json()
+        async def _do():
+            async with httpx.AsyncClient(transport=_asgi_transport(), base_url="http://dash-internal/api") as client:
+                resp = await client.get(path, params=params, timeout=timeout)
+                resp.raise_for_status()
+                return resp.json()
+        return _run(_do())
     except Exception as exc:
         _api_log.warning("GET %s%s failed: %s", API_BASE, path, exc)
         return None
@@ -26,17 +55,18 @@ def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> An
 
 def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None) -> Any:
     """POST request, returns parsed JSON or None on error."""
-    resp = None
     try:
-        resp = requests.post(
-            f"{API_BASE}{path}", json=json, params=params, timeout=TIMEOUT
-        )
-        resp.raise_for_status()
-        return resp.json()
+        async def _do():
+            async with httpx.AsyncClient(transport=_asgi_transport(), base_url="http://dash-internal/api") as client:
+                r = await client.post(path, json=json, params=params, timeout=TIMEOUT)
+                r.raise_for_status()
+                return r.json()
+        return _run(_do())
     except Exception as exc:
         # FastAPI 422 (validation) bodies carry the actual fault — log them
         # otherwise debugging is a guessing game.
         body = None
+        resp = getattr(exc, "response", None)
         if resp is not None:
             try:
                 body = resp.json()

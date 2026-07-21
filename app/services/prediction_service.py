@@ -6,6 +6,7 @@ Mevcut PredictionService API'sini korurken yeni ensemble mimarisini kullanir.
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 
@@ -96,6 +97,38 @@ def _fetch_symbol_data(
     df.index = pd.to_datetime(df.index).tz_localize(None)
     df = _clean_ohlcv(df)
     return df
+
+
+# ── Predictor cache ──────────────────────────────────────────────────────
+# Loading an ensemble means deserializing XGBoost + LightGBM + CatBoost +
+# BiLSTM + TFT from disk, which used to happen on every single /predict
+# call. Cache the loaded PricePredictor per (symbol, horizon, source) and
+# invalidate on the ensemble meta file's mtime, so a fresh training run is
+# picked up without a server restart.
+_predictor_cache: Dict[tuple, tuple] = {}  # key -> (predictor, meta_mtime)
+
+
+def _get_cached_predictor(horizon: str, symbol: str, source: Optional[str]):
+    """PricePredictor'i cache'ten dondur; egitilmis meta dosyasi degismisse yeniden yukle."""
+    from prediction.models import PricePredictor
+
+    key = (symbol, horizon, source)
+    predictor = PricePredictor(horizon, source=source)
+    meta_path = predictor.ensemble._ensemble_meta_path(symbol)
+
+    try:
+        meta_mtime = os.path.getmtime(meta_path)
+    except OSError:
+        meta_mtime = None
+
+    cached = _predictor_cache.get(key)
+    if cached is not None and cached[1] == meta_mtime:
+        return cached[0]
+
+    if predictor.is_trained(symbol):
+        predictor.load(symbol)
+    _predictor_cache[key] = (predictor, meta_mtime)
+    return predictor
 
 
 def _clean_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
@@ -542,7 +575,6 @@ class PredictionService:
             targets: Detayli kullanim — her oge {symbol, source} icerir.
                      Verilirse symbols+source goz ardi edilir.
         """
-        from prediction.models import PricePredictor
         from prediction.tracker import PredictionTracker
 
         tracker = PredictionTracker()
@@ -565,7 +597,7 @@ class PredictionService:
             symbol = job['symbol']
             try:
                 resolved = _resolve_source(symbol, job.get('source'))
-                predictor = PricePredictor(horizon, source=resolved)
+                predictor = _get_cached_predictor(horizon, symbol, resolved)
 
                 if not predictor.is_trained(symbol):
                     logger.warning(

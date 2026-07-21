@@ -122,13 +122,20 @@ def register_callbacks(app):
         models = api.get_models()
         history = api.get_portfolio_history()
 
+        # ── Fetch each model's metrics once, reuse for both the best-model
+        # summary below and the algo comparison chart (was fetched twice) ──
+        metrics_by_model = {
+            m.get("name", ""): api.get_model_metrics(m.get("name", ""))
+            for m in models
+        }
+
         # ── Aggregate metrics from best model ──────────────────────────────
         total_return = sharpe = drawdown = portfolio = trades = "—"
         if models:
             best = None
             best_sharpe = -999
             for m in models:
-                metrics = api.get_model_metrics(m.get("name", ""))
+                metrics = metrics_by_model.get(m.get("name", ""))
                 sr = metrics.get("sharpe_ratio", -999) if metrics else -999
                 if sr > best_sharpe:
                     best_sharpe = sr
@@ -153,7 +160,7 @@ def register_callbacks(app):
         portfolio_fig = _build_portfolio_chart(history)
 
         # ── Algorithm comparison chart ─────────────────────────────────────
-        algo_fig = _build_algo_chart(models)
+        algo_fig = _build_algo_chart(models, metrics_by_model)
 
         # ── RL Models list ─────────────────────────────────────────────────
         models_list = _build_models_list(models)
@@ -206,14 +213,17 @@ def _build_portfolio_chart(history):
     return fig
 
 
-def _build_algo_chart(models):
+def _build_algo_chart(models, metrics_by_model=None):
     fig = go.Figure()
     if not models:
         return empty_figure("Model yok")
 
+    if metrics_by_model is None:
+        metrics_by_model = {m.get("name", ""): api.get_model_metrics(m.get("name", "")) for m in models}
+
     names, sharpes = [], []
     for m in models:
-        metrics = api.get_model_metrics(m.get("name", ""))
+        metrics = metrics_by_model.get(m.get("name", ""))
         if metrics:
             algo = m.get("algorithm", "UNK").upper()
             names.append(algo)
