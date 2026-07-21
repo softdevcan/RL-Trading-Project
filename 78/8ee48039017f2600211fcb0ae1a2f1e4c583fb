@@ -1,0 +1,30 @@
+Makefile
+  s_5ca8bb443b4135::t_f93ee7fe988092 1-36
+.dockerignore
+  s_5ca8bb443b4135::t_49bea26592aeef 2-4
+  s_5ca8bb443b4135::t_cf547e83aec494 1,5-63
+Dockerfile
+  s_5ca8bb443b4135::t_a3de41b5244604 1-77
+docker-compose.yml
+  s_5ca8bb443b4135::t_fa7260a6d83c5d 1-56
+docs/deployment/docker.md
+  s_5ca8bb443b4135::t_9d1fc733c05014 1-183
+.env.production.example
+  s_5ca8bb443b4135::t_e38513b132a257 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "788ee48039017f2600211fcb0ae1a2f1e4c583fb",
+  "prompts": {},
+  "sessions": {
+    "s_5ca8bb443b4135": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2680ea4a-d76e-40b8-99d2-3f4b2c247970",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
