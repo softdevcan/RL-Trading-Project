@@ -7,6 +7,7 @@ import time
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from collections import OrderedDict
 from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple, Optional
 import os
@@ -17,11 +18,41 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _default_cache_maxsize() -> int:
+    """Cache tavanini config'ten oku (env override); config yoksa 64."""
+    try:
+        from app.core.config import get_settings
+        return int(get_settings().DATA_CACHE_MAXSIZE)
+    except Exception:
+        return 64
+
+
 class DataFetcher:
     """BIST-30 hisse verileri için veri çekici"""
 
-    # Class-level cache to share data across instances
-    _cache = {}
+    # Class-level LRU cache to share data across instances (Faz 6 · B8).
+    # OrderedDict = insertion/erisim sirasi -> en eski atilir. Sinirsiz dict
+    # batch egitimde RAM'i sisiriyordu. maxsize=0 -> sinirsiz (eski davranis).
+    _cache: "OrderedDict[str, pd.DataFrame]" = OrderedDict()
+    _cache_maxsize: int = _default_cache_maxsize()
+
+    @classmethod
+    def _cache_get(cls, key: str) -> Optional[pd.DataFrame]:
+        """LRU okuma: hit ise anahtari 'en yeni' konumuna tasi."""
+        if key not in cls._cache:
+            return None
+        cls._cache.move_to_end(key)
+        return cls._cache[key]
+
+    @classmethod
+    def _cache_put(cls, key: str, value: pd.DataFrame) -> None:
+        """LRU yazma: ekle, tavani asarsa en eski (LRU) girdiyi at."""
+        cls._cache[key] = value
+        cls._cache.move_to_end(key)
+        if cls._cache_maxsize and len(cls._cache) > cls._cache_maxsize:
+            evicted_key, _ = cls._cache.popitem(last=False)  # en eski
+            logger.debug("Cache tavani (%d) asildi, atilan: %s",
+                         cls._cache_maxsize, evicted_key)
 
     def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None,
                  max_workers: int = 8):
@@ -81,10 +112,11 @@ class DataFetcher:
         # Create cache key
         cache_key = f"{'-'.join(sorted(symbols))}_{self.start_date}_{self.end_date}"
 
-        # Check cache first
-        if cache_key in DataFetcher._cache:
+        # Check cache first (LRU — hit anahtari en yeni konuma tasir)
+        cached = DataFetcher._cache_get(cache_key)
+        if cached is not None:
             logger.info(f"✓ Using cached data for {len(symbols)} symbols ({self.start_date} to {self.end_date})")
-            return DataFetcher._cache[cache_key].copy()
+            return cached.copy()
 
         logger.info(f"Fetching data for {len(symbols)} symbols...")
         logger.info(f"Date range: {self.start_date} to {self.end_date}")
@@ -146,8 +178,8 @@ class DataFetcher:
         if save:
             self.save_data(combined_df, 'raw_stock_data.csv')
 
-        # Cache the result
-        DataFetcher._cache[cache_key] = combined_df.copy()
+        # Cache the result (LRU — tavan asilirsa en eski girdi atilir)
+        DataFetcher._cache_put(cache_key, combined_df.copy())
         logger.info(f"✓ Data cached for future use")
 
         return combined_df
