@@ -1,6 +1,6 @@
 # Faz 6 — Backend Performans & Eğitim Throughput Sprint'i
 
-**Durum:** Uygulama başladı (2026-07-22) — temel + ölçüm + dayanıklılık katmanı bitti; hız optimizasyonları (Epic 2/3) sırada.
+**Durum:** Devam ediyor (2026-07-22, 2. oturum — **iş bilgisayarı, GPU yok**) — ölçüm + dayanıklılık katmanı **+ CPU-güvenli hız/altyapı işleri** bitti; DL/GPU işleri (Epic 3, 2.2) GPU'lu makineye ertelendi. Sıradaki: **2.1 warm-start plumbing**.
 **Branch:** `fix/dl-models-ensemble-integration`
 **Önceki iş:** `perf: speed up dashboard...` (frontend/serving perf) + `devops: dockerize...` (single-VPS serving)
 **Bu fazın odağı:** **Backend** — veri işleme + model eğitimi (frontend/serving değil)
@@ -41,6 +41,12 @@
 | **G.2** — Fallback veri işareti | `macro_fetcher.py` `data_quality` bayrağı (sabit 50.0 / zero-fill), `df.attrs`'e iliştirilir | ✅ commit `ee7a0f1` |
 | **G.3** — Eğitim manifesti | `prediction/manifest.py` `TrainingManifest` → `results/training_runs/<run_id>.json` | ✅ commit `ee7a0f1` |
 | **Güvenlik ağı** | `tests/test_prediction_regression.py` + `tests/golden/`. **GEÇTİ, deterministik** | ✅ commit `ee7a0f1` |
+| **2.3** — Feature-eng fragmentasyon (B4) | Her `_add_*` → dict biriktir + tek `_assign()`. **BIT-EŞ doğrulandı** (daily+weekly+macro+fund+cross+iceemdan); `PerformanceWarning` 106→0; medyan build daily 68→62ms, weekly 76→60ms | ✅ commit `32b49f6` (2. oturum) |
+| **G.5** — Determinizm/seed | `prediction/seeding.py` `GLOBAL_SEED` (env `PREDICTION_SEED`, def 42) + `seed_everything()`; hardcode `42` 11 yerden merkeze; trainer başında çağrılır | ✅ commit `1e4a10b` |
+| **Config knobs** | `PREDICTION_SEED`, `DATA_FETCH_WORKERS`, `DATA_CACHE_MAXSIZE`, `ENSEMBLE_WARM_START` — hepsi env-override, hardcode yok | ✅ commit `1e4a10b` |
+| **1.2** — Cache LRU sınırı (B8) | `DataFetcher._cache` → `OrderedDict` LRU (`DATA_CACHE_MAXSIZE`, 0=sınırsız). Byte-eş; unit test geçti. (Parquet disk-cache bilinçli atlandı — düşük ROI + CSV kontratı) | ✅ commit `e87e3df` |
+| **G.3+G.4** — Batch orchestrator + resume | `PredictionService.train_batch()` manifest'i gerçekten kullanır (önce hiçbir yerde kullanılmıyordu) + sembol-seviyesi checkpoint/resume; `scripts/training/train_prediction_batch.py` (`--resume`/`--resume-latest`/`--strict`). Mock'lu test geçti (ok/degraded/failed, resume-skip, strict-stop) | ✅ commit `053cfec` |
+| **Teknik borç** | `catboost_info/` gitignore + untrack | ✅ commit `17711eb`+`98f4a83` |
 
 ### 📊 Baseline ölçüm bulguları (RTX 4060, 3 cached sembol)
 
@@ -51,11 +57,22 @@
 
 ### ⏭️ KALDIĞIMIZ YER — sıradaki iş: **Epic 2.1 (warm-start)**
 
-- **Kullanıcı kararı:** opt-in `warm_start=False` **default** (mevcut modeller/golden bozulmasın) → önce A/B ölçüm (hız + MAPE) → kazanç net + kalite regresyonsuzsa sun.
+- **Kullanıcı kararı:** opt-in `warm_start=False` **default** (mevcut modeller/golden bozulmasın) → önce A/B ölçüm (hız + MAPE) → kazanç net + kalite regresyonsuzsa sun. Config'e `ENSEMBLE_WARM_START` bayrağı zaten eklendi (2. oturum), varsayılan False.
 - **Konum:** [ensemble.py:320-359](../../prediction/models/ensemble.py#L320-L359) — %80 yeniden-eğitim turu. Her model `_create_model` ile **sıfırdan** eğitiliyor; DL için asıl kazanç burada.
-- **Her epic'in geçiş şartı:** `python tests/test_prediction_regression.py` yeşil kalmalı.
+- **⚠️ GPU gerekiyor:** 2.1'in asıl kazancı (DL state_dict warm-start + az-epoch fine-tune) ve A/B kalite ölçümü **GPU'lu makinede** yapılmalı — bu iş bilgisayarında DL CPU'da çok yavaş, ölçüm anlamlı olmaz. Plumbing (kod iskeleti) burada yazılabilir; **ölçüm+golden doğrulaması GPU makinesinde**.
+- **Her epic'in geçiş şartı:** `python tests/test_prediction_regression.py` yeşil kalmalı — **ama bu iş bilgisayarında değil** (aşağıdaki not).
 
-**Sıradaki sıra:** 2.1 → 2.2 (semboller arası paralellik; GPU tek/VRAM 8GB → DL semaphore) → 3.1 (DL AMP+DataLoader) → 2.3 (feature-eng fragmentasyon) → G.4 (resume) → 2.4 (feature-sel cache) → 3.2 (HPO sqlite resume) → 1.2 (LRU+Parquet) → G.5 (seed).
+**Sıradaki sıra (revize, GPU-farkındalıklı):** 2.1 plumbing (burada) → **[GPU makinesi]** 2.1 A/B + 3.1 (DL AMP+DataLoader) + 2.2 (semboller arası paralellik; VRAM semaphore) → 2.4 (feature-sel cache, CPU-OK) → 3.2 (HPO sqlite resume).
+
+### ✅ 2. oturumda tamamlananlar (bu iş bilgisayarında, CPU)
+
+CPU'da güvenle yapılıp **kod-doğruluğu** hafif testlerle doğrulanan işler (ağır DL eğitimi/golden GPU makinesine bırakıldı):
+
+- **2.3** feature-eng fragmentasyon — bit-eş, `PerformanceWarning` 106→0 (`32b49f6`)
+- **G.5** merkezi seed politikası + config knobs (`1e4a10b`)
+- **1.2** cache LRU sınırı (`e87e3df`)
+- **G.3+G.4** batch orchestrator + resume — manifest ilk kez gerçekten kullanılıyor (`053cfec`)
+- teknik borç: `catboost_info/` gitignore (`17711eb`, `98f4a83`)
 
 ### 🧹 Sprint kapanışta yapılacak teknik borç
 
@@ -70,12 +87,24 @@
 - **Terminal:** Bu makinede cp1254 (unicode ✓/❌ yazdıramıyor) → test/script çıktıları ASCII tutuldu.
 - **Uzun eğitim koşumları:** Windows'ta `nohup &` + CUDA arka plan süreçleri güvenilmez (bir baseline koşumu sessizce öldü). Uzun eğitimleri senkron veya harness'in kendi background task mekanizmasıyla çalıştır.
 
-### 🔁 Yarın devam etmek için (iş bilgisayarında)
+### 🖥️ İş bilgisayarı (2. oturum) — kesin bulgular
 
-1. `git checkout fix/dl-models-ensemble-integration` (3 commit: `9dcb277`, `bc31b37`, `ee7a0f1` + bu doküman commit'i)
-2. `pip install -r requirements.txt` (lightgbm/catboost dahil tam kurulum)
-3. `python tests/test_prediction_regression.py` — güvenlik ağının o makinede de yeşil olduğunu doğrula (golden yeniden üretmen gerekebilir: `--update`, çünkü donanım farkı DL non-determinizmini etkiler)
-4. Epic 2.1 (warm-start) ile devam — yukarıdaki "KALDIĞIMIZ YER" bölümüne göre.
+- **GPU YOK:** Bu makinede NVIDIA ekran kartı yok → `torch.cuda.is_available() == False`. DL modelleri (BiLSTM/TFT) CPU'da çalışır ve **çok yavaştır**. Sonuç: Epic 3 (AMP/GPU) ve 2.2 (VRAM semaphore paralelliği) burada **anlamlı ölçülemez** → GPU'lu makineye ertelendi.
+- **Python yorumlayıcısı:** Sistem `python`'ı (global) yalnızca numpy/pandas/yfinance içeriyor — **proje bağımlılıkları `venv/`'de**. Bu makinede tüm komutları `venv/Scripts/python.exe ...` ile çalıştır (yoksa `ModuleNotFoundError: sklearn`). venv'de: scikit-learn, xgboost, lightgbm, catboost, torch(CPU), optuna, shap, EMD-signal — hepsi kurulu.
+- **Golden regresyon testi burada rebaseline EDİLMEDİ:** `test_prediction_regression.py` feature matrisini bit-eş üretiyor (deterministik kısım ✓), ama DL kaynaklı ensemble metrikleri GPU golden'ından sapıyor (beklenen CPU-vs-GPU non-determinizmi). **Golden GPU makinesinin donanımına ait**; bu makinede `--update` ile ezmey**in** — GPU baseline'ı bozulur. Bu oturumdaki tüm feature-eng değişiklikleri bunun yerine **kendi CPU-yerel bit-eş karşılaştırmasıyla** (git HEAD'e karşı) doğrulandı.
+- **2.3 doğrulama yöntemi (tekrar için):** pre-refactor `feature_engineer.py`'ı `git show HEAD:...`'dan çekip aynı sentetik veri + macro/fund/cross/iceemdan ile `build_features` çıktısını NaN-farkında bit-eş karşılaştır; `PerformanceWarning`'i `warnings.simplefilter('error')` ile yakala.
+
+### 🔁 Yarın devam etmek için
+
+**Bu iş bilgisayarında (CPU-güvenli işler):**
+1. `venv/Scripts/python.exe` kullan (global python değil).
+2. Epic **2.1 warm-start plumbing** — kod iskeleti: `warm_start` bayrağını `StackingEnsemble.__init__`'e ekle (config `ENSEMBLE_WARM_START`'tan oku), %80 turunda DL için `state_dict` yükleme + ağaçlar için `xgb_model=`/`init_model=` yolunu hazırla. Davranış default (False) sıfırdan-eğitim; bit-eş kalmalı.
+3. 2.4 (feature-sel cache) da CPU-OK.
+
+**GPU'lu makinede (ölçüm + kalite):**
+1. `git checkout fix/dl-models-ensemble-integration && pip install -r requirements.txt`
+2. `python tests/test_prediction_regression.py --update` — golden'ı O makinede yeniden üret (donanım farkı DL non-determinizmini etkiler).
+3. 2.1 A/B ölçümü (hız + MAPE regresyonu), sonra 3.1 (AMP), 2.2 (paralellik).
 
 ---
 
@@ -309,6 +338,8 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 
 **Önerilen koşum sırası:** Epic 0 → **G.1** → 1.1 → 2.1 → **G.3** → (2.2 ‖ 3.1) → G.2/G.4 → 2.3 → geri kalan P2'ler.
 
+**Gerçekleşen (bugüne dek):** ✅ 0, 1.1, G.1, G.2, G.3, güvenlik-ağı (1. oturum) → ✅ 2.3, G.5, config, 1.2, G.4 (2. oturum, CPU) → ⏭️ **2.1** (plumbing burada, A/B GPU'da) → GPU: 3.1, 2.2 → 2.4, 3.2.
+
 > **Hız mı, güvenilirlik mi önce?** İkisi iç içe. G.1 (sessiz hata görünürlüğü) baseline'dan hemen sonra gelir çünkü hem paralelleştirmenin (2.2) ön koşulu hem de "sorunsuz"un temeli. Manifest (G.3) ilk hız kazanımlarıyla birlikte devreye girer ki her iyileştirmenin etkisi kayıt altına alınsın.
 
 ---
@@ -326,22 +357,23 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 ## Definition of Done (Sprint)
 
 **Hız:**
-- [ ] Epic 0 baseline dokümante, darboğaz sırası ölçümle teyit
-- [ ] `tests/test_prediction_regression.py` yeşil — tahmin/metric altın-dosya eşleşmesi
-- [ ] Uçtan uca N-sembol eğitim wall-clock'u baseline'a göre ölçülebilir düşük (hedef: birleşik ≥%40)
-- [ ] Veri çekme ≥%50 hızlı, çıktı byte-eş
-- [ ] GPU kullanımı DL eğitiminde artmış (`nvidia-smi` teyit), val metrikleri regresyonsuz
+- [x] Epic 0 baseline dokümante, darboğaz sırası ölçümle teyit
+- [~] `tests/test_prediction_regression.py` yeşil — GPU makinesinde golden'a karşı (bu iş bilgisayarında feature-eş ✓, ensemble metrikleri GPU golden'ından bekleniyor sapıyor; golden GPU'da)
+- [ ] Uçtan uca N-sembol eğitim wall-clock'u baseline'a göre ölçülebilir düşük (hedef: birleşik ≥%40) — **GPU makinesinde ölçülecek**
+- [x] Veri çekme ≥%50 hızlı, çıktı byte-eş (1.1)
+- [ ] GPU kullanımı DL eğitiminde artmış (`nvidia-smi` teyit), val metrikleri regresyonsuz — **GPU makinesinde (Epic 3.1)**
+- [x] Feature-eng fragmentasyon: `PerformanceWarning` 0, çıktı bit-eş (2.3)
 
 **Dayanıklılık ("sorunsuz eğitim"):**
-- [ ] Kasıtlı model/fold hatası sessizce yutulmuyor — eğitim fail-fast eder veya `status='degraded'` döner (G.1)
-- [ ] Her batch koşumu yapılandırılmış manifest üretiyor; degraded/failed semboller ayırt edilebilir (G.3)
-- [ ] Fallback makro verisi kullanıldığında manifestte işaretli (G.2)
-- [ ] `--resume` yarıda kalan batch'i biten sembolleri atlayarak sürdürüyor (G.4)
-- [ ] Aynı seed + seri mod → tekrar üretilebilir çıktı (G.5)
+- [x] Kasıtlı model/fold hatası sessizce yutulmuyor — eğitim fail-fast eder veya `status='degraded'` döner (G.1)
+- [x] Her batch koşumu yapılandırılmış manifest üretiyor; degraded/failed semboller ayırt edilebilir (G.3 + batch orchestrator)
+- [x] Fallback makro verisi kullanıldığında manifestte işaretli (G.2)
+- [x] `--resume` yarıda kalan batch'i biten sembolleri atlayarak sürdürüyor (G.4)
+- [x] Aynı seed + seri mod → tekrar üretilebilir çıktı (G.5 — merkezi seed + `seed_everything()` trainer başında)
 
 **Genel:**
-- [ ] Yeni ayarlar config üzerinden, hardcode yok
-- [ ] `docs/development/roadmap.md` ve `docs/README.md` güncellenmiş
+- [x] Yeni ayarlar config üzerinden, hardcode yok (`PREDICTION_SEED`, `DATA_FETCH_WORKERS`, `DATA_CACHE_MAXSIZE`, `ENSEMBLE_WARM_START`)
+- [ ] `docs/development/roadmap.md` ve `docs/README.md` güncellenmiş — sprint kapanışında
 
 ---
 
