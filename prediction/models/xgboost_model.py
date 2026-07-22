@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 import numpy as np
 
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class XGBoostModel(BasePredictionModel):
             'reg_alpha': 0.1,
             'reg_lambda': 1.0,
             'gamma': 0.0,
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'tree_method': 'hist',
             'early_stopping_rounds': 50,
         }
@@ -46,7 +47,7 @@ class XGBoostModel(BasePredictionModel):
             'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),
             'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
             'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'tree_method': 'hist',
             'early_stopping_rounds': 50,
         }

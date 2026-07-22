@@ -15,6 +15,8 @@ from sklearn.inspection import permutation_importance
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import TimeSeriesSplit
 
+from prediction.seeding import GLOBAL_SEED
+
 logger = logging.getLogger(__name__)
 
 
@@ -145,7 +147,7 @@ class FeatureSelector:
         X_clean = X.fillna(0).replace([np.inf, -np.inf], 0)
         y_clean = y.fillna(0)
 
-        mi = mutual_info_regression(X_clean, y_clean, random_state=42, n_neighbors=5)
+        mi = mutual_info_regression(X_clean, y_clean, random_state=GLOBAL_SEED, n_neighbors=5)
         return dict(zip(X.columns, mi))
 
     @staticmethod
@@ -169,7 +171,7 @@ class FeatureSelector:
         result = permutation_importance(
             model, X, y,
             n_repeats=n_repeats,
-            random_state=42,
+            random_state=GLOBAL_SEED,
             scoring='neg_mean_absolute_error',
         )
         return dict(zip(X.columns, result.importances_mean))

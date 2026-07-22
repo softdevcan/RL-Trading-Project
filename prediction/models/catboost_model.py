@@ -11,6 +11,7 @@ from typing import Dict, Any
 import numpy as np
 
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class CatBoostModel(BasePredictionModel):
             'random_strength': 1.0,
             'bagging_temperature': 1.0,
             'border_count': 128,
-            'random_seed': 42,
+            'random_seed': GLOBAL_SEED,
             'verbose': 0,
             'task_type': _default_task_type(),
             'early_stopping_rounds': 50,
@@ -54,7 +55,7 @@ class CatBoostModel(BasePredictionModel):
             'random_strength': trial.suggest_float('random_strength', 0.0, 10.0),
             'bagging_temperature': trial.suggest_float('bagging_temperature', 0.0, 10.0),
             'border_count': trial.suggest_int('border_count', 32, 255),
-            'random_seed': 42,
+            'random_seed': GLOBAL_SEED,
             'verbose': 0,
             'task_type': _default_task_type(),
             'early_stopping_rounds': 50,

@@ -20,6 +20,8 @@ from typing import Optional, Dict, Any
 
 import numpy as np
 
+from prediction.seeding import GLOBAL_SEED
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -95,7 +97,7 @@ class TATSCorrector:
             max_depth=3,
             learning_rate=0.1,
             subsample=0.8,
-            random_state=42,
+            random_state=GLOBAL_SEED,
             verbosity=0,
             eval_metric='mlogloss',
         )

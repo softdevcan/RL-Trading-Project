@@ -10,6 +10,7 @@ from typing import Dict, Any
 import numpy as np
 
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class LightGBMModel(BasePredictionModel):
             'min_child_samples': 20,
             'reg_alpha': 0.1,
             'reg_lambda': 1.0,
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'verbose': -1,
             'n_jobs': -1,
             'early_stopping_rounds': 50,
@@ -47,7 +48,7 @@ class LightGBMModel(BasePredictionModel):
             'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
             'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),
             'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'verbose': -1,
             'n_jobs': -1,
             'early_stopping_rounds': 50,

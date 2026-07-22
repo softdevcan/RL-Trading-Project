@@ -26,6 +26,7 @@ except ImportError:
 from prediction.models.base import BasePredictionModel, MODELS_DIR
 from prediction.feature_engineer import PredictionFeatureEngineer
 from prediction.tats import TATSCorrector
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class StackingEnsemble:
                 learning_rate=0.1,
                 subsample=0.8,
                 colsample_bytree=0.8,
-                random_state=42,
+                random_state=GLOBAL_SEED,
                 verbosity=0,
             )
         return Ridge(alpha=1.0)

@@ -18,6 +18,7 @@ import pandas as pd
 from prediction.feature_engineer import PredictionFeatureEngineer
 from prediction.feature_selector import FeatureSelector
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED, seed_everything
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,12 @@ class WalkForwardTrainer:
             Ensemble egitim sonuclari
         """
         from prediction.models.ensemble import StackingEnsemble
+
+        # Faz 6 (G.5): kosum basinda surec RNG'lerini tohumla — "ayni seed +
+        # seri mod -> tekrar uretilebilir". Model random_state'leri zaten
+        # GLOBAL_SEED'den geliyor; bu, numpy/torch/random global durumunu da
+        # sabitler (DL agirlik init, feature-sel permutation vb.).
+        seed_everything(GLOBAL_SEED)
 
         logger.info(f"[{symbol}] Final ensemble egitimi basliyor...")
         start_time = time.time()
