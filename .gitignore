@@ -63,6 +63,9 @@ data/**/*.csv
 # Tensorboard
 runs/
 
+# CatBoost training logs (regenerated on every fit — build artifact, not source)
+catboost_info/
+
 # Temporary files
 *.tmp
 *.bak
