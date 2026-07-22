@@ -1,0 +1,27 @@
+prediction/feature_engineer.py
+  s_7cb6d4313c3ece::t_54d5ed8a90667a 337-338,341-350
+  s_7cb6d4313c3ece::t_7fe2a66e6c4e2e 722-723,725
+  s_7cb6d4313c3ece::t_18365bb0998ad5 186-191
+  s_7cb6d4313c3ece::t_f57e1f37992a6a 276-277,280,284,286,289,294-298,300-301,303
+  s_7cb6d4313c3ece::t_e3dd7eea8f6773 157,161,183-185
+  s_7cb6d4313c3ece::t_1663290c2ff1e0 727-728,740-753
+  s_7cb6d4313c3ece::t_e4f080995664cf 309-310,314,316,318,321,323,326,329-331
+  s_7cb6d4313c3ece::t_298f308b14a9e7 90-91
+  s_7cb6d4313c3ece::t_09aa590ee67855 265,268-270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "32b49f622004519ebdde0949ad42b8d54dfa2d94",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
