@@ -1,0 +1,21 @@
+app/services/prediction_service.py
+  s_7cb6d4313c3ece::t_c8afd6683ba581 562-694
+scripts/training/train_prediction_batch.py
+  s_7cb6d4313c3ece::t_7a7fc82ff22398 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "053cfecaf4839e7f6cb57ec7373265ce9f5bdb46",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
