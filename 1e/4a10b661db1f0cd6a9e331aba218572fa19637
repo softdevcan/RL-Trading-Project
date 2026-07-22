@@ -1,0 +1,44 @@
+app/core/config.py
+  s_7cb6d4313c3ece::t_4976fe5d093f1e 45-63
+prediction/models/xgboost_model.py
+  s_7cb6d4313c3ece::t_f14dc327142aed 34,50
+  s_7cb6d4313c3ece::t_8a56c3d5d868c0 13
+prediction/models/catboost_model.py
+  s_7cb6d4313c3ece::t_ad1b14f5a9f7e9 14
+  s_7cb6d4313c3ece::t_9738783de8ef94 43,58
+prediction/trainer.py
+  s_7cb6d4313c3ece::t_919c2d56cb5620 220-225
+prediction/models/lightgbm_model.py
+  s_7cb6d4313c3ece::t_be44d75494f77c 34,51
+  s_7cb6d4313c3ece::t_e1f09bf46d33d3 13
+prediction/tats.py
+  s_7cb6d4313c3ece::t_d5965631e8ad44 100
+  s_7cb6d4313c3ece::t_ef9ea7008c1607 23-24
+prediction/feature_selector.py
+  s_7cb6d4313c3ece::t_d3d4c84813b831 174
+  s_7cb6d4313c3ece::t_7293bd151164d9 150
+  s_7cb6d4313c3ece::t_0378323b624381 18-19
+prediction/hyperopt.py
+  s_7cb6d4313c3ece::t_f2f691474e1e84 80
+  s_7cb6d4313c3ece::t_12001f98046989 20
+prediction/seeding.py
+  s_7cb6d4313c3ece::t_b0e544c79a6933 1-75
+prediction/models/ensemble.py
+  s_7cb6d4313c3ece::t_3fc9a67f891da0 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "1e4a10b661db1f0cd6a9e331aba218572fa19637",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
