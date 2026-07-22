@@ -1,0 +1,21 @@
+data/data_fetcher.py
+  s_7cb6d4313c3ece::t_6490db322ea525 115-117,119
+  s_7cb6d4313c3ece::t_85dbc39db62945 10,21-29,33-55
+  s_7cb6d4313c3ece::t_7c7319f4f762b9 181-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "e87e3dfd79c78bed66c690068eb2e2313dac3d7c",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
