@@ -87,8 +87,8 @@ class PredictionFeatureEngineer:
             filtered_close = _iceemdan_processor.filter_noise(data['close'])
             data['close'] = filtered_close
             imf_feats = _iceemdan_processor.extract_imf_features(filtered_close)
-            for col in imf_feats.columns:
-                data[col] = imf_feats[col]
+            # IMF kolonlarini tek atamada ekle (fragmentasyon onleme)
+            self._assign(data, {c: imf_feats[c] for c in imf_feats.columns})
             logger.info(f"[{symbol}] ICEEMDAN filtreleme uygulandi")
 
         if 'returns'      in active: self._add_return_features(data)
@@ -154,175 +154,252 @@ class PredictionFeatureEngineer:
         return [c for c in df.columns if c not in exclude and not c.startswith('_')]
 
     # ------------------------------------------------------------------
-    # 1. Getiri Ozellikleri
+    # Kolon yazma yardimcisi (Faz 6 · B4 — DataFrame fragmentasyonu)
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _add_return_features(data: pd.DataFrame):
+    def _assign(data: pd.DataFrame, cols: Dict[str, Any]) -> None:
+        """Bir grup kolonu YERINDE, kolon-bazli realloc olmadan ekle.
+
+        Eskiden her `_add_*` metodu kolonlari tek tek `data[c] = ...` ile
+        yaziyordu; bu, yuzlerce kolonda tekrar tekrar blok yeniden tahsisine ve
+        pandas `PerformanceWarning` ("DataFrame is highly fragmented")'ine yol
+        aciyordu (bkz. Faz 6 · B4).
+
+        Bu yardimci biriktirilmis {kolon: seri/deger} sozlugunu:
+          - ZATEN VAR OLAN kolonlari yerinde uzerine yazar (blok zaten tahsisli,
+            buyume yok),
+          - YENI kolonlarin HEPSINI tek `pd.concat` ile ekler.
+        Boylece frame en fazla bir kez yeniden kurulur. Karisik durumda (bazi
+        kolonlar var, bazilari yeni) `data[block.columns] = block` pandas icinde
+        kolon-bazli donguye duserek yine fragmentasyon uretir — bu yol onu onler.
+
+        Sonuc, tek tek atamayla BIT-BIT ayni deger uretir; sadece bellek erisim
+        deseni degisir. `data` YERINDE degistirilir (metodlarin sozlesmesi
+        korunur): ayni build icinde bir metodun ciktisi sonraki metodlarca
+        okunabildigi icin ( or. realized_vol_20 -> market_regime) her metod kendi
+        kolonlarini kendi sonunda materyalize eder.
+        """
+        if not cols:
+            return
+        block = pd.DataFrame(cols, index=data.index)
+        existing = [c for c in block.columns if c in data.columns]
+        new_cols = [c for c in block.columns if c not in data.columns]
+
+        # 1) Var olanlari yerinde uzerine yaz (buyume yok -> fragmentasyon yok)
+        for c in existing:
+            data[c] = block[c]
+
+        # 2) Yenilerin hepsini tek concat ile ekle, frame'i yerinde yeniden kur
+        if new_cols:
+            merged = pd.concat([data, block[new_cols]], axis=1, copy=False)
+            try:
+                # Yerinde yeniden kur (BlockManager degistir) — cagiranlarin
+                # in-place sozlesmesini korur, tek seferde defragmente eder.
+                data._mgr = merged._mgr
+            except AttributeError:
+                # Ozel pandas surumlerinde _mgr yoksa: guvenli (ama fragmente)
+                # geri donus. Deger yine dogru; sadece warning cikabilir.
+                data[new_cols] = block[new_cols]
+
+    # ------------------------------------------------------------------
+    # 1. Getiri Ozellikleri
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def _add_return_features(cls, data: pd.DataFrame):
         """Log return ve basit return ozellikleri."""
         close = data['close']
         safe_close = close.replace(0, np.nan)
+        cols: Dict[str, Any] = {}
 
+        # log_return_1d hem feature hem de skew/kurt girdisi — yerel referans tut
+        log_ret_shifted = {}
         for lag in range(1, 11):
-            data[f'log_return_{lag}d'] = np.log(safe_close / safe_close.shift(lag)).shift(1)
+            s = np.log(safe_close / safe_close.shift(lag)).shift(1)
+            cols[f'log_return_{lag}d'] = s
+            if lag == 1:
+                log_ret_1d = s
 
         for lag in [1, 2, 3, 5, 10, 20]:
-            data[f'return_{lag}d'] = close.pct_change(lag).shift(1)
+            cols[f'return_{lag}d'] = close.pct_change(lag).shift(1)
 
         for lag in range(1, 6):
-            data[f'close_lag_{lag}'] = close.shift(lag)
+            cols[f'close_lag_{lag}'] = close.shift(lag)
 
-        data['return_skew_20'] = data['log_return_1d'].rolling(20).skew().shift(1)
-        data['return_kurt_20'] = data['log_return_1d'].rolling(20).kurt().shift(1)
+        cols['return_skew_20'] = log_ret_1d.rolling(20).skew().shift(1)
+        cols['return_kurt_20'] = log_ret_1d.rolling(20).kurt().shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 2. Volatilite Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_volatility_features(data: pd.DataFrame):
+    @classmethod
+    def _add_volatility_features(cls, data: pd.DataFrame):
         """Parkinson, Garman-Klass ve realized volatility."""
         h = data['high']
         l = data['low']
         c = data['close']
         o = data['open']
+        cols: Dict[str, Any] = {}
 
         safe_hl = (h / l.replace(0, np.nan)).replace(0, np.nan)
-        data['parkinson_vol_20'] = np.sqrt(
+        cols['parkinson_vol_20'] = np.sqrt(
             (1.0 / (4.0 * np.log(2))) * (np.log(safe_hl) ** 2).rolling(20).mean()
         ).shift(1)
 
         safe_oc = (c / o.replace(0, np.nan)).replace(0, np.nan)
         gk_term = 0.5 * (np.log(safe_hl) ** 2) - (2 * np.log(2) - 1) * (np.log(safe_oc) ** 2)
-        data['garman_klass_vol_20'] = np.sqrt(gk_term.rolling(20).mean()).shift(1)
+        cols['garman_klass_vol_20'] = np.sqrt(gk_term.rolling(20).mean()).shift(1)
 
         log_ret = np.log(c / c.shift(1))
+        rv = {}
         for w in [5, 10, 20]:
-            data[f'realized_vol_{w}'] = log_ret.rolling(w).std().shift(1) * np.sqrt(252)
+            s = log_ret.rolling(w).std().shift(1) * np.sqrt(252)
+            cols[f'realized_vol_{w}'] = s
+            rv[w] = s
 
-        data['vol_ratio_5_20'] = (
-            data['realized_vol_5'] / data['realized_vol_20'].replace(0, np.nan)
-        )
+        # vol_ratio_5_20 realized_vol_5/20'ye bagli — yerel serilerden hesapla
+        cols['vol_ratio_5_20'] = rv[5] / rv[20].replace(0, np.nan)
 
         for w in [5, 20]:
-            data[f'std_{w}'] = c.rolling(w).std().shift(1)
+            cols[f'std_{w}'] = c.rolling(w).std().shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 3. Momentum Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_momentum_features(data: pd.DataFrame):
+    @classmethod
+    def _add_momentum_features(cls, data: pd.DataFrame):
         """RSI turevleri, MACD histogram gradyani, ADX trend gucu."""
         close = data['close']
+        cols: Dict[str, Any] = {}
 
         for w in [5, 10, 20, 50]:
             ma = close.rolling(w).mean()
-            data[f'price_to_ma_{w}'] = (close / ma.replace(0, np.nan) - 1).shift(1)
+            cols[f'price_to_ma_{w}'] = (close / ma.replace(0, np.nan) - 1).shift(1)
 
-        data['ma_cross_5_20'] = (
+        cols['ma_cross_5_20'] = (
             (close.rolling(5).mean() > close.rolling(20).mean()).astype(float).shift(1)
         )
-        data['ma_cross_10_50'] = (
+        cols['ma_cross_10_50'] = (
             (close.rolling(10).mean() > close.rolling(50).mean()).astype(float).shift(1)
         )
 
         for w in [5, 10, 20]:
-            data[f'mean_{w}'] = close.rolling(w).mean().shift(1)
+            cols[f'mean_{w}'] = close.rolling(w).mean().shift(1)
 
-        data['momentum_5'] = (close / close.shift(5) - 1).shift(1)
-        data['momentum_10'] = (close / close.shift(10) - 1).shift(1)
-        data['momentum_20'] = (close / close.shift(20) - 1).shift(1)
+        cols['momentum_5'] = (close / close.shift(5) - 1).shift(1)
+        cols['momentum_10'] = (close / close.shift(10) - 1).shift(1)
+        cols['momentum_20'] = (close / close.shift(20) - 1).shift(1)
 
-        data['roc_5'] = close.pct_change(5).shift(1) * 100
-        data['roc_10'] = close.pct_change(10).shift(1) * 100
+        cols['roc_5'] = close.pct_change(5).shift(1) * 100
+        cols['roc_10'] = close.pct_change(10).shift(1) * 100
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 4. Hacim Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_volume_features(data: pd.DataFrame):
+    @classmethod
+    def _add_volume_features(cls, data: pd.DataFrame):
         """Hacim bazli ozellikler."""
         vol = data['volume']
         close = data['close']
+        cols: Dict[str, Any] = {}
 
-        data['volume_lag_1'] = vol.shift(1)
+        cols['volume_lag_1'] = vol.shift(1)
         for w in [5, 10, 20]:
-            data[f'volume_ma_{w}'] = vol.rolling(w).mean().shift(1)
+            cols[f'volume_ma_{w}'] = vol.rolling(w).mean().shift(1)
 
         vol_ma5 = vol.rolling(5).mean()
-        data['volume_ratio_5'] = (vol / vol_ma5.replace(0, np.nan)).shift(1)
+        cols['volume_ratio_5'] = (vol / vol_ma5.replace(0, np.nan)).shift(1)
 
-        data['volume_change_1d'] = vol.pct_change().shift(1)
+        cols['volume_change_1d'] = vol.pct_change().shift(1)
 
         ret = close.pct_change()
-        data['volume_price_corr_20'] = ret.rolling(20).corr(vol).shift(1)
+        cols['volume_price_corr_20'] = ret.rolling(20).corr(vol).shift(1)
 
         obv = (np.sign(close.diff()) * vol).cumsum()
-        data['obv_slope_10'] = (obv - obv.shift(10)).shift(1)
+        cols['obv_slope_10'] = (obv - obv.shift(10)).shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 5. Takvim Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_calendar_features(data: pd.DataFrame):
+    @classmethod
+    def _add_calendar_features(cls, data: pd.DataFrame):
         """Takvim bazli ozellikler."""
         idx = data.index
-        data['day_of_week'] = idx.dayofweek
-        data['month'] = idx.month
-        data['quarter'] = idx.quarter
-        data['is_month_start'] = idx.is_month_start.astype(float)
-        data['is_month_end'] = idx.is_month_end.astype(float)
-        data['is_quarter_end'] = idx.is_quarter_end.astype(float)
-        data['week_of_year'] = idx.isocalendar().week.astype(int)
-
-        data['day_of_week_sin'] = np.sin(2 * np.pi * data['day_of_week'] / 5)
-        data['day_of_week_cos'] = np.cos(2 * np.pi * data['day_of_week'] / 5)
-        data['month_sin'] = np.sin(2 * np.pi * data['month'] / 12)
-        data['month_cos'] = np.cos(2 * np.pi * data['month'] / 12)
+        dow = pd.Series(idx.dayofweek, index=data.index)
+        month = pd.Series(idx.month, index=data.index)
+        cols: Dict[str, Any] = {
+            'day_of_week': dow,
+            'month': month,
+            'quarter': pd.Series(idx.quarter, index=data.index),
+            'is_month_start': idx.is_month_start.astype(float),
+            'is_month_end': idx.is_month_end.astype(float),
+            'is_quarter_end': idx.is_quarter_end.astype(float),
+            'week_of_year': idx.isocalendar().week.astype(int).values,
+            # sin/cos day_of_week & month'a bagli — yerel serilerden hesapla
+            'day_of_week_sin': np.sin(2 * np.pi * dow / 5),
+            'day_of_week_cos': np.cos(2 * np.pi * dow / 5),
+            'month_sin': np.sin(2 * np.pi * month / 12),
+            'month_cos': np.cos(2 * np.pi * month / 12),
+        }
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 6. Teknik Indikator Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_technical_features(data: pd.DataFrame):
+    @classmethod
+    def _add_technical_features(cls, data: pd.DataFrame):
         """Mevcut teknik indikatorlerden turetilmis ozellikler."""
+        cols: Dict[str, Any] = {}
         for col in ['macd', 'rsi', 'cci', 'adx', 'turbulence']:
             if col not in data.columns:
                 continue
-            data[f'{col}_lag_1'] = data[col].shift(1)
-            data[f'{col}_lag_2'] = data[col].shift(2)
-            data[f'{col}_change_1d'] = data[col].diff().shift(1)
-            data[f'{col}_change_5d'] = data[col].diff(5).shift(1)
+            cols[f'{col}_lag_1'] = data[col].shift(1)
+            cols[f'{col}_lag_2'] = data[col].shift(2)
+            cols[f'{col}_change_1d'] = data[col].diff().shift(1)
+            cols[f'{col}_change_5d'] = data[col].diff(5).shift(1)
 
         if 'macd_signal' in data.columns:
-            data['macd_signal_lag_1'] = data['macd_signal'].shift(1)
+            cols['macd_signal_lag_1'] = data['macd_signal'].shift(1)
         if 'macd_hist' in data.columns:
-            data['macd_hist_lag_1'] = data['macd_hist'].shift(1)
-            data['macd_hist_gradient'] = data['macd_hist'].diff().shift(1)
-            data['macd_hist_accel'] = data['macd_hist'].diff().diff().shift(1)
+            cols['macd_hist_lag_1'] = data['macd_hist'].shift(1)
+            cols['macd_hist_gradient'] = data['macd_hist'].diff().shift(1)
+            cols['macd_hist_accel'] = data['macd_hist'].diff().diff().shift(1)
 
         if 'rsi' in data.columns:
             rsi = data['rsi']
-            data['rsi_overbought'] = (rsi > 70).astype(float).shift(1)
-            data['rsi_oversold'] = (rsi < 30).astype(float).shift(1)
-            data['rsi_ma_5'] = rsi.rolling(5).mean().shift(1)
+            cols['rsi_overbought'] = (rsi > 70).astype(float).shift(1)
+            cols['rsi_oversold'] = (rsi < 30).astype(float).shift(1)
+            cols['rsi_ma_5'] = rsi.rolling(5).mean().shift(1)
 
         if 'adx' in data.columns:
-            data['adx_strong_trend'] = (data['adx'] > 25).astype(float).shift(1)
+            cols['adx_strong_trend'] = (data['adx'] > 25).astype(float).shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 7. Capraz Varlik Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_cross_asset_features(data: pd.DataFrame, cross_asset_df: pd.DataFrame):
+    @classmethod
+    def _add_cross_asset_features(cls, data: pd.DataFrame, cross_asset_df: pd.DataFrame):
         """BIST-100, USD/TRY ile korelasyon ve etkilesim."""
         cross = cross_asset_df.copy()
         cross.index = pd.to_datetime(cross.index)
+        cols: Dict[str, Any] = {}
 
         if 'bist100' in cross.columns or 'bist100_index' in cross.columns:
             bist_col = 'bist100' if 'bist100' in cross.columns else 'bist100_index'
@@ -330,10 +407,10 @@ class PredictionFeatureEngineer:
             bist_ret = bist.pct_change()
             stock_ret = data['close'].pct_change()
 
-            data['bist100_return_1d'] = bist_ret.shift(1)
-            data['bist100_return_5d'] = bist.pct_change(5).shift(1)
-            data['bist100_corr_20'] = stock_ret.rolling(20).corr(bist_ret).shift(1)
-            data['bist100_beta_60'] = (
+            cols['bist100_return_1d'] = bist_ret.shift(1)
+            cols['bist100_return_5d'] = bist.pct_change(5).shift(1)
+            cols['bist100_corr_20'] = stock_ret.rolling(20).corr(bist_ret).shift(1)
+            cols['bist100_beta_60'] = (
                 stock_ret.rolling(60).cov(bist_ret) /
                 bist_ret.rolling(60).var().replace(0, np.nan)
             ).shift(1)
@@ -342,20 +419,22 @@ class PredictionFeatureEngineer:
             usd = cross['usd_try'].reindex(data.index, method='ffill')
             usd_ret = usd.pct_change()
 
-            data['usdtry_return_1d'] = usd_ret.shift(1)
-            data['usdtry_return_5d'] = usd.pct_change(5).shift(1)
-            data['usdtry_vol_20'] = usd_ret.rolling(20).std().shift(1)
+            cols['usdtry_return_1d'] = usd_ret.shift(1)
+            cols['usdtry_return_5d'] = usd.pct_change(5).shift(1)
+            cols['usdtry_vol_20'] = usd_ret.rolling(20).std().shift(1)
 
         if 'eur_try' in cross.columns:
             eur = cross['eur_try'].reindex(data.index, method='ffill')
-            data['eurtry_return_1d'] = eur.pct_change().shift(1)
+            cols['eurtry_return_1d'] = eur.pct_change().shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 8. Makro Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_macro_features(data: pd.DataFrame, macro_df: pd.DataFrame):
+    @classmethod
+    def _add_macro_features(cls, data: pd.DataFrame, macro_df: pd.DataFrame):
         """Makroekonomik gosterge ozellikleri."""
         macro = macro_df.copy()
         macro.index = pd.to_datetime(macro.index)
@@ -373,6 +452,7 @@ class PredictionFeatureEngineer:
             'dxy': 'macro_dxy',
         }
 
+        cols: Dict[str, Any] = {}
         for src_col, dst_col in macro_cols.items():
             if src_col not in macro.columns:
                 continue
@@ -381,19 +461,22 @@ class PredictionFeatureEngineer:
             # aksi halde dropna(subset=feature_cols) tum satirlari uçurur.
             if aligned.notna().sum() == 0:
                 continue
-            data[dst_col] = aligned.shift(1)
+            cols[dst_col] = aligned.shift(1)
 
             if src_col in ('policy_rate', 'cpi_inflation', 'ppi_inflation'):
-                data[f'{dst_col}_change'] = aligned.diff().shift(1)
+                cols[f'{dst_col}_change'] = aligned.diff().shift(1)
             else:
-                data[f'{dst_col}_return'] = aligned.pct_change().shift(1)
+                cols[f'{dst_col}_return'] = aligned.pct_change().shift(1)
+
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 9. Fundamental Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
+    @classmethod
     def _add_fundamental_features(
+        cls,
         data: pd.DataFrame,
         fundamental_df: pd.DataFrame,
         symbol: str,
@@ -413,17 +496,19 @@ class PredictionFeatureEngineer:
             'profit_margin': 'fund_margin',
         }
 
+        cols: Dict[str, Any] = {}
         for src, dst in fund_cols.items():
             val = ratios.get(src, np.nan)
             if pd.notna(val):
-                data[dst] = float(val)
+                cols[dst] = float(val)   # skaler — tum satirlara yayilir
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # 10. Piyasa Rejimi Ozellikleri
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_market_regime_features(data: pd.DataFrame):
+    @classmethod
+    def _add_market_regime_features(cls, data: pd.DataFrame):
         """Volatilite rejimi ve trend rejimi tespiti."""
         if 'realized_vol_20' not in data.columns:
             return
@@ -431,46 +516,49 @@ class PredictionFeatureEngineer:
         vol = data['realized_vol_20']
         vol_median = vol.rolling(252, min_periods=60).median()
 
-        data['vol_regime'] = 0.0
-        if vol_median is not None:
-            data.loc[vol > vol_median * 1.5, 'vol_regime'] = 1.0
-            data.loc[vol < vol_median * 0.5, 'vol_regime'] = -1.0
+        # Eskisi: 0.0 baz + iki maskeli in-place atama. Ayni sonucu yerel
+        # seride uret (NaN-guvenli: vol_median NaN oldugunda maskeler False).
+        vol_regime = pd.Series(0.0, index=data.index)
+        vol_regime[vol > vol_median * 1.5] = 1.0
+        vol_regime[vol < vol_median * 0.5] = -1.0
 
         close = data['close']
         ma_50 = close.rolling(50, min_periods=20).mean()
         ma_200 = close.rolling(200, min_periods=60).mean()
 
-        data['trend_regime'] = 0.0
-        if ma_50 is not None and ma_200 is not None:
-            data.loc[(close > ma_50) & (ma_50 > ma_200), 'trend_regime'] = 1.0
-            data.loc[(close < ma_50) & (ma_50 < ma_200), 'trend_regime'] = -1.0
+        trend_regime = pd.Series(0.0, index=data.index)
+        trend_regime[(close > ma_50) & (ma_50 > ma_200)] = 1.0
+        trend_regime[(close < ma_50) & (ma_50 < ma_200)] = -1.0
 
-        data['drawdown'] = (
-            close / close.rolling(252, min_periods=20).max() - 1
-        ).shift(1)
+        cls._assign(data, {
+            'vol_regime': vol_regime,
+            'trend_regime': trend_regime,
+            'drawdown': (close / close.rolling(252, min_periods=20).max() - 1).shift(1),
+        })
 
     # ------------------------------------------------------------------
     # Haftalik Ek Ozellikler
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_weekly_features(data: pd.DataFrame):
+    @classmethod
+    def _add_weekly_features(cls, data: pd.DataFrame):
         """Haftalik horizon icin ek ozellikler."""
         close = data['close']
+        cols: Dict[str, Any] = {}
 
-        data['weekly_close'] = close.resample('W').last().reindex(
-            data.index, method='ffill'
-        )
+        weekly_close = close.resample('W').last().reindex(data.index, method='ffill')
+        cols['weekly_close'] = weekly_close
         for lag in range(1, 5):
-            data[f'weekly_return_lag_{lag}'] = (
-                data['weekly_close'].pct_change(lag).shift(1)
-            )
-        data['weekly_high'] = data['high'].rolling(5).max().shift(1)
-        data['weekly_low'] = data['low'].rolling(5).min().shift(1)
-        data['weekly_range'] = (
-            (data['weekly_high'] - data['weekly_low']) /
-            data['weekly_low'].replace(0, np.nan)
+            cols[f'weekly_return_lag_{lag}'] = weekly_close.pct_change(lag).shift(1)
+
+        weekly_high = data['high'].rolling(5).max().shift(1)
+        weekly_low  = data['low'].rolling(5).min().shift(1)
+        cols['weekly_high'] = weekly_high
+        cols['weekly_low']  = weekly_low
+        cols['weekly_range'] = (
+            (weekly_high - weekly_low) / weekly_low.replace(0, np.nan)
         )
+        cls._assign(data, cols)
 
     # ------------------------------------------------------------------
     # Hedef Degiskenler
@@ -488,27 +576,33 @@ class PredictionFeatureEngineer:
 
         if target_type == 'log_return':
             # log(P_{t+H} / P_t) — buyume olceginden bagimsiz, daha stasyoner
-            data['target_price'] = np.log(close.shift(shift_n) / close)
+            target_price = np.log(close.shift(shift_n) / close)
         else:
-            data['target_price'] = close.shift(shift_n)
+            target_price = close.shift(shift_n)
 
-        data['target_return'] = (close.shift(shift_n) / close - 1)
-        data['target_direction'] = (close.shift(shift_n) > close).astype(float)
-        data['target'] = data['target_price']
+        # Sayisal hedefleri tek atamada ekle (fragmentasyon onleme)
+        self._assign(data, {
+            'target_price': target_price,
+            'target_return': (close.shift(shift_n) / close - 1),
+            'target_direction': (close.shift(shift_n) > close).astype(float),
+            'target': target_price,
+        })
+        # String marker ayri (float bloka karistirilirsa dtype bozulur)
         data['_target_type'] = target_type   # predict asamasinda geri donusum icin
 
     # ------------------------------------------------------------------
     # Yeni Feature Metodlari (Faz 4)
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _add_fibonacci_features(data: pd.DataFrame):
+    @classmethod
+    def _add_fibonacci_features(cls, data: pd.DataFrame):
         """Fibonacci retracement seviyeleri.
 
         Son 50 / 100 / 200 gunluk swing high-low'dan %23.6, %38.2, %50, %61.8
         uzakligi — gunluk fiyatin bu seviyelere goreceli konumu.
         """
         close = data['close']
+        cols: Dict[str, Any] = {}
         for window in (50, 100, 200):
             rolling_high = close.rolling(window, min_periods=window // 2).max()
             rolling_low  = close.rolling(window, min_periods=window // 2).min()
@@ -516,70 +610,76 @@ class PredictionFeatureEngineer:
             for level, pct in [('236', 0.236), ('382', 0.382),
                                 ('500', 0.500), ('618', 0.618)]:
                 fib_val = rolling_high - rng * pct
-                col = f'fib_{window}_{level}'
                 # Fiyatin fib seviyesinin kac % uzaginda
-                data[col] = ((close - fib_val) / close).shift(1)
+                cols[f'fib_{window}_{level}'] = ((close - fib_val) / close).shift(1)
         # Fiyatin son 50g range icindeki normalized konumu (0-1)
-        data['price_position_50'] = (
+        cols['price_position_50'] = (
             (close - close.rolling(50, min_periods=20).min()) /
             (close.rolling(50, min_periods=20).max() -
              close.rolling(50, min_periods=20).min() + 1e-9)
         ).shift(1)
+        cls._assign(data, cols)
 
-    @staticmethod
-    def _add_donchian_features(data: pd.DataFrame):
+    @classmethod
+    def _add_donchian_features(cls, data: pd.DataFrame):
         """Donchian kanalı ve Chandelier Exit."""
         close  = data['close']
         high   = data.get('high', close)
         low    = data.get('low', close)
+        cols: Dict[str, Any] = {}
 
         for w in (20, 55):
             dc_high = high.rolling(w, min_periods=w // 2).max()
             dc_low  = low.rolling(w,  min_periods=w // 2).min()
             dc_mid  = (dc_high + dc_low) / 2
             dc_width = ((dc_high - dc_low) / close.replace(0, np.nan))
-            data[f'dc_{w}_width']    = dc_width.shift(1)
-            data[f'dc_{w}_position'] = (
+            cols[f'dc_{w}_width']    = dc_width.shift(1)
+            cols[f'dc_{w}_position'] = (
                 (close - dc_low) / (dc_high - dc_low + 1e-9)
             ).shift(1)
-            data[f'dc_{w}_mid_dist'] = ((close - dc_mid) / close.replace(0, np.nan)).shift(1)
+            cols[f'dc_{w}_mid_dist'] = ((close - dc_mid) / close.replace(0, np.nan)).shift(1)
 
         # Chandelier Exit (22-gun, 3xATR)
         atr_22 = (high - low).rolling(22, min_periods=10).mean()
         chandelier_long  = high.rolling(22, min_periods=10).max() - atr_22 * 3
         chandelier_short = low.rolling(22,  min_periods=10).min() + atr_22 * 3
-        data['chandelier_long_dist']  = ((close - chandelier_long)  / close.replace(0, np.nan)).shift(1)
-        data['chandelier_short_dist'] = ((close - chandelier_short) / close.replace(0, np.nan)).shift(1)
+        cols['chandelier_long_dist']  = ((close - chandelier_long)  / close.replace(0, np.nan)).shift(1)
+        cols['chandelier_short_dist'] = ((close - chandelier_short) / close.replace(0, np.nan)).shift(1)
+        cls._assign(data, cols)
 
-    @staticmethod
-    def _add_rolling_zscore_features(data: pd.DataFrame):
+    @classmethod
+    def _add_rolling_zscore_features(cls, data: pd.DataFrame):
         """Rolling Z-score — ortalamaya donus ve momentum sinyali."""
         close = data['close']
         log_ret = np.log(close / close.shift(1))
+        cols: Dict[str, Any] = {}
 
         for w in (20, 60, 252):
             mu  = log_ret.rolling(w, min_periods=w // 2).mean()
             std = log_ret.rolling(w, min_periods=w // 2).std()
-            data[f'zscore_ret_{w}'] = ((log_ret - mu) / std.replace(0, np.nan)).shift(1)
+            cols[f'zscore_ret_{w}'] = ((log_ret - mu) / std.replace(0, np.nan)).shift(1)
 
         # Fiyatin kendi hareketli ortalamasina gore Z-score
         for w in (20, 50):
             mu_p  = close.rolling(w, min_periods=w // 2).mean()
             std_p = close.rolling(w, min_periods=w // 2).std()
-            data[f'zscore_price_{w}'] = ((close - mu_p) / std_p.replace(0, np.nan)).shift(1)
+            cols[f'zscore_price_{w}'] = ((close - mu_p) / std_p.replace(0, np.nan)).shift(1)
 
-    @staticmethod
-    def _add_obv_features(data: pd.DataFrame):
+        cls._assign(data, cols)
+
+    @classmethod
+    def _add_obv_features(cls, data: pd.DataFrame):
         """On Balance Volume ve Chaikin Money Flow."""
         close  = data['close']
         volume = data.get('volume', pd.Series(1, index=data.index))
+        cols: Dict[str, Any] = {}
 
         # OBV
         direction = np.sign(close.diff())
         obv = (direction * volume).fillna(0).cumsum()
         obv_ma20 = obv.rolling(20, min_periods=5).mean()
-        data['obv_ma_ratio'] = (obv / obv_ma20.replace(0, np.nan)).shift(1)
-        data['obv_slope_5']  = obv.diff(5).shift(1)
+        cols['obv_ma_ratio'] = (obv / obv_ma20.replace(0, np.nan)).shift(1)
+        cols['obv_slope_5']  = obv.diff(5).shift(1)
 
         # CMF (Chaikin Money Flow)
         high = data.get('high', close)
@@ -589,12 +689,15 @@ class PredictionFeatureEngineer:
         for w in (20, 40):
             cmf = mfv.rolling(w, min_periods=w // 2).sum() / \
                   volume.rolling(w, min_periods=w // 2).sum().replace(0, np.nan)
-            data[f'cmf_{w}'] = cmf.shift(1)
+            cols[f'cmf_{w}'] = cmf.shift(1)
 
-    @staticmethod
-    def _add_global_macro_features(data: pd.DataFrame, macro_df: pd.DataFrame):
+        cls._assign(data, cols)
+
+    @classmethod
+    def _add_global_macro_features(cls, data: pd.DataFrame, macro_df: pd.DataFrame):
         """Global makro feature'lari: petrol, GVZ, reel faiz, altin-gumus orani."""
         aligned = macro_df.reindex(data.index, method='ffill')
+        cols: Dict[str, Any] = {}
 
         global_cols = {
             'oil_wti':      'oil_wti',
@@ -606,21 +709,23 @@ class PredictionFeatureEngineer:
             if src_col in aligned.columns:
                 series = aligned[src_col]
                 # Seviye
-                data[feat_name] = series.shift(1)
+                cols[feat_name] = series.shift(1)
                 # Normalize degisim (1g, 5g)
-                data[f'{feat_name}_chg1'] = series.pct_change(1).shift(1)
-                data[f'{feat_name}_chg5'] = series.pct_change(5).shift(1)
+                cols[f'{feat_name}_chg1'] = series.pct_change(1).shift(1)
+                cols[f'{feat_name}_chg5'] = series.pct_change(5).shift(1)
 
         # Altin/Gumus orani (silver varsa)
         if 'silver' in aligned.columns:
             silver_s = aligned['silver'].replace(0, np.nan)
             # close = gold price (bu fonksiyon gold dataframe'i uzerinde cagriliyor olabilir)
             gold_silver_ratio = data['close'] / silver_s
-            data['gold_silver_ratio']      = gold_silver_ratio.shift(1)
-            data['gold_silver_ratio_chg5'] = gold_silver_ratio.pct_change(5).shift(1)
+            cols['gold_silver_ratio']      = gold_silver_ratio.shift(1)
+            cols['gold_silver_ratio_chg5'] = gold_silver_ratio.pct_change(5).shift(1)
 
-    @staticmethod
-    def _add_seasonality_features(data: pd.DataFrame, symbol: str = ''):
+        cls._assign(data, cols)
+
+    @classmethod
+    def _add_seasonality_features(cls, data: pd.DataFrame, symbol: str = ''):
         """Mevsimsellik ve takvim etki ozellikleri.
 
         - Hindistan dugun sezonu (Ekim-Kasim) — altin icin pozitif sezonalite
@@ -632,26 +737,19 @@ class PredictionFeatureEngineer:
         month   = idx.month
         quarter = idx.quarter
 
-        # Siklik encoding
-        data['month_sin'] = np.sin(2 * np.pi * month / 12)
-        data['month_cos'] = np.cos(2 * np.pi * month / 12)
-        data['quarter_sin'] = np.sin(2 * np.pi * quarter / 4)
-        data['quarter_cos'] = np.cos(2 * np.pi * quarter / 4)
-
-        # Ozel donem bayraklari (gold-specific; diger varliklar icin nortral)
-        data['indian_wedding_season'] = month.isin([10, 11]).astype(float)
-        data['chinese_new_year']      = month.isin([1, 2]).astype(float)
-        data['cb_buying_season']      = quarter.isin([1, 3]).astype(float)
-
-        # Yil ici gun konumu (0-1)
-        data['year_progress'] = (idx.dayofyear / 365.0)
-
-        # Gecikme uygulama (data leakage onleme) — bu ozellikler gelecege bakmiyor
-        # ama tutarlilik icin shift(1) uygulariz
-        for col in ['month_sin', 'month_cos', 'quarter_sin', 'quarter_cos',
-                    'indian_wedding_season', 'chinese_new_year',
-                    'cb_buying_season', 'year_progress']:
-            if col in data.columns:
-                data[col] = data[col].shift(1)
+        # Once ham degerleri Series olarak uret, sonra hepsine shift(1) uygula
+        # (eski davranis: yaz -> geri oku -> shift; sonuc ayni).
+        raw = {
+            'month_sin': pd.Series(np.sin(2 * np.pi * month / 12), index=data.index),
+            'month_cos': pd.Series(np.cos(2 * np.pi * month / 12), index=data.index),
+            'quarter_sin': pd.Series(np.sin(2 * np.pi * quarter / 4), index=data.index),
+            'quarter_cos': pd.Series(np.cos(2 * np.pi * quarter / 4), index=data.index),
+            'indian_wedding_season': pd.Series(month.isin([10, 11]).astype(float), index=data.index),
+            'chinese_new_year': pd.Series(month.isin([1, 2]).astype(float), index=data.index),
+            'cb_buying_season': pd.Series(quarter.isin([1, 3]).astype(float), index=data.index),
+            'year_progress': pd.Series(idx.dayofyear / 365.0, index=data.index),
+        }
+        # Gecikme (data leakage onleme) — tumune shift(1)
+        cls._assign(data, {k: v.shift(1) for k, v in raw.items()})
 
 
