@@ -17,6 +17,7 @@ from optuna.samplers import TPESampler
 from sklearn.model_selection import TimeSeriesSplit
 
 from prediction.models.base import BasePredictionModel, MODELS_DIR
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class PredictionHyperOptimizer:
         study = optuna.create_study(
             study_name=study_name,
             direction='minimize',
-            sampler=TPESampler(seed=42),
+            sampler=TPESampler(seed=GLOBAL_SEED),
             pruner=MedianPruner(n_warmup_steps=5),
         )
 

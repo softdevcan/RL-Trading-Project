@@ -155,8 +155,9 @@ class TFTModel(BasePredictionModel):
 
     MODEL_TYPE = 'tft'
 
-    def __init__(self, horizon: str = 'daily', params: Optional[Dict] = None):
-        super().__init__(horizon, params)
+    def __init__(self, horizon: str = 'daily', params: Optional[Dict] = None,
+                 source: Optional[str] = None):
+        super().__init__(horizon, params, source)
         self.device = _get_device()
         self.net: Optional[_TFTNet] = None
         self.scaler_mean: Optional[np.ndarray] = None
@@ -194,6 +195,9 @@ class TFTModel(BasePredictionModel):
 
     def _build_model(self, params: Dict[str, Any]):
         pass
+
+    def _supports_warm_start(self) -> bool:
+        return True
 
     def _create_sequences(self, X: np.ndarray, y: np.ndarray, lookback: int):
         sequences_X, sequences_y, sequences_y_dir = [], [], []
@@ -241,6 +245,17 @@ class TFTModel(BasePredictionModel):
             num_lstm_layers=p['num_lstm_layers'],
             dropout=p['dropout'],
         ).to(self.device)
+
+        # Faz 6 (2.1): warm-start — onceki agirliklardan basla (ayni mimari sart).
+        # Sadece ensemble warm_start=True verdiginde dolu; aksi halde None =
+        # sifirdan (mevcut davranis, bit-es). Uyumsuzsa sessizce sifirdan.
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'net', None) is not None:
+            try:
+                self.net.load_state_dict(ws.net.state_dict())
+                logger.info("  [tft] warm-start: onceki agirliklar yuklendi")
+            except Exception as exc:
+                logger.info(f"  [tft] warm-start atlandi (mimari uyumsuz?): {exc}")
 
         train_ds = TensorDataset(
             torch.FloatTensor(X_tr_seq),

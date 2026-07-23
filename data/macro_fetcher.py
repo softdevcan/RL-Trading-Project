@@ -60,13 +60,19 @@ class MacroDataFetcher:
         'silver': 'SI=F',      # Gumus vadeli (altin/gumus orani icin)
     }
 
-    def __init__(self, api_key: Optional[str] = None, start_date: str = "2018-01-01", end_date: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, start_date: str = "2018-01-01",
+                 end_date: Optional[str] = None, strict_data: bool = False):
         """
         Args:
             api_key: TCMB EVDS API anahtarı. None ise EVDS_API_KEY env değişkeninden okunur.
             start_date: Başlangıç tarihi (DD-MM-YYYY veya YYYY-MM-DD)
             end_date: Bitiş tarihi (DD-MM-YYYY veya YYYY-MM-DD), None ise bugün
+            strict_data: Faz 6 (G.2/R3) — True ise sabit-değer/zero-fill fallback
+                devreye girerse HATA fırlatılır (production eğitimi yanlış makro
+                veriyle sessizce çalışmasın). Varsayılan False: fallback kullanılır
+                ama data_quality bayrağıyla işaretlenir (mevcut davranış).
         """
+        self.strict_data = strict_data
         self.api_key = api_key or os.getenv("EVDS_API_KEY")
         if not self.api_key:
             raise ValueError("EVDS_API_KEY bulunamadı. .env dosyasına ekleyin veya api_key parametresi geçin.")
@@ -87,6 +93,11 @@ class MacroDataFetcher:
 
         # Veri dizini oluştur
         os.makedirs(self.data_dir, exist_ok=True)
+
+        # Faz 6 (G.2): Veri kalite bayraklari — fallback/sabit-deger kullanildiginda
+        # isaretlenir. Egitim manifesti bunu kaydeder ki yanlis veriyle egitim
+        # sessizce gerceklesmesin (bkz. R3). fetch_macro_data basinda sifirlanir.
+        self.data_quality: Dict[str, str] = {}
 
         logger.info(f"MacroDataFetcher initialized")
         logger.info(f"Date range: {self.start_date_evds} to {self.end_date_evds}")
@@ -118,25 +129,49 @@ class MacroDataFetcher:
     def fetch_macro_data(self, save=True) -> pd.DataFrame:
         """Tüm makro verileri çek ve birleştir"""
         data_dict = {}
+        self.data_quality = {}  # Faz 6 (G.2): bu cekimde fallback kullanildi mi
 
-        # 1. yfinance verilerini çek (Döviz + BIST100)
+        # 1. yfinance verilerini çek (Döviz + BIST100 + global gostergeler)
+        # Faz 6 (1.3): sembolleri paralel çek (I/O-bound -> ThreadPool). Sonuçlar
+        # YF_SYMBOLS sırasına göre toplanır — deterministik. EVDS seri kalır
+        # (tek endpoint). Log/quality davranışı korunur.
         logger.info("Fetching market data from yfinance...")
-        for name, symbol in self.YF_SYMBOLS.items():
+
+        def _fetch_yf(item):
+            name, symbol = item
             try:
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(start=self.start_date_yf, end=self.end_date_yf)
-                
                 if not hist.empty:
-                    # Timezone kaldır
                     from pandas import DatetimeIndex
                     if isinstance(hist.index, DatetimeIndex) and hist.index.tz is not None:
                         hist.index = hist.index.tz_localize(None)
-                    data_dict[name] = hist['Close']
-                    logger.info(f"  ✓ {name}: {len(hist)} rows")
-                else:
-                    logger.warning(f"  ✗ {name}: No data found")
+                    return name, hist['Close'], len(hist), None
+                return name, None, 0, 'no_data'
             except Exception as e:
-                logger.error(f"Error fetching {name} from yfinance: {e}")
+                return name, None, 0, str(e)
+
+        items = list(self.YF_SYMBOLS.items())
+        yf_results = {}
+        if len(items) <= 1:
+            for it in items:
+                n, s, rows, err = _fetch_yf(it)
+                yf_results[n] = (s, rows, err)
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=min(8, len(items))) as pool:
+                for n, s, rows, err in pool.map(_fetch_yf, items):
+                    yf_results[n] = (s, rows, err)
+
+        for name, _symbol in items:  # deterministik sıra + log
+            series, rows, err = yf_results.get(name, (None, 0, 'missing'))
+            if series is not None:
+                data_dict[name] = series
+                logger.info(f"  ✓ {name}: {rows} rows")
+            elif err == 'no_data':
+                logger.warning(f"  ✗ {name}: No data found")
+            else:
+                logger.error(f"Error fetching {name} from yfinance: {err}")
 
         # 2. EVDS verilerini çek (Enflasyon + Faiz)
         if self.evds:
@@ -193,6 +228,13 @@ class MacroDataFetcher:
                     raise ValueError("Empty response for Policy Rate")
                     
             except Exception as e:
+                # Faz 6 (G.2): strict_data ise yanlis veriyle egitmektense patla
+                if self.strict_data:
+                    raise ValueError(
+                        f"strict_data: Politika faizi EVDS'ten cekilemedi ({e}) ve "
+                        f"sabit-deger (50.0) fallback devre disi. Gercek veriyle egit "
+                        f"ya da strict_data=False yap."
+                    ) from e
                 logger.warning(f"Could not fetch Policy Rate from EVDS ({e}). Using fallback value (50.0).")
                 # Fallback: 50.0 sabit değer
                 # Ensure dates are not None
@@ -200,6 +242,8 @@ class MacroDataFetcher:
                 end = self.end_date_yf or datetime.now().strftime("%Y-%m-%d")
                 dates = pd.date_range(start=start, end=end, freq='D')
                 data_dict['policy_rate'] = pd.Series(50.0, index=dates)
+                # Faz 6 (G.2): sabit-deger fallback isaretle — egitim manifestine gecer
+                self.data_quality['policy_rate'] = 'fallback_constant_50.0'
 
         # 3. Verileri Birleştir
         if not data_dict:
@@ -231,15 +275,30 @@ class MacroDataFetcher:
         
         # Son kontroller
         required_cols = ['policy_rate', 'cpi_inflation', 'ppi_inflation', 'usd_try', 'eur_try', 'bist100_index']
+        missing_required = [c for c in required_cols if c not in macro_df.columns]
+        # Faz 6 (G.2): strict_data ise zorunlu kolon eksikligini zero-fill'le
+        # gizlemek yerine patla.
+        if missing_required and self.strict_data:
+            raise ValueError(
+                f"strict_data: Zorunlu makro kolonlari eksik {missing_required} ve "
+                f"zero-fill fallback devre disi."
+            )
         for col in required_cols:
             if col not in macro_df.columns:
                 logger.warning(f"Missing column {col}, filling with 0")
                 macro_df[col] = 0.0
+                # Faz 6 (G.2): eksik zorunlu kolon sifirla dolduruldu — isaretle
+                self.data_quality[col] = 'fallback_zero'
 
         logger.info(f"\nMacro Data Summary:")
         logger.info(f"Rows: {len(macro_df)}")
         logger.info(f"Columns: {macro_df.columns.tolist()}")
-        
+        if self.data_quality:
+            logger.warning(f"⚠ Veri kalite uyarisi (fallback kullanildi): {self.data_quality}")
+
+        # Faz 6 (G.2): kalite bayraklarini DataFrame'e ilistir (downstream/manifest erisimi)
+        macro_df.attrs['data_quality'] = dict(self.data_quality)
+
         if save:
             self.save_data(macro_df, 'macro_data.csv')
 

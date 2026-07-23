@@ -559,6 +559,139 @@ class PredictionService:
             'training_time_seconds': result.get('training_time_seconds'),
         }
 
+    def train_batch(
+        self, symbols: List[str], horizon: str = 'daily',
+        start_date: str = '2018-01-01',
+        optimize: bool = False, n_hpo_trials: int = 30,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
+        resume_from: Optional[str] = None,
+        strict: bool = False,
+    ) -> Dict[str, Any]:
+        """Faz 6 (G.3+G.4): Cok-sembol batch egitim + manifest + resume.
+
+        Her sembol tek tek egitilir; hata bir sembolu dusurur ama batch'i
+        durdurmaz (strict=False). Sonuc yapilandirilmis bir manifest'e yazilir
+        (results/training_runs/<run_id>.json) — gece batch'i sabah tek bakista
+        teshis edilir (G.3).
+
+        Resume (G.4): resume_from bir onceki manifest yolu/run_id ise, orada
+        'ok' biten semboller ATLANIR; sadece kalanlar egitilir. Uzun batch
+        ortada kesilirse bastan baslamaz.
+
+        Args:
+            symbols: Egitilecek sembol listesi.
+            resume_from: Onceki manifest dosya yolu VEYA run_id. Verilirse o
+                kosumda basariyla tamamlanan semboller atlanir.
+            strict: True ise ilk basarisiz sembolde batch durur (fail-fast).
+                Varsayilan False — dayanikli batch (hatali sembol atlanir).
+
+        Returns:
+            {'manifest_path', 'run_id', 'summary', 'skipped', 'trained', 'failed'}
+        """
+        import time as _time
+        from prediction.manifest import TrainingManifest
+
+        # --- Resume: onceki manifest'ten biten sembolleri cikart ---
+        already_done: set = set()
+        if resume_from:
+            prev = self._load_manifest(resume_from)
+            if prev:
+                already_done = {
+                    s for s, d in prev.get('symbols', {}).items()
+                    if d.get('status') == 'ok'
+                }
+                logger.info(
+                    f"[batch] Resume: onceki kosumda {len(already_done)} sembol "
+                    f"'ok' bitmis, atlanacak."
+                )
+            else:
+                logger.warning(f"[batch] Resume kaynagi bulunamadi: {resume_from}")
+
+        pending = [s for s in symbols if s not in already_done]
+        skipped = [s for s in symbols if s in already_done]
+
+        manifest = TrainingManifest(
+            run_kind='batch_train', symbols=symbols, horizon=horizon,
+            extra={
+                'start_date': start_date, 'target_type': target_type,
+                'optimize': optimize, 'resume_from': resume_from,
+                'skipped_on_resume': skipped,
+            },
+        )
+
+        # Veri kalite bayragi (G.2): makro frame'in attrs'inden al — batch'te
+        # bir kez cekilir, tum sembollerde ayni makro kullanilir.
+        try:
+            macro_dq = _fetch_macro_data(start_date)
+            if macro_dq is not None and hasattr(macro_dq, 'attrs'):
+                manifest.set_data_quality(macro_dq.attrs.get('data_quality'))
+        except Exception as exc:
+            logger.debug(f"[batch] data_quality okunamadi: {exc}")
+
+        trained, failed = [], []
+        for i, sym in enumerate(pending, 1):
+            logger.info(f"[batch] ({i}/{len(pending)}) {sym} egitiliyor...")
+            t0 = _time.perf_counter()
+            try:
+                res = self.train_model(
+                    sym, horizon,
+                    start_date=start_date, optimize=optimize,
+                    n_hpo_trials=n_hpo_trials, source=source,
+                    feature_groups=feature_groups, target_type=target_type,
+                )
+                manifest.record_symbol(sym, result=res, seconds=_time.perf_counter() - t0)
+                status = manifest.symbols[sym]['status']
+                (trained if status != 'failed' else failed).append(sym)
+                if status == 'degraded':
+                    logger.warning(f"[batch] {sym} DEGRADED: eksik modeller "
+                                   f"{manifest.symbols[sym].get('missing_models')}")
+            except Exception as exc:
+                logger.error(f"[batch] {sym} basarisiz: {exc}", exc_info=True)
+                manifest.record_symbol(sym, error=str(exc), seconds=_time.perf_counter() - t0)
+                failed.append(sym)
+                # Her sembolde manifest'i diske yaz (checkpoint) — kesinti olsa
+                # bile o ana kadarki ilerleme resume icin kalir.
+                manifest.finalize()
+                if strict:
+                    logger.error("[batch] strict mod: ilk hatada durduruluyor.")
+                    break
+                continue
+            # Basarili sembol sonrasi da checkpoint yaz (resume dayanikliligi)
+            manifest.finalize()
+
+        path = manifest.finalize()
+        summary = manifest._summary()
+        logger.info(
+            f"[batch] Bitti. ok={summary['ok']} degraded={summary['degraded']} "
+            f"failed={summary['failed']} skipped(resume)={len(skipped)}. Manifest: {path}"
+        )
+        return {
+            'manifest_path': path,
+            'run_id': manifest.run_id,
+            'summary': summary,
+            'skipped': skipped,
+            'trained': trained,
+            'failed': failed,
+        }
+
+    @staticmethod
+    def _load_manifest(ref: str) -> Optional[Dict[str, Any]]:
+        """Manifest'i dosya yolu veya run_id'den yukle. G.4 resume yardimcisi."""
+        import json
+        from prediction.manifest import RUNS_DIR
+        candidates = [ref, os.path.join(RUNS_DIR, ref), os.path.join(RUNS_DIR, f'{ref}.json')]
+        for c in candidates:
+            if c and os.path.exists(c):
+                try:
+                    with open(c, 'r', encoding='utf-8') as f:
+                        return json.load(f)
+                except (OSError, json.JSONDecodeError) as exc:
+                    logger.warning(f"Manifest okunamadi ({c}): {exc}")
+                    return None
+        return None
+
     def predict(
         self, symbols: List[str], horizon: str = 'daily',
         save: bool = True,
@@ -629,8 +762,13 @@ class PredictionService:
         model_types: Optional[List[str]] = None,
         n_splits: int = 5,
         source: Optional[str] = None,
+        strict: bool = False,
     ) -> Dict[str, Any]:
-        """Walk-forward cross-validation ile model degerlendirme."""
+        """Walk-forward cross-validation ile model degerlendirme.
+
+        strict=True (Faz 6 R2): bir fold patlarsa fail-fast. Varsayilan False —
+        fold atlanir ama sonuc `status='degraded'` + `failed_folds` tasir.
+        """
         from prediction.trainer import WalkForwardTrainer
 
         resolved = _resolve_source(symbol, source)
@@ -643,6 +781,7 @@ class PredictionService:
             horizon=horizon,
             n_splits=n_splits,
             source=resolved,
+            strict=strict,
         )
         return trainer.cross_validate(
             df, symbol,

@@ -10,6 +10,7 @@ from typing import Dict, Any
 import numpy as np
 
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class LightGBMModel(BasePredictionModel):
             'min_child_samples': 20,
             'reg_alpha': 0.1,
             'reg_lambda': 1.0,
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'verbose': -1,
             'n_jobs': -1,
             'early_stopping_rounds': 50,
@@ -47,7 +48,7 @@ class LightGBMModel(BasePredictionModel):
             'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
             'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),
             'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
-            'random_state': 42,
+            'random_state': GLOBAL_SEED,
             'verbose': -1,
             'n_jobs': -1,
             'early_stopping_rounds': 50,
@@ -61,6 +62,9 @@ class LightGBMModel(BasePredictionModel):
         self.model = LGBMRegressor(**fit_params)
         self._early_stopping = params.get('early_stopping_rounds', 50)
 
+    def _supports_warm_start(self) -> bool:
+        return True
+
     def _fit(
         self,
         X_train: np.ndarray,
@@ -68,9 +72,19 @@ class LightGBMModel(BasePredictionModel):
         X_val: np.ndarray,
         y_val: np.ndarray,
     ) -> Dict[str, float]:
+        # Faz 6 (2.1): warm-start — onceki booster'dan devam (init_model). Sadece
+        # ensemble warm_start=True verdiginde dolu; aksi halde None = sifirdan.
+        init_model = None
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'model', None) is not None:
+            try:
+                init_model = ws.model.booster_
+            except Exception:
+                init_model = None
         self.model.fit(
             X_train, y_train,
             eval_set=[(X_val, y_val)],
+            init_model=init_model,
             callbacks=[
                 self._lgbm_early_stopping(),
                 self._lgbm_log_eval(),

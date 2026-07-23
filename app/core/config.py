@@ -42,6 +42,30 @@ class Settings(BaseSettings):
     MACRO_DIR: str = "data/macro"
     FUNDAMENTAL_DIR: str = "data/fundamental"
 
+    # --- Faz 6: Backend performans & egitim throughput ayarlari ---
+    # Tumu env uzerinden override edilebilir; kod icinde hardcode edilmez.
+
+    # Determinizm (G.5): tum tahmin modeli random_state'inin tek kaynagi.
+    PREDICTION_SEED: int = 42
+
+    # Paralel veri cekme (1.1): yfinance rate-limit'e saygili ThreadPool.
+    # 1 = eski seri yol (byte-eş). Uygulama env: DATA_FETCH_WORKERS.
+    DATA_FETCH_WORKERS: int = 8
+
+    # In-process fetch cache sinir (1.2 · B8): batch egitimde sinirsiz
+    # buyumeyi onler. 0 = sinirsiz (eski davranis). LRU tavani.
+    DATA_CACHE_MAXSIZE: int = 64
+
+    # Ensemble warm-start (2.1 · B2): %80 yeniden-egitim turu %60 modelinden
+    # baslasin mi. Varsayilan False — mevcut modeller/golden bozulmaz, once
+    # A/B olcum. Opt-in.
+    ENSEMBLE_WARM_START: bool = False
+
+    # Feature-selection disk cache (2.4 · B5): icerik-hash'li cache dizini.
+    # Bos string = cache kapali (varsayilan, davranis degismez). MI/permutation
+    # tekrar hesabini onler. Ornek deger: "results/feature_selection_cache".
+    FEATURE_SELECTION_CACHE_DIR: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True

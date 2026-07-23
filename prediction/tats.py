@@ -20,6 +20,8 @@ from typing import Optional, Dict, Any
 
 import numpy as np
 
+from prediction.seeding import GLOBAL_SEED
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -47,6 +49,9 @@ class TATSCorrector:
         self.flat_threshold = flat_threshold
         self.classifier: Optional[Any] = None
         self._is_fitted = False
+        # Faz 6: fit'te veride gorulen semantik siniflar (0=DOWN,1=FLAT,2=UP).
+        # predict_proba kolonlarini semantik etikete geri cevirmek icin.
+        self._semantic_classes = np.array([0, 1, 2])
 
     def fit(
         self,
@@ -78,19 +83,28 @@ class TATSCorrector:
             logger.warning("TATS: Yeterli sinif cesitliligi yok, egitim atlaniyor")
             return {'trained': False}
 
+        # XGBoost >= 2.0 hedef siniflari ardisik [0..k-1] bekler; eger veride
+        # sadece {0,2} gibi bir alt kume varsa dogrudan fit patlar
+        # (ValueError: Expected [0 1], got [0 2]). Semantik etiketleri (0=DOWN,
+        # 1=FLAT, 2=UP) sakla, egitimi encode edilmis uzayda yap, tahminde geri
+        # cevir. (Faz 6: DL modelleri devreye girince ilk kez tetiklenen bug.)
+        self._semantic_classes = np.unique(labels)  # or. [0 2]
+        remap = {orig: i for i, orig in enumerate(self._semantic_classes)}
+        labels_enc = np.array([remap[l] for l in labels])
+
         self.classifier = XGBClassifier(
             n_estimators=100,
             max_depth=3,
             learning_rate=0.1,
             subsample=0.8,
-            random_state=42,
+            random_state=GLOBAL_SEED,
             verbosity=0,
             eval_metric='mlogloss',
         )
-        self.classifier.fit(X, labels)
+        self.classifier.fit(X, labels_enc)
         self._is_fitted = True
 
-        train_acc = float(np.mean(self.classifier.predict(X) == labels))
+        train_acc = float(np.mean(self.classifier.predict(X) == labels_enc))
         class_dist = {int(c): int(np.sum(labels == c)) for c in np.unique(labels)}
         logger.info(f"  [TATS] Classifier egitildi. Train acc: {train_acc:.3f}, dagilim: {class_dist}")
         return {'trained': True, 'train_accuracy': train_acc, 'class_distribution': class_dist}
@@ -116,9 +130,12 @@ class TATSCorrector:
 
         try:
             proba = self.classifier.predict_proba(X_last.reshape(1, -1))[0]
-            # sınıf sırası: 0=DOWN, 1=FLAT, 2=UP
-            trend_label = int(np.argmax(proba))
-            trend_confidence = float(proba[trend_label])
+            # predict_proba encode edilmis uzayda kolon dondurur; semantik
+            # etikete (0=DOWN, 1=FLAT, 2=UP) geri cevir (fit'teki remap'in tersi).
+            enc_idx = int(np.argmax(proba))
+            trend_confidence = float(proba[enc_idx])
+            classes = getattr(self, '_semantic_classes', np.array([0, 1, 2]))
+            trend_label = int(classes[enc_idx]) if enc_idx < len(classes) else enc_idx
 
             predicted_return = (predicted_price - current_price) / (current_price or 1)
             trend_map = {0: 'DOWN', 1: 'FLAT', 2: 'UP'}

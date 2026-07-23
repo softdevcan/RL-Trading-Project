@@ -26,6 +26,7 @@ except ImportError:
 from prediction.models.base import BasePredictionModel, MODELS_DIR
 from prediction.feature_engineer import PredictionFeatureEngineer
 from prediction.tats import TATSCorrector
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ class StackingEnsemble:
         source: Optional[str] = None,
         feature_groups: Optional[List] = None,
         target_type: str = 'log_return',
+        strict: bool = False,
+        warm_start: Optional[bool] = None,
     ):
         if horizon not in ('daily', 'weekly'):
             raise ValueError("horizon 'daily' veya 'weekly' olmali")
@@ -87,6 +90,24 @@ class StackingEnsemble:
         self.n_folds = n_folds
         self.meta_learner_type = meta_learner_type
         self.use_tats = use_tats
+        # Faz 6 (G.1): strict=True ise bir base model egitimde patlayinca fail-fast
+        # (sessiz dusme yerine). Varsayilan False — geriye uyumlu; result nesnesi
+        # her durumda failed_models + status tasir.
+        self.strict = strict
+        self.failed_models: Dict[str, str] = {}
+
+        # Faz 6 (2.1/B2): warm_start=True ise %80 deployment turu, %60 modelinin
+        # agirliklarindan devam eder (DL state_dict / agac init_model) — sifirdan
+        # degil. None verilirse config ENSEMBLE_WARM_START'tan okunur (varsayilan
+        # False -> mevcut davranis, bit-es). NOT: asil hiz/kalite kazanci GPU'lu
+        # makinede olculur; bu iskele default kapali.
+        if warm_start is None:
+            try:
+                from app.core.config import get_settings
+                warm_start = bool(get_settings().ENSEMBLE_WARM_START)
+            except Exception:
+                warm_start = False
+        self.warm_start = warm_start
 
         self.feature_engineer = PredictionFeatureEngineer(horizon)
         self.base_models: Dict[str, BasePredictionModel] = {}
@@ -113,7 +134,7 @@ class StackingEnsemble:
                 learning_rate=0.1,
                 subsample=0.8,
                 colsample_bytree=0.8,
-                random_state=42,
+                random_state=GLOBAL_SEED,
                 verbosity=0,
             )
         return Ridge(alpha=1.0)
@@ -236,7 +257,13 @@ class StackingEnsemble:
                     f"Dir Acc: {result['val_metrics']['direction_accuracy']:.1f}%"
                 )
             except Exception as exc:
+                # Faz 6 (G.1): sessiz dusme yerine kaydet; strict ise fail-fast
+                self.failed_models[model_type] = str(exc)
                 logger.error(f"  [{model_type}] egitim hatasi: {exc}")
+                if self.strict:
+                    raise RuntimeError(
+                        f"[{symbol}] strict mod: '{model_type}' base modeli egitilemedi: {exc}"
+                    ) from exc
                 continue
 
         if len(meta_predictions) < 2:
@@ -256,8 +283,9 @@ class StackingEnsemble:
             return self._build_result(symbol, model_results, test_metrics, n, split)
 
         # Meta-learner: X_meta OOF tahminleri uzerinde egit
-        meta_X_train = np.column_stack([meta_predictions[m] for m in sorted(meta_predictions.keys())])
-        meta_y_train = y_meta[:meta_X_train.shape[0]]
+        # Sondan hizala: DL modelleri kisa OOF dondurur, hepsini min_len'e indir.
+        meta_X_train, meta_min_len = self._stack_aligned(meta_predictions)
+        meta_y_train = y_meta[-meta_min_len:]
 
         self.meta_learner = self._build_meta_learner()
         self.meta_learner.fit(meta_X_train, meta_y_train)
@@ -277,12 +305,11 @@ class StackingEnsemble:
                 logger.warning(f"  [{model_type}] test tahmin hatasi: {exc}")
 
         if len(test_preds_per_model) >= 2:
-            test_meta_X = np.column_stack(
-                [test_preds_per_model[m] for m in sorted(test_preds_per_model.keys())]
-            )
+            test_meta_X, _ = self._stack_aligned(test_preds_per_model)
             ensemble_pred = self.meta_learner.predict(test_meta_X)
         elif test_preds_per_model:
-            ensemble_pred = np.mean(list(test_preds_per_model.values()), axis=0)
+            only = list(test_preds_per_model.values())[0]
+            ensemble_pred = only
         else:
             ensemble_pred = np.zeros_like(y_test)
 
@@ -299,11 +326,10 @@ class StackingEnsemble:
         # TATS: meta-train seti uzerinde trend siniflandirici egit
         if self.use_tats and len(meta_predictions) >= 1:
             self.tats_corrector = TATSCorrector()
-            meta_X_for_tats = np.column_stack(
-                [meta_predictions[m] for m in sorted(meta_predictions.keys())]
-            )
-            current_prices_meta = y_base[-len(meta_y_train):]
-            tats_result = self.tats_corrector.fit(meta_X_for_tats, meta_y_train, current_prices_meta)
+            meta_X_for_tats, tats_min_len = self._stack_aligned(meta_predictions)
+            tats_y = y_meta[-tats_min_len:]
+            current_prices_meta = y_base[-tats_min_len:]
+            tats_result = self.tats_corrector.fit(meta_X_for_tats, tats_y, current_prices_meta)
             test_metrics['tats_trained'] = tats_result.get('trained', False)
 
         # ------------------------------------------------------------------
@@ -324,8 +350,16 @@ class StackingEnsemble:
         for model_type in list(self.base_models.keys()):
             try:
                 logger.info(f"  [{model_type}] tam egitim seti uzerinde yeniden egitiliyor (%80)...")
+                # Faz 6 (2.1): warm_start ise %60-modelini kaynak ver — bu satirda
+                # self.base_models[model_type] hala %60-trained model (asagida
+                # overwrite ediliyor). Kapaliyken None -> sifirdan (bit-es).
+                prev_model = self.base_models.get(model_type) if self.warm_start else None
                 full_model = self._create_model(model_type)
-                full_result = full_model.train(X_ft, y_ft, X_fv, y_fv, feature_cols=self.feature_cols)
+                full_result = full_model.train(
+                    X_ft, y_ft, X_fv, y_fv,
+                    feature_cols=self.feature_cols,
+                    warm_start_from=prev_model,
+                )
                 # Meta-set uzerinde yeni tahminler (meta-learner yeniden egitimi icin)
                 mp = full_model._predict_raw(X_meta)
                 if len(mp) != len(y_meta):
@@ -342,17 +376,30 @@ class StackingEnsemble:
 
         # Meta-learner'i yeni base model tahminleri uzerinde yeniden fit et
         if len(new_meta_preds) >= 2:
-            new_meta_X = np.column_stack(
-                [new_meta_preds[m] for m in sorted(new_meta_preds.keys())]
-            )
+            new_meta_X, new_min_len = self._stack_aligned(new_meta_preds)
             self.meta_learner = self._build_meta_learner()
-            self.meta_learner.fit(new_meta_X, y_meta[:new_meta_X.shape[0]])
+            self.meta_learner.fit(new_meta_X, y_meta[-new_min_len:])
             logger.info("  [META] Meta-learner %80-trained modeller ile yeniden egitildi")
 
         self._is_trained = True
         self._save_ensemble_meta(symbol, model_results, test_metrics)
 
         return self._build_result(symbol, model_results, test_metrics, n, split)
+
+    @staticmethod
+    def _stack_aligned(predictions: Dict[str, np.ndarray]):
+        """Model tahminlerini ortak minimum uzunluga (sondan) hizalayip stack'le.
+
+        Sekans modelleri (BiLSTM/TFT) lookback yuzunden agac modellerinden kisa
+        OOF tahmini dondurur; `column_stack` esit uzunluk ister. Hepsini sondan
+        `min_len` kadar kirparak hizalar ve (stacked_X, min_len) dondururuz.
+        Bu olmadan DL modelleri meta-katmanda column_stack'i patlatir ve sessizce
+        duserler (bkz. Faz 6 R1).
+        """
+        keys = sorted(predictions.keys())
+        min_len = min(len(predictions[k]) for k in keys)
+        stacked = np.column_stack([predictions[k][-min_len:] for k in keys])
+        return stacked, min_len
 
     def _compute_model_agreement(self, predictions: Dict[str, np.ndarray]) -> float:
         """Modellerin yon tahmini uzerindeki uzlasma orani."""
@@ -370,9 +417,17 @@ class StackingEnsemble:
         return round(float(agreement), 4)
 
     def _build_result(self, symbol, model_results, test_metrics, n, split):
+        # Faz 6 (G.1): eksik model varsa status='degraded' — sessiz "basarili" yok
+        expected = {m for m, cfg in self.model_configs.items() if cfg.get('enabled', True)}
+        trained = set(model_results.keys())
+        missing = sorted(expected - trained)
+        status = 'ok' if not missing else 'degraded'
         return {
             'symbol': symbol,
             'horizon': self.horizon,
+            'status': status,
+            'missing_models': missing,
+            'failed_models': dict(self.failed_models),
             'n_total': n,
             'n_train': split,
             'n_test': n - split,
@@ -381,6 +436,7 @@ class StackingEnsemble:
             'models_trained': list(model_results.keys()),
             'model_results': {k: v.get('val_metrics', {}) for k, v in model_results.items()},
             'ensemble_test_metrics': test_metrics,
+            'warm_start': self.warm_start,   # Faz 6 (2.1): %80 turu warm-start miydi
             'trained_at': datetime.now().isoformat(),
         }
 
@@ -485,13 +541,13 @@ class StackingEnsemble:
         direction = 'UP' if change_pct > 0 else 'DOWN'
 
         # Confidence: direction head varsa ondan, yoksa fiyat oylamasiyla
+        total_models = len(model_predictions)
         if direction_probs:
             mean_dir_prob = float(np.mean(list(direction_probs.values())))
             confidence = round(max(mean_dir_prob, 1 - mean_dir_prob), 4)
             agreement = mean_dir_prob if direction == 'UP' else (1 - mean_dir_prob)
         else:
             up_votes = sum(1 for p in model_predictions.values() if p > current_close)
-            total_models = len(model_predictions)
             agreement = up_votes / total_models if total_models > 0 else 0.5
             confidence = round(max(agreement, 1 - agreement), 4)
         agreement = round(float(agreement), 4)

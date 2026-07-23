@@ -18,6 +18,7 @@ import pandas as pd
 from prediction.feature_engineer import PredictionFeatureEngineer
 from prediction.feature_selector import FeatureSelector
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED, seed_everything
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class WalkForwardTrainer:
         source: Optional[str] = None,
         feature_groups: Optional[list] = None,
         target_type: str = 'log_return',
+        strict: bool = False,
     ):
         """
         Args:
@@ -58,6 +60,10 @@ class WalkForwardTrainer:
             max_features: Maksimum ozellik sayisi
             feature_groups: Aktif feature grup id listesi (None = registry default)
             target_type: 'log_return' (onerilen) veya 'abs_price'
+            strict: Faz 6 (R2) — True ise bir CV fold'u patlayinca fail-fast eder
+                (sessiz `except ... continue` yerine). Varsayilan False: geriye
+                uyumlu (fold atlanir) AMA artik ozette `failed_folds` +
+                `status='degraded'` ile GORUNUR. G.1'in (R1) CV karsiligi.
         """
         self.horizon = horizon
         self.source = source
@@ -68,6 +74,7 @@ class WalkForwardTrainer:
         self.embargo_days = embargo_days
         self.select_features = select_features
         self.max_features = max_features
+        self.strict = strict
         self.feature_engineer = PredictionFeatureEngineer(horizon)
 
         os.makedirs(EXPERIMENTS_DIR, exist_ok=True)
@@ -116,7 +123,15 @@ class WalkForwardTrainer:
         y = np.nan_to_num(y, nan=0.0)
 
         if self.select_features:
-            selector = FeatureSelector(max_features=self.max_features)
+            # Faz 6 (2.4): config'te cache dizini verilmisse feature-selection
+            # sonucu icerik-hash'ine gore cache'lenir (bos = kapali, davranissiz).
+            _cache_dir = None
+            try:
+                from app.core.config import get_settings
+                _cache_dir = get_settings().FEATURE_SELECTION_CACHE_DIR or None
+            except Exception:
+                _cache_dir = None
+            selector = FeatureSelector(max_features=self.max_features, cache_dir=_cache_dir)
             X_df = pd.DataFrame(X, columns=feature_cols)
             y_series = pd.Series(y)
             selection = selector.fit_select(X_df, y_series, feature_cols)
@@ -130,6 +145,9 @@ class WalkForwardTrainer:
         fold_size = n // (self.n_splits + 1)
 
         all_results = {mt: [] for mt in model_types}
+        # Faz 6 (R2): fold hatalarini sessizce yutma yerine biriktir — ozette
+        # gorunur olsun (yarim-fold'la hesaplanmis "basarili" CV'yi engelle).
+        failed_folds: List[Dict[str, Any]] = []
 
         prev_test_end = 0  # Onceki fold'un test_end'i (embargo icin)
         for fold in range(self.n_splits):
@@ -181,8 +199,18 @@ class WalkForwardTrainer:
                     )
                 except Exception as exc:
                     logger.error(f"    [{model_type}] Fold {fold + 1} hatasi: {exc}")
+                    failed_folds.append({
+                        'model_type': model_type, 'fold': fold + 1, 'error': str(exc),
+                    })
+                    # Faz 6 (R2): strict ise ilk fold hatasinda fail-fast —
+                    # "basarili" ama yarim CV uretmek yerine acikca patla.
+                    if self.strict:
+                        raise RuntimeError(
+                            f"[{symbol}] strict mod: '{model_type}' modeli fold "
+                            f"{fold + 1}'de patladi: {exc}"
+                        ) from exc
 
-        summary = self._summarize_cv_results(all_results, symbol)
+        summary = self._summarize_cv_results(all_results, symbol, failed_folds=failed_folds)
 
         self._save_experiment(summary, symbol)
 
@@ -215,6 +243,12 @@ class WalkForwardTrainer:
             Ensemble egitim sonuclari
         """
         from prediction.models.ensemble import StackingEnsemble
+
+        # Faz 6 (G.5): kosum basinda surec RNG'lerini tohumla — "ayni seed +
+        # seri mod -> tekrar uretilebilir". Model random_state'leri zaten
+        # GLOBAL_SEED'den geliyor; bu, numpy/torch/random global durumunu da
+        # sabitler (DL agirlik init, feature-sel permutation vb.).
+        seed_everything(GLOBAL_SEED)
 
         logger.info(f"[{symbol}] Final ensemble egitimi basliyor...")
         start_time = time.time()
@@ -276,8 +310,14 @@ class WalkForwardTrainer:
         self,
         all_results: Dict[str, List[Dict]],
         symbol: str,
+        failed_folds: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
-        """CV sonuclarini ozetle."""
+        """CV sonuclarini ozetle.
+
+        Faz 6 (R2): `failed_folds` bos degilse ozet `status='degraded'` tasir ve
+        hangi model/fold'un patladigini listeler — sessiz yarim-CV artik gorunur.
+        """
+        failed_folds = failed_folds or []
         summary = {
             'symbol': symbol,
             'horizon': self.horizon,
@@ -287,6 +327,10 @@ class WalkForwardTrainer:
             'model_results': {},
             'best_model': None,
             'best_avg_mape': float('inf'),
+            # R2 gorunurluk alanlari
+            'status': 'degraded' if failed_folds else 'ok',
+            'failed_folds': failed_folds,
+            'n_failed_folds': len(failed_folds),
         }
 
         for model_type, fold_results in all_results.items():
@@ -321,6 +365,14 @@ class WalkForwardTrainer:
 
         if summary['best_model']:
             logger.info(f"  En iyi model: {summary['best_model']} (MAPE: {summary['best_avg_mape']:.2f}%)")
+
+        # Faz 6 (R2): degraded ise ozette net uyari — log satirlarina gomulmesin
+        if failed_folds:
+            logger.warning(
+                f"  [{symbol}] CV DEGRADED: {len(failed_folds)} fold patladi "
+                f"(status='degraded'). Ozet yarim veriyle hesaplandi. "
+                f"Ilk hata: {failed_folds[0]['model_type']} fold {failed_folds[0]['fold']}"
+            )
 
         return summary
 

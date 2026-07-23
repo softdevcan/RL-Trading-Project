@@ -11,6 +11,7 @@ from typing import Dict, Any
 import numpy as np
 
 from prediction.models.base import BasePredictionModel
+from prediction.seeding import GLOBAL_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class CatBoostModel(BasePredictionModel):
             'random_strength': 1.0,
             'bagging_temperature': 1.0,
             'border_count': 128,
-            'random_seed': 42,
+            'random_seed': GLOBAL_SEED,
             'verbose': 0,
             'task_type': _default_task_type(),
             'early_stopping_rounds': 50,
@@ -54,7 +55,7 @@ class CatBoostModel(BasePredictionModel):
             'random_strength': trial.suggest_float('random_strength', 0.0, 10.0),
             'bagging_temperature': trial.suggest_float('bagging_temperature', 0.0, 10.0),
             'border_count': trial.suggest_int('border_count', 32, 255),
-            'random_seed': 42,
+            'random_seed': GLOBAL_SEED,
             'verbose': 0,
             'task_type': _default_task_type(),
             'early_stopping_rounds': 50,
@@ -69,6 +70,9 @@ class CatBoostModel(BasePredictionModel):
         self.model = CatBoostRegressor(**fit_params)
         self._early_stopping = params.get('early_stopping_rounds', 50)
 
+    def _supports_warm_start(self) -> bool:
+        return True
+
     def _fit(
         self,
         X_train: np.ndarray,
@@ -81,11 +85,23 @@ class CatBoostModel(BasePredictionModel):
         train_pool = Pool(X_train, y_train)
         val_pool = Pool(X_val, y_val)
 
+        # Faz 6 (2.1): warm-start — onceki fit'ten devam (init_model). Sadece
+        # ensemble warm_start=True verdiginde dolu; aksi halde None = sifirdan.
+        init_model = None
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'model', None) is not None:
+            try:
+                if ws.model.is_fitted():
+                    init_model = ws.model
+            except Exception:
+                init_model = None
+
         try:
             self.model.fit(
                 train_pool,
                 eval_set=val_pool,
                 early_stopping_rounds=self._early_stopping,
+                init_model=init_model,
                 verbose=False,
             )
         except Exception as exc:
@@ -99,6 +115,7 @@ class CatBoostModel(BasePredictionModel):
                     train_pool,
                     eval_set=val_pool,
                     early_stopping_rounds=self._early_stopping,
+                    init_model=init_model,
                     verbose=False,
                 )
             else:
