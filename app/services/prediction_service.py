@@ -762,8 +762,13 @@ class PredictionService:
         model_types: Optional[List[str]] = None,
         n_splits: int = 5,
         source: Optional[str] = None,
+        strict: bool = False,
     ) -> Dict[str, Any]:
-        """Walk-forward cross-validation ile model degerlendirme."""
+        """Walk-forward cross-validation ile model degerlendirme.
+
+        strict=True (Faz 6 R2): bir fold patlarsa fail-fast. Varsayilan False —
+        fold atlanir ama sonuc `status='degraded'` + `failed_folds` tasir.
+        """
         from prediction.trainer import WalkForwardTrainer
 
         resolved = _resolve_source(symbol, source)
@@ -776,6 +781,7 @@ class PredictionService:
             horizon=horizon,
             n_splits=n_splits,
             source=resolved,
+            strict=strict,
         )
         return trainer.cross_validate(
             df, symbol,
