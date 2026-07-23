@@ -13,6 +13,9 @@ import pandas as pd
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, status
 from pydantic import BaseModel
 
+from app.auth import workspace as ws
+from app.auth.deps import RequireWriter
+
 
 def _strip_nonfinite(obj: Any) -> Any:
     """JSON'a gidecek degerlerden NaN/Inf'i temizle (None'a cevir)."""
@@ -80,6 +83,7 @@ async def train_model(
     request: PredictionTrainRequest,
     background_tasks: BackgroundTasks,
     response: Response,
+    user: RequireWriter,
     sync: bool = Query(default=False, description="true ise senkron egitim (timeout riski)"),
 ):
     """Ensemble modeli egit (XGBoost + LightGBM + CatBoost + BiLSTM + TFT).
@@ -165,6 +169,9 @@ async def train_model(
                         if request.feature_config else None),
         target_type=(request.feature_config.target_type
                      if request.feature_config else 'log_return'),
+        # Arka plan gorevi istek baglamini devralmaz: model dosyalari dogru
+        # kullanicinin calisma alanina yazilsin diye kimlik acikca tasinir.
+        user_id=ws.current_user_id(),
     )
     return PredictionTrainAcceptedResponse(
         symbol=symbol,
@@ -205,7 +212,7 @@ async def get_train_status(
 
 
 @router.post("/train-ensemble", response_model=EnsembleTrainResponse)
-async def train_ensemble(request: EnsembleTrainRequest):
+async def train_ensemble(request: EnsembleTrainRequest, user: RequireWriter):
     """Sembol icin ensemble modeli egit (detayli sonuc)."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -242,7 +249,7 @@ async def train_ensemble(request: EnsembleTrainRequest):
 
 
 @router.post("/cross-validate")
-async def cross_validate(request: CrossValidateRequest):
+async def cross_validate(request: CrossValidateRequest, user: RequireWriter):
     """Walk-forward cross-validation ile model karsilastirma."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -265,7 +272,7 @@ async def cross_validate(request: CrossValidateRequest):
 
 
 @router.post("/optimize")
-async def optimize_hyperparameters(request: HyperOptRequest):
+async def optimize_hyperparameters(request: HyperOptRequest, user: RequireWriter):
     """Tum modeller icin Optuna hiperparametre optimizasyonu."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -326,7 +333,7 @@ async def list_models():
 # ------------------------------------------------------------------
 
 @router.post("/predict", response_model=PredictionResponse)
-async def predict(request: PredictionRequest):
+async def predict(request: PredictionRequest, user: RequireWriter):
     """Sembol+source listesi icin gunluk/haftalik fiyat tahmini uret."""
     horizon = _validate_horizon(request.horizon)
 
@@ -422,7 +429,7 @@ class EvaluateRequest(BaseModel):
 
 
 @router.post("/evaluate", response_model=EvaluatePendingResponse)
-async def evaluate_pending(request: EvaluateRequest = EvaluateRequest()):
+async def evaluate_pending(user: RequireWriter, request: EvaluateRequest = EvaluateRequest()):
     """Bekleyen tahminleri gerçek fiyatlarla değerlendir."""
     from app.services.prediction_service import PredictionService
     svc = PredictionService()

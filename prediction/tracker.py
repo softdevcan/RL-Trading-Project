@@ -18,6 +18,16 @@ logger = logging.getLogger(__name__)
 PREDICTIONS_DIR = os.path.join('data', 'predictions')
 
 
+def _default_predictions_dir() -> str:
+    """Aktif kullanicinin tahmin dizini; auth kapali/betik ise ortak dizin."""
+    try:
+        from app.auth import workspace as ws
+
+        return ws.predictions_dir()
+    except Exception:
+        return PREDICTIONS_DIR
+
+
 class PredictionTracker:
     """Tahmin depolama ve performans takip sistemi.
 
@@ -31,8 +41,10 @@ class PredictionTracker:
     }
     """
 
-    def __init__(self, predictions_dir: str = PREDICTIONS_DIR):
-        self.predictions_dir = predictions_dir
+    def __init__(self, predictions_dir: Optional[str] = None):
+        # Varsayilan cagri aninda cozulur: tracker istegi isleyen kullanicinin
+        # calisma alanina yazar (modul yuklenirken sabitlenemez).
+        self.predictions_dir = predictions_dir or _default_predictions_dir()
         os.makedirs(self.predictions_dir, exist_ok=True)
 
     # ------------------------------------------------------------------

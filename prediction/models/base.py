@@ -16,7 +16,45 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-MODELS_DIR = os.path.join('models', 'prediction')
+# Kullanici oncesi (ortak) dizin — auth kapaliyken ve standalone
+# betiklerde kullanilir; ayrica eski egitilmis modeller burada durur.
+LEGACY_MODELS_DIR = os.path.join('models', 'prediction')
+MODELS_DIR = LEGACY_MODELS_DIR  # geriye donuk uyumluluk (eski importlar)
+
+
+def models_dir() -> str:
+    """Yazma hedefi: aktif kullanicinin tahmin modeli dizini.
+
+    Auth kapali, istek baglami yok (betik/test) veya app katmani yuklenemiyorsa
+    eski ortak dizine duser — prediction paketi tek basina da calisir.
+    """
+    try:
+        from app.auth import workspace as ws
+
+        return ws.prediction_models_dir()
+    except Exception:
+        os.makedirs(LEGACY_MODELS_DIR, exist_ok=True)
+        return LEGACY_MODELS_DIR
+
+
+def model_dirs() -> list:
+    """Okuma sirasi: once kullanicinin alani, sonra ortak eski dizin."""
+    try:
+        from app.auth import workspace as ws
+
+        dirs = ws.read_dirs("prediction_models")
+        return dirs or [models_dir()]
+    except Exception:
+        return [LEGACY_MODELS_DIR] if os.path.isdir(LEGACY_MODELS_DIR) else []
+
+
+def find_model_file(filename: str) -> Optional[str]:
+    """Dosyayi kullanici alaninda, yoksa ortak dizinde ara."""
+    for directory in model_dirs():
+        candidate = os.path.join(directory, filename)
+        if os.path.exists(candidate):
+            return candidate
+    return None
 
 
 class BasePredictionModel(ABC):
@@ -50,7 +88,8 @@ class BasePredictionModel(ABC):
         # Faz 6 (2.1): warm-start kaynak modeli (train() ile set edilir); alt
         # siniflar _fit icinde okur. Varsayilan None = sifirdan.
         self._warm_start_from: Optional["BasePredictionModel"] = None
-        os.makedirs(MODELS_DIR, exist_ok=True)
+        # Dizin, yazma aninda models_dir() tarafindan olusturulur
+        # (kullanici calisma alanina gore cozulur).
 
     @abstractmethod
     def get_default_params(self) -> Dict[str, Any]:
@@ -192,8 +231,18 @@ class BasePredictionModel(ABC):
         safe = self._safe_symbol(symbol)
         return f'{safe}__{self.source}' if self.source else safe
 
+    def model_file_name(self, symbol: str) -> str:
+        return f'{self._model_id(symbol)}_{self.horizon}_{self.MODEL_TYPE}'
+
     def model_path(self, symbol: str) -> str:
-        return os.path.join(MODELS_DIR, f'{self._model_id(symbol)}_{self.horizon}_{self.MODEL_TYPE}')
+        """Yazma yolu — aktif kullanicinin calisma alani."""
+        return os.path.join(models_dir(), self.model_file_name(symbol))
+
+    def existing_model_path(self, symbol: str) -> Optional[str]:
+        """Okuma yolu — once kullanicinin alani, sonra ortak eski dizin."""
+        name = self.model_file_name(symbol)
+        found = find_model_file(name + '_meta.json')
+        return found[:-len('_meta.json')] if found else None
 
     def save(self, symbol: str, metrics: Optional[Dict] = None):
         """Modeli ve meta verisini kaydet."""
@@ -219,8 +268,8 @@ class BasePredictionModel(ABC):
         logger.info(f"  [{self.MODEL_TYPE}] Model kaydedildi: {path}")
 
     def load(self, symbol: str):
-        """Kaydedilmis modeli yukle."""
-        path = self.model_path(symbol)
+        """Kaydedilmis modeli yukle (kullanici alani -> ortak dizin)."""
+        path = self.existing_model_path(symbol) or self.model_path(symbol)
         self._load_model(path)
 
         meta_path = path + '_meta.json'
@@ -234,10 +283,8 @@ class BasePredictionModel(ABC):
         logger.info(f"  [{self.MODEL_TYPE}] Model yuklendi: {path}")
 
     def is_trained_for(self, symbol: str) -> bool:
-        """Sembol icin kayitli model var mi?"""
-        path = self.model_path(symbol)
-        meta_path = path + '_meta.json'
-        return os.path.exists(meta_path)
+        """Sembol icin kayitli model var mi? (kendi alani veya ortak dizin)"""
+        return self.existing_model_path(symbol) is not None
 
     # ------------------------------------------------------------------
     # Metrikler

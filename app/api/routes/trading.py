@@ -25,6 +25,8 @@ from app.schemas.trading import (
     ModelComparisonResponse
 )
 from app.core.config import get_settings
+from app.auth import workspace as ws
+from app.auth.deps import RequireWriter
 
 _settings = get_settings()
 
@@ -33,21 +35,40 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trading", tags=["Trading"])
 
-# Global training state — guarded by _training_lock (#23)
+# Training state — guarded by _training_lock (#23)
 # state semantics: "idle" → never ran / cleared
 #                  "running" → is_training=True
 #                  "completed" → finished OK
 #                  "error" → raised exception (detail in .error)
+#
+# Faz 7: durum artik KULLANICI BASINA tutulur. Tek global sozluk, bir
+# kullanicinin egitimi sirasinda digerlerini "Training already in progress"
+# ile bloklar ve ilerleme cubuklarini karistirirdi.
 _training_lock = asyncio.Lock()
-training_state = {
-    "is_training": False,
-    "state": "idle",
-    "current_step": 0,
-    "total_steps": 0,
-    "start_time": None,
-    "metrics": {},
-    "error": None
-}
+
+
+def _empty_training_state() -> Dict[str, Any]:
+    return {
+        "is_training": False,
+        "state": "idle",
+        "current_step": 0,
+        "total_steps": 0,
+        "start_time": None,
+        "metrics": {},
+        "error": None,
+    }
+
+
+_training_states: Dict[str, Dict[str, Any]] = {}
+
+
+def _training_key(user_id: Optional[str] = None) -> str:
+    """Durum anahtari: kullanici id, auth kapaliysa "local"."""
+    return user_id or ws.current_user_id() or "local"
+
+
+def get_training_state(user_id: Optional[str] = None) -> Dict[str, Any]:
+    return _training_states.setdefault(_training_key(user_id), _empty_training_state())
 
 _SAFE_MODEL_NAME = re.compile(r'^[a-zA-Z0-9_.-]+$')
 
@@ -81,7 +102,7 @@ async def get_hyperparameter_studies(algorithm: str):
         List of hyperparameter study files with metadata
     """
     try:
-        studies_dir = f"{_settings.RESULTS_DIR}/hyperparameter_studies"
+        studies_dir = ws.hyperopt_dir()
 
         if not os.path.exists(studies_dir):
             return {"studies": []}
@@ -193,7 +214,8 @@ def _check_training_data_freshness(phase: int, stale_threshold: int = 10) -> Non
 @router.post("/train", response_model=TrainingResponse)
 async def start_training(
     request: TrainingRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    user: RequireWriter,
 ):
     """
     Start model training in background
@@ -201,21 +223,24 @@ async def start_training(
     Args:
         request: Training configuration
         background_tasks: FastAPI background tasks
+        user: Aktif kullanici — egitim onun calisma alanina yazilir (viewer yapamaz)
     """
-    global training_state
-
     # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
     _check_training_data_freshness(request.phase)
 
+    user_id = ws.current_user_id()
+    key = _training_key(user_id)
+
     async with _training_lock:  # (#23) prevent race between concurrent requests
-        if training_state["is_training"]:
+        state = get_training_state(user_id)
+        if state["is_training"]:
             raise HTTPException(
                 status_code=400,
                 detail="Training already in progress"
             )
 
         # Reset training state inside lock
-        training_state = {
+        _training_states[key] = {
             "is_training": True,
             "state": "running",
             "current_step": 0,
@@ -226,20 +251,22 @@ async def start_training(
             "config": request.dict()
         }
 
-    # Start training in background (outside lock — long-running)
-    background_tasks.add_task(run_training, request)
+    # Start training in background (outside lock — long-running).
+    # Kullanici kimligi acikca tasinir: arka plan gorevi istek baglamini
+    # (ContextVar) devralmaz, calisma alani yolu buna gore cozulur.
+    background_tasks.add_task(run_training, request, user_id)
 
     return TrainingResponse(
         message="Training started successfully",
-        training_id=training_state["start_time"],
+        training_id=_training_states[key]["start_time"],
         status="started"
     )
 
 
 @router.get("/train/status", response_model=TrainingStatus)
 async def get_training_status():
-    """Get current training status"""
-    global training_state
+    """Get current training status (aktif kullaniciya ait)"""
+    training_state = get_training_state()
 
     progress = 0.0
     if training_state["total_steps"] > 0:
@@ -271,15 +298,18 @@ def _models_cache_key() -> tuple:
             return os.path.getmtime(path)
         except OSError:
             return None
-    return (_mtime(_settings.MODELS_DIR), _mtime(_settings.RESULTS_DIR))
+    # Kullanici kimligi anahtarin parcasi: iki kullanici birbirinin model
+    # listesini onbellekten gormemeli.
+    dirs = ws.read_dirs("models") + ws.read_dirs("results")
+    return (ws.current_user_id(), tuple(_mtime(d) for d in dirs))
 
 
 @router.get("/models", response_model=List[ModelInfo])
 async def list_models():
-    """List all trained models"""
-    models_dir = _settings.MODELS_DIR
+    """List all trained models (kullanicinin calisma alani + ortak eski modeller)"""
+    model_dirs = ws.read_dirs("models")
 
-    if not os.path.exists(models_dir):
+    if not model_dirs:
         return []
 
     cache_key = _models_cache_key()
@@ -288,17 +318,21 @@ async def list_models():
         return _models_cache["value"]
 
     models = []
+    seen: set[str] = set()
 
-    for filename in os.listdir(models_dir):
-        if filename.endswith(".zip"):
+    for models_dir in model_dirs:
+        for filename in sorted(os.listdir(models_dir)):
+            if not filename.endswith(".zip") or filename in seen:
+                continue
+            seen.add(filename)  # kendi alanindaki dosya, eski ortak dosyayi golgeler
             model_path = os.path.join(models_dir, filename)
 
             # Try to load metrics from results
             model_name = filename.replace(".zip", "")
-            metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
+            metrics_file = ws.find_file("results", f"{model_name}_metrics.json")
 
             metrics = {}
-            if os.path.exists(metrics_file):
+            if metrics_file:
                 with open(metrics_file, 'r') as f:
                     metrics = json.load(f)
 
@@ -338,9 +372,9 @@ async def list_models():
 async def get_model_metrics(model_name: str):
     """Get metrics for a specific model"""
     model_name = sanitize_model_name(model_name)
-    metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
+    metrics_file = ws.find_file("results", f"{model_name}_metrics.json")
 
-    if not os.path.exists(metrics_file):
+    if not metrics_file:
         raise HTTPException(
             status_code=404,
             detail=f"Metrics not found for model: {model_name}"
@@ -354,6 +388,7 @@ async def get_model_metrics(model_name: str):
 
 @router.post("/data/generate")
 async def generate_data(
+    user: RequireWriter,
     phase: int = 1,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
@@ -664,7 +699,7 @@ async def get_data_status():
 
 
 @router.post("/data/update")
-async def update_data(request: DataUpdateRequest):
+async def update_data(request: DataUpdateRequest, user: RequireWriter):
     """Seçili veri kaynaklarını güncelle (incremental veya tam)."""
     try:
         results = {}
@@ -848,12 +883,22 @@ def get_earliest_date(source: str = "borsapy"):
 
 
 @router.delete("/models/{model_name}")
-async def delete_model(model_name: str):
-    """Delete a trained model"""
+async def delete_model(model_name: str, user: RequireWriter):
+    """Delete a trained model.
+
+    Yalnizca kullanicinin KENDI calisma alanindaki model silinebilir; ortak
+    (kullanici oncesi) modeller salt-okunurdur — bir kullanici digerlerinin
+    gordugu modeli silemez.
+    """
     model_name = sanitize_model_name(model_name)
-    model_path = f"{_settings.MODELS_DIR}/{model_name}.zip"
+    model_path = os.path.join(ws.models_dir(), f"{model_name}.zip")
 
     if not os.path.exists(model_path):
+        if ws.find_file("models", f"{model_name}.zip"):
+            raise HTTPException(
+                status_code=403,
+                detail="Bu model ortak (salt-okunur) dizinde; silinemez."
+            )
         raise HTTPException(
             status_code=404,
             detail=f"Model not found: {model_name}"
@@ -863,21 +908,32 @@ async def delete_model(model_name: str):
     os.remove(model_path)
 
     # Delete metrics if exists
-    metrics_file = f"{_settings.RESULTS_DIR}/{model_name}_metrics.json"
+    metrics_file = os.path.join(ws.results_dir(), f"{model_name}_metrics.json")
     if os.path.exists(metrics_file):
         os.remove(metrics_file)
 
     return {"message": f"Model {model_name} deleted successfully"}
 
 
-async def run_training(request: TrainingRequest):
+async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
     """
     Background task for model training
 
     Args:
         request: Training configuration
+        user_id: Egitimi baslatan kullanici; model/metrik/log dosyalari onun
+                 calisma alanina yazilir. None = auth kapali (eski davranis).
     """
-    global training_state
+    state_key = _training_key(user_id)
+    training_state = _training_states.setdefault(state_key, _empty_training_state())
+
+    # ContextVar arka plan gorevine tasinmadigi icin calisma alani baglami
+    # burada acikca kurulur — asagidaki tum ws.* cagrilarini etkiler.
+    with ws.use_workspace(user_id):
+        await _run_training_inner(request, training_state)
+
+
+async def _run_training_inner(request: TrainingRequest, training_state: Dict[str, Any]):
     import time
 
     # Track total training time
@@ -899,7 +955,7 @@ async def run_training(request: TrainingRequest):
                 super().__init__(verbose)
 
             def _on_step(self) -> bool:
-                global training_state
+                # Kullaniciya ait durum sozlugu closure ile tasinir.
                 training_state["current_step"] = self.num_timesteps
                 return True
 
@@ -985,13 +1041,13 @@ async def run_training(request: TrainingRequest):
         }.get(request.algorithm, PPO)  # Default to PPO instead of A2C
 
         # Setup TensorBoard logging
-        os.makedirs(_settings.LOGS_DIR, exist_ok=True)
+        os.makedirs(ws.logs_dir(), exist_ok=True)
         model_name = f"{request.algorithm.lower()}_phase{request.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # Load hyperparameters if study is specified
         hyperparams = {}
         if request.hyperparameter_study:
-            study_path = os.path.join(f"{_settings.RESULTS_DIR}/hyperparameter_studies", request.hyperparameter_study)
+            study_path = os.path.join(ws.hyperopt_dir(), request.hyperparameter_study)
             if os.path.exists(study_path):
                 with open(study_path, 'r') as f:
                     study_data = json.load(f)
@@ -1022,7 +1078,7 @@ async def run_training(request: TrainingRequest):
                 ent_coef=hyperparams.get('ent_coef', 0.15),
                 vf_coef=hyperparams.get('vf_coef', 0.5),
                 max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
-                tensorboard_log=_settings.LOGS_DIR,
+                tensorboard_log=ws.logs_dir(),
                 verbose=1
             )
         elif request.algorithm == "A2C":
@@ -1045,7 +1101,7 @@ async def run_training(request: TrainingRequest):
                 normalize_advantage=True,
                 use_rms_prop=True,
                 rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
-                tensorboard_log=_settings.LOGS_DIR,
+                tensorboard_log=ws.logs_dir(),
                 verbose=1
             )
         elif request.algorithm == "TD3":
@@ -1076,7 +1132,7 @@ async def run_training(request: TrainingRequest):
                 policy_delay=hyperparams.get('policy_delay', 2),
                 target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
                 target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
-                tensorboard_log=_settings.LOGS_DIR,
+                tensorboard_log=ws.logs_dir(),
                 verbose=1
             )
         elif request.algorithm == "SAC":
@@ -1101,7 +1157,7 @@ async def run_training(request: TrainingRequest):
                 ent_coef=ent_coef,
                 target_update_interval=hyperparams.get('target_update_interval', 1),
                 use_sde=hyperparams.get('use_sde', False),
-                tensorboard_log=_settings.LOGS_DIR,
+                tensorboard_log=ws.logs_dir(),
                 verbose=1
             )
         else:
@@ -1111,7 +1167,7 @@ async def run_training(request: TrainingRequest):
                 'MlpPolicy',
                 env,
                 learning_rate=actual_learning_rate,
-                tensorboard_log=_settings.LOGS_DIR,
+                tensorboard_log=ws.logs_dir(),
                 verbose=1
             )
 
@@ -1132,8 +1188,8 @@ async def run_training(request: TrainingRequest):
                        f"final_value=${train_metrics['final_portfolio_value']:,.0f}")
 
         # Save model
-        os.makedirs(_settings.MODELS_DIR, exist_ok=True)
-        model_path = f'{_settings.MODELS_DIR}/{model_name}'
+        models_root = ws.models_dir()
+        model_path = os.path.join(models_root, model_name)
         model.save(model_path)
 
         # Evaluate on test set
@@ -1202,8 +1258,7 @@ async def run_training(request: TrainingRequest):
         total_training_time = time.time() - training_start_time
 
         # Save metrics
-        os.makedirs(_settings.RESULTS_DIR, exist_ok=True)
-        metrics_file = f'{_settings.RESULTS_DIR}/{model_name}_metrics.json'
+        metrics_file = os.path.join(ws.results_dir(), f'{model_name}_metrics.json')
 
         metrics_with_config = {
             **metrics,
@@ -1279,7 +1334,7 @@ def _load_sb3_model(model_path: str, model_name_lower: str):
 
 
 @router.post("/daily-decision", response_model=DailyDecisionResponse)
-async def get_daily_decision(request: DailyDecisionRequest):
+async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter):
     """
     Get daily trading decision from trained model
 
@@ -1312,12 +1367,14 @@ async def get_daily_decision(request: DailyDecisionRequest):
 
         # 1. Load model
         safe_model_name = sanitize_model_name(request.model_name)
-        model_path = f"{_settings.MODELS_DIR}/{safe_model_name}"
-        if not os.path.exists(model_path + ".zip"):
+        # Once kullanicinin kendi alani, sonra ortak (eski) model dizini.
+        model_zip = ws.find_file("models", f"{safe_model_name}.zip")
+        if not model_zip:
             raise HTTPException(
                 status_code=404,
                 detail=f"Model not found: {request.model_name}"
             )
+        model_path = model_zip[:-4]  # SB3 .zip uzantisini kendisi ekler
 
         # Determine model type from name (cached — see _load_sb3_model)
         model_name_lower = request.model_name.lower()
@@ -1460,7 +1517,7 @@ async def get_daily_decision(request: DailyDecisionRequest):
 
 
 @router.post("/apply-decision")
-async def apply_decision(date: str):
+async def apply_decision(date: str, user: RequireWriter):
     """
     Apply a saved decision and update portfolio history
 
@@ -1476,7 +1533,7 @@ async def apply_decision(date: str):
         logger.info(f"Applying decision for date: {date}")
 
         # Load decision from file
-        decision_file = f'{_settings.DATA_DIR}/live_trading/trade_decisions.json'
+        decision_file = os.path.join(ws.live_trading_dir(), 'trade_decisions.json')
 
         if not os.path.exists(decision_file):
             raise HTTPException(
@@ -1523,7 +1580,7 @@ async def get_decisions_history():
     Return all saved daily decisions (trade_decisions.json) sorted by date desc.
     Used by the dashboard to browse past decisions, not just the most recent one.
     """
-    decision_file = f'{_settings.DATA_DIR}/live_trading/trade_decisions.json'
+    decision_file = os.path.join(ws.live_trading_dir(), 'trade_decisions.json')
     if not os.path.exists(decision_file):
         return {"dates": [], "decisions": {}}
 
@@ -1592,7 +1649,7 @@ async def get_latest_portfolio():
         Latest portfolio snapshot or default initial state
     """
     try:
-        history_file = f'{_settings.DATA_DIR}/live_trading/portfolio_history.csv'
+        history_file = os.path.join(ws.live_trading_dir(), 'portfolio_history.csv')
 
         if not os.path.exists(history_file):
             # Return default initial state
@@ -1656,9 +1713,11 @@ async def get_model_comparison():
         Comparison table with all performance metrics
     """
     try:
-        results_file = f'{_settings.RESULTS_DIR}/data/detailed_results.json'
+        # Akademik rapor betigi (scripts/generate_academic_report.py) ortak
+        # results/ dizinine yazar; once kullanici alanina bakilir.
+        results_file = ws.find_file('results', os.path.join('data', 'detailed_results.json'))
 
-        if not os.path.exists(results_file):
+        if not results_file:
             raise HTTPException(
                 status_code=404,
                 detail="No analysis results found. Please run scripts/generate_academic_report.py first"
@@ -1688,9 +1747,11 @@ async def get_best_models():
         Dictionary with best models for each metric
     """
     try:
-        results_file = f'{_settings.RESULTS_DIR}/data/detailed_results.json'
+        # Akademik rapor betigi (scripts/generate_academic_report.py) ortak
+        # results/ dizinine yazar; once kullanici alanina bakilir.
+        results_file = ws.find_file('results', os.path.join('data', 'detailed_results.json'))
 
-        if not os.path.exists(results_file):
+        if not results_file:
             raise HTTPException(
                 status_code=404,
                 detail="No analysis results found. Please run scripts/generate_academic_report.py first"

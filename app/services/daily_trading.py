@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple, Optional
 from filelock import FileLock
 
 from data.technical_indicators import add_indicators_to_multi_symbol_df
+from app.auth import workspace as ws
 
 logger = logging.getLogger(__name__)
 
@@ -692,9 +693,9 @@ def save_daily_decision(
     """
     logger.info(f"Saving daily decision for {date}")
 
-    os.makedirs('data/live_trading', exist_ok=True)
-
-    decision_file = 'data/live_trading/trade_decisions.json'
+    # Kararlar kullanici bazlidir: her kullanicinin kendi portfoyu ve
+    # gunluk karar gecmisi kendi calisma alaninda tutulur.
+    decision_file = os.path.join(ws.live_trading_dir(), 'trade_decisions.json')
     lock_file = decision_file + '.lock'
 
     # File-level lock for concurrent access safety (#31)
@@ -744,9 +745,7 @@ def append_to_portfolio_history(
     """
     logger.info(f"Appending to portfolio history: {date}")
 
-    os.makedirs('data/live_trading', exist_ok=True)
-
-    history_file = 'data/live_trading/portfolio_history.csv'
+    history_file = os.path.join(ws.live_trading_dir(), 'portfolio_history.csv')
 
     # Create new row
     new_row = {
@@ -785,7 +784,7 @@ def load_portfolio_history(days: int = 30) -> dict:
     Returns:
         Dict with dates, values, returns, balances
     """
-    history_file = 'data/live_trading/portfolio_history.csv'
+    history_file = os.path.join(ws.live_trading_dir(), 'portfolio_history.csv')
 
     if not os.path.exists(history_file):
         return {
