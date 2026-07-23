@@ -1,0 +1,20 @@
+docs/development/phase-6-backend-performance.md
+  s_7cb6d4313c3ece::t_a4f17865db6e58 3
+  s_7cb6d4313c3ece::t_e9b35b046009f4 14,16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "aa47e1ca7168679c1232d9338b479010300b210b",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
