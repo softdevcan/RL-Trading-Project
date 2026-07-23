@@ -1,6 +1,6 @@
 # Faz 6 — Backend Performans & Eğitim Throughput Sprint'i
 
-**Durum:** Devam ediyor (2026-07-22, 2. oturum — **iş bilgisayarı, GPU yok**) — ölçüm + dayanıklılık katmanı **+ CPU-güvenli hız/altyapı işleri** bitti; DL/GPU işleri (Epic 3, 2.2) GPU'lu makineye ertelendi. Sıradaki: **2.1 warm-start plumbing**.
+**Durum:** Devam ediyor (2026-07-23, 2. oturum — **iş bilgisayarı, GPU yok**) — ölçüm + dayanıklılık katmanı **+ CPU-güvenli hız/altyapı işleri** bitti; DL/GPU işleri (Epic 3, 2.2) GPU'lu makineye ertelendi. Sıradaki: **2.1 warm-start plumbing**.
 **Branch:** `fix/dl-models-ensemble-integration`
 **Önceki iş:** `perf: speed up dashboard...` (frontend/serving perf) + `devops: dockerize...` (single-VPS serving)
 **Bu fazın odağı:** **Backend** — veri işleme + model eğitimi (frontend/serving değil)
@@ -11,9 +11,10 @@
 
 ---
 
-## ⏱️ Uygulama Durumu (2026-07-22, güncel)
+## ⏱️ Uygulama Durumu (son güncelleme 2026-07-23)
 
-> Bu bölüm sprintin **canlı ilerlemesini** izler. Yarın buradan devam edilir.
+> Bu bölüm sprintin **canlı ilerlemesini** izler. Bir sonraki oturum buradan devam eder.
+> 1. oturum: 2026-07-22 (GPU'lu geliştirici makinesi). 2. oturum: 2026-07-23 (iş bilgisayarı, GPU yok).
 
 ### 🔴 En kritik keşif — ensemble aslında 3 model çalışıyormuş
 
