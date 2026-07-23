@@ -1,0 +1,26 @@
+prediction/trainer.py
+  s_7cb6d4313c3ece::t_330a2e774905eb 313,315-320,330-333
+  s_7cb6d4313c3ece::t_fc327b6ba010c5 369-376
+  s_7cb6d4313c3ece::t_d97ca85a02c197 51,63-66,77
+  s_7cb6d4313c3ece::t_65f7f55c20b43b 202-213
+  s_7cb6d4313c3ece::t_852ebe76f0d25a 148-150
+  s_7cb6d4313c3ece::t_a89a5116681224 126-134
+app/services/prediction_service.py
+  s_7cb6d4313c3ece::t_c4d0f518394a51 765,767-771,784
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "fda30a07d95434e2783dd90e9c0ff49bc5a71684",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
