@@ -1,0 +1,28 @@
+.dockerignore
+  s_b7fac307218dcd::t_e3f62fd9937dd3 60-64
+  s_b7fac307218dcd::t_e2e82440a5f851 34-41
+docker-compose.yml
+  s_b7fac307218dcd::t_e00c5c5507daf6 43-46
+Makefile
+  s_b7fac307218dcd::t_c603be22ed754f 11-17,21
+  s_b7fac307218dcd::t_6dc18d635dea81 5
+  s_b7fac307218dcd::t_4c48d96992a3ba 39-41
+Dockerfile
+  s_b7fac307218dcd::t_ad3c57ecdde99f 63-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "444d0092323356596277fd62a6eddb5b13bed41f",
+  "prompts": {},
+  "sessions": {
+    "s_b7fac307218dcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab65dcfb-d9b6-4d68-b5a4-0404c52be6d3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
