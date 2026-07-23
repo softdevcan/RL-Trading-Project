@@ -1,0 +1,20 @@
+data/macro_fetcher.py
+  s_7cb6d4313c3ece::t_afdd5f22a7662e 134-137,139-141,149-150,152-174
+  s_7cb6d4313c3ece::t_f9250db259e651 63-64,70-73,75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "52a1b44dfddb2b6b49335649eb1be5d8719b2e3b",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
