@@ -1,0 +1,37 @@
+prediction/models/tft_model.py
+  s_7cb6d4313c3ece::t_d9b1332a565f29 199-200
+  s_7cb6d4313c3ece::t_5b7de0fc3b1416 249-258
+prediction/models/catboost_model.py
+  s_7cb6d4313c3ece::t_42d34cdf215b8e 73-75,88-90,93-97,104
+  s_7cb6d4313c3ece::t_d499e2ebb46235 118
+prediction/models/ensemble.py
+  s_7cb6d4313c3ece::t_124496db90465d 99-100,103-110
+  s_7cb6d4313c3ece::t_6225d3843e8f49 439
+  s_7cb6d4313c3ece::t_f26afbe6579d1e 78
+prediction/models/base.py
+  s_7cb6d4313c3ece::t_f92d278f22ae98 50-52
+  s_7cb6d4313c3ece::t_c0808f2bf89155 116
+  s_7cb6d4313c3ece::t_7e4efeea6cf227 88,95
+prediction/models/lightgbm_model.py
+  s_7cb6d4313c3ece::t_d873e53055848a 65-67,75-77,80-83,87
+prediction/models/lstm_model.py
+  s_7cb6d4313c3ece::t_baee5ed690834c 168-178
+prediction/models/xgboost_model.py
+  s_7cb6d4313c3ece::t_9022ad63a3eda9 63-65,74-77,80-83,88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "8203afee5d97926cc02272566ab5a038c274eae6",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
