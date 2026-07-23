@@ -1,0 +1,29 @@
+app/api/routes/prediction.py
+  s_b7fac307218dcd::t_984e297f65d6e0 16-18,86,172-174,215,252,275,336,432
+app/services/daily_trading.py
+  s_b7fac307218dcd::t_91289ec301430c 17,696-698,748,787
+prediction/models/ensemble.py
+  s_b7fac307218dcd::t_5832be15da455c 26-28,121
+  s_b7fac307218dcd::t_4fe25cfb872938 652-653
+prediction/models/base.py
+  s_b7fac307218dcd::t_a86ce586c8f54f 19-25,31-57
+  s_b7fac307218dcd::t_2646540f41cccf 91-92
+app/services/prediction_service.py
+  s_b7fac307218dcd::t_50d525ee1d6069 427-430,435-439,441-443,450,452,454-457,462,465-466,476,493,495,497-501,504-505,515-522
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "38c3300ea16b44cc284ead8fbd341d77f4d2f084",
+  "prompts": {},
+  "sessions": {
+    "s_b7fac307218dcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab65dcfb-d9b6-4d68-b5a4-0404c52be6d3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
