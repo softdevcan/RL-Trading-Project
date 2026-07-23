@@ -32,6 +32,7 @@ Proje mimarisi ve roadmap:
 
 - [**roadmap.md**](development/roadmap.md) — Geliştirme planı ve faz takibi (Faz 1 → Faz 3 tamamlandı)
 - [**prediction-system.md**](development/prediction-system.md) — Gelişmiş tahmin sistemi mimarisi (ensemble, feature engineering, veri katmanı)
+- [**phase7-auth.md**](development/phase7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
 - [**phase3-implementation.md**](development/phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
 

@@ -424,25 +424,46 @@ def ensure_fresh_data(
 # ------------------------------------------------------------------
 # Arka plan egitim durum takibi
 # ------------------------------------------------------------------
-# Basit in-memory store: {(symbol, horizon): {state, started_at, finished_at, error, result}}
+# Basit in-memory store:
+#   {(user_id, symbol, horizon, source): {state, started_at, finished_at, error, result}}
+# Faz 7: anahtara kullanici eklendi — bir kullanicinin egitimi digerinin
+# durum ekraninda gorunmez ve ayni sembolu es zamanli egitmelerini engellemez.
 # Tek islemli uvicorn icin yeterli; cok-worker kurulumda Redis/DB'ye tasinmali.
 _training_state: Dict[tuple, Dict[str, Any]] = {}
+
+
+def _current_user_key(user_id: Optional[str] = None) -> str:
+    if user_id:
+        return user_id
+    try:
+        from app.auth import workspace as ws
+
+        return ws.current_user_id() or 'local'
+    except Exception:
+        return 'local'
 
 
 def get_training_state(
     symbol: Optional[str] = None,
     horizon: Optional[str] = None,
     source: Optional[str] = None,
+    user_id: Optional[str] = None,
 ):
-    """Egitim durumlarini raporla. symbol+horizon (+source) verilirse tek kayit, yoksa tumu."""
+    """Egitim durumlarini raporla (yalnizca aktif kullaniciya ait kayitlar).
+
+    symbol+horizon (+source) verilirse tek kayit, yoksa tumu.
+    """
+    uid = _current_user_key(user_id)
+    own = {k: v for k, v in _training_state.items() if k[0] == uid}
+
     if symbol and horizon:
         # source verilmediyse en yenisi (varsa) doner
         if source is not None:
-            return _training_state.get((symbol, horizon, source))
+            return own.get((uid, symbol, horizon, source))
         # source belirtilmediyse: o symbol+horizon icin running olan varsa onu, yoksa en son baslayan
         candidates = [
-            (k, v) for k, v in _training_state.items()
-            if k[0] == symbol and k[1] == horizon
+            (k, v) for k, v in own.items()
+            if k[1] == symbol and k[2] == horizon
         ]
         if not candidates:
             return None
@@ -452,7 +473,7 @@ def get_training_state(
         return max(candidates, key=lambda kv: kv[1].get('started_at', ''))[1]
     return [
         {'symbol': s, 'horizon': h, 'source': src, **info}
-        for (s, h, src), info in _training_state.items()
+        for (_u, s, h, src), info in own.items()
     ]
 
 
@@ -469,10 +490,19 @@ class PredictionService:
         source: Optional[str] = None,
         feature_groups: Optional[list] = None,
         target_type: str = 'log_return',
+        user_id: Optional[str] = None,
     ) -> None:
-        """Arka plan egitimi: BackgroundTasks ile cagrilir, sonucu _training_state'e yazar."""
+        """Arka plan egitimi: BackgroundTasks ile cagrilir, sonucu _training_state'e yazar.
+
+        user_id: egitimi baslatan kullanici. Arka plan gorevi istek baglamini
+        devralmadigi icin calisma alani burada acikca kurulur — model dosyalari
+        dogru kullanicinin dizinine yazilir.
+        """
+        from app.auth import workspace as ws
+
         resolved = _resolve_source(symbol, source)
-        key = (symbol, horizon, resolved)
+        uid = _current_user_key(user_id)
+        key = (uid, symbol, horizon, resolved)
         _training_state[key] = {
             'state': 'running',
             'source': resolved,
@@ -482,13 +512,14 @@ class PredictionService:
             'result': None,
         }
         try:
-            result = self.train_model(
-                symbol, horizon,
-                start_date=start_date, test_ratio=test_ratio,
-                source=resolved,
-                feature_groups=feature_groups,
-                target_type=target_type,
-            )
+            with ws.use_workspace(user_id):
+                result = self.train_model(
+                    symbol, horizon,
+                    start_date=start_date, test_ratio=test_ratio,
+                    source=resolved,
+                    feature_groups=feature_groups,
+                    target_type=target_type,
+                )
             _training_state[key].update({
                 'state': 'completed',
                 'finished_at': datetime.now().isoformat(),

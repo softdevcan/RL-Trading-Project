@@ -18,6 +18,23 @@ async def lifespan(app: FastAPI):
     print(f"Starting {settings.API_TITLE} v{settings.API_VERSION}")
     print(f"Dashboard:  http://{settings.HOST}:{settings.PORT}/dash/")
     print(f"API docs:   http://{settings.HOST}:{settings.PORT}/docs")
+
+    if settings.AUTH_ENABLED:
+        # Auth semasi + ilk admin. JWT anahtari eksikse burada fail-fast olur.
+        from app.auth.db import init_db, session_scope
+        from app.auth.security import get_secret_key
+        from app.auth.service import purge_expired_sessions
+        from app.auth.bootstrap import bootstrap_admin
+
+        get_secret_key()
+        init_db()
+        with session_scope() as db:
+            purge_expired_sessions(db)
+        bootstrap_admin()
+        print("Auth:       ACIK — giris: /login")
+    else:
+        print("Auth:       KAPALI (AUTH_ENABLED=False) — sunucuda kullanmayin!")
+
     yield
     print(f"Shutting down {settings.API_TITLE}")
 
@@ -33,6 +50,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Oturum kapisi. CORS'tan ONCE eklenir; Starlette middleware'i ters sirada
+# uyguladigi icin CORS en distaki katman olur ve 401 yanitlari ile preflight
+# istekleri de dogru CORS basliklarini alir.
+from app.auth.middleware import AuthGateMiddleware
+app.add_middleware(AuthGateMiddleware)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -43,6 +66,11 @@ app.add_middleware(
 )
 
 # Include routers
+from app.auth.routes import router as auth_router
+from app.api.routes import admin as admin_routes
+
+app.include_router(auth_router)                      # /login, /auth/*
+app.include_router(admin_routes.router, prefix="/api")  # /api/admin/*
 app.include_router(health.router)
 app.include_router(items.router)
 app.include_router(trading.router, prefix="/api")

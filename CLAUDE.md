@@ -21,7 +21,17 @@ Respond in the same language the user writes in.
 ## Project Structure
 ```
 app/                  # FastAPI backend
-  api/routes/         # API endpoints (trading.py, health.py, prediction.py)
+  api/routes/         # API endpoints (trading.py, health.py, prediction.py, admin.py)
+  auth/               # Faz 7: kimlik dogrulama, yetkilendirme, calisma alanlari
+    models.py         # User / SessionToken / AuditLog (SQLAlchemy)
+    db.py             # SQLite engine + init_db
+    security.py       # bcrypt + JWT + CSRF + parola politikasi
+    service.py        # Kullanici CRUD, authenticate, oturum rotasyonu, audit
+    deps.py           # CurrentUser / RequireWriter / RequireAdmin
+    middleware.py     # AuthGateMiddleware (/dash + /api kapisi, sessiz yenileme)
+    routes.py         # /login, /change-password, /auth/*
+    workspace.py      # Kullanici bazli dizin cozumleyici (hibrit izolasyon)
+    templates/        # login.html, change_password.html
   schemas/            # Pydantic models
   services/           # Business logic (model_analysis.py, daily_trading.py, prediction_service.py)
   core/config.py      # Configuration
@@ -64,9 +74,10 @@ static/               # Sadece favicon
 tests/                # Test scripts
 scripts/              # Standalone scripts (training, debug, reports)
 docs/                 # Documentation (development plan, guides)
-models/               # Trained models (.zip) - gitignored
+models/               # Trained models (.zip) - gitignored (kullanici oncesi, salt-okunur)
 results/              # Metrics (.json) - gitignored
 logs/                 # TensorBoard logs - gitignored
+workspaces/<user_id>/ # Faz 7: kullanici bazli models/results/predictions/live_trading - gitignored
 ```
 
 ## Important Rules
@@ -85,7 +96,19 @@ python run_server.py  # http://localhost:8000
 python tests/test_env.py
 python tests/test_ppo.py
 python tests/test_all_algorithms.py
+python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
+python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 ```
+
+### Auth & kullanici bazli calisma (Faz 7)
+- Giris: `/login` (cerez tabanli oturum — Dash WSGI header tasiyamaz)
+- Kapi: `app/auth/middleware.py` — `/dash/*`, `/api/*`, `/docs` korumali;
+  acik yollar: `/login`, `/auth/login`, `/auth/refresh`, `/health`, `/static/*`
+- Roller: `viewer` (okuma) / `user` (kendi alaninda yazma) / `admin` (+ kullanici yonetimi)
+- Kayit yok: hesaplari admin acar (`/dash/users` veya `python scripts/create_admin.py`)
+- Dizin cozumleme: `app/auth/workspace.py` → `models_dir()`, `results_dir()`,
+  `live_trading_dir()`, `find_file(kind, name)`, `use_workspace(user_id)`
+- Detay: `docs/development/phase7-auth.md`
 
 ### Data pipeline
 ```
@@ -129,7 +152,13 @@ borsapy/yf     → gold_fetcher.py       ─┘
 
 ## Do NOT
 - Read or modify files inside `venv/`
-- Add `models/`, `results/`, `logs/` to git
+- Add `models/`, `results/`, `logs/`, `workspaces/`, `data/auth/` to git
+- `AUTH_ENABLED=False` ile sunucuya cikma — pano ve tum API herkese acik kalir
+- Yeni yazma ucu eklerken `RequireWriter`/`RequireAdmin` bagimliligini atlama
+- Arka plan gorevine kullanici kimligini tasimayi unutma (`ws.use_workspace(user_id)`) —
+  aksi halde dosyalar yanlis calisma alanina yazilir
+- `models/`, `results/`, `data/live_trading` gibi yollari koda sabitleme;
+  `app/auth/workspace.py` cozumleyicisini kullan
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
@@ -142,4 +171,7 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - 3.2: Tahmin kalitesi (ICEEMDAN gürültü filtresi, TATS trend düzeltici, VIX/US10Y/DXY global makro)
   - 3.3: Risk yönetimi (ATR tabanlı pozisyon boyutlandırma, Kelly Criterion)
   - 3.4: Explainability & monitoring (SHAP, Sortino/Calmar/DSR/Turnover metrikleri, /explain API)
+- Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
+  (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
+  (piyasa verisi ortak; model/sonuc/karar kullanici bazli), kullanici basina egitim durumu
 - Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`. Dokümantasyon indeksi: `docs/README.md`.

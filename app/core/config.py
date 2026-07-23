@@ -66,6 +66,51 @@ class Settings(BaseSettings):
     # tekrar hesabini onler. Ornek deger: "results/feature_selection_cache".
     FEATURE_SELECTION_CACHE_DIR: str = ""
 
+    # --- Faz 7: Kimlik dogrulama, yetkilendirme, kullanici calisma alanlari ---
+
+    # Ana anahtar. False = eski davranis (herkese acik) — sadece yerel
+    # gelistirme icin. Sunucuda ASLA False birakilmaz.
+    AUTH_ENABLED: bool = True
+
+    # Kullanici deposu. SQLite tek dosya; Docker volume'una bind edilir.
+    # Postgres'e gecis: sadece bu URL degisir.
+    AUTH_DB_URL: str = "sqlite:///data/auth/auth.db"
+
+    # JWT imzalama. Bos birakilirsa DEBUG modda gecici anahtar dosyaya yazilir;
+    # DEBUG=False iken bos olursa uygulama acilista hata verir (fail-fast).
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 14
+
+    # Cerezler. Dash WSGI altinda calistigi icin oturum cerez tabanli
+    # (tarayici callback'leri Authorization header tasiyamaz).
+    SESSION_COOKIE_NAME: str = "rlt_session"
+    REFRESH_COOKIE_NAME: str = "rlt_refresh"
+    CSRF_COOKIE_NAME: str = "rlt_csrf"
+    COOKIE_SECURE: bool = False   # HTTPS arkasinda True yapilmali
+    COOKIE_SAMESITE: str = "lax"  # Dash POST'lari icin lax yeterli, CSRF'i keser
+    COOKIE_DOMAIN: str = ""
+
+    # Ilk admin (bootstrap). Yalnizca hic kullanici yokken kullanilir;
+    # kullanici olustuktan sonra bu degerler yok sayilir.
+    BOOTSTRAP_ADMIN_EMAIL: str = ""
+    BOOTSTRAP_ADMIN_PASSWORD: str = ""
+
+    # Brute-force korumasi
+    LOGIN_MAX_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 15
+    PASSWORD_MIN_LENGTH: int = 10
+
+    # Kullanici bazli calisma alani (hibrit izolasyon):
+    # piyasa verisi (bist/macro/fundamental/gold) ORTAK kalir; model, sonuc,
+    # tahmin ve gunluk karar dosyalari kullanici basina ayrisir.
+    WORKSPACES_DIR: str = "workspaces"
+    WORKSPACE_ISOLATION: bool = True
+    # Eski (kullanici oncesi) models/ ve results/ iceriginin herkese salt-okunur
+    # gosterilmesi. False = sadece kendi calisma alanini gorur.
+    WORKSPACE_SHOW_LEGACY: bool = True
+
     class Config:
         env_file = ".env"
         case_sensitive = True

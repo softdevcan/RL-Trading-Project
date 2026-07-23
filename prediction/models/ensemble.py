@@ -23,7 +23,9 @@ try:
 except ImportError:
     _XGBOOST_AVAILABLE = False
 
-from prediction.models.base import BasePredictionModel, MODELS_DIR
+from prediction.models.base import (
+    BasePredictionModel, MODELS_DIR, models_dir, model_dirs, find_model_file,
+)
 from prediction.feature_engineer import PredictionFeatureEngineer
 from prediction.tats import TATSCorrector
 from prediction.seeding import GLOBAL_SEED
@@ -116,7 +118,7 @@ class StackingEnsemble:
         self.feature_cols: List[str] = []
         self._is_trained = False
 
-        os.makedirs(MODELS_DIR, exist_ok=True)
+        # Model dizini yazma aninda cozulur (kullanici calisma alani).
 
     # ------------------------------------------------------------------
     # Meta-learner fabrikasi
@@ -594,11 +596,19 @@ class StackingEnsemble:
         safe = symbol.replace('/', '_').replace('=', '_').replace('.', '_')
         return f'{safe}__{self.source}' if self.source else safe
 
+    def _ensemble_meta_name(self, symbol: str) -> str:
+        return f'{self._model_id(symbol)}_{self.horizon}_ensemble_meta.json'
+
     def _ensemble_meta_path(self, symbol: str) -> str:
-        return os.path.join(MODELS_DIR, f'{self._model_id(symbol)}_{self.horizon}_ensemble_meta.json')
+        """Yazma yolu. Okuma icin _find_ensemble_meta kullanilir."""
+        return os.path.join(models_dir(), self._ensemble_meta_name(symbol))
+
+    def _find_ensemble_meta(self, symbol: str) -> Optional[str]:
+        """Once kullanicinin calisma alani, sonra ortak (eski) dizin."""
+        return find_model_file(self._ensemble_meta_name(symbol))
 
     def _meta_learner_path(self, symbol: str) -> str:
-        return os.path.join(MODELS_DIR, f'{self._model_id(symbol)}_{self.horizon}_meta_learner.json')
+        return os.path.join(models_dir(), f'{self._model_id(symbol)}_{self.horizon}_meta_learner.json')
 
     def _save_ensemble_meta(self, symbol, model_results, test_metrics):
         meta = {
@@ -637,10 +647,16 @@ class StackingEnsemble:
                 logger.warning(f"  [{model_type}] kaydetme hatasi: {exc}")
 
     def load(self, symbol: str):
-        """Ensemble meta ve tum base modelleri yukle."""
-        meta_path = self._ensemble_meta_path(symbol)
-        if not os.path.exists(meta_path):
-            raise FileNotFoundError(f"Ensemble meta bulunamadi: {meta_path}")
+        """Ensemble meta ve tum base modelleri yukle.
+
+        Once kullanicinin calisma alanina, yoksa ortak (kullanici oncesi)
+        model dizinine bakilir.
+        """
+        meta_path = self._find_ensemble_meta(symbol)
+        if not meta_path:
+            raise FileNotFoundError(
+                f"Ensemble meta bulunamadi: {self._ensemble_meta_path(symbol)}"
+            )
 
         with open(meta_path, 'r', encoding='utf-8') as f:
             meta = json.load(f)
@@ -660,7 +676,11 @@ class StackingEnsemble:
                 logger.warning(f"  [{model_type}] yukleme hatasi: {exc}")
 
         self.meta_learner_type = meta.get('meta_learner_type', 'ridge')
-        ml_path = self._meta_learner_path(symbol)
+        # Meta-learner dosyasi meta ile ayni dizinde durur.
+        ml_path = os.path.join(
+            os.path.dirname(meta_path),
+            f'{self._model_id(symbol)}_{self.horizon}_meta_learner.json',
+        )
         if meta.get('meta_learner_saved') and _XGBOOST_AVAILABLE and os.path.exists(ml_path):
             self.meta_learner = XGBRegressor()
             self.meta_learner.load_model(ml_path)
@@ -674,15 +694,18 @@ class StackingEnsemble:
         logger.info(f"  Ensemble yuklendi: {len(self.base_models)} model")
 
     def is_trained(self, symbol: str) -> bool:
-        return os.path.exists(self._ensemble_meta_path(symbol))
+        return self._find_ensemble_meta(symbol) is not None
 
     def list_trained_models(self) -> list:
-        if not os.path.exists(MODELS_DIR):
-            return []
         models = []
-        for fname in os.listdir(MODELS_DIR):
-            if fname.endswith(f'_{self.horizon}_ensemble_meta.json'):
-                path = os.path.join(MODELS_DIR, fname)
+        seen = set()
+        # Kullanicinin kendi modelleri once; ayni isimli eski ortak model golgelenir.
+        for directory in model_dirs():
+            for fname in sorted(os.listdir(directory)):
+                if not fname.endswith(f'_{self.horizon}_ensemble_meta.json') or fname in seen:
+                    continue
+                seen.add(fname)
+                path = os.path.join(directory, fname)
                 try:
                     with open(path, 'r', encoding='utf-8') as f:
                         info = json.load(f)
