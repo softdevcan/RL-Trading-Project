@@ -1,0 +1,24 @@
+prediction/feature_selector.py
+  s_7cb6d4313c3ece::t_8917a91694dc09 59-62,68-78,97-110
+  s_7cb6d4313c3ece::t_1edfdeefd8dd0c 8-9,11
+  s_7cb6d4313c3ece::t_4c6e96f62c915f 165,177-186
+  s_7cb6d4313c3ece::t_424adba8aab388 40,47-52,57
+app/core/config.py
+  s_7cb6d4313c3ece::t_deeabade12ccc6 64-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "95788910da97630e070bebb4232147342e05708e",
+  "prompts": {},
+  "sessions": {
+    "s_7cb6d4313c3ece": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01d95827-2512-47d8-a28c-b1a13d423b5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
