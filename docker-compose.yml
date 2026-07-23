@@ -38,6 +38,9 @@ services:
       - ./data:/app/data
       - ./results:/app/results
       - ./logs:/app/logs
+      # Faz 7: kullanici calisma alanlari (model/sonuc/karar) ve auth veritabani.
+      # data/ zaten bagli oldugundan data/auth/auth.db kalicidir.
+      - ./workspaces:/app/workspaces
 
     # Self-healing: restart on crash and on server reboot, but not if you
     # deliberately `docker compose stop`.
