@@ -60,7 +60,9 @@ WORKDIR /app
 COPY --chown=appuser:appuser . .
 
 # Create the writable runtime dirs in case the volumes are empty on first run.
-RUN mkdir -p models results logs data/predictions \
+# workspaces/ holds the per-user models/results/decisions, data/auth/ the user
+# database — both must be writable by appuser or the first login fails.
+RUN mkdir -p models results logs data/predictions workspaces data/auth \
     && chown -R appuser:appuser /app
 
 USER appuser

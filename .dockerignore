@@ -31,6 +31,14 @@ data/processed/
 hyperparameter_optimization/
 runs/
 
+# Faz 7: kullanici calisma alanlari ve kimlik verisi asla image'a girmez.
+workspaces/
+data/auth/
+*.db
+*.db-wal
+*.db-shm
+.jwt_secret
+
 # ── Secrets — passed at runtime via env_file, never in the image ─────────────
 .env
 .env.*
@@ -49,6 +57,11 @@ Thumbs.db
 # ── Not needed to run the server ─────────────────────────────────────────────
 tests/
 scripts/
+# Exception: admin hesabi sunucuda bu betikle acilir
+# (`docker compose exec rltrading python scripts/create_admin.py`).
+# Docker'da son eslesen kural kazanir, bu yuzden dislanan dizinden tek dosya
+# geri alinabilir (git'ten farkli).
+!scripts/create_admin.py
 docs/
 *.ipynb
 .ipynb_checkpoints/
