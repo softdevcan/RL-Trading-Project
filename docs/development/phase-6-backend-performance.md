@@ -396,3 +396,116 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 ## Sonuç: "Bu plan bizi sorunsuz eğitime geçirir mi?"
 
 **Evet — ama iki koşulla.** (1) Hız epic'leri (0-3) eğitimi hızlandırır; **(2) Epic G olmadan "sorunsuz" iddiası eksiktir.** Hızlı ama sessizce yarım-eğitilmiş bir ensemble üreten sistem "sorunsuz" değildir — sadece hızlı yanlıştır. Bu plan ikisini birlikte ele aldığı için, tamamlandığında hem **hızlı** hem **güvenilir/gözlemlenebilir** bir eğitim sürecine geçilir. Kalan büyük dayanıklılık işleri (dağıtık eğitim, otomatik retrain tetikleyicileri, veri drift tespiti) bilinçli olarak sonraki fazlara bırakıldı.
+
+---
+
+## 🎯 GPU Makinesi — Test & Doğrulama Planı (merge sonrası)
+
+> **Bu bölüm GPU'lu makineye (CUDA, ör. RTX 4060) geçen kişi içindir.** CPU-güvenli tüm kod işleri tamamlandı ve `main`'e **merge edildi** (PR #1). Burada, GPU gerektiren işler + doğrulamalar sırayla, çalıştırılabilir komutlar ve kabul kriterleriyle. Komutları Windows'ta `venv/Scripts/python.exe ...`, Linux'ta (CUDA'lı venv) `python ...` ile çalıştır.
+>
+> **Genel kural (davranış dondurma):** T3–T7 arasındaki **her kod değişikliğinden sonra** T1 golden'ı (`python tests/test_prediction_regression.py`) yeşil kalmalı.
+
+### Adım 0 — Ortam & sağlık kontrolü (önkoşul, ~5 dk)
+
+```bash
+git checkout main && git pull                 # merge edilmiş güncel main
+pip install -r requirements.txt               # lightgbm/catboost/torch(CUDA) dahil TAM kurulum
+python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+```
+
+**Kabul:** `CUDA: True <GPU adı>`. `False` ise CUDA'lı torch kurulu değildir — bu plan çalışmaz.
+
+**⚠️ Kritik:** `pip install -r requirements.txt` şart — lightgbm/catboost eksikse ensemble sessizce 3 modele düşer (R1). T1'in çıktısında `models_trained` 5 model listelemiyorsa önce bunu düzelt.
+
+### T1 — Golden'ı bu donanımda yeniden üret — **her şeyden önce**
+
+Golden dosyası başka donanıma ait. DL non-determinizmi donanıma bağlı olduğu için **bu makinede yeniden üretilmeli**, yoksa sonraki tüm regresyon kontrolleri yanlış "başarısız" verir.
+
+```bash
+python tests/test_prediction_regression.py --update      # golden'ı BU makinede üret
+git add tests/golden/prediction_regression.json
+git commit -m "test(phase6): rebaseline regression golden on GPU hardware"
+python tests/test_prediction_regression.py               # --update olmadan: GEÇMELİ
+```
+
+**Kabul:** İkinci koşum `[REGRESYON] GECTI (OK)`; `models_trained` = 5 model (bilstm, catboost, lightgbm, tft, xgboost).
+
+### T2 — Yeni baseline profili — "önce ölç"
+
+Tüm "X→Y" iddialarının kanıt tabanı; bu donanıma özgü:
+
+```bash
+python scripts/benchmarking/profile_training.py --stage all --symbols 5 \
+    --out results/benchmarks/phase6_baseline_gpu.md
+```
+
+**Kabul:** `phase6_baseline_gpu.md` üretildi (aşama süreleri + model breakdown + `nvidia-smi` snapshot + peak RAM). Bu dosyayı sakla — T3/T4/T5 kazançları buna karşı ölçülür.
+
+### T3 — 2.1 Warm-start A/B — **en yüksek ROI, kalite riski var**
+
+Plumbing hazır, default OFF (bit-eş doğrulandı). Burada gerçek DL eğitim süresiyle hız + kalite A/B.
+
+```bash
+# A) BASELINE (warm-start OFF)
+python scripts/benchmarking/profile_training.py --stage train --symbols 5 \
+    --out results/benchmarks/warmstart_OFF.md
+
+# B) WARM-START ON
+#   PowerShell:  $env:ENSEMBLE_WARM_START="true"
+#   bash:        export ENSEMBLE_WARM_START=true
+python scripts/benchmarking/profile_training.py --stage train --symbols 5 \
+    --out results/benchmarks/warmstart_ON.md
+#   (sonra kapat: Remove-Item Env:ENSEMBLE_WARM_START  /  unset ENSEMBLE_WARM_START)
+```
+
+**Kabul:** hız **≥%30 azalır** (ON vs OFF); `ensemble_test_metrics` (MAPE, dir-acc) baseline'ın **±%2** içinde; kaydedilen model formatı (`*_ensemble_meta.json`) değişmez.
+**Karar:** Hız net **ve** kalite regresyonsuzsa → `ENSEMBLE_WARM_START=true` production default (.env/config). Aksi halde OFF kalır (kod güvenli default'ta). Sonucu bu dokümana "T3 sonucu" olarak yaz.
+
+### T4 — 3.1 DL AMP + DataLoader (kod + ölçüm)
+
+Kod henüz yazılmadı (GPU'ya özgü). Hedef: [lstm_model.py](../../prediction/models/lstm_model.py), [tft_model.py](../../prediction/models/tft_model.py).
+- `torch.cuda.amp.autocast` + `GradScaler` (forward'da autocast, loss FP32).
+- `DataLoader(num_workers>0, pin_memory=True)` — Windows'ta spawn maliyetini ölç, gerekiyorsa `persistent_workers=True`.
+- Tüm sekansı GPU'ya bir kez taşı (per-batch `.to(device)` yerine).
+
+**Kabul:** tek BiLSTM eğitimi **≥%25 hızlı**; val MAPE **±%2**; AMP overflow yok; T1 golden geçer.
+
+### T5 — 2.2 Semboller arası paralellik (kod + ölçüm)
+
+`train_batch` orchestrator hazır ([train_prediction_batch.py](../../scripts/training/train_prediction_batch.py)); paralellik üstüne eklenecek. **Kritik:** GPU tek + VRAM 8GB → DL paralel = OOM. Ağaç modelleri (CPU) çok-process paralel; DL (GPU) semaphore ile 1-2 sembol.
+
+```bash
+# Paralellik eklendikten sonra: küçük batch ile OOM + eşdeğerlik + resume kontrolü
+python scripts/training/train_prediction_batch.py --symbols GARAN.IS AKBNK.IS THYAO.IS
+# ortada Ctrl+C, sonra:
+python scripts/training/train_prediction_batch.py --symbols GARAN.IS AKBNK.IS THYAO.IS --resume-latest
+```
+
+**Kabul:** 5 sembol batch **≥%40 hızlı**; **GPU OOM yok**; her modelin metriği tek-sembol koşumuyla eş; `--resume` biten sembolleri atlıyor.
+
+### T6 — (Opsiyonel) 3.2 HPO sqlite resume
+
+HPO nadiren kullanılıyor (P2). Optuna study'yi `storage=sqlite:///...` ile kalıcı yap → kesinti sonrası devam. **Kabul:** aynı `n_trials` için wall-clock belirgin düşer; resume çalışır; `best_params` kalitesi düşmez.
+
+### T7 — Tam BIST-30 doğrulama koşumu — kapanış
+
+```bash
+python scripts/training/train_prediction_batch.py           # tüm BIST-30
+# çıktı: results/training_runs/<run_id>.json — tek bakışta ok/degraded/failed
+```
+
+**Kabul:** manifest'te tüm semboller `status='ok'` (5 model); `degraded`/`failed` varsa `missing_models`/`error` ile teşhis; toplam wall-clock baseline'a göre **≥%40** düşük (birleşik hedef). Bu koşum "sorunsuz eğitim" iddiasının canlı kanıtıdır.
+
+### 📋 GPU test özet tablosu
+
+| # | Test | Komut / dosya | Kabul kriteri | Ön koşul |
+|---|------|---------------|---------------|----------|
+| T1 | Golden rebaseline | `test_prediction_regression.py --update` | 2. koşum GEÇER, 5 model | Adım 0 |
+| T2 | Yeni baseline | `profile_training.py --stage all --symbols 5` | baseline md üretildi | T1 |
+| T3 | 2.1 warm-start A/B | `ENSEMBLE_WARM_START` OFF vs ON | hız ≥%30↓, MAPE ±%2 | T2 |
+| T4 | 3.1 DL AMP | (kod + ölçüm) | BiLSTM ≥%25↓, MAPE ±%2, golden geçer | T1 |
+| T5 | 2.2 paralellik | `train_prediction_batch.py` (5 sembol) | ≥%40↓, OOM yok, metrik eş, resume | T1 |
+| T6 | 3.2 HPO resume (ops) | Optuna sqlite storage | wall-clock↓, resume çalışır | — |
+| T7 | Tam BIST-30 | `train_prediction_batch.py` | manifest hepsi ok, ≥%40↓ | T1–T5 |
+
+**Kapsam dışı (sonraki fazlar):** dağıtık eğitim, otomatik retrain tetikleyicileri, veri drift tespiti.
