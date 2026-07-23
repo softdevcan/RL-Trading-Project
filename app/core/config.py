@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     # A/B olcum. Opt-in.
     ENSEMBLE_WARM_START: bool = False
 
+    # Feature-selection disk cache (2.4 · B5): icerik-hash'li cache dizini.
+    # Bos string = cache kapali (varsayilan, davranis degismez). MI/permutation
+    # tekrar hesabini onler. Ornek deger: "results/feature_selection_cache".
+    FEATURE_SELECTION_CACHE_DIR: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True

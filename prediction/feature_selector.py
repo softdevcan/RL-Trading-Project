@@ -5,7 +5,10 @@ Mutual information, permutation importance ve korelasyon filtresi
 kullanarak en bilgilendirici ozellikleri secer.
 """
 
+import hashlib
+import json
 import logging
+import os
 from typing import List, Optional, Dict, Any, Tuple
 
 import numpy as np
@@ -34,16 +37,45 @@ class FeatureSelector:
         correlation_threshold: float = 0.95,
         mi_percentile: float = 10.0,
         max_features: Optional[int] = None,
+        cache_dir: Optional[str] = None,
     ):
         """
         Args:
             correlation_threshold: Korelasyon esik degeri (bu ustundekiler atilir)
             mi_percentile: Mutual info alt yuzdelik (bu altindakiler atilir)
             max_features: Maksimum ozellik sayisi (None = sinir yok)
+            cache_dir: Faz 6 (2.4/B5) — verilirse fit_select sonucu icerik-hash'ine
+                gore diske cache'lenir (MI + permutation pahali; CV foldlari +
+                final egitim ayni matrisi tekrar hesapliyor). None = cache yok
+                (varsayilan, davranis degismez). Hash X/y icerigine bagli oldugu
+                icin feature degisince otomatik gecersizlesir — leakage riski yok
+                (sadece secim, model egitimi degil).
         """
         self.correlation_threshold = correlation_threshold
         self.mi_percentile = mi_percentile
         self.max_features = max_features
+        self.cache_dir = cache_dir
+
+    def _cache_key(
+        self, X: pd.DataFrame, y: pd.Series, feature_cols: List[str],
+        use_permutation_importance: bool,
+    ) -> str:
+        """fit_select girdisinin icerik-hash'i (2.4 disk cache anahtari).
+
+        X/y'nin ham baytlarina + aday kolonlara + secim config'ine baglidir;
+        girdi degisince anahtar degisir -> otomatik invalidation.
+        """
+        h = hashlib.sha256()
+        valid = [c for c in feature_cols if c in X.columns]
+        Xv = np.ascontiguousarray(X[valid].to_numpy(dtype=np.float64, na_value=np.nan))
+        yv = np.ascontiguousarray(np.asarray(y, dtype=np.float64))
+        h.update(Xv.tobytes())
+        h.update(yv.tobytes())
+        h.update('|'.join(valid).encode())
+        cfg = (self.correlation_threshold, self.mi_percentile, self.max_features,
+               bool(use_permutation_importance), GLOBAL_SEED)
+        h.update(repr(cfg).encode())
+        return h.hexdigest()[:32]
 
     def fit_select(
         self,
@@ -62,6 +94,21 @@ class FeatureSelector:
         Returns:
             Secilen ozellikler ve analiz sonuclari
         """
+        # Faz 6 (2.4): disk cache — ayni girdi daha once secildiyse tekrar
+        # hesaplama (MI + permutation pahali). cache_dir yoksa devre disi.
+        cache_path = None
+        if self.cache_dir:
+            key = self._cache_key(X, y, feature_cols, use_permutation_importance)
+            cache_path = os.path.join(self.cache_dir, f'featsel_{key}.json')
+            if os.path.exists(cache_path):
+                try:
+                    with open(cache_path, 'r', encoding='utf-8') as f:
+                        cached = json.load(f)
+                    logger.info(f"  Ozellik secimi cache HIT ({len(cached.get('selected_features', []))} ozellik)")
+                    return cached
+                except (OSError, json.JSONDecodeError) as exc:
+                    logger.warning(f"  Ozellik secimi cache okunamadi ({exc}), yeniden hesaplaniyor")
+
         valid_cols = [c for c in feature_cols if c in X.columns]
         X_feat = X[valid_cols].copy()
 
@@ -115,7 +162,7 @@ class FeatureSelector:
         selected = X_feat.columns.tolist()
         logger.info(f"  Sonuc: {len(selected)} ozellik secildi")
 
-        return {
+        result = {
             'selected_features': selected,
             'n_original': len(valid_cols),
             'n_selected': len(selected),
@@ -126,6 +173,17 @@ class FeatureSelector:
             'pi_scores': pi_scores,
             'dropped_pi': pi_dropped,
         }
+
+        # Faz 6 (2.4): sonucu diske yaz (bir sonraki ayni-girdi cagrisi HIT olur)
+        if cache_path:
+            try:
+                os.makedirs(self.cache_dir, exist_ok=True)
+                with open(cache_path, 'w', encoding='utf-8') as f:
+                    json.dump(result, f, default=float)
+            except OSError as exc:
+                logger.warning(f"  Ozellik secimi cache yazilamadi ({exc})")
+
+        return result
 
     def _correlation_filter(self, X: pd.DataFrame) -> Tuple[List[str], List[str]]:
         """Yuksek korelasyonlu ciftlerden birini at."""
