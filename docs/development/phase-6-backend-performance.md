@@ -47,6 +47,11 @@
 | **Config knobs** | `PREDICTION_SEED`, `DATA_FETCH_WORKERS`, `DATA_CACHE_MAXSIZE`, `ENSEMBLE_WARM_START` — hepsi env-override, hardcode yok | ✅ commit `1e4a10b` |
 | **1.2** — Cache LRU sınırı (B8) | `DataFetcher._cache` → `OrderedDict` LRU (`DATA_CACHE_MAXSIZE`, 0=sınırsız). Byte-eş; unit test geçti. (Parquet disk-cache bilinçli atlandı — düşük ROI + CSV kontratı) | ✅ commit `e87e3df` |
 | **G.3+G.4** — Batch orchestrator + resume | `PredictionService.train_batch()` manifest'i gerçekten kullanır (önce hiçbir yerde kullanılmıyordu) + sembol-seviyesi checkpoint/resume; `scripts/training/train_prediction_batch.py` (`--resume`/`--resume-latest`/`--strict`). Mock'lu test geçti (ok/degraded/failed, resume-skip, strict-stop) | ✅ commit `053cfec` |
+| **R2** — CV fold hata görünürlüğü | `WalkForwardTrainer` `strict` + `failed_folds` + `status='degraded'`; G.1'in eksik kalan CV ayağı (önce sadece R1/ensemble yapılmıştı). Service passthrough. | ✅ commit `fda30a0` (3. oturum) |
+| **2.4** — Feature-selection cache (B5) | `FeatureSelector(cache_dir=...)` içerik-hash'li disk cache (MI+permutation tekrarını önler); opt-in `FEATURE_SELECTION_CACHE_DIR` (boş=kapalı). HIT==MISS, invalidation doğrulandı | ✅ commit `9578891` |
+| **2.1 plumbing** — Warm-start iskeleti (B2) | `base.train(warm_start_from=)` + `_supports_warm_start()`; 5 model (ağaç `xgb_model`/`init_model`, DL `state_dict`); ensemble `warm_start` (config `ENSEMBLE_WARM_START`, %80 turunda %60-modeli kaynak). **Default OFF = bit-eş doğrulandı** (xgb/lgbm/bilstm). Asıl A/B GPU'da | ✅ commit `8203afe` |
+| **1.3** — Paralel makro çekme (B1) | `macro_fetcher` yfinance sembol döngüsü ThreadPool (deterministik sıra, log/quality korunur) | ✅ commit `52a1b44` |
+| **G.2-strict** — Fallback → hata modu (R3) | `MacroDataFetcher(strict_data=True)` sabit-50/zero-fill fallback'inde patlar (default False = eski davranış + bayrak) | ✅ commit `52a1b44` |
 | **Teknik borç** | `catboost_info/` gitignore + untrack | ✅ commit `17711eb`+`98f4a83` |
 
 ### 📊 Baseline ölçüm bulguları (RTX 4060, 3 cached sembol)
@@ -56,24 +61,34 @@
 - **Sembol başına süre 2-4x değişken:** 140s–665s (DL early-stopping farklı epoch'larda tetikleniyor) → warm-start (2.1) + DL ince ayar (3.1) potansiyeli yüksek.
 - **Ekstrapolasyon:** ~440s/sembol × 30 ≈ **3.7 saat** tam BIST-30 (seri). Optimize edilecek gerçek sayı bu.
 
-### ⏭️ KALDIĞIMIZ YER — sıradaki iş: **Epic 2.1 (warm-start)**
+### ⏭️ KALDIĞIMIZ YER — CPU işleri bitti, sıradakiler **GPU makinesinde**
 
-- **Kullanıcı kararı:** opt-in `warm_start=False` **default** (mevcut modeller/golden bozulmasın) → önce A/B ölçüm (hız + MAPE) → kazanç net + kalite regresyonsuzsa sun. Config'e `ENSEMBLE_WARM_START` bayrağı zaten eklendi (2. oturum), varsayılan False.
-- **Konum:** [ensemble.py:320-359](../../prediction/models/ensemble.py#L320-L359) — %80 yeniden-eğitim turu. Her model `_create_model` ile **sıfırdan** eğitiliyor; DL için asıl kazanç burada.
-- **⚠️ GPU gerekiyor:** 2.1'in asıl kazancı (DL state_dict warm-start + az-epoch fine-tune) ve A/B kalite ölçümü **GPU'lu makinede** yapılmalı — bu iş bilgisayarında DL CPU'da çok yavaş, ölçüm anlamlı olmaz. Plumbing (kod iskeleti) burada yazılabilir; **ölçüm+golden doğrulaması GPU makinesinde**.
-- **Her epic'in geçiş şartı:** `python tests/test_prediction_regression.py` yeşil kalmalı — **ama bu iş bilgisayarında değil** (aşağıdaki not).
+Bu iş bilgisayarında (GPU yok) yapılabilecek/doğrulanabilecek **tüm** CPU-güvenli kod işleri tamamlandı (2. + 3. oturum). Geriye kalan işler doğaları gereği GPU gerektiriyor:
 
-**Sıradaki sıra (revize, GPU-farkındalıklı):** 2.1 plumbing (burada) → **[GPU makinesi]** 2.1 A/B + 3.1 (DL AMP+DataLoader) + 2.2 (semboller arası paralellik; VRAM semaphore) → 2.4 (feature-sel cache, CPU-OK) → 3.2 (HPO sqlite resume).
+- **2.1 A/B ölçüm** — warm-start plumbing yazıldı ve **default OFF bit-eş doğrulandı**; ama "hız ≥%30 azalır + MAPE ±%2" kabul kriteri DL'in gerçek eğitim süresini gerektirir → GPU. Açmak için: `ENSEMBLE_WARM_START=True` (env) veya `StackingEnsemble(warm_start=True)`, sonra baseline metrik dosyalarıyla A/B.
+- **3.1** DL AMP + DataLoader ([lstm_model.py](../../prediction/models/lstm_model.py), [tft_model.py](../../prediction/models/tft_model.py)) — GPU'ya özgü.
+- **2.2** semboller arası paralellik (VRAM semaphore) — GPU + `batch_train` üstüne (`train_batch` orchestrator hazır, paralellik eklenecek).
+- **3.2** HPO sqlite resume — CPU'da yapılabilir ama HPO nadiren kullanılıyor, P2; istenirse buraya alınabilir.
+- **Golden:** `python tests/test_prediction_regression.py --update` **GPU makinesinde** çalıştırılıp golden o donanımda yenilenmeli.
 
-### ✅ 2. oturumda tamamlananlar (bu iş bilgisayarında, CPU)
+### ✅ 2. + 3. oturumda tamamlananlar (bu iş bilgisayarında, CPU)
 
 CPU'da güvenle yapılıp **kod-doğruluğu** hafif testlerle doğrulanan işler (ağır DL eğitimi/golden GPU makinesine bırakıldı):
 
+**2. oturum (2026-07-23, öğle):**
 - **2.3** feature-eng fragmentasyon — bit-eş, `PerformanceWarning` 106→0 (`32b49f6`)
 - **G.5** merkezi seed politikası + config knobs (`1e4a10b`)
 - **1.2** cache LRU sınırı (`e87e3df`)
 - **G.3+G.4** batch orchestrator + resume — manifest ilk kez gerçekten kullanılıyor (`053cfec`)
 - teknik borç: `catboost_info/` gitignore (`17711eb`, `98f4a83`)
+
+**3. oturum (2026-07-23, akşam) — "testleri sona sakla, tüm kodu tamamla":**
+- **R2** CV fold hata görünürlüğü (`fda30a0`) — G.1'in eksik ayağı
+- **2.4** feature-selection disk cache (`9578891`)
+- **2.1 plumbing** warm-start iskeleti, default OFF bit-eş (`8203afe`)
+- **1.3** paralel makro çekme + **G.2-strict** (`52a1b44`)
+
+> **3. oturum doğrulama notu:** Tüm değişiklikler default OFF/geriye-uyumlu tasarlandı; kritik özellik **"warm-start OFF = bit-eş"** ve **"cache disabled = değişmez"** — ikisi de aynı-seed karşılaştırmasıyla doğrulandı. Ağır bit-eş/mock testleri (import smoke, tree warm OFF==None, DL state_dict crash-yok, R2 degraded, 2.4 HIT==MISS) geçti. Gerçek DL A/B GPU'da.
 
 ### 🧹 Sprint kapanışta yapılacak teknik borç
 
@@ -339,7 +354,7 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 
 **Önerilen koşum sırası:** Epic 0 → **G.1** → 1.1 → 2.1 → **G.3** → (2.2 ‖ 3.1) → G.2/G.4 → 2.3 → geri kalan P2'ler.
 
-**Gerçekleşen (bugüne dek):** ✅ 0, 1.1, G.1, G.2, G.3, güvenlik-ağı (1. oturum) → ✅ 2.3, G.5, config, 1.2, G.4 (2. oturum, CPU) → ⏭️ **2.1** (plumbing burada, A/B GPU'da) → GPU: 3.1, 2.2 → 2.4, 3.2.
+**Gerçekleşen (bugüne dek):** ✅ 0, 1.1, G.1, G.2, G.3, güvenlik-ağı (1. oturum) → ✅ 2.3, G.5, config, 1.2, G.4 (2. oturum, CPU) → ✅ R2, 2.4, 2.1-plumbing, 1.3, G.2-strict (3. oturum, CPU) → ⏭️ **GPU makinesi:** 2.1 A/B, 3.1, 2.2, 3.2 + golden `--update`.
 
 > **Hız mı, güvenilirlik mi önce?** İkisi iç içe. G.1 (sessiz hata görünürlüğü) baseline'dan hemen sonra gelir çünkü hem paralelleştirmenin (2.2) ön koşulu hem de "sorunsuz"un temeli. Manifest (G.3) ilk hız kazanımlarıyla birlikte devreye girer ki her iyileştirmenin etkisi kayıt altına alınsın.
 
@@ -366,7 +381,7 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 - [x] Feature-eng fragmentasyon: `PerformanceWarning` 0, çıktı bit-eş (2.3)
 
 **Dayanıklılık ("sorunsuz eğitim"):**
-- [x] Kasıtlı model/fold hatası sessizce yutulmuyor — eğitim fail-fast eder veya `status='degraded'` döner (G.1)
+- [x] Kasıtlı model/fold hatası sessizce yutulmuyor — eğitim fail-fast eder veya `status='degraded'` döner (G.1 ensemble/R1 + R2 CV fold: `WalkForwardTrainer` `failed_folds`+`status`)
 - [x] Her batch koşumu yapılandırılmış manifest üretiyor; degraded/failed semboller ayırt edilebilir (G.3 + batch orchestrator)
 - [x] Fallback makro verisi kullanıldığında manifestte işaretli (G.2)
 - [x] `--resume` yarıda kalan batch'i biten sembolleri atlayarak sürdürüyor (G.4)
