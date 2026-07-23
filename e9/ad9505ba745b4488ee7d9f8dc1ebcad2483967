@@ -1,0 +1,66 @@
+app/auth/deps.py
+  s_b7fac307218dcd::t_918bc9b8e76bf6 1-118
+app/auth/db.py
+  s_b7fac307218dcd::t_fcb5a3e122f269 1-106
+app/auth/models.py
+  s_b7fac307218dcd::t_e8db2e67373e84 1-16,21-23,25-108,110-128
+  s_b7fac307218dcd::t_ab896e761da728 17-20,24
+  s_b7fac307218dcd::t_be4cb5ca29eb6f 109
+app/auth/security.py
+  s_b7fac307218dcd::t_3ac6cc1ff81f6b 1-174
+app/api/routes/admin.py
+  s_b7fac307218dcd::t_60acec634f4bbd 12-13,15
+  s_b7fac307218dcd::t_19a07117267847 30-32,34,36,41-48
+  s_b7fac307218dcd::t_8425eb6683690e 1-11,14,16-29,33,35,37-40,49-242
+app/main.py
+  s_b7fac307218dcd::t_b456845872e105 21-37
+app/auth/templates/change_password.html
+  s_b7fac307218dcd::t_09bdf5596dba46 1-78
+app/auth/templates/login.html
+  s_b7fac307218dcd::t_a1f562202861da 1-76
+app/auth/__init__.py
+  s_b7fac307218dcd::t_e82e6523d8378f 1-14
+app/auth/service.py
+  s_b7fac307218dcd::t_d5e8feb5848b74 1-6,8-12,14-172,174-185,187-221,228-230,233-240,252-292,294-298
+  s_b7fac307218dcd::t_7d96ca6d973d65 222-227,231-232,241-251
+  s_b7fac307218dcd::t_a57079f05d2ff7 173
+  s_b7fac307218dcd::t_e68cfd3e5fd8dd 293
+  s_b7fac307218dcd::t_3118d6cd2341fc 7,13
+  s_b7fac307218dcd::t_3214c61a0957e9 186
+app/auth/routes.py
+  s_b7fac307218dcd::t_03a1d4fb3f6bf2 1-276
+app/auth/bootstrap.py
+  s_b7fac307218dcd::t_0d37340dd98c7f 1-72
+app/core/config.py
+  s_b7fac307218dcd::t_1d9dcdfbe1dc47 69-113
+app/auth/cookies.py
+  s_b7fac307218dcd::t_182f4e243b7c03 18-21
+  s_b7fac307218dcd::t_0957d457480564 1-5,8-17,22-74
+  s_b7fac307218dcd::t_29a71ac5d9038c 6-7
+app/auth/workspace.py
+  s_b7fac307218dcd::t_cd8312b8a91aed 1-211
+.gitignore
+  s_b7fac307218dcd::t_80e37ecdaf2a6e 81-88
+app/auth/middleware.py
+  s_b7fac307218dcd::t_0c7450ca32df61 1-179
+scripts/create_admin.py
+  s_b7fac307218dcd::t_b951bf42f97316 1-91
+requirements.txt
+  s_b7fac307218dcd::t_80e37ecdaf2a6e 100-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "e9ad9505ba745b4488ee7d9f8dc1ebcad2483967",
+  "prompts": {},
+  "sessions": {
+    "s_b7fac307218dcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab65dcfb-d9b6-4d68-b5a4-0404c52be6d3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "softdevcan <akyildirimcan@gmail.com>"
+    }
+  }
+}
