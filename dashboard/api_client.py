@@ -39,11 +39,48 @@ def _run(coro):
     return asyncio.run(coro)
 
 
+def _forward_auth() -> tuple[Dict[str, str], Dict[str, str]]:
+    """Tarayicinin oturumunu ic ASGI cagrisina tasi.
+
+    Dash callback'i Flask istek baglaminda calisir; oradaki cerezleri
+    (oturum + CSRF) FastAPI'ye ilettigimizde AuthGateMiddleware istegi ayni
+    kullanici adina dogrular ve calisma alani (workspace) baglamini kurar.
+    Baglam yoksa (test, arka plan is parcacigi) bos doner — auth kapaliysa
+    zaten gerekmez.
+    """
+    try:
+        from flask import has_request_context, request as flask_request
+
+        if not has_request_context():
+            return {}, {}
+        cookies = dict(flask_request.cookies)
+        headers: Dict[str, str] = {}
+        from app.core.config import get_settings
+
+        csrf = cookies.get(get_settings().CSRF_COOKIE_NAME)
+        if csrf:
+            # /api/* yazma istekleri double-submit CSRF dogrulamasindan gecer.
+            headers["X-CSRF-Token"] = csrf
+        return headers, cookies
+    except Exception:  # Flask baglami yok / auth kapali
+        return {}, {}
+
+
+def _client(cookies: Dict[str, str], headers: Dict[str, str]) -> httpx.AsyncClient:
+    return httpx.AsyncClient(
+        transport=_asgi_transport(),
+        base_url="http://dash-internal/api",
+        cookies=cookies,
+        headers=headers,
+    )
+
+
 def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> Any:
     """GET request, returns parsed JSON or None on error."""
+    headers, cookies = _forward_auth()
     try:
         async def _do():
-            async with httpx.AsyncClient(transport=_asgi_transport(), base_url="http://dash-internal/api") as client:
+            async with _client(cookies, headers) as client:
                 resp = await client.get(path, params=params, timeout=timeout)
                 resp.raise_for_status()
                 return resp.json()
@@ -55,9 +92,10 @@ def _get(path: str, params: Optional[Dict] = None, timeout: int = TIMEOUT) -> An
 
 def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None) -> Any:
     """POST request, returns parsed JSON or None on error."""
+    headers, cookies = _forward_auth()
     try:
         async def _do():
-            async with httpx.AsyncClient(transport=_asgi_transport(), base_url="http://dash-internal/api") as client:
+            async with _client(cookies, headers) as client:
                 r = await client.post(path, json=json, params=params, timeout=TIMEOUT)
                 r.raise_for_status()
                 return r.json()
@@ -77,6 +115,73 @@ def _post(path: str, json: Optional[Dict] = None, params: Optional[Dict] = None)
             API_BASE, path, exc, json, body,
         )
         return None
+
+
+def _request(method: str, path: str, json: Optional[Dict] = None) -> Any:
+    """PATCH/DELETE gibi diger metotlar icin ortak yol."""
+    headers, cookies = _forward_auth()
+    try:
+        async def _do():
+            async with _client(cookies, headers) as client:
+                r = await client.request(method, path, json=json, timeout=TIMEOUT)
+                r.raise_for_status()
+                return r.json()
+        return _run(_do())
+    except Exception as exc:
+        _api_log.warning("%s %s%s failed: %s", method, API_BASE, path, exc)
+        return None
+
+
+def _post_raw(path: str, json: Optional[Dict] = None) -> Dict:
+    """POST — hata govdesini de dondurur (yonetim ekranlarinda mesaj gerekli)."""
+    headers, cookies = _forward_auth()
+
+    async def _do():
+        async with _client(cookies, headers) as client:
+            r = await client.post(path, json=json, timeout=TIMEOUT)
+            try:
+                body = r.json()
+            except Exception:
+                body = {"detail": r.text[:300]}
+            return {"ok": r.is_success, "status": r.status_code, "body": body}
+
+    try:
+        return _run(_do())
+    except Exception as exc:
+        _api_log.warning("POST %s%s failed: %s", API_BASE, path, exc)
+        return {"ok": False, "status": 0, "body": {"detail": str(exc)}}
+
+
+# ── Kullanici yonetimi (admin) ─────────────────────────────────────────────
+
+def list_users() -> List[Dict]:
+    data = _get("/admin/users") or {}
+    return data.get("users", [])
+
+
+def create_user(payload: Dict) -> Dict:
+    return _post_raw("/admin/users", json=payload)
+
+
+def update_user(user_id: str, payload: Dict) -> Dict:
+    return _request("PATCH", f"/admin/users/{user_id}", json=payload) or {}
+
+
+def reset_user_password(user_id: str, password: Optional[str] = None) -> Dict:
+    return _post_raw(f"/admin/users/{user_id}/password", json={"password": password})
+
+
+def revoke_user_sessions(user_id: str) -> Dict:
+    return _post_raw(f"/admin/users/{user_id}/revoke-sessions", json=None)
+
+
+def delete_user(user_id: str) -> Dict:
+    return _request("DELETE", f"/admin/users/{user_id}") or {}
+
+
+def get_audit_log(limit: int = 100) -> List[Dict]:
+    data = _get("/admin/audit", params={"limit": limit}) or {}
+    return data.get("entries", [])
 
 
 # ── Trading ────────────────────────────────────────────────────────────────

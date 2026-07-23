@@ -50,8 +50,9 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     # Lazy-import pages to avoid circular imports at module load time
     from dashboard.pages import (
         home, training, data as data_page, models,
-        daily_trading, prediction, academic, hyperopt,
+        daily_trading, prediction, academic, hyperopt, users,
     )
+    from dashboard.auth_context import is_admin
 
     dash_app = Dash(
         __name__,
@@ -71,14 +72,19 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     )
 
     # ── Main layout ──────────────────────────────────────────────────────
-    dash_app.layout = html.Div(
-        [
-            dcc.Location(id="url", refresh=False),
-            create_sidebar(),
-            html.Div(id="page-content", style=CONTENT_STYLE),
-        ],
-        style={"backgroundColor": BG, "minHeight": "100vh"},
-    )
+    # Callable layout: her sayfa yuklemesinde yeniden uretilir; boylece
+    # kenar cubugu aktif kullaniciyi ve rolune gore menuyu gosterebilir.
+    def serve_layout():
+        return html.Div(
+            [
+                dcc.Location(id="url", refresh=False),
+                create_sidebar(),
+                html.Div(id="page-content", style=CONTENT_STYLE),
+            ],
+            style={"backgroundColor": BG, "minHeight": "100vh"},
+        )
+
+    dash_app.layout = serve_layout
 
     # ── Page routing callback ─────────────────────────────────────────────
     from dash import Input, Output
@@ -107,6 +113,18 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
             return academic.layout()
         elif path == "/hyperopt":
             return hyperopt.layout()
+        elif path == "/users":
+            # Kullanici yonetimi yalnizca admin. URL'i elle yazan kullanici
+            # icin de kapali — API tarafi ayrica RequireAdmin ile korunur.
+            if not is_admin():
+                return html.Div(
+                    [
+                        html.H3("Yetkisiz erisim", style={"color": "#ef4444"}),
+                        html.P("Bu sayfa yalnizca yoneticiler icindir."),
+                    ],
+                    style={"padding": "40px"},
+                )
+            return users.layout()
         return html.Div(
             [
                 html.H3("404 – Sayfa bulunamadi", style={"color": "#ef4444"}),
@@ -124,5 +142,6 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     prediction.register_callbacks(dash_app)
     academic.register_callbacks(dash_app)
     hyperopt.register_callbacks(dash_app)
+    users.register_callbacks(dash_app)
 
     return dash_app
