@@ -60,6 +60,9 @@ class XGBoostModel(BasePredictionModel):
         self.model = XGBRegressor(**fit_params)
         self._early_stopping = params.get('early_stopping_rounds', 50)
 
+    def _supports_warm_start(self) -> bool:
+        return True
+
     def _fit(
         self,
         X_train: np.ndarray,
@@ -68,10 +71,21 @@ class XGBoostModel(BasePredictionModel):
         y_val: np.ndarray,
     ) -> Dict[str, float]:
         self.model.set_params(early_stopping_rounds=self._early_stopping)
+        # Faz 6 (2.1): warm-start — onceki booster'dan devam et (yeni agaclar
+        # ekle). Sadece ensemble warm_start=True verdiginde dolu olur; aksi
+        # halde None -> sifirdan (mevcut davranis, bit-es).
+        xgb_init = None
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'model', None) is not None:
+            try:
+                xgb_init = ws.model.get_booster()
+            except Exception:
+                xgb_init = None
         self.model.fit(
             X_train, y_train,
             eval_set=[(X_val, y_val)],
             verbose=False,
+            xgb_model=xgb_init,
         )
         val_pred = self.model.predict(X_val)
         return self.compute_metrics(y_val, val_pred)

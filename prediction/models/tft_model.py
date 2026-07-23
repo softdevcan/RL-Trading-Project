@@ -196,6 +196,9 @@ class TFTModel(BasePredictionModel):
     def _build_model(self, params: Dict[str, Any]):
         pass
 
+    def _supports_warm_start(self) -> bool:
+        return True
+
     def _create_sequences(self, X: np.ndarray, y: np.ndarray, lookback: int):
         sequences_X, sequences_y, sequences_y_dir = [], [], []
         for i in range(lookback, len(X)):
@@ -242,6 +245,17 @@ class TFTModel(BasePredictionModel):
             num_lstm_layers=p['num_lstm_layers'],
             dropout=p['dropout'],
         ).to(self.device)
+
+        # Faz 6 (2.1): warm-start — onceki agirliklardan basla (ayni mimari sart).
+        # Sadece ensemble warm_start=True verdiginde dolu; aksi halde None =
+        # sifirdan (mevcut davranis, bit-es). Uyumsuzsa sessizce sifirdan.
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'net', None) is not None:
+            try:
+                self.net.load_state_dict(ws.net.state_dict())
+                logger.info("  [tft] warm-start: onceki agirliklar yuklendi")
+            except Exception as exc:
+                logger.info(f"  [tft] warm-start atlandi (mimari uyumsuz?): {exc}")
 
         train_ds = TensorDataset(
             torch.FloatTensor(X_tr_seq),

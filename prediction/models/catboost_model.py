@@ -70,6 +70,9 @@ class CatBoostModel(BasePredictionModel):
         self.model = CatBoostRegressor(**fit_params)
         self._early_stopping = params.get('early_stopping_rounds', 50)
 
+    def _supports_warm_start(self) -> bool:
+        return True
+
     def _fit(
         self,
         X_train: np.ndarray,
@@ -82,11 +85,23 @@ class CatBoostModel(BasePredictionModel):
         train_pool = Pool(X_train, y_train)
         val_pool = Pool(X_val, y_val)
 
+        # Faz 6 (2.1): warm-start — onceki fit'ten devam (init_model). Sadece
+        # ensemble warm_start=True verdiginde dolu; aksi halde None = sifirdan.
+        init_model = None
+        ws = getattr(self, '_warm_start_from', None)
+        if ws is not None and getattr(ws, 'model', None) is not None:
+            try:
+                if ws.model.is_fitted():
+                    init_model = ws.model
+            except Exception:
+                init_model = None
+
         try:
             self.model.fit(
                 train_pool,
                 eval_set=val_pool,
                 early_stopping_rounds=self._early_stopping,
+                init_model=init_model,
                 verbose=False,
             )
         except Exception as exc:
@@ -100,6 +115,7 @@ class CatBoostModel(BasePredictionModel):
                     train_pool,
                     eval_set=val_pool,
                     early_stopping_rounds=self._early_stopping,
+                    init_model=init_model,
                     verbose=False,
                 )
             else:

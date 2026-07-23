@@ -47,6 +47,9 @@ class BasePredictionModel(ABC):
         self.model = None
         self.feature_cols: List[str] = []
         self.is_fitted = False
+        # Faz 6 (2.1): warm-start kaynak modeli (train() ile set edilir); alt
+        # siniflar _fit icinde okur. Varsayilan None = sifirdan.
+        self._warm_start_from: Optional["BasePredictionModel"] = None
         os.makedirs(MODELS_DIR, exist_ok=True)
 
     @abstractmethod
@@ -82,6 +85,15 @@ class BasePredictionModel(ABC):
         """
         return None
 
+    def _supports_warm_start(self) -> bool:
+        """Faz 6 (2.1): Bu model tipi warm-start destekliyor mu?
+
+        Varsayilan False — `train(warm_start_from=...)` sessizce yok sayilir,
+        sifirdan egitilir. Alt siniflar (DL: state_dict, agac: init_model)
+        override edip True dondurur ve `_fit`'te `self._warm_start_from`'u kullanir.
+        """
+        return False
+
     @abstractmethod
     def _save_model(self, path: str):
         """Modeli dosyaya kaydet."""
@@ -101,9 +113,20 @@ class BasePredictionModel(ABC):
         X_val: np.ndarray,
         y_val: np.ndarray,
         feature_cols: Optional[List[str]] = None,
+        warm_start_from: Optional["BasePredictionModel"] = None,
     ) -> Dict[str, Any]:
-        """Modeli egit ve metrikleri dondur."""
+        """Modeli egit ve metrikleri dondur.
+
+        Faz 6 (2.1/B2) — warm_start_from: verilirse, bu model onceki bir egitilmis
+        modelin durumundan baslayabilir (DL icin `state_dict`, agac icin
+        `xgb_model`/`init_model`). Varsayilan None = sifirdan egitim (mevcut
+        davranis, bit-es). Alt siniflar `_supports_warm_start()` True dondurup
+        `_fit`'te `self._warm_start_from`'u kullanarak destekler; desteklemeyen
+        model bunu sessizce yok sayar (sifirdan egitir).
+        """
         self.feature_cols = feature_cols or []
+        # Alt siniflarin _build_model/_fit'i okuyabilsin diye sakla.
+        self._warm_start_from = warm_start_from if self._supports_warm_start() else None
         self._build_model(self.params)
 
         val_metrics = self._fit(X_train, y_train, X_val, y_val)

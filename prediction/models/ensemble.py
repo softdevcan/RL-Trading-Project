@@ -75,6 +75,7 @@ class StackingEnsemble:
         feature_groups: Optional[List] = None,
         target_type: str = 'log_return',
         strict: bool = False,
+        warm_start: Optional[bool] = None,
     ):
         if horizon not in ('daily', 'weekly'):
             raise ValueError("horizon 'daily' veya 'weekly' olmali")
@@ -94,6 +95,19 @@ class StackingEnsemble:
         # her durumda failed_models + status tasir.
         self.strict = strict
         self.failed_models: Dict[str, str] = {}
+
+        # Faz 6 (2.1/B2): warm_start=True ise %80 deployment turu, %60 modelinin
+        # agirliklarindan devam eder (DL state_dict / agac init_model) — sifirdan
+        # degil. None verilirse config ENSEMBLE_WARM_START'tan okunur (varsayilan
+        # False -> mevcut davranis, bit-es). NOT: asil hiz/kalite kazanci GPU'lu
+        # makinede olculur; bu iskele default kapali.
+        if warm_start is None:
+            try:
+                from app.core.config import get_settings
+                warm_start = bool(get_settings().ENSEMBLE_WARM_START)
+            except Exception:
+                warm_start = False
+        self.warm_start = warm_start
 
         self.feature_engineer = PredictionFeatureEngineer(horizon)
         self.base_models: Dict[str, BasePredictionModel] = {}
@@ -336,8 +350,16 @@ class StackingEnsemble:
         for model_type in list(self.base_models.keys()):
             try:
                 logger.info(f"  [{model_type}] tam egitim seti uzerinde yeniden egitiliyor (%80)...")
+                # Faz 6 (2.1): warm_start ise %60-modelini kaynak ver — bu satirda
+                # self.base_models[model_type] hala %60-trained model (asagida
+                # overwrite ediliyor). Kapaliyken None -> sifirdan (bit-es).
+                prev_model = self.base_models.get(model_type) if self.warm_start else None
                 full_model = self._create_model(model_type)
-                full_result = full_model.train(X_ft, y_ft, X_fv, y_fv, feature_cols=self.feature_cols)
+                full_result = full_model.train(
+                    X_ft, y_ft, X_fv, y_fv,
+                    feature_cols=self.feature_cols,
+                    warm_start_from=prev_model,
+                )
                 # Meta-set uzerinde yeni tahminler (meta-learner yeniden egitimi icin)
                 mp = full_model._predict_raw(X_meta)
                 if len(mp) != len(y_meta):
@@ -414,6 +436,7 @@ class StackingEnsemble:
             'models_trained': list(model_results.keys()),
             'model_results': {k: v.get('val_metrics', {}) for k, v in model_results.items()},
             'ensemble_test_metrics': test_metrics,
+            'warm_start': self.warm_start,   # Faz 6 (2.1): %80 turu warm-start miydi
             'trained_at': datetime.now().isoformat(),
         }
 
