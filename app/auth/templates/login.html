@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giris — RL Trading</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --card2: #334155; --text: #e2e8f0;
+      --muted: #94a3b8; --border: #475569; --blue: #3b82f6; --red: #ef4444;
+      --yellow: #eab308;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; background: var(--bg); color: var(--text);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .card {
+      width: 100%; max-width: 400px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 12px; padding: 32px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    }
+    h1 { margin: 0 0 4px; font-size: 22px; }
+    .sub { margin: 0 0 24px; color: var(--muted); font-size: 13px; }
+    label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--muted); }
+    input {
+      width: 100%; padding: 11px 12px; margin-bottom: 16px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card2); color: var(--text);
+      font-size: 14px;
+    }
+    input:focus { outline: 2px solid var(--blue); outline-offset: 0; border-color: var(--blue); }
+    button {
+      width: 100%; padding: 11px; border: 0; border-radius: 8px; background: var(--blue);
+      color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.1); }
+    .alert {
+      padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 18px;
+      border: 1px solid var(--red); background: rgba(239, 68, 68, .12); color: #fecaca;
+    }
+    .notice {
+      padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 18px;
+      border: 1px solid var(--yellow); background: rgba(234, 179, 8, .12); color: #fde68a;
+    }
+    .foot { margin-top: 18px; text-align: center; color: var(--muted); font-size: 12px; }
+    code { background: var(--card2); padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>RL Trading</h1>
+    <p class="sub">Devam etmek icin giris yapin</p>
+
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    {% if setup_needed %}
+      <div class="notice">
+        Sistemde hic kullanici yok. Sunucuda
+        <code>python scripts/create_admin.py</code> calistirarak ilk admin hesabini olusturun.
+      </div>
+    {% endif %}
+
+    <form method="post" action="/auth/login" autocomplete="on">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label for="email">E-posta</label>
+      <input id="email" name="email" type="email" required autofocus autocomplete="username">
+      <label for="password">Parola</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password">
+      <button type="submit">Giris yap</button>
+    </form>
+
+    <p class="foot">Hesap talebi icin sistem yoneticinize basvurun.</p>
+  </div>
+</body>
+</html>

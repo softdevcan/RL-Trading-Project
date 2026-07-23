@@ -98,3 +98,10 @@ flake8>=7.0.0
 # Dash Frontend
 dash>=2.18.0
 dash-bootstrap-components>=1.6.0
+
+# Authentication & Authorization (Faz 7)
+# SQLAlchemy zaten Optuna ile geliyor; kullanici deposu icin acikca pinlendi.
+SQLAlchemy>=2.0.0
+PyJWT==2.10.1
+bcrypt==5.0.0
+email-validator==2.3.0
