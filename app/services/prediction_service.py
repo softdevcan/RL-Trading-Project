@@ -599,6 +599,7 @@ class PredictionService:
         target_type: str = 'log_return',
         resume_from: Optional[str] = None,
         strict: bool = False,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Faz 6 (G.3+G.4): Cok-sembol batch egitim + manifest + resume.
 
@@ -617,10 +618,41 @@ class PredictionService:
                 kosumda basariyla tamamlanan semboller atlanir.
             strict: True ise ilk basarisiz sembolde batch durur (fail-fast).
                 Varsayilan False — dayanikli batch (hatali sembol atlanir).
+            user_id: Faz 7 — batch bir arka plan gorevinden calisiyorsa
+                egitimi baslatan kullanici. Verilirse modeller ve manifest o
+                kullanicinin calisma alanina yazilir. None = mevcut baglam
+                korunur (CLI betiginde baglam yok -> ortak dizinler).
 
         Returns:
             {'manifest_path', 'run_id', 'summary', 'skipped', 'trained', 'failed'}
         """
+        if user_id:
+            from app.auth import workspace as ws
+            with ws.use_workspace(user_id):
+                return self._train_batch(
+                    symbols, horizon=horizon, start_date=start_date,
+                    optimize=optimize, n_hpo_trials=n_hpo_trials, source=source,
+                    feature_groups=feature_groups, target_type=target_type,
+                    resume_from=resume_from, strict=strict,
+                )
+        return self._train_batch(
+            symbols, horizon=horizon, start_date=start_date,
+            optimize=optimize, n_hpo_trials=n_hpo_trials, source=source,
+            feature_groups=feature_groups, target_type=target_type,
+            resume_from=resume_from, strict=strict,
+        )
+
+    def _train_batch(
+        self, symbols: List[str], horizon: str = 'daily',
+        start_date: str = '2018-01-01',
+        optimize: bool = False, n_hpo_trials: int = 30,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
+        resume_from: Optional[str] = None,
+        strict: bool = False,
+    ) -> Dict[str, Any]:
+        """train_batch govdesi — calisma alani baglami cagiran tarafta kurulur."""
         import time as _time
         from prediction.manifest import TrainingManifest
 
@@ -709,19 +741,22 @@ class PredictionService:
 
     @staticmethod
     def _load_manifest(ref: str) -> Optional[Dict[str, Any]]:
-        """Manifest'i dosya yolu veya run_id'den yukle. G.4 resume yardimcisi."""
+        """Manifest'i dosya yolu veya run_id'den yukle. G.4 resume yardimcisi.
+
+        Arama sirasi (Faz 7): once aktif kullanicinin calisma alani, sonra
+        kullanici oncesi ortak dizin — eski kosumlar da surdurulebilir kalir.
+        """
         import json
-        from prediction.manifest import RUNS_DIR
-        candidates = [ref, os.path.join(RUNS_DIR, ref), os.path.join(RUNS_DIR, f'{ref}.json')]
-        for c in candidates:
-            if c and os.path.exists(c):
-                try:
-                    with open(c, 'r', encoding='utf-8') as f:
-                        return json.load(f)
-                except (OSError, json.JSONDecodeError) as exc:
-                    logger.warning(f"Manifest okunamadi ({c}): {exc}")
-                    return None
-        return None
+        from prediction.manifest import find_manifest
+        path = find_manifest(ref)
+        if not path:
+            return None
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning(f"Manifest okunamadi ({path}): {exc}")
+            return None
 
     def predict(
         self, symbols: List[str], horizon: str = 'daily',
