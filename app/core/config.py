@@ -100,6 +100,11 @@ class Settings(BaseSettings):
     # Ayni anda GPU'da DL egitebilecek sembol sayisi (VRAM korumasi).
     DL_GPU_SLOTS: int = 1
 
+    # HPO kalici depo (3.2 · B6): bos = bellekte (varsayilan, eski davranis).
+    # "sqlite:///results/prediction_hyperopt/hpo.db" verilirse Optuna study'leri
+    # diske yazilir ve yarida kesilen HPO kaldigi trial'dan devam eder.
+    HPO_STORAGE: str = ""
+
     # --- Faz 7: Kimlik dogrulama, yetkilendirme, kullanici calisma alanlari ---
 
     # Ana anahtar. False = eski davranis (herkese acik) — sadece yerel

@@ -37,17 +37,36 @@ class PredictionHyperOptimizer:
         n_trials: int = 50,
         n_cv_splits: int = 3,
         timeout: Optional[int] = 3600,
+        storage: Optional[str] = None,
     ):
         """
         Args:
             n_trials: Optuna deneme sayisi
             n_cv_splits: TimeSeriesSplit fold sayisi
             timeout: Maksimum sure (saniye), None = sinir yok
+            storage: Faz 6 (3.2) — Optuna kalici depo. None = bellekte (eski
+                davranis). "sqlite:///results/prediction_hyperopt/hpo.db" gibi
+                bir URL verilirse study'ler diske yazilir; yarida kesilen HPO
+                `load_if_exists` ile kaldigi trial'dan devam eder. Bos config
+                degeri (HPO_STORAGE) kapali demektir.
         """
         self.n_trials = n_trials
         self.n_cv_splits = n_cv_splits
         self.timeout = timeout
+        if storage is None:
+            try:
+                from app.core.config import get_settings
+
+                storage = get_settings().HPO_STORAGE or None
+            except Exception:
+                storage = None
+        self.storage = storage
         os.makedirs(HYPEROPT_DIR, exist_ok=True)
+        # sqlite dosya yolu HYPEROPT_DIR altindaysa dizinin var oldugundan emin ol.
+        if storage and storage.startswith('sqlite:///'):
+            db_dir = os.path.dirname(storage[len('sqlite:///'):])
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
 
     def optimize(
         self,
@@ -74,22 +93,40 @@ class PredictionHyperOptimizer:
 
         logger.info(f"[{model_type}] HPO basliyor: {self.n_trials} trial, {self.n_cv_splits} CV fold")
 
+        # Faz 6 (3.2): kalici depo verildiyse ayni study'yi yeniden ac
+        # (load_if_exists) -> kesinti sonrasi biten trial'lar korunur, HPO
+        # kaldigi yerden devam eder. Bellekte (storage=None) eski davranis.
         study = optuna.create_study(
             study_name=study_name,
             direction='minimize',
             sampler=TPESampler(seed=GLOBAL_SEED),
             pruner=MedianPruner(n_warmup_steps=5),
+            storage=self.storage,
+            load_if_exists=bool(self.storage),
         )
+        if self.storage:
+            done = len([t for t in study.trials
+                        if t.state.name in ('COMPLETE', 'PRUNED')])
+            if done:
+                logger.info(f"  [{model_type}] kalici study bulundu: {done} trial "
+                            f"tamam, kalan ~{max(0, self.n_trials - done)} trial.")
 
         def objective(trial):
             return self._objective(trial, model_type, X, y, horizon)
 
-        study.optimize(
-            objective,
-            n_trials=self.n_trials,
-            timeout=self.timeout,
-            show_progress_bar=True,
-        )
+        # Resume: kalici study'de biten trial'lari say, sadece kalani kadar kos
+        # -> "ayni n_trials" toplam butcesi korunur (bellekte fark yok, done=0).
+        done = len([t for t in study.trials
+                    if t.state.name in ('COMPLETE', 'PRUNED')]) if self.storage else 0
+        remaining = max(0, self.n_trials - done)
+
+        if remaining > 0:
+            study.optimize(
+                objective,
+                n_trials=remaining,
+                timeout=self.timeout,
+                show_progress_bar=True,
+            )
 
         best = study.best_trial
         logger.info(
