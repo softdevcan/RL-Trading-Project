@@ -11,6 +11,7 @@ KULLANICI BAZLI (workspaces/<user_id>/ altinda):
     models/            RL modelleri (.zip)
     models/prediction/ tahmin modelleri
     results/           metrik JSON'lari, deney kayitlari
+    results/training_runs/ batch egitim manifestleri (Faz 6 G.3)
     data/predictions/  uretilen tahminler
     data/live_trading/ gunluk kararlar + portfoy gecmisi
     logs/              TensorBoard
@@ -54,6 +55,7 @@ _KINDS = {
     "live_trading": os.path.join("data", "live_trading"),
     "logs": "logs",
     "hyperopt": os.path.join("results", "hyperparameter_studies"),
+    "training_runs": os.path.join("results", "training_runs"),
 }
 
 
@@ -101,6 +103,7 @@ def _legacy_dir(kind: str) -> str:
         "live_trading": os.path.join(s.DATA_DIR, "live_trading"),
         "logs": s.LOGS_DIR,
         "hyperopt": s.HYPEROPT_DIR,
+        "training_runs": os.path.join(s.RESULTS_DIR, "training_runs"),
     }[kind]
 
 
@@ -181,6 +184,11 @@ def logs_dir(user_id: str | None = None) -> str:
 
 def hyperopt_dir(user_id: str | None = None) -> str:
     return resolve("hyperopt", user_id)
+
+
+def training_runs_dir(user_id: str | None = None) -> str:
+    """Faz 6 (G.3) egitim manifestleri — kullanici bazli."""
+    return resolve("training_runs", user_id)
 
 
 def ensure_workspace(user_id: str) -> str | None:

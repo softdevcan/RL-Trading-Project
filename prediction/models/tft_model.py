@@ -22,6 +22,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from prediction.models.base import BasePredictionModel
+from prediction.models import torch_perf as tp
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,91 @@ class _VariableSelectionNetwork(nn.Module):
         return (var_outputs * weights).sum(dim=-2)
 
 
+class _GroupedGRN(nn.Module):
+    """n_vars adet ozdes yapili GRN'i (girdi boyutu 1) tek batched islemde hesaplar.
+
+    Faz 6 (3.1) — Olcum (2026-07-24, RTX 4060): TFT egitimin ~%90'iydi ve
+    masrafin kaynagi VSN'in `for i in range(n_vars)` dongusuydu: 131 ozellik x
+    ~6 katman = adim basina ~800 kucuk kernel. Ag kucuk oldugu icin GPU bos
+    bekliyor, zaman kernel firlatma masrafinda gidiyordu.
+
+    Buradaki matematik `_GatedResidualNetwork`(input_size=1) ile birebir ayni;
+    fark yalnizca degiskenlerin ayri ayri degil yiginlanmis parametrelerle
+    hesaplanmasi. Init de ayni dagilimdan gelir (asagida gercek nn.Linear
+    modullerinden yiginlanir).
+
+    NOT (egitim determinizmi): dropout maskesi tek seferde (B,T,V,H) icin
+    cekilir, dongudeki V ayri cekilise gore farkli bir RNG tuketimidir —
+    egitim yorungesi degisir. `eval()` modunda dropout kapali oldugundan
+    cikarim (inference) birebir aynidir.
+    """
+
+    def __init__(self, n_vars: int, hidden_size: int, output_size: int, dropout: float):
+        super().__init__()
+        self.n_vars = n_vars
+        self.dropout = nn.Dropout(dropout)
+        self.eps = 1e-5
+
+        def _stack(make):
+            """V adet gercek nn.Linear kurup agirliklarini yiginla — boylece
+            baslangic dagilimi dongulu surumle ayni kalir."""
+            mods = [make() for _ in range(n_vars)]
+            w = torch.stack([m.weight.detach().clone() for m in mods])
+            b = torch.stack([m.bias.detach().clone() for m in mods])
+            return nn.Parameter(w), nn.Parameter(b)
+
+        self.w1, self.b1 = _stack(lambda: nn.Linear(1, hidden_size))
+        self.w2, self.b2 = _stack(lambda: nn.Linear(hidden_size, hidden_size))
+        self.w_fc, self.b_fc = _stack(lambda: nn.Linear(hidden_size, output_size))
+        self.w_gate, self.b_gate = _stack(lambda: nn.Linear(hidden_size, output_size))
+        self.w_skip, self.b_skip = _stack(lambda: nn.Linear(1, output_size))
+
+        self.ln_weight = nn.Parameter(torch.ones(n_vars, output_size))
+        self.ln_bias = nn.Parameter(torch.zeros(n_vars, output_size))
+
+    def forward(self, x):
+        """x: (B, T, V) — her degisken skaler girdi. Cikti: (B, T, V, output).
+
+        V, kurulumdaki n_vars'tan kucuk gelebilir (dongulu surumdeki
+        `min(n_vars, x.shape[-1])` kapaginin karsiligi) — parametreler dilimlenir.
+        """
+        v = x.shape[-1]
+        xu = x.unsqueeze(-1)                                        # (B,T,V,1)
+
+        residual = xu * self.w_skip[:v].squeeze(-1) + self.b_skip[:v]
+        h = torch.nn.functional.elu(xu * self.w1[:v].squeeze(-1) + self.b1[:v])
+        h = torch.einsum('btvh,vkh->btvk', h, self.w2[:v]) + self.b2[:v]
+        h = self.dropout(h)
+
+        gate_in = torch.einsum('btvh,vkh->btvk', h, self.w_gate[:v]) + self.b_gate[:v]
+        h = ((torch.einsum('btvh,vkh->btvk', h, self.w_fc[:v]) + self.b_fc[:v])
+             * torch.sigmoid(gate_in))
+
+        z = h + residual
+        mean = z.mean(dim=-1, keepdim=True)
+        var = z.var(dim=-1, unbiased=False, keepdim=True)
+        z = (z - mean) / torch.sqrt(var + self.eps)
+        return z * self.ln_weight[:v] + self.ln_bias[:v]
+
+
+class _FastVariableSelectionNetwork(nn.Module):
+    """VSN — degisken bazli GRN'ler gruplanmis (bkz. _GroupedGRN)."""
+
+    def __init__(self, input_size: int, n_vars: int, hidden_size: int, dropout: float = 0.1):
+        super().__init__()
+        self.n_vars = n_vars
+        self.grn_vars = _GroupedGRN(n_vars, hidden_size, hidden_size, dropout)
+        self.grn_weights = _GatedResidualNetwork(input_size, hidden_size, n_vars, dropout)
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        weights = self.softmax(self.grn_weights(x))
+        n = min(self.n_vars, x.shape[-1])
+        var_outputs = self.grn_vars(x[..., :n])                 # (B,T,n,H)
+        weights = weights[..., :n].unsqueeze(-1)
+        return (var_outputs * weights).sum(dim=-2)
+
+
 class _TFTNet(nn.Module):
     """Basitlestirilmis Temporal Fusion Transformer agi."""
 
@@ -99,13 +185,19 @@ class _TFTNet(nn.Module):
         num_heads: int = 4,
         num_lstm_layers: int = 1,
         dropout: float = 0.1,
+        fast_vsn: bool = False,
     ):
         super().__init__()
         self.hidden_size = hidden_size
+        self.fast_vsn = fast_vsn
 
         self.input_proj = nn.Linear(input_size, hidden_size)
 
-        self.vsn = _VariableSelectionNetwork(
+        # fast_vsn: degisken bazli GRN'ler gruplanir (ayni matematik, tek
+        # batched islem). Parametre duzeni farkli oldugu icin checkpoint'e
+        # `params['fast_vsn']` ile yazilir ve yuklerken ayni varyant kurulur.
+        vsn_cls = _FastVariableSelectionNetwork if fast_vsn else _VariableSelectionNetwork
+        self.vsn = vsn_cls(
             input_size=input_size,
             n_vars=input_size,
             hidden_size=hidden_size,
@@ -214,6 +306,17 @@ class TFTModel(BasePredictionModel):
         X_val: np.ndarray,
         y_val: np.ndarray,
     ) -> Dict[str, float]:
+        # Epic 2.2: paralel sembol egitiminde GPU yuvasi (seri kosumda etkisiz).
+        with tp.gpu_slot():
+            return self._fit_impl(X_train, y_train, X_val, y_val)
+
+    def _fit_impl(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+    ) -> Dict[str, float]:
         p = self.params
         lookback = p['lookback']
 
@@ -238,12 +341,19 @@ class TFTModel(BasePredictionModel):
             return {'mape': 999, 'rmse': 999, 'mae': 999, 'direction_accuracy': 0}
 
         n_features = X_tr_seq.shape[2]
+        # Faz 6 (3.1): hangi VSN varyantiyla egitildigi parametrelere yazilir —
+        # checkpoint bu bilgiyle yuklenir, config sonradan degisse bile model
+        # kendi mimarisiyle acilir.
+        p['fast_vsn'] = tp.fast_vsn_enabled()
+        self.params = p
+
         self.net = _TFTNet(
             input_size=n_features,
             hidden_size=p['hidden_size'],
             num_heads=p['num_heads'],
             num_lstm_layers=p['num_lstm_layers'],
             dropout=p['dropout'],
+            fast_vsn=p['fast_vsn'],
         ).to(self.device)
 
         # Faz 6 (2.1): warm-start — onceki agirliklardan basla (ayni mimari sart).
@@ -257,18 +367,41 @@ class TFTModel(BasePredictionModel):
             except Exception as exc:
                 logger.info(f"  [tft] warm-start atlandi (mimari uyumsuz?): {exc}")
 
-        train_ds = TensorDataset(
-            torch.FloatTensor(X_tr_seq),
-            torch.FloatTensor(y_tr_seq),
-            torch.FloatTensor(y_tr_dir),
-        )
-        val_ds = TensorDataset(
-            torch.FloatTensor(X_va_seq),
-            torch.FloatTensor(y_va_seq),
-            torch.FloatTensor(y_va_dir),
-        )
-        train_loader = DataLoader(train_ds, batch_size=p['batch_size'], shuffle=False)
-        val_loader = DataLoader(val_ds, batch_size=p['batch_size'], shuffle=False)
+        # Faz 6 (3.1/B7): TFT olcumde egitimin ~%90'i (sembol basina ~135s,
+        # epoch ~3s) — bu buyuklukteki bir ag icin masraf batch basina Python
+        # + transferde. Sekanslar bir kez cihaza tasinir; batch sinirlari
+        # DataLoader ile ayni (shuffle=False), sayisal sonuc degismez.
+        tp.configure_threads()
+        batch_size = p['batch_size']
+        if tp.gpu_preload_enabled():
+            tr_tensors = tp.to_device_tensors([X_tr_seq, y_tr_seq, y_tr_dir], self.device)
+            va_tensors = tp.to_device_tensors([X_va_seq, y_va_seq, y_va_dir], self.device)
+            train_batches = lambda: tp.iter_batches(tr_tensors, batch_size)
+            val_batches = lambda: tp.iter_batches(va_tensors, batch_size)
+            n_val_batches = tp.n_batches(len(X_va_seq), batch_size)
+        else:
+            train_ds = TensorDataset(
+                torch.FloatTensor(X_tr_seq),
+                torch.FloatTensor(y_tr_seq),
+                torch.FloatTensor(y_tr_dir),
+            )
+            val_ds = TensorDataset(
+                torch.FloatTensor(X_va_seq),
+                torch.FloatTensor(y_va_seq),
+                torch.FloatTensor(y_va_dir),
+            )
+            train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=False)
+            val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+            _dev = self.device
+            train_batches = lambda: (
+                tuple(t.to(_dev) for t in batch) for batch in train_loader
+            )
+            val_batches = lambda: (
+                tuple(t.to(_dev) for t in batch) for batch in val_loader
+            )
+            n_val_batches = len(val_loader)
+
+        autocast, scaler = tp.amp_components(self.device)
 
         optimizer = torch.optim.AdamW(
             self.net.parameters(), lr=p['learning_rate'], weight_decay=p['weight_decay'],
@@ -283,30 +416,26 @@ class TFTModel(BasePredictionModel):
 
         for epoch in range(p['epochs']):
             self.net.train()
-            for batch_x, batch_y, batch_dir in train_loader:
-                batch_x = batch_x.to(self.device)
-                batch_y = batch_y.to(self.device)
-                batch_dir = batch_dir.to(self.device)
+            for batch_x, batch_y, batch_dir in train_batches():
+                # AMP acikken forward fp16; loss FP32 (BCELoss autocast altinda
+                # guvenli degil).
+                with autocast():
+                    pred_price, pred_dir = self.net(batch_x)
+                loss = (price_loss_fn(pred_price.float(), batch_y)
+                        + 0.3 * dir_loss_fn(pred_dir.float(), batch_dir))
 
-                pred_price, pred_dir = self.net(batch_x)
-                loss = price_loss_fn(pred_price, batch_y) + 0.3 * dir_loss_fn(pred_dir, batch_dir)
-
-                optimizer.zero_grad()
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
-                optimizer.step()
+                tp.backward_step(loss, optimizer, scaler, self.net.parameters())
 
             scheduler.step()
 
             self.net.eval()
             val_loss = 0.0
             with torch.no_grad():
-                for batch_x, batch_y, batch_dir in val_loader:
-                    batch_x = batch_x.to(self.device)
-                    batch_y = batch_y.to(self.device)
-                    pred_price, _ = self.net(batch_x)
-                    val_loss += price_loss_fn(pred_price, batch_y).item()
-            val_loss /= max(len(val_loader), 1)
+                for batch_x, batch_y, batch_dir in val_batches():
+                    with autocast():
+                        pred_price, _ = self.net(batch_x)
+                    val_loss += price_loss_fn(pred_price.float(), batch_y).item()
+            val_loss /= max(n_val_batches, 1)
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
@@ -403,6 +532,8 @@ class TFTModel(BasePredictionModel):
                 num_heads=self.params['num_heads'],
                 num_lstm_layers=self.params['num_lstm_layers'],
                 dropout=self.params['dropout'],
+                # Eski checkpoint'lerde bu anahtar yok -> dongulu (eski) VSN.
+                fast_vsn=bool(self.params.get('fast_vsn', False)),
             ).to(self.device)
             self.net.load_state_dict(state['net_state'])
             self.net.eval()

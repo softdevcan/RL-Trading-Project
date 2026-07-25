@@ -15,6 +15,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from prediction.models.base import BasePredictionModel
+from prediction.models import torch_perf as tp
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,18 @@ class BiLSTMModel(BasePredictionModel):
         X_val: np.ndarray,
         y_val: np.ndarray,
     ) -> Dict[str, float]:
+        # Epic 2.2: semboller paralel egitilirken GPU'ya ayni anda kac DL
+        # egitimi girecegini sinirla (seri kosumda etkisiz).
+        with tp.gpu_slot():
+            return self._fit_impl(X_train, y_train, X_val, y_val)
+
+    def _fit_impl(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+    ) -> Dict[str, float]:
         p = self.params
         lookback = p['lookback']
 
@@ -177,19 +190,40 @@ class BiLSTMModel(BasePredictionModel):
             except Exception as exc:
                 logger.info(f"  [bilstm] warm-start atlandi (mimari uyumsuz?): {exc}")
 
-        train_ds = TensorDataset(
-            torch.FloatTensor(X_tr_seq),
-            torch.FloatTensor(y_tr_seq),
-            torch.FloatTensor(y_tr_dir),
-        )
-        val_ds = TensorDataset(
-            torch.FloatTensor(X_va_seq),
-            torch.FloatTensor(y_va_seq),
-            torch.FloatTensor(y_va_dir),
-        )
+        # Faz 6 (3.1/B7): veri kucuk — tum sekanslari bir kez cihaza tasi ve
+        # dilimleyerek ilerle. shuffle=False oldugu icin batch sinirlari
+        # DataLoader ile birebir ayni, sayisal sonuc degismez.
+        tp.configure_threads()
+        batch_size = p['batch_size']
+        if tp.gpu_preload_enabled():
+            tr_tensors = tp.to_device_tensors([X_tr_seq, y_tr_seq, y_tr_dir], self.device)
+            va_tensors = tp.to_device_tensors([X_va_seq, y_va_seq, y_va_dir], self.device)
+            train_batches = lambda: tp.iter_batches(tr_tensors, batch_size)
+            val_batches = lambda: tp.iter_batches(va_tensors, batch_size)
+            n_val_batches = tp.n_batches(len(X_va_seq), batch_size)
+        else:
+            train_ds = TensorDataset(
+                torch.FloatTensor(X_tr_seq),
+                torch.FloatTensor(y_tr_seq),
+                torch.FloatTensor(y_tr_dir),
+            )
+            val_ds = TensorDataset(
+                torch.FloatTensor(X_va_seq),
+                torch.FloatTensor(y_va_seq),
+                torch.FloatTensor(y_va_dir),
+            )
+            train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=False)
+            val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+            _dev = self.device
+            train_batches = lambda: (
+                tuple(t.to(_dev) for t in batch) for batch in train_loader
+            )
+            val_batches = lambda: (
+                tuple(t.to(_dev) for t in batch) for batch in val_loader
+            )
+            n_val_batches = len(val_loader)
 
-        train_loader = DataLoader(train_ds, batch_size=p['batch_size'], shuffle=False)
-        val_loader = DataLoader(val_ds, batch_size=p['batch_size'], shuffle=False)
+        autocast, scaler = tp.amp_components(self.device)
 
         optimizer = torch.optim.AdamW(
             self.net.parameters(),
@@ -208,30 +242,25 @@ class BiLSTMModel(BasePredictionModel):
 
         for epoch in range(p['epochs']):
             self.net.train()
-            for batch_x, batch_y, batch_dir in train_loader:
-                batch_x = batch_x.to(self.device)
-                batch_y = batch_y.to(self.device)
-                batch_dir = batch_dir.to(self.device)
+            for batch_x, batch_y, batch_dir in train_batches():
+                # AMP acikken forward fp16; loss FP32'de hesaplanir (BCELoss
+                # autocast altinda guvenli degil).
+                with autocast():
+                    pred_price, pred_dir = self.net(batch_x)
+                loss = (price_loss_fn(pred_price.float(), batch_y)
+                        + 0.3 * dir_loss_fn(pred_dir.float(), batch_dir))
 
-                pred_price, pred_dir = self.net(batch_x)
-                loss = price_loss_fn(pred_price, batch_y) + 0.3 * dir_loss_fn(pred_dir, batch_dir)
-
-                optimizer.zero_grad()
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
-                optimizer.step()
+                tp.backward_step(loss, optimizer, scaler, self.net.parameters())
 
             self.net.eval()
             val_loss = 0.0
             with torch.no_grad():
-                for batch_x, batch_y, batch_dir in val_loader:
-                    batch_x = batch_x.to(self.device)
-                    batch_y = batch_y.to(self.device)
-                    batch_dir = batch_dir.to(self.device)
-                    pred_price, pred_dir = self.net(batch_x)
-                    val_loss += price_loss_fn(pred_price, batch_y).item()
+                for batch_x, batch_y, batch_dir in val_batches():
+                    with autocast():
+                        pred_price, pred_dir = self.net(batch_x)
+                    val_loss += price_loss_fn(pred_price.float(), batch_y).item()
 
-            val_loss /= max(len(val_loader), 1)
+            val_loss /= max(n_val_batches, 1)
             scheduler.step(val_loss)
 
             if val_loss < best_val_loss:

@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+import json
 import logging
 import os
 import yfinance as yf
@@ -304,11 +305,27 @@ class MacroDataFetcher:
 
         return macro_df
 
+    @staticmethod
+    def _quality_sidecar_path(filepath: str) -> str:
+        """CSV'nin yanindaki kalite bayragi dosyasi (Faz 6 · G.2)."""
+        return f"{os.path.splitext(filepath)[0]}_quality.json"
+
     def save_data(self, df: pd.DataFrame, filename: str):
         """Veriyi kaydet"""
         filepath = os.path.join(self.data_dir, filename)
         df.to_csv(filepath)
         logger.info(f"Macro data saved to {filepath}")
+
+        # Faz 6 (G.2): kalite bayraklari CSV'de tasinamiyor; yan dosyaya yaz ki
+        # sonraki egitimler veriyi cache'ten okudugunda da fallback gorunur
+        # kalsin. Temiz cekimde bos dict yazilir -> eski bayrak temizlenir.
+        quality = dict(df.attrs.get('data_quality') or {})
+        try:
+            with open(self._quality_sidecar_path(filepath), 'w', encoding='utf-8') as f:
+                json.dump({'fetched_at': datetime.now().isoformat(),
+                           'data_quality': quality}, f, indent=2)
+        except OSError as e:
+            logger.warning(f"Kalite bayragi yazilamadi ({filepath}): {e}")
 
     def load_data(self, filename: str = 'macro_data.csv') -> pd.DataFrame:
         """Veriyi yükle"""
@@ -318,7 +335,35 @@ class MacroDataFetcher:
 
         df = pd.read_csv(filepath, index_col=0, parse_dates=True)
         logger.info(f"Loaded macro data: {len(df)} rows")
+
+        # Faz 6 (G.2): cache'ten okuma yolu da kalite bayragini tasimali —
+        # aksi halde fallback'li bir CSV ile egitim yapilir ve manifest bunu
+        # 'temiz' gosterir (R3'un tam olarak kacinilmak istenen hali).
+        df.attrs['data_quality'] = self._load_quality(filepath)
+
+        if self.strict_data and df.attrs['data_quality']:
+            raise ValueError(
+                f"strict_data: cache'lenmis makro veri kalite bayragi tasiyor "
+                f"{df.attrs['data_quality']} — temiz veri icin yeniden cekin "
+                f"(fetch_macro_data) ya da strict_data=False yapin."
+            )
         return df
+
+    def _load_quality(self, filepath: str) -> Dict[str, str]:
+        """CSV'nin kalite bayraklarini yan dosyadan oku.
+
+        Yan dosya yoksa CSV bu ozellikten once yazilmistir: 'temiz' demek yerine
+        bilinmiyor olarak isaretlenir — sessiz yanlis guven olusmasin.
+        """
+        sidecar = self._quality_sidecar_path(filepath)
+        if not os.path.exists(sidecar):
+            return {'macro_csv': 'quality_unknown_legacy_file'}
+        try:
+            with open(sidecar, 'r', encoding='utf-8') as f:
+                return dict(json.load(f).get('data_quality') or {})
+        except (OSError, json.JSONDecodeError, AttributeError) as e:
+            logger.warning(f"Kalite bayragi okunamadi ({sidecar}): {e}")
+            return {'macro_csv': 'quality_unreadable'}
 
     # ------------------------------------------------------------------ #
     # Faz 4: Incremental veri akisi

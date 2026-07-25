@@ -599,6 +599,7 @@ class PredictionService:
         target_type: str = 'log_return',
         resume_from: Optional[str] = None,
         strict: bool = False,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Faz 6 (G.3+G.4): Cok-sembol batch egitim + manifest + resume.
 
@@ -617,10 +618,41 @@ class PredictionService:
                 kosumda basariyla tamamlanan semboller atlanir.
             strict: True ise ilk basarisiz sembolde batch durur (fail-fast).
                 Varsayilan False — dayanikli batch (hatali sembol atlanir).
+            user_id: Faz 7 — batch bir arka plan gorevinden calisiyorsa
+                egitimi baslatan kullanici. Verilirse modeller ve manifest o
+                kullanicinin calisma alanina yazilir. None = mevcut baglam
+                korunur (CLI betiginde baglam yok -> ortak dizinler).
 
         Returns:
             {'manifest_path', 'run_id', 'summary', 'skipped', 'trained', 'failed'}
         """
+        if user_id:
+            from app.auth import workspace as ws
+            with ws.use_workspace(user_id):
+                return self._train_batch(
+                    symbols, horizon=horizon, start_date=start_date,
+                    optimize=optimize, n_hpo_trials=n_hpo_trials, source=source,
+                    feature_groups=feature_groups, target_type=target_type,
+                    resume_from=resume_from, strict=strict,
+                )
+        return self._train_batch(
+            symbols, horizon=horizon, start_date=start_date,
+            optimize=optimize, n_hpo_trials=n_hpo_trials, source=source,
+            feature_groups=feature_groups, target_type=target_type,
+            resume_from=resume_from, strict=strict,
+        )
+
+    def _train_batch(
+        self, symbols: List[str], horizon: str = 'daily',
+        start_date: str = '2018-01-01',
+        optimize: bool = False, n_hpo_trials: int = 30,
+        source: Optional[str] = None,
+        feature_groups: Optional[list] = None,
+        target_type: str = 'log_return',
+        resume_from: Optional[str] = None,
+        strict: bool = False,
+    ) -> Dict[str, Any]:
+        """train_batch govdesi — calisma alani baglami cagiran tarafta kurulur."""
         import time as _time
         from prediction.manifest import TrainingManifest
 
@@ -662,8 +694,10 @@ class PredictionService:
             logger.debug(f"[batch] data_quality okunamadi: {exc}")
 
         trained, failed = [], []
-        for i, sym in enumerate(pending, 1):
-            logger.info(f"[batch] ({i}/{len(pending)}) {sym} egitiliyor...")
+        n_workers = self._parallel_workers(len(pending))
+
+        def _train_one(sym: str) -> tuple:
+            """Tek sembol egitimi — (sembol, sonuc, hata, sure)."""
             t0 = _time.perf_counter()
             try:
                 res = self.train_model(
@@ -672,25 +706,74 @@ class PredictionService:
                     n_hpo_trials=n_hpo_trials, source=source,
                     feature_groups=feature_groups, target_type=target_type,
                 )
-                manifest.record_symbol(sym, result=res, seconds=_time.perf_counter() - t0)
+                return sym, res, None, _time.perf_counter() - t0
+            except Exception as exc:
+                logger.error(f"[batch] {sym} basarisiz: {exc}", exc_info=True)
+                return sym, None, str(exc), _time.perf_counter() - t0
+
+        def _record(sym: str, res, err, seconds) -> str:
+            """Manifest'e yaz + checkpoint. Cagiran taraf sirali olmali."""
+            if err is not None:
+                manifest.record_symbol(sym, error=err, seconds=seconds)
+                failed.append(sym)
+            else:
+                manifest.record_symbol(sym, result=res, seconds=seconds)
                 status = manifest.symbols[sym]['status']
                 (trained if status != 'failed' else failed).append(sym)
                 if status == 'degraded':
                     logger.warning(f"[batch] {sym} DEGRADED: eksik modeller "
                                    f"{manifest.symbols[sym].get('missing_models')}")
-            except Exception as exc:
-                logger.error(f"[batch] {sym} basarisiz: {exc}", exc_info=True)
-                manifest.record_symbol(sym, error=str(exc), seconds=_time.perf_counter() - t0)
-                failed.append(sym)
-                # Her sembolde manifest'i diske yaz (checkpoint) — kesinti olsa
-                # bile o ana kadarki ilerleme resume icin kalir.
-                manifest.finalize()
-                if strict:
+            # Her sembolden sonra manifest'i diske yaz (checkpoint) — kesinti
+            # olsa bile o ana kadarki ilerleme resume icin kalir.
+            manifest.finalize()
+            return manifest.symbols[sym]['status']
+
+        if n_workers > 1:
+            # Epic 2.2 (B3): semboller birbirinden bagimsiz -> is parcaciklari.
+            # Process yerine thread: tek CUDA baglami (VRAM cogalmaz), veri
+            # pickle'lanmaz; agac modelleri ve torch zaten GIL'i birakir. DL
+            # adimi ayrica DL_GPU_SLOTS yuvasiyla sinirlanir.
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
+            from app.auth import workspace as ws
+
+            # ContextVar is parcacigi sinirini gecmez -> aktif kullaniciyi
+            # acikca tasi, yoksa modeller yanlis calisma alanina yazilir.
+            current = ws.get_current_user()
+
+            def _worker(sym: str):
+                if current:
+                    with ws.use_workspace(current.get('id'), current.get('email', ''),
+                                          current.get('role', 'user')):
+                        return _train_one(sym)
+                return _train_one(sym)
+
+            logger.info(f"[batch] Paralel mod: {n_workers} is parcacigi, "
+                        f"{len(pending)} sembol.")
+            done = 0
+            with ThreadPoolExecutor(max_workers=n_workers) as pool:
+                futures = {pool.submit(_worker, s): s for s in pending}
+                for fut in as_completed(futures):
+                    sym, res, err, seconds = fut.result()
+                    done += 1
+                    logger.info(f"[batch] ({done}/{len(pending)}) {sym} bitti "
+                                f"({seconds:.1f}s)")
+                    # Manifest tek is parcaciginda (ana) guncellenir -> kilit gerekmez.
+                    status = _record(sym, res, err, seconds)
+                    if strict and status == 'failed':
+                        logger.error("[batch] strict mod: hata sonrasi kalan "
+                                     "semboller iptal ediliyor.")
+                        for f in futures:
+                            f.cancel()
+                        break
+        else:
+            for i, sym in enumerate(pending, 1):
+                logger.info(f"[batch] ({i}/{len(pending)}) {sym} egitiliyor...")
+                sym, res, err, seconds = _train_one(sym)
+                status = _record(sym, res, err, seconds)
+                if strict and status == 'failed':
                     logger.error("[batch] strict mod: ilk hatada durduruluyor.")
                     break
-                continue
-            # Basarili sembol sonrasi da checkpoint yaz (resume dayanikliligi)
-            manifest.finalize()
 
         path = manifest.finalize()
         summary = manifest._summary()
@@ -708,20 +791,38 @@ class PredictionService:
         }
 
     @staticmethod
+    def _parallel_workers(n_pending: int) -> int:
+        """Epic 2.2: es zamanli sembol sayisi (1 = seri, varsayilan).
+
+        Sembol sayisindan fazla is parcacigi acmanin faydasi yok; kucuk
+        batch'lerde paralellik masrafi kazanci yiyebilir.
+        """
+        try:
+            from app.core.config import get_settings
+
+            configured = int(getattr(get_settings(), 'TRAIN_PARALLEL_SYMBOLS', 1) or 1)
+        except Exception:
+            configured = 1
+        return max(1, min(configured, max(1, n_pending)))
+
+    @staticmethod
     def _load_manifest(ref: str) -> Optional[Dict[str, Any]]:
-        """Manifest'i dosya yolu veya run_id'den yukle. G.4 resume yardimcisi."""
+        """Manifest'i dosya yolu veya run_id'den yukle. G.4 resume yardimcisi.
+
+        Arama sirasi (Faz 7): once aktif kullanicinin calisma alani, sonra
+        kullanici oncesi ortak dizin — eski kosumlar da surdurulebilir kalir.
+        """
         import json
-        from prediction.manifest import RUNS_DIR
-        candidates = [ref, os.path.join(RUNS_DIR, ref), os.path.join(RUNS_DIR, f'{ref}.json')]
-        for c in candidates:
-            if c and os.path.exists(c):
-                try:
-                    with open(c, 'r', encoding='utf-8') as f:
-                        return json.load(f)
-                except (OSError, json.JSONDecodeError) as exc:
-                    logger.warning(f"Manifest okunamadi ({c}): {exc}")
-                    return None
-        return None
+        from prediction.manifest import find_manifest
+        path = find_manifest(ref)
+        if not path:
+            return None
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning(f"Manifest okunamadi ({path}): {exc}")
+            return None
 
     def predict(
         self, symbols: List[str], horizon: str = 'daily',

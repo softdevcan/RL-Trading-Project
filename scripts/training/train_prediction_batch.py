@@ -32,7 +32,6 @@ semboller ok, 1 = en az bir degraded/failed (CI icin).
 """
 
 import argparse
-import glob
 import logging
 import os
 import sys
@@ -44,12 +43,12 @@ logger = logging.getLogger('train_prediction_batch')
 
 
 def _latest_manifest_run_id() -> str:
-    """En son yazilmis manifest'in run_id'sini dondur (--resume-latest icin)."""
-    from prediction.manifest import RUNS_DIR
-    files = sorted(glob.glob(os.path.join(RUNS_DIR, '*.json')))
-    if not files:
-        return ''
-    return os.path.splitext(os.path.basename(files[-1]))[0]
+    """En son yazilmis manifest'in run_id'sini dondur (--resume-latest icin).
+
+    Faz 7: manifest dizini calisma alanina gore cozulur (betikte ortak dizin).
+    """
+    from prediction.manifest import latest_run_id
+    return latest_run_id()
 
 
 def main() -> int:

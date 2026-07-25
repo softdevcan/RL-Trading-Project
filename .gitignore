@@ -57,6 +57,9 @@ data/raw/
 data/processed/
 data/*.csv
 data/**/*.csv
+# Faz 6 (G.2): cekilen verinin kalite bayragi yan dosyasi — CSV ile birlikte
+# uretilir, CSV gibi versiyonlanmaz.
+data/**/*_quality.json
 # Stray CSVs at repo root, but never under prediction/ (that's source, not data).
 /*.csv
 

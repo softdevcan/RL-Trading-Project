@@ -26,10 +26,67 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-RUNS_DIR = os.path.join('results', 'training_runs')
+# Kullanıcı öncesi (ortak) dizin — auth kapalıyken, standalone betiklerde ve
+# app katmanı yüklenemediğinde kullanılır. Faz 7'de yazma hedefi kullanıcının
+# çalışma alanına taşındı; bu sabit geriye dönük uyumluluk için duruyor.
+LEGACY_RUNS_DIR = os.path.join('results', 'training_runs')
+RUNS_DIR = LEGACY_RUNS_DIR
 
 # Beklenen tam model seti — bundan azı 'degraded' sayılır.
 EXPECTED_MODELS = {'xgboost', 'lightgbm', 'catboost', 'bilstm', 'tft'}
+
+
+def runs_dir() -> str:
+    """Yazma hedefi: aktif kullanıcının manifest dizini.
+
+    Auth kapalı / istek bağlamı yok (betik, test) ise eski ortak dizine düşer —
+    `prediction` paketi app katmanı olmadan da çalışır.
+    """
+    try:
+        from app.auth import workspace as ws
+
+        return ws.training_runs_dir()
+    except Exception:
+        os.makedirs(LEGACY_RUNS_DIR, exist_ok=True)
+        return LEGACY_RUNS_DIR
+
+
+def run_dirs() -> list:
+    """Okuma sırası: önce kullanıcının alanı, sonra ortak (eski) dizin."""
+    try:
+        from app.auth import workspace as ws
+
+        dirs = ws.read_dirs('training_runs')
+        return dirs or [runs_dir()]
+    except Exception:
+        return [LEGACY_RUNS_DIR] if os.path.isdir(LEGACY_RUNS_DIR) else []
+
+
+def find_manifest(ref: str) -> Optional[str]:
+    """Manifesti dosya yolu veya run_id'den bul (kullanıcı alanı → ortak)."""
+    if not ref:
+        return None
+    if os.path.exists(ref):
+        return ref
+    for directory in run_dirs():
+        for candidate in (os.path.join(directory, ref),
+                          os.path.join(directory, f'{ref}.json')):
+            if os.path.exists(candidate):
+                return candidate
+    return None
+
+
+def latest_run_id() -> str:
+    """En son yazılmış manifestin run_id'si (--resume-latest için)."""
+    import glob
+
+    files: List[str] = []
+    for directory in run_dirs():
+        files.extend(glob.glob(os.path.join(directory, '*.json')))
+    if not files:
+        return ''
+    newest = max(files, key=os.path.getmtime)
+    return os.path.splitext(os.path.basename(newest))[0]
 
 
 def _git_commit() -> str:
@@ -74,7 +131,9 @@ class TrainingManifest:
         self.symbols: Dict[str, Dict[str, Any]] = {}
         self.data_quality: Dict[str, str] = {}
         self._finalized = False
-        os.makedirs(RUNS_DIR, exist_ok=True)
+        # Yazma dizini kosum basinda bir kez cozulur: uzun batch sirasinda
+        # calisma alani baglami degisse bile manifest tek yere yazilir.
+        self.runs_dir = runs_dir()
 
     # ------------------------------------------------------------------
     def set_data_quality(self, dq: Optional[Dict[str, str]]):
@@ -145,7 +204,7 @@ class TrainingManifest:
     def finalize(self, write: bool = True) -> str:
         """Manifesti diske yaz ve yolunu döndür."""
         self._finalized = True
-        path = os.path.join(RUNS_DIR, f'{self.run_id}.json')
+        path = os.path.join(self.runs_dir, f'{self.run_id}.json')
         if write:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(self.to_dict(), f, indent=2, default=str)

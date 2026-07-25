@@ -11,9 +11,9 @@ Bu belge projenin **geçmişini (tamamlanan fazlar)** ve **gelecek yol haritası
 
 ---
 
-## Güncel Durum (2026-04-21)
+## Güncel Durum (2026-07-25)
 
-Üç faz tamamlandı. Tek-ajanlı temel altyapı, ensemble tahmin sistemi ve risk yönetimi çalışır durumda. Sonraki adım **tez için çoklu-ajan mimariye** geçiş (Milestone 0-4).
+Faz 1-3 + Faz 6 (backend perf/dayanıklılık) + Faz 7 (auth/multi-user) tamamlandı. Tek-ajanlı temel altyapı, ensemble tahmin sistemi, risk yönetimi, hızlandırılmış/gözlemlenebilir eğitim ve kullanıcı bazlı izolasyon çalışır durumda. Sonraki adım **tez için çoklu-ajan mimariye** geçiş (Milestone 0-4).
 
 | Katman | Durum | Konum |
 |---|---|---|
@@ -87,6 +87,24 @@ Bug fix'ler + tahmin kalitesi + risk yönetimi + açıklanabilirlik.
 - Sortino, Calmar, Deflated Sharpe Ratio, Turnover metrikleri
 
 **Ana çıktı:** Faz 2 sisteminin "production-grade" kalite için düzeltilmiş ve zenginleştirilmiş sürümü.
+
+### ✅ Faz 6 — Backend Performans & Eğitim Throughput
+
+Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üretilebilir). Detay: [phase-6-backend-performance.md](phase-6-backend-performance.md).
+
+- **🔴 Kritik keşif:** Ensemble hiç 5 modelle eğitilmiyormuş — BiLSTM/TFT her koşumda `except...continue` ile sessizce düşüyor, sistem 3 ağaç modeliyle "başarılı" tamamlanıyordu. Düzeltilince 5 gizli bug açığa çıktı (hepsi DL sessiz düşmesiyle maskeliydi).
+- **Ölçüm (Epic 0):** `profile_training.py` baseline. Eğitim = wall-clock'un %99.8'i; TFT tek başına ~%90 (değişken-seçim ağının özellik-başına Python döngüsü darboğaz).
+- **Veri I/O (Epic 1):** paralel çok-sembol + makro çekme (ThreadPool), LRU cache sınırı.
+- **Eğitim mimarisi (Epic 2):** feature-eng fragmentasyon giderme (bit-eş, PerfWarning 106→0), feature-selection disk cache, warm-start plumbing, **sembol paralelliği** (thread + VRAM semaphore).
+- **DL/GPU ince ayar (Epic 3):** GPU-preload batch'leme (BiLSTM +%56), **TFT gruplanmış-VSN 4.7×** (eşdeğerlik kanıtlı), HPO sqlite resume. AMP ölçülüp reddedildi (küçük ağda daha yavaş). *DL perf knob'ları default OFF (opt-in) — davranış dondurma; sıfırdan retrain'de açılır.*
+- **Güvenilirlik (Epic G):** sessiz model/fold düşmesi görünür (`status`/`degraded`/`failed_models`), fallback veri işareti + strict mod (cache yolu dahil), **eğitim manifesti** (`results/training_runs/<run_id>.json`), checkpoint/resume, merkezi seed politikası.
+- **Kapanış koşumu (T7):** 5 sembol uçtan uca — varsayılan 533.9s → perf knob'ları açık **157.6s (−%70.5)**, 5/5 sembol `ok` (5 model), OOM yok, `--resume` 1.0s. Hedef ≥%40 idi.
+
+**Ana çıktı:** Ölçülebilir daha hızlı + gözlemlenebilir/dayanıklı eğitim; her koşum tek-bakışta teşhis edilebilir manifest üretir. Regresyon golden'ı davranışı donduruyor.
+
+### ✅ Faz 7 — Auth & Multi-User
+
+Çerez tabanlı JWT oturum, bcrypt, roller (admin/user/viewer), admin-only kayıt, denetim kaydı, hibrit kullanıcı izolasyonu (piyasa verisi ortak; model/sonuç/karar/manifest kullanıcı bazlı). Detay: [phase7-auth.md](phase7-auth.md).
 
 ---
 

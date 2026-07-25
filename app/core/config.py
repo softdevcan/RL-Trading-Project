@@ -66,6 +66,45 @@ class Settings(BaseSettings):
     # tekrar hesabini onler. Ornek deger: "results/feature_selection_cache".
     FEATURE_SELECTION_CACHE_DIR: str = ""
 
+    # DL egitim dongusu ince ayari (3.1 · B7). Uc knob da OPT-IN (default OFF).
+    # Gerekce: her biri egitim yorungesini deterministik olarak kaydirir (izole
+    # modelde ayni-seed-ile bit-es olsa da tam pipeline'da RNG tuketim sirasi
+    # degisir; olcum: golden MAPE 139->177). Faz 6 ilke #2/#5 geregi mevcut
+    # egitimli modeller ve golden bozulmasin diye varsayilan kapali; sifirdan
+    # tam retrain gibi "eski uyumu gereksiz" kosumlarda acilir (env ile).
+    # Olculen kazanc (RTX 4060): BiLSTM preload +%56, TFT fast_vsn +%73-75.
+
+    # GPU-yerlesik batch'leme: sekanslar bir kez cihaza tasinir, DataLoader
+    # yerine dilimlenir (batch icerigi/sirasi ayni, shuffle=False).
+    DL_GPU_PRELOAD: bool = False
+
+    # Karisik hassasiyet (forward fp16, loss fp32). Kucuk aglarda cast/scaler
+    # masrafi kazanci yiyor (olcum: BiLSTM ve TFT'de daha YAVAS) -> onerilmez.
+    DL_AMP: bool = False
+
+    # TFT degisken-secim agi (VSN): gruplanmis/batched surum. Olcumde TFT
+    # egitimin ~%90'iydi ve masraf VSN'in ozellik basina Python dongusundeydi
+    # (131 ozellik x ~6 katman = adim basina ~800 kernel). Ayni fonksiyon
+    # (esdegerlik testi: max fark 2e-7), tek batched islem -> ~4.7x hizli.
+    TFT_FAST_VSN: bool = False
+
+    # torch CPU is parcacigi sayisi (0 = torch varsayilani). Epic 2.2
+    # process-paralel egitiminde asiri-abonelugi onlemek icin sabitlenir.
+    DL_TORCH_THREADS: int = 0
+
+    # Sembol paralelligi (2.2 · B3): batch egitimde es zamanli sembol sayisi.
+    # 1 = seri (varsayilan, mevcut davranis). GPU tekil oldugu icin DL adimi
+    # ayrica semaphore ile sinirlanir (DL_GPU_SLOTS).
+    TRAIN_PARALLEL_SYMBOLS: int = 1
+
+    # Ayni anda GPU'da DL egitebilecek sembol sayisi (VRAM korumasi).
+    DL_GPU_SLOTS: int = 1
+
+    # HPO kalici depo (3.2 · B6): bos = bellekte (varsayilan, eski davranis).
+    # "sqlite:///results/prediction_hyperopt/hpo.db" verilirse Optuna study'leri
+    # diske yazilir ve yarida kesilen HPO kaldigi trial'dan devam eder.
+    HPO_STORAGE: str = ""
+
     # --- Faz 7: Kimlik dogrulama, yetkilendirme, kullanici calisma alanlari ---
 
     # Ana anahtar. False = eski davranis (herkese acik) — sadece yerel
