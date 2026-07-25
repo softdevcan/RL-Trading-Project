@@ -2,7 +2,7 @@
 
 ## Project Summary
 Deep Reinforcement Learning-based algorithmic trading system for BIST-30 stocks.
-Based on Ansari et al. (2024) paper. Phase 1 (POC) completed, Phase 2 (Advanced Prediction System) completed, Phase 3 (Production improvements) completed.
+Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user) tamamlandı.
 
 ## Language
 Respond in the same language the user writes in.
@@ -55,10 +55,12 @@ prediction/           # Gelişmiş tahmin sistemi (Faz 2+3)
     lightgbm_model.py
     catboost_model.py
     lstm_model.py     # BiLSTM (PyTorch, CUDA) + direction head
-    tft_model.py      # Temporal Fusion Transformer (PyTorch, CUDA) + direction head
-    ensemble.py       # Stacking meta-learner (Ridge + XGBoost), 3-way split, OOF, TATS
-  hyperopt.py         # Optuna HPO
-  trainer.py          # Walk-forward + purge gap + embargo (prev_test_end takibi)
+    tft_model.py      # Temporal Fusion Transformer (PyTorch, CUDA) + direction head + Faz6 gruplanmış-VSN (opt-in)
+    ensemble.py       # Stacking meta-learner (Ridge + XGBoost), 3-way split, OOF, TATS + warm-start plumbing
+    torch_perf.py     # Faz 6 (3.1): DL eğitim ince ayarı — GPU-preload batch, AMP, thread pin, GPU semaphore
+  hyperopt.py         # Optuna HPO + Faz 6 (3.2) sqlite resume (HPO_STORAGE)
+  trainer.py          # Walk-forward + purge gap + embargo (prev_test_end takibi) + strict/failed_folds
+  manifest.py         # Faz 6 (G.3): eğitim manifesti → results/training_runs/<run_id>.json (kullanıcı bazlı)
   evaluator.py        # Direction acc, Profit Factor, IC, Sortino, Calmar, DSR, turnover
   tracker.py          # Experiment tracking (JSON log)
   legacy_models.py    # Eski tek-model implementasyonu (referans)
@@ -77,7 +79,7 @@ docs/                 # Documentation (development plan, guides)
 models/               # Trained models (.zip) - gitignored (kullanici oncesi, salt-okunur)
 results/              # Metrics (.json) - gitignored
 logs/                 # TensorBoard logs - gitignored
-workspaces/<user_id>/ # Faz 7: kullanici bazli models/results/predictions/live_trading - gitignored
+workspaces/<user_id>/ # Faz 7: kullanici bazli models/results/predictions/live_trading/training_runs - gitignored
 ```
 
 ## Important Rules
@@ -98,6 +100,12 @@ python tests/test_ppo.py
 python tests/test_all_algorithms.py
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
+python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
+python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
+python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
+python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
+python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
+python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -107,8 +115,10 @@ python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol
 - Roller: `viewer` (okuma) / `user` (kendi alaninda yazma) / `admin` (+ kullanici yonetimi)
 - Kayit yok: hesaplari admin acar (`/dash/users` veya `python scripts/create_admin.py`)
 - Dizin cozumleme: `app/auth/workspace.py` → `models_dir()`, `results_dir()`,
-  `live_trading_dir()`, `find_file(kind, name)`, `use_workspace(user_id)`
-- Detay: `docs/development/phase7-auth.md`
+  `live_trading_dir()`, `training_runs_dir()`, `find_file(kind, name)`, `use_workspace(user_id)`
+- Faz 6 manifest de kullanici bazli: `prediction/manifest.py` → `runs_dir()`/`find_manifest()`;
+  `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
+- Detay: `docs/development/phase7-auth.md`, `docs/development/phase-6-backend-performance.md`
 
 ### Data pipeline
 ```
@@ -171,7 +181,15 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - 3.2: Tahmin kalitesi (ICEEMDAN gürültü filtresi, TATS trend düzeltici, VIX/US10Y/DXY global makro)
   - 3.3: Risk yönetimi (ATR tabanlı pozisyon boyutlandırma, Kelly Criterion)
   - 3.4: Explainability & monitoring (SHAP, Sortino/Calmar/DSR/Turnover metrikleri, /explain API)
+- Faz 6 (Backend perf & training throughput): Tamamlandı
+  - Ölçüm: `profile_training.py` baseline — eğitim wall-clock'un %99.8'i, TFT ~%90 (VSN döngüsü darboğaz)
+  - Veri I/O: paralel sembol + makro çekme, LRU cache; Eğitim: feature-eng bit-eş refactor, feature-sel cache
+  - DL ince ayar: GPU-preload (BiLSTM +%56), TFT gruplanmış-VSN (4.7×), HPO sqlite resume; AMP ölçülüp reddedildi
+  - Paralellik: sembol-bazlı thread + VRAM semaphore (`TRAIN_PARALLEL_SYMBOLS`, `DL_GPU_SLOTS`)
+  - Güvenilirlik: sessiz model/fold düşmesi görünür, fallback işareti + strict mod (cache yolu dahil: `data/macro/macro_data_quality.json`), eğitim manifesti, checkpoint/resume, merkezi seed
+  - Kapanış koşumu (T7, 5 sembol): 533.9s → **157.6s (−%70.5)** perf knob'ları açıkken; resume 1.0s; 5/5 sembol `ok` (5 model)
+  - **DL perf knob'ları default OFF (opt-in)**: tam pipeline'da RNG sırasını kaydırıp golden'ı değiştirdikleri için (davranış dondurma). Sıfırdan retrain'de açılır, golden o donanımda yenilenir.
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
-  (piyasa verisi ortak; model/sonuc/karar kullanici bazli), kullanici basina egitim durumu
-- Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`. Dokümantasyon indeksi: `docs/README.md`.
+  (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu
+- Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`, `docs/development/phase-6-backend-performance.md`. Dokümantasyon indeksi: `docs/README.md`.

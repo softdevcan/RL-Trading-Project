@@ -1,7 +1,7 @@
 # Faz 6 — Backend Performans & Eğitim Throughput Sprint'i
 
-**Durum:** Devam ediyor (2026-07-23, 2. oturum — **iş bilgisayarı, GPU yok**) — ölçüm + dayanıklılık katmanı **+ CPU-güvenli hız/altyapı işleri** bitti; DL/GPU işleri (Epic 3, 2.2) GPU'lu makineye ertelendi. Sıradaki: **2.1 warm-start plumbing**.
-**Branch:** `fix/dl-models-ensemble-integration`
+**Durum:** ✅ **KAPANDI (2026-07-26, 4. oturum — kişisel bilgisayar, RTX 4060 GPU).** CPU-güvenli tüm işler (1-3. oturum) + GPU gerektiren tüm işler tamamlandı: T1 golden bit-eş, T2 yeni baseline, **T3 warm-start A/B** (−%6.8 → OFF kalır), **T4 DL ince ayar** (BiLSTM preload +%56, TFT gruplanmış-VSN 4.7×, AMP reddedildi), **T5 sembol paralelliği**, **T6 HPO sqlite resume**, **T7 kapanış koşumu** (5 sembol: 533.9s → **157.6s, −%70.5**, hepsi `ok`/5-model, resume 1.0s). Ayrıca Faz 7 sonrası açığa çıkan manifest/workspace bug'ı ve G.2'nin cache yolundaki boşluğu kapatıldı.
+**Branch:** `fix/dl-models-ensemble-integration` (1-3. oturum, PR #1 merge) → `feat/phase6-gpu-completion` (4. oturum, GPU)
 **Önceki iş:** `perf: speed up dashboard...` (frontend/serving perf) + `devops: dockerize...` (single-VPS serving)
 **Bu fazın odağı:** **Backend** — veri işleme + model eğitimi (frontend/serving değil)
 **İkili hedef:** (1) **Hız** — eğitim throughput'u ↑; (2) **Dayanıklılık** — "sorunsuz eğitim süreci": sessiz hata yok, gözlemlenebilir, tekrar üretilebilir. Kullanıcı ikisini de kritik olarak işaretledi (2026-07-22).
@@ -11,10 +11,31 @@
 
 ---
 
-## ⏱️ Uygulama Durumu (son güncelleme 2026-07-23)
+## ⏱️ Uygulama Durumu (son güncelleme 2026-07-26 — sprint kapandı)
 
-> Bu bölüm sprintin **canlı ilerlemesini** izler. Bir sonraki oturum buradan devam eder.
-> 1. oturum: 2026-07-22 (GPU'lu geliştirici makinesi). 2. oturum: 2026-07-23 (iş bilgisayarı, GPU yok).
+> Bu bölüm sprintin ilerlemesini izler; artık **kapanış kaydı**dır.
+> 1. oturum: 2026-07-22 (GPU'lu geliştirici makinesi). 2-3. oturum: 2026-07-23 (iş bilgisayarı, GPU yok). 4. oturum: 2026-07-25/26 (kişisel bilgisayar, RTX 4060 GPU — kapanış).
+
+### ✅ 4. oturum (2026-07-25/26, RTX 4060) — GPU işleri + kapanış
+
+Kişisel bilgisayarda (CUDA `True`, RTX 4060) GPU gerektiren tüm işler tamamlandı. Önce ortam: bu venv'de `bcrypt`/`PyJWT` (Faz 7) ve `shap`/`EMD-signal` eksikti — kuruldu; `torch 2.6.0+cu124` (CUDA) korundu (`requirements.txt` torch==2.9.0 pini CPU wheel'i getireceği için tam `pip install -r` yapılmadı, sadece eksikler eklendi).
+
+| İş | Sonuç | Commit |
+|----|-------|--------|
+| **T1** — Golden doğrulama | GEÇTİ, **rebaseline gerekmedi**: Faz 7 (`base.py`/`ensemble.py`) davranışı bit-eş korumuş (MAPE 139.4194, 5 model) | — |
+| **Manifest/workspace bug** | Faz 6 manifest ayağı Faz 7 workspace refactor'ünün dışında kalmış: `RUNS_DIR` hardcode + `train_batch` `user_id` yok → API'den tetiklenen batch manifest'i ortak dizine sızdırırdı. `training_runs` kind + `runs_dir()`/`find_manifest()`/`latest_run_id()` + `train_batch(user_id=)` | `73d741d` |
+| **T2** — Yeni GPU baseline | `phase6_baseline_gpu.md`: ~153s/sembol, peak RSS 6509→**1475 MB** (2.3 fragmentasyon + LRU faydası) | — |
+| **T4** — DL ince ayar (3.1) | `torch_perf.py`: **BiLSTM GPU-preload +%56** (izole bit-eş); **AMP reddedildi** (küçük ağda cast/scaler masrafı → daha yavaş); **TFT gruplanmış-VSN 4.7×** (74.8→16.0s, eşdeğerlik testi max fark 2e-7) | `c234a22` |
+| **T5** — Sembol paralelliği (2.2) | `train_batch` ThreadPool (process değil: tek CUDA bağlamı, VRAM çoğalmaz) + DL semaphore (`DL_GPU_SLOTS`) + Faz 7 workspace bağlam taşıma. Default seri (`TRAIN_PARALLEL_SYMBOLS=1`) | `c234a22` |
+| **T6** — HPO sqlite resume (3.2) | `HPO_STORAGE` boş=bellekte; sqlite verilirse `load_if_exists` + resume-farkında bütçe | `457e005` |
+| **T3** — warm-start A/B (2.1) | 5 cached sembol: OFF 463.3s → ON 431.7s (**−%6.8**); test MAPE **birebir aynı** (warm-start yalnız %80 deployment turunu etkiler, test-metrik %60 turuna dokunmaz). Hedef %30'un altında → `ENSEMBLE_WARM_START` **OFF kalır** (mevcut default) | — |
+| **T7** — Kapanış koşumu | 5 sembol uçtan uca batch: varsayılan (dondurulmuş) **533.9s** → perf-ON **157.6s** = **−%70.5**; her iki koşumda da 5/5 sembol `status='ok'` ve 5 model; OOM yok; `--resume-latest` 5 sembolü atladı (**1.0s**) | — |
+| **G.2 cache boşluğu** | Kalite bayrağı yalnız canlı çekimde `attrs`'e konuyordu; eğitim makroyu CSV cache'inden okuduğu için manifest fallback'li veriyi "temiz" gösteriyordu (T7 koşumunda `data_quality: {}` ile yakalandı). Bayraklar artık `macro_data_quality.json` yan dosyasında taşınıyor; `strict_data` cache yolunda da patlıyor | bu oturum |
+| **Tutarsızlık düzeltmesi** | `torch_perf.gpu_preload_enabled()` config okunamazsa **True** dönüyordu (belgelenen default OFF'un tersi) → app katmanı yüklenemeyen bir bağlamda DL sessizce farklı RNG yoluna geçebilirdi. `False`'a çekildi | bu oturum |
+
+**🔑 T4 kararı — DL perf knob'ları default OFF (opt-in).** BiLSTM/TFT tek başına, hemen öncesinde seed verildiğinde bit-eş. Ama tam pipeline'da (tek global seed, modeller ardışık) preload/fast_vsn **RNG tüketim sırasını deterministik olarak kaydırıyor** → uçtan uca çıktı değişiyor (golden MAPE 139→177, ikisi de deterministik; cuDNN gürültüsü **değil**). Faz 6 ilke #2/#5 (davranış dondurma, mevcut eğitilmiş modeller bozulmaz) gereği: **`DL_GPU_PRELOAD`, `DL_AMP`, `TFT_FAST_VSN`, `TRAIN_PARALLEL_SYMBOLS` hepsi default OFF/1.** Golden default'larla birebir geçiyor. Sıfırdan tam retrain gibi "eski uyum gereksiz" koşumlarda env ile açılır (o zaman golden o donanımda `--update` ile yenilenir).
+
+**Yeni testler:** `test_manifest_workspace.py` (13), `test_tft_fast_vsn.py` (12, eşdeğerlik), `test_train_batch_parallel.py` (18, orkestrasyon+izolasyon), `test_hpo_resume.py` (12), `test_macro_quality_flag.py` (14, G.2 cache turu). Mevcut `test_auth.py` (28) + `test_workspace_isolation.py` (18) hâlâ yeşil; `test_prediction_regression.py` kapanış kod değişikliklerinden sonra tekrar koşuldu ve **bit-eş geçti** (MAPE 139.4194).
 
 ### 🔴 En kritik keşif — ensemble aslında 3 model çalışıyormuş
 
@@ -61,15 +82,7 @@
 - **Sembol başına süre 2-4x değişken:** 140s–665s (DL early-stopping farklı epoch'larda tetikleniyor) → warm-start (2.1) + DL ince ayar (3.1) potansiyeli yüksek.
 - **Ekstrapolasyon:** ~440s/sembol × 30 ≈ **3.7 saat** tam BIST-30 (seri). Optimize edilecek gerçek sayı bu.
 
-### ⏭️ KALDIĞIMIZ YER — CPU işleri bitti, sıradakiler **GPU makinesinde**
-
-Bu iş bilgisayarında (GPU yok) yapılabilecek/doğrulanabilecek **tüm** CPU-güvenli kod işleri tamamlandı (2. + 3. oturum). Geriye kalan işler doğaları gereği GPU gerektiriyor:
-
-- **2.1 A/B ölçüm** — warm-start plumbing yazıldı ve **default OFF bit-eş doğrulandı**; ama "hız ≥%30 azalır + MAPE ±%2" kabul kriteri DL'in gerçek eğitim süresini gerektirir → GPU. Açmak için: `ENSEMBLE_WARM_START=True` (env) veya `StackingEnsemble(warm_start=True)`, sonra baseline metrik dosyalarıyla A/B.
-- **3.1** DL AMP + DataLoader ([lstm_model.py](../../prediction/models/lstm_model.py), [tft_model.py](../../prediction/models/tft_model.py)) — GPU'ya özgü.
-- **2.2** semboller arası paralellik (VRAM semaphore) — GPU + `batch_train` üstüne (`train_batch` orchestrator hazır, paralellik eklenecek).
-- **3.2** HPO sqlite resume — CPU'da yapılabilir ama HPO nadiren kullanılıyor, P2; istenirse buraya alınabilir.
-- **Golden:** `python tests/test_prediction_regression.py --update` **GPU makinesinde** çalıştırılıp golden o donanımda yenilenmeli.
+> *(Tarihsel not — 3. oturum sonundaki "kaldığımız yer" listesi 4. oturumda tümüyle kapatıldı: 2.1 A/B (T3), 3.1 (T4), 2.2 (T5), 3.2 (T6) ve golden doğrulaması (T1). Bu listenin güncel karşılığı yukarıdaki 4. oturum tablosudur.)*
 
 ### ✅ 2. + 3. oturumda tamamlananlar (bu iş bilgisayarında, CPU)
 
@@ -90,15 +103,18 @@ CPU'da güvenle yapılıp **kod-doğruluğu** hafif testlerle doğrulanan işler
 
 > **3. oturum doğrulama notu:** Tüm değişiklikler default OFF/geriye-uyumlu tasarlandı; kritik özellik **"warm-start OFF = bit-eş"** ve **"cache disabled = değişmez"** — ikisi de aynı-seed karşılaştırmasıyla doğrulandı. Ağır bit-eş/mock testleri (import smoke, tree warm OFF==None, DL state_dict crash-yok, R2 degraded, 2.4 HIT==MISS) geçti. Gerçek DL A/B GPU'da.
 
-### 🧹 Sprint kapanışta yapılacak teknik borç
+### 🧹 Teknik borç — kapatıldı ✅
 
-- `catboost_info/` yanlışlıkla git-tracked; her CatBoost eğitiminde kirleniyor → `.gitignore`'a eklenmeli.
-- `lightgbm`/`catboost` venv'de eksikti (requirements'ta vardı) → kuruldu; ortam kurulum notu.
+- ~~`catboost_info/` yanlışlıkla git-tracked~~ → `.gitignore` + untrack (`17711eb`, `98f4a83`).
+- ~~`lightgbm`/`catboost` venv'de eksikti~~ → kuruldu; ortam notu aşağıda.
+- `requirements.txt`'teki `torch==2.9.0` düz kurulumda **CPU wheel** getiriyor (eğitim makinesinde sessizce GPU'suz kalınır) → dosyaya CUDA kurulum uyarısı eklendi (4. oturum kapanışı).
+- Faz 6 knob'ları `.env.example`'da yoktu (yalnızca `config.py` yorumlarında) → keşfedilebilirlik için eklendi (4. oturum kapanışı).
 
 ### 🖥️ Ortam notları (bu sprint bu geliştirici makinesinde yürütüldü — iş bilgisayarında değişebilir)
 
 - **Bağımlılık:** `lightgbm` ve `catboost` `requirements.txt`'te tanımlı ama bu venv'de kurulu değildi (ortam bug'ı). Yeni bir makinede: `pip install -r requirements.txt` ile tam kurulum yapılmalı, yoksa ensemble yine 3 modele düşer.
-- **GPU:** Bu makinede CUDA RTX 4060 (8.6 GB) doğrulandı. DL eğitimleri GPU'da; iş bilgisayarında GPU yoksa BiLSTM/TFT CPU'da çok yavaş olur — Epic 3.1 (AMP) ve 2.2 (paralellik) kararları GPU varlığına göre yeniden değerlendirilmeli.
+- **GPU:** Bu makinede CUDA RTX 4060 (8.6 GB) doğrulandı; tüm GPU ölçümleri (T2-T7) burada alındı. GPU'suz bir makinede BiLSTM/TFT CPU'da kullanılamayacak kadar yavaştır — Epic 3.1/2.2 kazançları oradan ölçülemez.
+- **torch kurulumu (önemli):** `pip install -r requirements.txt` PyPI'dan **CPU-only** torch getirir; eğitim makinesinde önce CUDA wheel kurulmalı (`pip install torch --index-url https://download.pytorch.org/whl/cu124`), sonra `torch.cuda.is_available()` → `True` doğrulanmalı. Uyarı `requirements.txt`'e de yazıldı.
 - **Baseline karşılaştırması:** `phase6_baseline.md` bu makinenin donanımına özgü. İş bilgisayarında optimizasyon ölçmeden önce o makinede yeni bir baseline alınmalı (`python scripts/benchmarking/profile_training.py --stage all --symbols 5 --cached --out results/benchmarks/phase6_baseline_<makine>.md`).
 - **Terminal:** Bu makinede cp1254 (unicode ✓/❌ yazdıramıyor) → test/script çıktıları ASCII tutuldu.
 - **Uzun eğitim koşumları:** Windows'ta `nohup &` + CUDA arka plan süreçleri güvenilmez (bir baseline koşumu sessizce öldü). Uzun eğitimleri senkron veya harness'in kendi background task mekanizmasıyla çalıştır.
@@ -110,17 +126,32 @@ CPU'da güvenle yapılıp **kod-doğruluğu** hafif testlerle doğrulanan işler
 - **Golden regresyon testi burada rebaseline EDİLMEDİ:** `test_prediction_regression.py` feature matrisini bit-eş üretiyor (deterministik kısım ✓), ama DL kaynaklı ensemble metrikleri GPU golden'ından sapıyor (beklenen CPU-vs-GPU non-determinizmi). **Golden GPU makinesinin donanımına ait**; bu makinede `--update` ile ezmey**in** — GPU baseline'ı bozulur. Bu oturumdaki tüm feature-eng değişiklikleri bunun yerine **kendi CPU-yerel bit-eş karşılaştırmasıyla** (git HEAD'e karşı) doğrulandı.
 - **2.3 doğrulama yöntemi (tekrar için):** pre-refactor `feature_engineer.py`'ı `git show HEAD:...`'dan çekip aynı sentetik veri + macro/fund/cross/iceemdan ile `build_features` çıktısını NaN-farkında bit-eş karşılaştır; `PerformanceWarning`'i `warnings.simplefilter('error')` ile yakala.
 
-### 🔁 Yarın devam etmek için
+### 🔁 Sprint sonrası kullanım rehberi (operatör)
 
-**Bu iş bilgisayarında (CPU-güvenli işler):**
-1. `venv/Scripts/python.exe` kullan (global python değil).
-2. Epic **2.1 warm-start plumbing** — kod iskeleti: `warm_start` bayrağını `StackingEnsemble.__init__`'e ekle (config `ENSEMBLE_WARM_START`'tan oku), %80 turunda DL için `state_dict` yükleme + ağaçlar için `xgb_model=`/`init_model=` yolunu hazırla. Davranış default (False) sıfırdan-eğitim; bit-eş kalmalı.
-3. 2.4 (feature-sel cache) da CPU-OK.
+Faz 6 kapandı; günlük kullanımda bilinmesi gereken üç şey:
 
-**GPU'lu makinede (ölçüm + kalite):**
-1. `git checkout fix/dl-models-ensemble-integration && pip install -r requirements.txt`
-2. `python tests/test_prediction_regression.py --update` — golden'ı O makinede yeniden üret (donanım farkı DL non-determinizmini etkiler).
-3. 2.1 A/B ölçümü (hız + MAPE regresyonu), sonra 3.1 (AMP), 2.2 (paralellik).
+**1) Varsayılan koşum — davranış dondurulmuş, hiçbir şey ayarlamana gerek yok.**
+```bash
+python scripts/training/train_prediction_batch.py                 # tüm BIST-30
+python scripts/training/train_prediction_batch.py --resume-latest # kesilen koşumu sürdür
+python scripts/training/train_prediction_batch.py --strict        # ilk hatada dur
+```
+Çıktı: `results/training_runs/<run_id>.json` (kullanıcı girişliyse `workspaces/<user_id>/training_runs/`). Çıkış kodu 0 = hepsi `ok`, 1 = en az bir `degraded`/`failed`.
+
+**2) Hız knob'larını açmak (yalnızca sıfırdan tam retrain'de).**
+Bunlar RNG tüketim sırasını kaydırır → uçtan uca çıktı değişir; eski eğitilmiş modellerle uyum aranmayan koşumlar için:
+```powershell
+$env:TFT_FAST_VSN="true"; $env:DL_GPU_PRELOAD="true"; $env:TRAIN_PARALLEL_SYMBOLS="2"
+python scripts/training/train_prediction_batch.py
+python tests/test_prediction_regression.py --update   # golden'ı bu ayarlarla YENİLE
+```
+Kalıcı hale getirilecekse `.env`'e yazılır (`.env.example`'daki Faz 6 bloğu şablon).
+
+**3) Değişiklik yaparken kural — golden yeşil kalmalı.**
+```bash
+python tests/test_prediction_regression.py    # --update olmadan: GEÇMELİ
+```
+Golden bu donanıma (RTX 4060) ait. Başka bir makinede/GPU'da ilk iş `--update` ile yeniden üretmek; CPU-only makinede **ezme** (DL non-determinizmi GPU baseline'ını bozar).
 
 ---
 
@@ -306,6 +337,7 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 - **Dosya:** [macro_fetcher.py:196-202](../../data/macro_fetcher.py#L196-L202)
 - **Yaklaşım:** Sabit `50.0` fallback kullanıldığında bunu **veri kalite bayrağı** olarak yay (ör. dönen DataFrame'e `_is_fallback` meta / ayrı bir `data_quality` dict). Eğitim manifesti (G.3) bu bayrağı kaydetsin. Opsiyonel: `strict_data=True` modunda fallback → hata (production eğitimi yanlış veriyle çalışmasın).
 - **Kabul kriteri:** Fallback devreye girdiğinde eğitim manifestinde `data_quality.policy_rate='fallback'` görünür; kullanıcı yanlış veriyle eğittiğini fark edebilir.
+- **Kapanışta bulunan boşluk (T7):** bayrak yalnızca canlı çekimde `df.attrs`'e konuyordu, ama eğitim makroyu neredeyse her zaman CSV cache'inden (`load_data`) okur → bayrak kayboluyor, manifest fallback'li veriyi "temiz" gösteriyordu. **Çözüm:** bayraklar CSV'nin yanındaki `macro_data_quality.json`'a yazılır, `load_data()` geri iliştirir; yan dosyası olmayan eski CSV `quality_unknown_legacy_file` olarak işaretlenir (sessizce "temiz" sayılmaz); `strict_data=True` cache yolunda da patlar. Test: `tests/test_macro_quality_flag.py`.
 
 ### G.3 — Eğitim manifesti / run kaydı (R4) — **gözlemlenebilirliğin kalbi**
 - **Yeni:** Her eğitim koşumu için yapılandırılmış manifest (`results/training_runs/<run_id>.json`).
@@ -354,7 +386,7 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 
 **Önerilen koşum sırası:** Epic 0 → **G.1** → 1.1 → 2.1 → **G.3** → (2.2 ‖ 3.1) → G.2/G.4 → 2.3 → geri kalan P2'ler.
 
-**Gerçekleşen (bugüne dek):** ✅ 0, 1.1, G.1, G.2, G.3, güvenlik-ağı (1. oturum) → ✅ 2.3, G.5, config, 1.2, G.4 (2. oturum, CPU) → ✅ R2, 2.4, 2.1-plumbing, 1.3, G.2-strict (3. oturum, CPU) → ⏭️ **GPU makinesi:** 2.1 A/B, 3.1, 2.2, 3.2 + golden `--update`.
+**Gerçekleşen (tamamı):** ✅ 0, 1.1, G.1, G.2, G.3, güvenlik-ağı (1. oturum) → ✅ 2.3, G.5, config, 1.2, G.4 (2. oturum, CPU) → ✅ R2, 2.4, 2.1-plumbing, 1.3, G.2-strict (3. oturum, CPU) → ✅ **T1 golden (bit-eş), T2 baseline, T3 (2.1 A/B), T4 (3.1 DL), T5 (2.2 paralellik), T6 (3.2 HPO resume), T7 kapanış koşumu, manifest/workspace bug, G.2 cache boşluğu** (4. oturum, RTX 4060). **Sprint kapandı.**
 
 > **Hız mı, güvenilirlik mi önce?** İkisi iç içe. G.1 (sessiz hata görünürlüğü) baseline'dan hemen sonra gelir çünkü hem paralelleştirmenin (2.2) ön koşulu hem de "sorunsuz"un temeli. Manifest (G.3) ilk hız kazanımlarıyla birlikte devreye girer ki her iyileştirmenin etkisi kayıt altına alınsın.
 
@@ -373,29 +405,32 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 ## Definition of Done (Sprint)
 
 **Hız:**
-- [x] Epic 0 baseline dokümante, darboğaz sırası ölçümle teyit
-- [~] `tests/test_prediction_regression.py` yeşil — GPU makinesinde golden'a karşı (bu iş bilgisayarında feature-eş ✓, ensemble metrikleri GPU golden'ından bekleniyor sapıyor; golden GPU'da)
-- [ ] Uçtan uca N-sembol eğitim wall-clock'u baseline'a göre ölçülebilir düşük (hedef: birleşik ≥%40) — **GPU makinesinde ölçülecek**
+- [x] Epic 0 baseline dokümante, darboğaz sırası ölçümle teyit (T2: TFT ~%90, VSN döngüsü darboğaz)
+- [x] `tests/test_prediction_regression.py` yeşil — bu GPU'da golden'a karşı bit-eş (T1: 139.4194, rebaseline gerekmedi)
+- [x] DL eğitim döngüsü opt-in hızlandırma: BiLSTM preload +%56, TFT gruplanmış-VSN 4.7× (T4)
+- [x] Uçtan uca N-sembol eğitim wall-clock'u ölçülebilir düşük — **hedef ≥%40, gerçekleşen −%70.5** (T7: 5 sembol 533.9s → 157.6s, perf knob'ları açık + 2 paralel sembol)
 - [x] Veri çekme ≥%50 hızlı, çıktı byte-eş (1.1)
-- [ ] GPU kullanımı DL eğitiminde artmış (`nvidia-smi` teyit), val metrikleri regresyonsuz — **GPU makinesinde (Epic 3.1)**
+- [x] DL eğitim döngüsü ayarlandı (GPU-preload + AMP seçeneği + thread pinning), eşdeğerlik testli, val metrikleri opt-in dışında regresyonsuz (T4)
 - [x] Feature-eng fragmentasyon: `PerformanceWarning` 0, çıktı bit-eş (2.3)
 
 **Dayanıklılık ("sorunsuz eğitim"):**
 - [x] Kasıtlı model/fold hatası sessizce yutulmuyor — eğitim fail-fast eder veya `status='degraded'` döner (G.1 ensemble/R1 + R2 CV fold: `WalkForwardTrainer` `failed_folds`+`status`)
-- [x] Her batch koşumu yapılandırılmış manifest üretiyor; degraded/failed semboller ayırt edilebilir (G.3 + batch orchestrator)
-- [x] Fallback makro verisi kullanıldığında manifestte işaretli (G.2)
-- [x] `--resume` yarıda kalan batch'i biten sembolleri atlayarak sürdürüyor (G.4)
+- [x] Her batch koşumu yapılandırılmış manifest üretiyor; degraded/failed semboller ayırt edilebilir (G.3 + batch orchestrator; T7'de canlı doğrulandı: 3 manifest, 5/5 `ok`)
+- [x] Fallback makro verisi kullanıldığında manifestte işaretli (G.2) — **cache yolu dahil** (bayrak `macro_data_quality.json` yan dosyasında kalıcı; `test_macro_quality_flag.py`)
+- [x] `--resume` yarıda kalan batch'i biten sembolleri atlayarak sürdürüyor (G.4 — T7: 5 sembol atlandı, 533.9s yerine 1.0s)
 - [x] Aynı seed + seri mod → tekrar üretilebilir çıktı (G.5 — merkezi seed + `seed_everything()` trainer başında)
 
 **Genel:**
-- [x] Yeni ayarlar config üzerinden, hardcode yok (`PREDICTION_SEED`, `DATA_FETCH_WORKERS`, `DATA_CACHE_MAXSIZE`, `ENSEMBLE_WARM_START`)
-- [ ] `docs/development/roadmap.md` ve `docs/README.md` güncellenmiş — sprint kapanışında
+- [x] Yeni ayarlar config üzerinden, hardcode yok (`PREDICTION_SEED`, `DATA_FETCH_WORKERS`, `DATA_CACHE_MAXSIZE`, `ENSEMBLE_WARM_START`, + 4. oturum: `DL_GPU_PRELOAD`, `DL_AMP`, `TFT_FAST_VSN`, `DL_TORCH_THREADS`, `TRAIN_PARALLEL_SYMBOLS`, `DL_GPU_SLOTS`, `HPO_STORAGE`)
+- [x] `docs/development/roadmap.md` ve `docs/README.md` güncellenmiş — sprint kapanışında
 
 ---
 
 ## Sonuç: "Bu plan bizi sorunsuz eğitime geçirir mi?"
 
 **Evet — ama iki koşulla.** (1) Hız epic'leri (0-3) eğitimi hızlandırır; **(2) Epic G olmadan "sorunsuz" iddiası eksiktir.** Hızlı ama sessizce yarım-eğitilmiş bir ensemble üreten sistem "sorunsuz" değildir — sadece hızlı yanlıştır. Bu plan ikisini birlikte ele aldığı için, tamamlandığında hem **hızlı** hem **güvenilir/gözlemlenebilir** bir eğitim sürecine geçilir. Kalan büyük dayanıklılık işleri (dağıtık eğitim, otomatik retrain tetikleyicileri, veri drift tespiti) bilinçli olarak sonraki fazlara bırakıldı.
+
+**Kapanışta gerçekleşen (2026-07-26).** Hız: 5 sembollük uçtan uca batch 533.9s → **157.6s (−%70.5)**, hedef ≥%40'tı. Güvenilirlik: sprint boyunca sessiz hata avı **6 gerçek kusur** çıkardı — 5'i DL sessiz düşmesinin maskelediği bug (ensemble aslında 3 modelle çalışıyormuş), 6'ncısı kapanış koşumunun yakaladığı G.2 cache boşluğu (fallback makro verisi manifestte "temiz" görünüyordu). İkisi de planın öngördüğü kırılganlıkların (R1, R3) canlı kanıtıydı; ikisi de artık kapalı ve testle korunuyor.
 
 ---
 
@@ -409,11 +444,14 @@ GPU'lu dev makinede BiLSTM/TFT eğitim döngüsünü doyurmak.
 
 ```bash
 git checkout main && git pull                 # merge edilmiş güncel main
-pip install -r requirements.txt               # lightgbm/catboost/torch(CUDA) dahil TAM kurulum
+pip install -r requirements.txt               # lightgbm/catboost dahil TAM kurulum
+pip install torch --index-url https://download.pytorch.org/whl/cu124   # CUDA wheel (aşağıdaki nota bak)
 python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
 **Kabul:** `CUDA: True <GPU adı>`. `False` ise CUDA'lı torch kurulu değildir — bu plan çalışmaz.
+
+**⚠️ torch tuzağı:** `requirements.txt`'teki düz `torch==2.9.0` PyPI'dan **CPU-only** wheel getirir; kurulum "başarılı" görünür ama DL eğitimi sessizce CPU'ya düşer (kullanılamayacak kadar yavaş). CUDA wheel'i ayrıca kurun.
 
 **⚠️ Kritik:** `pip install -r requirements.txt` şart — lightgbm/catboost eksikse ensemble sessizce 3 modele düşer (R1). T1'in çıktısında `models_trained` 5 model listelemiyorsa önce bunu düzelt.
 
@@ -487,25 +525,50 @@ python scripts/training/train_prediction_batch.py --symbols GARAN.IS AKBNK.IS TH
 
 HPO nadiren kullanılıyor (P2). Optuna study'yi `storage=sqlite:///...` ile kalıcı yap → kesinti sonrası devam. **Kabul:** aynı `n_trials` için wall-clock belirgin düşer; resume çalışır; `best_params` kalitesi düşmez.
 
-### T7 — Tam BIST-30 doğrulama koşumu — kapanış
+### T7 — Uçtan uca doğrulama koşumu — kapanış ✅
+
+Tam BIST-30 yerine **5 cached sembolle** koşuldu (AKBNK, ASELS, BIMAS, THYAO, TUPRS; `--start-date 2020-01-01`). Gerekçe: BIST-30'un kalan 25 sembolü bu makinede cache'te yok, ağdan çekim ölçümü donanımdan bağımsız gürültüyle kirletir; ölçülen şey sembol-başına eğitim maliyeti ve orkestrasyon, ikisi de 5 sembolde temsili. Kabul kriterleri aynen uygulandı.
 
 ```bash
-python scripts/training/train_prediction_batch.py           # tüm BIST-30
-# çıktı: results/training_runs/<run_id>.json — tek bakışta ok/degraded/failed
+# A) Varsayılan (davranış dondurulmuş, seri)
+python scripts/training/train_prediction_batch.py --symbols AKBNK.IS ASELS.IS BIMAS.IS THYAO.IS TUPRS.IS --start-date 2020-01-01
+
+# B) Perf knob'ları açık + 2 paralel sembol
+$env:TFT_FAST_VSN="true"; $env:DL_GPU_PRELOAD="true"; $env:TRAIN_PARALLEL_SYMBOLS="2"; $env:DL_GPU_SLOTS="1"
+python scripts/training/train_prediction_batch.py --symbols ... (aynı)
+
+# C) Resume
+python scripts/training/train_prediction_batch.py --symbols ... --resume-latest
 ```
 
-**Kabul:** manifest'te tüm semboller `status='ok'` (5 model); `degraded`/`failed` varsa `missing_models`/`error` ile teşhis; toplam wall-clock baseline'a göre **≥%40** düşük (birleşik hedef). Bu koşum "sorunsuz eğitim" iddiasının canlı kanıtıdır.
+**Sonuç (RTX 4060, 2026-07-26):**
+
+| Koşum | Wall-clock | Sonuç | Çıkış kodu |
+|-------|-----------|-------|------------|
+| A — varsayılan (dondurulmuş, seri) | **533.9s** | 5/5 `ok`, her sembol 5 model | 0 |
+| B — perf-ON + 2 paralel sembol | **157.6s** (**−%70.5**) | 5/5 `ok`, her sembol 5 model, **OOM yok** | 0 |
+| C — `--resume-latest` | **1.0s** | 5 sembol atlandı, 0 yeniden eğitim | 0 |
+
+Sembol bazlı (A → B saniye): AKBNK 110.8→59.4, ASELS 93.3→41.9, BIMAS 100.8→62.6, THYAO 114.5→65.0, TUPRS 113.4→52.0.
+
+**Kalite:** perf-ON çıktıyı **değiştirir** (beklenen — RNG tüketim sırası kayar), ama sistematik olarak kötüleştirmez: ortalama test MAPE 195.0 → 189.3; sembol bazında iki yönde de ±%10 salınım (AKBNK 174.0→182.2, ASELS 260.7→248.7, BIMAS 187.7→165.6, THYAO 160.0→156.9, TUPRS 192.8→193.2). Bu yüzden knob'lar **sıfırdan retrain**'e uygundur, mevcut modellerin üstüne değil.
+
+**Kabul karşılığı:** ✅ tüm semboller `status='ok'` (5 model) · ✅ wall-clock hedefi ≥%40 → gerçekleşen **−%70.5** · ✅ OOM yok · ✅ resume biten sembolleri atlıyor.
+
+**T7'nin yakaladığı gerçek kusur:** ilk koşumun manifestinde `data_quality: {}` çıktı — halbuki makro veri CSV cache'inden okunuyordu ve kalite bayrağı yalnızca canlı çekimde `attrs`'e konuyordu. Yani fallback'li bir makro CSV ile eğitim yapılsa manifest bunu "temiz" gösterecekti (R3'ün tam kaçınılmak istenen hali). Bayraklar artık `data/macro/macro_data_quality.json` yan dosyasında kalıcı; `load_data()` geri iliştiriyor, `strict_data=True` cache yolunda da patlıyor (`tests/test_macro_quality_flag.py`, 14 kontrol).
 
 ### 📋 GPU test özet tablosu
 
-| # | Test | Komut / dosya | Kabul kriteri | Ön koşul |
-|---|------|---------------|---------------|----------|
-| T1 | Golden rebaseline | `test_prediction_regression.py --update` | 2. koşum GEÇER, 5 model | Adım 0 |
-| T2 | Yeni baseline | `profile_training.py --stage all --symbols 5` | baseline md üretildi | T1 |
-| T3 | 2.1 warm-start A/B | `ENSEMBLE_WARM_START` OFF vs ON | hız ≥%30↓, MAPE ±%2 | T2 |
-| T4 | 3.1 DL AMP | (kod + ölçüm) | BiLSTM ≥%25↓, MAPE ±%2, golden geçer | T1 |
-| T5 | 2.2 paralellik | `train_prediction_batch.py` (5 sembol) | ≥%40↓, OOM yok, metrik eş, resume | T1 |
-| T6 | 3.2 HPO resume (ops) | Optuna sqlite storage | wall-clock↓, resume çalışır | — |
-| T7 | Tam BIST-30 | `train_prediction_batch.py` | manifest hepsi ok, ≥%40↓ | T1–T5 |
+| # | Test | Sonuç (4. oturum, RTX 4060) | Durum |
+|---|------|------------------------------|-------|
+| T1 | Golden doğrulama | Bit-eş geçti (139.4194, 5 model) — Faz 7 davranışı bozmamış, **rebaseline gerekmedi** | ✅ |
+| T2 | Yeni baseline | ~153s/sembol, peak RSS 1475 MB → `phase6_baseline_gpu.md` | ✅ |
+| T3 | 2.1 warm-start A/B | OFF 463.3s → ON 431.7s (**−%6.8**), test MAPE birebir aynı → hedef %30'un altında, **OFF kalır** | ✅ |
+| T4 | 3.1 DL ince ayar | BiLSTM preload +%56 (bit-eş); TFT gruplanmış-VSN **4.7×** (eşdeğerlik 2e-7); AMP reddedildi | ✅ |
+| T5 | 2.2 paralellik | Thread + DL semaphore + workspace bağlam; orkestrasyon testi 18/18 | ✅ |
+| T6 | 3.2 HPO resume | sqlite `load_if_exists` + resume-bütçe; test 12/12 | ✅ |
+| T7 | Kapanış koşumu | 5 sembol: varsayılan 533.9s → perf-ON **157.6s (−%70.5)**; 5/5 `ok`+5 model; OOM yok; resume 1.0s | ✅ |
+
+> **T4 detay:** AMP küçük ağlarda cast/scaler masrafı nedeniyle daha yavaş çıktı (BiLSTM 1.32s→2.13s, TFT 72s→104s) → reddedildi. Asıl kazanç TFT'nin değişken-seçim ağının (VSN) özellik-başına Python döngüsünü tek batched işleme indirmekten geldi (131 özellik × ~6 katman = adım başına ~800 kernel → 4.7× hız). Gruplanmış VSN aynı fonksiyonu hesaplıyor (parametre sayısı birebir, çıktı farkı 2e-7 = fp32 gürültüsü).
 
 **Kapsam dışı (sonraki fazlar):** dağıtık eğitim, otomatik retrain tetikleyicileri, veri drift tespiti.
