@@ -53,8 +53,14 @@ def _settings():
 
 
 def gpu_preload_enabled() -> bool:
+    """Sekanslar cihaza bir kez tasinip dilimlensin mi (DataLoader yerine).
+
+    Config okunamazsa (app katmani yok / Settings patladi) KAPALI kabul edilir:
+    acik olmasi RNG tuketim sirasini kaydirip uctan uca ciktiyi degistirir
+    (golden MAPE 139->177) — sessiz davranis degisikligi olmasin.
+    """
     s = _settings()
-    return True if s is None else bool(getattr(s, 'DL_GPU_PRELOAD', True))
+    return False if s is None else bool(getattr(s, 'DL_GPU_PRELOAD', False))
 
 
 def fast_vsn_enabled() -> bool:
