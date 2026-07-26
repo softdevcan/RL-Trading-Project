@@ -203,6 +203,26 @@ def get_model_metrics(model_name: str) -> Dict:
     return _get(f"/trading/models/{model_name}/metrics") or {}
 
 
+def model_return(metrics: Optional[Dict]) -> Optional[float]:
+    """Modelin toplam getirisi — alan adi kaynaga gore degisir.
+
+    RL ortami metrigi `cumulative_return` adiyla yazar (env/trading_env.py),
+    akademik analiz raporu ise `total_return` adiyla
+    (app/services/model_analysis.py). Panolar tek ad okuyunca eksik alan
+    `.get(key, 0)` varsayilanina dusup sessizce %0.0 gosteriyordu.
+
+    None doner: metrik yok ya da iki ad da bulunamadi (cagiran taraf "—"
+    basabilsin diye; 0 dondurup gercek sifir getiriyle karistirmiyoruz).
+    """
+    if not metrics:
+        return None
+    for key in ("cumulative_return", "total_return"):
+        value = metrics.get(key)
+        if value is not None:
+            return value
+    return None
+
+
 def start_training(payload: Dict) -> Dict:
     return _post("/trading/train", json=payload) or {}
 

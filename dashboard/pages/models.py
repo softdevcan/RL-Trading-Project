@@ -173,7 +173,7 @@ def register_callbacks(app):
                 "name": name,
                 "algorithm": m.get("algorithm", "—").upper(),
                 "phase": str(m.get("phase", "—")),
-                "total_return": _fmt_pct(metrics.get("total_return")),
+                "total_return": _fmt_pct(api.model_return(metrics)),
                 "sharpe_ratio": _fmt2(metrics.get("sharpe_ratio")),
                 "sortino_ratio": _fmt2(metrics.get("sortino_ratio")),
                 "calmar_ratio": _fmt2(metrics.get("calmar_ratio")),
@@ -295,6 +295,8 @@ def _build_activity_chart(metrics):
 
 
 def _render_modal_metrics(metrics):
+    # Getiri alan adi kaynaga gore degisir; tek ada normalize et (api.model_return).
+    metrics = {**(metrics or {}), "total_return": api.model_return(metrics)}
     keys = [
         ("Toplam Getiri", "total_return", True),
         ("Sharpe", "sharpe_ratio", False),

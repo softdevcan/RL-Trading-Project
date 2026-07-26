@@ -43,6 +43,9 @@ pydantic_core==2.41.5
 pyparsing==3.2.5
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
+# Starlette request.form() bunu zorunlu kilar (assert) — /login HTML formu
+# application/x-www-form-urlencoded gonderir: app/auth/routes.py:137
+python-multipart==0.0.32
 pytz==2025.2
 PyYAML==6.0.3
 requests==2.32.5

@@ -28,7 +28,11 @@ data/**/*.csv
 data/predictions/
 data/raw/
 data/processed/
-hyperparameter_optimization/
+# DIKKAT: hyperparameter_optimization/ bir Python PAKETIDIR (optimizers/,
+# search_spaces.py) ve app/api/routes/hyperopt.py onu import eder — dizinin
+# tamami dislanirsa uygulama acilista ModuleNotFoundError verir. Sadece
+# ciktilarini disla (config.py: HYPEROPT_DIR).
+hyperparameter_optimization/results/
 runs/
 
 # Faz 7: kullanici calisma alanlari ve kimlik verisi asla image'a girmez.

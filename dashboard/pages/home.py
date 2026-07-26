@@ -141,8 +141,8 @@ def register_callbacks(app):
                     best_sharpe = sr
                     best = metrics
             if best:
-                ret = best.get("total_return", 0) or 0
-                total_return = f"{ret:.1%}"
+                ret = api.model_return(best)
+                total_return = f"{ret:.1%}" if ret is not None else "—"
                 sharpe = f"{best.get('sharpe_ratio', 0):.2f}"
                 dd = best.get("max_drawdown", 0) or 0
                 drawdown = f"{dd:.1%}"

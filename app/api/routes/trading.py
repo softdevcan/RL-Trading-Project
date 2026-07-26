@@ -867,10 +867,16 @@ def get_earliest_date(source: str = "borsapy"):
         valid_dates = [v for v in per_metric.values() if not v.startswith("hata")]
         earliest = min(valid_dates) if valid_dates else None
 
+        # BIST tabani: bu tarihten eski istekler cekme aninda buraya cekilir
+        # (2005 oncesi yfinance verisi TL/YTL denominasyonu yuzunden bozuk).
+        # Panonun kullaniciya bildirebilmesi icin yanitta tasiniyor.
+        from data.data_fetcher import BIST_MIN_START_DATE
+
         payload = {
             "source":     source,
             "earliest":   earliest,
             "per_metric": per_metric,
+            "bist_min_start": BIST_MIN_START_DATE,
         }
         # Cache'e yaz (sadece basarili sonuclar — hata-only durumda da yazariz, TTL sonrasi yeniden dener)
         _EARLIEST_CACHE[source] = {"ts": time.time(), "payload": payload}

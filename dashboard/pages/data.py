@@ -444,6 +444,23 @@ def register_callbacks(app):
                           "marginBottom": "4px"}),
             )
 
+        # BIST'in kendi tabani var: 2005 oncesi yfinance verisi TL/YTL
+        # denominasyonu yuzunden negatif fiyat iceriyor, cekme aninda oraya
+        # cekiliyor. Altin/makro secilen tarihten baslamaya devam eder.
+        bist_min = result.get("bist_min_start")
+        bist_note = []
+        if bist_min and earliest < bist_min:
+            bist_note = [html.Div([
+                html.Small("BIST verisi ", style={"color": TEXT_MUTED}),
+                dbc.Badge(bist_min, color="warning", pill=True,
+                          style={"fontSize": "11px", "fontWeight": "600"}),
+                html.Small(
+                    " tarihinden başlar (öncesi bozuk: TL/YTL denominasyonu). "
+                    "Altın ve makro seçilen tarihten başlar.",
+                    style={"color": TEXT_MUTED, "marginLeft": "6px"},
+                ),
+            ], className="mb-1")]
+
         info = html.Div([
             html.Div([
                 html.Small(
@@ -457,6 +474,7 @@ def register_callbacks(app):
                     style={"color": TEXT_MUTED, "marginLeft": "6px"},
                 ),
             ], className="mb-1"),
+            *bist_note,
             html.Div(rows),
         ])
 

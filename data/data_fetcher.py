@@ -12,10 +12,66 @@ from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple, Optional
 import os
 import logging
+import warnings
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# Borsa saat dilimi. yfinance tz-aware timestamp dondurur; tarihleri bu
+# dilimde naive'e indiriyoruz ki takvim gunu yazildigi gibi kalsin.
+MARKET_TZ = 'Europe/Istanbul'
+
+# BIST icin en erken kullanilabilir tarih. Daha eskisi istenirse buraya cekilir.
+#
+# Gerekce: 2005 oncesi yfinance BIST verisi bozuk. 2005'teki TL/YTL
+# denominasyonunun (1 YTL = 1.000.000 TL) geriye-duzeltmesi negatif fiyat
+# uretiyor — olculdu: 2000-2004 arasi 8.155 satir (%4,5), 2003'te satirlarin
+# %42'si negatif. clean_data() bunlari zaten dusuruyor, yani daha eskiye gitmek
+# veri kazandirmiyor; sadece indirme suresi ve gurultu ekliyor.
+#
+# Yalnizca BIST'i baglar: altin/makro/fundamental ayri fetcher siniflaridir.
+BIST_MIN_START_DATE = '2005-01-01'
+
+
+def to_naive_market_dates(values, tz: str = MARKET_TZ) -> pd.DatetimeIndex:
+    """Tarihleri borsa yerel saatinde tz'siz (naive) datetime64'e normalize et.
+
+    Neden gerekli: yfinance tz-aware timestamp dondurur ve CSV'ye UTC ofsetiyle
+    yazilir. Turkiye 2016 Eylul'e kadar yaz saati uyguladigi icin uzun gecmisli
+    dosyalarda +02:00 (kis) ve +03:00 (yaz) satirlari yan yana bulunur. pandas
+    2.x boyle bir sutunu datetime64'e cevirmez -> object dtype + FutureWarning,
+    ardindan pd.to_datetime "Tz-aware datetime.datetime cannot be converted to
+    datetime64 unless utc=True" hatasi verir.
+
+    Cozum: once utc=True ile tek tipe indir, sonra borsa saat dilimine geri
+    cevirip tz'yi at. Dogrudan UTC'de birakmak kis satirlarini bir gun geriye
+    kaydirirdi (2000-10-30 00:00+02:00 -> 2000-10-29 22:00). Bu yol takvim
+    gununu korur.
+
+    Zaten tz'siz gelen degerler oldugu gibi dondurulur — UTC varsayip yerel
+    saate cevirmek her gidis-donuste tarihi +3 saat kaydirirdi.
+    """
+    idx = pd.Index(values)
+    if len(idx) == 0:
+        return pd.DatetimeIndex([])
+
+    # Tz'siz girdiyi kaydirmadan gec. Karisik ofsetli girdi burada ValueError
+    # firlatir; asagidaki utc=True yolu onu toparlar.
+    try:
+        with warnings.catch_warnings():
+            # Karisik ofsette pandas 2.x once uyarir, ileride hata firlatacak;
+            # iki durumu da asagidaki utc=True yolu karsiliyor.
+            warnings.simplefilter('ignore', FutureWarning)
+            parsed = pd.to_datetime(idx)
+        if getattr(parsed, 'tz', None) is None and parsed.dtype.kind == 'M':
+            return pd.DatetimeIndex(parsed)
+    except (ValueError, TypeError):
+        pass
+
+    utc = pd.DatetimeIndex(pd.to_datetime(idx, utc=True))
+    return utc.tz_convert(tz).tz_localize(None)
 
 
 def _default_cache_maxsize() -> int:
@@ -54,6 +110,32 @@ class DataFetcher:
             logger.debug("Cache tavani (%d) asildi, atilan: %s",
                          cls._cache_maxsize, evicted_key)
 
+    @staticmethod
+    def _clamp_start_date(start_date: Optional[str]) -> Tuple[str, bool]:
+        """BIST_MIN_START_DATE'ten eski istekleri o tarihe cek.
+
+        (kullanilacak_tarih, cekildi_mi) doner. Tarih cozulemezse dokunmadan
+        gecer — bicim dogrulamasi bu metodun isi degil, cagiran taraf/yfinance
+        kendi hatasini versin.
+        """
+        if not start_date:
+            return BIST_MIN_START_DATE, False
+        try:
+            requested = pd.to_datetime(start_date).date()
+            floor = pd.to_datetime(BIST_MIN_START_DATE).date()
+        except (ValueError, TypeError):
+            return start_date, False
+
+        if requested >= floor:
+            return start_date, False
+
+        logger.warning(
+            "BIST baslangic tarihi %s -> %s olarak cekildi. 2005 oncesi yfinance "
+            "verisi TL/YTL denominasyonu yuzunden negatif fiyat iceriyor.",
+            start_date, BIST_MIN_START_DATE,
+        )
+        return BIST_MIN_START_DATE, True
+
     def __init__(self, start_date: str = "2018-01-01", end_date: Optional[str] = None,
                  max_workers: int = 8):
         """
@@ -63,7 +145,7 @@ class DataFetcher:
             max_workers: Paralel sembol çekme için thread sayısı (Faz 6, 1.1).
                          yfinance rate-limit'ine saygılı; 1 = seri (eski davranış).
         """
-        self.start_date = start_date
+        self.start_date, self.start_date_clamped = self._clamp_start_date(start_date)
         self.end_date = end_date or datetime.now().strftime("%Y-%m-%d")
         self.data_dir = "data/bist"
         self.max_workers = max(1, int(max_workers))
@@ -187,6 +269,16 @@ class DataFetcher:
     def save_data(self, df: pd.DataFrame, filename: str):
         """DataFrame'i CSV olarak kaydet"""
         filepath = os.path.join(self.data_dir, filename)
+        # Tarihleri ofsetsiz yaz: aksi halde yaz/kis saati gecisleri yuzunden
+        # dosyada +02:00 ve +03:00 birlikte olusur ve okuma tarafi patlar.
+        if 'date' in (df.index.names or []):
+            dates = to_naive_market_dates(df.index.get_level_values('date'))
+            df = df.copy()
+            df.index = pd.MultiIndex.from_arrays(
+                [df.index.get_level_values(name) if name != 'date' else dates
+                 for name in df.index.names],
+                names=df.index.names,
+            )
         # Reset index to avoid duplicate symbol column in CSV
         df.to_csv(filepath, index=True)
         logger.info(f"Data saved to {filepath}")
@@ -198,8 +290,11 @@ class DataFetcher:
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Data file not found: {filepath}")
 
-        # Read CSV and handle potential duplicate columns
-        df = pd.read_csv(filepath, parse_dates=['date'])
+        # date'i pandas'a parse ettirmiyoruz: karisik UTC ofsetli dosyalarda
+        # object dtype + FutureWarning uretiyor. Ham okuyup normalize ediyoruz.
+        df = pd.read_csv(filepath)
+        if 'date' in df.columns:
+            df['date'] = to_naive_market_dates(df['date'])
 
         # Remove duplicate symbol column if it exists
         if 'symbol' in df.columns and df.columns.tolist().count('symbol') > 1:
@@ -285,9 +380,7 @@ class DataFetcher:
 
         try:
             df = self.load_data(filename)
-            all_dates = pd.to_datetime(df.index.get_level_values('date'))
-            if all_dates.tz is not None:
-                all_dates = all_dates.tz_localize(None)
+            all_dates = to_naive_market_dates(df.index.get_level_values('date'))
             last_date = all_dates.max().date()
             missing = sum(
                 1 for i in range(1, (today - last_date).days + 1)
@@ -329,9 +422,7 @@ class DataFetcher:
             df = self.fetch_stock_data(symbols, save=True)
             return {'mode': 'full', 'new_rows': len(df), 'total_rows': len(df)}
 
-        all_dates = pd.to_datetime(existing.index.get_level_values('date'))
-        if all_dates.tz is not None:
-            all_dates = all_dates.tz_localize(None)
+        all_dates = to_naive_market_dates(existing.index.get_level_values('date'))
         min_last_date = all_dates.max().date()
         fetch_from = (datetime.combine(min_last_date, datetime.min.time()) + timedelta(days=1)).strftime('%Y-%m-%d')
 
@@ -345,10 +436,7 @@ class DataFetcher:
 
         # Normalize timezone
         new_data = new_data.reset_index()
-        dates = pd.to_datetime(new_data['date'])
-        if getattr(dates.dt, 'tz', None) is not None:
-            dates = dates.dt.tz_localize(None)
-        new_data['date'] = dates
+        new_data['date'] = to_naive_market_dates(new_data['date'])
         new_data = new_data.set_index(['symbol', 'date'])
 
         existing = existing.reset_index()
