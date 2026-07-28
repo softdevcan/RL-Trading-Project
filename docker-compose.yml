@@ -34,14 +34,40 @@ services:
     # Persist state across restarts/rebuilds. These are the app's writable
     # dirs (config.py: MODELS_DIR/DATA_DIR/RESULTS_DIR/LOGS_DIR).
     volumes:
+      # Egitilmis modeller host'ta durur ve buraya baglanir: kendi makinende
+      # egitip models/ dizinini sunucuya kopyalarsin (dosyanin basindaki nota bak).
       - ./models:/app/models
-      - ./data:/app/data
-      - ./results:/app/results
-      - ./logs:/app/logs
-      # Faz 7: kullanici calisma alanlari (model/sonuc/karar) ve auth veritabani.
-      # data/ zaten bagli oldugundan data/auth/auth.db kalicidir.
+
+      # ── data/ ─────────────────────────────────────────────────────────────
+      # DIKKAT: `./data:/app/data` YAPMA. data/ ayni zamanda bir Python
+      # PAKETIDIR (data_fetcher.py, bist30_symbols.py, macro_fetcher.py,
+      # technical_indicators.py, ...). Bind mount dizinin tamamini golgeler,
+      # image'daki .py modulleri gorunmez olur ve uygulama
+      # `ModuleNotFoundError: No module named 'data.data_fetcher'` ile acilmaz.
+      # Bu yuzden yalnizca VERI alt dizinleri baglanir; kod image'dan gelir.
       #
-      # Linux host'ta bu dizinler host'ta YOKSA Docker onlari root:root olarak
+      # Named volume secildi: container ilk acilista BOS veriyle baslar
+      # (host'taki yerel data/ icerigi container'a tasinmaz), sonraki
+      # restart'larda veri ve auth.db korunur.
+      #   Sifirlamak icin : docker compose down -v
+      #   Icerige bakmak  : docker compose exec rltrading ls -la data/bist
+      - rlt_bist:/app/data/bist
+      - rlt_macro:/app/data/macro
+      - rlt_gold:/app/data/gold
+      - rlt_fundamental:/app/data/fundamental
+      - rlt_predictions:/app/data/predictions
+      - rlt_live_trading:/app/data/live_trading
+      # Kullanici veritabani (Faz 7). Named volume oldugu icin kalicidir;
+      # `down -v` calistirirsan admin hesabini yeniden acman gerekir.
+      - rlt_auth:/app/data/auth
+
+      # Calisma ciktilari — bunlar da container'da sifirdan baslar.
+      - rlt_results:/app/results
+      - rlt_logs:/app/logs
+
+      # Faz 7: kullanici calisma alanlari (model/sonuc/karar).
+      #
+      # Linux host'ta bu dizin host'ta YOKSA Docker onu root:root olarak
       # olusturur ve container icindeki appuser (uid 10001) yazamaz. Ilk
       # kurulumdan once: `make dirs` (veya mkdir + chown 10001:10001).
       - ./workspaces:/app/workspaces
@@ -61,3 +87,17 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+
+# Docker'in yonettigi volume'ler. Host'taki yerel data/ ile hicbir baglantisi
+# yoktur — container temiz baslar, uygulama piyasa verisini kendisi ceker.
+# Hepsini silip sifirlamak: docker compose down -v
+volumes:
+  rlt_bist: {}
+  rlt_macro: {}
+  rlt_gold: {}
+  rlt_fundamental: {}
+  rlt_predictions: {}
+  rlt_live_trading: {}
+  rlt_auth: {}
+  rlt_results: {}
+  rlt_logs: {}

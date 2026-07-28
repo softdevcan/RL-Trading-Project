@@ -62,7 +62,16 @@ COPY --chown=appuser:appuser . .
 # Create the writable runtime dirs in case the volumes are empty on first run.
 # workspaces/ holds the per-user models/results/decisions, data/auth/ the user
 # database — both must be writable by appuser or the first login fails.
-RUN mkdir -p models results logs data/predictions workspaces data/auth \
+#
+# data/ alt dizinleri TEK TEK acilir cunku compose onlari named volume olarak
+# baglar (data/ bir Python PAKETI oldugu icin komple mount EDILEMEZ — mount
+# image'daki data/*.py modullerini golgeler ve uygulama ModuleNotFoundError
+# ile acilmaz). Named volume ilk olusurken mount noktasinin sahipligini
+# image'dan devralir; dizin image'da yoksa root:root olusur ve appuser
+# (uid 10001) yazamaz. Bu yuzden hepsi burada olusturulup chown edilir.
+RUN mkdir -p models results logs workspaces \
+        data/bist data/gold data/macro data/fundamental \
+        data/predictions data/live_trading data/auth \
     && chown -R appuser:appuser /app
 
 USER appuser
