@@ -100,6 +100,7 @@ python tests/test_env.py
 python tests/test_ppo.py
 python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
+python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
@@ -175,6 +176,20 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
+
+### Veri butunlugu (ONEMLI)
+- **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in
+  2005 TL sadelestirmesi oncesi duzeltme artefaktlari, 2000-05-10..2004-08-30, 10 sembol).
+  **Bu dosyayi TradingEnv'e vermeden once mutlaka `DataFetcher.clean_data()` cagir.**
+  Cagirmazsan: negatif fiyat -> BUY'da `cost < 0` -> bakiye artar (yoktan para),
+  SELL'de bakiye sinirsiz duser -> gozlemdeki `log()` NaN -> SB3 "Normal(loc: nan)" cokusu.
+- `TradingEnv` artik `fiyat <= 0` veya NaN olan satirlarda **islem yapmaz** ve
+  `balance_norm` tabanlidir — bozuk veri egitimi cokertemez, ama sessizce de kabul edilmez
+  (kurulumda tek seferlik `GECERSIZ FIYAT` raporu basilir).
+- Eksik `(sembol, tarih)` cifti yapisaldir (sembol borsaya sonradan girmis olabilir);
+  uyari **sembol basina bir kez** verilir, toplam kapsam kurulumda ozetlenir.
+- Panelde ayrica **38 tamamen hayalet gun** var (piyasa kapali; OHLC = onceki kapanis,
+  volume = 0). Henuz filtrelenmiyor — bkz. asagidaki "bilinen acik".
 
 ### Egitim suresi tahmini (ETA)
 - Servis: `app/services/training_eta.py` — `estimate()` (on tahmin), `live_eta()` (canli), `record_run()`
