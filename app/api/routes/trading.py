@@ -28,6 +28,7 @@ from app.core.config import get_settings
 from app.auth import workspace as ws
 from app.auth.deps import RequireWriter
 from app.services import training_eta
+from app.services import background_jobs as jobs
 
 _settings = get_settings()
 
@@ -278,7 +279,16 @@ async def start_training(
     # Start training in background (outside lock — long-running).
     # Kullanici kimligi acikca tasinir: arka plan gorevi istek baglamini
     # (ContextVar) devralmaz, calisma alani yolu buna gore cozulur.
-    background_tasks.add_task(run_training, request, user_id)
+    #
+    # `background_tasks.add_task` DEGIL: Starlette gorevi ayni ASGI cagrisinin
+    # icinde bekler ve pano backend'i in-process ASGI ile cagirir, dolayisiyla
+    # bu uc egitim bitene kadar donmuyordu (olculdu: 3000 timestep -> 15.0 sn).
+    # Ayrica `run_training` async oldugu icin bloke eden model.learn() dogrudan
+    # event loop'u kilitliyor, tum pano donuyordu.
+    jobs.spawn(
+        lambda: run_training(request, user_id),
+        name=f"training-{key}",
+    )
 
     return TrainingResponse(
         message="Training started successfully",

@@ -32,6 +32,7 @@ from app.schemas.hyperopt import (
     WSOptimizationComplete,
     AlgorithmType,
 )
+from app.services import background_jobs as jobs
 from data.bist30_symbols import PHASE1_SYMBOLS
 from hyperparameter_optimization.optimizers import (
     PPOOptimizer,
@@ -311,12 +312,15 @@ async def start_optimization(
         # Store in active studies
         active_studies[study_id] = study_info.dict()
 
-        # Add background task
-        background_tasks.add_task(
-            run_optimization_background,
-            study_id,
-            request,
-            study_info
+        # Isi istekten AYIR. `background_tasks.add_task` kullanilamaz: Starlette
+        # arka plan gorevini ayni ASGI cagrisinin icinde bekler, pano da
+        # backend'i in-process ASGI ile cagirdigi icin bu uc optimizasyon
+        # bitene kadar donmuyordu (olculdu: tek trial 32.8 sn; varsayilan
+        # 20 trial ~11 dk). Istemci 30 sn'de zaman asimina ugrayip kullaniciya
+        # hicbir bildirim gosteremiyordu.
+        jobs.spawn(
+            lambda: run_optimization_background(study_id, request, study_info),
+            name=f"hyperopt-{study_id[:8]}",
         )
 
         # Estimate duration (rough estimate: 2 min per trial)
@@ -552,42 +556,58 @@ async def get_optimization_progress(study_id: str):
 
         study = active_studies[study_id]
 
-        # Get last trial info
+        # Ilerleme CANLI olarak Optuna deposundan okunur. `active_studies`
+        # icindeki sayac yalnizca `optimizer.optimize()` DONDUGUNDE guncelleniyor;
+        # ona guvenilirse pano tum kosum boyunca %0 gosterip sonunda birden
+        # %100'e atlar (20 trial'da ~11 dakika "hicbir sey olmuyor" izlenimi).
+        # Optuna study'si sqlite'a yazdigi icin biten trial'lar kosu sirasinda
+        # okunabilir.
+        trials_completed = study.get("trials_completed", 0)
+        best_value = study.get("best_value")
         last_trial = None
-        if study["trials_completed"] > 0:
-            try:
-                optuna_study = optuna.load_study(
-                    study_name=study["study_name"],
-                    storage=OPTUNA_STORAGE
+        try:
+            optuna_study = optuna.load_study(
+                study_name=study["study_name"],
+                storage=OPTUNA_STORAGE
+            )
+            done = [t for t in optuna_study.trials if t.state.name == "COMPLETE"]
+            trials_completed = max(trials_completed, len(done))
+            values = [t.value for t in done if t.value is not None]
+            if values:
+                best_value = max(values)
+            if optuna_study.trials:
+                trial = optuna_study.trials[-1]
+                last_trial = TrialInfo(
+                    trial_number=trial.number,
+                    state=TrialState(trial.state.name.lower()),
+                    value=trial.value,
+                    params=trial.params,
+                    duration_seconds=trial.duration.total_seconds() if trial.duration else None,
                 )
-                if optuna_study.trials:
-                    trial = optuna_study.trials[-1]
-                    last_trial = TrialInfo(
-                        trial_number=trial.number,
-                        state=TrialState(trial.state.name.lower()),
-                        value=trial.value,
-                        params=trial.params,
-                        duration_seconds=trial.duration.total_seconds() if trial.duration else None,
-                    )
-            except Exception:
-                pass
+        except Exception:
+            # Study ilk saniyelerde henuz olusmamis olabilir — in-memory
+            # degerlerle devam et.
+            pass
+
+        n_trials = study["n_trials"] or 1
+        progress_percentage = min(trials_completed / n_trials * 100.0, 100.0)
 
         # Estimate time remaining
         estimated_time_remaining = None
-        if study["status"] == StudyStatus.RUNNING and study["trials_completed"] > 0:
+        if study["status"] == StudyStatus.RUNNING and trials_completed > 0:
             elapsed = (datetime.now() - study["started_at"]).total_seconds() / 60
-            avg_time_per_trial = elapsed / study["trials_completed"]
-            remaining_trials = study["n_trials"] - study["trials_completed"]
+            avg_time_per_trial = elapsed / trials_completed
+            remaining_trials = max(study["n_trials"] - trials_completed, 0)
             estimated_time_remaining = avg_time_per_trial * remaining_trials
 
         return OptimizationProgressResponse(
             study_id=study_id,
             study_name=study["study_name"],
             status=StudyStatus(study["status"]),
-            progress_percentage=study.get("progress_percentage", 0.0),
-            trials_completed=study.get("trials_completed", 0),
+            progress_percentage=progress_percentage,
+            trials_completed=trials_completed,
             trials_total=study["n_trials"],
-            current_best_value=study.get("best_value"),
+            current_best_value=best_value,
             estimated_time_remaining_minutes=estimated_time_remaining,
             last_trial=last_trial,
         )

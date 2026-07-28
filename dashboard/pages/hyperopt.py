@@ -84,6 +84,8 @@ def layout():
 
     return html.Div([
         dcc.Interval(id="hyperopt-poll", interval=3_000, disabled=True, n_intervals=0),
+        # Calisan optimizasyonun study_id'si — /progress bununla sorgulanir
+        dcc.Store(id="hyperopt-active-study", data=None),
         dcc.Store(id="hyperopt-modal-study-id", data=None),
         dcc.Store(id="hyperopt-data-range", data=data_range),
 
@@ -177,6 +179,8 @@ def layout():
                             className="w-100",
                         ),
                         html.Div(id="hyperopt-start-result", className="mt-3"),
+                        # Calisan optimizasyonun canli durumu (/progress ucundan)
+                        html.Div(id="hyperopt-progress-panel", className="mt-3"),
                     ]),
                 ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
             ], md=4, className="mb-4"),
@@ -264,7 +268,9 @@ def register_callbacks(app):
             return ""
 
     @app.callback(
-        [Output("hyperopt-poll", "disabled"), Output("hyperopt-start-result", "children")],
+        [Output("hyperopt-poll", "disabled"),
+         Output("hyperopt-start-result", "children"),
+         Output("hyperopt-active-study", "data")],
         Input("hyperopt-start-btn", "n_clicks"),
         [
             State("hyperopt-algo", "value"),
@@ -283,16 +289,16 @@ def register_callbacks(app):
     def start_optimization(n, algo, phase, reward, trials, timesteps,
                            train_start, train_end, refresh, symbols, data_range):
         if not n:
-            return True, html.Span()
+            return True, html.Span(), None
 
         if not train_start or not train_end:
-            return True, dbc.Alert("Eğitim tarihleri eksik.", color="danger", dismissable=True)
+            return True, dbc.Alert("Eğitim tarihleri eksik.", color="danger", dismissable=True), None
 
         # val = train_end+1 → csv_max
         try:
             te = date.fromisoformat(str(train_end)[:10])
         except Exception:
-            return True, dbc.Alert("Train end tarihi geçersiz.", color="danger", dismissable=True)
+            return True, dbc.Alert("Train end tarihi geçersiz.", color="danger", dismissable=True), None
         val_start_d = te + timedelta(days=1)
         csv_max = (data_range or {}).get("max_date") or str(date.today())
         try:
@@ -303,7 +309,7 @@ def register_callbacks(app):
             return True, dbc.Alert(
                 "Val aralığı boş — train_end'i öne çekin veya veri çekin.",
                 color="danger", dismissable=True,
-            )
+            ), None
 
         payload = {
             "algorithm": algo,
@@ -319,19 +325,32 @@ def register_callbacks(app):
             "stock_symbols": symbols or None,
         }
         result = api.start_hyperopt(payload)
-        if result:
-            sid = result.get('study_id', result.get('id', 'OK'))
+        if result and result.get("study_id"):
+            sid = result["study_id"]
             info = (
                 f"Train {payload['train_start']}→{payload['train_end']} • "
                 f"Val {payload['val_start']}→{payload['val_end']} • "
                 f"Kaynak: {'CSV' if payload['use_cached_data'] else 'yfinance'}"
             )
+            est = result.get("estimated_duration_minutes")
+            est_txt = f" • tahmini ~{est:.0f} dk" if isinstance(est, (int, float)) else ""
             return False, dbc.Alert(
                 [html.I(className="bi bi-check-circle me-2"),
-                 f"Optimizasyon baslatildi: {sid}", html.Br(), html.Small(info)],
+                 f"Optimizasyon başlatıldı ({payload['n_trials']} trial{est_txt})",
+                 html.Br(), html.Small(info),
+                 html.Br(), html.Small(f"study: {sid}", style={"opacity": 0.7})],
                 color="success", dismissable=True,
-            )
-        return True, dbc.Alert("Optimizasyon baslatılamadı.", color="danger", dismissable=True)
+            ), sid
+
+        # Nedeni burada bilinmiyor (api_client hatayi loglar). Kullaniciya en
+        # sik iki sebebi soyle: dogrulama hatasi ve backend hatasi.
+        return True, dbc.Alert(
+            [html.I(className="bi bi-x-circle me-2"),
+             "Optimizasyon başlatılamadı.", html.Br(),
+             html.Small("Parametreleri kontrol edin (timestep sayısı en az 10.000 olmalı). "
+                        "Ayrıntı için sunucu loglarına bakın.")],
+            color="danger", dismissable=True,
+        ), None
 
     @app.callback(
         Output("hyperopt-studies-grid", "children"),
@@ -389,16 +408,104 @@ def register_callbacks(app):
         return True, title, info_div, params_str, trials_div, study_id
 
     @app.callback(
-        Output("hyperopt-poll", "disabled", allow_duplicate=True),
+        [Output("hyperopt-progress-panel", "children"),
+         Output("hyperopt-poll", "disabled", allow_duplicate=True)],
         Input("hyperopt-poll", "n_intervals"),
+        State("hyperopt-active-study", "data"),
         prevent_initial_call=True,
     )
-    def auto_stop_poll(n):
-        # Stop after 100 polls (5 minutes)
-        return (n or 0) >= 100
+    def poll_progress(n, study_id):
+        """Calisan optimizasyonun canli durumu.
+
+        Eskiden burada sabit "100 poll sonra dur" (5 dakika) vardi ve calisma
+        durumu hic gosterilmiyordu: 20 trial ~11 dakika surdugu icin polling
+        is bitmeden kesiliyor, kullanici basladi mi bitti mi anlayamiyordu.
+        Artik polling isin DURUMUNA gore durur.
+        """
+        if not study_id:
+            return html.Span(), True
+
+        pr = api.get_hyperopt_progress(str(study_id))
+        if not pr:
+            # Study ilk saniyelerde henuz gorunmeyebilir — polling'i surdur.
+            return _render_progress_placeholder(), False
+
+        status = (pr.get("status") or "").lower()
+        bitti = status in ("completed", "failed", "cancelled")
+        return _render_progress(pr), bitti
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+_STATUS_LABEL = {
+    "pending": ("Sıraya alındı", BLUE),
+    "running": ("Çalışıyor", BLUE),
+    "completed": ("Tamamlandı", GREEN),
+    "failed": ("Başarısız", RED),
+    "cancelled": ("İptal edildi", ORANGE),
+}
+
+
+def _render_progress_placeholder():
+    return dbc.Alert(
+        [dbc.Spinner(size="sm", color="primary", className="me-2"), "Başlatılıyor..."],
+        color="primary", className="mb-0",
+    )
+
+
+def _render_progress(pr):
+    """Canli optimizasyon durumu — /hyperopt/studies/{id}/progress ciktisi."""
+    status = (pr.get("status") or "").lower()
+    label, color = _STATUS_LABEL.get(status, (status or "?", TEXT_MUTED))
+    done = pr.get("trials_completed", 0) or 0
+    total = pr.get("trials_total", 0) or 0
+    pct = pr.get("progress_percentage", 0) or 0
+    best = pr.get("current_best_value")
+    eta = pr.get("estimated_time_remaining_minutes")
+    last = pr.get("last_trial") or {}
+
+    satirlar = [
+        dbc.Row([
+            dbc.Col(html.Small("Durum", className="section-title"), width=5),
+            dbc.Col(html.Span(label, style={"color": color, "fontWeight": "600"}), width=7),
+        ], className="mb-2"),
+        dbc.Row([
+            dbc.Col(html.Small("Trial", className="section-title"), width=5),
+            dbc.Col(html.Span(f"{done} / {total}", style={"color": TEXT, "fontWeight": "600"}), width=7),
+        ], className="mb-2"),
+        dbc.Progress(value=pct, label=f"{pct:.0f}%",
+                     color="success" if status == "completed" else "primary",
+                     className="mb-3", animated=status == "running", striped=status == "running"),
+    ]
+
+    if isinstance(eta, (int, float)) and status == "running":
+        satirlar.append(dbc.Row([
+            dbc.Col(html.Small("Kalan", className="section-title"), width=5),
+            dbc.Col(html.Span(f"~{eta:.0f} dk", style={"color": TEXT}), width=7),
+        ], className="mb-2"))
+
+    if isinstance(best, (int, float)):
+        satirlar.append(dbc.Row([
+            dbc.Col(html.Small("En iyi değer", className="section-title"), width=5),
+            dbc.Col(html.Span(f"{best:.4f}", style={"color": GREEN, "fontWeight": "600"}), width=7),
+        ], className="mb-2"))
+
+    if last.get("trial_number") is not None:
+        val = last.get("value")
+        val_txt = f"{val:.4f}" if isinstance(val, (int, float)) else "—"
+        satirlar.append(dbc.Row([
+            dbc.Col(html.Small("Son trial", className="section-title"), width=5),
+            dbc.Col(html.Span(f"#{last['trial_number']} · {last.get('state', '')} · {val_txt}",
+                              style={"color": TEXT_MUTED, "fontSize": "12px"}), width=7),
+        ], className="mb-2"))
+
+    return html.Div(satirlar, style={
+        "padding": "12px",
+        "borderRadius": "6px",
+        "border": f"1px solid {CARD2}",
+        "backgroundColor": CARD2,
+    })
+
 
 def _render_studies_grid(studies):
     cols = []
