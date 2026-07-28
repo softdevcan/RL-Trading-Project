@@ -104,6 +104,8 @@ def layout():
                             placeholder="Calisma sec (opsiyonel)...",
                             style={"marginBottom": "24px", "color": CARD},
                         ),
+                        # Tahmini sure — form degistikce guncellenir
+                        html.Div(id="training-estimate", className="mb-3"),
                         # Start button
                         dbc.Button(
                             [html.I(className="bi bi-play-circle me-2"), "Egitimi Baslat"],
@@ -139,29 +141,73 @@ def _idle_status():
     ])
 
 
+# Backend `phase_name` degerlerinin panoda gosterilen karsiliklari.
+_PHASE_LABELS = {
+    "preparing": "Veri hazirlaniyor",
+    "training": "Model egitiliyor",
+    "evaluating": "Test setinde degerlendiriliyor",
+    "completed": "Tamamlandi",
+}
+
+
+def _eta_row(status):
+    """Kalan sure + tahmini bitis saati. ETA yoksa satiri hic basma."""
+    eta_text = status.get("eta_text")
+    if not eta_text or eta_text == "—":
+        return None
+
+    finish_at = status.get("finish_at")
+    source = status.get("eta_source")
+    # 'prior' = henuz gozlem yok, on tahminden; kullaniciya bunu durustce soyle.
+    note = " (on tahmin)" if source == "prior" else ""
+    finish_txt = f" · bitis ~{finish_at}" if finish_at else ""
+
+    return dbc.Row([
+        dbc.Col(html.Small("Kalan", className="section-title"), width=4),
+        dbc.Col(html.Span(
+            f"~{eta_text}{finish_txt}{note}",
+            style={"color": TEXT, "fontWeight": "600"},
+        ), width=8),
+    ], className="mb-2")
+
+
 def _running_status(status):
     step = status.get("current_step", 0)
     total = status.get("total_steps", 1) or 1
     pct = min(int(step / total * 100), 100)
-    elapsed = status.get("elapsed", "—")
+    elapsed = status.get("elapsed_text") or status.get("elapsed", "—")
     metrics = status.get("metrics", {}) or {}
+    phase_label = _PHASE_LABELS.get(status.get("phase_name"), "Egitim devam ediyor")
+    rate = status.get("steps_per_sec")
+
+    rows = [
+        dbc.Row([
+            dbc.Col(html.Small("Adim", className="section-title"), width=4),
+            dbc.Col(html.Span(f"{step:,} / {total:,}", style={"color": TEXT, "fontWeight": "600"}), width=8),
+        ], className="mb-2"),
+        dbc.Progress(value=pct, label=f"{pct}%", color="primary", className="mb-3"),
+        dbc.Row([
+            dbc.Col(html.Small("Gecen", className="section-title"), width=4),
+            dbc.Col(html.Span(str(elapsed), style={"color": TEXT_MUTED}), width=8),
+        ], className="mb-2"),
+    ]
+
+    eta_row = _eta_row(status)
+    if eta_row is not None:
+        rows.append(eta_row)
+
+    if rate:
+        rows.append(dbc.Row([
+            dbc.Col(html.Small("Hiz", className="section-title"), width=4),
+            dbc.Col(html.Span(f"{rate:,.0f} adim/sn", style={"color": TEXT_MUTED}), width=8),
+        ], className="mb-2"))
 
     return html.Div([
         dbc.Alert(
-            [dbc.Spinner(size="sm", color="primary", className="me-2"), "Egitim devam ediyor..."],
+            [dbc.Spinner(size="sm", color="primary", className="me-2"), f"{phase_label}..."],
             color="primary", className="mb-3",
         ),
-        html.Div([
-            dbc.Row([
-                dbc.Col(html.Small("Adim", className="section-title"), width=4),
-                dbc.Col(html.Span(f"{step:,} / {total:,}", style={"color": TEXT, "fontWeight": "600"}), width=8),
-            ], className="mb-2"),
-            dbc.Progress(value=pct, label=f"{pct}%", color="primary", className="mb-3"),
-            dbc.Row([
-                dbc.Col(html.Small("Sure", className="section-title"), width=4),
-                dbc.Col(html.Span(str(elapsed), style={"color": TEXT_MUTED}), width=8),
-            ], className="mb-2"),
-        ]),
+        html.Div(rows),
         # Live metrics
         html.Div(_render_live_metrics(metrics), id="training-live-metrics"),
     ])
@@ -169,9 +215,16 @@ def _running_status(status):
 
 def _completed_status(status):
     metrics = status.get("metrics", {}) or {}
+    # Gerceklesen sure metriklerden gelir (training_time_minutes), yoksa durumdan.
+    minutes = metrics.get("training_time_minutes")
+    if isinstance(minutes, (int, float)):
+        took = f" ({minutes:.1f} dk)"
+    else:
+        took = f" ({status['elapsed_text']})" if status.get("elapsed_text") else ""
+
     return html.Div([
         dbc.Alert(
-            [html.I(className="bi bi-check-circle-fill me-2"), "Egitim tamamlandi!"],
+            [html.I(className="bi bi-check-circle-fill me-2"), f"Egitim tamamlandi!{took}"],
             color="success", className="mb-3",
         ),
         _render_live_metrics(metrics),
@@ -228,6 +281,47 @@ def register_callbacks(app):
                 label = f"{s.get('study_name', sid)} (en iyi: {best_txt})"
                 opts.append({"label": label, "value": str(sid)})
         return opts
+
+    @app.callback(
+        Output("training-estimate", "children"),
+        [
+            Input("training-algo", "value"),
+            Input("training-phase", "value"),
+            Input("training-timesteps", "value"),
+        ],
+    )
+    def update_estimate(algo, phase, timesteps):
+        """Form degistikce tahmini sureyi goster (egitim baslamadan once)."""
+        if not timesteps or int(timesteps) <= 0:
+            return html.Span()
+
+        est = api.get_training_estimate(algo or "ppo", int(phase or 1), int(timesteps))
+        if not est or not est.get("total_text"):
+            return html.Span()
+
+        confidence = est.get("confidence")
+        # Yerlesik katsayidan gelen tahmin kaba olabilir; kullanici bunu bilsin.
+        color, icon = {
+            "measured": (GREEN, "bi-check-circle"),
+            "scaled": (BLUE, "bi-arrows-angle-expand"),
+        }.get(confidence, (YELLOW, "bi-exclamation-circle"))
+
+        return html.Div([
+            html.Div([
+                html.I(className=f"bi {icon} me-2", style={"color": color}),
+                html.Span("Tahmini sure: ", style={"color": TEXT_MUTED, "fontSize": "13px"}),
+                html.Span(f"~{est['total_text']}", style={"color": TEXT, "fontWeight": "600"}),
+            ]),
+            html.Small(
+                f"{est.get('source', '')} · {est.get('n_symbols', '?')} sembol",
+                style={"color": TEXT_MUTED, "fontSize": "11px"},
+            ),
+        ], style={
+            "padding": "10px 12px",
+            "borderRadius": "6px",
+            "border": f"1px solid {CARD2}",
+            "backgroundColor": CARD2,
+        })
 
     @app.callback(
         [Output("training-poll", "disabled"), Output("training-store", "data")],

@@ -34,6 +34,7 @@ app/                  # FastAPI backend
     templates/        # login.html, change_password.html
   schemas/            # Pydantic models
   services/           # Business logic (model_analysis.py, daily_trading.py, prediction_service.py)
+    training_eta.py   # Egitim suresi tahmini: on tahmin + canli ETA, gecmis kosumlardan ogrenir
   core/config.py      # Configuration
   main.py             # FastAPI app
 data/                 # Data processing modules
@@ -98,6 +99,8 @@ python run_server.py  # http://localhost:8000
 python tests/test_env.py
 python tests/test_ppo.py
 python tests/test_all_algorithms.py
+python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
+python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
@@ -172,6 +175,19 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
+
+### Egitim suresi tahmini (ETA)
+- Servis: `app/services/training_eta.py` — `estimate()` (on tahmin), `live_eta()` (canli), `record_run()`
+- Uclar: `GET /api/trading/train/estimate?algorithm=&phase=&total_timesteps=` ve
+  `GET /api/trading/train/status` (eta_seconds/eta_text/finish_at/steps_per_sec/phase_name)
+- Model: `toplam = hazirlik + total_timesteps x adim_maliyeti(algoritma, sembol) + degerlendirme`
+- Ogrenme: her tamamlanan kosum `results/training_eta_history.json`'a yazilir (kullanici bazli);
+  sonraki tahmin medyanini kullanir. Gecmis yoksa yerlesik katsayi (`confidence='default'`)
+- **`n_symbols` `get_symbols(phase)`'ten ALINMAZ** — egitim rotasi o listeyi yalnizca veri
+  cekerken kullanir, egitim yuklenen CSV'nin tamamiyla yapilir (faz 1 secilse de 30 sembol)
+- Varsayilan katsayilari yeniden olcmek icin:
+  `python scripts/benchmarking/measure_training_eta_defaults.py --steps 10000,25000`
+  (kucuk N'de olcum ~2x oynar; egim buyuk N'de kararli)
 
 ## Development Plan
 - Faz 1 (POC): Tamamlandı — 5 hisse, A2C/PPO/TD3, temel RL ortamı

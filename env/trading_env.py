@@ -12,6 +12,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Gözlem vektörünün sembol-başına okuduğu kolonlar, _get_observation'daki sırayla.
+# `default=None` olanlar zorunlu: yoksa lookup cache hiç kurulmaz ve .loc yoluna düşülür.
+# Diğerlerinin default'u, eski `row.get(col, default)` çağrılarıyla birebir aynıdır.
+_OBS_COLUMN_SPEC = (
+    ('open', None), ('high', None), ('low', None), ('close', None), ('volume', None),
+    ('macd', 0.0), ('rsi', 50.0), ('cci', 0.0), ('adx', 0.0), ('turbulence', 0.0),
+)
+_OBS_COLUMNS = tuple(col for col, _ in _OBS_COLUMN_SPEC)
+_IX_HIGH = _OBS_COLUMNS.index('high')
+_IX_LOW = _OBS_COLUMNS.index('low')
+_IX_CLOSE = _OBS_COLUMNS.index('close')
+
 
 class TradingEnv(gym.Env):
     """
@@ -164,6 +176,11 @@ class TradingEnv(gym.Env):
         self.trades_history: List[Dict] = []
         self.returns_history: List[float] = []  # For PSR reward
 
+        # Sembol×tarih satır erişimini önceden diziye çıkar (RL step hızlandırma).
+        # Gözlem vektörünü değiştirmez; yalnız aynı değerleri O(1) okur.
+        self._dates_list = list(self.dates)
+        self._build_lookup_cache()
+
         logger.info(f"TradingEnv initialized (Phase {phase}, Reward: {reward_type.upper()}):")
         logger.info(f"  Stocks: {self.n_stocks} ({', '.join(self.symbols)})")
         logger.info(f"  Trading days: {self.frame_bound[1] - self.frame_bound[0] + 1}")
@@ -196,6 +213,71 @@ class TradingEnv(gym.Env):
         """Return price normalization stats (save these for inference)."""
         return self.price_stats
 
+    def _build_lookup_cache(self):
+        """Sembol×tarih satır okumalarını önceden numpy dizisine çıkar.
+
+        `_get_observation` / `_get_current_price` / `_get_atr` adım başına onlarca
+        MultiIndex `.loc` çağrısı yapıyordu; profilde step süresinin ~%80'i buydu.
+        Cache aynı değerleri aynı sırada tutar, yani gözlem vektörü bit-eş kalır —
+        kazanç yalnız erişim biçiminden gelir.
+
+        Kurulamazsa (zorunlu kolon eksik, sıralanmamış index, sayısal olmayan veri)
+        `_lookup_cache` None kalır ve tüm okumalar eski `.loc` yoluna düşer.
+        """
+        self._lookup_cache: Optional[Dict[str, Dict]] = None
+        self._price_memo: Dict[str, float] = {}
+        self._price_memo_step: int = -1
+
+        missing = [c for c, default in _OBS_COLUMN_SPEC
+                   if default is None and c not in self.df.columns]
+        if missing:
+            logger.info(f"Lookup cache atlandı (zorunlu kolon yok: {missing}) — .loc yolu kullanılacak")
+            return
+
+        try:
+            values, positions, date_keys = {}, {}, {}
+            for symbol in self.symbols:
+                sub = self.df.xs(symbol, level='symbol')
+                if not sub.index.is_monotonic_increasing:
+                    logger.info(f"Lookup cache atlandı ({symbol} tarihleri sıralı değil) — .loc yolu kullanılacak")
+                    return
+
+                block = np.empty((len(sub), len(_OBS_COLUMN_SPEC)), dtype=np.float64)
+                for j, (col, default) in enumerate(_OBS_COLUMN_SPEC):
+                    if col in sub.columns:
+                        block[:, j] = sub[col].to_numpy(dtype=np.float64)
+                    else:
+                        block[:, j] = default
+
+                values[symbol] = block
+                positions[symbol] = {d: i for i, d in enumerate(sub.index)}
+                date_keys[symbol] = sub.index.values
+
+            self._lookup_cache = {'values': values, 'positions': positions, 'dates': date_keys}
+        except Exception as exc:
+            logger.warning(f"Lookup cache kurulamadı ({exc}) — .loc yoluna dönülüyor")
+            self._lookup_cache = None
+
+    def _obs_row(self, symbol: str, current_date):
+        """Sembolün o günkü gözlem değerlerini `_OBS_COLUMNS` sırasıyla döndür.
+
+        Satır yoksa `KeyError` yükseltir — çağıranlar `.loc`'un davranışına göre
+        yazılmıştı, o sözleşme korunuyor.
+        """
+        cache = self._lookup_cache
+        if cache is not None:
+            i = cache['positions'].get(symbol, {}).get(current_date)
+            if i is None:
+                raise KeyError((symbol, current_date))
+            return cache['values'][symbol][i]
+
+        row = self.df.loc[(symbol, current_date)]
+        return (
+            row['open'], row['high'], row['low'], row['close'], row['volume'],
+            row.get('macd', 0), row.get('rsi', 50), row.get('cci', 0),
+            row.get('adx', 0), row.get('turbulence', 0),
+        )
+
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict]:
         """Environment'ı başlangıç durumuna döndür"""
         super().reset(seed=seed)
@@ -203,6 +285,8 @@ class TradingEnv(gym.Env):
         self.current_step = self.frame_bound[0]
         self.balance = self.initial_balance
         self.shares_owned = np.zeros(self.n_stocks)
+        self._price_memo = {}
+        self._price_memo_step = -1
         self.portfolio_values = [self.initial_balance]
         self.trades_history = []
         self.returns_history = []
@@ -439,21 +523,8 @@ class TradingEnv(gym.Env):
         for symbol in self.symbols:
             # Hissenin o günkü verisini al
             try:
-                row = self.df.loc[(symbol, current_date)]
-
-                # OHLCV
-                open_price = row['open']
-                high_price = row['high']
-                low_price = row['low']
-                close_price = row['close']
-                volume = row['volume']
-
-                # Technical indicators
-                macd = row.get('macd', 0)
-                rsi = row.get('rsi', 50)
-                cci = row.get('cci', 0)
-                adx = row.get('adx', 0)
-                turbulence = row.get('turbulence', 0)
+                (open_price, high_price, low_price, close_price, volume,
+                 macd, rsi, cci, adx, turbulence) = self._obs_row(symbol, current_date)
 
                 # Improved normalization for better neural network learning
                 # Use log-scale for volume to handle large variance
@@ -579,14 +650,28 @@ class TradingEnv(gym.Env):
         """
         current_date = self._get_current_date()
         try:
-            sym_df = self.df.xs(symbol, level='symbol')
-            sym_df = sym_df[sym_df.index <= current_date].tail(self.atr_period + 1)
-            if len(sym_df) < 2:
-                return 0.0
+            cache = self._lookup_cache
+            if cache is not None:
+                # `sym_df[sym_df.index <= current_date].tail(atr_period + 1)` ile aynı
+                # pencere: tarihler sıralı olduğu için searchsorted yeterli.
+                end = int(np.searchsorted(cache['dates'][symbol],
+                                          np.datetime64(current_date), side='right'))
+                start = max(0, end - (self.atr_period + 1))
+                window = cache['values'][symbol][start:end]
+                if len(window) < 2:
+                    return 0.0
+                high = window[:, _IX_HIGH]
+                low = window[:, _IX_LOW]
+                close = window[:, _IX_CLOSE]
+            else:
+                sym_df = self.df.xs(symbol, level='symbol')
+                sym_df = sym_df[sym_df.index <= current_date].tail(self.atr_period + 1)
+                if len(sym_df) < 2:
+                    return 0.0
 
-            high = sym_df['high'].astype(float).values
-            low = sym_df['low'].astype(float).values
-            close = sym_df['close'].astype(float).values
+                high = sym_df['high'].astype(float).values
+                low = sym_df['low'].astype(float).values
+                close = sym_df['close'].astype(float).values
 
             # True Range: max(H-L, |H-Cprev|, |L-Cprev|)
             tr = np.maximum(
@@ -689,20 +774,36 @@ class TradingEnv(gym.Env):
         return int(np.sign(action_signal)) * shares_int
 
     def _get_current_price(self, symbol: str) -> float:
-        """Hissenin güncel fiyatını döndür (close price)"""
+        """Hissenin güncel fiyatını döndür (close price)
+
+        Aynı adım içinde sembol başına bir kez okunur: `_get_portfolio_value` her
+        adımda 2-3 kez çağrılıyor ve her seferinde tüm sembolleri yeniden
+        soruyordu (adım başına ~12,7 lookup). Memo yalnız başarılı okumaları
+        tutar, böylece eksik veri uyarısı eskisi gibi her denemede loglanır.
+        """
+        if self._price_memo_step != self.current_step:
+            self._price_memo = {}
+            self._price_memo_step = self.current_step
+        else:
+            cached = self._price_memo.get(symbol)
+            if cached is not None:
+                return cached
+
         current_date = self._get_current_date()
         try:
-            price = self.df.loc[(symbol, current_date), 'close']
+            price = self._obs_row(symbol, current_date)[_IX_CLOSE]
             # Convert to float, handling various pandas types
             if isinstance(price, (int, float, np.integer, np.floating)):
-                return float(price)
+                price = float(price)
             else:
                 # Try conversion, this handles most pandas scalar types
                 try:
-                    return float(price)  # type: ignore
+                    price = float(price)  # type: ignore
                 except:
                     logger.warning(f"Could not convert price to float: {type(price)}")
                     return 0.0
+            self._price_memo[symbol] = price
+            return price
         except KeyError:
             logger.warning(f"Price not found for {symbol} on {current_date}")
             return 0.0
@@ -711,8 +812,13 @@ class TradingEnv(gym.Env):
             return 0.0
 
     def _get_current_date(self):
-        """Güncel tarihi döndür"""
-        return self.dates[self.current_step]
+        """Güncel tarihi döndür
+
+        `self.dates` bir DatetimeIndex; her indekslemede yeni Timestamp üretir.
+        Adım başına onlarca kez çağrıldığı için önceden listeye alınmış hali
+        kullanılır (aynı Timestamp nesneleri).
+        """
+        return self._dates_list[self.current_step]
 
     def _get_portfolio_value(self) -> float:
         """Toplam portfolio değeri (balance + stock values)"""
