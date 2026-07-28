@@ -18,7 +18,7 @@ import pandas as pd
 import logging
 
 from app.schemas.trading import (
-    TrainingRequest, TrainingStatus, ModelMetrics,
+    TrainingRequest, TrainingStatus, TrainingEstimate, ModelMetrics,
     ModelInfo, TrainingResponse,
     DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
     PortfolioSnapshot, PortfolioHistoryResponse,
@@ -27,6 +27,7 @@ from app.schemas.trading import (
 from app.core.config import get_settings
 from app.auth import workspace as ws
 from app.auth.deps import RequireWriter
+from app.services import training_eta
 
 _settings = get_settings()
 
@@ -56,6 +57,12 @@ def _empty_training_state() -> Dict[str, Any]:
         "start_time": None,
         "metrics": {},
         "error": None,
+        # ETA alanlari: phase_name kaba faz ("preparing"/"training"/"evaluating"),
+        # *_ts epoch damgalari, estimate egitim baslarken uretilen on tahmin.
+        "phase_name": None,
+        "run_start_ts": None,
+        "learn_start_ts": None,
+        "estimate": None,
     }
 
 
@@ -239,6 +246,19 @@ async def start_training(
                 detail="Training already in progress"
             )
 
+        # On tahmin: kullanici "Baslat"a bastigi anda ne kadar surecegini gorsun.
+        # Tahmin uretilemezse egitim yine baslar — ETA sus kalir.
+        try:
+            prior = training_eta.estimate(
+                algorithm=request.algorithm,
+                phase=request.phase,
+                total_timesteps=request.total_timesteps,
+                user_id=user_id,
+            )
+        except Exception as exc:
+            logger.warning(f"ETA on tahmini uretilemedi ({exc}) — egitim tahminsiz baslatiliyor")
+            prior = None
+
         # Reset training state inside lock
         _training_states[key] = {
             "is_training": True,
@@ -248,7 +268,11 @@ async def start_training(
             "start_time": datetime.now().isoformat(),
             "metrics": {},
             "error": None,
-            "config": request.dict()
+            "config": request.dict(),
+            "phase_name": "preparing",
+            "run_start_ts": time.time(),
+            "learn_start_ts": None,
+            "estimate": prior,
         }
 
     # Start training in background (outside lock — long-running).
@@ -263,6 +287,30 @@ async def start_training(
     )
 
 
+@router.get("/train/estimate", response_model=TrainingEstimate)
+async def estimate_training_time(
+    algorithm: str = "ppo",
+    phase: int = 1,
+    total_timesteps: int = 50_000,
+):
+    """Egitim baslatmadan once tahmini sureyi dondur.
+
+    Pano bunu form degistikce cagirir; kullanici "Baslat"a basmadan once
+    ne kadar surecegini gorur. Tahmin ayni makinedeki gecmis kosumlardan
+    ogrenilir, gecmis yoksa yerlesik katsayilardan (`confidence='default'`).
+    """
+    if total_timesteps <= 0:
+        raise HTTPException(status_code=400, detail="total_timesteps must be positive")
+    try:
+        result = training_eta.estimate(
+            algorithm=algorithm, phase=phase, total_timesteps=total_timesteps,
+        )
+    except Exception as exc:
+        logger.error(f"ETA tahmini basarisiz: {exc}")
+        raise HTTPException(status_code=500, detail="Sure tahmini uretilemedi")
+    return TrainingEstimate(**{k: v for k, v in result.items() if k != "step_cost"})
+
+
 @router.get("/train/status", response_model=TrainingStatus)
 async def get_training_status():
     """Get current training status (aktif kullaniciya ait)"""
@@ -272,6 +320,31 @@ async def get_training_status():
     if training_state["total_steps"] > 0:
         progress = training_state["current_step"] / training_state["total_steps"]
 
+    # ETA: devam eden kosumda gozlenen hizdan, isinma penceresinde on tahminden.
+    # ETA bir ek ozellik; pano ilerleme takibi bu uca bagli oldugu icin buradaki
+    # hicbir hata durumu dusurmemeli — hepsi yutulur, alanlar bos doner.
+    try:
+        live = training_eta.live_eta(training_state)
+    except Exception as exc:
+        logger.warning(f"Canli ETA hesaplanamadi ({exc}) — durum ETA'siz donuyor")
+        live = {"eta_seconds": None, "eta_text": None, "finish_at": None,
+                "steps_per_sec": None, "estimated_total_seconds": None,
+                "eta_source": None}
+
+    run_start = training_state.get("run_start_ts")
+    elapsed = (time.time() - run_start) if run_start else None
+
+    prior_model = None
+    prior = training_state.get("estimate")
+    if prior:
+        try:
+            prior_model = TrainingEstimate(
+                **{k: v for k, v in prior.items() if k != "step_cost"}
+            )
+        except Exception as exc:
+            # Eksik/eski sekilli tahmin sozlugu — yut, durumu dondurmeye devam et.
+            logger.warning(f"On tahmin sozlugu cozulemedi ({exc}) — status ETA'siz donuyor")
+
     return TrainingStatus(
         is_training=training_state["is_training"],
         state=training_state.get("state", "idle"),
@@ -280,7 +353,17 @@ async def get_training_status():
         progress=progress,
         start_time=training_state.get("start_time"),
         metrics=training_state.get("metrics", {}),
-        error=training_state.get("error")
+        error=training_state.get("error"),
+        phase_name=training_state.get("phase_name"),
+        elapsed_seconds=elapsed,
+        elapsed_text=training_eta.humanize(elapsed) if elapsed is not None else None,
+        eta_seconds=live["eta_seconds"],
+        eta_text=live["eta_text"],
+        finish_at=live["finish_at"],
+        steps_per_sec=live["steps_per_sec"],
+        estimated_total_seconds=live["estimated_total_seconds"],
+        eta_source=live["eta_source"],
+        estimate=prior_model,
     )
 
 
@@ -944,6 +1027,12 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
 
     # Track total training time
     training_start_time = time.time()
+    # ETA fazlari: hazirlik/ogrenme/degerlendirme ayri olculur, kosum bitince
+    # gecmise yazilir ve bir sonraki tahminin dayanagi olur.
+    training_state.setdefault("run_start_ts", training_start_time)
+    training_state["phase_name"] = "preparing"
+    learn_start_time = None
+    learn_end_time = None
 
     try:
         # Import training modules
@@ -1179,11 +1268,17 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
 
         # Train model with logging
         callback = TrainingStateCallback()
+        learn_start_time = time.time()
+        training_state["learn_start_ts"] = learn_start_time
+        training_state["phase_name"] = "training"
         model.learn(
             total_timesteps=request.total_timesteps,
             callback=callback,
             tb_log_name=model_name
         )
+        learn_end_time = time.time()
+        training_state["learn_end_ts"] = learn_end_time
+        training_state["phase_name"] = "evaluating"
 
         # Log training environment metrics (for debugging)
         from env.trading_env import TradingEnv
@@ -1293,12 +1388,37 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["state"] = "completed"
         training_state["metrics"] = metrics_with_config
         training_state["current_step"] = request.total_timesteps
+        training_state["phase_name"] = "completed"
+
+        # Bu kosumu ETA gecmisine yaz — bir sonraki tahminin dayanagi olur.
+        # Kayit basarisiz olursa egitim yine basarili sayilir.
+        if learn_start_time is not None:
+            try:
+                learn_seconds = (learn_end_time or time.time()) - learn_start_time
+                # Sembol sayisi EGITILEN panelden alinir, get_symbols(phase)'ten
+                # degil: rota o listeyi yalnizca veri cekerken kullanir, egitim
+                # yuklenen CSV'nin tamamiyla yapilir.
+                trained_symbols = train_df.index.get_level_values('symbol').nunique()
+                training_eta.record_run(
+                    algorithm=request.algorithm,
+                    phase=request.phase,
+                    n_symbols=int(trained_symbols),
+                    total_timesteps=request.total_timesteps,
+                    setup_seconds=learn_start_time - training_start_time,
+                    learn_seconds=learn_seconds,
+                    eval_seconds=max(total_training_time - (learn_seconds + (learn_start_time - training_start_time)), 0.0),
+                    total_seconds=total_training_time,
+                    device=str(getattr(getattr(model, "device", None), "type", "cpu")),
+                )
+            except Exception as exc:
+                logger.warning(f"ETA gecmisine yazilamadi ({exc}) — egitim etkilenmedi")
 
     except Exception as e:
         logger.error(f"Training failed with error: {str(e)}", exc_info=True)
         training_state["is_training"] = False
         training_state["state"] = "error"
         training_state["error"] = str(e)
+        training_state["phase_name"] = "error"
         raise
 
 

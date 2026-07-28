@@ -231,6 +231,15 @@ def get_training_status() -> Dict:
     return _get("/trading/train/status") or {}
 
 
+def get_training_estimate(algorithm: str, phase: int, total_timesteps: int) -> Dict:
+    """Egitim baslamadan once tahmini sure (bkz. app/services/training_eta.py)."""
+    return _get("/trading/train/estimate", params={
+        "algorithm": algorithm,
+        "phase": phase,
+        "total_timesteps": total_timesteps,
+    }) or {}
+
+
 def get_data_info() -> Dict:
     return _get("/trading/data/info") or {}
 

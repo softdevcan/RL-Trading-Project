@@ -73,6 +73,23 @@ class TrainingResponse(BaseModel):
     status: str
 
 
+class TrainingEstimate(BaseModel):
+    """Egitim baslamadan once sure tahmini"""
+    total_seconds: float = Field(description="Tahmini toplam sure (saniye)")
+    total_text: str = Field(description="Insan okunur sure, orn. '8 dk 20 sn'")
+    setup_seconds: float = Field(description="Veri yukleme + ortam kurulumu")
+    learn_seconds: float = Field(description="model.learn() fazi")
+    eval_seconds: float = Field(description="Test setinde degerlendirme")
+    confidence: Literal["measured", "scaled", "default"] = Field(
+        description="measured=ayni ayarla gecmis kosum var, "
+                    "scaled=farkli sembol sayisindan olceklendi, "
+                    "default=yerlesik katsayi"
+    )
+    sample_size: int = Field(description="Tahminin dayandigi gecmis kosum sayisi")
+    source: str = Field(description="Tahminin nereden geldigi (metin)")
+    n_symbols: int = Field(description="Bu fazda egitilen sembol sayisi")
+
+
 class TrainingStatus(BaseModel):
     """Training status model"""
     is_training: bool
@@ -83,6 +100,26 @@ class TrainingStatus(BaseModel):
     start_time: Optional[str] = None
     metrics: Dict = {}
     error: Optional[str] = None
+
+    # ── ETA (Faz 8) ───────────────────────────────────────────────────────────
+    phase_name: Optional[str] = Field(
+        default=None,
+        description="preparing | training | evaluating | completed"
+    )
+    elapsed_seconds: Optional[float] = Field(default=None, description="Baslangictan beri gecen sure")
+    elapsed_text: Optional[str] = None
+    eta_seconds: Optional[float] = Field(default=None, description="Tahmini kalan sure")
+    eta_text: Optional[str] = None
+    finish_at: Optional[str] = Field(default=None, description="Tahmini bitis saati (HH:MM)")
+    steps_per_sec: Optional[float] = Field(default=None, description="Gozlenen egitim hizi")
+    estimated_total_seconds: Optional[float] = None
+    eta_source: Optional[str] = Field(
+        default=None,
+        description="measured=gozlenen hizdan, prior=on tahminden, completed=bitti"
+    )
+    estimate: Optional[TrainingEstimate] = Field(
+        default=None, description="Egitim baslarken uretilen on tahmin"
+    )
 
 
 class ModelMetrics(BaseModel):
