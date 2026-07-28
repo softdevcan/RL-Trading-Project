@@ -227,6 +227,8 @@ class TradingEnv(gym.Env):
         self._lookup_cache: Optional[Dict[str, Dict]] = None
         self._price_memo: Dict[str, float] = {}
         self._price_memo_step: int = -1
+        # (uyari_turu, sembol) — bkz. _should_warn
+        self._warned: set = set()
 
         missing = [c for c, default in _OBS_COLUMN_SPEC
                    if default is None and c not in self.df.columns]
@@ -254,9 +256,64 @@ class TradingEnv(gym.Env):
                 date_keys[symbol] = sub.index.values
 
             self._lookup_cache = {'values': values, 'positions': positions, 'dates': date_keys}
+            self._log_coverage_summary(values)
         except Exception as exc:
             logger.warning(f"Lookup cache kurulamadı ({exc}) — .loc yoluna dönülüyor")
             self._lookup_cache = None
+
+    def _log_coverage_summary(self, values: Dict[str, np.ndarray]):
+        """Panel kapsamini ve bozuk fiyatlari kurulumda BIR KEZ raporla.
+
+        Adim basina uyarma kaldirildigi icin sorunun gorunurlugu buraya tasindi:
+        eksik veri ve gecersiz fiyat toplu olarak burada bildirilir.
+        """
+        n_dates = len(self._dates_list)
+        expected = n_dates * len(self.symbols)
+        actual = sum(len(v) for v in values.values())
+        holes = expected - actual
+        if holes > 0:
+            en_eksik = sorted(
+                ((s, n_dates - len(v)) for s, v in values.items() if len(v) < n_dates),
+                key=lambda kv: -kv[1],
+            )[:5]
+            logger.info(
+                f"  Veri kapsamı: {actual:,}/{expected:,} (%{actual / expected * 100:.1f}); "
+                f"{holes:,} eksik (sembol,tarih) — forward-fill uygulanacak. "
+                f"En eksik: {', '.join(f'{s} ({n})' for s, n in en_eksik)}"
+            )
+
+        # Geçersiz fiyat: _execute_trade bunları reddedecek, ama kullanıcı
+        # veriyi temizlemesi gerektiğini kurulumda öğrensin.
+        bad_total = 0
+        bad_symbols = []
+        for symbol, block in values.items():
+            close = block[:, _IX_CLOSE]
+            n_bad = int((~np.isfinite(close)).sum() + (close <= 0).sum())
+            if n_bad:
+                bad_total += n_bad
+                bad_symbols.append(f"{symbol} ({n_bad})")
+        if bad_total:
+            logger.error(
+                f"  GEÇERSİZ FİYAT: {bad_total:,} satırda kapanış <= 0 veya NaN — "
+                f"{', '.join(bad_symbols[:5])}{' ...' if len(bad_symbols) > 5 else ''}. "
+                f"Bu satırlarda işlem yapılmayacak. Veriyi DataFetcher.clean_data() ile "
+                f"temizleyin; aksi halde eğitim bozuk fiyatlar üzerinden koşar."
+            )
+
+    def _should_warn(self, kind: str, symbol: str) -> bool:
+        """Ayni (tur, sembol) icin yalnizca ilk seferde True dondur.
+
+        Eksik veri burada YAPISAL: bir sembol borsaya sonradan girdiyse ondan
+        onceki her adimda eksiktir. Adim basina uyarmak HPO'da yuz binlerce
+        satir uretiyor ve olcumde env adim suresinin ~%58'ini logging'e
+        harciyordu (NullHandler ile bile — f-string kurulumu tek basina pahali).
+        Cagiran taraf bu kontrolu mesaji KURMADAN once yapmali.
+        """
+        key = (kind, symbol)
+        if key in self._warned:
+            return False
+        self._warned.add(key)
+        return True
 
     def _obs_row(self, symbol: str, current_date):
         """Sembolün o günkü gözlem değerlerini `_OBS_COLUMNS` sırasıyla döndür.
@@ -462,6 +519,22 @@ class TradingEnv(gym.Env):
         symbol = self.symbols[stock_idx]
         current_price = self._get_current_price(symbol)
 
+        # Fiyat gecersizse islem YAPILMAZ. Bu bir performans korumasi degil,
+        # dogruluk korumasi: negatif fiyatta (bozuk kaynak verisi — yfinance'in
+        # 2005 TL sadelestirmesi oncesi duzeltme artefaktlari gibi) `cost` negatif
+        # cikar, `cost <= balance` kontrolu her zaman gecer ve `balance -= cost`
+        # yoktan para basar; SELL tarafinda ise bakiyeyi sinirsiz asagi ceker.
+        # Bakiye -initial_balance'in altina dusunce _get_observation'daki
+        # log() NaN uretir, NaN politika agina gider ve egitim coker.
+        # Fiyat 0 ise (veri yok) bedava hisse verilir — o da yasak.
+        if not np.isfinite(current_price) or current_price <= 0:
+            if self._should_warn('bad_price', symbol):
+                logger.warning(
+                    f"Gecersiz fiyat ({current_price}) — {symbol} icin islem atlandi. "
+                    f"Kaynak veri temizlenmemis olabilir (bkz. DataFetcher.clean_data)."
+                )
+            return False, 0.0
+
         if shares > 0:  # BUY
             commission_cost = shares * current_price * self.commission_rate
             cost = shares * current_price * (1 + self.commission_rate)
@@ -511,7 +584,20 @@ class TradingEnv(gym.Env):
         Faz 2: [balance, shares_owned[N], OHLCV+Technical+Fundamental[N*17], Macro[6]]
         """
         # Balance (normalize with log scale for better range)
-        balance_norm = np.log(float(self.balance) / self.initial_balance + 1)
+        # Argumani koru: bozuk fiyat verisi bakiyeyi -initial_balance'in altina
+        # cekerse log() sessizce NaN uretir, NaN tum gozleme ve oradan politika
+        # agina yayilir; SB3 "Normal(loc: nan)" ile coker. Gozlem zaten
+        # [-10, 10] araligina kirpildigi icin taban -10 yeterli.
+        balance_ratio = float(self.balance) / self.initial_balance + 1
+        if np.isfinite(balance_ratio) and balance_ratio > 0:
+            balance_norm = np.log(balance_ratio)
+        else:
+            if self._should_warn('bad_balance', '*'):
+                logger.error(
+                    f"Bakiye gozlem icin gecersiz ({self.balance}); balance_norm "
+                    f"tabana sabitlendi. Kaynak veride bozuk fiyat olabilir."
+                )
+            balance_norm = -10.0
 
         # Shares owned (normalize relative to max possible)
         shares_norm = self.shares_owned.astype(np.float32) / self.max_shares_per_trade
@@ -577,9 +663,13 @@ class TradingEnv(gym.Env):
                 features.extend(stock_features)
 
             except KeyError:
-                # Missing data: forward-fill from last known step, then warn (#4)
-                logger.warning(f"Missing data for {symbol} on {current_date} — "
-                               f"filling with last known observation features.")
+                # Missing data: forward-fill from last known step, then warn (#4).
+                # Sembol basina tek uyari — kurulumda zaten toplam kapsam ozeti
+                # loglaniyor, adim basina tekrar etmek HPO ciktisini boguyordu.
+                if self._should_warn('missing_obs', symbol):
+                    logger.warning(f"Missing data for {symbol} (ilk: {current_date}) — "
+                                   f"filling with last known observation features. "
+                                   f"Bu sembol icin tekrar uyarilmayacak.")
                 n_features = 10 if self.phase == 1 else 17
                 if len(features) >= n_features:
                     # repeat last symbol's feature block
@@ -805,7 +895,9 @@ class TradingEnv(gym.Env):
             self._price_memo[symbol] = price
             return price
         except KeyError:
-            logger.warning(f"Price not found for {symbol} on {current_date}")
+            if self._should_warn('missing_price', symbol):
+                logger.warning(f"Price not found for {symbol} (ilk: {current_date}) — "
+                               f"bu sembol icin tekrar uyarilmayacak.")
             return 0.0
         except (ValueError, TypeError) as e:
             logger.warning(f"Price conversion error for {symbol} on {current_date}: {e}")

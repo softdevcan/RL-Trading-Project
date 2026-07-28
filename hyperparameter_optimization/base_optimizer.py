@@ -255,6 +255,7 @@ class BaseHyperparameterOptimizer:
         """
         # 1. Fetch market data
         df = None
+        data_fetcher = None  # asagidaki temizlik adimi bunu her dalda bekliyor
         if use_cached_data:
             try:
                 data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
@@ -298,6 +299,22 @@ class BaseHyperparameterOptimizer:
         if df is None:
             data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
             df = data_fetcher.fetch_stock_data(stock_symbols)
+
+        # Temizlik ZORUNLU — bu yol 'raw_stock_data.csv'yi ham yukluyordu.
+        # Ham dosyada negatif fiyatlar var (yfinance'in 2005 TL sadelestirmesi
+        # oncesine ait duzeltme artefaktlari). Negatif fiyat TradingEnv'de
+        # bakiyeyi -initial_balance'in altina cekiyor, gozlemdeki log() NaN
+        # uretiyor ve trial "Normal(loc: nan)" ile cokuyordu.
+        if df is not None and not df.empty:
+            if data_fetcher is None:
+                data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
+            rows_before = len(df)
+            df = data_fetcher.clean_data(df)
+            if len(df) != rows_before:
+                logger.info(
+                    f"🧹 Temizlik: {rows_before - len(df):,} satir dusuruldu "
+                    f"(negatif/sifir fiyat, duplicate) -> {len(df):,} satir kaldi"
+                )
 
         if df is None or df.empty:
             raise ValueError(f"No data fetched for {stock_symbols}")
