@@ -19,13 +19,22 @@ dist/
 .mypy_cache/
 .ruff_cache/
 
-# ── Runtime state — comes in as bind-mounted volumes, not baked into image ───
+# ── Runtime state — volume olarak gelir, image'a GOMULMEZ ───────────────────
 models/
 results/
 logs/
-data/*.csv
-data/**/*.csv
+# data/ ALT DIZINLERI calisma verisidir; data/*.py ise PROJE KODUDUR ve
+# image'da kalmali (compose bu alt dizinleri ayri ayri named volume olarak
+# baglar — data/ komple mount edilemez, .py modullerini golgeler).
+# Dizinin tamami dislanir: yalnizca *.csv dislamak yetmiyordu, orn.
+# data/macro/macro_data_quality.json (Faz 6 kalite bayragi) image'a sizip
+# container'i hic veri cekmeden "fallback" durumuyla baslatiyordu.
+data/bist/
+data/macro/
+data/gold/
+data/fundamental/
 data/predictions/
+data/live_trading/
 data/raw/
 data/processed/
 # DIKKAT: hyperparameter_optimization/ bir Python PAKETIDIR (optimizers/,
