@@ -314,6 +314,14 @@ def main() -> int:
             check(f"{selector} tanimli", selector in custom_css,
                   "Bootstrap varsayilani sizacak")
 
+    # Dolgulu varyantin DEVRE DISI hali ayrica ezilmeli: Bootstrap'in
+    # `.btn-primary:disabled` kurali (0,2,0) bizim `.btn-primary` (0,1,0)
+    # kuralimizdan ozgul, ezilmezse dugme devre disiyken Bootstrap'in ham
+    # rengine duser (#0d6efd). Ekranda goruldu, hesaplanmis stille dogrulandi.
+    for variant in sorted(variants):
+        check(f".btn-{variant}:disabled ezilmis", f".btn-{variant}:disabled" in custom_css,
+              "devre disi dugme Bootstrap paletine duser")
+
     print("\n10) Kendi CSS siniflarimiz tanimli mi")
     # Baglanmayan bir sinif hata VERMEZ, bileseni sessizce bicimsiz birakir.
     # Yalnizca tasarim sistemimizin kendi onekleri taranir; Bootstrap yardimci

@@ -131,20 +131,27 @@ hr { border-color: var(--rlt-border); opacity: 1; }
 .topbar-search { width: 210px; font-size: 13px; }
 
 /* Bildirim zili — icerik /api/account/notifications'tan gelir. */
-.topbar-bell {
+/* dbc.DropdownMenu toggle dugmesine kendi renk varyantini basiyor
+   (varsayilan color="primary" -> `btn btn-primary`). `.topbar-bell` onunla
+   AYNI ozgullukte oldugu icin dosyada sonra gelen `.btn-primary` kazaniyor
+   ve zil dolgulu mavi cikiyordu — sayfanin birincil eylemi gibi duruyordu.
+   Seciciyi `.topbar ... .btn` ile ozgullestirmek, hangi varyantin bastigina
+   bakmadan sorunu kapatiyor. */
+.topbar .topbar-bell.btn {
   position: relative;
-  background: transparent;
+  background-color: transparent;
   border: 1px solid var(--rlt-border-strong);
-  color: var(--rlt-muted);
+  color: var(--rlt-muted) !important;
   border-radius: var(--rlt-radius-sm);
   padding: 4px 10px;
   font-size: 14px;
   line-height: 1.3;
 }
-.topbar-bell:hover,
-.topbar-bell:focus {
+.topbar .topbar-bell.btn:hover,
+.topbar .topbar-bell.btn:focus,
+.topbar .topbar-bell.btn.show {
   background-color: var(--rlt-surface-hover);
-  color: var(--rlt-text);
+  color: var(--rlt-text) !important;
   border-color: var(--rlt-border-strong);
   box-shadow: none;
 }
@@ -402,6 +409,29 @@ hr { border-color: var(--rlt-border); opacity: 1; }
 .btn-dark, .btn-outline-dark   { color: var(--rlt-text); border-color: var(--rlt-border-strong); background-color: var(--rlt-surface-2); }
 
 .btn:disabled, .btn.disabled { opacity: .55; }
+/* Bootstrap'in `.btn-primary:disabled` kurali (0,2,0) bizim `.btn-primary`
+   (0,1,0) kuralimizdan OZGUL; ezilmezse devre disi her dolgulu dugme
+   Bootstrap'in ham rengine duser (#0d6efd / #198754 / ...). Ekranda
+   "devre disi ama bizim paletimizde degil" diye gorunuyordu. */
+.btn-primary:disabled, .btn-primary.disabled {
+  background-color: var(--rlt-primary-fill); border-color: var(--rlt-primary-fill);
+}
+.btn-success:disabled, .btn-success.disabled {
+  background-color: var(--rlt-profit-fill); border-color: var(--rlt-profit-fill);
+}
+.btn-danger:disabled, .btn-danger.disabled {
+  background-color: var(--rlt-loss-fill); border-color: var(--rlt-loss-fill);
+}
+.btn-warning:disabled, .btn-warning.disabled {
+  background-color: var(--rlt-warn-fill); border-color: var(--rlt-warn-fill);
+}
+.btn-info:disabled, .btn-info.disabled {
+  background-color: var(--rlt-info); border-color: var(--rlt-info);
+}
+.btn-secondary:disabled, .btn-secondary.disabled {
+  background-color: var(--rlt-surface-2); border-color: var(--rlt-border-strong);
+  color: var(--rlt-text);
+}
 
 /* ── Form kontrolleri ───────────────────────────────────────────────────── */
 .form-control,

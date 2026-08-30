@@ -205,23 +205,28 @@ def _metric_val(value, tone: str = "neutral"):
 
 
 def _build_portfolio_chart(history):
-    fig = go.Figure()
-    if history:
-        records = history.get("history", []) if isinstance(history, dict) else []
-        if records:
-            dates = [r.get("date", "") for r in records]
-            values = [r.get("value", 0) for r in records]
-            fig.add_trace(go.Scatter(
-                x=dates, y=values,
-                mode="lines",
-                fill="tozeroy",
-                fillcolor=plot_rgba("blue", 0.15),
-                line={"color": plot_palette()["blue"], "width": 2},
-                name="Portfoy",
-                hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
-            ))
-    else:
+    # Dallanma KAYIT uzerinden yapilir: uc {"history": []} donebiliyor, yani
+    # `history` dogru ama icinde kayit yok. Onceki kurgu (`if history:` ->
+    # `if records:`) o durumda hicbir dala girmeyip cizgisiz, mesajsiz,
+    # varsayilan -1..6 eksenli bos bir grafik birakiyordu — panoda boyle
+    # gorundu, gorsel dogrulamada yakalandi.
+    records = history.get("history", []) if isinstance(history, dict) else []
+
+    if not records:
         fig = empty_figure("Portfoy gecmisi yok")
+    else:
+        fig = go.Figure()
+        dates = [r.get("date", "") for r in records]
+        values = [r.get("value", 0) for r in records]
+        fig.add_trace(go.Scatter(
+            x=dates, y=values,
+            mode="lines",
+            fill="tozeroy",
+            fillcolor=plot_rgba("blue", 0.15),
+            line={"color": plot_palette()["blue"], "width": 2},
+            name="Portfoy",
+            hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
+        ))
 
     apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=280, margin={"l": 50, "r": 10, "t": 10, "b": 40})
