@@ -158,6 +158,59 @@ def main() -> int:
 
         _training_states.clear()
 
+        print(chr(10) + "5) Tahmin egitimi durumu")
+        # Tahmin sayfasi yalnizca tek seferlik "arka planda baslatildi" uyarisi
+        # basiyor, bir daha guncellemiyordu: kullanici bitti mi suruyor mu
+        # anlamiyordu ve sayfadan cikip donunce o uyari da kayboluyordu.
+        # `/train/status` sembol istedigi icin sayfa donuste NEYI soracagini
+        # bilmiyordu; `/train/active` listeyi backend'den verir.
+        from app.services.prediction_service import _training_state as pred_state
+
+        pred_state.clear()
+        r = c.get("/api/prediction/train/active")
+        check("active ucu bos listeyle 200", r.status_code == 200 and r.json()["runs"] == [],
+              f"(got {r.status_code} {r.text[:100]})")
+
+        pred_state[("local", "AKBNK.IS", "daily", "yfinance")] = {
+            "state": "running", "source": "yfinance",
+            "started_at": "2026-08-30T10:00:00", "finished_at": None,
+            "error": None, "result": {"buyuk": "cikti"},
+        }
+        pred_state[("baska-kullanici", "THYAO.IS", "daily", "yfinance")] = {
+            "state": "running", "source": "yfinance",
+            "started_at": "2026-08-30T10:00:00", "finished_at": None,
+            "error": None, "result": None,
+        }
+        body = c.get("/api/prediction/train/active").json()
+        check("Kendi kosumu listeleniyor",
+              any(r0.get("symbol") == "AKBNK.IS" for r0 in body["runs"]),
+              f"(got {body})")
+        check("Baska kullanicinin kosumu sizmiyor",
+              not any(r0.get("symbol") == "THYAO.IS" for r0 in body["runs"]),
+              f"(got {body})")
+        check("running sayaci dogru", body["running"] == 1, f"(got {body['running']})")
+        check("Egitim ciktisi listede tasinmiyor",
+              all("result" not in r0 for r0 in body["runs"]), f"(got {body['runs']})")
+
+        import dashboard.pages.prediction as prediction_page
+
+        tree = prediction_page.layout()
+        poll = find_by_id(tree, "pred-train-poll")
+        status_box = find_by_id(tree, "pred-train-status")
+        check("Kosum surerken tahmin yoklamasi ACIK dogar",
+              poll is not None and poll.disabled is False,
+              f"(got {getattr(poll, 'disabled', 'yok')})")
+        check("Sayfaya donuldugunde durum blogu basiliyor",
+              status_box is not None and "AKBNK.IS" in str(status_box.children),
+              f"(got {str(getattr(status_box, 'children', ''))[:120]})")
+
+        pred_state.clear()
+        tree = prediction_page.layout()
+        poll = find_by_id(tree, "pred-train-poll")
+        check("Kosum yokken tahmin yoklamasi KAPALI dogar",
+              poll is not None and poll.disabled is True,
+              f"(got {getattr(poll, 'disabled', 'yok')})")
+
     print("\n" + "=" * 60)
     print(f"  Gecen: {len(PASSED)}   Kalan: {len(FAILED)}")
     if FAILED:

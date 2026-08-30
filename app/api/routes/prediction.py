@@ -211,6 +211,32 @@ async def get_train_status(
     )
 
 
+@router.get("/train/active")
+async def list_active_trainings() -> dict:
+    """Kullanicinin TUM tahmin egitimi kayitlari (sembol basina degil).
+
+    `/train/status` sembol istiyor; pano sayfaya donuldugunde hangi sembolun
+    egitildigini BILMIYOR (o bilgi yalnizca istemci tarafinda bir Store'da
+    duruyordu ve gezinmede sifirlaniyordu). Bu uc listeyi backend'den verir,
+    boylece sayfa acilista surmekte olan kosumlari bulup gosterebilir.
+
+    Durumlar bellekte tutuluyor (`prediction_service._training_state`), uc
+    ucuz: diske veya DB'ye gitmiyor.
+    """
+    from app.services.prediction_service import get_training_state
+
+    runs = get_training_state() or []
+    if not isinstance(runs, list):
+        runs = []
+    # `result` egitim ciktisinin tamami — listede tasimanin anlami yok.
+    slim = [
+        {k: v for k, v in run.items() if k != "result"}
+        for run in runs
+    ]
+    running = [r for r in slim if r.get("state") == "running"]
+    return {"runs": slim, "running": len(running), "count": len(slim)}
+
+
 @router.post("/train-ensemble", response_model=EnsembleTrainResponse)
 async def train_ensemble(request: EnsembleTrainRequest, user: RequireWriter):
     """Sembol icin ensemble modeli egit (detayli sonuc)."""

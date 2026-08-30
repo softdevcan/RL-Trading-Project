@@ -49,9 +49,70 @@ CATEGORY_LABEL = {
 
 # ─── Layout ───────────────────────────────────────────────────────────────────
 
+_RUN_STATE_LABELS = {
+    "running": ("Suruyor", "bi-arrow-repeat", "info"),
+    "completed": ("Tamamlandi", "bi-check-circle", "success"),
+    "error": ("Hata", "bi-x-circle", "danger"),
+}
+
+
+def _active_runs() -> list:
+    """Kullanicinin tahmin egitimi kayitlari (bos liste = hic kosum yok)."""
+    return (api.get_prediction_active_trainings() or {}).get("runs") or []
+
+
+def _has_running() -> bool:
+    return any(r.get("state") == "running" for r in _active_runs())
+
+
+def _training_runs_block(runs: list):
+    """Tahmin egitimi kayitlarini goster.
+
+    Sayfa onceden yalnizca "arka planda baslatildi" diye TEK SEFERLIK bir
+    uyari basiyor, bir daha hic guncellemiyordu: kullanici bitti mi surüyor
+    mu anlayamiyordu, sayfadan cikip donunce o uyari da kayboluyordu.
+
+    Ilerleme YUZDESI YOK ve uydurulmuyor — tahmin egitimi adim sayaci
+    yayinlamiyor; durum + gecen/biten zaman gosteriliyor.
+    """
+    if not runs:
+        return None
+
+    rows = []
+    for run in runs:
+        state = run.get("state", "idle")
+        label, icon, color = _RUN_STATE_LABELS.get(state, (state, "bi-question-circle", "secondary"))
+        stamp = run.get("finished_at") or run.get("started_at") or ""
+        detail = run.get("error") or run.get("source") or ""
+        rows.append(dbc.Row([
+            dbc.Col(html.Span(run.get("symbol", "—"), className="card-title-sm"), width=4),
+            dbc.Col(dbc.Badge([html.I(className=f"bi {icon} me-1"), label],
+                              color=color, pill=True), width=4),
+            dbc.Col(html.Small(str(stamp)[:19].replace("T", " "),
+                               style={"color": TEXT_MUTED}), width=4),
+        ], className="mb-2 align-items-center") if not detail else dbc.Row([
+            dbc.Col(html.Span(run.get("symbol", "—"), className="card-title-sm"), width=4),
+            dbc.Col(dbc.Badge([html.I(className=f"bi {icon} me-1"), label],
+                              color=color, pill=True), width=4),
+            dbc.Col([
+                html.Small(str(stamp)[:19].replace("T", " "),
+                           style={"color": TEXT_MUTED, "display": "block"}),
+                html.Small(str(detail)[:120], style={"color": TEXT_MUTED}),
+            ], width=4),
+        ], className="mb-2 align-items-center"))
+
+    return dbc.Card([
+        dbc.CardHeader(html.Span("Egitim Durumu", className="card-title-sm")),
+        dbc.CardBody(rows),
+    ])
+
+
 def layout():
     return html.Div([
         dcc.Interval(id="pred-refresh", interval=60_000, n_intervals=0),
+        # Tahmin egitimi yoklamasi: yalnizca calisan kosum varken acik.
+        dcc.Interval(id="pred-train-poll", interval=3_000, n_intervals=0,
+                     disabled=not _has_running()),
         dcc.Store(id="pred-symbols-store", data=[]),
         dcc.Store(id="pred-models-store", data=[]),
 
@@ -142,6 +203,11 @@ def _train_tab():
                             id="train-btn", color="primary", className="w-100",
                         ),
                         html.Div(id="train-result", className="mt-3"),
+                        # Egitim durumu — sayfa acilista backend'e sorar, boylece
+                        # baska bir ekrana gidip donen kullanici surmekte olan
+                        # kosumu gorur (egitim sayfasindaki ayni kalip).
+                        html.Div(id="pred-train-status", className="mt-3",
+                                 children=_training_runs_block(_active_runs())),
                     ]),
                 ]),
 
@@ -425,10 +491,29 @@ def register_callbacks(app):
         )
         return opts, sources[0], {"display": "block"}, hint
 
+    @app.callback(
+        [Output("pred-train-status", "children"),
+         Output("pred-train-poll", "disabled")],
+        Input("pred-train-poll", "n_intervals"),
+    )
+    def poll_prediction_training(_n):
+        """Egitim kayitlarini tazele; calisan kosum kalmayinca yoklamayi kapat.
+
+        Kapatmak onemli: bitmis kosumlar icin 3 sn'de bir sorgu atmanin
+        anlami yok, sayfa acik kaldigi surece surer.
+        """
+        runs = _active_runs()
+        block = _training_runs_block(runs)
+        still_running = any(r.get("state") == "running" for r in runs)
+        return block, not still_running
+
     # ── Egitim sekmesi: butonla egit, durumu goster
     @app.callback(
         [Output("train-result", "children"),
-         Output("pred-models-store", "data", allow_duplicate=True)],
+         Output("pred-models-store", "data", allow_duplicate=True),
+         # Baslatir baslatmaz yoklamayi ac; yoksa durum blogu bir sonraki
+         # sayfa yuklemesine kadar guncellenmezdi.
+         Output("pred-train-poll", "disabled", allow_duplicate=True)],
         Input("train-btn", "n_clicks"),
         [State("train-symbol", "value"),
          State("train-horizon", "value"),
@@ -443,7 +528,7 @@ def register_callbacks(app):
                        tech_groups, macro_groups, alt_groups, target_type):
         models = api.get_prediction_models() or []
         if not n or not symbol:
-            return "", models
+            return "", models, True
 
         payload: Dict[str, Any] = {"symbol": symbol, "horizon": horizon or "daily"}
         if source:
@@ -464,7 +549,7 @@ def register_callbacks(app):
             err = result.get("detail", "Bilinmeyen hata") if result else "Sunucu yanit vermedi"
             return (dbc.Alert([html.I(className="bi bi-x-circle me-2"),
                                f"Egitim baslatilamadi: {err}"],
-                              color="danger", dismissable=True), models)
+                              color="danger", dismissable=True), models, True)
 
         already_running = "zaten" in (result.get("message") or "")
         icon = "bi-hourglass-split" if already_running else "bi-play-circle"
@@ -485,7 +570,8 @@ def register_callbacks(app):
                 style={"color": TEXT_MUTED},
             ),
         ]
-        return dbc.Alert(body, color="info", dismissable=True), models
+        # Egitim basladi -> yoklamayi ac (False = disabled degil)
+        return dbc.Alert(body, color="info", dismissable=True), models, False
 
     # ── Egitim sekmesi: feature secim hizli butonlari (Hepsi/Hicbiri/Varsayilan)
     @app.callback(

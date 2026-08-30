@@ -459,6 +459,11 @@ def train_prediction(payload: Dict) -> Dict:
     return _post("/prediction/train", json=payload) or {}
 
 
+def get_prediction_active_trainings() -> Dict:
+    """Kullanicinin tum tahmin egitimi kayitlari (sayfa acilisinda gerekli)."""
+    return _get("/prediction/train/active") or {"runs": [], "running": 0}
+
+
 def get_prediction_train_status(
     symbol: str, horizon: str = "daily", source: Optional[str] = None,
 ) -> Dict:
