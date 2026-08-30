@@ -1,6 +1,6 @@
 # Faz 8 — UI/UX: Tema, Profil, Üst Çubuk ve Yapıt Yönetimi
 
-**Durum:** ✅ Uygulandı · **Tarih:** 2026-08-30
+**Durum:** ✅ Tamamlandı · **Tarih:** 2026-08-30
 
 > **Bu belge bir plan değil, akan bir kayıt.** Aşağıdaki A–E bölümleri fazın
 > ilk planıdır (aydınlık tema + bileşen okunabilirliği) ve uygulanmıştır;
@@ -1172,15 +1172,21 @@ açtığı eksiği kapattı; sıra tesadüf değil, kullanım sırasıyla ortaya
 | Optimizasyon kaydını silme | **yok** (uç iptal ediyordu) | var |
 | UI testi | yok | 324 kontrol |
 
-### Kalan açık iş
+### Kararlar ve devredilen iş
 
-1. **Zil yoklaması oturumu canlı tutuyor** (G.5) — davranış belgelendi, karar
-   verilmedi: kabul mü, cadans mı düşsün, yoksa zil yalnızca açılınca mı
-   yoklasın.
-2. **Optuna deposu izolasyonu** (I.3) — `OPTUNA_STORAGE` depo köküne sabit
-   bağlı, çalışmalar tüm kullanıcılar arasında ortak. **Bu Faz 8 işi değil,
-   Faz 7 (izolasyon) kapsamıdır**; burada yalnızca bulunduğu için kayıtlı.
-   Taşımak mevcut çalışmaları öksüz bırakır, ayrı iş olarak planlanmalı.
+1. **Zil yoklaması oturumu canlı tutuyor** (G.5) — **kabul edildi**
+   (2026-08-30). Gerekçe: `home.py` zaten 30 sn'de bir yokluyordu, üst sınır
+   refresh token'ın azami ömrü (`REFRESH_TOKEN_EXPIRE_DAYS`) ve pano zaten
+   sekme açık bırakılan bir çalışma aracı. Değiştirmek istenirse iki seçenek
+   duruyor: cadansı düşürmek ya da zili yalnızca açılınca yoklatmak (o zaman
+   rozet sayacı gider).
+2. **Optuna deposu izolasyonu** (I.3) — **Faz 7'ye devredildi.**
+   `OPTUNA_STORAGE` depo köküne sabit bağlı, çalışmalar tüm kullanıcılar
+   arasında ortak. Bu bir izolasyon işi, UI işi değil; taşımak mevcut
+   çalışmaları öksüz bırakır, ayrı iş olarak planlanmalı.
+
+**Faz 8 kapandı** (2026-08-30): container güncel kodda doğrulandı, 324 kontrol
+yeşil, ortak model silme canlıda teyit edildi.
 
 ---
 

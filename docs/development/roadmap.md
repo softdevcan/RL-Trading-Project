@@ -118,7 +118,7 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 - **Faz H — dar ekran + ölü bileşen:** varsayım "dar ekranda düzen bozuluyor" idi, **ölçüm çürüttü** — 1280/1024/820/640'ta hiçbir taşma veya yatay kaydırma yok. Gerçek sorun darlıktı (640px'de menü ekranın %34'ü); ≤820px'de kenar çubuğu 64px ikon rayına iniyor, kullanılabilir alan 640px'de 372 → 528px. Masaüstü değişmedi. İki tur boyunca hiçbir sayfaya bağlanmayan `create_filter_bar` silindi.
 - **Faz I — yapıt silme:** eğitilmiş modeller ve optimizasyon çalışmaları panodan silinemiyordu; deneme koşumları ekranı kalıcı kirletiyordu. Model için uç vardı ama **arayüz yoktu**; hiperparametre için silme yeteneği **hiç yoktu** (`DELETE` aslında iptal ediyordu, çalışmayan kayda 404 dönüyordu). `DELETE /hyperopt/studies/{id}` gerçek silmeye çevrildi, iptal `POST .../cancel` oldu — ikisi durum bakımından ayrık olduğu için geçiş veri kaybı doğurmuyor. Faz 7'nin "kimse ortak dizindeki modeli silemez" kuralı iki katmana ayrıldı (`user` silemez, `admin` siler + denetim kaydı): eski kural kullanıcı sisteminden önce eğitilmiş deneme modellerini temizlemenin hiçbir yolunu bırakmıyordu. Yol üstünde iki gedik: `/hyperopt/start` **hiç RBAC taşımıyordu** (viewer optimizasyon başlatabiliyordu — düzeltildi) ve Optuna deposu çalışma alanına göre çözülmüyor (çalışmalar tüm kullanıcılar arasında ortak — belgelendi, **Faz 7 kapsamında ayrı iş**). `tests/test_delete_artifacts.py` 32 kontrol.
 
-**Doğrulama:** 324 kontrol (7 paket), 9 sayfa × 2 tema görsel kontrol.
+**Doğrulama:** 324 kontrol (7 paket), 9 sayfa × 2 tema görsel kontrol, container'da canlı teyit. Optuna deposu izolasyonu Faz 7'ye devredildi.
 
 Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
 

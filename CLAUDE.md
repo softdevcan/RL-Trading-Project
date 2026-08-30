@@ -186,9 +186,11 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
 - "Bitti" satirlari 12 saatlik pencereyle sinirli (`NOTIFY_RECENT_SECONDS`);
   zaman damgasi olmayan `completed` HIC gosterilmez. Bunun icin
   `trading.py` kosum bitisini `finished_ts`'e yazar.
-- **Bilinen davranis:** zil 60 sn'de bir yokladigi icin acik bir sekme sessiz
-  yenilemeyi tetikler ve oturumu canli tutar. Ust sinir refresh token'in azami
-  omru. Karar acik (bkz. faz belgesi "Kalan acik is").
+- **Bilinen ve KABUL EDILMIS davranis:** zil 60 sn'de bir yokladigi icin acik
+  bir sekme sessiz yenilemeyi tetikler ve oturumu canli tutar. Ust sinir
+  refresh token'in azami omru (`REFRESH_TOKEN_EXPIRE_DAYS`). Degistirmek
+  gerekirse: cadansi dusur ya da zili yalnizca acilinca yoklat (rozet sayaci
+  gider).
 
 ### Dar ekran (Faz 8/H)
 - <=820px'de kenar cubugu 64px **ikon rayina** iner; masaustu degismez.
