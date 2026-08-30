@@ -84,9 +84,24 @@ SIDEBAR_STYLE = {
     "zIndex": 1000,
 }
 
+# Ust cubuk (Faz 8/G) yalnizca icerik alanini kaplar: kenar cubugu tam boy
+# kalir, marka tek yerde durur.
+TOPBAR_HEIGHT = "54px"
+
+TOPBAR_STYLE = {
+    "position": "fixed",
+    "top": 0,
+    "left": SIDEBAR_WIDTH,
+    "right": 0,
+    "height": TOPBAR_HEIGHT,
+    "zIndex": 900,
+}
+
 CONTENT_STYLE = {
     "marginLeft": SIDEBAR_WIDTH,
-    "padding": "24px",
+    # Ust cubuk `fixed`, yani akistan cikmis: icerik onun altindan baslasin
+    # diye ust bosluk cubugun yuksekligi kadar artirilir.
+    "padding": f"calc({TOPBAR_HEIGHT} + 24px) 24px 24px",
     "backgroundColor": BG,
     "minHeight": "100vh",
 }

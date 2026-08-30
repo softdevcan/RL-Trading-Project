@@ -73,7 +73,8 @@ dashboard/            # Dash frontend (Plotly Dash, /dash/ altında mount)
   app.py              # Dash factory + PrefixMiddleware + FOUC engelleyici index_string
   pages/              # home, training, data, models, daily_trading, prediction,
                       # academic, hyperopt, users, account (Faz 8: Hesabım)
-  components/         # sidebar, metric_card, page_header, filter_bar, table, state_block
+  components/         # sidebar, topbar, metric_card, page_header, filter_bar,
+                      # table, state_block
   theme.py            # Faz 8: DOM icin var(--token) + Plotly icin hex palet
   assets/
     00-tokens.css     # static/tokens.css'i @import eder (alfabetik once yuklenir)
@@ -122,6 +123,7 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
                                            #        CSS siniflarimiz (86 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
+python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama (21 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
                                            #          smoke (84 kontrol)
@@ -157,6 +159,13 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
 - **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
   Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
+- **Gorunum anahtari UST CUBUKTA** (`dashboard/components/topbar.py`), kenar
+  cubugunda degil. Cogaltma: `theme-toggle.js` `getElementById` kullaniyor, iki
+  kopya olursa biri tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam
+  bir tane oldugunu denetliyor.
+- **Kenar cubugu menusune madde eklerken `topbar.ROUTE_INDEX`'i unutma** —
+  aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
+  (`tests/test_topbar.py` yapisal bekci).
 - Detay: `docs/development/phase-8-ui-theming.md`
 
 ### Hesap ve profil (Faz 8/F)

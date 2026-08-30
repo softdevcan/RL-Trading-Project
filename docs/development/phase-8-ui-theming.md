@@ -790,6 +790,66 @@ Stil taşımayan iki kanca (`theme-label`, `sidebar-link`) gerekçesiyle muaf.
 
 ---
 
+## Faz G — Üst çubuk (2026-08-30)
+
+Kenar çubuğu "nereye gidebilirim"i anlatıyor; eksik olan "neredeyim ve buradan
+ne yapabilirim". Görünüm anahtarı da menünün dibinde, sık kullanılan bir
+kontrol için yanlış yerdeydi.
+
+### G.1 — Yerleşim
+
+Kenar çubuğu **tam boy** kalır (marka üstte), üst çubuk **yalnızca içerik
+alanını** kaplar (`left: SIDEBAR_WIDTH`). Böylece marka tek yerde durur ve
+mevcut sabit yerleşim bozulmaz. Konum `theme.py::TOPBAR_STYLE`'dan (kenar
+çubuğundaki kalıbın aynısı), görünüm `custom.css`'ten geliyor. Üst çubuk
+`fixed` olduğu için `CONTENT_STYLE` üst boşluğu `calc(54px + 24px)` oldu.
+
+### G.2 — İçerik
+
+| Bölge | İçerik | Karar |
+|---|---|---|
+| Sol | Kırıntı: **grup › sayfa** | Sayfa başlığını **tekrarlamaz** — `PageHeader` zaten başlık + alt metni veriyor; buradaki katkı hangi grupta olduğun |
+| Sağ | Bağlamsal eylem | Rastgele kısayol değil: belgelenen akışı (veri indir → eğit → analiz) izler; akışta karşılığı olmayan sayfada (Hesabım, Kullanıcılar) slot boş kalır |
+| Sağ | Arama | Sayfalar üzerinde komut paleti; **role duyarlı** — Yönetim grubu yalnızca admin'e önerilir (rota zaten korumalı, ama öneri de yanıltmamalı) |
+| Sağ | Görünüm anahtarı | Kenar çubuğundan **taşındı**, çoğaltılmadı |
+
+Görünüm anahtarının tek kopya olması önemli: iki kopya kalsaydı birine
+tıklandığında diğerinin etiketi güncellenmez ve anahtar tutarsız görünürdü
+(`theme-toggle.js` `getElementById` kullanıyor, ilk kopyayı bulur). Test
+DOM'da tam bir tane olduğunu doğruluyor.
+
+Aramada seçim `url.pathname`'i yazıp kutuyu boşaltıyor — boşaltılmazsa aynı
+sayfa ikinci kez seçilemez (değer değişmediği için callback tetiklenmez). Aynı
+sayfa seçilirse `no_update` dönüyor, sayfa boşuna yeniden çizilmiyor.
+
+### G.3 — Yol üstünde bulunan kusur
+
+`--rlt-` önek göçünden kalma bir kaçak: kenar çubuğundaki marka ikonu
+`style={"color": "var(--primary)"}` kullanıyordu. O token artık yok
+(`--rlt-primary` var), dolayısıyla bildirim geçersiz sayılıp ikon miras
+renge düşüyordu — sessiz bir kayıp. `E.2` kaçak-hex denetimi bunu yakalamıyor
+çünkü ortada hex yok. `BLUE` sabitine çevrildi.
+
+### G.4 — Testler
+
+`tests/test_topbar.py` — **21 kontrol**: yerleşim, tek kopya görünüm anahtarı,
+kırıntı (bilinmeyen rotada boş), bağlamsal eylem, role duyarlı arama, arama
+yönlendirmesi ve `no_update` yolu.
+
+İki **yapısal bekçi** var: kenar çubuğundaki her menü maddesinin kırıntı
+karşılığı olmalı (menüye madde eklenip buraya eklenmezse üst çubuk o sayfada
+sessizce boşalır), ve sonraki-adım haritası yalnızca var olan rotalara işaret
+etmeli.
+
+`test_theme_contrast`'ın sınıf denetimine `topbar` öneki eklendi.
+
+> **Bildirimler henüz yok.** Üst çubukta yer ayrılmadı: çalışmayan bir zil
+> koymak, olmayan bir özelliği varmış gibi göstermek olurdu. Gerçek sinyaller
+> mevcut (RL eğitim durumu, tahmin eğitim durumu — ikisi de bellekte), sıradaki
+> tur bu.
+
+---
+
 ## Belge Güncelleme Notu
 
 Faz kapanışında güncellendi: `CLAUDE.md` (Development Plan, proje yapısı, tests

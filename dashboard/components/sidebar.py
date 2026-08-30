@@ -1,15 +1,16 @@
-"""Sol kenar cubugu (Faz 8, C.8 + B.4).
+"""Sol kenar cubugu (Faz 8, C.8).
 
 Menu uc gruba ayrildi; duz bir 8 maddelik liste yerine ne aradigini bilen
-kullanicinin dogrudan bulabilecegi bir yapi. Alt kisimda kullanici rozeti,
-gorunum anahtari ve cikis.
+kullanicinin dogrudan bulabilecegi bir yapi. Altta hesap satiri ve cikis.
+
+Gorunum anahtari Faz 8/G'de ust cubuga tasindi (bkz. `topbar.py`).
 """
 
 from dash import html
 import dash_bootstrap_components as dbc
 
 from dashboard.auth_context import current_user, display_name, is_admin
-from dashboard.theme import BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
+from dashboard.theme import BLUE, BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
 
 # Gruplar sirayla cizilir; admin grubu yalnizca admin icin eklenir.
 NAV_GROUPS = [
@@ -43,25 +44,6 @@ def _nav_link(item: dict) -> dbc.NavLink:
         active="exact",
         className="sidebar-link",
         style={"padding": "9px 17px", "margin": "1px 8px"},
-    )
-
-
-def _theme_button() -> html.Button:
-    """Uc durumu sirayla dolasan gorunum anahtari.
-
-    Etiket ve ikon assets/theme-toggle.js tarafindan acilista ve her
-    tiklamada guncellenir; buradaki degerler yalnizca ilk cizimde
-    (script calismadan once) gorunen yer tutuculardir.
-    """
-    return html.Button(
-        [
-            html.I(className="bi bi-circle-half"),
-            html.Span("Sistem", className="theme-label ms-2"),
-        ],
-        id="theme-toggle",
-        type="button",
-        title="Gorunum tercihini degistir",
-        **{"data-theme-set": "__cycle__"},
     )
 
 
@@ -124,26 +106,29 @@ def _account_link(user: dict) -> html.Div:
 
 
 def _user_footer():
-    """Hesap satiri + gorunum anahtari + cikis.
+    """Hesap satiri + cikis.
 
-    Auth kapaliyken hesap satiri gosterilmez ama gorunum anahtari kalir —
-    tema tercihi kimlik dogrulamadan bagimsiz calisir (cerezde saklanir).
+    Gorunum anahtari Faz 8/G'de ust cubuga tasindi: menunun dibi, sik
+    kullanilan bir kontrol icin yanlis yerdi. Tek kopya var, cogaltilmadi.
+
+    Hesap satiri her durumda cizilir; auth kapaliyken "Misafir" olur
+    (gerekce `_account_link` docstring'inde).
     """
     user = current_user()
 
-    # Hesap satiri her durumda cizilir; auth kapaliyken "Misafir" olur.
     rows = [_account_link(user or {})]
 
-    controls = [_theme_button()]
     if user:
-        controls.append(
-            html.A(
-                [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
-                href="/logout",
-                className="sidebar-logout",
+        rows.append(
+            html.Div(
+                html.A(
+                    [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
+                    href="/logout",
+                    className="sidebar-logout",
+                ),
+                className="sidebar-controls",
             )
         )
-    rows.append(html.Div(controls, className="sidebar-controls"))
 
     return html.Div(rows, className="sidebar-footer")
 
@@ -169,7 +154,7 @@ def create_sidebar():
                     html.Div(
                         [
                             html.I(className="bi bi-robot me-2",
-                                   style={"color": "var(--primary)", "fontSize": "19px"}),
+                                   style={"color": BLUE, "fontSize": "19px"}),
                             html.Span("RL Trading",
                                       style={"color": TEXT, "fontWeight": "700",
                                              "fontSize": "16px"}),
@@ -188,6 +173,6 @@ def create_sidebar():
             dbc.Nav(nav_children, vertical=True, pills=True),
             _user_footer(),
         ],
-        style={**SIDEBAR_STYLE, "paddingBottom": "150px"},
+        style={**SIDEBAR_STYLE, "paddingBottom": "120px"},
         id="sidebar",
     )

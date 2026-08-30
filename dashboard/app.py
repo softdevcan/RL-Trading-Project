@@ -16,6 +16,8 @@ import dash_bootstrap_components as dbc
 
 from dashboard.theme import BG, CONTENT_STYLE, RED, TEXT_MUTED
 from dashboard.components.sidebar import create_sidebar
+from dashboard.components import topbar
+from dashboard.components.topbar import create_topbar
 
 
 def _index_template() -> str:
@@ -142,6 +144,7 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
             [
                 dcc.Location(id="url", refresh=False),
                 create_sidebar(),
+                create_topbar(),
                 html.Div(id="page-content", style=CONTENT_STYLE),
             ],
             style={"backgroundColor": BG, "minHeight": "100vh"},
@@ -209,5 +212,6 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     hyperopt.register_callbacks(dash_app)
     users.register_callbacks(dash_app)
     account.register_callbacks(dash_app)
+    topbar.register_callbacks(dash_app)
 
     return dash_app
