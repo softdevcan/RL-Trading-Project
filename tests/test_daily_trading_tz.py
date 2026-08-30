@@ -117,6 +117,7 @@ def run():
 
     try:
         print("\n[1] CSV (tz'siz) + yfinance (tz'li) birlesimi")
+        dt.clear_panel_cache()  # panel TTL onbellegi bu testi maskelemesin
         try:
             combined = asyncio.run(
                 dt.fetch_latest_market_data(SYMBOLS, TARGET, lookback_days=30)
@@ -170,6 +171,7 @@ def run():
 
         print("\n[6] Onbellek yokken de tz'siz cikiyor")
         df_mod.DataFetcher = None  # load_data cagrisi patlar -> yalniz yfinance yolu
+        dt.clear_panel_cache()  # yoksa [1]'in sonucu onbellekten doner
         try:
             only_yf = asyncio.run(
                 dt.fetch_latest_market_data(SYMBOLS, TARGET, lookback_days=30)

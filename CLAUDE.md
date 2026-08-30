@@ -115,6 +115,9 @@ python tests/test_training_status.py        # /train/status progress, sembol uya
                                            #        donunce geri gelmesi (19 kontrol)
 python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinance (tz'li)
                                            #        birlesimi, sessiz sembol dusmesi (18 kontrol)
+python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans),
+                                           #        taslak satir, kapsam esigi,
+                                           #        panel onbellegi (21 kontrol)
 python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
@@ -371,6 +374,31 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Evren dogru sayida cikip durum yine de uymazsa (faz 2 modeli: hisse basina 17
   ozellik + 6 makro; `build_live_state` 10 uretir) rota SB3'a girmeden 400 ile
   nedeni soyler.
+
+### Panel tazeligi ve yfinance taslak satiri (ONEMLI)
+- **Tazelik olcutu takvim gunu DEGIL, kapanmis olmasi beklenen son SEANS.**
+  `cached_last < end_date.date()` sorusu 30 Agustos Pazar hedefinde CSV 28
+  Agustos Cuma'ya kadar dolu olsa bile dogru cikiyordu; tek karar istegi 30 CSV
+  okumasi + **30 yfinance indirmesi** yapiyordu, sonuc hic degismeden.
+  `daily_trading.last_expected_session()` hafta sonunu geriye sarar. Resmi BIST
+  tatilleri bilinmiyor; o gunlerde tek bosuna tur atilir, TTL onbellegi keser.
+- **yfinance seans kapanmadan once OHLC'si NaN, volume'u DOLU taslak satir
+  dondurur.** Bu satir diske yazilirsa iki zarar birden: panelde tamamen bos
+  bir gun kalir **ve** `fetch_incremental`'in `min_last_date`'i o gune kayar,
+  `fetch_from` ertesi gun olur, o seansin gercek verisi bir daha HIC cekilmez.
+  Filtre `fetch_incremental`'da **yalnizca yeni veriye** uygulanir — `existing`
+  ham panel ve 2005 oncesi negatif fiyat artefaktlarini tasiyor (asagiya bak);
+  oraya `close > 0` uygulamak gecmisi sessizce degistirirdi.
+- **`actual_date` sembol kapsamina bakar** (`MIN_SESSION_COVERAGE`, %90).
+  Panelin bir kismi tazelenip kalani tazelenmeyince (28.08.2026: 30 sembolden
+  3'u) en son tarihte yalnizca o 3 sembolun kapanisi oluyordu; kalan 27 sembol
+  tek tek bir onceki gune dusuyor, durum vektoru **iki gunun karisimini**
+  tasiyordu. Esigi gecemeyen gun atlanir.
+- Panel `(semboller, hedef, lookback, CSV mtime)` anahtariyla 15 dk onbellege
+  alinir. Veri sayfasi yeni veri indirince mtime degisir, onbellek TTL
+  beklemeden duser. Testte `dt.clear_panel_cache()` cagir — yoksa ikinci
+  cagriyi onbellek karsilar ve test sahte yesil verir.
+- Test: `python tests/test_panel_freshness.py` (21 kontrol)
 
 ### Veri butunlugu (ONEMLI)
 - **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in
