@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
 from filelock import FileLock
 
+from data.data_fetcher import to_naive_market_dates
 from data.technical_indicators import add_indicators_to_multi_symbol_df
 from app.auth import workspace as ws
 
@@ -53,6 +54,133 @@ def get_risk_parameters(risk_mode: str) -> dict:
     }
 
     return params.get(risk_mode, params["moderate"])
+
+
+# ==================== TRADE UNIVERSE RESOLUTION ====================
+
+# Egitilmis modelin yanina yazilan tanim dosyasi. `.zip` ile ayni koke sahip.
+MODEL_META_SUFFIX = ".meta.json"
+
+
+def model_meta_path(model_path: str) -> str:
+    """`<model>.zip` yolundan `<model>.meta.json` yolunu uret."""
+    base = model_path[:-4] if model_path.endswith(".zip") else model_path
+    return base + MODEL_META_SUFFIX
+
+
+def write_model_meta(model_path: str, meta: dict) -> Optional[str]:
+    """Model tanimini yan dosyaya yaz. Basarisizlik egitimi dusurmez."""
+    path = model_meta_path(model_path)
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(meta, fh, ensure_ascii=False, indent=2)
+        logger.info(f"Model tanimi yazildi: {os.path.basename(path)} "
+                    f"({meta.get('n_symbols')} sembol)")
+        return path
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Model tanimi yazilamadi ({exc}) — egitim etkilenmedi")
+        return None
+
+
+def read_model_meta(model_path: str) -> Optional[dict]:
+    """Yan dosyayi oku; yoksa veya bozuksa None."""
+    path = model_meta_path(model_path)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Model tanimi okunamadi ({path}): {exc}")
+        return None
+
+
+def _panel_train_symbols() -> List[str]:
+    """Egitim rotasinin kullandigi paneli birebir yeniden uret.
+
+    Egitim `stock_data_with_indicators.csv`'yi yukler, `split_data()` ile
+    KRONOLOJIK boler ve modelin evrenini EGITIM boluminin sembolleri belirler.
+    Sembol sirasi CSV'deki gorunme sirasidir — durum vektorunun dizilimi de
+    bu, dolayisiyla `sorted()` yapmak YANLIS olurdu.
+    """
+    from data.data_fetcher import DataFetcher
+
+    fetcher = DataFetcher()
+    df = fetcher.load_data('stock_data_with_indicators.csv')
+    train_df, _, _ = fetcher.split_data(df)
+    return train_df.index.get_level_values('symbol').unique().tolist()
+
+
+def resolve_trade_universe(model, model_path: str, model_name: str) -> Tuple[List[str], str]:
+    """Modelin EGITILDIGI sembol evrenini, egitimdeki SIRAYLA dondur.
+
+    Neden model adindan turetilemiyor: egitim rotasi `get_symbols(phase)`
+    listesini yalnizca veri cekerken kullanir, egitimi yuklenen panelin
+    tamamiyla yapar. Yani "phase1" adli bir model pekala 30 sembolle
+    egitilmis olabilir (gozlem uzayi 331). Ada guvenmek durum vektorunu
+    56 uzunlugunda uretiyordu ve SB3 `predict` asamasinda
+    "Unexpected observation shape (56,) ... please use (331,)" ile patliyordu.
+
+    Tek gercek kaynak modelin kendisi: `action_space` hisse basina bir eylem
+    tasir, yani uzunlugu sembol sayisidir. Adaylar bu sayiya gore elenir.
+
+    Returns:
+        (semboller, kaynak_etiketi)
+    """
+    action_shape = getattr(model.action_space, "shape", None)
+    n_expected = int(action_shape[0]) if action_shape else 0
+    if n_expected <= 0:
+        raise ValueError("Modelin eylem uzayi okunamadi; sembol sayisi bilinmiyor")
+
+    # 1) Yan dosya — modelle birlikte yazildigi icin en guvenilir kaynak.
+    meta = read_model_meta(model_path)
+    if meta:
+        symbols = [str(x) for x in (meta.get("symbols") or [])]
+        if len(symbols) == n_expected:
+            return symbols, "model tanim dosyasi"
+        if symbols:
+            logger.warning(
+                f"Model tanimindaki sembol sayisi ({len(symbols)}) modelin eylem "
+                f"uzayiyla ({n_expected}) uyusmuyor; tanim dosyasi yok sayildi"
+            )
+
+    # 2) Egitim panelini yeniden uret (yan dosyasi olmayan eski modeller).
+    try:
+        panel = _panel_train_symbols()
+        if len(panel) == n_expected:
+            return panel, "egitim paneli (yeniden uretildi)"
+        logger.warning(
+            f"Egitim paneli {len(panel)} sembol veriyor ama model {n_expected} "
+            f"bekliyor; panel yok sayildi"
+        )
+    except FileNotFoundError:
+        logger.info("stock_data_with_indicators.csv yok; panel yolu atlandi")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Egitim paneli okunamadi ({exc}); panel yolu atlandi")
+
+    # 3) Ad tabanli sabitler — yalnizca sayi tutuyorsa (eski davranis).
+    from data.bist30_symbols import BIST30_SYMBOLS, PHASE1_SYMBOLS, PHASE3_SYMBOLS
+
+    lower = model_name.lower()
+    candidates = [
+        (list(PHASE3_SYMBOLS), "PHASE3_SYMBOLS"),
+        (list(PHASE1_SYMBOLS), "PHASE1_SYMBOLS"),
+        (list(BIST30_SYMBOLS), "BIST30_SYMBOLS"),
+    ]
+    if "phase3" not in lower:
+        candidates = candidates[1:] + candidates[:1]
+    for symbols, label in candidates:
+        if len(symbols) == n_expected:
+            return symbols, f"model adi ({label})"
+
+    raise ValueError(
+        f"Model {n_expected} sembolle egitilmis ama bu evren cozumlenemedi. "
+        f"Model tanim dosyasi ({os.path.basename(model_meta_path(model_path))}) yok ve "
+        f"egitim paneli farkli sayida sembol iceriyor. Modeli yeniden egitin "
+        f"(yeni modeller tanim dosyasini kendileri yazar) ya da Veri sayfasindan "
+        f"paneli egitimdeki haline getirin."
+    )
 
 
 # ==================== MARKET DATA FETCHING ====================
@@ -139,6 +267,12 @@ async def fetch_latest_market_data(
                     continue
                 df.columns = df.columns.str.lower()
                 df = df[['open', 'high', 'low', 'close', 'volume']]
+                # yfinance returns a tz-aware index (Europe/Istanbul for .IS),
+                # the CSV cache is tz-naive. Concatenating the two produces an
+                # object index and the sort below raises "Cannot compare
+                # tz-naive and tz-aware timestamps". Normalize to the same
+                # naive market-local calendar day the CSV uses.
+                df.index = to_naive_market_dates(df.index)
                 # Drop stub rows yfinance emits for the current trading day
                 # before market close (close=NaN). These poison both the state
                 # vector and the JSON response.

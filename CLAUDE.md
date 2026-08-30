@@ -113,6 +113,10 @@ python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
 python tests/test_training_status.py        # /train/status progress, sembol uyarisi,
                                            #        RL + tahmin egitimi durumunun sayfaya
                                            #        donunce geri gelmesi (19 kontrol)
+python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinance (tz'li)
+                                           #        birlesimi, sessiz sembol dusmesi (18 kontrol)
+python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
+                                           #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
@@ -345,6 +349,28 @@ borsapy/yf     → gold_fetcher.py       ─┘
   hizalama YAPMA: kullanici 30 sembol sandigi modeli 5 sembolle egitmis olur.
 - Kalici cozum veride: eksik sembollerin tam gecmisini indir (Veri sayfasi ->
   "Yeniden Indir (tam)").
+
+### Modelin sembol evreni model ADINDAN cozulmez (ONEMLI)
+- Egitim rotasi `get_symbols(phase)` listesini YALNIZCA veri cekerken kullanir;
+  egitimi yuklenen panelin tamamiyla yapar. Yani `ppo_phase1_...` adli bir model
+  pekala 30 sembolle egitilmistir (obs=331, PHASE1_SYMBOLS ise 5 -> obs=56).
+  `/trading/daily-decision` evreni adindan tahmin edince durum vektoru 56
+  cikiyordu ve SB3 `predict` asamasinda patliyordu:
+  `Unexpected observation shape (56,) ... please use (331,)`.
+- Tek gercek kaynak MODELIN KENDISI: `action_space.shape[0]` = sembol sayisi.
+  `daily_trading.resolve_trade_universe()` adaylari bu sayiya gore eler:
+  yan dosya -> egitim paneli (yeniden uretilir) -> ad tabanli sabitler.
+- **Yeni modeller kendi evrenini tasir**: egitim `model.save()` yanina
+  `<model>.meta.json` yazar (`write_model_meta`). Eski modeller icin:
+  `python scripts/backfill_model_meta.py --write` (once `--write`siz deneme kosumu).
+- **Sembol SIRASI onemli** — durum vektoru sembolleri env'deki sirayla diziyor
+  (`TradingEnv.symbols` = panelin gorunme sirasi). `sorted()` uygulamak state'i
+  sessizce bozar; cozumleyici sirayi oldugu gibi tasir.
+- Model silinince yan dosya da silinir (`delete_model`); `list_models` yalnizca
+  `.zip` suzdugu icin meta dosyasi model gibi listelenmez.
+- Evren dogru sayida cikip durum yine de uymazsa (faz 2 modeli: hisse basina 17
+  ozellik + 6 makro; `build_live_state` 10 uretir) rota SB3'a girmeden 400 ile
+  nedeni soyler.
 
 ### Veri butunlugu (ONEMLI)
 - **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in

@@ -1036,6 +1036,13 @@ async def delete_model(model_name: str, user: RequireWriter):
 
     os.remove(model_path)
 
+    # Modelin yaninda duran tanim dosyasi (`<model>.meta.json`) da gider —
+    # `.zip` silinip tanim kalirsa dizinde sahibi olmayan bir dosya birikir.
+    from app.services.daily_trading import model_meta_path
+    meta_file = model_meta_path(model_path)
+    if os.path.exists(meta_file):
+        os.remove(meta_file)
+
     # Metrik JSON'u modelin BULUNDUGU katmandan silinir: ortak bir modelin
     # metrigi ortak results/ altindadir, kullanicininki kendi alaninda.
     metrics_dir = ws.shared_dir("results") if is_shared else ws.results_dir()
@@ -1390,6 +1397,28 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         model_path = os.path.join(models_root, model_name)
         model.save(model_path)
 
+        # Modelin evrenini modelin yanina yaz. Model ADI evreni ANLATMIYOR:
+        # yukarida gorulecegi gibi egitim `get_symbols(phase)` listesini yalnizca
+        # veri cekerken kullanir, egitimi panelin tamamiyla yapar — "phase1" adli
+        # bir model 30 sembolle egitilmis olabilir. Gunluk karar ucu evreni
+        # adindan tahmin edince durum vektoru yanlis uzunlukta cikiyor ve SB3
+        # "Unexpected observation shape" ile patliyordu. Sira onemli: durum
+        # vektoru sembolleri env'deki sirayla diziyor.
+        from app.services.daily_trading import write_model_meta
+        write_model_meta(model_path, {
+            "model_name": model_name,
+            "algorithm": request.algorithm,
+            "phase": request.phase,
+            "symbols": list(temp_env.symbols),
+            "n_symbols": int(temp_env.n_stocks),
+            "obs_dim": int(temp_env.observation_space.shape[0]),
+            "action_dim": int(action_dim),
+            "total_timesteps": request.total_timesteps,
+            "initial_balance": request.initial_balance,
+            "max_shares_per_trade": request.max_shares_per_trade,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        })
+
         # Evaluate on test set
         def make_test_env():
             return make_env(
@@ -1579,6 +1608,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
     """
     from app.services.daily_trading import (
         get_risk_parameters,
+        resolve_trade_universe,
         fetch_latest_market_data,
         build_live_state,
         get_current_prices,
@@ -1618,18 +1648,20 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         target_date = request.date or datetime.now().strftime("%Y-%m-%d")
 
         # The trade universe MUST match what the model saw during training,
-        # otherwise the state vector size mismatches the obs space. Derive it
-        # from the model name (phase1/phase2) instead of trusting whatever
-        # set the UI happened to send. The user-supplied `shares` is treated
-        # as a sparse declaration of current holdings — missing entries are
-        # filled with 0.
-        # Phase 1 and 2 share the same 5-symbol universe; phase 2 only adds
-        # fundamental/macro features on top. Phase 3 adds GOLD_GRAM_TRY.
-        from data.bist30_symbols import PHASE1_SYMBOLS, PHASE3_SYMBOLS
-        if "phase3" in model_name_lower:
-            trade_universe = list(PHASE3_SYMBOLS)
-        else:
-            trade_universe = list(PHASE1_SYMBOLS)
+        # otherwise the state vector size mismatches the obs space. The model
+        # NAME does not carry it: training uses `get_symbols(phase)` only to
+        # fetch data and then trains on whatever the loaded panel contains, so
+        # a "phase1" model can well have 30 symbols. Ask the model itself
+        # (sidecar meta → training panel → name constants, each checked against
+        # the action space). The user-supplied `shares` is treated as a sparse
+        # declaration of current holdings — missing entries are filled with 0.
+        try:
+            trade_universe, universe_source = resolve_trade_universe(
+                model, model_path, request.model_name
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        logger.info(f"Trade universe source: {universe_source}")
 
         # Normalize whatever shares the client sent to BIST `.IS` form.
         user_shares = {
@@ -1657,6 +1689,23 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         )
 
         # 5. Model inference
+        # Son kontrol: evren dogru sayida olsa da durum vektoru hala yanlis
+        # uzunlukta cikabilir (ornegin faz 2 modeli — hisse basina 17 ozellik +
+        # 6 makro bekler, `build_live_state` 10 ozellik uretir). SB3'un ham
+        # "Unexpected observation shape" hatasi kullaniciya hicbir sey
+        # anlatmiyordu; nedeni burada soyluyoruz.
+        expected_obs = getattr(model.observation_space, "shape", None)
+        if expected_obs is not None and state.shape != tuple(expected_obs):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Durum vektoru {state.shape[0]} uzunlugunda uretildi ama model "
+                    f"{expected_obs[0]} bekliyor ({len(trade_universe)} sembol, evren "
+                    f"kaynagi: {universe_source}). Model muhtemelen bu ucun "
+                    f"uretemedigi ek ozelliklerle egitildi (faz 2: fundamental + makro). "
+                    f"Faz 1/3 modeliyle deneyin."
+                ),
+            )
         logger.info("Running model inference...")
         action, _states = model.predict(state, deterministic=True)
         logger.info(f"Model output (raw action): {action}")
