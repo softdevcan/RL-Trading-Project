@@ -83,10 +83,23 @@ def layout():
         else "CSV yok — 'yfinance'tan tazele' otomatik açık."
     )
 
+    # Sayfa her gezinmede yeniden uretiliyor; calisan study'nin kimligi
+    # yalnizca `dcc.Store`'da tutulsaydi baska bir sayfaya gidip donen
+    # kullanici surmekte olan optimizasyonun ilerlemesini bir daha
+    # goremezdi (egitim sayfasindaki ayni kusur). Acilista listeden
+    # calisan kosum bulunur ve yoklama ona baglanir.
+    running = next(
+        (st for st in (api.get_hyperopt_studies() or [])
+         if str(st.get("status", st.get("state", ""))).lower() == "running"),
+        None,
+    )
+    active_study = (running or {}).get("study_id") or (running or {}).get("study_name")
+
     return html.Div([
-        dcc.Interval(id="hyperopt-poll", interval=3_000, disabled=True, n_intervals=0),
+        dcc.Interval(id="hyperopt-poll", interval=3_000,
+                     disabled=active_study is None, n_intervals=0),
         # Calisan optimizasyonun study_id'si — /progress bununla sorgulanir
-        dcc.Store(id="hyperopt-active-study", data=None),
+        dcc.Store(id="hyperopt-active-study", data=active_study),
         dcc.Store(id="hyperopt-modal-study-id", data=None),
         dcc.Store(id="hyperopt-data-range", data=data_range),
 

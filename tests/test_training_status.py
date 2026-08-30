@@ -115,6 +115,47 @@ def main() -> int:
               r.status_code == 200 and r.json().get("warnings") == [],
               f"(got {r.text[:120]})")
 
+        print(chr(10) + "4) Sayfaya donuldugunde ilerleme geri geliyor mu")
+        # `display_page` yalnizca page-content'i degistirir; sayfa her
+        # gezinmede YENIDEN uretilir. dcc.Interval `disabled=True` dogup
+        # yalnizca "Baslat" dugmesiyle aciliyordu, dolayisiyla baska bir
+        # sayfaya gidip donen kullanici surmekte olan egitimi bir daha
+        # goremiyordu. layout() artik acilista durumu soruyor.
+        import dashboard.pages.training as training_page
+
+        def find_by_id(node, target):
+            if getattr(node, "id", None) == target:
+                return node
+            children = getattr(node, "children", None)
+            if children is None:
+                return None
+            if not isinstance(children, (list, tuple)):
+                children = [children]
+            for child in children:
+                found = find_by_id(child, target)
+                if found is not None:
+                    return found
+            return None
+
+        set_state(is_training=True, state="running", phase_name="training",
+                  current_step=7_000, total_steps=10_000)
+        tree = training_page.layout()
+        poll = find_by_id(tree, "training-poll")
+        content = find_by_id(tree, "training-status-content")
+        check("Kosum surerken yoklama ACIK dogar",
+              poll is not None and poll.disabled is False,
+              f"(got {getattr(poll, 'disabled', 'yok')})")
+        check("Kosum surerken ilerleme blogu basiliyor",
+              content is not None and "egitiliyor" in str(content.children).lower(),
+              f"(got {str(getattr(content, 'children', ''))[:120]})")
+
+        set_state(is_training=False, state="idle", current_step=0, total_steps=0)
+        tree = training_page.layout()
+        poll = find_by_id(tree, "training-poll")
+        check("Bosta yoklama KAPALI dogar",
+              poll is not None and poll.disabled is True,
+              f"(got {getattr(poll, 'disabled', 'yok')})")
+
         _training_states.clear()
 
     print("\n" + "=" * 60)

@@ -110,7 +110,8 @@ python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
-python tests/test_training_status.py        # /train/status progress + sembol uyarisi (8 kontrol)
+python tests/test_training_status.py        # /train/status progress, sembol uyarisi,
+                                           #        sayfaya donunce ilerleme (11 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
@@ -311,6 +312,17 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 - `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
   alembic yok, `create_all()` var olan tabloyu değiştirmez
+
+### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
+- `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
+  **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat
+  dugmesi acar" kalibi bu yuzden bozuk: baska sayfaya gidip donen kullanici
+  surmekte olan isin ilerlemesini bir daha goremez.
+- Kural: uzun suren bir isin sayfasi **acilista durumu sormali** ve yoklamayi
+  ona gore acmali (`training.py::layout` -> `_status_block`,
+  `hyperopt.py::layout` -> calisan study'yi listeden bulur).
+- Ayrica calisan isin kimligini yalnizca `dcc.Store`'da tutma — store da
+  sifirlanir; kimlik backend'den geri bulunabilmeli.
 
 ### Sembol evreni ve train/test bolmesi (ONEMLI)
 - Gozlem uzayi sembol sayisina bagli: `1 + n + 5n + 5n`. 5 sembol -> 56,

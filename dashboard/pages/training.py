@@ -43,9 +43,18 @@ def _phase_options():
 # ── Layout ────────────────────────────────────────────────────────────────────
 
 def layout():
+    # Sayfa her gezinmede YENIDEN uretiliyor (`display_page` yalnizca
+    # page-content'i degistirir). Onceden `dcc.Interval` her seferinde
+    # `disabled=True` doguyordu ve yalnizca "Baslat" dugmesi aciyordu; baska
+    # bir sayfaya gidip donen kullanici surmekte olan egitimin ilerlemesini
+    # bir daha goremiyordu. Sayfa artik acilista "zaten calisan bir kosum var
+    # mi" diye soruyor. Uc bellekten okundugu icin ucuz.
+    status = api.get_training_status() or {}
+    content, poll_disabled = _status_block(status)
+
     return html.Div([
-        # Polling interval (starts disabled)
-        dcc.Interval(id="training-poll", interval=3_000, disabled=True, n_intervals=0),
+        dcc.Interval(id="training-poll", interval=3_000,
+                     disabled=poll_disabled, n_intervals=0),
         dcc.Store(id="training-store", data={}),
 
         # Header
@@ -125,7 +134,7 @@ def layout():
                 dbc.Card([
                     dbc.CardHeader(html.Span("Egitim Durumu", className="card-title-sm")),
                     dbc.CardBody([
-                        html.Div(id="training-status-content", children=_idle_status()),
+                        html.Div(id="training-status-content", children=content),
                     ]),
                 ]),
             ], md=8, className="mb-4"),
@@ -171,6 +180,23 @@ def _eta_row(status):
             className="card-title-sm",
         ), width=8),
     ], className="mb-2")
+
+
+def _status_block(status):
+    """(gosterilecek blok, yoklama kapali mi) — layout ve poll ayni kaynaktan.
+
+    Ayri ayri yazildiginda sayfaya donuldugunde farkli sey gorunuyordu:
+    callback dogru blogu uretiyordu ama layout her zaman "bos" ile
+    basliyordu ve yoklama kapali oldugu icin callback hic calismiyordu.
+    """
+    state = status.get("state", status.get("status", "idle"))
+    if state == "running":
+        return _with_warnings(_running_status(status), status), False
+    if state == "completed":
+        return _with_warnings(_completed_status(status), status), True
+    if state == "error":
+        return _error_status(status), True
+    return _idle_status(), True
 
 
 def _with_warnings(block, status):
@@ -375,13 +401,4 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def poll_training(n):
-        status = api.get_training_status()
-        state = status.get("state", status.get("status", "idle"))
-
-        if state == "running":
-            return _with_warnings(_running_status(status), status), False
-        elif state == "completed":
-            return _with_warnings(_completed_status(status), status), True
-        elif state == "error":
-            return _error_status(status), True
-        return _idle_status(), True
+        return _status_block(api.get_training_status() or {})
