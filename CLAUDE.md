@@ -125,6 +125,8 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
                                            #          bildirimler (39 kontrol)
+python tests/test_delete_artifacts.py      # Faz 8/I: model + optimizasyon kaydi
+                                           #          silme, RBAC (26 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
                                            #          smoke (84 kontrol)
@@ -172,6 +174,16 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
   (`tests/test_topbar.py` yapisal bekci).
 - Detay: `docs/development/phase-8-ui-theming.md`
+
+### Yapit silme (Faz 8/I)
+- Model: `DELETE /api/trading/models/{name}` (RequireWriter). Ortak (kullanici
+  oncesi) dizindeki model **salt-okunur** -> 403. Panoda: Modeller sayfasinda
+  cok secimli liste + "Secilenleri sil".
+- Optimizasyon: `DELETE /api/hyperopt/studies/{id}` **kaydi kalici siler**;
+  iptal ayri uctadir (`POST /studies/{id}/cancel`). Calisan kosum silmede 409.
+- **`OPTUNA_STORAGE` calisma alanina gore COZULMUYOR** — depo kokune sabit
+  bagli, yani optimizasyon calismalari tum kullanicilar arasinda ORTAK.
+  Bilinen gedik, ayri is olarak ele alinmali (bkz. Faz 8/I.3).
 
 ### Hesap ve profil (Faz 8/F)
 - Sayfa: `/dash/account` ("Hesabim") — kenar cubugu altindaki **avatar satiri**
@@ -244,6 +256,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Add `models/`, `results/`, `logs/`, `workspaces/`, `data/auth/` to git
 - `AUTH_ENABLED=False` ile sunucuya cikma — pano ve tum API herkese acik kalir
 - Yeni yazma ucu eklerken `RequireWriter`/`RequireAdmin` bagimliligini atlama
+  (Faz 8/I'de yakalandi: `/api/hyperopt/start` hic RBAC tasimiyordu, viewer
+  GPU'da optimizasyon baslatabiliyordu)
 - Arka plan gorevine kullanici kimligini tasimayi unutma (`ws.use_workspace(user_id)`) —
   aksi halde dosyalar yanlis calisma alanina yazilir
 - `models/`, `results/`, `data/live_trading` gibi yollari koda sabitleme;

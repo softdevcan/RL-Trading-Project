@@ -158,8 +158,31 @@ GET /api/hyperopt/studies/{study_id}/progress
 ### 5. Optimizasyonu İptal Et
 
 ```http
+POST /api/hyperopt/studies/{study_id}/cancel
+```
+
+> ⚠️ **Değişti.** Bu iş eskiden `DELETE /api/hyperopt/studies/{study_id}` idi.
+> `DELETE` artık **kaydı kalıcı olarak siler** (aşağıda, madde 6). İkisi durum
+> bakımından ayrık: çalışan bir study'ye `DELETE` atarsanız 409 alırsınız ve
+> buraya yönlendirilirsiniz — veri kaybı olmaz.
+
+### 6. Optimizasyon Kaydını Sil
+
+```http
 DELETE /api/hyperopt/studies/{study_id}
 ```
+
+Kaydı Optuna deposundan **kalıcı olarak** siler (deneme geçmişi ve en iyi
+parametreler dahil). Çalışan bir koşum `409` ile reddedilir — önce iptal edin.
+
+`user` veya `admin` rolü gerekir (`viewer` silemez). Panoda: HiperParam
+sayfasındaki çalışma kartında çöp kutusu düğmesi.
+
+> **İzolasyon notu:** Optuna deposu depo köküne sabit bağlıdır
+> (`results/hyperparameter_studies/optuna_studies.db`), `app/auth/workspace.py`
+> ile çözülmez. Yani çalışmalar **tüm kullanıcılar arasında ortaktır**: burada
+> silinen kayıt herkesten silinir. Liste de zaten herkese aynı çalışmaları
+> gösteriyor.
 
 **Response:**
 ```json
@@ -428,6 +451,14 @@ GET /api/hyperopt/studies?algorithm=ppo&status=completed
 ### Q: Optimizasyonu nasıl durdururum?
 
 **A:**
+```http
+POST /api/hyperopt/studies/{study_id}/cancel
+```
+
+### Q: Biten bir çalışmayı listeden nasıl kaldırırım?
+
+**A:** Kalıcı olarak silin — tamamlanan çalışmalar Optuna deposunda kalır ve
+liste onları her açılışta geri getirir:
 ```http
 DELETE /api/hyperopt/studies/{study_id}
 ```

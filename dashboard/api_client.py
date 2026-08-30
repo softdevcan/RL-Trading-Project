@@ -246,6 +246,15 @@ def get_health() -> Dict:
     return _get("/trading/health") or {}
 
 
+def delete_model(model_name: str) -> Dict:
+    """Egitilmis modeli sil.
+
+    Ortak (kullanici oncesi) dizindeki modeller salt-okunur: uc 403 doner ve
+    govdedeki mesaj kullaniciya gosterilir, o yuzden ham yanit dondurulur.
+    """
+    return _request_raw("DELETE", f"/trading/models/{model_name}")
+
+
 def get_models() -> List[Dict]:
     data = _get("/trading/models")
     if isinstance(data, list):
@@ -386,6 +395,15 @@ def get_config_feature_groups() -> Dict:
 
 def start_hyperopt(payload: Dict) -> Dict:
     return _post("/hyperopt/start", json=payload) or {}
+
+
+def delete_hyperopt_study(study_id: str) -> Dict:
+    """Optimizasyon kaydini kalici olarak sil (calisan study 409 verir)."""
+    return _request_raw("DELETE", f"/hyperopt/studies/{study_id}")
+
+
+def cancel_hyperopt_study(study_id: str) -> Dict:
+    return _post_raw(f"/hyperopt/studies/{study_id}/cancel", json=None)
 
 
 def get_hyperopt_studies() -> List[Dict]:

@@ -32,6 +32,7 @@ from app.schemas.hyperopt import (
     WSOptimizationComplete,
     AlgorithmType,
 )
+from app.auth.deps import RequireWriter
 from app.services import background_jobs as jobs
 from data.bist30_symbols import PHASE1_SYMBOLS
 from hyperparameter_optimization.optimizers import (
@@ -297,7 +298,8 @@ async def get_cached_data_range():
 @router.post("/start", response_model=OptimizationStartResponse)
 async def start_optimization(
     request: OptimizationRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    user: RequireWriter,
 ):
     """
     Hiper parametre optimizasyonu başlatır
@@ -619,10 +621,14 @@ async def get_optimization_progress(study_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/studies/{study_id}", response_model=CancelOptimizationResponse)
-async def cancel_optimization(study_id: str):
-    """
-    Running optimization'ı iptal eder
+@router.post("/studies/{study_id}/cancel", response_model=CancelOptimizationResponse)
+async def cancel_optimization(study_id: str, user: RequireWriter):
+    """Calisan optimizasyonu iptal eder.
+
+    Onceden bu is `DELETE /studies/{id}` idi; DELETE artik KAYDI SILIYOR
+    (asagida). Ikisi durum bakimindan ayrik oldugu icin gecis guvenli:
+    calisan bir study'ye DELETE atan eski bir cagiran 409 alir ve buraya
+    yonlendirilir, veri kaybi olmaz.
     """
     try:
         if study_id not in active_studies:
@@ -656,6 +662,60 @@ async def cancel_optimization(study_id: str):
     except Exception as e:
         logger.error(f"Failed to cancel optimization: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/studies/{study_id}")
+async def delete_study(study_id: str, user: RequireWriter) -> dict:
+    """Optimizasyon kaydini KALICI olarak siler.
+
+    Neden gerekli: tamamlanmis calismalar Optuna'nin SQLite deposunda kaliyor
+    ve `/studies` listesi onlari her acilista geri getiriyor. Deneme amacli
+    kosumlar listeyi kalici olarak kirletiyordu; silmenin baska yolu yoktu.
+
+    `DELETE` onceden IPTAL anlamina geliyordu; iptal `POST /studies/{id}/cancel`
+    ucuna tasindi. Calisan bir study burada 409 ile reddedilir — once iptal
+    edilmeli. Ikisi durum bakimindan ayrik oldugu icin eski cagiranlar veri
+    kaybetmez.
+
+    ONEMLI — izolasyon: Optuna deposu (`OPTUNA_STORAGE`) depo kokune SABIT
+    baglidir, `app/auth/workspace.py` ile cozulmez. Yani calismalar TUM
+    kullanicilar arasinda ORTAKTIR: burada silinen kayit herkesten silinir.
+    Bu, silme ile gelen yeni bir durum degil — liste de zaten herkese ayni
+    calismalari gosteriyor. Ayri bir is olarak ele alinmali.
+    """
+    record = active_studies.get(study_id)
+    study_name = (record or {}).get("study_name") or study_id
+
+    if record and str(record.get("status", "")).lower() == StudyStatus.RUNNING.value:
+        raise HTTPException(
+            status_code=409,
+            detail="Calisan optimizasyon silinemez; once /cancel ile iptal edin.",
+        )
+
+    deleted_storage = False
+    try:
+        optuna.delete_study(study_name=study_name, storage=OPTUNA_STORAGE)
+        deleted_storage = True
+    except KeyError:
+        # Depoda yok: yalnizca bellekte duran (hic trial uretmemis) bir kayit
+        # olabilir. Bellekten dusurmek yine de dogru sonuc.
+        logger.info(f"Study '{study_name}' Optuna deposunda yok; yalnizca bellekten dusuruluyor")
+    except Exception as exc:
+        logger.error(f"Study silinemedi ({study_name}): {exc}")
+        raise HTTPException(status_code=500, detail=f"Silinemedi: {exc}")
+
+    removed_memory = active_studies.pop(study_id, None) is not None
+    if not removed_memory:
+        # Liste, depodan gelen kayitlar icin study_name'i id yerine kullaniyor.
+        for sid, info in list(active_studies.items()):
+            if info.get("study_name") == study_name:
+                active_studies.pop(sid, None)
+                removed_memory = True
+
+    if not deleted_storage and not removed_memory:
+        raise HTTPException(status_code=404, detail=f"Study bulunamadi: {study_id}")
+
+    return {"status": "deleted", "study_id": study_id, "study_name": study_name}
 
 
 @router.get("/search-spaces/{algorithm}", response_model=AlgorithmSearchSpaceResponse)

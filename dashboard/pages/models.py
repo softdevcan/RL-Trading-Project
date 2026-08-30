@@ -6,7 +6,7 @@ API endpoints used:
   GET /api/trading/models/{name}/metrics
 """
 
-from dash import html, dcc
+from dash import html, dcc, no_update
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable
@@ -29,6 +29,8 @@ import dashboard.api_client as api
 def layout():
     return html.Div([
         dcc.Store(id="models-store", data=[]),
+        # Silme sonrasi listeyi tazeler
+        dcc.Store(id="models-delete-tick", data=0),
 
         create_page_header("Model Karsilastirma",
                            "Birden fazla modeli karsilastir ve detaylari incele"),
@@ -48,12 +50,35 @@ def layout():
                                    id="models-deselect-all", size="sm", color="secondary", outline=True),
                     ], md=4, className="d-flex align-items-end"),
                     dbc.Col([
+                        dbc.Button([html.I(className="bi bi-trash me-1"), "Secilenleri sil"],
+                                   id="models-delete-btn", size="sm", color="danger",
+                                   outline=True, disabled=True),
+                    ], md=2, className="d-flex align-items-end"),
+                    dbc.Col([
                         dbc.Button([html.I(className="bi bi-arrow-clockwise me-2"), "Yenile"],
                                    id="models-refresh-btn", color="secondary", outline=True, className="w-100"),
                     ], md=2, className="d-flex align-items-end ms-auto"),
                 ], className="g-3"),
+                html.Div(id="models-delete-alert", className="mt-3"),
             ])
         ], className="mb-4"),
+
+        # Silme onayi — geri alinamaz bir islem, tek tikla olmamali
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Modelleri sil")),
+                dbc.ModalBody(html.Div(id="models-delete-body")),
+                dbc.ModalFooter([
+                    dbc.Button("Vazgec", id="models-delete-cancel",
+                               color="secondary", outline=True, className="me-2"),
+                    dbc.Button([html.I(className="bi bi-trash me-1"), "Sil"],
+                               id="models-delete-confirm", color="danger"),
+                ]),
+            ],
+            id="models-delete-modal",
+            is_open=False,
+            centered=True,
+        ),
 
         # Comparison table
         dbc.Card([
@@ -128,10 +153,11 @@ def register_callbacks(app):
 
     @app.callback(
         [Output("models-checklist", "options"), Output("models-store", "data")],
-        Input("models-refresh-btn", "n_clicks"),
+        [Input("models-refresh-btn", "n_clicks"),
+         Input("models-delete-tick", "data")],
         prevent_initial_call=False,
     )
-    def refresh_models(n):
+    def refresh_models(n, _tick):
         models = api.get_models()
         opts = [{"label": _model_label(m), "value": m.get("name", "")} for m in models]
         return opts, models
@@ -147,6 +173,76 @@ def register_callbacks(app):
         if ctx.triggered_id == "models-select-all":
             return [o["value"] for o in (opts or [])]
         return []
+
+    @app.callback(
+        Output("models-delete-btn", "disabled"),
+        Input("models-checklist", "value"),
+    )
+    def toggle_delete_enabled(selected):
+        return not selected
+
+    @app.callback(
+        [Output("models-delete-modal", "is_open"),
+         Output("models-delete-body", "children")],
+        [Input("models-delete-btn", "n_clicks"),
+         Input("models-delete-cancel", "n_clicks"),
+         Input("models-delete-confirm", "n_clicks")],
+        State("models-checklist", "value"),
+        prevent_initial_call=True,
+    )
+    def toggle_delete_modal(open_n, cancel_n, confirm_n, selected):
+        from dash import ctx
+        if ctx.triggered_id != "models-delete-btn":
+            return False, no_update
+        names = selected or []
+        body = html.Div([
+            html.P(f"{len(names)} model kalici olarak silinecek. Bu islem geri alinamaz.",
+                   style={"color": TEXT}),
+            html.Ul([html.Li(n, style={"color": TEXT_MUTED, "fontSize": "13px"})
+                     for n in names]),
+            html.Small(
+                "Model dosyasi ve varsa metrik JSON'u silinir. Ortak (kullanici "
+                "oncesi) dizindeki modeller salt-okunurdur ve atlanir.",
+                style={"color": TEXT_MUTED},
+            ),
+        ])
+        return True, body
+
+    @app.callback(
+        [Output("models-delete-alert", "children"),
+         Output("models-delete-tick", "data"),
+         Output("models-checklist", "value", allow_duplicate=True)],
+        Input("models-delete-confirm", "n_clicks"),
+        [State("models-checklist", "value"), State("models-delete-tick", "data")],
+        prevent_initial_call=True,
+    )
+    def delete_selected(n_clicks, selected, tick):
+        if not n_clicks or not selected:
+            return no_update, no_update, no_update
+
+        ok, failed = [], []
+        for name in selected:
+            result = api.delete_model(name)
+            if result.get("ok"):
+                ok.append(name)
+            else:
+                detail = (result.get("body") or {}).get("detail") or f"HTTP {result.get('status')}"
+                failed.append(f"{name}: {detail}")
+
+        blocks = []
+        if ok:
+            blocks.append(dbc.Alert(f"{len(ok)} model silindi.", color="success",
+                                    className="py-2 mb-2", duration=4000))
+        if failed:
+            # Her basarisiz satir ayri gosterilir: 403 (ortak dizin) ile 404
+            # (baska bir yerde zaten silinmis) farkli sebepler.
+            blocks.append(dbc.Alert(
+                [html.Div("Silinemeyenler:", style={"fontWeight": "600"})]
+                + [html.Div(f, style={"fontSize": "12px"}) for f in failed],
+                color="danger", className="py-2 mb-0",
+            ))
+
+        return html.Div(blocks), (tick or 0) + 1, []
 
     @app.callback(
         [Output("models-table", "data"), Output("models-bar-chart", "figure")],

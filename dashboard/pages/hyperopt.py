@@ -12,7 +12,7 @@ API endpoints used:
 import json
 from datetime import date, timedelta
 
-from dash import html, dcc
+from dash import html, dcc, no_update
 from dash import ALL as _ALL
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -197,9 +197,31 @@ def layout():
                         ),
                     ], className="mb-3 d-flex justify-content-end"),
                 ]),
+                html.Div(id="hyperopt-delete-alert"),
                 html.Div(id="hyperopt-studies-grid"),
             ], md=8, className="mb-4"),
         ]),
+
+        # Silme sonrasi listeyi tazeler
+        dcc.Store(id="hyperopt-delete-tick", data=0),
+        dcc.Store(id="hyperopt-delete-target", data=None),
+
+        # Silme onayi — Optuna deposundan kalici olarak siler
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Calismayi sil")),
+                dbc.ModalBody(html.Div(id="hyperopt-delete-body")),
+                dbc.ModalFooter([
+                    dbc.Button("Vazgec", id="hyperopt-delete-cancel",
+                               color="secondary", outline=True, className="me-2"),
+                    dbc.Button([html.I(className="bi bi-trash me-1"), "Sil"],
+                               id="hyperopt-delete-confirm", color="danger"),
+                ]),
+            ],
+            id="hyperopt-delete-modal",
+            is_open=False,
+            centered=True,
+        ),
 
         # ── Detail modal ─────────────────────────────────────────────────────
         dbc.Modal([
@@ -355,14 +377,69 @@ def register_callbacks(app):
 
     @app.callback(
         Output("hyperopt-studies-grid", "children"),
-        [Input("hyperopt-refresh-btn", "n_clicks"), Input("hyperopt-poll", "n_intervals")],
+        [Input("hyperopt-refresh-btn", "n_clicks"), Input("hyperopt-poll", "n_intervals"),
+         Input("hyperopt-delete-tick", "data")],
         prevent_initial_call=False,
     )
-    def refresh_studies(n_ref, n_poll):
+    def refresh_studies(n_ref, n_poll, _tick):
         studies = api.get_hyperopt_studies()
         if not studies:
             return create_state_block("empty", "Kayitli optimizasyon calismasi yok.")
         return _render_studies_grid(studies)
+
+    @app.callback(
+        [Output("hyperopt-delete-modal", "is_open"),
+         Output("hyperopt-delete-body", "children"),
+         Output("hyperopt-delete-target", "data")],
+        [Input({"type": "hyperopt-study-delete", "index": _ALL}, "n_clicks"),
+         Input("hyperopt-delete-cancel", "n_clicks"),
+         Input("hyperopt-delete-confirm", "n_clicks")],
+        prevent_initial_call=True,
+    )
+    def toggle_delete_modal(del_clicks, cancel_n, confirm_n):
+        from dash import ctx
+        triggered = ctx.triggered_id
+        if not isinstance(triggered, dict) or not any(del_clicks or []):
+            # Vazgec / Sil -> kapat. Hedefi TEMIZLEME: silme callback'i onu
+            # ayni turda State olarak okuyor.
+            return False, no_update, no_update
+
+        study_id = str(triggered.get("index"))
+        body = html.Div([
+            html.P("Bu optimizasyon kaydi kalici olarak silinecek. "
+                   "Deneme gecmisi ve en iyi parametreler de gider.",
+                   style={"color": TEXT}),
+            html.Div(study_id, style={"color": TEXT_MUTED, "fontSize": "12px",
+                                      "wordBreak": "break-all"}),
+            html.Small(
+                "Optuna deposu tum kullanicilar arasinda ORTAK — silinen kayit "
+                "herkesten silinir.",
+                style={"color": TEXT_MUTED},
+            ),
+        ])
+        return True, body, study_id
+
+    @app.callback(
+        [Output("hyperopt-delete-alert", "children"),
+         Output("hyperopt-delete-tick", "data")],
+        Input("hyperopt-delete-confirm", "n_clicks"),
+        [State("hyperopt-delete-target", "data"), State("hyperopt-delete-tick", "data")],
+        prevent_initial_call=True,
+    )
+    def delete_study(n_clicks, study_id, tick):
+        if not n_clicks or not study_id:
+            return no_update, no_update
+
+        result = api.delete_hyperopt_study(str(study_id))
+        if result.get("ok"):
+            return (
+                dbc.Alert("Calisma silindi.", color="success",
+                          className="py-2 mb-3", duration=4000),
+                (tick or 0) + 1,
+            )
+
+        detail = (result.get("body") or {}).get("detail") or f"HTTP {result.get('status')}"
+        return dbc.Alert(str(detail), color="danger", className="py-2 mb-3"), no_update
 
     @app.callback(
         [
@@ -538,8 +615,20 @@ def _render_studies_grid(studies):
                         dbc.Col(html.Span(f"{best:.4f}", style={"color": GREEN, "fontWeight": "700", "fontSize": "14px"}), width=7),
                     ]),
                     html.Div(
-                        dbc.Button("Detay", id={"type": "hyperopt-study-card", "index": str(sid)},
-                                   size="sm", color="primary", outline=True, className="w-100 mt-2"),
+                        [
+                            dbc.Button("Detay",
+                                       id={"type": "hyperopt-study-card", "index": str(sid)},
+                                       size="sm", color="primary", outline=True,
+                                       className="flex-grow-1"),
+                            dbc.Button(html.I(className="bi bi-trash"),
+                                       id={"type": "hyperopt-study-delete", "index": str(sid)},
+                                       size="sm", color="danger", outline=True,
+                                       title="Bu calismayi sil",
+                                       # Calisan kosum once iptal edilmeli; uc de
+                                       # 409 ile reddediyor, dugme onu tekrar etmesin.
+                                       disabled=(status == "running")),
+                        ],
+                        className="d-flex gap-2 mt-2",
                     ),
                 ])
             ]),

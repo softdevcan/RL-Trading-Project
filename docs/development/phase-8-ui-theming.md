@@ -976,6 +976,71 @@ da `Set-Cookie`'yi Flask yanıtına elle taşımayı gerektirir; ikisi de mevcut
 
 ---
 
+## Faz I — Yapıt silme (2026-08-30)
+
+Kullanıcı bildirimi: *"eğitilmiş RL modellerini ekranda silemiyorum, hiper
+parametreler için de öyle; test için yapılanlar kirlilik yapıyor."* Doğruydu ve
+iki ayrı sebebi vardı.
+
+### I.1 — Model: uç vardı, arayüz yoktu
+
+`DELETE /api/trading/models/{name}` Faz 7'den beri var (RequireWriter, model
+dosyası + metrik JSON'unu siliyor, ortak dizindeki modeli 403 ile reddediyor).
+Panoda **hiçbir karşılığı yoktu** — `api_client`'ta sarmalayıcı bile yok.
+
+Modeller sayfasındaki mevcut çoklu seçim listesi zaten doğru araç: seçilenler
+tek seferde silinebiliyor. Onay modalı ne silineceğini sayıyor ve listeliyor;
+başarısızlıklar **tek tek** gösteriliyor, çünkü 403 (ortak dizin, salt-okunur)
+ile 404 (başka yerde zaten silinmiş) farklı sebepler.
+
+### I.2 — Hiperparametre: silme yeteneği hiç yoktu
+
+`DELETE /hyperopt/studies/{id}` **iptal** ediyordu, silmiyordu: çalışmayan bir
+study'ye 404 dönüyordu. Tamamlanan çalışmalar Optuna'nın SQLite deposunda
+kalıyor ve `/studies` listesi onları her açılışta geri getiriyor — deneme
+amaçlı koşumlar listeyi kalıcı olarak kirletiyordu, temizlemenin **hiçbir yolu
+yoktu**.
+
+- `POST /studies/{id}/cancel` → iptal (eski davranış, doğru adla)
+- `DELETE /studies/{id}` → kaydı Optuna deposundan kalıcı siler
+
+Geçiş güvenli: ikisi durum bakımından **ayrık**. Çalışan bir study'ye `DELETE`
+atan eski bir çağıran 409 alır ve `/cancel`'a yönlendirilir — veri kaybı yok.
+Depoda hiç kaydı olmayan (trial üretmemiş) bir çalışma yalnızca bellekten
+düşürülür. Kod tabanında `DELETE`'i çağıran yoktu; yalnızca
+`API_HYPEROPT_GUIDE.md` belgeliyordu, o da güncellendi.
+
+### I.3 — Yol üstünde bulunan iki gedik
+
+**1. `/hyperopt/start` hiç RBAC taşımıyordu** — `viewer` rolü GPU üzerinde
+optimizasyon başlatabiliyordu. Faz 7 yetki matrisi *"viewer: yalnızca okuma,
+eğitim yok"* diyor ama `/api/hyperopt/*` korunan uçlar listesinde hiç yoktu.
+`RequireWriter` eklendi; test viewer'ın 403 aldığını doğruluyor.
+
+**2. Optuna deposu çalışma alanına göre çözülmüyor.** `OPTUNA_STORAGE` depo
+köküne **sabit** bağlı (`results/hyperparameter_studies/optuna_studies.db`),
+`app/auth/workspace.py` kullanılmıyor — CLAUDE.md'nin *"yolları koda sabitleme"*
+kuralının ihlali. Sonuç: çalışmalar tüm kullanıcılar arasında ortak; burada
+silinen kayıt herkesten silinir.
+
+Bu **düzeltilmedi**, bilinçli olarak: taşımak mevcut çalışmaları öksüz bırakır
+ve Faz 7 izolasyon işidir, silme özelliği değil. Silme yeni bir açık da
+getirmiyor — liste zaten herkese aynı çalışmaları gösteriyordu. Uç, arayüz ve
+kılavuz üçü de bunu açıkça yazıyor. **Ayrı bir iş olarak ele alınmalı.**
+
+### I.4 — Testler
+
+`tests/test_delete_artifacts.py` — **26 kontrol**: model silme (dosya + metrik),
+viewer 403, ortak dizin salt-okunur (403 + dosya yerinde), olmayan model 404,
+yol geçişi (`../`) reddi, CSRF'siz silme reddi; çalışma silme (depodan düşüyor),
+çalışan koşum 409, iptalden sonra silinebiliyor, viewer silemiyor,
+`/hyperopt/start` viewer'a kapalı.
+
+Test Optuna deposunu **geçici bir dosyaya** yönlendiriyor; gerçek
+`optuna_studies.db` dosyasına dokunulmuyor.
+
+---
+
 ## Belge Güncelleme Notu
 
 Faz kapanışında güncellendi: `CLAUDE.md` (Development Plan, proje yapısı, tests
