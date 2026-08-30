@@ -12,6 +12,10 @@ Ne dogrular (Faz 8, G):
      sayfa bosuna yeniden cizilmiyor (no_update).
   6. Yapisal bekci: kenar cubugundaki her menu maddesinin kirinti karsiligi
      var. Menuye madde eklenip buraya eklenmezse ust cubuk sessizce bosalir.
+  7. Bildirimler: /api/account/notifications bellekteki calisma durumlarindan
+     ne uretiyor (suren/hatali/yeni biten), "yakinda bitti" penceresi disinda
+     kalan kosum zilde asili kaliyor mu, baska kullanicinin kosumu siziyor mu,
+     ve zil callback'i rozeti/menuyu dogru dolduruyor mu.
 """
 
 from __future__ import annotations
@@ -185,6 +189,112 @@ def main() -> int:
                  if route not in known or href not in known)
     check("Sonraki adim haritasi gecerli rotalara isaret ediyor", not bad,
           f"gecersiz: {bad}")
+
+    print("\n8) Bildirimler (/api/account/notifications + zil)")
+    # Bildirimler kalici bir tablodan degil, BELLEKTEKI calisma durumlarindan
+    # uretiliyor. Test de o sozlukleri dogrudan kurup ucun ne cikardigina bakar.
+    import time as _time
+
+    from app.api.routes.account import NOTIFY_RECENT_SECONDS
+    from app.api.routes.trading import _empty_training_state, _training_states
+    from app.services.prediction_service import _training_state as pred_state
+    from app.auth.models import User
+
+    with session_scope() as db:
+        uid = db.query(User).filter(User.email == "user@test.local").first().id
+        other = db.query(User).filter(User.email == "root@test.local").first().id
+
+    def notifications(client: TestClient) -> list:
+        r = client.get("/api/account/notifications")
+        return r.json().get("items", []) if r.status_code == 200 else [{"http": r.status_code}]
+
+    with TestClient(app) as c:
+        check("Giris (bildirim)", login(c, "user@test.local", "UserPass1234"))
+
+        _training_states.clear()
+        pred_state.clear()
+        check("Hicbir sey calismiyorken zil bos", notifications(c) == [],
+              f"(got {notifications(c)})")
+
+        _training_states[uid] = {**_empty_training_state(), "is_training": True,
+                                 "state": "running", "current_step": 43,
+                                 "total_steps": 100}
+        items = notifications(c)
+        check("Suren egitim bildiriliyor",
+              any(i["id"] == "rl-training" for i in items), f"(got {items})")
+        check("Ilerleme yuzdesi tasiniyor",
+              any("%43" in (i.get("body") or "") for i in items), f"(got {items})")
+
+        _training_states[uid] = {**_empty_training_state(), "state": "error",
+                                 "error": "CUDA out of memory"}
+        items = notifications(c)
+        check("Hata bildiriliyor", any(i["kind"] == "error" for i in items),
+              f"(got {items})")
+        check("Hata metni tasiniyor",
+              any("CUDA" in (i.get("body") or "") for i in items), f"(got {items})")
+
+        _training_states[uid] = {**_empty_training_state(), "state": "completed",
+                                 "finished_ts": _time.time()}
+        check("Yeni biten egitim bildiriliyor",
+              any(i["id"] == "rl-done" for i in notifications(c)))
+
+        # Pencere disinda kalan kosum zilde asili kalmamali
+        _training_states[uid] = {**_empty_training_state(), "state": "completed",
+                                 "finished_ts": _time.time() - NOTIFY_RECENT_SECONDS - 60}
+        check("Eski kosum zilde asili kalmiyor", notifications(c) == [],
+              f"(got {notifications(c)})")
+
+        # Damgasiz "completed" gosterilmez: ne zaman bittigini bilmiyoruz
+        _training_states[uid] = {**_empty_training_state(), "state": "completed"}
+        check("Zaman damgasiz bitis gosterilmiyor", notifications(c) == [],
+              f"(got {notifications(c)})")
+
+        print("\n  -- tahmin egitimi --")
+        _training_states.clear()
+        pred_state[(uid, "AKBNK.IS", "daily", "yfinance")] = {
+            "state": "running", "source": "yfinance",
+            "started_at": "2026-08-30T10:00:00", "finished_at": None,
+            "error": None, "result": None,
+        }
+        items = notifications(c)
+        check("Suren tahmin egitimi bildiriliyor",
+              any("AKBNK.IS" in i["title"] for i in items), f"(got {items})")
+
+        # Baska kullanicinin kosumu sizmamali
+        pred_state[(other, "THYAO.IS", "daily", "yfinance")] = {
+            "state": "running", "source": "yfinance",
+            "started_at": "2026-08-30T10:00:00", "finished_at": None,
+            "error": None, "result": None,
+        }
+        _training_states[other] = {**_empty_training_state(), "is_training": True,
+                                   "state": "running", "current_step": 1,
+                                   "total_steps": 10}
+        items = notifications(c)
+        check("Baska kullanicinin tahmin egitimi sizmiyor",
+              not any("THYAO.IS" in i["title"] for i in items), f"(got {items})")
+        check("Baska kullanicinin RL egitimi sizmiyor",
+              not any(i["id"] == "rl-training" for i in items), f"(got {items})")
+
+        print("\n  -- zil callback'i --")
+        r = fire(c, "topbar-notify.children", [1])
+        check("Zil callback'i calisti", r.status_code == 200, f"(got {r.status_code})")
+        resp = r.json()["response"] if r.status_code == 200 else {}
+        check("Rozet sayaci dolduruldu",
+              resp.get("topbar-notify-badge", {}).get("children") == "1",
+              f"(got {resp.get('topbar-notify-badge')})")
+        check("Rozet turu sinifa yansiyor",
+              "is-info" in (resp.get("topbar-notify-badge", {}).get("className") or ""),
+              f"(got {resp.get('topbar-notify-badge')})")
+        check("Menu ogesi uretildi", "AKBNK.IS" in r.text)
+
+        pred_state.clear()
+        _training_states.clear()
+        r = fire(c, "topbar-notify.children", [2])
+        resp = r.json()["response"]
+        check("Bos durumda rozet gizli",
+              "is-empty" in resp["topbar-notify-badge"]["className"],
+              f"(got {resp['topbar-notify-badge']})")
+        check("Bos durumda aciklayici satir var", "Yeni bildirim yok" in r.text)
 
     print("\n" + "=" * 60)
     print(f"  Gecen: {len(PASSED)}   Kalan: {len(FAILED)}")

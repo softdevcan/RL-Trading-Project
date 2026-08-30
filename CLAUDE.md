@@ -123,7 +123,8 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
                                            #        CSS siniflarimiz (86 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
-python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama (21 kontrol)
+python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
+                                           #          bildirimler (39 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
                                            #          smoke (84 kontrol)
@@ -163,6 +164,10 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   cubugunda degil. Cogaltma: `theme-toggle.js` `getElementById` kullaniyor, iki
   kopya olursa biri tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam
   bir tane oldugunu denetliyor.
+- **Bildirimler OLAY GUNLUGU DEGIL, durum ozeti**: bellekteki calisma
+  durumlarindan (RL + tahmin egitimi) uretilir, kalici tablo yok. Veri tazeligi
+  bilincli olarak disarida — `/trading/data/status` CSV okur, 60 sn'de bir
+  yoklanamaz. "Bitti" satirlari 12 saatlik pencereyle sinirli.
 - **Kenar cubugu menusune madde eklerken `topbar.ROUTE_INDEX`'i unutma** —
   aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
   (`tests/test_topbar.py` yapisal bekci).
@@ -173,8 +178,8 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   buraya gider (`dashboard/components/sidebar.py::_account_link`). Her rol erisir.
 - Uclar: `app/api/routes/account.py` → `GET /api/account/me`,
   `PATCH /api/account/profile`, `GET /api/account/sessions`,
-  `POST /api/account/sessions/revoke-others`, `GET /api/account/activity`.
-  Hepsi `CurrentUser`.
+  `POST /api/account/sessions/revoke-others`, `GET /api/account/activity`,
+  `GET /api/account/notifications`. Hepsi `CurrentUser`.
 - **Neden `/api/*`, `/auth/*` degil:** pano callback'leri `api_client` uzerinden
   cagiriyor; `/api/*` altinda CSRF + RBAC middleware'den bedava geliyor.
   `/auth/*` tarayicinin dogrudan cagirdigi yuzey (giris formu, tema anahtari) —

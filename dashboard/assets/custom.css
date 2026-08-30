@@ -130,6 +130,70 @@ hr { border-color: var(--rlt-border); opacity: 1; }
 
 .topbar-search { width: 210px; font-size: 13px; }
 
+/* Bildirim zili — icerik /api/account/notifications'tan gelir. */
+.topbar-bell {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-muted);
+  border-radius: var(--rlt-radius-sm);
+  padding: 4px 10px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.topbar-bell:hover,
+.topbar-bell:focus {
+  background-color: var(--rlt-surface-hover);
+  color: var(--rlt-text);
+  border-color: var(--rlt-border-strong);
+  box-shadow: none;
+}
+
+.topbar-badge {
+  display: inline-block;
+  min-width: 17px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  color: var(--rlt-on-fill);
+  background-color: var(--rlt-primary-fill);
+}
+/* Sayac yokken rozet hic yer kaplamasin — bos daire "0 bildirim" gibi durur */
+.topbar-badge.is-empty { display: none; }
+.topbar-badge.is-info { background-color: var(--rlt-primary-fill); }
+.topbar-badge.is-success { background-color: var(--rlt-profit-fill); }
+.topbar-badge.is-error { background-color: var(--rlt-loss-fill); }
+
+.topbar-notify .dropdown-menu { min-width: 300px; max-width: 360px; }
+
+.topbar-notify-item { white-space: normal; }
+.topbar-notify-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rlt-text);
+}
+.topbar-notify-body {
+  display: block;
+  font-size: 11px;
+  color: var(--rlt-muted);
+}
+/* Sol kenar seridi: turu renkle degil KONUMLA da isaretler, boylece renk tek
+   basina bilgi tasimaz (renk korlugu). */
+.topbar-notify-item { border-left: 3px solid transparent; }
+.topbar-notify-item.is-info { border-left-color: var(--rlt-primary); }
+.topbar-notify-item.is-success { border-left-color: var(--rlt-profit); }
+.topbar-notify-item.is-error { border-left-color: var(--rlt-loss); }
+
+.topbar-notify-empty {
+  font-size: 12px;
+  color: var(--rlt-muted);
+}
+
 /* Dar ekranda once kirinti, sonra baglamsal eylem yer acar; arama ve tema
    anahtari her zaman kalir. */
 @media (max-width: 1100px) {

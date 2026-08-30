@@ -8,13 +8,16 @@
 > olduğunu anlatıyor.
 >
 > Doğrulama: `test_theme_contrast` 86/86, `test_theme_preference` 31/31,
-> `test_account_profile` 84/84, `test_auth` 28/28,
+> `test_account_profile` 84/84, `test_topbar` 39/39, `test_auth` 28/28,
 > `test_workspace_isolation` 18/18; 10 sayfa × 2 tema gerçek tarayıcıda
 > (Chrome/CDP) görsel kontrol.
 >
 > **Faz F (2026-08-30)** — Hesabım sayfası panoda *bulunamıyordu*; kenar
 > çubuğundaki tek giriş noktası düz metin görünümündeki bir addı. O tur
 > "Faz F — Profil sayfası" başlığında.
+>
+> **Faz G (2026-08-30)** — Üst çubuk: kırıntı, bağlamsal eylem, sayfa araması,
+> taşınan görünüm anahtarı ve bildirim zili. "Faz G — Üst çubuk" başlığında.
 
 Amaç: panoya çalışır bir **aydınlık tema** kazandırmak ve bileşenleri
 sadelik/okunabilirlik yönünde profesyonelleştirmek. Referans olarak kullanıcının
@@ -832,9 +835,11 @@ renge düşüyordu — sessiz bir kayıp. `E.2` kaçak-hex denetimi bunu yakalam
 
 ### G.4 — Testler
 
-`tests/test_topbar.py` — **21 kontrol**: yerleşim, tek kopya görünüm anahtarı,
+`tests/test_topbar.py` — **39 kontrol**: yerleşim, tek kopya görünüm anahtarı,
 kırıntı (bilinmeyen rotada boş), bağlamsal eylem, role duyarlı arama, arama
-yönlendirmesi ve `no_update` yolu.
+yönlendirmesi ve `no_update` yolu; bildirim üretimi (süren/hatalı/yeni biten),
+pencere dışında kalan koşumun düşmesi, damgasız bitişin gösterilmemesi,
+**başka kullanıcının koşumunun sızmaması** ve zil callback'i.
 
 İki **yapısal bekçi** var: kenar çubuğundaki her menü maddesinin kırıntı
 karşılığı olmalı (menüye madde eklenip buraya eklenmezse üst çubuk o sayfada
@@ -843,10 +848,47 @@ etmeli.
 
 `test_theme_contrast`'ın sınıf denetimine `topbar` öneki eklendi.
 
-> **Bildirimler henüz yok.** Üst çubukta yer ayrılmadı: çalışmayan bir zil
-> koymak, olmayan bir özelliği varmış gibi göstermek olurdu. Gerçek sinyaller
-> mevcut (RL eğitim durumu, tahmin eğitim durumu — ikisi de bellekte), sıradaki
-> tur bu.
+### G.5 — Bildirimler
+
+**Olay günlüğü değil, durum özeti.** Kalıcı bir bildirim tablosu yok;
+`GET /api/account/notifications` zaten bellekte tutulan çalışma durumlarını
+okuyor — RL eğitimi (`trading._training_states`) ve tahmin eğitimi
+(`prediction_service._training_state`), ikisi de kullanıcı bazlı sözlükler.
+Bu yüzden uç ucuz: diske ve DB'ye hiç gitmiyor. "Okundu" işareti de yok — bir
+iş bittiğinde ya da düzeldiğinde satır kendiliğinden kayboluyor.
+
+Üretilen satırlar:
+
+| Durum | Tür | Nereye götürür |
+|---|---|---|
+| RL eğitimi sürüyor | info (`%43 · phase`) | Eğitim |
+| RL eğitimi hata verdi | error (hata metni) | Eğitim |
+| RL eğitimi **yakında** bitti | success | Modeller |
+| Tahmin eğitimi sürüyor / hata / yakında bitti | info / error / success | Tahmin |
+
+İki karar açıkça yazılı:
+
+- **Veri tazeliği kasıtlı olarak dışarıda.** `/trading/data/status` paneli
+  CSV'den okuyor; zilin arkasına koymak her yoklamada o maliyeti ödetirdi.
+  Veri durumu kendi sayfasında kalıyor.
+- **"Bitti" satırları 12 saatlik pencereyle sınırlı** (`NOTIFY_RECENT_SECONDS`).
+  Aksi halde son koşumun sonucu günlerce zilde asılı kalırdı. Zaman damgası
+  olmayan bir "completed" hiç gösterilmiyor: *"ne zaman bittiğini bilmiyorum"*
+  ile *"az önce bitti"* aynı şey değil. Bunun için `trading.py` koşumun bittiği
+  anı `finished_ts`'e yazıyor (`learn_end_ts` değerlendirme öncesini işaretler,
+  o yüzden ayrı tutuldu).
+
+Rozetin rengini **en ağır** tür belirler (hata > bilgi > başarı): kullanıcı
+zili açmadan önce "bir şey mi bozuldu" sorusunun cevabını görmeli. Tür ayrıca
+satırın **sol kenar şeridiyle** de işaretleniyor, yani renk tek başına bilgi
+taşımıyor.
+
+**Yoklama cadansı 60 sn** — panonun zaten var olan sürekli yoklayıcılarıyla
+aynı (`prediction.py` 60 sn, `home.py` 30 sn), yeni bir yük sınıfı açmıyor.
+Yan etkisi kayda değer: açık bir sekme sessiz yenilemeyi tetiklediği için
+oturumu canlı tutar. Bu davranış `home.py`'nin yoklayıcısıyla zaten vardı;
+üst çubuk onu **tüm sayfalara** yayıyor. Üst sınır refresh token'ın azami ömrü
+(`REFRESH_TOKEN_EXPIRE_DAYS`).
 
 ---
 

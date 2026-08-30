@@ -64,6 +64,10 @@ def _empty_training_state() -> Dict[str, Any]:
         "run_start_ts": None,
         "learn_start_ts": None,
         "estimate": None,
+        # Kosumun BITTIGI an (basarili ya da hatali). Bildirim zili "yakinda
+        # bitti mi" sorusunu bununla cevapliyor; learn_end_ts degerlendirme
+        # oncesini isaretledigi icin ayri tutuluyor.
+        "finished_ts": None,
     }
 
 
@@ -1399,6 +1403,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["metrics"] = metrics_with_config
         training_state["current_step"] = request.total_timesteps
         training_state["phase_name"] = "completed"
+        training_state["finished_ts"] = time.time()
 
         # Bu kosumu ETA gecmisine yaz — bir sonraki tahminin dayanagi olur.
         # Kayit basarisiz olursa egitim yine basarili sayilir.
@@ -1429,6 +1434,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["state"] = "error"
         training_state["error"] = str(e)
         training_state["phase_name"] = "error"
+        training_state["finished_ts"] = time.time()
         raise
 
 

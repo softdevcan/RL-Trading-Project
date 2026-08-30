@@ -26,6 +26,9 @@ karsiligi olmayan sayfada (Hesabim, Kullanicilar) slot bos kalir.
 
 from dash import html, dcc, no_update
 from dash import Input, Output, State
+import dash_bootstrap_components as dbc
+
+import dashboard.api_client as api
 
 from dashboard.auth_context import is_admin
 from dashboard.theme import TOPBAR_STYLE
@@ -80,6 +83,13 @@ def create_topbar() -> html.Div:
             html.Div(id="topbar-crumb", className="topbar-crumb"),
             html.Div(className="topbar-spacer"),
             html.Div(id="topbar-actions", className="topbar-actions"),
+            # Bildirim yoklamasi her sayfada calisir. Cadans, panonun zaten
+            # var olan surekli yoklayicilariyla ayni (prediction.py 60 sn);
+            # yeni bir yuk sinifi acmiyor. Yan etki: acik sekme oturumu
+            # canli tutar (sessiz yenileme) — bu davranis home.py'nin 30 sn'lik
+            # yoklayicisiyla zaten vardi, burada tum sayfalara yayiliyor.
+            dcc.Interval(id="topbar-notify-tick", interval=60_000, n_intervals=0),
+            _notify_menu(),
             dcc.Dropdown(
                 id="topbar-search",
                 options=_search_options(),
@@ -93,6 +103,31 @@ def create_topbar() -> html.Div:
         className="topbar",
         id="topbar",
         style=TOPBAR_STYLE,
+    )
+
+
+def _notify_menu() -> dbc.DropdownMenu:
+    """Bildirim zili.
+
+    Icerigi `/api/account/notifications` dolduruyor: kalici bir bildirim
+    tablosu YOK, gosterilenler bellekteki calisma durumlarinin ozeti (RL
+    egitimi, tahmin egitimi). Bu yuzden "okundu" isareti de yok — bir sey
+    bittiginde/duzeldiginde satir kendiliginden kayboluyor.
+
+    Rozet `label` icinde: dbc toggle dugmesini `label`'dan uretiyor, id
+    oradaki span'de kaldigi icin callback dogrudan yazabiliyor.
+    """
+    return dbc.DropdownMenu(
+        id="topbar-notify",
+        label=[
+            html.I(className="bi bi-bell"),
+            html.Span(id="topbar-notify-badge", className="topbar-badge is-empty"),
+        ],
+        children=[],
+        align_end=True,
+        caret=False,
+        toggle_class_name="topbar-bell",
+        className="topbar-notify",
     )
 
 
@@ -147,6 +182,40 @@ def register_callbacks(app):
                 )
             ]
         return crumb, actions
+
+    @app.callback(
+        Output("topbar-notify", "children"),
+        Output("topbar-notify-badge", "children"),
+        Output("topbar-notify-badge", "className"),
+        Input("topbar-notify-tick", "n_intervals"),
+    )
+    def refresh_notifications(_ticks):
+        items = api.get_notifications()
+
+        if not items:
+            empty = dbc.DropdownMenuItem(
+                "Yeni bildirim yok", disabled=True, class_name="topbar-notify-empty",
+            )
+            return [empty], "", "topbar-badge is-empty"
+
+        children = [dbc.DropdownMenuItem("Bildirimler", header=True)]
+        for item in items:
+            children.append(
+                dbc.DropdownMenuItem(
+                    [
+                        html.Span(item.get("title", ""), className="topbar-notify-title"),
+                        html.Span(item.get("body", ""), className="topbar-notify-body"),
+                    ],
+                    href=item.get("href") or "/dash/",
+                    class_name=f"topbar-notify-item is-{item.get('kind', 'info')}",
+                )
+            )
+
+        # Rozet rengini en agir tur belirler: hata > bilgi > basari. Kullanici
+        # zili acmadan once "bir sey mi bozuldu" sorusunun cevabini gormeli.
+        kinds = {item.get("kind") for item in items}
+        worst = "error" if "error" in kinds else ("info" if "info" in kinds else "success")
+        return children, str(len(items)), f"topbar-badge is-{worst}"
 
     @app.callback(
         Output("url", "pathname"),

@@ -230,6 +230,12 @@ def get_own_activity(limit: int = 20) -> List[Dict]:
     return data.get("entries", [])
 
 
+def get_notifications() -> List[Dict]:
+    """Ust cubuk zili. Ucuz uc: yalnizca bellekteki calisma durumlarini okur."""
+    data = _get("/account/notifications") or {}
+    return data.get("items", [])
+
+
 def revoke_other_sessions() -> Dict:
     return _post_raw("/account/sessions/revoke-others", json=None)
 

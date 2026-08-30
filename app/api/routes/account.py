@@ -21,6 +21,8 @@ degil, kisisel hesap ayaridir.
 from __future__ import annotations
 
 import json
+import time
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -93,6 +95,36 @@ def _device_label(user_agent: str) -> str:
     if browser or platform:
         return browser or platform
     return (ua[:48] + "...") if len(ua) > 48 else (ua or "Bilinmeyen istemci")
+
+
+# "Yakinda bitti" penceresi. Daha uzun tutmak son kosumun sonucunu gunlerce
+# zilde asili birakirdi; daha kisa tutmak gece biten bir egitimi kacirtirdi.
+NOTIFY_RECENT_SECONDS = 12 * 3600
+
+
+def _is_recent(epoch: float | None, now: float) -> bool:
+    """Epoch damgasi pencere icinde mi. Damga yoksa GOSTERME —
+    "ne zaman bittigini bilmiyorum" ile "az once bitti" ayni sey degil."""
+    if not epoch:
+        return False
+    return 0 <= (now - float(epoch)) <= NOTIFY_RECENT_SECONDS
+
+
+def _is_recent_iso(stamp: str | None, now: float) -> bool:
+    """ISO damgali surum (tahmin egitimi `finished_at` ISO yaziyor).
+
+    Naive damga yerel saat kabul edilir: prediction_service `datetime.now()`
+    ile yaziyor, epoch'a cevirirken ayni varsayim korunmali.
+    """
+    if not stamp:
+        return False
+    try:
+        parsed = datetime.fromisoformat(stamp)
+    except (TypeError, ValueError):
+        return False
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone().replace(tzinfo=None)
+    return _is_recent(parsed.timestamp(), now)
 
 
 def _current_jti(request: Request) -> str:
@@ -225,6 +257,104 @@ async def list_own_activity(
             "detail": detail if isinstance(detail, dict) else {},
         })
     return {"entries": entries, "count": len(entries)}
+
+
+@router.get("/notifications")
+async def list_notifications(user: CurrentUser) -> dict:
+    """Ust cubuktaki zil icin bildirimler.
+
+    **Olay gunlugu degil, DURUM ozeti.** Kalici bir bildirim tablosu yok;
+    burada okunanlar zaten bellekte tutulan calisma durumlaridir (RL egitimi
+    ve tahmin egitimi, ikisi de kullanici bazli sozlukler). Bu yuzden uc
+    ucuz: disk veya DB'ye gitmiyor, sik yoklanabilir.
+
+    Kasitli olarak DISARIDA: veri tazeligi. `/trading/data/status` panelin
+    tamamini CSV'den okuyor; zilin arkasina koymak her yoklamada o maliyeti
+    odetirdi. Veri durumu kendi sayfasinda kaliyor.
+
+    "Bitti" bildirimleri `NOTIFY_RECENT_SECONDS` penceresiyle sinirli — aksi
+    halde son kosumun sonucu sonsuza kadar zilde asili kalirdi.
+    """
+    now = time.time()
+    items: list[dict] = []
+
+    # ── RL egitimi ────────────────────────────────────────────────────────
+    try:
+        from app.api.routes.trading import get_training_state
+
+        rl = get_training_state(user.id) or {}
+    except Exception:  # pragma: no cover - modul yuklenemezse zil bos kalir
+        rl = {}
+
+    if rl.get("is_training"):
+        total = rl.get("total_steps") or 0
+        current = rl.get("current_step") or 0
+        percent = int(100 * current / total) if total else None
+        body = f"%{percent}" if percent is not None else "Suruyor"
+        phase = rl.get("phase_name")
+        if phase and phase not in ("training", "completed", "error"):
+            body = f"{body} · {phase}"
+        items.append({
+            "id": "rl-training",
+            "kind": "info",
+            "title": "Model egitimi suruyor",
+            "body": body,
+            "href": "/dash/training",
+        })
+    elif rl.get("state") == "error":
+        items.append({
+            "id": "rl-error",
+            "kind": "error",
+            "title": "Model egitimi hata verdi",
+            "body": (rl.get("error") or "")[:160],
+            "href": "/dash/training",
+        })
+    elif rl.get("state") == "completed" and _is_recent(rl.get("finished_ts"), now):
+        items.append({
+            "id": "rl-done",
+            "kind": "success",
+            "title": "Model egitimi tamamlandi",
+            "body": "Sonuclar Modeller sayfasinda",
+            "href": "/dash/models",
+        })
+
+    # ── Tahmin egitimi (sembol basina) ────────────────────────────────────
+    try:
+        from app.services.prediction_service import get_training_state as pred_states
+
+        records = pred_states(user_id=user.id) or []
+    except Exception:  # pragma: no cover
+        records = []
+
+    for record in records if isinstance(records, list) else []:
+        symbol = record.get("symbol", "?")
+        state = record.get("state")
+        if state == "running":
+            items.append({
+                "id": f"pred-{symbol}",
+                "kind": "info",
+                "title": f"{symbol} tahmin egitimi suruyor",
+                "body": record.get("source") or "",
+                "href": "/dash/prediction",
+            })
+        elif state == "error":
+            items.append({
+                "id": f"pred-err-{symbol}",
+                "kind": "error",
+                "title": f"{symbol} tahmin egitimi hata verdi",
+                "body": (record.get("error") or "")[:160],
+                "href": "/dash/prediction",
+            })
+        elif state == "completed" and _is_recent_iso(record.get("finished_at"), now):
+            items.append({
+                "id": f"pred-done-{symbol}",
+                "kind": "success",
+                "title": f"{symbol} tahmin egitimi tamamlandi",
+                "body": record.get("source") or "",
+                "href": "/dash/prediction",
+            })
+
+    return {"items": items, "count": len(items)}
 
 
 @router.post("/sessions/revoke-others")
