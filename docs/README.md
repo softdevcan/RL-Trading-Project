@@ -37,6 +37,7 @@ Proje mimarisi ve roadmap:
 - [**phase7-auth.md**](development/phase7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
 - [**phase-8-ui-theming.md**](development/phase-8-ui-theming.md) — Faz 8: aydınlık/koyu/sistem teması ve token katmanı (A–E), profil sayfası (F), üst çubuk + bildirimler (G), dar ekranda ikon rayı (H), model ve optimizasyon kaydı silme (I). Kapsam özeti belgenin sonundaki "Kapanış özeti"nde.
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
+- [**prediction-timeseries-models.md**](development/prediction-timeseries-models.md) — Ensemble'a ARIMA/SARIMAX eklemenin değerlendirmesi: getiri vs. volatilite yapısı ve mevsimsellik ölçümü (30 sembol, 76.058 gözlem); GARCH ve yön meta-learner'ı önerileri (salt analiz, 2026-08-30)
 
 ---
 

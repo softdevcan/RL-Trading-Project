@@ -32,6 +32,7 @@ from scripts.benchmarking.benchmark_strategies import BuyAndHoldStrategy
 ### `/analysis` - Analiz ve Raporlama
 - **generate_academic_report.py** - Akademik kalite raporlar oluşturur
 - **extract_comparison_table.py** - Model karşılaştırma tablosu
+- **probe_timeseries_structure.py** - Getiri/volatilite otokorelasyonu + mevsimsellik ölçümü (ARIMA/SARIMAX/GARCH kararına veri sağlar; `statsmodels` gerektirmez)
 
 **Kullanım:**
 ```bash
@@ -40,6 +41,9 @@ python scripts/analysis/generate_academic_report.py
 
 # Karşılaştırma tablosu çıkar
 python scripts/analysis/extract_comparison_table.py
+
+# Zaman serisi yapısını ölç (bulgular: docs/development/prediction-timeseries-models.md)
+python scripts/analysis/probe_timeseries_structure.py
 ```
 
 **Çıktılar:**
