@@ -157,6 +157,16 @@ def find_file(kind: str, filename: str, user_id: str | None = None) -> str | Non
     return None
 
 
+def shared_dir(kind: str) -> str:
+    """Kullanici oncesi ORTAK dizin (yazma hedefi degil, kimlik sorusu icin).
+
+    `find_file` bir dosyayi ortak dizinde buldugunda cagiran tarafin "bu ortak
+    mi benim mi" ayrimini yapabilmesi gerekiyor; `_legacy_dir`'e disaridan
+    uzanmak yerine bu kapi kullanilir.
+    """
+    return _legacy_dir(kind)
+
+
 # Kisayollar — cagri yerlerinde okunakli kalsin diye.
 def models_dir(user_id: str | None = None) -> str:
     return resolve("models", user_id)

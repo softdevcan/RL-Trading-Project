@@ -9,7 +9,8 @@ silme ucu vardi ama arayuzu yoktu; optimizasyon icin silme yetenegi HIC yoktu
 Ne dogrular:
   1. Model silme — sahibi silebiliyor, dosya ve metrik JSON'u gidiyor.
   2. Viewer silemiyor (RequireWriter).
-  3. Ortak (kullanici oncesi) dizindeki model salt-okunur: 403, dosya duruyor.
+  3. Ortak (kullanici oncesi) dizindeki model: kullaniciya 403 (dosya duruyor),
+     YONETICIYE acik (dosya + metrik gidiyor, denetim kaydi yaziliyor).
   4. Olmayan model 404; yol gecisi (../) reddediliyor.
   5. Optimizasyon kaydi silme — Optuna deposundan ve bellekten dusuyor.
   6. Calisan kosum 409 ile reddediliyor (once iptal edilmeli).
@@ -137,23 +138,54 @@ def main() -> int:
         check("Viewer optimizasyon baslatamiyor", r.status_code == 403,
               f"(got {r.status_code})")
 
-    print("\n4) Ortak (kullanici oncesi) model salt-okunur")
-    with TestClient(app) as c:
-        login(c, "writer@test.local", "WriterPass1")
-        legacy_dir = get_settings().MODELS_DIR
-        os.makedirs(legacy_dir, exist_ok=True)
-        legacy = os.path.join(legacy_dir, "ortak_test_model.zip")
+    print("\n4) Ortak (kullanici oncesi) model: kullaniciya kapali, yoneticiye acik")
+    legacy_dir = get_settings().MODELS_DIR
+    legacy_results = get_settings().RESULTS_DIR
+    os.makedirs(legacy_dir, exist_ok=True)
+    os.makedirs(legacy_results, exist_ok=True)
+    legacy = os.path.join(legacy_dir, "ortak_test_model.zip")
+    legacy_metrics = os.path.join(legacy_results, "ortak_test_model_metrics.json")
+    try:
         open(legacy, "wb").write(b"PK\x03\x04 ortak")
-        try:
+        open(legacy_metrics, "w").write("{}")
+
+        with TestClient(app) as c:
+            login(c, "writer@test.local", "WriterPass1")
             r = c.delete("/api/trading/models/ortak_test_model", headers=csrf(c))
-            check("Ortak model 403", r.status_code == 403, f"(got {r.status_code})")
+            check("Kullanici ortak modeli silemiyor (403)", r.status_code == 403,
+                  f"(got {r.status_code})")
             check("Ortak model yerinde duruyor", os.path.exists(legacy))
-            check("403 mesaji sebebi soyluyor",
-                  "salt-okunur" in r.text or "ortak" in r.text.lower(),
-                  f"(got {r.text[:120]})")
-        finally:
-            if os.path.exists(legacy):
-                os.remove(legacy)
+            check("403 mesaji yoneticiyi isaret ediyor", "yonetici" in r.text.lower(),
+                  f"(got {r.text[:140]})")
+
+        # Faz 8/I: Faz 7'de "kimse silemez" idi; bu, kullanici sistemi oncesi
+        # egitilmis deneme modellerini panodan temizlemenin hicbir yolunu
+        # birakmiyordu (tek cikis dosya sistemine elle girmekti).
+        with session_scope() as db:
+            create_user(db, email="root@test.local", password="RootPass1234",
+                        full_name="R", role=Role.ADMIN, created_by="test",
+                        must_change_password=False)
+        with TestClient(app) as c:
+            check("Admin giris yapti", login(c, "root@test.local", "RootPass1234"))
+            r = c.delete("/api/trading/models/ortak_test_model", headers=csrf(c))
+            check("Admin ortak modeli silebiliyor", r.status_code == 200,
+                  f"(got {r.status_code} {r.text[:140]})")
+            check("Yanit ortak oldugunu bildiriyor",
+                  r.json().get("shared") is True, f"(got {r.text[:140]})")
+            check("Ortak model dosyasi gitti", not os.path.exists(legacy))
+            check("Ortak metrik JSON'u da gitti", not os.path.exists(legacy_metrics))
+
+        # Ortak dizinden silme herkesi etkiler -> denetim kaydina yazilir
+        from app.auth.models import AuditLog
+
+        with session_scope() as db:
+            actions = [row.action for row in db.query(AuditLog).all()]
+        check("Ortak silme denetim kaydina yazildi", "model.delete_shared" in actions,
+              f"(got {sorted(set(actions))})")
+    finally:
+        for path in (legacy, legacy_metrics):
+            if os.path.exists(path):
+                os.remove(path)
 
     print("\n5) Optimizasyon kaydi silme")
     import optuna

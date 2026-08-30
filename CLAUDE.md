@@ -126,7 +126,7 @@ python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, C
 python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
                                            #          bildirimler (39 kontrol)
 python tests/test_delete_artifacts.py      # Faz 8/I: model + optimizasyon kaydi
-                                           #          silme, RBAC (26 kontrol)
+                                           #          silme, RBAC (32 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
                                            #          smoke (84 kontrol)
@@ -176,9 +176,12 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
 - Detay: `docs/development/phase-8-ui-theming.md`
 
 ### Yapit silme (Faz 8/I)
-- Model: `DELETE /api/trading/models/{name}` (RequireWriter). Ortak (kullanici
-  oncesi) dizindeki model **salt-okunur** -> 403. Panoda: Modeller sayfasinda
-  cok secimli liste + "Secilenleri sil".
+- Model: `DELETE /api/trading/models/{name}` (RequireWriter). Panoda: Modeller
+  sayfasinda cok secimli liste + "Secilenleri sil".
+- **Ortak (kullanici oncesi) model iki katmanli**: `user` silemez (403, mesaj
+  yoneticiyi isaret eder), `admin` siler + `model.delete_shared` denetim kaydi.
+  Faz 7'de "kimse silemez" idi; o kural deneme modellerini panodan
+  temizlemenin hicbir yolunu birakmiyordu.
 - Optimizasyon: `DELETE /api/hyperopt/studies/{id}` **kaydi kalici siler**;
   iptal ayri uctadir (`POST /studies/{id}/cancel`). Calisan kosum silmede 409.
 - **`OPTUNA_STORAGE` calisma alanina gore COZULMUYOR** — depo kokune sabit

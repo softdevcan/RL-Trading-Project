@@ -27,6 +27,7 @@ from app.schemas.trading import (
 from app.core.config import get_settings
 from app.auth import workspace as ws
 from app.auth.deps import RequireWriter
+from app.auth.models import Role
 from app.services import training_eta
 from app.services import background_jobs as jobs
 
@@ -987,35 +988,74 @@ def get_earliest_date(source: str = "borsapy"):
 
 @router.delete("/models/{model_name}")
 async def delete_model(model_name: str, user: RequireWriter):
-    """Delete a trained model.
+    """Egitilmis modeli sil.
 
-    Yalnizca kullanicinin KENDI calisma alanindaki model silinebilir; ortak
-    (kullanici oncesi) modeller salt-okunurdur — bir kullanici digerlerinin
-    gordugu modeli silemez.
+    Iki katman var:
+
+    - **Kendi calisma alanindaki model** — sahibi siler (RequireWriter).
+    - **Ortak (kullanici oncesi) model** — herkese gorunur oldugu icin bir
+      kullanici digerlerinin gordugunu silememeli; YALNIZCA YONETICI siler.
+
+    Ikinci madde Faz 7'de "kimse silemez" idi. Pratikte bu, kullanici sistemi
+    oncesinde egitilmis deneme modellerini panodan temizlemenin HICBIR yolunu
+    birakmiyordu — tek cikis kapsayicinin baglandigi dizine elle girmekti.
+    Yonetici zaten operatordur (hesap silebilir, parola sifirlayabilir);
+    ortak yapitlarin temizligi de onun isi. Silme ortak dizini etkiledigi
+    icin denetim kaydina yazilir.
     """
     model_name = sanitize_model_name(model_name)
-    model_path = os.path.join(ws.models_dir(), f"{model_name}.zip")
+    own_path = os.path.join(ws.models_dir(), f"{model_name}.zip")
 
-    if not os.path.exists(model_path):
-        if ws.find_file("models", f"{model_name}.zip"):
+    if os.path.exists(own_path):
+        model_path, is_shared = own_path, False
+    else:
+        found = ws.find_file("models", f"{model_name}.zip")
+        if not found:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model not found: {model_name}"
+            )
+        if user.role != Role.ADMIN:
             raise HTTPException(
                 status_code=403,
-                detail="Bu model ortak (salt-okunur) dizinde; silinemez."
+                detail=("Bu model ortak (kullanici oncesi) dizinde; herkese gorunur. "
+                        "Yalnizca yonetici silebilir."),
             )
-        raise HTTPException(
-            status_code=404,
-            detail=f"Model not found: {model_name}"
-        )
+        model_path, is_shared = found, True
 
-    # Delete model file
     os.remove(model_path)
 
-    # Delete metrics if exists
-    metrics_file = os.path.join(ws.results_dir(), f"{model_name}_metrics.json")
+    # Metrik JSON'u modelin BULUNDUGU katmandan silinir: ortak bir modelin
+    # metrigi ortak results/ altindadir, kullanicininki kendi alaninda.
+    metrics_dir = ws.shared_dir("results") if is_shared else ws.results_dir()
+    metrics_file = os.path.join(metrics_dir, f"{model_name}_metrics.json")
     if os.path.exists(metrics_file):
         os.remove(metrics_file)
 
-    return {"message": f"Model {model_name} deleted successfully"}
+    if is_shared:
+        _audit_shared_model_delete(user, model_name)
+
+    return {
+        "message": f"Model {model_name} deleted successfully",
+        "shared": is_shared,
+    }
+
+
+def _audit_shared_model_delete(user, model_name: str) -> None:
+    """Ortak dizinden silme denetim kaydina yazilir — herkesi etkiler.
+
+    Denetim yazimi basarisiz olursa SILME GERI ALINMAZ (dosya zaten gitti);
+    hata yalnizca loglanir, kullaniciya basarisiz gibi gosterilmez.
+    """
+    try:
+        from app.auth import service
+        from app.auth.db import session_scope
+
+        with session_scope() as db:
+            service.audit(db, "model.delete_shared", user=user, target=model_name,
+                          detail={"scope": "shared"})
+    except Exception as exc:  # pragma: no cover - denetim kaydi kritik yol degil
+        logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):

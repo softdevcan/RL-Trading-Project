@@ -990,8 +990,35 @@ Panoda **hiçbir karşılığı yoktu** — `api_client`'ta sarmalayıcı bile y
 
 Modeller sayfasındaki mevcut çoklu seçim listesi zaten doğru araç: seçilenler
 tek seferde silinebiliyor. Onay modalı ne silineceğini sayıyor ve listeliyor;
-başarısızlıklar **tek tek** gösteriliyor, çünkü 403 (ortak dizin, salt-okunur)
-ile 404 (başka yerde zaten silinmiş) farklı sebepler.
+başarısızlıklar **tek tek** gösteriliyor, çünkü 403 (ortak dizin) ile 404
+(başka yerde zaten silinmiş) farklı sebepler.
+
+**Ortak modeller iki katmanlı oldu.** Faz 7'de kural "kimse ortak dizindeki
+modeli silemez (403)" idi. İlk denemede tam bu duvara çarpıldı:
+
+```
+Silinemeyenler:
+ppo_phase1_20260729_013401: Bu model ortak (salt-okunur) dizinde; silinemez.
+```
+
+Kural doğru bir sezgiden geliyordu (bir kullanıcı diğerlerinin gördüğünü
+silmemeli) ama **hiçbir çıkış yolu bırakmıyordu**: kullanıcı sisteminden önce
+eğitilmiş deneme modelleri panodan asla temizlenemiyordu, tek yol dosya
+sistemine elle girmekti. Yeni kural:
+
+| Model nerede | `user` | `admin` |
+|---|---|---|
+| Kendi çalışma alanı | siler | siler |
+| Ortak (kullanıcı öncesi) dizin | **403** — mesaj yöneticiyi işaret eder | **siler** + denetim kaydı |
+
+Yönetici zaten operatör: hesap siliyor, parola sıfırlıyor, oturum kapatıyor.
+Ortak yapıtların temizliği de onun işi. Silme herkesi etkilediği için
+`model.delete_shared` olarak denetim kaydına yazılıyor; kayıt yazımı
+başarısız olursa silme **geri alınmıyor** (dosya zaten gitti), yalnızca
+loglanıyor — kullanıcıya başarısız gibi gösterilmesi yanlış olurdu.
+
+Metrik JSON'u modelin **bulunduğu katmandan** siliniyor: ortak bir modelin
+metriği ortak `results/` altında, kullanıcınınki kendi alanında.
 
 ### I.2 — Hiperparametre: silme yeteneği hiç yoktu
 
