@@ -16,6 +16,7 @@ Yeni renk eklerken bu testi calistir; "muhtemelen yeterlidir" kabul degil.
 
 from __future__ import annotations
 
+import ast
 import os
 import re
 import sys
@@ -235,7 +236,41 @@ def main() -> int:
     unprefixed = sorted(t for t in all_tokens if not t.startswith("--rlt-"))
     check("Tum tokenlar --rlt- onekli", not unprefixed, f"oneksiz: {unprefixed}")
 
-    print("\n7) Kullanilan dcc bilesenleri temalanmis mi")
+    print("\n7) theme sembolleri import edilmis mi")
+    # Faz C'de olu importlar budanirken `f"1px solid {BORDER}"` gibi f-string
+    # icindeki kullanimlar bir kez gozden kacti ve callback calisinca
+    # NameError verdi. layout() render testi bunu YAKALAMAZ — hata callback
+    # govdesinde. Bu denetim ucuz ve o sinifi kapatiyor.
+    theme_tree = ast.parse(open(os.path.join(ROOT, "dashboard", "theme.py"),
+                                encoding="utf-8").read())
+    exported = {n.targets[0].id for n in theme_tree.body
+                if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)}
+    exported |= {n.name for n in theme_tree.body
+                 if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+
+    undefined: list[str] = []
+    for path in scan + glob.glob(os.path.join(ROOT, "dashboard", "components", "*.py")):
+        tree = ast.parse(open(path, encoding="utf-8").read())
+        imported: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                imported |= {a.asname or a.name for a in node.names}
+            elif isinstance(node, ast.Import):
+                imported |= {(a.asname or a.name).split(".")[0] for a in node.names}
+        defined = {n.name for n in tree.body
+                   if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                defined |= {t.id for t in node.targets if isinstance(t, ast.Name)}
+        used = {n.id for n in ast.walk(tree)
+                if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+        for name in sorted((used & exported) - imported - defined):
+            undefined.append(f"{os.path.relpath(path, ROOT)}:{name}")
+
+    check("theme sembolleri her yerde import edilmis", not undefined,
+          f"eksik: {undefined}")
+
+    print("\n8) Kullanilan dcc bilesenleri temalanmis mi")
     custom_css = open(os.path.join(ROOT, "dashboard", "assets", "custom.css"),
                       encoding="utf-8").read()
     # Dash surumleri bilesenlerin DOM'unu degistiriyor: dcc.Dropdown artik
@@ -263,7 +298,7 @@ def main() -> int:
         check(f"dcc.{component} -> .{family}-* temalanmis", family in custom_css,
               "Dash varsayilani sizacak")
 
-    print("\n8) Bootstrap renk varyantlari ezilmis mi")
+    print("\n9) Bootstrap renk varyantlari ezilmis mi")
     # Taban artik dbc.themes.BOOTSTRAP. Ezilmeyen her varyant Bootstrap'in
     # kendi rengini kullanir — .btn-outline-warning'in #ffc107'si beyaz zeminde
     # ~1.6:1 kaliyordu. Sayfalarda kullanilan her varyant burada tanimli olmali.

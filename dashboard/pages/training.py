@@ -11,7 +11,7 @@ from dash import html, dcc
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
-from dashboard.theme import CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, YELLOW
+from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, YELLOW
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
