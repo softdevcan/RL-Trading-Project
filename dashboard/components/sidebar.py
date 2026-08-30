@@ -159,7 +159,7 @@ def create_sidebar():
                         ],
                         style={"display": "flex", "alignItems": "center"},
                     ),
-                    html.Small("BIST-30 System",
+                    html.Small("by softdevcan",
                                style={"color": TEXT_MUTED, "fontSize": "11px"}),
                 ],
                 style={
