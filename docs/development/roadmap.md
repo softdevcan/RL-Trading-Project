@@ -117,6 +117,8 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 
 - **Faz G — ust cubuk:** kenar cubugu "nereye gidebilirim"i anlatiyordu; ust cubuk "neredeyim ve buradan ne yapabilirim"i ekledi. Kirinti (grup > sayfa, basligi tekrarlamaz), belgelenen akisi izleyen baglamsal eylem, sayfalar uzerinde role duyarli komut paleti aramasi. Gorunum anahtari kenar cubugundan tasindi (cogaltilmadi). Yol ustunde `--rlt-` gocunden kalan bir kacak bulundu: marka ikonu tanimsiz `var(--primary)` kullaniyordu. Zil bellekteki calisma durumlarindan (RL + tahmin egitimi) beslenen bir DURUM ozeti; kalici bildirim tablosu yok, veri tazeligi maliyeti yuzunden bilincli olarak disarida. `tests/test_topbar.py` 39 kontrol.
 
+- **Görsel doğrulama (F+G):** 9 sayfa × 2 tema, headless Chrome/CDP ile ekran görüntüsü + hesaplanmış stil ölçümü. Yerleşim temiz; üç kusur çıktı ve düzeltildi: bildirim zili `dbc.DropdownMenu`'nün `btn-primary` varyantını alıp dolgulu mavi çıkıyordu, **devre dışı dolgulu düğmeler uygulama genelinde** Bootstrap'in ham `#0d6efd`'sine düşüyordu (`.btn-*:disabled` ezilmemiş), Dashboard'daki boş portföy grafiği `{"history": []}` durumunda mesajsız/eksenli kalıyordu.
+
 Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
 
 ---

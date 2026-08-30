@@ -7,10 +7,15 @@
 > sonunda) kayıtlı — plan metni tasarım kararlarını, o bölüm gerçekte ne
 > olduğunu anlatıyor.
 >
-> Doğrulama: `test_theme_contrast` 86/86, `test_theme_preference` 31/31,
-> `test_account_profile` 84/84, `test_topbar` 39/39, `test_auth` 28/28,
-> `test_workspace_isolation` 18/18; 10 sayfa × 2 tema gerçek tarayıcıda
-> (Chrome/CDP) görsel kontrol.
+> Doğrulama (tümü, son durum): `test_theme_contrast` 92/92,
+> `test_account_profile` 84/84, `test_topbar` 39/39,
+> `test_theme_preference` 31/31, `test_auth` 28/28,
+> `test_workspace_isolation` 18/18.
+>
+> **Görsel kontrol iki ayrı turda yapıldı** — kapsamları farklı:
+> Faz A–E kapanışında 10 sayfa × 2 tema; Faz F–G kapanışında 9 sayfa × 2 tema
+> (headless Chrome/CDP, ekran görüntüsü + hesaplanmış stil ölçümü). İkinci tur
+> üç kusur çıkardı, "G.6 — Görsel doğrulama" başlığında.
 >
 > **Faz F (2026-08-30)** — Hesabım sayfası panoda *bulunamıyordu*; kenar
 > çubuğundaki tek giriş noktası düz metin görünümündeki bir addı. O tur
@@ -69,6 +74,12 @@ PASS 7.63  YELLOW #eab308
 - Sayfa bilgi mimarisi / menü yapısı değişikliği (mevcut 9 sayfa aynı kalır).
 - Yeni grafik türü, yeni API ucu, backend davranışı.
 - Referans ekranın birebir taklidi (Kanban, üst arama çubuğu, bildirim vb.).
+
+> ⚠️ Bu liste **Faz A–E için** geçerliydi. Faz F ve G onu bilinçli olarak
+> aştı: altı yeni uç (`/api/account/*`), bir yeni sayfa yüzeyi (üst çubuk),
+> arama ve bildirim geldi. Yani "yeni API ucu / üst arama çubuğu / bildirim
+> kapsam dışı" satırları **artık geçerli değil** — gerekçeleri ilgili faz
+> başlıklarında.
 
 ---
 
@@ -528,6 +539,24 @@ tercihi hesaba kayıtlı olarak çalışır ve pano okunur; C/D olmadan sadece
 | `tests/test_theme_contrast.py` | **YENİ** (E.1, E.2) |
 | `tests/test_theme_preference.py` | **YENİ** (E.3) — göç, uç nokta, çerezler, RBAC |
 
+### Faz F ve G'de eklenenler
+
+| Dosya | Değişiklik |
+|---|---|
+| `app/api/routes/account.py` | **YENİ** — `/api/account/*`: profil, oturumlar, etkinlik, bildirimler (F.3, G.5) |
+| `app/auth/service.py` | `list_sessions`, `revoke_other_sessions` (kayıt **siler**, bkz. F.4), `list_audit_for_user` |
+| `app/api/routes/trading.py` | Eğitim durumuna `finished_ts` — zilin "yakında bitti" penceresi için (G.5) |
+| `app/main.py` | `account_routes` kaydı |
+| `dashboard/components/topbar.py` | **YENİ** — kırıntı, bağlamsal eylem, arama, zil, görünüm anahtarı (G) |
+| `dashboard/components/sidebar.py` | Hesap satırı (F.1), görünüm anahtarı **çıkarıldı** (G.2), marka ikonu token kaçağı (G.3) |
+| `dashboard/pages/account.py` | Profil düzenleme, hesap özeti, oturumlar, son etkinlik (F.2) |
+| `dashboard/pages/home.py` | Boş portföy grafiği düzeltmesi (G.6) |
+| `dashboard/theme.py` | `TOPBAR_HEIGHT` / `TOPBAR_STYLE`, `CONTENT_STYLE` üst boşluğu (G.1) |
+| `dashboard/api_client.py` | `_request_raw` + hesap uçları sarmalayıcıları |
+| `dashboard/assets/custom.css` | Üst çubuk, zil, hesap satırı; **devre dışı varyant** düzeltmesi (G.6) |
+| `tests/test_account_profile.py` | **YENİ** — 84 kontrol (F.7) |
+| `tests/test_topbar.py` | **YENİ** — 39 kontrol (G.4) |
+
 ---
 
 ## Uygulama notları
@@ -704,6 +733,7 @@ PATCH /api/account/profile                 {full_name}
 GET   /api/account/sessions                gruplanmış aktif oturumlar
 POST  /api/account/sessions/revoke-others  bu tarayıcı hariç hepsini kapat
 GET   /api/account/activity                kendi denetim kaydı (son N olay)
+GET   /api/account/notifications           üst çubuk zili (bkz. G.5)
 ```
 
 Hepsi `CurrentUser` — viewer dahil her rol. Hedef **her zaman** oturumdaki
@@ -784,7 +814,7 @@ Stil taşımayan iki kanca (`theme-label`, `sidebar-link`) gerekçesiyle muaf.
 | | Önce | Sonra |
 |---|---|---|
 | Profil sayfasına görünür giriş | yok (düz metin ad) | avatar satırı + hover + aktif vurgu |
-| Hesabım sayfasındaki kart | 3 (tema, salt-okunur hesap, parola linki) | 4 (profil düzenleme, hesap, tema, güvenlik+oturumlar) |
+| Hesabım sayfasındaki kart | 3 (tema, salt-okunur hesap, parola linki) | 5 (profil düzenleme, hesap, tema, güvenlik+oturumlar, son etkinlik) |
 | Kullanıcının kendi düzenleyebildiği alan | tema | tema + ad soyad |
 | Kendi oturumlarını görme/kapatma | yok (yalnızca admin) | var |
 | İptalin grace penceresiyle atlatılabilmesi | mümkündü | kapalı (kayıt siliniyor) |
@@ -890,6 +920,60 @@ oturumu canlı tutar. Bu davranış `home.py`'nin yoklayıcısıyla zaten vardı
 üst çubuk onu **tüm sayfalara** yayıyor. Üst sınır refresh token'ın azami ömrü
 (`REFRESH_TOKEN_EXPIRE_DAYS`).
 
+### G.6 — Görsel doğrulama (F + G)
+
+Container yeniden derlendi ve Faz F/G **ilk kez gerçekten görüldü**: 9 sayfa ×
+2 tema, headless Chrome/CDP ile ekran görüntüsü **ve** hesaplanmış stil
+ölçümü. Doğrulama `AUTH_ENABLED=False` ile **yerel** bir kopyada yapıldı
+(port 8001) — kullanıcının veritabanına ve çalışan container'a dokunulmadı.
+
+Yerleşim ölçümleri 18 kombinasyonun hepsinde aynı ve temiz çıktı: üst çubuk
+`top=0 left=220 h=54 z=900`, içerik `78`den başlıyor (çakışma yok), yatay
+kaydırma yok, `system` yolu damgasız çalışıyor, konsol hatası yok.
+
+Üç kusur çıktı — üçü de **ancak tarayıcıda** görülebilirdi:
+
+**1. Bildirim zili dolgulu mavi çıkıyordu**, sayfanın birincil eylemi gibi.
+`dbc.DropdownMenu` toggle'a kendi renk varyantını basıyor (varsayılan
+`color="primary"` → `btn btn-primary`). `.topbar-bell` onunla **aynı
+özgüllükte** (0,1,0) olduğu için dosyada sonra gelen `.btn-primary`
+kazanıyordu. Seçici `.topbar .topbar-bell.btn` yapıldı — hangi varyantın
+bastığına bakmadan kapanıyor. (Faz C'deki `dbc.Badge` bulgusunun aynısı:
+dbc bileşeni kendi varyant sınıfını getiriyor.)
+
+**2. Devre dışı dolgulu düğmeler Bootstrap'in ham paletine düşüyordu.**
+Bootstrap'in `.btn-primary:disabled` kuralı (0,2,0) bizim `.btn-primary`
+kuralımızdan (0,1,0) özgül; ezilmediği için devre dışı düğme `#0d6efd`
+oluyordu (hesaplanmış stille ölçüldü). Bu **yalnızca yeni kodda değil,
+uygulama genelinde** geçerliydi — Faz A–E'nin varyant temizliği `:disabled`
+durumunu atlamış. `primary/success/danger/warning/info/secondary` için
+`:disabled` kuralları eklendi, `test_theme_contrast`'a bekçi kondu (86 → 92).
+
+**3. Dashboard'daki portföy grafiği boş veriyle çizgisiz, mesajsız,
+varsayılan −1..6 eksenli kalıyordu.** Sebep dallanma hatası: uç
+`{"history": []}` dönüyor → `if history:` **doğru** ama `if records:` yanlış;
+ikisinin arasında dal olmadığı için `empty_figure` hiç çağrılmıyordu.
+Dallanma kayıt üzerine alındı; dört girdi (None / `{}` / boş kayıt / dolu)
+için davranış doğrulandı.
+
+> Ders: `test_theme_contrast`'ın varyant bekçisi bir seçicinin **var
+> olduğunu** doğruluyor, kaskadı **kazandığını** değil. 1 ve 2 numaralı
+> kusurlar tam bu boşluktan geçti. Yeni bir dbc bileşeni eklerken hesaplanmış
+> stile bakmak hâlâ gerekli.
+
+### G.7 — Parola değiştirme neden Hesabım'a gömülmedi
+
+Hesabım'daki Güvenlik kartı `/change-password` sayfasına **bağlantı** veriyor;
+formu sayfaya gömmek düşünüldü ve **kasıtlı olarak yapılmadı**.
+
+Parola değişimi tüm oturumları iptal edip **yeni çerezleri tarayıcıya**
+yazmak zorunda. Dash callback'i `api_client`'ın in-process ASGI çağrısından
+geçiyor; iç yanıttaki `Set-Cookie` tarayıcıya ulaşmıyor. Gömülü form
+çalışsaydı kullanıcı kendi parolasını değiştirdiği anda oturumdan düşerdi.
+Çözmek ya ucun semantiğini bozmayı (çağıranın oturumunu ayakta bırakmak) ya
+da `Set-Cookie`'yi Flask yanıtına elle taşımayı gerektirir; ikisi de mevcut
+çözümden kötü. Ayrı Jinja sayfası doğru tasarım.
+
 ---
 
 ## Belge Güncelleme Notu
@@ -901,3 +985,21 @@ listesi, "Tema (Faz 8)" bölümü ve Do-NOT maddeleri),
 Faz F sonrası güncellendi: `CLAUDE.md` (proje yapısı — `app/api/routes/account.py`,
 tests listesi — `test_account_profile.py`, "Hesap ve profil (Faz 8/F)" bölümü),
 `docs/README.md` (Faz 8 satırının açıklaması).
+
+Faz G sonrası güncellendi: `CLAUDE.md` (proje yapısı — `topbar.py`, tests
+listesi — `test_topbar.py`, bildirim ve kırıntı Do-NOT maddeleri),
+`docs/development/roadmap.md` (Faz G girdisi). Bu belgede ayrıca beş drift
+kapatıldı: başlıktaki doğrulama iddiasının kapsamı ayrıldı (A–E ve F–G iki
+ayrı tur), "Kapsam dışı" listesinin F/G ile aşıldığı işaretlendi, F.3 uç
+listesine `/notifications` eklendi, Faz F sonuç tablosundaki kart sayısı
+4 → 5 düzeltildi, "Kritik dosyalar" tablosuna F/G dosyaları eklendi.
+
+### Bu belgede henüz karşılığı olmayan açık işler
+
+- **Dar ekran.** Kenar çubuğu 220px sabit, katlanmıyor; medya sorgusu yalnızca
+  üst çubukta var. Faz 8 boyunca ne yapıldı ne de kapsam dışı ilan edildi.
+- **`create_filter_bar` ölü bileşen** (C.5). Hiçbir sayfa kullanmıyor; sınıf
+  bekçisi de kapsamıyor. Ya bağlanmalı ya silinmeli.
+- **Zil yoklamasının oturumu canlı tutması** (G.5). Davranış belgelendi, karar
+  verilmedi: kabul mü, cadans mı düşsün, yoksa zil yalnızca açılınca mı
+  yoklasın.

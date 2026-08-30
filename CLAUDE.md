@@ -121,7 +121,8 @@ python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontro
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
-                                           #        CSS siniflarimiz (86 kontrol)
+                                           #        CSS siniflarimiz, devre disi
+                                           #        varyantlar (92 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
                                            #          bildirimler (39 kontrol)
@@ -252,6 +253,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
 - Sayfa/bileşen koduna hex renk yazma — `static/tokens.css`'e token ekle, kontrastı ölç
+- Yeni bir `dbc` bileşeni eklerken **hesaplanmış stile bak**: dbc kendi renk
+  varyant sınıfını basıyor (`DropdownMenu` → `btn-primary`, `Badge` → `bg-secondary`)
+  ve aynı özgüllükteki kendi kuralımızı kaskadda yenebiliyor. Test seçicinin
+  *var olduğunu* doğruluyor, *kazandığını* değil
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 - `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
   alembic yok, `create_all()` var olan tabloyu değiştirmez
