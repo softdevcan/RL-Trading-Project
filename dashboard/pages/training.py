@@ -206,7 +206,8 @@ def _running_status(status):
 
     return html.Div([
         dbc.Alert(
-            [dbc.Spinner(size="sm", color="primary", className="me-2"), f"{phase_label}..."],
+            [dbc.Spinner(size="sm", color="primary", spinner_class_name="me-2"),
+             f"{phase_label}..."],
             color="primary", className="mb-3",
         ),
         html.Div(rows),

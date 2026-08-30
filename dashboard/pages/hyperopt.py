@@ -526,7 +526,8 @@ _STATUS_LABEL = {
 
 def _render_progress_placeholder():
     return dbc.Alert(
-        [dbc.Spinner(size="sm", color="primary", className="me-2"), "Başlatılıyor..."],
+        [dbc.Spinner(size="sm", color="primary", spinner_class_name="me-2"),
+         "Başlatılıyor..."],
         color="primary", className="mb-0",
     )
 

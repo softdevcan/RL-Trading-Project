@@ -111,6 +111,7 @@ python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
 python tests/test_training_status.py        # /train/status progress kirpma (5 kontrol)
+python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
@@ -303,6 +304,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
   varyant sınıfını basıyor (`DropdownMenu` → `btn-primary`, `Badge` → `bg-secondary`)
   ve aynı özgüllükteki kendi kuralımızı kaskadda yenebiliyor. Test seçicinin
   *var olduğunu* doğruluyor, *kazandığını* değil
+- **`className` her `dbc` bileşeninde yok.** Dash tanımadığı kwarg'ı yok saymaz,
+  `TypeError` fırlatır — hata da çalışma anında, callback gövdesinde patlar.
+  `dbc.Spinner` → `spinner_class_name`, `dbc.NavLink` → `title` kabul etmiyor.
+  `tests/test_dash_props.py` tüm çağrıları gerçek prop listesiyle karşılaştırır
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 - `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
   alembic yok, `create_all()` var olan tabloyu değiştirmez
