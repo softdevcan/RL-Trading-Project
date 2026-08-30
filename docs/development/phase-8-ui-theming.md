@@ -1,11 +1,13 @@
-# Faz 8 — UI/UX: Aydınlık Tema + Bileşen Okunabilirliği
+# Faz 8 — UI/UX: Tema, Profil, Üst Çubuk ve Yapıt Yönetimi
 
 **Durum:** ✅ Uygulandı · **Tarih:** 2026-08-30
 
-> Aşağıdaki plan uygulandı. Uygulama sırasında planın dışına çıkılan üç yer
-> ve canlıda yakalanan üç kusur **"Uygulama notları"** başlığında (belgenin
-> sonunda) kayıtlı — plan metni tasarım kararlarını, o bölüm gerçekte ne
-> olduğunu anlatıyor.
+> **Bu belge bir plan değil, akan bir kayıt.** Aşağıdaki A–E bölümleri fazın
+> ilk planıdır (aydınlık tema + bileşen okunabilirliği) ve uygulanmıştır;
+> planın dışına çıkılan yerler "Uygulama notları" başlığında. Faz sonradan
+> **F–I turlarıyla genişledi** — profil sayfası, üst çubuk, bildirimler, dar
+> ekran ve yapıt silme. Her tur kendi başlığında, kararı ve gerekçesiyle.
+> Kapsam özeti için belgenin sonundaki **"Kapanış özeti"**ne bakın.
 >
 > Doğrulama (tümü, son durum): `test_theme_contrast` 92/92,
 > `test_account_profile` 84/84, `test_topbar` 39/39,
@@ -669,7 +671,6 @@ kalıyordu; yığın açıkça verildi.
 | Temasız Dash bileşen ailesi | 5 | 0 (test bekçilik ediyor) |
 | Token adı çakışması | 3 (`--muted`/`--border`/`--accent`) | 0 (`--rlt-` öneki) |
 | Tema testi | yok | 115 kontrol (kontrast + tercih) |
-
 ---
 
 ## Faz F — Profil sayfası (2026-08-30)
@@ -976,6 +977,66 @@ da `Set-Cookie`'yi Flask yanıtına elle taşımayı gerektirir; ikisi de mevcut
 
 ---
 
+## Faz H — Dar ekran ve ölü bileşen (2026-08-30)
+
+### H.1 — Dar ekran: önce ölçüldü, sonra karar verildi
+
+Varsayım "kenar çubuğu 220px sabit, dar ekranda düzen bozuluyor" idi.
+**Ölçüm bunu çürüttü.** Dört genişlikte (1280 / 1024 / 820 / 640), üç sayfada
+(`home`, `data`, `prediction`) CDP ile bakıldı: hiçbir kombinasyonda taşan
+öğe, yatay kaydırma veya kırılma **yok** — Bootstrap ızgarası sütunları
+yığıyor, tablolar kendi `overflow-x`'inde kalıyor. 640px'de sayfa okunur ve
+kullanılır durumda.
+
+Gerçek sorun bozulma değil **darlık**: 640px'de 220px'lik menü ekranın
+%34'ünü yiyordu. Bu yüzden düzen değişmedi, yalnızca ≤820px'de kenar çubuğu
+**64px ikon rayına** iniyor:
+
+| Genişlik | Önce (kullanılabilir) | Sonra |
+|---|---|---|
+| 1280 / 1024 | 1012 / 756 | değişmedi (menü 220px) |
+| 820 | 552 | **708** (+156) |
+| 640 | 372 | **528** (+156) |
+
+Uygulama detayları:
+
+- Etiketler ayrı `nav-label` span'inde — CSS yalnızca yazıyı gizliyor, ikon ve
+  tıklama alanı kalıyor. Aynısı marka yazısı (`brand-text`), hesap satırı
+  metni ve çıkış etiketi için.
+- Rayda tek ayırt edici ikon olduğu için **her menü maddesi `title` taşıyor**.
+  `title` sarmalayan `html.Div`'de: `dbc.NavLink` o propu kabul etmiyor
+  (F.1'deki aynı tuzak, `/dash/` 500 döndürüyordu).
+- Menü boşlukları inline stilden `#sidebar .nav-link` kuralına taşındı, çünkü
+  medya sorgusu **inline stili `!important` olmadan ezemez**. Konum/genişlik
+  hâlâ `theme.py`'den inline geldiği için ray kuralları `!important` kullanıyor
+  — gerekçe CSS'te yazılı.
+
+Telefon boyu (≤480px) **hedef değil**: bu pano yoğun tablolar ve mum grafiği
+gösteriyor, 640px altında okunabilirlik ızgarayla değil içerik tasarımıyla
+çözülür. Ray onu da kullanılır kılıyor ama iddia edilen bir hedef değil.
+
+### H.2 — `create_filter_bar` silindi
+
+C.5'te planlanmış, Faz C'de "karşılığı çıkmadı" diye bağlanmamış, iki tur
+boyunca **hiçbir sayfada kullanılmamıştı**. Sayfaların kontrol blokları yatay
+filtre satırı değil, kenar sütununda dikey formlar (`prediction` 17,
+`hyperopt` 18, `daily_trading` 13 `section-title`); beş ağır sayfayı bu
+kalıba çevirmek görsel kazancı belirsiz, riski yüksek bir yeniden düzenleme
+olurdu — üstelik o sayfalar görsel olarak yeni doğrulandı.
+
+"İhtiyaç olursa hazır" ölü kodun birikme biçimidir; bileşen ve tek
+kullanıcısı olan `.field-label` kuralı silindi. Gerekirse git geçmişinden
+geri gelir.
+
+### H.3 — Testler
+
+`test_theme_contrast` sınıf bekçisine `nav-label` ve `brand-text` eklendi
+(92/92). Kenar çubuğu DOM'u değiştiği için (menü maddeleri artık `title`
+taşıyan bir Div'e sarılı) `test_workspace_isolation` 18/18 ve `test_topbar`
+39/39 yeniden koşuldu — ikisi de kenar çubuğu yapısına bakıyor.
+
+---
+
 ## Faz I — Yapıt silme (2026-08-30)
 
 Kullanıcı bildirimi: *"eğitilmiş RL modellerini ekranda silemiyorum, hiper
@@ -1068,6 +1129,61 @@ Test Optuna deposunu **geçici bir dosyaya** yönlendiriyor; gerçek
 
 ---
 
+## Kapanış özeti
+
+Faz 8 tek bir turda değil, **beş turda** oturdu. Her tur bir öncekinin canlıda
+açtığı eksiği kapattı; sıra tesadüf değil, kullanım sırasıyla ortaya çıktı.
+
+| Tur | Ne geldi | Yol üstünde bulunan |
+|---|---|---|
+| **A–E** | Aydınlık/koyu/sistem teması, tek kaynak token katmanı, 6 bileşen, WCAG AA denetimi | Mevcut koyu temadaki 4 AA hatası; DataTable token adı çakışması; temasız 5 Dash bileşen ailesi |
+| **F** | Profil sayfası: görünür giriş, ad düzenleme, oturum yönetimi, kendi denetim kaydı | Kasıtlı oturum iptali 30 sn'lik grace penceresiyle **atlatılabiliyordu** |
+| **G** | Üst çubuk: kırıntı, bağlamsal eylem, role duyarlı arama, taşınan tema anahtarı, bildirim zili | `--rlt-` göçünden kalan tanımsız `var(--primary)` kaçağı |
+| **G.6** | Görsel doğrulama (9 sayfa × 2 tema, Chrome/CDP) | Zil `btn-primary` varyantını alıyordu; **devre dışı dolgulu düğmeler uygulama genelinde** Bootstrap'in ham paletine düşüyordu; boş portföy grafiği mesajsız/eksenli kalıyordu |
+| **H** | ≤820px'de ikon rayı; ölü `FilterBar` silindi | Ölçüm "düzen bozuluyor" varsayımını **çürüttü** — sorun bozulma değil darlıktı |
+| **I** | Model ve optimizasyon kaydı silme | `/hyperopt/start` **hiç RBAC taşımıyordu**; ortak model için "kimse silemez" kuralı hiçbir çıkış yolu bırakmıyordu; Optuna deposu çalışma alanına göre çözülmüyor |
+
+### Test tablosu (son durum)
+
+| Paket | Kontrol | Kapsam |
+|---|---|---|
+| `test_theme_contrast` | 92 | Token kontrastı, kaçak hex, üçüncü parti çakışması, kendi CSS sınıflarımız, devre dışı varyantlar |
+| `test_account_profile` | 84 | `/api/account/*`, CSRF, RBAC, oturum gruplama, grace penceresi, Dash callback'leri |
+| `test_topbar` | 39 | Yerleşim, kırıntı, arama, bildirim üretimi ve izolasyonu, yapısal bekçiler |
+| `test_delete_artifacts` | 32 | Model ve çalışma silme, ortak dizin katmanları, RBAC, yol geçişi |
+| `test_theme_preference` | 31 | Üç durumlu tema, şema göçü, çerezler |
+| `test_auth` | 28 | Faz 7 regresyonu |
+| `test_workspace_isolation` | 18 | Faz 7 regresyonu |
+| **Toplam** | **324** | |
+
+### Ölçülebilir sonuç
+
+| | Faz 8 öncesi | Sonra |
+|---|---|---|
+| Tema | 1 (koyu) | 3 durum, hesaba kayıtlı |
+| AA'yı geçmeyen renk | 4 | 0 |
+| Tema tanımının kopyası | 3 | 1 |
+| Profil sayfasına görünür giriş | yok | var |
+| Kendi oturumlarını görme/kapatma | yok | var |
+| Sayfa bağlamı (neredeyim) | yok | üst çubuk kırıntısı |
+| Çalışma durumundan bildirim | yok | zil (durum özeti) |
+| 640px'de kullanılabilir genişlik | 372px | 528px |
+| Eğitilmiş modeli panodan silme | yok | var (ortak model: yönetici) |
+| Optimizasyon kaydını silme | **yok** (uç iptal ediyordu) | var |
+| UI testi | yok | 324 kontrol |
+
+### Kalan açık iş
+
+1. **Zil yoklaması oturumu canlı tutuyor** (G.5) — davranış belgelendi, karar
+   verilmedi: kabul mü, cadans mı düşsün, yoksa zil yalnızca açılınca mı
+   yoklasın.
+2. **Optuna deposu izolasyonu** (I.3) — `OPTUNA_STORAGE` depo köküne sabit
+   bağlı, çalışmalar tüm kullanıcılar arasında ortak. **Bu Faz 8 işi değil,
+   Faz 7 (izolasyon) kapsamıdır**; burada yalnızca bulunduğu için kayıtlı.
+   Taşımak mevcut çalışmaları öksüz bırakır, ayrı iş olarak planlanmalı.
+
+---
+
 ## Belge Güncelleme Notu
 
 Faz kapanışında güncellendi: `CLAUDE.md` (Development Plan, proje yapısı, tests
@@ -1080,74 +1196,21 @@ tests listesi — `test_account_profile.py`, "Hesap ve profil (Faz 8/F)" bölüm
 
 Faz G sonrası güncellendi: `CLAUDE.md` (proje yapısı — `topbar.py`, tests
 listesi — `test_topbar.py`, bildirim ve kırıntı Do-NOT maddeleri),
-`docs/development/roadmap.md` (Faz G girdisi). Bu belgede ayrıca beş drift
+`docs/development/roadmap.md` (Faz G girdisi).
+
+Faz I sonrası güncellendi: `docs/guides/API_HYPEROPT_GUIDE.md` (`DELETE`
+artık siliyor, iptal `POST .../cancel`), `docs/development/phase7-auth.md`
+("kimse ortak dizindeki modeli silemez" maddesi artık yanlıştı).
+
+**Kapanış turu (2026-08-30).** Belge bir plan olmaktan çıkıp akan bir kayda
+dönüştüğü için başlık ve giriş gerçek kapsama çekildi; bölümler kronolojik
+sıraya alındı (F → G → H → I) ve **"Kapanış özeti"** eklendi: tur tablosu,
+test tablosu (324 kontrol), ölçülebilir sonuç ve kalan açık iş. `CLAUDE.md`'de
+üst çubuk/bildirim kuralları "Tema" bölümünden ayrılıp kendi başlığına alındı,
+"Dar ekran (Faz 8/H)" bölümü eklendi, Development Plan girdisi A–E/F/G/H/I
+olarak açıldı ve proje özeti satırı güncellendi. `docs/README.md` ve
+`roadmap.md` indeks/durum satırları Faz 8'i kapsayacak şekilde düzeltildi. Bu belgede ayrıca beş drift
 kapatıldı: başlıktaki doğrulama iddiasının kapsamı ayrıldı (A–E ve F–G iki
 ayrı tur), "Kapsam dışı" listesinin F/G ile aşıldığı işaretlendi, F.3 uç
 listesine `/notifications` eklendi, Faz F sonuç tablosundaki kart sayısı
 4 → 5 düzeltildi, "Kritik dosyalar" tablosuna F/G dosyaları eklendi.
-
-### Kalan açık iş
-
-- **Zil yoklamasının oturumu canlı tutması** (G.5). Davranış belgelendi, karar
-  verilmedi: kabul mü, cadans mı düşsün, yoksa zil yalnızca açılınca mı
-  yoklasın.
-
----
-
-## Faz H — Dar ekran ve ölü bileşen (2026-08-30)
-
-### H.1 — Dar ekran: önce ölçüldü, sonra karar verildi
-
-Varsayım "kenar çubuğu 220px sabit, dar ekranda düzen bozuluyor" idi.
-**Ölçüm bunu çürüttü.** Dört genişlikte (1280 / 1024 / 820 / 640), üç sayfada
-(`home`, `data`, `prediction`) CDP ile bakıldı: hiçbir kombinasyonda taşan
-öğe, yatay kaydırma veya kırılma **yok** — Bootstrap ızgarası sütunları
-yığıyor, tablolar kendi `overflow-x`'inde kalıyor. 640px'de sayfa okunur ve
-kullanılır durumda.
-
-Gerçek sorun bozulma değil **darlık**: 640px'de 220px'lik menü ekranın
-%34'ünü yiyordu. Bu yüzden düzen değişmedi, yalnızca ≤820px'de kenar çubuğu
-**64px ikon rayına** iniyor:
-
-| Genişlik | Önce (kullanılabilir) | Sonra |
-|---|---|---|
-| 1280 / 1024 | 1012 / 756 | değişmedi (menü 220px) |
-| 820 | 552 | **708** (+156) |
-| 640 | 372 | **528** (+156) |
-
-Uygulama detayları:
-
-- Etiketler ayrı `nav-label` span'inde — CSS yalnızca yazıyı gizliyor, ikon ve
-  tıklama alanı kalıyor. Aynısı marka yazısı (`brand-text`), hesap satırı
-  metni ve çıkış etiketi için.
-- Rayda tek ayırt edici ikon olduğu için **her menü maddesi `title` taşıyor**.
-  `title` sarmalayan `html.Div`'de: `dbc.NavLink` o propu kabul etmiyor
-  (F.1'deki aynı tuzak, `/dash/` 500 döndürüyordu).
-- Menü boşlukları inline stilden `#sidebar .nav-link` kuralına taşındı, çünkü
-  medya sorgusu **inline stili `!important` olmadan ezemez**. Konum/genişlik
-  hâlâ `theme.py`'den inline geldiği için ray kuralları `!important` kullanıyor
-  — gerekçe CSS'te yazılı.
-
-Telefon boyu (≤480px) **hedef değil**: bu pano yoğun tablolar ve mum grafiği
-gösteriyor, 640px altında okunabilirlik ızgarayla değil içerik tasarımıyla
-çözülür. Ray onu da kullanılır kılıyor ama iddia edilen bir hedef değil.
-
-### H.2 — `create_filter_bar` silindi
-
-C.5'te planlanmış, Faz C'de "karşılığı çıkmadı" diye bağlanmamış, iki tur
-boyunca **hiçbir sayfada kullanılmamıştı**. Sayfaların kontrol blokları yatay
-filtre satırı değil, kenar sütununda dikey formlar (`prediction` 17,
-`hyperopt` 18, `daily_trading` 13 `section-title`); beş ağır sayfayı bu
-kalıba çevirmek görsel kazancı belirsiz, riski yüksek bir yeniden düzenleme
-olurdu — üstelik o sayfalar görsel olarak yeni doğrulandı.
-
-"İhtiyaç olursa hazır" ölü kodun birikme biçimidir; bileşen ve tek
-kullanıcısı olan `.field-label` kuralı silindi. Gerekirse git geçmişinden
-geri gelir.
-
-### H.3 — Testler
-
-`test_theme_contrast` sınıf bekçisine `nav-label` ve `brand-text` eklendi
-(92/92). Kenar çubuğu DOM'u değiştiği için (menü maddeleri artık `title`
-taşıyan bir Div'e sarılı) `test_workspace_isolation` 18/18 ve `test_topbar`
-39/39 yeniden koşuldu — ikisi de kenar çubuğu yapısına bakıyor.

@@ -2,7 +2,7 @@
 
 ## Project Summary
 Deep Reinforcement Learning-based algorithmic trading system for BIST-30 stocks.
-Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user), Phase 8 (UI/UX: aydınlık tema + bileşen okunabilirliği) tamamlandı.
+Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user), Phase 8 (UI/UX: tema + profil + üst çubuk + yapıt yönetimi) tamamlandı.
 
 ## Language
 Respond in the same language the user writes in.
@@ -162,18 +162,45 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
 - **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
   Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
-- **Gorunum anahtari UST CUBUKTA** (`dashboard/components/topbar.py`), kenar
-  cubugunda degil. Cogaltma: `theme-toggle.js` `getElementById` kullaniyor, iki
-  kopya olursa biri tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam
-  bir tane oldugunu denetliyor.
-- **Bildirimler OLAY GUNLUGU DEGIL, durum ozeti**: bellekteki calisma
-  durumlarindan (RL + tahmin egitimi) uretilir, kalici tablo yok. Veri tazeligi
-  bilincli olarak disarida — `/trading/data/status` CSV okur, 60 sn'de bir
-  yoklanamaz. "Bitti" satirlari 12 saatlik pencereyle sinirli.
+- Detay: `docs/development/phase-8-ui-theming.md`
+
+### Ust cubuk ve bildirimler (Faz 8/G)
+- Bilesen: `dashboard/components/topbar.py`. Kenar cubugu tam boy kalir, ust
+  cubuk YALNIZCA icerik alanini kaplar (`theme.py::TOPBAR_STYLE`,
+  `left: SIDEBAR_WIDTH`); `CONTENT_STYLE` ust boslugu `calc(54px + 24px)`.
+- **Gorunum anahtari ust cubukta**, kenar cubugunda degil ve TEK KOPYA.
+  `theme-toggle.js` `getElementById` kullaniyor; iki kopya olursa birine
+  tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam bir tane
+  oldugunu denetliyor.
 - **Kenar cubugu menusune madde eklerken `topbar.ROUTE_INDEX`'i unutma** —
   aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
-  (`tests/test_topbar.py` yapisal bekci).
-- Detay: `docs/development/phase-8-ui-theming.md`
+  (`tests/test_topbar.py` yapisal bekci). `NEXT_STEP` haritasi da yalnizca
+  var olan rotalara isaret etmeli.
+- Arama role duyarli: `viewer`/`user` icin Yonetim grubu onerilmez.
+- **Bildirimler OLAY GUNLUGU DEGIL, DURUM OZETI**: `GET /api/account/notifications`
+  bellekteki calisma durumlarindan uretir (`trading._training_states`,
+  `prediction_service._training_state`) — kalici tablo, "okundu" isareti yok.
+  Is bitince satir kendiliginden kaybolur.
+- Veri tazeligi bilincli olarak KAPSAM DISI: `/trading/data/status` paneli
+  CSV'den okuyor, 60 sn'de bir yoklanamaz.
+- "Bitti" satirlari 12 saatlik pencereyle sinirli (`NOTIFY_RECENT_SECONDS`);
+  zaman damgasi olmayan `completed` HIC gosterilmez. Bunun icin
+  `trading.py` kosum bitisini `finished_ts`'e yazar.
+- **Bilinen davranis:** zil 60 sn'de bir yokladigi icin acik bir sekme sessiz
+  yenilemeyi tetikler ve oturumu canli tutar. Ust sinir refresh token'in azami
+  omru. Karar acik (bkz. faz belgesi "Kalan acik is").
+
+### Dar ekran (Faz 8/H)
+- <=820px'de kenar cubugu 64px **ikon rayina** iner; masaustu degismez.
+  Olculdu: 1280/1024/820/640'ta tasma veya yatay kaydirma YOK — sorun bozulma
+  degil darlikti (640px'de menu ekranin %34'u).
+- Menu etiketleri `nav-label` span'inde ki CSS yalnizca yaziyi gizleyebilsin;
+  ipucu icin her madde `title` tasiyan bir Div'e sarili (**dbc.NavLink `title`
+  kabul etmiyor** — verilince tum Dash agaci render edilemez, `/dash/` 500).
+- **Medya sorgusu inline stili `!important` olmadan ezemez.** Konum/genislik
+  `theme.py`'den inline geldigi icin ray kurallari `!important` kullanir;
+  menu bosluklari bu yuzden inline'dan `#sidebar .nav-link` kuralina tasindi.
+- Telefon boyu (<=480px) HEDEF DEGIL ve oyle iddia edilmiyor.
 
 ### Yapit silme (Faz 8/I)
 - Model: `DELETE /api/trading/models/{name}` (RequireWriter). Panoda: Modeller
@@ -320,12 +347,29 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - Güvenilirlik: sessiz model/fold düşmesi görünür, fallback işareti + strict mod (cache yolu dahil: `data/macro/macro_data_quality.json`), eğitim manifesti, checkpoint/resume, merkezi seed
   - Kapanış koşumu (T7, 5 sembol): 533.9s → **157.6s (−%70.5)** perf knob'ları açıkken; resume 1.0s; 5/5 sembol `ok` (5 model)
   - **DL perf knob'ları default OFF (opt-in)**: tam pipeline'da RNG sırasını kaydırıp golden'ı değiştirdikleri için (davranış dondurma). Sıfırdan retrain'de açılır, golden o donanımda yenilenir.
-- Faz 8 (UI/UX): Tamamlandı — aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu),
-  tek kaynak token katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
-  6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA hatası da düzeldi)
-  - Faz F: profil sayfası — kenar çubuğunda görünür giriş noktası, ad soyad düzenleme,
-    son giriş/çalışma alanı özeti, kendi oturumlarını görme ve kapatma (`/api/account/*`);
-    kasıtlı oturum iptalinin grace penceresiyle atlatılabilmesi kapatıldı
+- Faz 8 (UI/UX): Tamamlandı — kapsam tur tur genişledi, tamamı
+  `docs/development/phase-8-ui-theming.md`'de
+  - A–E: aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu), tek kaynak token
+    katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
+    6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA
+    hatası da düzeldi)
+  - F: profil sayfası — kenar çubuğunda görünür giriş noktası, ad soyad düzenleme,
+    son giriş/çalışma alanı özeti, kendi oturumlarını görme ve kapatma, kendi
+    denetim kaydı (`/api/account/*`); kasıtlı oturum iptalinin grace penceresiyle
+    atlatılabilmesi kapatıldı
+  - G: üst çubuk — kırıntı, belgelenen akışı izleyen bağlamsal eylem, role duyarlı
+    sayfa araması, taşınan görünüm anahtarı ve bellekteki çalışma durumlarından
+    beslenen bildirim zili
+  - Görsel doğrulama: 9 sayfa × 2 tema (headless Chrome/CDP). Üç kusur çıktı:
+    zil `btn-primary` varyantını alıyordu, **devre dışı dolgulu düğmeler uygulama
+    genelinde** Bootstrap'in ham paletine düşüyordu, boş portföy grafiği
+    mesajsız/eksenli kalıyordu
+  - H: ≤820px'de ikon rayı (ölçüm "düzen bozuluyor" varsayımını çürüttü — sorun
+    darlıktı); iki turdur kullanılmayan `FilterBar` silindi
+  - I: eğitilmiş model ve optimizasyon kaydı silme. Yol üstünde iki gedik:
+    `/hyperopt/start` hiç RBAC taşımıyordu (viewer optimizasyon başlatabiliyordu),
+    ortak model için Faz 7'nin "kimse silemez" kuralı hiçbir çıkış yolu
+    bırakmıyordu → yönetici katmanı eklendi
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu
