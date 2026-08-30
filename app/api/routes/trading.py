@@ -331,9 +331,15 @@ async def get_training_status():
     """Get current training status (aktif kullaniciya ait)"""
     training_state = get_training_state()
 
+    # SB3 `total_timesteps`'i tam tutturmaz: ogrenme `n_steps` bloklariyla
+    # ilerledigi icin son blok hedefi asabiliyor (olculdu: 1.001472). Sema
+    # `progress`'i [0,1] ile sinirliyor, dolayisiyla ham oran YANIT
+    # DOGRULAMASINI dusuruyordu -> /train/status 500 veriyor, pano egitim
+    # boyunca ilerleme ve ETA gosteremiyordu. Oran burada kirpilir; sema
+    # sozlesmesi (le=1) oldugu gibi kalir.
     progress = 0.0
     if training_state["total_steps"] > 0:
-        progress = training_state["current_step"] / training_state["total_steps"]
+        progress = min(1.0, training_state["current_step"] / training_state["total_steps"])
 
     # ETA: devam eden kosumda gozlenen hizdan, isinma penceresinde on tahminden.
     # ETA bir ek ozellik; pano ilerleme takibi bu uca bagli oldugu icin buradaki
