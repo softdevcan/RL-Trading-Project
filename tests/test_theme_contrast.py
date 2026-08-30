@@ -327,7 +327,8 @@ def main() -> int:
     # Yalnizca tasarim sistemimizin kendi onekleri taranir; Bootstrap yardimci
     # siniflari (me-2, d-flex, ...) kapsam disi.
     OWN_PREFIXES = ("sidebar-", "account-", "card-title", "state-", "metric-",
-                    "theme-", "section-", "page-", "filter-", "topbar")
+                    "theme-", "section-", "page-", "filter-", "topbar",
+                    "nav-label", "brand-text")
     # Stil TASIMAYAN, kasitli istisnalar:
     #   theme-label  — theme-toggle.js'in metnini gunceldigi kanca
     #   sidebar-link — isaret; bicimi `#sidebar .nav-link` kuralindan geliyor

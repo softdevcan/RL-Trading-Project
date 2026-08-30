@@ -37,13 +37,29 @@ ADMIN_GROUP = ("Yonetim", [
 ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
 
 
-def _nav_link(item: dict) -> dbc.NavLink:
-    return dbc.NavLink(
-        [html.I(className=f"{item['icon']} me-2"), item["label"]],
-        href=item["href"],
-        active="exact",
-        className="sidebar-link",
-        style={"padding": "9px 17px", "margin": "1px 8px"},
+def _nav_link(item: dict) -> html.Div:
+    """Menu maddesi.
+
+    Etiket ayri bir span'de (`nav-label`): dar ekranda kenar cubugu ikon
+    rayina inerken CSS'in yalnizca yaziyi gizleyebilmesi icin. Sarmalayici
+    Div `title` tasiyor — rayda yalnizca ikon gorundugunde ipucu tek
+    kalan ayirt edici. (dbc.NavLink `title` propunu kabul etmiyor; verilince
+    tum Dash agaci render edilemiyor.)
+
+    Bosluk/kenar bosluklari inline degil `#sidebar .nav-link` kuralinda:
+    medya sorgusunun `!important` olmadan ezebilmesi icin.
+    """
+    return html.Div(
+        dbc.NavLink(
+            [
+                html.I(className=item["icon"]),
+                html.Span(item["label"], className="nav-label"),
+            ],
+            href=item["href"],
+            active="exact",
+            className="sidebar-link",
+        ),
+        title=item["label"],
     )
 
 
@@ -122,7 +138,8 @@ def _user_footer():
         rows.append(
             html.Div(
                 html.A(
-                    [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
+                    [html.I(className="bi bi-box-arrow-right"),
+                     html.Span("Cikis", className="nav-label ms-1")],
                     href="/logout",
                     className="sidebar-logout",
                 ),
@@ -155,13 +172,13 @@ def create_sidebar():
                         [
                             html.I(className="bi bi-robot me-2",
                                    style={"color": BLUE, "fontSize": "19px"}),
-                            html.Span("RL Trading",
+                            html.Span("RL Trading", className="brand-text",
                                       style={"color": TEXT, "fontWeight": "700",
                                              "fontSize": "16px"}),
                         ],
                         style={"display": "flex", "alignItems": "center"},
                     ),
-                    html.Small("by softdevcan",
+                    html.Small("by softdevcan", className="brand-text",
                                style={"color": TEXT_MUTED, "fontSize": "11px"}),
                 ],
                 style={

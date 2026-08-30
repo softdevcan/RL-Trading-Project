@@ -994,12 +994,68 @@ ayrı tur), "Kapsam dışı" listesinin F/G ile aşıldığı işaretlendi, F.3 
 listesine `/notifications` eklendi, Faz F sonuç tablosundaki kart sayısı
 4 → 5 düzeltildi, "Kritik dosyalar" tablosuna F/G dosyaları eklendi.
 
-### Bu belgede henüz karşılığı olmayan açık işler
+### Kalan açık iş
 
-- **Dar ekran.** Kenar çubuğu 220px sabit, katlanmıyor; medya sorgusu yalnızca
-  üst çubukta var. Faz 8 boyunca ne yapıldı ne de kapsam dışı ilan edildi.
-- **`create_filter_bar` ölü bileşen** (C.5). Hiçbir sayfa kullanmıyor; sınıf
-  bekçisi de kapsamıyor. Ya bağlanmalı ya silinmeli.
 - **Zil yoklamasının oturumu canlı tutması** (G.5). Davranış belgelendi, karar
   verilmedi: kabul mü, cadans mı düşsün, yoksa zil yalnızca açılınca mı
   yoklasın.
+
+---
+
+## Faz H — Dar ekran ve ölü bileşen (2026-08-30)
+
+### H.1 — Dar ekran: önce ölçüldü, sonra karar verildi
+
+Varsayım "kenar çubuğu 220px sabit, dar ekranda düzen bozuluyor" idi.
+**Ölçüm bunu çürüttü.** Dört genişlikte (1280 / 1024 / 820 / 640), üç sayfada
+(`home`, `data`, `prediction`) CDP ile bakıldı: hiçbir kombinasyonda taşan
+öğe, yatay kaydırma veya kırılma **yok** — Bootstrap ızgarası sütunları
+yığıyor, tablolar kendi `overflow-x`'inde kalıyor. 640px'de sayfa okunur ve
+kullanılır durumda.
+
+Gerçek sorun bozulma değil **darlık**: 640px'de 220px'lik menü ekranın
+%34'ünü yiyordu. Bu yüzden düzen değişmedi, yalnızca ≤820px'de kenar çubuğu
+**64px ikon rayına** iniyor:
+
+| Genişlik | Önce (kullanılabilir) | Sonra |
+|---|---|---|
+| 1280 / 1024 | 1012 / 756 | değişmedi (menü 220px) |
+| 820 | 552 | **708** (+156) |
+| 640 | 372 | **528** (+156) |
+
+Uygulama detayları:
+
+- Etiketler ayrı `nav-label` span'inde — CSS yalnızca yazıyı gizliyor, ikon ve
+  tıklama alanı kalıyor. Aynısı marka yazısı (`brand-text`), hesap satırı
+  metni ve çıkış etiketi için.
+- Rayda tek ayırt edici ikon olduğu için **her menü maddesi `title` taşıyor**.
+  `title` sarmalayan `html.Div`'de: `dbc.NavLink` o propu kabul etmiyor
+  (F.1'deki aynı tuzak, `/dash/` 500 döndürüyordu).
+- Menü boşlukları inline stilden `#sidebar .nav-link` kuralına taşındı, çünkü
+  medya sorgusu **inline stili `!important` olmadan ezemez**. Konum/genişlik
+  hâlâ `theme.py`'den inline geldiği için ray kuralları `!important` kullanıyor
+  — gerekçe CSS'te yazılı.
+
+Telefon boyu (≤480px) **hedef değil**: bu pano yoğun tablolar ve mum grafiği
+gösteriyor, 640px altında okunabilirlik ızgarayla değil içerik tasarımıyla
+çözülür. Ray onu da kullanılır kılıyor ama iddia edilen bir hedef değil.
+
+### H.2 — `create_filter_bar` silindi
+
+C.5'te planlanmış, Faz C'de "karşılığı çıkmadı" diye bağlanmamış, iki tur
+boyunca **hiçbir sayfada kullanılmamıştı**. Sayfaların kontrol blokları yatay
+filtre satırı değil, kenar sütununda dikey formlar (`prediction` 17,
+`hyperopt` 18, `daily_trading` 13 `section-title`); beş ağır sayfayı bu
+kalıba çevirmek görsel kazancı belirsiz, riski yüksek bir yeniden düzenleme
+olurdu — üstelik o sayfalar görsel olarak yeni doğrulandı.
+
+"İhtiyaç olursa hazır" ölü kodun birikme biçimidir; bileşen ve tek
+kullanıcısı olan `.field-label` kuralı silindi. Gerekirse git geçmişinden
+geri gelir.
+
+### H.3 — Testler
+
+`test_theme_contrast` sınıf bekçisine `nav-label` ve `brand-text` eklendi
+(92/92). Kenar çubuğu DOM'u değiştiği için (menü maddeleri artık `title`
+taşıyan bir Div'e sarılı) `test_workspace_isolation` 18/18 ve `test_topbar`
+39/39 yeniden koşuldu — ikisi de kenar çubuğu yapısına bakıyor.

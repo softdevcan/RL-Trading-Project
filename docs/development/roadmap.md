@@ -119,6 +119,8 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 
 - **Görsel doğrulama (F+G):** 9 sayfa × 2 tema, headless Chrome/CDP ile ekran görüntüsü + hesaplanmış stil ölçümü. Yerleşim temiz; üç kusur çıktı ve düzeltildi: bildirim zili `dbc.DropdownMenu`'nün `btn-primary` varyantını alıp dolgulu mavi çıkıyordu, **devre dışı dolgulu düğmeler uygulama genelinde** Bootstrap'in ham `#0d6efd`'sine düşüyordu (`.btn-*:disabled` ezilmemiş), Dashboard'daki boş portföy grafiği `{"history": []}` durumunda mesajsız/eksenli kalıyordu.
 
+- **Faz H — dar ekran + olu bilesen:** varsayim "dar ekranda duzen bozuluyor" idi, olcum curuttu — 1280/1024/820/640'ta hicbir tasma veya yatay kaydirma yok. Gercek sorun darlikti (640px'de menu ekranin %34'u); <=820px'de kenar cubugu 64px ikon rayina iniyor, kullanilabilir alan 640px'de 372 -> 528px. `create_filter_bar` iki tur boyunca hicbir sayfada kullanilmadigi icin silindi.
+
 Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
 
 ---

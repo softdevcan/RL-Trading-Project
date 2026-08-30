@@ -73,8 +73,7 @@ dashboard/            # Dash frontend (Plotly Dash, /dash/ altında mount)
   app.py              # Dash factory + PrefixMiddleware + FOUC engelleyici index_string
   pages/              # home, training, data, models, daily_trading, prediction,
                       # academic, hyperopt, users, account (Faz 8: Hesabım)
-  components/         # sidebar, topbar, metric_card, page_header, filter_bar,
-                      # table, state_block
+  components/         # sidebar, topbar, metric_card, page_header, table, state_block
   theme.py            # Faz 8: DOM icin var(--token) + Plotly icin hex palet
   assets/
     00-tokens.css     # static/tokens.css'i @import eder (alfabetik once yuklenir)
