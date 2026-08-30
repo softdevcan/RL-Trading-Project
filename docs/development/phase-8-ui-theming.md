@@ -1153,8 +1153,10 @@ açtığı eksiği kapattı; sıra tesadüf değil, kullanım sırasıyla ortaya
 | `test_delete_artifacts` | 32 | Model ve çalışma silme, ortak dizin katmanları, RBAC, yol geçişi |
 | `test_theme_preference` | 31 | Üç durumlu tema, şema göçü, çerezler |
 | `test_auth` | 28 | Faz 7 regresyonu |
+| `test_training_status` | 19 | İlerleme kırpma, sembol uyarısı, RL + tahmin durumunun sayfaya dönünce geri gelmesi |
 | `test_workspace_isolation` | 18 | Faz 7 regresyonu |
-| **Toplam** | **324** | |
+| `test_dash_props` | 4 | dbc/dcc/html kwarg uyumu |
+| **Toplam** | **347** | |
 
 ### Ölçülebilir sonuç
 
@@ -1185,8 +1187,115 @@ açtığı eksiği kapattı; sıra tesadüf değil, kullanım sırasıyla ortaya
    arasında ortak. Bu bir izolasyon işi, UI işi değil; taşımak mevcut
    çalışmaları öksüz bırakır, ayrı iş olarak planlanmalı.
 
-**Faz 8 kapandı** (2026-08-30): container güncel kodda doğrulandı, 324 kontrol
-yeşil, ortak model silme canlıda teyit edildi.
+**Faz 8 kapandı** (2026-08-30): container güncel kodda doğrulandı, ortak model
+silme canlıda teyit edildi. Kapanıştan sonraki canlı test turunda çıkan beş
+kusur ve düzeltmeleri belgenin sonundaki **"Canlı test turu"** bölümünde;
+test toplamı 347.
+
+---
+
+## Canlı test turu (2026-08-30) — kapanıştan sonra bulunanlar
+
+Faz 8 kapandıktan sonra sistem uçtan uca çalıştırıldı (veri → HPO → eğitim →
+analiz). **Beş kusur çıktı ve hiçbiri test paketinde görünmüyordu** — hepsi
+ancak gerçek bir koşum yapılınca ortaya çıktı. Bu bölüm onların kaydı; ders
+niteliğinde olanları `CLAUDE.md`'ye kural olarak da yazıldı.
+
+### 1. `/train/status` koşum sonuna doğru 500 veriyordu
+
+`progress` = `current_step / total_steps`, ama SB3 `total_timesteps`'i tam
+tutturmuyor: öğrenme `n_steps` bloklarıyla ilerlediği için son blok hedefi
+aşabiliyor (canlıda **1.001472**). Şema `[0,1]` ile sınırlı olduğundan ham oran
+**yanıt doğrulamasını** düşürüyordu.
+
+Etkisi göründüğünden büyüktü: o uç ilerleme çubuğunu **ve** ETA'yı taşıyor,
+yani ETA özelliğinin tamamı tam da işe yarayacağı anda ölüyordu. Sinsi tarafı:
+yalnızca bitişe yakın çıktığı için kısa duman testlerinde görünmüyor.
+→ Oran üretim tarafında kırpıldı, şema sözleşmesi korundu.
+
+### 2. `dbc.Spinner(className=...)` — ilerleme bloğu hiç çizilemiyordu
+
+dbc 2.0.4'te doğru ad `spinner_class_name`. İki çağrı yeri de **ilerleme
+yoklamasının gövdesindeydi**: eğitim ya da optimizasyon çalışırken her yoklama
+`TypeError` ile 500 veriyordu. Kullanıcı "ilerleme göstergesi yok" diye
+bildirdi; oysa gösterge yazılmıştı, bu tek satır onu ekrana hiç bırakmıyordu.
+
+**Bu sınıf Faz 8'de ikinci kez ısırdı** (öncekinde `dbc.NavLink(title=...)`
+tüm Dash ağacını render edilemez yapmıştı). Ortak nokta: Dash tanımadığı
+kwarg'ı yok saymaz, `TypeError` fırlatır ve hata çalışma anında, callback
+gövdesinde patlar — layout render testi yakalamaz.
+
+→ `tests/test_dash_props.py`: `dashboard/` ağacını AST ile tarayıp her
+`dbc.X` / `dcc.X` / `html.X` çağrısının kwarg'larını bileşenin **gerçek prop
+listesiyle** karşılaştırır. Doğrulandı: hem `Spinner.className`'i hem
+`NavLink.title`'ı yakalıyor.
+
+### 3. Hiçbir eğitim koşumu tamamlanamıyordu
+
+```
+ValueError: Unexpected observation shape (331,) ... please use (56,)
+```
+
+Gözlem uzayı sembol sayısına bağlı (`1 + n + 5n + 5n`) ve
+`DataFetcher.split_data()` **kronolojik** bölüyor, sembol üyeliğine bakmıyor.
+Kullanıcının panelinde ölçüldü:
+
+```
+train 2018-01-01..2024-01-16 ->  5 sembol ->  56 özellik
+test  2025-05-14..2026-08-28 -> 30 sembol -> 331 özellik
+```
+
+25 sembolün geçmişi yalnızca 2025-05-14'ten başlıyor. Model 56 ile eğitilip
+331 ile değerlendiriliyordu; eğitim **bittikten sonraki** değerlendirme
+adımında patlıyordu.
+
+→ Val/test eğitim bölümünün sembol evrenine hizalanıyor. **Sessizce değil:**
+düşen semboller ve gerçek sembol sayısı `/train/status` ile dışarı çıkıyor ve
+eğitim sayfasında uyarı olarak görünüyor. Sessiz hizalama, kullanıcının 30
+sembol sandığı modeli 5 sembolle eğitmesine yol açardı ve koşum "başarılı"
+görünürdü. Kalıcı çözüm veride: eksik sembollerin tam geçmişini indirmek.
+
+### 4. Sayfadan çıkıp dönünce ilerleme kayboluyordu
+
+`display_page` yalnızca `page-content`'i değiştiriyor, sayfa her gezinmede
+**yeniden üretiliyor**. `dcc.Interval(disabled=True)` + "yalnızca Başlat
+düğmesi açar" kalıbı bu yüzden bozuk: dönüşte düğmeye basılmadığı için yoklama
+hiç başlamıyor.
+
+Eğitim ve HiperParam sayfalarının ikisinde de vardı. HiperParam'da ayrıca
+çalışan study'nin kimliği yalnızca `dcc.Store`'daydı ve o da sıfırlanıyordu.
+
+→ Her iki sayfa açılışta durumu soruyor. Eğitimde blok üretimi tek yere alındı
+(`_status_block`): önceden layout hep "boş" ile başlıyor, callback ise doğru
+bloğu üretiyordu — ayrıştıkları için dönüşte boş ekran kalıyordu.
+
+### 5. Tahmin eğitimi panoda hiç görünmüyordu
+
+Tahmin sayfası `get_prediction_train_status`'ı **hiç çağırmıyordu**: uç ve
+istemci sarmalayıcısı vardı, sayfada karşılığı yoktu. Tek seferlik "arka
+planda başlatıldı" uyarısı basılıyor, bir daha güncellenmiyordu.
+
+Basit bir yoklama yetmedi çünkü `/prediction/train/status` **sembol** istiyor
+ve sayfa dönüşte hangi sembolün eğitildiğini bilmiyordu (o bilgi de bir
+`dcc.Store`'daydı).
+
+→ `GET /api/prediction/train/active` (yeni) kullanıcının tüm koşumlarını
+bellekten döndürüyor; sayfa açılışta onu soruyor, yoklama yalnızca çalışan
+koşum varken açık ve bitince kendini kapatıyor. **İlerleme yüzdesi yok ve
+uydurulmadı** — tahmin eğitimi adım sayacı yayınlamıyor; durum ve zaman
+damgası gösteriliyor.
+
+### Çıkarılan ders
+
+Beşinin ortak yanı: **hiçbiri birim testiyle yakalanamazdı, ama üçü ucuz bir
+bekçiyle yakalanabilirdi.** `test_dash_props` (kwarg uyumu) ve
+`test_training_status` (durum yüzeyi) tam bu boşluğu kapatmak için yazıldı.
+Kalan ikisi (sembol evreni, ilerleme kalıcılığı) veri ve gezinme davranışına
+bağlı; onlar için de regresyon testi var.
+
+Not: bu turun bulguları **Faz 8'in kapsamını değiştirmiyor** — faz kapalı.
+Burada kayıtlı olmalarının sebebi, hepsinin Faz 8'de dokunulan yüzeylerde
+çıkması ve derslerinin o yüzeyleri ilgilendirmesi.
 
 ---
 
@@ -1199,6 +1308,12 @@ listesi, "Tema (Faz 8)" bölümü ve Do-NOT maddeleri),
 Faz F sonrası güncellendi: `CLAUDE.md` (proje yapısı — `app/api/routes/account.py`,
 tests listesi — `test_account_profile.py`, "Hesap ve profil (Faz 8/F)" bölümü),
 `docs/README.md` (Faz 8 satırının açıklaması).
+
+Kapanış sonrası canlı test turu (2026-08-30) belgeye "Canlı test turu"
+başlığıyla eklendi: beş kusur, sebepleri ve iki yeni bekçi
+(`test_dash_props`, `test_training_status`). `CLAUDE.md`'ye üç kural yazıldı —
+`dbc` kwarg uyumu, sembol evreni/split ilişkisi, uzun süren işlerin sayfa
+gezinmesinde durumu koruması.
 
 Faz G sonrası güncellendi: `CLAUDE.md` (proje yapısı — `topbar.py`, tests
 listesi — `test_topbar.py`, bildirim ve kırıntı Do-NOT maddeleri),
