@@ -16,10 +16,9 @@ import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable
 
 from dashboard.components.page_header import create_page_header
+from dashboard.components.table import TABLE_STYLES, numeric_columns
 import dashboard.api_client as api
-from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, BLUE, GREEN, RED, YELLOW,
-)
+from dashboard.theme import TEXT_MUTED, BORDER
 
 ROLE_OPTIONS = [
     {"label": "Yonetici (admin)", "value": "admin"},
@@ -27,17 +26,6 @@ ROLE_OPTIONS = [
     {"label": "Izleyici (viewer)", "value": "viewer"},
 ]
 
-_TABLE_STYLE = {
-    "style_table": {"overflowX": "auto"},
-    "style_header": {
-        "backgroundColor": CARD2, "color": TEXT_MUTED, "fontWeight": "600",
-        "fontSize": "12px", "textTransform": "uppercase", "border": f"1px solid {BORDER}",
-    },
-    "style_cell": {
-        "backgroundColor": CARD, "color": TEXT, "border": f"1px solid {BORDER}",
-        "fontSize": "13px", "padding": "8px", "textAlign": "left",
-    },
-}
 
 
 def _fmt_size(num_bytes: int) -> str:
@@ -65,7 +53,7 @@ def layout():
 
         # Yeni kullanici
         dbc.Card([
-            dbc.CardHeader(html.Span("Yeni Kullanici", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardHeader(html.Span("Yeni Kullanici", className="card-title-sm")),
             dbc.CardBody([
                 dbc.Row([
                     dbc.Col([
@@ -90,13 +78,13 @@ def layout():
                     style={"color": TEXT_MUTED},
                 ),
             ]),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Kullanici listesi
         dbc.Card([
             dbc.CardHeader(
                 dbc.Row([
-                    dbc.Col(html.Span("Kullanicilar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.Col(html.Span("Kullanicilar", className="card-title-sm")),
                     dbc.Col(
                         dbc.Button([html.I(className="bi bi-arrow-clockwise me-1"), "Yenile"],
                                    id="users-refresh-btn", size="sm", color="secondary", outline=True),
@@ -105,11 +93,11 @@ def layout():
                 ], align="center", justify="between"),
             ),
             dbc.CardBody(html.Div(id="users-list")),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Denetim kaydi
         dbc.Card([
-            dbc.CardHeader(html.Span("Denetim Kaydi (son 100)", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardHeader(html.Span("Denetim Kaydi (son 100)", className="card-title-sm")),
             dbc.CardBody(DataTable(
                 id="users-audit-table",
                 columns=[
@@ -123,9 +111,9 @@ def layout():
                 data=[],
                 page_size=10,
                 sort_action="native",
-                **_TABLE_STYLE,
+                **TABLE_STYLES,
             )),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+        ]),
     ])
 
 
@@ -146,7 +134,7 @@ def _user_row(user: dict):
 
     return dbc.Row([
         dbc.Col([
-            html.Div(user.get("email", ""), style={"color": TEXT, "fontWeight": "600"}),
+            html.Div(user.get("email", ""), className="card-title-sm"),
             html.Small(user.get("full_name") or "-", style={"color": TEXT_MUTED}),
         ], md=3),
         dbc.Col(html.Div(badges), md=2),

@@ -11,8 +11,9 @@ from dash import html, dcc
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
-from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, ORANGE, RED, YELLOW, empty_figure
+from dashboard.theme import CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, YELLOW
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 # Backend /config/* endpoint'leri ulasilamadiginda kullanilan emniyet listeleri.
@@ -55,7 +56,7 @@ def layout():
             # ── Left: Training form ─────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Egitim Parametreleri", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Egitim Parametreleri", className="card-title-sm")),
                     dbc.CardBody([
                         # Algorithm
                         html.Label("Algoritma", className="section-title"),
@@ -64,7 +65,7 @@ def layout():
                             options=_algo_options(),
                             value="ppo",
                             clearable=False,
-                            style={"marginBottom": "16px", "color": CARD},
+                            style={"marginBottom": "16px"},
                         ),
                         # Phase
                         html.Label("Faz", className="section-title"),
@@ -103,7 +104,7 @@ def layout():
                             value="",
                             clearable=False,
                             placeholder="Calisma sec (opsiyonel)...",
-                            style={"marginBottom": "24px", "color": CARD},
+                            style={"marginBottom": "24px"},
                         ),
                         # Tahmini sure — form degistikce guncellenir
                         html.Div(id="training-estimate", className="mb-3"),
@@ -116,30 +117,30 @@ def layout():
                             size="lg",
                         ),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=4, className="mb-4"),
 
             # ── Right: Status ───────────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Egitim Durumu", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Egitim Durumu", className="card-title-sm")),
                     dbc.CardBody([
                         html.Div(id="training-status-content", children=_idle_status()),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8, className="mb-4"),
         ]),
     ])
 
 
 def _idle_status():
-    return html.Div([
-        html.Div(
-            html.I(className="bi bi-hourglass text-muted", style={"fontSize": "48px"}),
-            className="text-center py-4",
-        ),
-        html.P("Egitim baslatilmadi.", style={"color": TEXT_MUTED, "textAlign": "center"}),
-    ])
+    # Kum saati "bir sey oluyor" izlenimi veriyordu; burada henuz hicbir sey
+    # baslamamis durumda. Bos durum blogu (C.7) dogru olan.
+    return create_state_block(
+        "empty",
+        "Egitim baslatilmadi.",
+        hint="Soldaki formu doldurup egitimi baslatin.",
+    )
 
 
 # Backend `phase_name` degerlerinin panoda gosterilen karsiliklari.
@@ -167,7 +168,7 @@ def _eta_row(status):
         dbc.Col(html.Small("Kalan", className="section-title"), width=4),
         dbc.Col(html.Span(
             f"~{eta_text}{finish_txt}{note}",
-            style={"color": TEXT, "fontWeight": "600"},
+            className="card-title-sm",
         ), width=8),
     ], className="mb-2")
 
@@ -184,7 +185,7 @@ def _running_status(status):
     rows = [
         dbc.Row([
             dbc.Col(html.Small("Adim", className="section-title"), width=4),
-            dbc.Col(html.Span(f"{step:,} / {total:,}", style={"color": TEXT, "fontWeight": "600"}), width=8),
+            dbc.Col(html.Span(f"{step:,} / {total:,}", className="card-title-sm"), width=8),
         ], className="mb-2"),
         dbc.Progress(value=pct, label=f"{pct}%", color="primary", className="mb-3"),
         dbc.Row([
@@ -311,7 +312,7 @@ def register_callbacks(app):
             html.Div([
                 html.I(className=f"bi {icon} me-2", style={"color": color}),
                 html.Span("Tahmini sure: ", style={"color": TEXT_MUTED, "fontSize": "13px"}),
-                html.Span(f"~{est['total_text']}", style={"color": TEXT, "fontWeight": "600"}),
+                html.Span(f"~{est['total_text']}", className="card-title-sm"),
             ]),
             html.Small(
                 f"{est.get('source', '')} · {est.get('n_symbols', '?')} sembol",
@@ -320,7 +321,7 @@ def register_callbacks(app):
         ], style={
             "padding": "10px 12px",
             "borderRadius": "6px",
-            "border": f"1px solid {CARD2}",
+            "border": f"1px solid {BORDER}",
             "backgroundColor": CARD2,
         })
 

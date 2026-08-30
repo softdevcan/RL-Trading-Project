@@ -68,12 +68,12 @@
    * da AA gectikleri icin aradaki tur sorun degil. */
   function repaintPlots() {
     if (!window.Plotly) return;
-    var surface = token("--surface");
-    var grid = token("--border");
-    var line = token("--border-strong");
-    var text = token("--text");
-    var muted = token("--muted");
-    var surface2 = token("--surface-2");
+    var surface = token("--rlt-surface");
+    var grid = token("--rlt-border");
+    var line = token("--rlt-border-strong");
+    var text = token("--rlt-text");
+    var muted = token("--rlt-muted");
+    var surface2 = token("--rlt-surface-2");
     if (!surface || !text) return;
 
     var patch = {

@@ -7,7 +7,7 @@
 > sonunda) kayıtlı — plan metni tasarım kararlarını, o bölüm gerçekte ne
 > olduğunu anlatıyor.
 >
-> Doğrulama: `test_theme_contrast` 75/75, `test_theme_preference` 31/31,
+> Doğrulama: `test_theme_contrast` 84/84, `test_theme_preference` 31/31,
 > `test_auth` 28/28, `test_workspace_isolation` 18/18; 10 sayfa × 2 tema
 > gerçek tarayıcıda (Chrome/CDP) görsel kontrol.
 
@@ -83,6 +83,12 @@ Faz E'de.
 
 Dash `assets/` dosyalarını **alfabetik** yükler; `00-` öneki tokenların
 `custom.css`'ten önce gelmesini garanti eder.
+
+> ⚠️ Aşağıdaki isimler **plan anındaki** hâlleridir. Uygulamada hepsi `--rlt-`
+> önekine alındı (`--muted` → `--rlt-muted`), çünkü Dash DataTable kendi
+> `--muted`/`--border`/`--accent` tokenlarını tanımlayıp bunları gölgeliyordu.
+> Gerekçe "Üçüncü parti çakışmaları" bölümünde; güncel liste
+> `static/tokens.css`'te.
 
 Üç durum için kaskad (bkz. B.1): aydınlık taban `:root`'ta durur, koyu blok
 **iki kez** yazılır — bir kez damgasız `system` hâli için media sorgusunda,
@@ -562,6 +568,57 @@ elle ayrıştırılırken geçersiz değer 500 veriyordu; gövde FastAPI paramet
 - **`empty_figure` artık eksenleri gizliyor** — boş grafik "veri yok" derken
   1'den 6'ya boş bir eksen göstermesin diye.
 
+### Faz C ikinci turu — bileşenlerin sayfalara bağlanması
+
+İlk turda bileşenler yazıldı ama ikisi hiçbir sayfaya bağlanmamıştı. İkinci
+tur bağlama işi ve üç ciddi kusuru ortaya çıkardı.
+
+**Yapılan bağlama**
+
+- 42 kart inline stili kaldırıldı. `.card` kuralı zaten doğrusunu veriyordu;
+  üstelik oradaki `border` yanlış tokenı (`--rlt-surface-2`) kullanıyordu.
+- 43 kart başlığı `card-title-sm` sınıfına indi.
+- `models.py` ve `users.py` ortak `TABLE_STYLES`'a geçti (zebra kalktı,
+  sayısal sütunlar sağa dayandı); `users.py`'deki yerel stil sözlüğü silindi.
+- 13 ad-hoc "… yok" satırı `create_state_block`'a döndü; `training.py`'deki
+  kum saatli blok da bos duruma çevrildi (kum saati "bir şey oluyor" izlenimi
+  veriyordu, oysa henüz hiçbir şey başlamamıştı).
+- DARKLY döneminden kalma 12 `"color": CARD` dropdown hack'i temizlendi —
+  token dünyasında bu "yazıyı kart zeminine boya" demek.
+- Kart temizliğinden sonra ölü kalan ~50 tema importu budandı.
+
+**C.5 (FilterBar) uygulanmadı.** Sayfalardaki kontrol blokları kenar sütununda
+dikey formlar; yatay filtre satırı yok, `academic.py`'de hiç filtre yok.
+Planın o maddesi referans ekrandaki Kanban filtre barına bakılarak yazılmıştı
+ve bu panoda karşılığı çıkmadı. Bileşen duruyor, ihtiyaç olursa hazır.
+
+### Üçüncü parti çakışmaları (bu turun asıl bulgusu)
+
+**1. Dash DataTable token adlarımızı gölgeliyordu.**
+DataTable kendi bundle'ında `--muted: #c8c8c8`, `--border`, `--accent`
+tanımlıyor. Tablonun içinde bizim `var(--muted)`'ımız onların değerine
+çözülüyordu: başlık `#c8c8c8`, zemin üzerinde **1.35:1**. Ne `style_header`
+ne CSS kuralı düzeltiyordu — bu bir ad çakışmasıydı, öncelik sorunu değil.
+Çözüm: **tüm tokenlar `--rlt-` önekine alındı** (514 kullanım). Test artık
+hem çakışmayı hem öneksiz token kalmadığını denetliyor.
+
+**2. Dash'in yeni bileşen DOM'u hiç temalanmamıştı.**
+Bu Dash sürümünde `dcc.Dropdown` react-select değil `button.dash-dropdown`;
+`dcc.Slider` `dash-slider-*`. CSS'imiz eski react-select seçicilerini
+hedefliyordu, yani:
+- açılır kutular koyu temada **beyaz** kalıyordu,
+- slider işaretleri `rgba(0,9,38,.9)` ile koyu kartta **görünmüyordu**,
+- slider yan kutusu beyaz zeminde `--rlt-text` ile **1.14:1**'di,
+- tarih seçicinin dış kapsayıcısı beyazdı (altta 16px'lik şerit).
+
+`dash-dropdown-*`, `dash-slider-*`, `dash-input-*`, `dash-options-*`,
+`dash-spinner-*` aileleri temaya bağlandı. Test artık sayfalarda kullanılan
+her `dcc.X` için karşılık gelen sınıf ailesinin `custom.css`'te olmasını
+arıyor — Dash yükseltmesi yeni DOM getirirse yakalanır.
+
+**3. DataTable `fontFamily: "inherit"` kabul etmiyor.** Tablolar monospace
+kalıyordu; yığın açıkça verildi.
+
 ### Ölçülen sonuç
 
 | | Önce | Sonra |
@@ -570,7 +627,11 @@ elle ayrıştırılırken geçersiz değer 500 veriyordu; gövde FastAPI paramet
 | Tema tanımının kopyası | 3 | 1 (`static/tokens.css`) |
 | AA'yı geçmeyen renk | 4 (BLUE 3.98, RED 3.89, PURPLE 3.70, MUTED 4.04) | 0 (en düşük 4.58) |
 | Sayfa kodunda kaçak hex | 2 | 0 (test bekçilik ediyor) |
-| Tema testi | yok | 106 kontrol (kontrast + tercih) |
+| Kart inline stili | 42 | 0 (`.card` kuralı) |
+| Tablonun kendi stil sözlüğü | 2 sayfa | 0 (`TABLE_STYLES`) |
+| Temasız Dash bileşen ailesi | 5 | 0 (test bekçilik ediyor) |
+| Token adı çakışması | 3 (`--muted`/`--border`/`--accent`) | 0 (`--rlt-` öneki) |
+| Tema testi | yok | 115 kontrol (kontrast + tercih) |
 
 ---
 

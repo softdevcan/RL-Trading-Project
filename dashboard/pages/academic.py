@@ -13,11 +13,11 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN,
-    algo_badge_class, DARK_TEMPLATE, empty_figure, apply_theme_template,
-    plot_palette, algo_plot_colors,
+    TEXT, TEXT_MUTED, GREEN, RED, BLUE, PURPLE, algo_badge_class, empty_figure,
+    apply_theme_template, plot_palette, algo_plot_colors,
 )
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 
@@ -55,41 +55,41 @@ def layout():
 
         # Comparison table
         dbc.Card([
-            dbc.CardHeader(html.Span("Model Karsilastirma Tablosu", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardHeader(html.Span("Model Karsilastirma Tablosu", className="card-title-sm")),
             dbc.CardBody(html.Div(id="academic-comparison-table")),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Charts – 4 charts
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Karsilastirma", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Portfoy Karsilastirma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-portfolio-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Risk-Getiri Dagilimi", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Risk-Getiri Dagilimi", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-scatter-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
         ]),
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Metrik Karsilastirma", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Metrik Karsilastirma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-metrics-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Kazanma Orani", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Kazanma Orani", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-winrate-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
         ]),
     ])
@@ -174,7 +174,7 @@ def _render_best_cards(best):
                 ], className="d-flex align-items-center mb-2"),
                 html.Div(str(value), style={"color": color, "fontWeight": "700", "fontSize": "24px"}),
                 html.Small(name, style={"color": TEXT_MUTED, "fontSize": "12px"}),
-            ]), style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+            ])),
             md=3, sm=6, xs=12, className="mb-3",
         ))
     return cols
@@ -183,7 +183,7 @@ def _render_best_cards(best):
 def _render_comparison_table(comparison):
     models = comparison.get("models", comparison.get("results", [])) if comparison else []
     if not models:
-        return html.P("Karsilastirma verisi yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Karsilastirma verisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Model", className="section-title"), width=3),

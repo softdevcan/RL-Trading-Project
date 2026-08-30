@@ -37,8 +37,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg);
-    color: var(--text);
+    background: var(--rlt-bg);
+    color: var(--rlt-text);
     font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 14px;
     padding: 24px;
@@ -46,21 +46,21 @@
 
   .card {
     width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--rlt-surface);
+    border: 1px solid var(--rlt-border);
     border-radius: 12px;
     padding: 32px;
-    box-shadow: var(--shadow-pop);
+    box-shadow: var(--rlt-shadow-pop);
   }
 
   h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -0.01em; }
-  .sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
+  .sub { margin: 0 0 22px; color: var(--rlt-muted); font-size: 13px; }
 
   label {
     display: block;
     font-size: 13px;
     margin-bottom: 6px;
-    color: var(--muted);
+    color: var(--rlt-muted);
   }
 
   input {
@@ -68,15 +68,15 @@
     padding: 11px 12px;
     margin-bottom: 16px;
     border-radius: 8px;
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    color: var(--text);
+    border: 1px solid var(--rlt-border-strong);
+    background: var(--rlt-surface);
+    color: var(--rlt-text);
     font-size: 14px;
   }
   input:focus {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--rlt-primary);
     outline-offset: 0;
-    border-color: var(--primary);
+    border-color: var(--rlt-primary);
   }
 
   button {
@@ -84,13 +84,13 @@
     padding: 11px;
     border: 0;
     border-radius: 8px;
-    background: var(--primary-fill);
-    color: var(--on-fill);
+    background: var(--rlt-primary-fill);
+    color: var(--rlt-on-fill);
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
   }
-  button:hover { background: var(--primary-fill-hover); }
+  button:hover { background: var(--rlt-primary-fill-hover); }
 
   /* Uyari kutulari: notr yuzey + anlamli metin/kenar. Yari saydam renkli
      zemin iki temada farkli davraniyor ve kontrasti tahmine birakiyordu. */
@@ -99,21 +99,21 @@
     border-radius: 8px;
     font-size: 13px;
     margin-bottom: 18px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--border-strong);
+    background: var(--rlt-surface-2);
+    border: 1px solid var(--rlt-border);
+    border-left: 3px solid var(--rlt-border-strong);
   }
-  .alert  { border-left-color: var(--loss); color: var(--loss); }
-  .notice { border-left-color: var(--warn); color: var(--warn); }
+  .alert  { border-left-color: var(--rlt-loss); color: var(--rlt-loss); }
+  .notice { border-left-color: var(--rlt-warn); color: var(--rlt-warn); }
 
-  .rules { color: var(--muted); font-size: 12px; margin: -6px 0 18px; line-height: 1.6; }
+  .rules { color: var(--rlt-muted); font-size: 12px; margin: -6px 0 18px; line-height: 1.6; }
 
-  .foot { margin-top: 16px; text-align: center; color: var(--muted); font-size: 12px; }
-  .foot a { color: var(--primary); }
+  .foot { margin-top: 16px; text-align: center; color: var(--rlt-muted); font-size: 12px; }
+  .foot a { color: var(--rlt-primary); }
 
   code {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    background: var(--rlt-surface-2);
+    border: 1px solid var(--rlt-border);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 12px;

@@ -117,7 +117,8 @@ python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
-python tests/test_theme_contrast.py        # Faz 8: token kontrasti + kacak hex (51 kontrol)
+python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
+                                           #        ucuncu parti cakismasi (84 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 ```
 
@@ -140,6 +141,13 @@ python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, C
 - Uc durum: `light` / `dark` / `system`. `system` = DOM'da damga YOK, karari
   `@media (prefers-color-scheme)` verir. Bu yuzden koyu blok tokens.css'te **iki kez**
   yazilir; ikisi ayrisirsa test kalir.
+- **Tokenlar `--rlt-` onekli.** Dash DataTable kendi bundle'inda `--muted`,
+  `--border`, `--accent` tanimliyor ve oneksiz adlari tablo icinde golgeliyor
+  (tablo basligi 1.35:1 cikiyordu). Yeni token eklerken oneki koru.
+- **Yeni bir `dcc.*` bileseni eklerken sinif ailesini custom.css'e bagla.**
+  Dash surumleri DOM'u degistiriyor (`dcc.Dropdown` artik `button.dash-dropdown`,
+  react-select degil); baglanmayan aile Dash'in kendi renginde kalir.
+  `test_theme_contrast.py` bunu denetliyor.
 - Tercih **hesaba** bagli (`users.theme`), cerez yalnizca okuma onbellegi.
   `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
 - **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.

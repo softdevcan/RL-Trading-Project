@@ -18,10 +18,10 @@ from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW,
-    algo_badge_class, empty_figure, apply_theme_template,
+    CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, ORANGE, algo_badge_class,
 )
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 # Backend /config/* ulasilamadiginda kullanilan emniyet listeleri.
@@ -97,7 +97,7 @@ def layout():
             # ── Form panel ──────────────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Optimizasyon Baslat", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Optimizasyon Baslat", className="card-title-sm")),
                     dbc.CardBody([
                         # Algorithm
                         html.Label("Algoritma", className="section-title"),
@@ -105,7 +105,7 @@ def layout():
                             id="hyperopt-algo",
                             options=_algo_options(),
                             value="ppo", clearable=False,
-                            style={"marginBottom": "16px", "color": CARD},
+                            style={"marginBottom": "16px"},
                         ),
                         # Phase
                         html.Label("Faz", className="section-title"),
@@ -120,7 +120,7 @@ def layout():
                             id="hyperopt-reward",
                             options=_reward_options(),
                             value="psr", clearable=False,
-                            style={"marginBottom": "16px", "color": CARD},
+                            style={"marginBottom": "16px"},
                         ),
                         # n_trials
                         html.Label("Deneme Sayisi (n_trials)", className="section-title"),
@@ -152,7 +152,7 @@ def layout():
                             value=csv_symbols,
                             multi=True,
                             placeholder="Boş = PHASE1_SYMBOLS (default)",
-                            style={"marginBottom": "12px", "color": CARD},
+                            style={"marginBottom": "12px"},
                         ),
 
                         # Train date range (val = train_end +1 → csv_max)
@@ -183,7 +183,7 @@ def layout():
                         # Calisan optimizasyonun canli durumu (/progress ucundan)
                         html.Div(id="hyperopt-progress-panel", className="mt-3"),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=4, className="mb-4"),
 
             # ── Studies grid ────────────────────────────────────────────────
@@ -361,7 +361,7 @@ def register_callbacks(app):
     def refresh_studies(n_ref, n_poll):
         studies = api.get_hyperopt_studies()
         if not studies:
-            return html.P("Kayitli optimizasyon calismasi yok.", style={"color": TEXT_MUTED})
+            return create_state_block("empty", "Kayitli optimizasyon calismasi yok.")
         return _render_studies_grid(studies)
 
     @app.callback(
@@ -472,7 +472,7 @@ def _render_progress(pr):
         ], className="mb-2"),
         dbc.Row([
             dbc.Col(html.Small("Trial", className="section-title"), width=5),
-            dbc.Col(html.Span(f"{done} / {total}", style={"color": TEXT, "fontWeight": "600"}), width=7),
+            dbc.Col(html.Span(f"{done} / {total}", className="card-title-sm"), width=7),
         ], className="mb-2"),
         dbc.Progress(value=pct, label=f"{pct:.0f}%",
                      color="success" if status == "completed" else "primary",
@@ -503,7 +503,7 @@ def _render_progress(pr):
     return html.Div(satirlar, style={
         "padding": "12px",
         "borderRadius": "6px",
-        "border": f"1px solid {CARD2}",
+        "border": f"1px solid {BORDER}",
         "backgroundColor": CARD2,
     })
 
@@ -542,7 +542,7 @@ def _render_studies_grid(studies):
                                    size="sm", color="primary", outline=True, className="w-100 mt-2"),
                     ),
                 ])
-            ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+            ]),
             md=4, sm=6, xs=12, className="mb-3",
         ))
     return dbc.Row(cols)
@@ -584,7 +584,7 @@ def _render_modal_info(study, stats=None, total_trials=None):
 
 def _render_trials_table(trials):
     if not trials:
-        return html.P("Trial verisi yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Trial verisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("#", className="section-title"), width=1),

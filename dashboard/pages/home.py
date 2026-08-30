@@ -18,10 +18,8 @@ import plotly.graph_objects as go
 _log = logging.getLogger(__name__)
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER,
-    GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN, GOLD,
-    DARK_TEMPLATE, algo_badge_class, empty_figure, apply_theme_template,
-    plot_palette, plot_rgba, algo_plot_colors,
+    CARD2, TEXT, TEXT_MUTED, GREEN, RED, YELLOW, GOLD, algo_badge_class, empty_figure,
+    apply_theme_template, plot_palette, plot_rgba, algo_plot_colors,
 )
 from dashboard.components.metric_card import (
     create_metric_card, tone_color, tone_for_number,
@@ -67,15 +65,15 @@ def layout():
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Performansi", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Portfoy Performansi", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="home-portfolio-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Algoritma Karsilastirma", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Algoritma Karsilastirma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="home-algo-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=4, className="mb-4"),
         ]),
 
@@ -83,15 +81,15 @@ def layout():
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("RL Modeller", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("RL Modeller", className="card-title-sm")),
                     dbc.CardBody(html.Div(id="home-models-list", children=create_state_block("loading"))),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", className="card-title-sm")),
                     dbc.CardBody(html.Div(id="home-pred-models-list", children=create_state_block("loading"))),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=6, className="mb-4"),
         ]),
     ])
@@ -309,7 +307,7 @@ def _build_pred_models_list(models):
 
 def _build_models_list(models):
     if not models:
-        return html.P("Egitilmis model bulunamadi.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Egitilmis model bulunamadi.")
 
     rows = []
     for m in models:

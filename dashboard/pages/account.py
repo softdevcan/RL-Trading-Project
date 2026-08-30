@@ -14,7 +14,7 @@ import dash_bootstrap_components as dbc
 
 from dashboard.auth_context import current_user, display_name
 from dashboard.components.page_header import create_page_header
-from dashboard.theme import BORDER, CARD, CARD2, TEXT, TEXT_MUTED
+from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED
 
 ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
 

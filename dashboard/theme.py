@@ -24,25 +24,25 @@ log = logging.getLogger(__name__)
 # ── DOM katmani — inline style icin ─────────────────────────────────────────
 # Not: bunlar HEX DEGIL. Plotly'ye verilirsen sessizce siyah cizer;
 # grafik icin plot_palette() kullan.
-BG = "var(--bg)"
-CARD = "var(--surface)"
-CARD2 = "var(--surface-2)"
-BORDER = "var(--border)"
-TEXT = "var(--text)"
-TEXT_MUTED = "var(--muted)"
+BG = "var(--rlt-bg)"
+CARD = "var(--rlt-surface)"
+CARD2 = "var(--rlt-surface-2)"
+BORDER = "var(--rlt-border)"
+TEXT = "var(--rlt-text)"
+TEXT_MUTED = "var(--rlt-muted)"
 
-GREEN = "var(--profit)"
-RED = "var(--loss)"
-BLUE = "var(--primary)"
-YELLOW = "var(--warn)"
-PURPLE = "var(--accent)"
-CYAN = "var(--info)"
-ORANGE = "var(--orange)"
-GOLD = "var(--gold)"
+GREEN = "var(--rlt-profit)"
+RED = "var(--rlt-loss)"
+BLUE = "var(--rlt-primary)"
+YELLOW = "var(--rlt-warn)"
+PURPLE = "var(--rlt-accent)"
+CYAN = "var(--rlt-info)"
+ORANGE = "var(--rlt-orange)"
+GOLD = "var(--rlt-gold)"
 
 # Dolgu (rozet/dugme zemini) ve uzerine yazilacak renk.
-PRIMARY_FILL = "var(--primary-fill)"
-ON_FILL = "var(--on-fill)"
+PRIMARY_FILL = "var(--rlt-primary-fill)"
+ON_FILL = "var(--rlt-on-fill)"
 
 # Algoritma rozetleri.
 #
@@ -62,10 +62,10 @@ def algo_badge_class(algorithm: str) -> str:
 
 # Geriye donuk: bazi yerler hala sozluk bekliyor olabilir.
 ALGO_COLORS = {
-    "PPO": "var(--primary-fill)",
-    "A2C": "var(--profit-fill)",
-    "SAC": "var(--accent)",
-    "TD3": "var(--orange)",
+    "PPO": "var(--rlt-primary-fill)",
+    "A2C": "var(--rlt-profit-fill)",
+    "SAC": "var(--rlt-accent)",
+    "TD3": "var(--rlt-orange)",
 }
 
 # Kenar cubugu / icerik yerlesimi

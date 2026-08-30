@@ -27,8 +27,8 @@ from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 from dashboard.theme import (
-    BLUE, CARD, CARD2, GOLD, GREEN, ORANGE, PURPLE, RED, TEXT, TEXT_MUTED, YELLOW,
-    apply_theme_template, empty_figure, plot_palette, plot_rgba,
+    BLUE, CARD2, GOLD, GREEN, RED, TEXT, TEXT_MUTED, YELLOW, apply_theme_template,
+    empty_figure, plot_palette, plot_rgba,
 )
 from prediction.feature_groups import (
     DEFAULT_TARGET_TYPE, TARGET_TYPES, default_groups, groups_by_category,
@@ -79,12 +79,12 @@ def _gold_summary_section():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(html.Span("Altin Fiyatlari",
-                                  style={"color": TEXT, "fontWeight": "600"}),
+                                  className="card-title-sm"),
                         md=2, className="d-flex align-items-center"),
                 dbc.Col(dbc.Row(id="pred-gold-cards", className="g-2"), md=10),
             ], className="align-items-center"),
         ], style={"padding": "12px 16px"}),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "16px"})
+    ], className="mb-3")
 
 
 # ─── Tab: Model Egit ──────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ def _train_tab():
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.Span("Yeni Model Egit",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody([
                         html.Label("Kategori", className="section-title"),
                         dcc.Dropdown(
@@ -106,13 +106,13 @@ def _train_tab():
                                 {"label": "Doviz",             "value": "fx"},
                             ],
                             value="gold", clearable=False,
-                            style={"marginBottom": "12px", "color": CARD},
+                            style={"marginBottom": "12px"},
                         ),
 
                         html.Label("Sembol", className="section-title"),
                         dcc.Dropdown(id="train-symbol", options=[], value=None,
                                      placeholder="Sembol sec...", clearable=False,
-                                     style={"marginBottom": "12px", "color": CARD}),
+                                     style={"marginBottom": "12px"}),
 
                         html.Div(id="train-source-wrapper", children=[
                             html.Label("Veri Kaynagi", className="section-title"),
@@ -134,7 +134,7 @@ def _train_tab():
                         dcc.Dropdown(
                             id="train-horizon", options=HORIZONS,
                             value="daily", clearable=False,
-                            style={"marginBottom": "20px", "color": CARD},
+                            style={"marginBottom": "20px"},
                         ),
 
                         dbc.Button(
@@ -143,7 +143,7 @@ def _train_tab():
                         ),
                         html.Div(id="train-result", className="mt-3"),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
 
                 # Feature grup secim paneli
                 _feature_groups_card(),
@@ -158,7 +158,7 @@ def _train_tab():
                     dbc.CardHeader(dbc.Row([
                         dbc.Col(html.Span(id="train-chart-title",
                                           children="Fiyat Grafigi",
-                                          style={"color": TEXT, "fontWeight": "600"})),
+                                          className="card-title-sm")),
                         dbc.Col(dcc.Dropdown(
                             id="train-chart-range",
                             options=[
@@ -177,17 +177,16 @@ def _train_tab():
                         figure=empty_figure("Sembol secince fiyat grafigi gelir"),
                         config={"displayModeBar": False},
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-                          "marginBottom": "16px"}),
+                ], className="mb-3"),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Egitilmis Modeller",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(html.Div(
                         id="train-models-table",
                         children=create_state_block("loading"),
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8),
         ]),
     ])
@@ -235,7 +234,7 @@ def _feature_groups_card():
     return dbc.Card([
         dbc.CardHeader(dbc.Row([
             dbc.Col(html.Span("Ozellik Gruplari",
-                              style={"color": TEXT, "fontWeight": "600"})),
+                              className="card-title-sm")),
             dbc.Col(dbc.ButtonGroup([
                 dbc.Button("Hepsi", id="features-select-all",
                            size="sm", color="secondary", outline=True),
@@ -246,8 +245,7 @@ def _feature_groups_card():
             ], size="sm"), width="auto"),
         ], className="align-items-center justify-content-between")),
         dbc.CardBody(sections),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-              "marginTop": "16px"})
+    ], className="mt-3")
 
 
 def _target_type_card():
@@ -264,7 +262,7 @@ def _target_type_card():
     ]
     return dbc.Card([
         dbc.CardHeader(html.Span("Hedef Tipi",
-                                 style={"color": TEXT, "fontWeight": "600"})),
+                                 className="card-title-sm")),
         dbc.CardBody([
             dcc.RadioItems(
                 id="train-target-type",
@@ -275,8 +273,7 @@ def _target_type_card():
                             "alignItems": "flex-start"},
             ),
         ]),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-              "marginTop": "16px"})
+    ], className="mt-3")
 
 
 # ─── Tab: Tahmin Yap ──────────────────────────────────────────────────────────
@@ -287,13 +284,13 @@ def _predict_tab():
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.Span("Tahmin Ayarlari",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody([
                         html.Label("Egitilmis Model", className="section-title"),
                         dcc.Dropdown(
                             id="predict-model", options=[], value=None,
                             placeholder="Egitilmis bir model sec...",
-                            clearable=False, style={"marginBottom": "16px", "color": CARD},
+                            clearable=False, style={"marginBottom": "16px"},
                         ),
                         html.Small(
                             "Yalnizca egitilmis modeller listelenir. "
@@ -313,15 +310,14 @@ def _predict_tab():
                         ),
                         html.Div(id="predict-action-result", className="mt-3"),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Altin Fiyat Gecmisi",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="pred-gold-chart", figure=empty_figure(),
                                            config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-                          "marginTop": "16px"}),
+                ], className="mt-3"),
             ], md=4),
 
             dbc.Col([
@@ -331,30 +327,30 @@ def _predict_tab():
                 dbc.Row([
                     dbc.Col(dbc.Card([
                         dbc.CardHeader(html.Span("Tahmin vs Gercek",
-                                                 style={"color": TEXT, "fontWeight": "600"})),
+                                                 className="card-title-sm")),
                         dbc.CardBody(dcc.Graph(id="predict-vs-actual-chart",
                                                figure=empty_figure(),
                                                config={"displayModeBar": False})),
-                    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    ]),
                             md=7, className="mb-3"),
                     dbc.Col(dbc.Card([
                         dbc.CardHeader(html.Span("Dogruluk Trendi",
-                                                 style={"color": TEXT, "fontWeight": "600"})),
+                                                 className="card-title-sm")),
                         dbc.CardBody(dcc.Graph(id="predict-accuracy-chart",
                                                figure=empty_figure(),
                                                config={"displayModeBar": False})),
-                    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    ]),
                             md=5, className="mb-3"),
                 ]),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Tahmin Gecmisi",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(html.Div(
                         id="predict-history-table",
-                        children=html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                        children=create_state_block("empty", "Henuz tahmin yok."),
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8),
         ]),
     ])
@@ -574,7 +570,7 @@ def register_callbacks(app):
     )
     def make_prediction(n, model_value, models):
         blank = (html.Div(), empty_figure(), empty_figure(),
-                 html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                 create_state_block("empty", "Henuz tahmin yok."),
                  html.Div(), "")
         if not n or not model_value:
             return blank
@@ -592,7 +588,7 @@ def register_callbacks(app):
             alert = dbc.Alert([html.I(className="bi bi-x-circle me-2"), err],
                               color="danger", dismissable=True)
             return (html.Div(), empty_figure(), empty_figure(),
-                    html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                    create_state_block("empty", "Henuz tahmin yok."),
                     html.Div(), alert)
 
         result = predictions[0]
@@ -727,7 +723,7 @@ def _render_models_table(models: List[Dict]):
 
 def _render_gold_cards(gold):
     if not gold:
-        return [dbc.Col(html.P("Altin verisi yok.", style={"color": TEXT_MUTED}))]
+        return [dbc.Col(create_state_block("empty", "Altin verisi yok."))]
 
     items = [
         ("TRY/gram", gold.get("try_per_gram", gold.get("price_try", "—")), GOLD),
@@ -958,7 +954,7 @@ def _render_result_card(result, symbol, source, meta):
             ]),
             *(_render_model_predictions(result) if result.get("model_predictions") else []),
         ])
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+    ])
 
 
 def _render_ensemble_agreement(result):
@@ -1073,15 +1069,15 @@ def _render_performance(perf):
         return html.Div()
     return dbc.Card([
         dbc.CardHeader(html.Span("Performans Metrikleri",
-                                 style={"color": TEXT, "fontWeight": "600"})),
+                                 className="card-title-sm")),
         dbc.CardBody(dbc.Row(items, className="g-2")),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+    ])
 
 
 def _render_history_table(hist):
     records = hist.get("history", hist.get("predictions", [])) if isinstance(hist, dict) else []
     if not records:
-        return html.P("Tahmin gecmisi yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Tahmin gecmisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Tarih", className="section-title"), width=3),

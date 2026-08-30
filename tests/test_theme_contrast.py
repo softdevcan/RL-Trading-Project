@@ -4,7 +4,7 @@
 
 Ne dogrular (Faz 8, E.1 + E.2):
   1. static/tokens.css'teki HER metin tokeni, kendi temasindaki UC yuzeyin
-     (--bg / --surface / --surface-2) hepsinde WCAG AA (>= 4.5:1) geciyor mu.
+     (--rlt-bg / --rlt-surface / --rlt-surface-2) hepsinde WCAG AA (>= 4.5:1) geciyor mu.
   2. UI sinirlari ve dolgular >= 3:1, dolgu uzerindeki yazi >= 4.5:1.
   3. Koyu blok iki kez yaziliyor (damgasiz "system" hali + acik secim);
      ikisi BIREBIR ayni mi. Ayrisirlarsa bir durum sessizce bozulur.
@@ -106,20 +106,20 @@ def load_themes() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
 
 # ── Kontrast beklentileri ──────────────────────────────────────────────────
 
-SURFACES = ("--bg", "--surface", "--surface-2")
+SURFACES = ("--rlt-bg", "--rlt-surface", "--rlt-surface-2")
 
 # Metin/ikon olarak kullanilan tokenlar: uc yuzeyin hepsinde AA gecmeli.
 TEXT_TOKENS = (
-    "--text", "--muted", "--primary", "--profit", "--loss",
-    "--warn", "--info", "--accent", "--orange", "--gold",
+    "--rlt-text", "--rlt-muted", "--rlt-primary", "--rlt-profit", "--rlt-loss",
+    "--rlt-warn", "--rlt-info", "--rlt-accent", "--rlt-orange", "--rlt-gold",
 )
 
-# Dolgular: --on-fill yazisi okunmali (>=4.5) ve yuzeyden ayrilmali (>=3).
-# --info dolgu tokeni degil ama .badge.bg-info zemininde kullaniliyor.
-FILL_TOKENS = ("--primary-fill", "--profit-fill", "--loss-fill", "--warn-fill", "--info")
+# Dolgular: --rlt-on-fill yazisi okunmali (>=4.5) ve yuzeyden ayrilmali (>=3).
+# --rlt-info dolgu tokeni degil ama .badge.bg-info zemininde kullaniliyor.
+FILL_TOKENS = ("--rlt-primary-fill", "--rlt-profit-fill", "--rlt-loss-fill", "--rlt-warn-fill", "--rlt-info")
 
 # Sinir: metin degil, 3:1 yeterli.
-BORDER_TOKENS = ("--border-strong",)
+BORDER_TOKENS = ("--rlt-border-strong",)
 
 
 def audit_theme(label: str, tokens: dict[str, str]) -> None:
@@ -141,13 +141,13 @@ def audit_theme(label: str, tokens: dict[str, str]) -> None:
         )
 
     for token in FILL_TOKENS:
-        on_fill = contrast(tokens["--on-fill"], tokens[token])
+        on_fill = contrast(tokens["--rlt-on-fill"], tokens[token])
         check(
-            f"{label}: {token} uzerine --on-fill okunuyor ({on_fill:.2f})",
+            f"{label}: {token} uzerine --rlt-on-fill okunuyor ({on_fill:.2f})",
             on_fill >= AA_TEXT,
             f"{on_fill:.2f} < {AA_TEXT}",
         )
-        sep = contrast(tokens[token], tokens["--surface"])
+        sep = contrast(tokens[token], tokens["--rlt-surface"])
         check(
             f"{label}: {token} yuzeyden ayriliyor ({sep:.2f})",
             sep >= AA_NON_TEXT,
@@ -155,7 +155,7 @@ def audit_theme(label: str, tokens: dict[str, str]) -> None:
         )
 
     for token in BORDER_TOKENS:
-        sep = contrast(tokens[token], tokens["--surface"])
+        sep = contrast(tokens[token], tokens["--rlt-surface"])
         check(
             f"{label}: {token} gorunur sinir ({sep:.2f})",
             sep >= AA_NON_TEXT,
@@ -184,11 +184,11 @@ def main() -> int:
     from dashboard.theme import PLOT
 
     mapping = {
-        "text": "--text", "muted": "--muted", "blue": "--primary",
-        "green": "--profit", "red": "--loss", "yellow": "--warn",
-        "purple": "--accent", "cyan": "--info", "orange": "--orange",
-        "gold": "--gold", "grid": "--border", "line": "--border-strong",
-        "bg": "--surface", "hover_bg": "--surface-2",
+        "text": "--rlt-text", "muted": "--rlt-muted", "blue": "--rlt-primary",
+        "green": "--rlt-profit", "red": "--rlt-loss", "yellow": "--rlt-warn",
+        "purple": "--rlt-accent", "cyan": "--rlt-info", "orange": "--rlt-orange",
+        "gold": "--rlt-gold", "grid": "--rlt-border", "line": "--rlt-border-strong",
+        "bg": "--rlt-surface", "hover_bg": "--rlt-surface-2",
     }
     for theme_name, tokens in (("light", light), ("dark", dark_stamp)):
         drift = {
@@ -218,13 +218,55 @@ def main() -> int:
                 leaks.append(f"{os.path.relpath(path, ROOT)}:{i}")
     check("Sayfa/bilesen kodunda hex yok", not leaks, f"kacak: {leaks}")
 
-    print("\n6) Bootstrap renk varyantlari ezilmis mi")
+    print("\n6) Token adi ucuncu parti ile cakisiyor mu")
+    # Dash DataTable kendi bundle'inda --muted / --border / --accent tanimliyor
+    # ve tablo icinde ayni adli tokenlari golgeliyor. Onek olmadan tablo
+    # basligi #c8c8c8 cikiyordu (zemin uzerinde 1.35:1) — ne style_header ne
+    # de custom.css kuraliyla duzelen bir sey; ad cakismasi.
+    RESERVED = {
+        "--accent", "--border", "--muted", "--hover", "--text-color",
+        "--faded-text", "--faded-text-header", "--faded-dropdown",
+        "--selected-background", "--background-color-ellipses",
+    }
+    all_tokens = set(light) | set(dark_stamp)
+    collisions = sorted(all_tokens & RESERVED)
+    check("Token adlari DataTable ile cakismiyor", not collisions,
+          f"cakisan: {collisions}")
+    unprefixed = sorted(t for t in all_tokens if not t.startswith("--rlt-"))
+    check("Tum tokenlar --rlt- onekli", not unprefixed, f"oneksiz: {unprefixed}")
+
+    print("\n7) Kullanilan dcc bilesenleri temalanmis mi")
+    custom_css = open(os.path.join(ROOT, "dashboard", "assets", "custom.css"),
+                      encoding="utf-8").read()
+    # Dash surumleri bilesenlerin DOM'unu degistiriyor: dcc.Dropdown artik
+    # react-select degil `button.dash-dropdown`, dcc.Slider `dash-slider-*`.
+    # Eski secicilerimiz bunlara uymuyordu — acilir kutu koyu temada beyaz
+    # kaliyor, slider isaretleri gorunmez oluyordu. Sayfalarda kullanilan her
+    # bilesen ailesinin custom.css'te karsiligi olmali.
+    FAMILIES = {
+        "Dropdown": "dash-dropdown",
+        "Slider": "dash-slider",
+        "RangeSlider": "dash-slider",
+        "Checklist": "dash-options",
+        "RadioItems": "dash-options",
+        "Loading": "dash-spinner",
+        "DatePickerSingle": "dash-datepicker",
+        "DatePickerRange": "dash-datepicker",
+    }
+    used_components: set[str] = set()
+    for path in scan:
+        used_components.update(
+            re.findall(r"dcc\.([A-Za-z]+)", open(path, encoding="utf-8").read())
+        )
+    for component in sorted(used_components & set(FAMILIES)):
+        family = FAMILIES[component]
+        check(f"dcc.{component} -> .{family}-* temalanmis", family in custom_css,
+              "Dash varsayilani sizacak")
+
+    print("\n8) Bootstrap renk varyantlari ezilmis mi")
     # Taban artik dbc.themes.BOOTSTRAP. Ezilmeyen her varyant Bootstrap'in
     # kendi rengini kullanir — .btn-outline-warning'in #ffc107'si beyaz zeminde
     # ~1.6:1 kaliyordu. Sayfalarda kullanilan her varyant burada tanimli olmali.
-    custom_css = open(os.path.join(ROOT, "dashboard", "assets", "custom.css"),
-                      encoding="utf-8").read()
-
     used: set[str] = set()
     for path in scan:
         text = open(path, encoding="utf-8").read()

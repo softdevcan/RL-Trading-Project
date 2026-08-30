@@ -16,8 +16,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--rlt-bg);
+  color: var(--rlt-text);
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 13px;
   line-height: 1.6;
@@ -27,22 +27,22 @@ body {
 /* Sayilarin sutunlarda hizalanmasi (C.1/C.6) */
 .tabular, td, th, .metric-value { font-variant-numeric: tabular-nums; }
 
-a { color: var(--primary); }
-a:hover { color: var(--primary); }
+a { color: var(--rlt-primary); }
+a:hover { color: var(--rlt-primary); }
 
-hr { border-color: var(--border); opacity: 1; }
+hr { border-color: var(--rlt-border); opacity: 1; }
 
 /* Klavye odagi her zaman gorunur olmali */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--rlt-primary);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
 /* ── Tipografi olcegi (C.1) ─────────────────────────────────────────────── */
-.page-title    { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; margin: 0; }
-.page-subtitle { font-size: 13px; color: var(--muted); margin: 0; }
-.card-title-sm { font-size: 14px; font-weight: 600; color: var(--text); }
+.page-title    { font-size: 20px; font-weight: 600; color: var(--rlt-text); letter-spacing: -0.01em; margin: 0; }
+.page-subtitle { font-size: 13px; color: var(--rlt-muted); margin: 0; }
+.card-title-sm { font-size: 14px; font-weight: 600; color: var(--rlt-text); }
 .metric-value  { font-size: 26px; font-weight: 650; line-height: 1; letter-spacing: -0.02em; }
 
 /* Etiket rolu — uppercase + harf araligi YALNIZCA burada */
@@ -52,62 +52,62 @@ hr { border-color: var(--border); opacity: 1; }
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.06em !important;
-  color: var(--muted) !important;
+  color: var(--rlt-muted) !important;
   margin-bottom: 6px !important;
   display: block;
 }
 
-.text-muted { color: var(--muted) !important; }
+.text-muted { color: var(--rlt-muted) !important; }
 
 /* ── Kaydirma cubugu ────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-thumb { background: var(--rlt-border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--rlt-muted); }
 
 /* ── Kartlar (C.4) — golge degil, ince kenarlik ─────────────────────────── */
 .card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  border-radius: var(--rlt-radius);
+  box-shadow: var(--rlt-shadow);
 }
 .card-header {
   background-color: transparent;
-  border-bottom: 1px solid var(--border);
-  padding: 14px var(--pad);
-  color: var(--text);
+  border-bottom: 1px solid var(--rlt-border);
+  padding: 14px var(--rlt-pad);
+  color: var(--rlt-text);
   font-weight: 600;
 }
 .card-body {
-  color: var(--text);
-  padding: 16px var(--pad);
+  color: var(--rlt-text);
+  padding: 16px var(--rlt-pad);
 }
 .card-footer {
   background-color: transparent;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--rlt-border);
 }
 
 /* ── Kenar cubugu (C.8) ─────────────────────────────────────────────────── */
-#sidebar { background-color: var(--surface); border-right: 1px solid var(--border); }
+#sidebar { background-color: var(--rlt-surface); border-right: 1px solid var(--rlt-border); }
 
 #sidebar .nav-link {
-  color: var(--muted) !important;
-  border-radius: var(--radius-sm);
+  color: var(--rlt-muted) !important;
+  border-radius: var(--rlt-radius-sm);
   transition: background-color .15s, color .15s, border-color .15s;
   font-size: 13px;
   font-weight: 500;
   border-left: 3px solid transparent;
 }
 #sidebar .nav-link:hover {
-  background-color: var(--surface-hover) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface-hover) !important;
+  color: var(--rlt-text) !important;
 }
 /* Aktif oge: dolgu yerine sol kenar + hafif zemin (aydinlikta dolgu agir durur) */
 #sidebar .nav-link.active {
-  background-color: var(--surface-2) !important;
-  color: var(--text) !important;
-  border-left-color: var(--primary);
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border-left-color: var(--rlt-primary);
   font-weight: 600;
 }
 
@@ -116,7 +116,7 @@ hr { border-color: var(--border); opacity: 1; }
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--rlt-muted);
   padding: 14px 20px 4px;
 }
 
@@ -124,7 +124,7 @@ hr { border-color: var(--border); opacity: 1; }
 .btn {
   font-size: 13px;
   font-weight: 500;
-  border-radius: var(--radius-sm);
+  border-radius: var(--rlt-radius-sm);
   transition: background-color .15s, border-color .15s, color .15s;
 }
 
@@ -132,85 +132,85 @@ hr { border-color: var(--border); opacity: 1; }
 .btn-success,
 .btn-danger,
 .btn-warning {
-  color: var(--on-fill) !important;
+  color: var(--rlt-on-fill) !important;
 }
-.btn-primary  { background-color: var(--primary-fill); border-color: var(--primary-fill); }
+.btn-primary  { background-color: var(--rlt-primary-fill); border-color: var(--rlt-primary-fill); }
 .btn-primary:hover,
-.btn-primary:focus  { background-color: var(--primary-fill-hover); border-color: var(--primary-fill-hover); }
-.btn-success  { background-color: var(--profit-fill); border-color: var(--profit-fill); }
-.btn-success:hover  { background-color: var(--profit-fill-hover); border-color: var(--profit-fill-hover); }
-.btn-danger   { background-color: var(--loss-fill); border-color: var(--loss-fill); }
-.btn-danger:hover   { background-color: var(--loss-fill-hover); border-color: var(--loss-fill-hover); }
-.btn-warning  { background-color: var(--warn-fill); border-color: var(--warn-fill); }
-.btn-warning:hover  { background-color: var(--warn-fill-hover); border-color: var(--warn-fill-hover); }
+.btn-primary:focus  { background-color: var(--rlt-primary-fill-hover); border-color: var(--rlt-primary-fill-hover); }
+.btn-success  { background-color: var(--rlt-profit-fill); border-color: var(--rlt-profit-fill); }
+.btn-success:hover  { background-color: var(--rlt-profit-fill-hover); border-color: var(--rlt-profit-fill-hover); }
+.btn-danger   { background-color: var(--rlt-loss-fill); border-color: var(--rlt-loss-fill); }
+.btn-danger:hover   { background-color: var(--rlt-loss-fill-hover); border-color: var(--rlt-loss-fill-hover); }
+.btn-warning  { background-color: var(--rlt-warn-fill); border-color: var(--rlt-warn-fill); }
+.btn-warning:hover  { background-color: var(--rlt-warn-fill-hover); border-color: var(--rlt-warn-fill-hover); }
 
 .btn-secondary {
-  background-color: var(--surface-2);
-  border-color: var(--border-strong);
-  color: var(--text);
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-border-strong);
+  color: var(--rlt-text);
 }
-.btn-secondary:hover { background-color: var(--surface-hover); color: var(--text); }
+.btn-secondary:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
 
-.btn-outline-primary   { color: var(--primary); border-color: var(--primary); background: transparent; }
-.btn-outline-primary:hover   { background-color: var(--surface-2); color: var(--primary); border-color: var(--primary); }
-.btn-outline-secondary { color: var(--muted); border-color: var(--border-strong); background: transparent; }
-.btn-outline-secondary:hover { background-color: var(--surface-hover); color: var(--text); }
-.btn-outline-danger    { color: var(--loss); border-color: var(--loss); background: transparent; }
-.btn-outline-danger:hover    { background-color: var(--surface-2); color: var(--loss); border-color: var(--loss); }
-.btn-outline-success   { color: var(--profit); border-color: var(--profit); background: transparent; }
-.btn-outline-success:hover   { background-color: var(--surface-2); color: var(--profit); border-color: var(--profit); }
+.btn-outline-primary   { color: var(--rlt-primary); border-color: var(--rlt-primary); background: transparent; }
+.btn-outline-primary:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-primary); border-color: var(--rlt-primary); }
+.btn-outline-secondary { color: var(--rlt-muted); border-color: var(--rlt-border-strong); background: transparent; }
+.btn-outline-secondary:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+.btn-outline-danger    { color: var(--rlt-loss); border-color: var(--rlt-loss); background: transparent; }
+.btn-outline-danger:hover    { background-color: var(--rlt-surface-2); color: var(--rlt-loss); border-color: var(--rlt-loss); }
+.btn-outline-success   { color: var(--rlt-profit); border-color: var(--rlt-profit); background: transparent; }
+.btn-outline-success:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-profit); border-color: var(--rlt-profit); }
 /* Bunlar tanimsiz birakilirsa Bootstrap'in kendi sarisi (#ffc107) ve
    turkuazi (#0dcaf0) devreye giriyor; ikisi de beyaz zeminde ~1.6:1. */
-.btn-outline-warning   { color: var(--warn); border-color: var(--warn); background: transparent; }
-.btn-outline-warning:hover   { background-color: var(--surface-2); color: var(--warn); border-color: var(--warn); }
-.btn-outline-info      { color: var(--info); border-color: var(--info); background: transparent; }
-.btn-outline-info:hover      { background-color: var(--surface-2); color: var(--info); border-color: var(--info); }
-.btn-info { background-color: var(--info); border-color: var(--info); color: var(--on-fill) !important; }
-.btn-info:hover { filter: brightness(.92); color: var(--on-fill) !important; }
-.btn-light, .btn-outline-light { color: var(--text); border-color: var(--border-strong); background-color: var(--surface-2); }
-.btn-dark, .btn-outline-dark   { color: var(--text); border-color: var(--border-strong); background-color: var(--surface-2); }
+.btn-outline-warning   { color: var(--rlt-warn); border-color: var(--rlt-warn); background: transparent; }
+.btn-outline-warning:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-warn); border-color: var(--rlt-warn); }
+.btn-outline-info      { color: var(--rlt-info); border-color: var(--rlt-info); background: transparent; }
+.btn-outline-info:hover      { background-color: var(--rlt-surface-2); color: var(--rlt-info); border-color: var(--rlt-info); }
+.btn-info { background-color: var(--rlt-info); border-color: var(--rlt-info); color: var(--rlt-on-fill) !important; }
+.btn-info:hover { filter: brightness(.92); color: var(--rlt-on-fill) !important; }
+.btn-light, .btn-outline-light { color: var(--rlt-text); border-color: var(--rlt-border-strong); background-color: var(--rlt-surface-2); }
+.btn-dark, .btn-outline-dark   { color: var(--rlt-text); border-color: var(--rlt-border-strong); background-color: var(--rlt-surface-2); }
 
 .btn:disabled, .btn.disabled { opacity: .55; }
 
 /* ── Form kontrolleri ───────────────────────────────────────────────────── */
 .form-control,
 .form-select {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border-strong) !important;
-  color: var(--text) !important;
-  border-radius: var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  color: var(--rlt-text) !important;
+  border-radius: var(--rlt-radius-sm) !important;
   font-size: 13px !important;
 }
-.form-control::placeholder { color: var(--muted) !important; opacity: 1; }
+.form-control::placeholder { color: var(--rlt-muted) !important; opacity: 1; }
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent) !important;
-  background-color: var(--surface) !important;
-  color: var(--text) !important;
+  border-color: var(--rlt-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rlt-primary) 22%, transparent) !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
 }
 .form-control:disabled, .form-select:disabled {
-  background-color: var(--surface-2) !important;
-  color: var(--muted) !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-muted) !important;
 }
 
 .input-group-text {
-  background-color: var(--surface-2);
-  border-color: var(--border-strong);
-  color: var(--muted);
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-border-strong);
+  color: var(--rlt-muted);
 }
 
 /* Checkbox / radio / switch */
-.form-check-label { color: var(--text); font-size: 13px; cursor: pointer; }
+.form-check-label { color: var(--rlt-text); font-size: 13px; cursor: pointer; }
 .form-check-input {
-  background-color: var(--surface);
-  border-color: var(--border-strong);
+  background-color: var(--rlt-surface);
+  border-color: var(--rlt-border-strong);
 }
 .form-check-input:checked {
-  background-color: var(--primary-fill);
-  border-color: var(--primary-fill);
+  background-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-primary-fill);
 }
-.form-check-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+.form-check-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--rlt-primary) 22%, transparent); }
 .form-switch .form-check-input {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238595a9'/%3e%3c/svg%3e");
 }
@@ -219,82 +219,232 @@ hr { border-color: var(--border); opacity: 1; }
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
 }
 
-/* ── dcc.Dropdown (react-select) ────────────────────────────────────────── */
-.dash-dropdown .Select-control,
-.Select-control {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: var(--radius-sm) !important;
-  color: var(--text) !important;
+/* ── dcc.Dropdown — YENI yapi (dash-dropdown-*) ─────────────────────────
+   Dash'in guncel dcc.Dropdown'i react-select kullanmiyor; kendi
+   `button.dash-dropdown` yapisini ciziyor. Asagidaki react-select kurallari
+   bu yapiya HIC uymuyordu ve acilir kutular koyu temada beyaz kaliyordu.
+   Sinif listesi dash/dcc bundle'indan alindi. */
+.dash-dropdown-wrapper { color: var(--rlt-text); }
+
+button.dash-dropdown {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+  font-size: 13px !important;
   min-height: 38px;
 }
-.Select-control:hover { border-color: var(--primary) !important; }
+button.dash-dropdown:hover { border-color: var(--rlt-primary) !important; }
+button.dash-dropdown:focus-visible {
+  border-color: var(--rlt-primary) !important;
+  outline: 2px solid var(--rlt-primary);
+  outline-offset: 1px;
+}
+
+.dash-dropdown-value { color: var(--rlt-text) !important; }
+.dash-dropdown-placeholder { color: var(--rlt-muted) !important; }
+.dash-dropdown-trigger-icon,
+.dash-dropdown-search-icon,
+.dash-dropdown-clear { color: var(--rlt-muted) !important; }
+.dash-dropdown-clear:hover { color: var(--rlt-text) !important; }
+
+/* Secili deger duz metindir — cip degil. (Ilk denemede cip yapilmisti ve
+   tek secimli kutularda her deger mavi bir rozet gibi gorunuyordu.) */
+.dash-dropdown-value-item {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+}
+
+/* Coklu secimde "N selected" sayaci — notr, bagirmayan bir rozet */
+.dash-dropdown-value-count {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+}
+
+/* Acilir liste */
+.dash-dropdown-content,
+.dash-dropdown-options {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
+  color: var(--rlt-text) !important;
+  z-index: 9999 !important;
+}
+.dash-dropdown-option {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+  font-size: 13px !important;
+}
+.dash-dropdown-option:hover,
+.dash-dropdown-option[data-highlighted],
+.dash-dropdown-option[aria-selected="true"] {
+  background-color: var(--rlt-surface-hover) !important;
+  color: var(--rlt-text) !important;
+}
+.dash-dropdown-option[aria-selected="true"] { font-weight: 600; }
+
+.dash-dropdown-search,
+.dash-dropdown-search-container input {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+}
+.dash-dropdown-search::placeholder,
+.dash-dropdown-search-container input::placeholder {
+  color: var(--rlt-muted) !important;
+}
+
+.dash-dropdown-actions { border-top: 1px solid var(--rlt-border) !important; }
+.dash-dropdown-action-button {
+  background: transparent !important;
+  color: var(--rlt-primary) !important;
+  font-size: 12px !important;
+}
+.dash-dropdown-action-button:hover { background-color: var(--rlt-surface-hover) !important; }
+
+/* ── dcc.Dropdown (react-select — eski surumler) ────────────────────────── */
+.dash-dropdown .Select-control,
+.Select-control {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+  min-height: 38px;
+}
+.Select-control:hover { border-color: var(--rlt-primary) !important; }
 .Select-multi-value-wrapper,
 .Select-value { background-color: transparent !important; }
 .Select-value-label,
 .Select-placeholder,
-.Select--multi .Select-value-label { color: var(--text) !important; }
-.Select-placeholder { color: var(--muted) !important; }
-.Select-input > input { color: var(--text) !important; background: transparent !important; }
+.Select--multi .Select-value-label { color: var(--rlt-text) !important; }
+.Select-placeholder { color: var(--rlt-muted) !important; }
+.Select-input > input { color: var(--rlt-text) !important; background: transparent !important; }
 .Select-menu-outer,
 .Select-menu {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: 0 0 var(--rlt-radius-sm) var(--rlt-radius-sm) !important;
   z-index: 9999 !important;
-  box-shadow: var(--shadow-pop) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
 }
-.Select-option { background-color: var(--surface) !important; color: var(--text) !important; font-size: 13px; }
+.Select-option { background-color: var(--rlt-surface) !important; color: var(--rlt-text) !important; font-size: 13px; }
 .Select-option:hover,
-.Select-option.is-focused { background-color: var(--surface-hover) !important; }
-.Select-option.is-selected { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
+.Select-option.is-focused { background-color: var(--rlt-surface-hover) !important; }
+.Select-option.is-selected { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
 .Select-arrow-zone,
 .Select-clear-zone,
-.Select-clear { color: var(--muted) !important; }
+.Select-clear { color: var(--rlt-muted) !important; }
 
 .Select--multi .Select-value {
-  background-color: var(--primary-fill) !important;
+  background-color: var(--rlt-primary-fill) !important;
   border: none !important;
   border-radius: 4px !important;
   margin: 2px !important;
 }
-.Select--multi .Select-value-label { color: var(--on-fill) !important; font-size: 12px !important; }
+.Select--multi .Select-value-label { color: var(--rlt-on-fill) !important; font-size: 12px !important; }
 .Select--multi .Select-value-icon {
-  color: var(--on-fill) !important;
+  color: var(--rlt-on-fill) !important;
   opacity: .7;
-  border-right: 1px solid color-mix(in srgb, var(--on-fill) 25%, transparent) !important;
+  border-right: 1px solid color-mix(in srgb, var(--rlt-on-fill) 25%, transparent) !important;
 }
 .Select--multi .Select-value-icon:hover { opacity: 1; }
 
 /* react-select v5 sinif adlari degisken; oznitelik seciciyle yakalaniyor */
 [class*="-control"] {
-  background-color: var(--surface) !important;
-  border-color: var(--border-strong) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  border-color: var(--rlt-border-strong) !important;
+  color: var(--rlt-text) !important;
 }
 [class*="-menu"] {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: var(--shadow-pop) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
   z-index: 9999 !important;
 }
-[class*="-option"] { background-color: var(--surface) !important; color: var(--text) !important; }
-[class*="-option"]:hover { background-color: var(--surface-hover) !important; }
-[class*="-placeholder"] { color: var(--muted) !important; }
-[class*="-singleValue"] { color: var(--text) !important; }
-[class*="-Input"] input { color: var(--text) !important; }
-[class*="-multiValue"] { background-color: var(--primary-fill) !important; border-radius: 4px !important; }
-[class*="-multiValueLabel"] { color: var(--on-fill) !important; font-size: 12px !important; }
-[class*="-multiValueRemove"] { color: var(--on-fill) !important; }
-[class*="-indicatorSeparator"] { background-color: var(--border) !important; }
+[class*="-option"] { background-color: var(--rlt-surface) !important; color: var(--rlt-text) !important; }
+[class*="-option"]:hover { background-color: var(--rlt-surface-hover) !important; }
+[class*="-placeholder"] { color: var(--rlt-muted) !important; }
+[class*="-singleValue"] { color: var(--rlt-text) !important; }
+[class*="-Input"] input { color: var(--rlt-text) !important; }
+[class*="-multiValue"] { background-color: var(--rlt-primary-fill) !important; border-radius: 4px !important; }
+[class*="-multiValueLabel"] { color: var(--rlt-on-fill) !important; font-size: 12px !important; }
+[class*="-multiValueRemove"] { color: var(--rlt-on-fill) !important; }
+[class*="-indicatorSeparator"] { background-color: var(--rlt-border) !important; }
 [class*="-dropdownIndicator"],
-[class*="-clearIndicator"] { color: var(--muted) !important; }
+[class*="-clearIndicator"] { color: var(--rlt-muted) !important; }
+
+/* ── dcc.Slider / RangeSlider (dash-slider-*) ───────────────────────────
+   Dash'in kendi paleti: mor dolgu, isaretler rgba(0,9,38,.9). Koyu kartta
+   isaretler goze gorunmez oluyordu (~1.2:1). */
+.dash-slider-track { background-color: var(--rlt-surface-2) !important; }
+.dash-slider-range { background-color: var(--rlt-primary-fill) !important; }
+.dash-slider-thumb {
+  background-color: var(--rlt-primary-fill) !important;
+  border-color: var(--rlt-surface) !important;
+}
+.dash-slider-thumb:focus-visible { outline: 2px solid var(--rlt-primary); outline-offset: 2px; }
+
+.dash-slider-mark { color: var(--rlt-text) !important; font-size: 11px !important; }
+.dash-slider-mark-outside-selection { color: var(--rlt-muted) !important; }
+.dash-slider-dot { background-color: var(--rlt-primary-fill) !important; border: none !important; }
+.dash-slider-dot-outside-selection { background-color: var(--rlt-border-strong) !important; }
+
+.dash-slider-tooltip {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border) !important;
+}
+
+/* dcc.Input / slider yan kutusu (dash-input-*)
+   `.dash-range-slider-input` beyaz zeminde --rlt-text ile geliyordu: 1.14:1,
+   yani icindeki sayi gorunmuyordu. */
+.dash-input-container,
+.dash-input,
+.dash-textarea {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+}
+.dash-input-element,
+.dash-range-slider-min-input,
+.dash-range-slider-max-input {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+  border: none !important;
+  font-size: 13px !important;
+}
+.dash-input-element::placeholder { color: var(--rlt-muted) !important; }
+.dash-input-container:focus-within { border-color: var(--rlt-primary) !important; }
+.dash-input-stepper { color: var(--rlt-muted) !important; background: transparent !important; }
+.dash-input-stepper:hover { color: var(--rlt-text) !important; }
+
+/* ── dcc.Checklist / RadioItems (dash-options-*) ────────────────────────── */
+.dash-options-list-option-text { color: var(--rlt-text) !important; font-size: 13px !important; }
+.dash-options-list-option-wrapper:hover { background-color: var(--rlt-surface-hover) !important; }
+.dash-options-list-option-checkbox {
+  accent-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-border-strong) !important;
+}
+
+/* ── dcc.Loading (dash-spinner-*) ───────────────────────────────────────── */
+.dash-spinner-container, .dash-loading-title { color: var(--rlt-muted) !important; }
+.dash-dot-spinner-bounce, .dash-sk-child, .dash-bar { background-color: var(--rlt-primary) !important; }
+.dash-cube-side { background-color: var(--rlt-primary) !important; }
 
 /* ── DatePickerRange (Radix tabanli) ────────────────────────────────────── */
+/* Dis kapsayici beyaz kaliyordu: ic sarmalayici 44px, kapsayici 60px —
+   koyu temada altta 16px'lik beyaz serit gorunuyordu. */
+.dash-datepicker { background-color: transparent !important; }
+
 .dash-datepicker-input-wrapper {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
   display: inline-flex !important;
   align-items: center !important;
   padding: 5px 10px !important;
@@ -304,15 +454,15 @@ hr { border-color: var(--border); opacity: 1; }
   transition: border-color .15s !important;
 }
 .dash-datepicker-input-wrapper:hover,
-.dash-datepicker-input-wrapper:focus-within { border-color: var(--primary) !important; }
+.dash-datepicker-input-wrapper:focus-within { border-color: var(--rlt-primary) !important; }
 
 body .dash-datepicker-input-wrapper .dash-datepicker-input,
 body .dash-datepicker-input,
 .dash-datepicker-input {
   background: transparent !important;
-  color: var(--text) !important;
-  -webkit-text-fill-color: var(--text) !important;
-  caret-color: var(--text) !important;
+  color: var(--rlt-text) !important;
+  -webkit-text-fill-color: var(--rlt-text) !important;
+  caret-color: var(--rlt-text) !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
@@ -322,31 +472,31 @@ body .dash-datepicker-input,
 }
 body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .dash-datepicker-input::placeholder {
-  color: var(--muted) !important;
-  -webkit-text-fill-color: var(--muted) !important;
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
 }
 
 .dash-datepicker-range-arrow,
-.dash-datepicker-caret-icon { color: var(--muted) !important; flex-shrink: 0; }
+.dash-datepicker-caret-icon { color: var(--rlt-muted) !important; flex-shrink: 0; }
 
 [data-radix-popper-content-wrapper] { z-index: 9999 !important; }
 [data-radix-popper-content-wrapper] > div,
 .dash-datepicker-calendar {
-  background-color: var(--surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-pop) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
+  color: var(--rlt-text) !important;
   padding: 12px !important;
 }
 /* Takvim icindeki her sey once metin rengine cekilir, sonra istisnalar */
 [data-radix-popper-content-wrapper] * {
-  color: var(--text) !important;
-  -webkit-text-fill-color: var(--text) !important;
+  color: var(--rlt-text) !important;
+  -webkit-text-fill-color: var(--rlt-text) !important;
 }
 [data-radix-popper-content-wrapper] [role="columnheader"] {
-  color: var(--muted) !important;
-  -webkit-text-fill-color: var(--muted) !important;
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
 }
@@ -355,41 +505,41 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   background: transparent !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:hover {
-  background-color: var(--surface-hover) !important;
+  background-color: var(--rlt-surface-hover) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
 [data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
-  background-color: var(--primary-fill) !important;
-  color: var(--on-fill) !important;
-  -webkit-text-fill-color: var(--on-fill) !important;
+  background-color: var(--rlt-primary-fill) !important;
+  color: var(--rlt-on-fill) !important;
+  -webkit-text-fill-color: var(--rlt-on-fill) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
-  color: var(--muted) !important;
-  -webkit-text-fill-color: var(--muted) !important;
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
   opacity: .45;
   cursor: not-allowed;
 }
 [data-radix-popper-content-wrapper] button { background-color: transparent !important; }
-[data-radix-popper-content-wrapper] button:hover { background-color: var(--surface-hover) !important; }
+[data-radix-popper-content-wrapper] button:hover { background-color: var(--rlt-surface-hover) !important; }
 [data-radix-popper-content-wrapper] select,
 [data-radix-popper-content-wrapper] input[type="number"],
 [data-radix-popper-content-wrapper] input[type="text"] {
-  background-color: var(--surface-2) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border-strong) !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
   border-radius: 4px !important;
 }
 [data-radix-popper-content-wrapper] select option {
-  background-color: var(--surface) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
 }
 
 /* ── Tablolar (C.6) ─────────────────────────────────────────────────────── */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
-  background-color: var(--surface-2) !important;
-  color: var(--muted) !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-muted) !important;
   border: none !important;
-  border-bottom: 1px solid var(--border-strong) !important;
+  border-bottom: 1px solid var(--rlt-border-strong) !important;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -397,10 +547,10 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   padding: 10px 12px !important;
 }
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
-  background-color: var(--surface) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
   border: none !important;
-  border-bottom: 1px solid var(--border) !important;
+  border-bottom: 1px solid var(--rlt-border) !important;
   font-size: 13px;
   height: 38px !important;
   padding: 0 12px !important;
@@ -408,23 +558,23 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 }
 /* Zebra serit yok — ayirici tek cizgi (C.6) */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover td {
-  background-color: var(--surface-hover) !important;
+  background-color: var(--rlt-surface-hover) !important;
 }
 .dash-table-container .previous-next-container,
 .dash-table-container .dash-filter input {
-  color: var(--text) !important;
+  color: var(--rlt-text) !important;
 }
 
 /* Duz HTML tablolar */
-.table { color: var(--text); border-color: var(--border); }
-.table > :not(caption) > * > * { background-color: transparent; color: var(--text); border-bottom-color: var(--border); }
+.table { color: var(--rlt-text); border-color: var(--rlt-border); }
+.table > :not(caption) > * > * { background-color: transparent; color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
 .table thead th {
-  color: var(--muted);
+  color: var(--rlt-muted);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--rlt-border-strong);
 }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -435,43 +585,43 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   padding: 4px 10px;
   border-radius: 20px;
 }
-.badge.bg-primary   { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
-.badge.bg-success   { background-color: var(--profit-fill) !important;  color: var(--on-fill) !important; }
-.badge.bg-danger    { background-color: var(--loss-fill) !important;    color: var(--on-fill) !important; }
-.badge.bg-warning   { background-color: var(--warn-fill) !important;    color: var(--on-fill) !important; }
-.badge.bg-secondary { background-color: var(--surface-2) !important;    color: var(--text) !important; }
-.badge.bg-info      { background-color: var(--info) !important;         color: var(--on-fill) !important; }
+.badge.bg-primary   { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
+.badge.bg-success   { background-color: var(--rlt-profit-fill) !important;  color: var(--rlt-on-fill) !important; }
+.badge.bg-danger    { background-color: var(--rlt-loss-fill) !important;    color: var(--rlt-on-fill) !important; }
+.badge.bg-warning   { background-color: var(--rlt-warn-fill) !important;    color: var(--rlt-on-fill) !important; }
+.badge.bg-secondary { background-color: var(--rlt-surface-2) !important;    color: var(--rlt-text) !important; }
+.badge.bg-info      { background-color: var(--rlt-info) !important;         color: var(--rlt-on-fill) !important; }
 
 /* Algoritma rozeti.
    Renk sinifla veriliyor, inline stille degil: dbc.Badge kendi `bg-secondary`
    sinifini basiyor ve Bootstrap utility'leri `!important` tasidigi icin inline
    backgroundColor sessizce eziliyordu. Taninmayan algoritma notr kalir. */
 .badge.algo-badge {
-  background-color: var(--surface-2) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
 }
-.badge.algo-badge.algo-ppo { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
-.badge.algo-badge.algo-a2c { background-color: var(--profit-fill) !important;  color: var(--on-fill) !important; }
-.badge.algo-badge.algo-sac { background-color: var(--accent) !important;       color: var(--on-fill) !important; }
-.badge.algo-badge.algo-td3 { background-color: var(--orange) !important;       color: var(--on-fill) !important; }
+.badge.algo-badge.algo-ppo { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-a2c { background-color: var(--rlt-profit-fill) !important;  color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-sac { background-color: var(--rlt-accent) !important;       color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-td3 { background-color: var(--rlt-orange) !important;       color: var(--rlt-on-fill) !important; }
 
 /* ── Uyari kutulari ─────────────────────────────────────────────────────
    Yari saydam renkli zemin yerine notr yuzey + anlamli metin/kenar:
    boylece her iki temada da kontrast onceden dogrulanmis cift kullanilir. */
 .alert {
-  border-radius: var(--radius);
+  border-radius: var(--rlt-radius);
   font-size: 13px;
-  background-color: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--border-strong);
-  color: var(--text);
+  background-color: var(--rlt-surface-2);
+  border: 1px solid var(--rlt-border);
+  border-left: 3px solid var(--rlt-border-strong);
+  color: var(--rlt-text);
 }
-.alert-success   { border-left-color: var(--profit); color: var(--profit); }
-.alert-danger    { border-left-color: var(--loss);   color: var(--loss); }
-.alert-warning   { border-left-color: var(--warn);   color: var(--warn); }
-.alert-info      { border-left-color: var(--info);   color: var(--info); }
-.alert-primary   { border-left-color: var(--primary); color: var(--primary); }
-.alert-secondary { border-left-color: var(--border-strong); color: var(--text); }
+.alert-success   { border-left-color: var(--rlt-profit); color: var(--rlt-profit); }
+.alert-danger    { border-left-color: var(--rlt-loss);   color: var(--rlt-loss); }
+.alert-warning   { border-left-color: var(--rlt-warn);   color: var(--rlt-warn); }
+.alert-info      { border-left-color: var(--rlt-info);   color: var(--rlt-info); }
+.alert-primary   { border-left-color: var(--rlt-primary); color: var(--rlt-primary); }
+.alert-secondary { border-left-color: var(--rlt-border-strong); color: var(--rlt-text); }
 .alert .btn-close { filter: none; opacity: .6; }
 :root[data-theme="dark"] .alert .btn-close { filter: invert(1); }
 @media (prefers-color-scheme: dark) {
@@ -479,19 +629,19 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 }
 
 /* ── Ilerleme cubugu ────────────────────────────────────────────────────── */
-.progress { background-color: var(--surface-2); border-radius: 4px; height: 6px; }
-.progress-bar { border-radius: 4px; background-color: var(--primary-fill); }
+.progress { background-color: var(--rlt-surface-2); border-radius: 4px; height: 6px; }
+.progress-bar { border-radius: 4px; background-color: var(--rlt-primary-fill); }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
 .modal-content {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: var(--radius);
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  color: var(--rlt-text);
+  border-radius: var(--rlt-radius);
 }
-.modal-header { border-bottom: 1px solid var(--border); }
-.modal-footer { border-top: 1px solid var(--border); }
-.modal-title  { color: var(--text); }
+.modal-header { border-bottom: 1px solid var(--rlt-border); }
+.modal-footer { border-top: 1px solid var(--rlt-border); }
+.modal-title  { color: var(--rlt-text); }
 .modal-backdrop.show { opacity: .55; }
 :root[data-theme="dark"] .modal-backdrop.show { opacity: .7; }
 .modal .btn-close { opacity: .6; }
@@ -502,53 +652,53 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 }
 
 /* ── Sekmeler ───────────────────────────────────────────────────────────── */
-.nav-tabs { border-bottom: 1px solid var(--border); }
-.nav-tabs .nav-link { color: var(--muted); border: 1px solid transparent; font-size: 13px; }
-.nav-tabs .nav-link:hover { color: var(--text); border-color: transparent; }
+.nav-tabs { border-bottom: 1px solid var(--rlt-border); }
+.nav-tabs .nav-link { color: var(--rlt-muted); border: 1px solid transparent; font-size: 13px; }
+.nav-tabs .nav-link:hover { color: var(--rlt-text); border-color: transparent; }
 .nav-tabs .nav-link.active {
   background-color: transparent;
-  border-color: transparent transparent var(--primary);
+  border-color: transparent transparent var(--rlt-primary);
   border-bottom-width: 2px;
-  color: var(--text);
+  color: var(--rlt-text);
   font-weight: 600;
 }
 
 /* ── Toast / tooltip / popover ──────────────────────────────────────────── */
 .toast, .popover {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  box-shadow: var(--shadow-pop);
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  color: var(--rlt-text);
+  box-shadow: var(--rlt-shadow-pop);
 }
-.toast-header { background-color: var(--surface-2); color: var(--text); border-bottom-color: var(--border); }
-.tooltip-inner { background-color: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
-.tooltip .tooltip-arrow::before { border-top-color: var(--surface-2); }
-.popover-header { background-color: var(--surface-2); color: var(--text); border-bottom-color: var(--border); }
-.popover-body { color: var(--text); }
+.toast-header { background-color: var(--rlt-surface-2); color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
+.tooltip-inner { background-color: var(--rlt-surface-2); color: var(--rlt-text); border: 1px solid var(--rlt-border); }
+.tooltip .tooltip-arrow::before { border-top-color: var(--rlt-surface-2); }
+.popover-header { background-color: var(--rlt-surface-2); color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
+.popover-body { color: var(--rlt-text); }
 
 /* ── Acilir menu (dbc.DropdownMenu) ─────────────────────────────────────── */
 .dropdown-menu {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-pop);
-  border-radius: var(--radius-sm);
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  box-shadow: var(--rlt-shadow-pop);
+  border-radius: var(--rlt-radius-sm);
 }
-.dropdown-item { color: var(--text); font-size: 13px; }
-.dropdown-item:hover, .dropdown-item:focus { background-color: var(--surface-hover); color: var(--text); }
-.dropdown-item.active { background-color: var(--primary-fill); color: var(--on-fill); }
-.dropdown-divider { border-top-color: var(--border); }
+.dropdown-item { color: var(--rlt-text); font-size: 13px; }
+.dropdown-item:hover, .dropdown-item:focus { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+.dropdown-item.active { background-color: var(--rlt-primary-fill); color: var(--rlt-on-fill); }
+.dropdown-divider { border-top-color: var(--rlt-border); }
 
 /* ── Liste grubu ────────────────────────────────────────────────────────── */
 .list-group-item {
-  background-color: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
+  background-color: var(--rlt-surface);
+  border-color: var(--rlt-border);
+  color: var(--rlt-text);
 }
 
 /* ── Plotly modebar ─────────────────────────────────────────────────────── */
 .js-plotly-plot .plotly .modebar { background: transparent !important; }
-.js-plotly-plot .plotly .modebar-btn path { fill: var(--muted) !important; }
-.js-plotly-plot .plotly .modebar-btn:hover path { fill: var(--text) !important; }
+.js-plotly-plot .plotly .modebar-btn path { fill: var(--rlt-muted) !important; }
+.js-plotly-plot .plotly .modebar-btn:hover path { fill: var(--rlt-text) !important; }
 
 /* ── BIST sembol cipleri ────────────────────────────────────────────────── */
 .bist-chip-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
@@ -563,25 +713,25 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid var(--border-strong);
-  background-color: var(--surface);
-  color: var(--muted);
+  border: 1px solid var(--rlt-border-strong);
+  background-color: var(--rlt-surface);
+  color: var(--rlt-muted);
   transition: background-color .15s, color .15s, border-color .15s;
   user-select: none;
   white-space: nowrap;
 }
 .bist-chip-list .form-check-label:hover {
-  border-color: var(--primary);
-  color: var(--text);
-  background-color: var(--surface-hover);
+  border-color: var(--rlt-primary);
+  color: var(--rlt-text);
+  background-color: var(--rlt-surface-hover);
 }
 .bist-chip-list .form-check-input:checked + .form-check-label {
-  background-color: var(--primary-fill);
-  border-color: var(--primary-fill);
-  color: var(--on-fill);
+  background-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-primary-fill);
+  color: var(--rlt-on-fill);
 }
 .bist-chip-list .form-check-input:focus-visible + .form-check-label {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--rlt-primary);
   outline-offset: 2px;
 }
 
@@ -591,7 +741,7 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--rlt-border);
 }
 .source-row:last-child { border-bottom: none; }
 
@@ -604,7 +754,7 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   flex-wrap: wrap;
   padding-bottom: 14px;
   margin-bottom: 22px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--rlt-border);
 }
 
 /* ── Tema secenegi (B.3) ────────────────────────────────────────────────── */
@@ -613,33 +763,33 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   align-items: center;
   justify-content: center;
   width: 100%;
-  background-color: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--muted);
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border-strong);
+  border-radius: var(--rlt-radius-sm);
+  color: var(--rlt-muted);
   padding: 9px 10px;
   font-size: 13px;
   font-weight: 500;
 }
-.theme-option:hover { background-color: var(--surface-hover); color: var(--text); }
+.theme-option:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
 .theme-option.active {
-  background-color: var(--surface-2);
-  border-color: var(--primary);
-  color: var(--text);
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-primary);
+  color: var(--rlt-text);
   font-weight: 600;
-  box-shadow: inset 0 -2px 0 var(--primary);
+  box-shadow: inset 0 -2px 0 var(--rlt-primary);
 }
 
 #theme-toggle {
   background: transparent;
-  border: 1px solid var(--border-strong);
-  color: var(--muted);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-muted);
+  border-radius: var(--rlt-radius-sm);
   padding: 3px 9px;
   font-size: 12px;
   line-height: 1.4;
 }
-#theme-toggle:hover { background-color: var(--surface-hover); color: var(--text); }
+#theme-toggle:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
 
 /* ── Durum bloklari (C.7) ───────────────────────────────────────────────── */
 .state-block {
@@ -648,12 +798,12 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   align-items: center;
   gap: 8px;
   padding: 28px 16px;
-  color: var(--muted);
+  color: var(--rlt-muted);
   font-size: 13px;
   text-align: center;
 }
 .state-block i { font-size: 20px; opacity: .7; }
-.state-block.state-error { color: var(--loss); }
+.state-block.state-error { color: var(--rlt-loss); }
 
 /* ── Gecisler ───────────────────────────────────────────────────────────── */
 .collapsing { transition: height .25s ease !important; }

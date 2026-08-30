@@ -20,11 +20,11 @@ from dash.dash_table import DataTable
 import plotly.graph_objects as go
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, YELLOW, PURPLE,
-    DARK_TEMPLATE, empty_figure, apply_theme_template,
+    TEXT, TEXT_MUTED, GREEN, RED, BLUE, PURPLE, empty_figure, apply_theme_template,
     plot_palette, plot_rgba,
 )
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 BIST30_SYMBOLS = [
@@ -49,13 +49,13 @@ def layout():
             # ── Left panel: settings ─────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Ayarlar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Ayarlar", className="card-title-sm")),
                     dbc.CardBody([
                         # Model selection
                         html.Label("Model", className="section-title"),
                         dcc.Dropdown(id="dt-model-select", options=[], value=None,
                                      placeholder="Model sec...", clearable=False,
-                                     style={"marginBottom": "16px", "color": CARD}),
+                                     style={"marginBottom": "16px"}),
 
                         # Risk mode
                         html.Label("Risk Modu", className="section-title"),
@@ -90,7 +90,7 @@ def layout():
                             className="mb-3",
                         ),
 
-                        html.Hr(style={"borderColor": CARD2}),
+                        html.Hr(),
 
                         # Portfolio inputs
                         html.Label("Mevcut Portfoy", className="section-title"),
@@ -106,8 +106,7 @@ def layout():
                                         options=[{"label": s, "value": s} for s in BIST30_SYMBOLS],
                                         value=DEFAULT_SYMBOLS[i] if i < len(DEFAULT_SYMBOLS) else None,
                                         clearable=True,
-                                        style={"color": CARD},
-                                    ), width=7),
+                                                                            ), width=7),
                                     dbc.Col(dbc.Input(id=f"dt-qty-{i}", type="number", value=0, min=0,
                                                       placeholder="Adet"), width=5),
                                 ], className="mb-2"),
@@ -115,7 +114,7 @@ def layout():
                             for i in range(5)
                         ],
 
-                        html.Hr(style={"borderColor": CARD2}),
+                        html.Hr(),
 
                         # Action buttons
                         dbc.Button(
@@ -141,14 +140,14 @@ def layout():
                         dcc.Download(id="dt-download"),
                         html.Div(id="dt-action-result", className="mt-3"),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=4, className="mb-4"),
 
             # ── Right panel: results ─────────────────────────────────────────
             dbc.Col([
                 # History selector — gecmis kararlari gormek icin tarih dropdown.
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Gecmis Kararlar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Gecmis Kararlar", className="card-title-sm")),
                     dbc.CardBody([
                         dbc.Row([
                             dbc.Col(dcc.Dropdown(
@@ -157,8 +156,7 @@ def layout():
                                 value=None,
                                 placeholder="Onceki bir karari yukle...",
                                 clearable=True,
-                                style={"color": CARD},
-                            ), width=9),
+                                                            ), width=9),
                             dbc.Col(dbc.Button(
                                 [html.I(className="bi bi-arrow-clockwise me-2"), "Yenile"],
                                 id="dt-history-refresh",
@@ -168,7 +166,7 @@ def layout():
                             ), width=3),
                         ]),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "16px"}),
+                ], className="mb-3"),
 
                 # Summary cards
                 dbc.Row([
@@ -178,18 +176,18 @@ def layout():
                 # Decision table
                 dbc.Card([
                     dbc.CardHeader([
-                        html.Span("Trading Kararlari", style={"color": TEXT, "fontWeight": "600"}),
+                        html.Span("Trading Kararlari", className="card-title-sm"),
                         html.Span(id="dt-decision-date-badge", style={"color": TEXT_MUTED, "marginLeft": "12px", "fontSize": "13px"}),
                     ]),
                     dbc.CardBody(html.Div(id="dt-decision-table")),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+                ], className="mb-4"),
 
                 # Portfolio chart
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Gecmisi", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Portfoy Gecmisi", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="dt-portfolio-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8, className="mb-4"),
         ]),
     ])
@@ -362,7 +360,7 @@ def register_callbacks(app):
 def _render_decision_table(result):
     decisions = result.get("decisions", result.get("trades", []))
     if not decisions:
-        return html.P("Karar yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Karar yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Sembol", className="section-title"), width=2),
@@ -384,7 +382,7 @@ def _render_decision_table(result):
             total_val = d.get("cost", 0) if is_buy else d.get("revenue", 0) if is_sell else 0
         shares_val = d.get("quantity", d.get("shares", 0))
         rows.append(dbc.Row([
-            dbc.Col(html.Span(d.get("symbol", "—"), style={"color": TEXT, "fontWeight": "600"}), width=2),
+            dbc.Col(html.Span(d.get("symbol", "—"), className="card-title-sm"), width=2),
             dbc.Col(dbc.Badge(action, style={"backgroundColor": color}, pill=True), width=2),
             dbc.Col(html.Span(str(shares_val), style={"color": TEXT}), width=1),
             dbc.Col(html.Span(f"₺{d.get('price', 0):,.2f}", style={"color": TEXT}), width=2),
@@ -439,7 +437,7 @@ def _mini_card(title, value, color):
     return dbc.Card(dbc.CardBody([
         html.Small(title, style={"color": TEXT_MUTED, "fontSize": "11px", "textTransform": "uppercase"}),
         html.Div(value, style={"color": color, "fontWeight": "700", "fontSize": "20px"}),
-    ]), style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+    ]))
 
 
 def _build_portfolio_chart(history):

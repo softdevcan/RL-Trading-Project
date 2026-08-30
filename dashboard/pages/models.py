@@ -13,11 +13,14 @@ from dash.dash_table import DataTable
 import plotly.graph_objects as go
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, BLUE, GREEN, PURPLE, ORANGE, RED, YELLOW,
-    ALGO_COLORS, DARK_TEMPLATE, empty_figure, apply_theme_template,
-    plot_palette, plot_rgba,
+    TEXT, TEXT_MUTED, GREEN, RED, empty_figure, apply_theme_template, plot_palette,
+    plot_rgba,
 )
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
+from dashboard.components.table import (
+    TABLE_STYLES, numeric_columns, tone_rules_formatted,
+)
 import dashboard.api_client as api
 
 
@@ -50,11 +53,11 @@ def layout():
                     ], md=2, className="d-flex align-items-end ms-auto"),
                 ], className="g-3"),
             ])
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Comparison table
         dbc.Card([
-            dbc.CardHeader(html.Span("Karsilastirma Tablosu", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardHeader(html.Span("Karsilastirma Tablosu", className="card-title-sm")),
             dbc.CardBody([
                 DataTable(
                     id="models-table",
@@ -72,38 +75,30 @@ def layout():
                     data=[],
                     page_size=10,
                     sort_action="native",
-                    style_table={"overflowX": "auto"},
-                    style_header={
-                        "backgroundColor": CARD2,
-                        "color": TEXT_MUTED,
-                        "fontWeight": "600",
-                        "fontSize": "12px",
-                        "textTransform": "uppercase",
-                        "border": f"1px solid {BORDER}",
-                    },
-                    style_cell={
-                        "backgroundColor": CARD,
-                        "color": TEXT,
-                        "border": f"1px solid {CARD2}",
-                        "fontSize": "13px",
-                        "padding": "8px 12px",
-                        "textAlign": "left",
-                    },
-                    style_data_conditional=[
-                        {"if": {"row_index": "odd"}, "backgroundColor": CARD2},
-                    ],
+                    **TABLE_STYLES,
+                    # Sayilar saga dayali; basamak sayisi degisen degerler
+                    # sola dayaliyken alt alta hizalanmiyordu (C.6).
+                    style_cell_conditional=numeric_columns(
+                        "total_return", "sharpe_ratio", "sortino_ratio",
+                        "calmar_ratio", "max_drawdown", "win_rate",
+                    ),
+                    # Renk yalnizca yon tasiyan sutunlarda
+                    style_data_conditional=(
+                        tone_rules_formatted("total_return")
+                        + tone_rules_formatted("max_drawdown")
+                    ),
                     row_selectable="single",
                 ),
             ]),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Charts
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Sharpe / Sortino / Calmar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Sharpe / Sortino / Calmar", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="models-bar-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=12, className="mb-4"),
         ]),
 
@@ -324,7 +319,7 @@ def _render_modal_metrics(metrics):
 def _render_trades_table(metrics):
     trades = metrics.get("trades") or metrics.get("trade_history") or []
     if not trades:
-        return html.P("Islem gecmisi yok.", style={"color": TEXT_MUTED, "marginTop": "16px"})
+        return create_state_block("empty", "Islem gecmisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Tarih", className="section-title"), width=3),

@@ -16,51 +16,57 @@
    test_theme_contrast.py ikisinin ayni oldugunu da dogrular.
 
    RENK EKLERKEN: her metin tokeni, kendi temasindaki uc yuzeyin
-   (--bg / --surface / --surface-2) HEPSINDE >= 4.5:1 olmali. UI sinirlari
+   (--rlt-bg / --rlt-surface / --rlt-surface-2) HEPSINDE >= 4.5:1 olmali. UI sinirlari
    ve dolgular icin esik 3:1. Tahminle ekleme — testi calistir.
+
+   NEDEN "--rlt-" ONEKI: Dash DataTable kendi bundle'inda --muted, --border,
+   --accent, --hover, --text-color tanimliyor ve tablo icinde ayni adli
+   tokenlari GOLGELIYOR. Onek olmadan tablolarin basligi #c8c8c8 cikiyordu
+   (zemin uzerinde 1.35:1). Yeni token eklerken oneki koru;
+   test_theme_contrast.py cakismayi ayrica denetliyor.
    ========================================================================== */
 
 /* ── AYDINLIK (taban) ─────────────────────────────────────────────────── */
 :root {
   /* Yuzeyler */
-  --bg:               #f6f8fb;
-  --surface:          #ffffff;
-  --surface-2:        #f1f5f9;
-  --surface-hover:    #eef2f7;
-  --border:           #e2e8f0;
-  --border-strong:    #8595a9;
+  --rlt-bg:               #f6f8fb;
+  --rlt-surface:          #ffffff;
+  --rlt-surface-2:        #f1f5f9;
+  --rlt-surface-hover:    #eef2f7;
+  --rlt-border:           #e2e8f0;
+  --rlt-border-strong:    #8595a9;
 
   /* Metin */
-  --text:             #0f172a;   /* en kotu zeminde 16.30 */
-  --muted:            #556275;   /* en kotu zeminde  5.65 */
+  --rlt-text:             #0f172a;   /* en kotu zeminde 16.30 */
+  --rlt-muted:            #556275;   /* en kotu zeminde  5.65 */
 
   /* Anlam tasiyan metin/ikon renkleri */
-  --primary:          #2563eb;   /* 4.72 */
-  --profit:           #15803d;   /* 4.58 */
-  --loss:             #b91c1c;   /* 5.91 */
-  --warn:             #b45309;   /* 4.58 */
-  --info:             #0e7490;   /* 4.89 */
-  --accent:           #7e22ce;   /* 6.37 */
-  --orange:           #c2410c;   /* 4.73 */
-  --gold:             #946005;   /* 4.87 — altin fiyati serisi */
+  --rlt-primary:          #2563eb;   /* 4.72 */
+  --rlt-profit:           #15803d;   /* 4.58 */
+  --rlt-loss:             #b91c1c;   /* 5.91 */
+  --rlt-warn:             #b45309;   /* 4.58 */
+  --rlt-info:             #0e7490;   /* 4.89 */
+  --rlt-accent:           #7e22ce;   /* 6.37 */
+  --rlt-orange:           #c2410c;   /* 4.73 */
+  --rlt-gold:             #946005;   /* 4.87 — altin fiyati serisi */
 
-  /* Dolgular (dugme, aktif menu, rozet) — uzerlerine --on-fill yazilir */
-  --primary-fill:       #2563eb;
-  --primary-fill-hover: #1d4ed8;
-  --profit-fill:        #15803d;
-  --profit-fill-hover:  #166534;
-  --loss-fill:          #b91c1c;
-  --loss-fill-hover:    #991b1b;
-  --warn-fill:          #b45309;
-  --warn-fill-hover:    #92400e;
-  --on-fill:            #ffffff;  /* dolgu uzerindeki yazi */
+  /* Dolgular (dugme, aktif menu, rozet) — uzerlerine --rlt-on-fill yazilir */
+  --rlt-primary-fill:       #2563eb;
+  --rlt-primary-fill-hover: #1d4ed8;
+  --rlt-profit-fill:        #15803d;
+  --rlt-profit-fill-hover:  #166534;
+  --rlt-loss-fill:          #b91c1c;
+  --rlt-loss-fill-hover:    #991b1b;
+  --rlt-warn-fill:          #b45309;
+  --rlt-warn-fill-hover:    #92400e;
+  --rlt-on-fill:            #ffffff;  /* dolgu uzerindeki yazi */
 
   /* Golge / olcu */
-  --shadow:      0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .04);
-  --shadow-pop:  0 8px 24px rgba(15, 23, 42, .12);
-  --radius:      8px;
-  --radius-sm:   6px;
-  --pad:         18px;
+  --rlt-shadow:      0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .04);
+  --rlt-shadow-pop:  0 8px 24px rgba(15, 23, 42, .12);
+  --rlt-radius:      8px;
+  --rlt-radius-sm:   6px;
+  --rlt-pad:         18px;
 
   color-scheme: light;
 }
@@ -68,39 +74,39 @@
 /* ── KOYU — 1) damgasiz "system" hali ─────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:               #0f172a;
-    --surface:          #1e293b;
-    --surface-2:        #334155;
-    --surface-hover:    #374355;
-    --border:           #334155;
-    --border-strong:    #64748b;
+    --rlt-bg:               #0f172a;
+    --rlt-surface:          #1e293b;
+    --rlt-surface-2:        #334155;
+    --rlt-surface-hover:    #374355;
+    --rlt-border:           #334155;
+    --rlt-border-strong:    #64748b;
 
-    --text:             #e2e8f0;   /* en kotu zeminde 8.40 */
-    --muted:            #a8b6c9;   /* en kotu zeminde 5.03 */
+    --rlt-text:             #e2e8f0;   /* en kotu zeminde 8.40 */
+    --rlt-muted:            #a8b6c9;   /* en kotu zeminde 5.03 */
 
-    --primary:          #93c5fd;   /* 5.74 */
-    --profit:           #4ade80;   /* 5.94 */
-    --loss:             #fca5a5;   /* 5.46 */
-    --warn:             #fbbf24;   /* 6.20 */
-    --info:             #22d3ee;   /* 5.73 */
-    --accent:           #d8b4fe;   /* 5.86 */
-    --orange:           #fb923c;   /* 4.58 */
-    --gold:             #fcd34d;   /* 7.18 */
+    --rlt-primary:          #93c5fd;   /* 5.74 */
+    --rlt-profit:           #4ade80;   /* 5.94 */
+    --rlt-loss:             #fca5a5;   /* 5.46 */
+    --rlt-warn:             #fbbf24;   /* 6.20 */
+    --rlt-info:             #22d3ee;   /* 5.73 */
+    --rlt-accent:           #d8b4fe;   /* 5.86 */
+    --rlt-orange:           #fb923c;   /* 4.58 */
+    --rlt-gold:             #fcd34d;   /* 7.18 */
 
     /* Koyu temada dolgu PARLAK, yazi KOYU olur. Aydinliktaki koyu dolgular
        #1e293b uzerinde 2.3-2.9 ile kaybolyordu (>=3 gerekiyor). */
-    --primary-fill:       #60a5fa;
-    --primary-fill-hover: #93c5fd;
-    --profit-fill:        #4ade80;
-    --profit-fill-hover:  #86efac;
-    --loss-fill:          #f87171;
-    --loss-fill-hover:    #fca5a5;
-    --warn-fill:          #fbbf24;
-    --warn-fill-hover:    #fcd34d;
-    --on-fill:            #0f172a;
+    --rlt-primary-fill:       #60a5fa;
+    --rlt-primary-fill-hover: #93c5fd;
+    --rlt-profit-fill:        #4ade80;
+    --rlt-profit-fill-hover:  #86efac;
+    --rlt-loss-fill:          #f87171;
+    --rlt-loss-fill-hover:    #fca5a5;
+    --rlt-warn-fill:          #fbbf24;
+    --rlt-warn-fill-hover:    #fcd34d;
+    --rlt-on-fill:            #0f172a;
 
-    --shadow:      0 1px 3px rgba(0, 0, 0, .35);
-    --shadow-pop:  0 12px 32px rgba(0, 0, 0, .5);
+    --rlt-shadow:      0 1px 3px rgba(0, 0, 0, .35);
+    --rlt-shadow-pop:  0 12px 32px rgba(0, 0, 0, .5);
 
     color-scheme: dark;
   }
@@ -108,50 +114,37 @@
 
 /* ── KOYU — 2) acikca secilmis hali ───────────────────────────────────── */
 :root[data-theme="dark"] {
-  --bg:               #0f172a;
-  --surface:          #1e293b;
-  --surface-2:        #334155;
-  --surface-hover:    #374355;
-  --border:           #334155;
-  --border-strong:    #64748b;
+  --rlt-bg:               #0f172a;
+  --rlt-surface:          #1e293b;
+  --rlt-surface-2:        #334155;
+  --rlt-surface-hover:    #374355;
+  --rlt-border:           #334155;
+  --rlt-border-strong:    #64748b;
 
-  --text:             #e2e8f0;
-  --muted:            #a8b6c9;
+  --rlt-text:             #e2e8f0;
+  --rlt-muted:            #a8b6c9;
 
-  --primary:          #93c5fd;
-  --profit:           #4ade80;
-  --loss:             #fca5a5;
-  --warn:             #fbbf24;
-  --info:             #22d3ee;
-  --accent:           #d8b4fe;
-  --orange:           #fb923c;
-  --gold:             #fcd34d;
+  --rlt-primary:          #93c5fd;
+  --rlt-profit:           #4ade80;
+  --rlt-loss:             #fca5a5;
+  --rlt-warn:             #fbbf24;
+  --rlt-info:             #22d3ee;
+  --rlt-accent:           #d8b4fe;
+  --rlt-orange:           #fb923c;
+  --rlt-gold:             #fcd34d;
 
-  --primary-fill:       #60a5fa;
-  --primary-fill-hover: #93c5fd;
-  --profit-fill:        #4ade80;
-  --profit-fill-hover:  #86efac;
-  --loss-fill:          #f87171;
-  --loss-fill-hover:    #fca5a5;
-  --warn-fill:          #fbbf24;
-  --warn-fill-hover:    #fcd34d;
-  --on-fill:            #0f172a;
+  --rlt-primary-fill:       #60a5fa;
+  --rlt-primary-fill-hover: #93c5fd;
+  --rlt-profit-fill:        #4ade80;
+  --rlt-profit-fill-hover:  #86efac;
+  --rlt-loss-fill:          #f87171;
+  --rlt-loss-fill-hover:    #fca5a5;
+  --rlt-warn-fill:          #fbbf24;
+  --rlt-warn-fill-hover:    #fcd34d;
+  --rlt-on-fill:            #0f172a;
 
-  --shadow:      0 1px 3px rgba(0, 0, 0, .35);
-  --shadow-pop:  0 12px 32px rgba(0, 0, 0, .5);
+  --rlt-shadow:      0 1px 3px rgba(0, 0, 0, .35);
+  --rlt-shadow-pop:  0 12px 32px rgba(0, 0, 0, .5);
 
   color-scheme: dark;
-}
-
-/* ── Eski isimler ──────────────────────────────────────────────────────
-   Faz 8 oncesi custom.css ve sayfalar bu adlari kullaniyordu. Yeni kod
-   kullanmamali; gozden kacan bir yer kalirsa bozulmasin diye duruyorlar. */
-:root {
-  --card:    var(--surface);
-  --card2:   var(--surface-2);
-  --blue:    var(--primary);
-  --blue-d:  var(--primary-fill);
-  --green:   var(--profit);
-  --red:     var(--loss);
-  --yellow:  var(--warn);
 }
