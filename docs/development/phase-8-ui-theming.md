@@ -8,7 +8,7 @@
 > olduğunu anlatıyor.
 >
 > Doğrulama: `test_theme_contrast` 86/86, `test_theme_preference` 31/31,
-> `test_account_profile` 82/82, `test_auth` 28/28,
+> `test_account_profile` 84/84, `test_auth` 28/28,
 > `test_workspace_isolation` 18/18; 10 sayfa × 2 tema gerçek tarayıcıda
 > (Chrome/CDP) görsel kontrol.
 >
@@ -661,6 +661,19 @@ token; yeni sınıflar `custom.css`'te (`sidebar-footer`, `sidebar-account`,
 > ağacı** render edilemiyor ve `/dash/` 500 dönüyordu — `test_workspace_isolation`
 > bunu 4 fail ile yakaladı. İpucu metni sarmalayan `html.Div`'e taşındı.
 
+**Kenar çubuğu ad değişiminden sonra bayattı.** `create_sidebar()` yalnızca
+`app.py::serve_layout` içinde, yani **tam sayfa yüklemesinde** çalışıyor;
+`display_page` sadece `page-content`'i değiştiriyor. Ad kaydedildikten sonra
+kenar çubuğu eski adı göstermeye devam ediyordu (tarayıcı yenilenene kadar).
+Profil callback'i artık `sidebar-account-name` / `sidebar-account-avatar`
+çıktılarını da yazıyor.
+
+Bunun için hesap satırı **auth kapalıyken de** çiziliyor ("Misafir" ·
+"Kimlik doğrulama kapalı"): o kimlikler her zaman DOM'da olsun ki callback
+var olmayan bir bileşene yazmaya çalışmasın. Yan fayda — `AUTH_ENABLED=False`
+modunda Hesabım sayfasına hiç giriş yolu yoktu, oysa oradaki görünüm tercihi
+o modda da çalışıyor. Çıkış bağlantısı bu durumda gösterilmiyor.
+
 ### F.2 — Sayfa gerçek bir profil sayfasına çıktı
 
 | Kart | İçerik |
@@ -749,7 +762,7 @@ burada **anlam** taşıyor, C.3'ün dekoratif renk yasağıyla çelişmiyor.
 
 ### F.7 — Testler
 
-`tests/test_account_profile.py` — **82 kontrol**: uçlar, doğrulama, CSRF,
+`tests/test_account_profile.py` — **84 kontrol**: uçlar, doğrulama, CSRF,
 viewer'ın kendi profilini yönetmesi, rol yükseltme denemesi, oturum gruplama,
 iptalden sonra kapatılan oturumun grace penceresinden dönememesi, denetim
 kaydı, `_device_label` birim kontrolleri.
@@ -773,7 +786,7 @@ Stil taşımayan iki kanca (`theme-label`, `sidebar-link`) gerekçesiyle muaf.
 | Kendi oturumlarını görme/kapatma | yok (yalnızca admin) | var |
 | İptalin grace penceresiyle atlatılabilmesi | mümkündü | kapalı (kayıt siliniyor) |
 | Hesabına yönelik başarısız giriş denemesini görme | yok | var (sebebiyle) |
-| Hesap testi | yok | 82 kontrol |
+| Hesap testi | yok | 84 kontrol |
 
 ---
 

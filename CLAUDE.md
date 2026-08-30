@@ -124,7 +124,7 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
-                                           #          smoke (82 kontrol)
+                                           #          smoke (84 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)

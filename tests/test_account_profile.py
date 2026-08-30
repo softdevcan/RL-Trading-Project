@@ -404,6 +404,15 @@ def main() -> int:
         check("Girdi kutusu mevcut adi tasiyor",
               data.get("account-name-input", {}).get("value") == "Bob Eski",
               f"(got {data.get('account-name-input')})")
+        # Kenar cubugu yalnizca tam sayfa yuklemesinde uretiliyor; ad
+        # degisikliginden sonra eski adi gostermemesi icin callback onu da
+        # tazeliyor.
+        check("Kenar cubugu adi da tazeleniyor",
+              data.get("sidebar-account-name", {}).get("children") == "Bob Eski",
+              f"(got {data.get('sidebar-account-name')})")
+        check("Kenar cubugu avatari da tazeleniyor",
+              data.get("sidebar-account-avatar", {}).get("children") == "BE",
+              f"(got {data.get('sidebar-account-avatar')})")
 
         r = fire(c, "account-sessions-body.children", [0])
         check("Oturum callback'i calisti", r.status_code == 200, f"(got {r.status_code})")

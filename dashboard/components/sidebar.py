@@ -84,21 +84,31 @@ def _account_link(user: dict) -> html.Div:
     `active="exact"` ile aktif sayfa vurgusu var (dbc aktif durumu
     dcc.Location'dan cozer, sunucu turu gerekmez).
 
+    Auth KAPALIYKEN de cizilir ("Misafir"): o modda hesap yok ama Hesabim
+    sayfasindaki gorunum tercihi calisiyor ve oraya baska giris yolu
+    kalmiyordu. Yan fayda: `sidebar-account-name`/`-avatar` kimlikleri her
+    zaman DOM'da, boylece ad guncelleme callback'i var olmayan bir bilesene
+    yazmaya calismiyor.
+
     `title` sarmalayan Div'de: dbc.NavLink yalnizca sayili prop kabul ediyor
     (active/href/target/...), `title` verilince tum Dash agaci render
     edilemiyor — /dash/ 500 donuyordu. Sarmalayici ayni alani kapladigi icin
     ipucu davranisi degismiyor.
     """
-    role = user.get("role", "user")
     name = display_name()
+    role = user.get("role")
+    subtitle = ROLE_LABELS.get(role, role) if role else "Kimlik dogrulama kapali"
+    email = user.get("email", "")
     return html.Div(
         dbc.NavLink(
             [
-                html.Span(_initials(name), className="account-avatar"),
+                html.Span(_initials(name), id="sidebar-account-avatar",
+                          className="account-avatar"),
                 html.Span(
                     [
-                        html.Span(name, className="account-name"),
-                        html.Span(ROLE_LABELS.get(role, role), className="account-role"),
+                        html.Span(name, id="sidebar-account-name",
+                                  className="account-name"),
+                        html.Span(subtitle, className="account-role"),
                     ],
                     className="account-text",
                 ),
@@ -108,7 +118,8 @@ def _account_link(user: dict) -> html.Div:
             active="exact",
             className="sidebar-account",
         ),
-        title=f"{user.get('email', '')} - Hesabim, gorunum ve guvenlik",
+        title=(f"{email} - Hesabim, gorunum ve guvenlik" if email
+               else "Hesabim - gorunum ayarlari"),
     )
 
 
@@ -120,9 +131,8 @@ def _user_footer():
     """
     user = current_user()
 
-    rows = []
-    if user:
-        rows.append(_account_link(user))
+    # Hesap satiri her durumda cizilir; auth kapaliyken "Misafir" olur.
+    rows = [_account_link(user or {})]
 
     controls = [_theme_button()]
     if user:

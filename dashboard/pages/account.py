@@ -477,6 +477,12 @@ def register_callbacks(app):
         Output("account-name-save", "disabled"),
         Output("account-email", "children"),
         Output("account-info-body", "children"),
+        # Kenar cubugu app.py'nin serve_layout'unda uretiliyor ve YALNIZCA tam
+        # sayfa yuklemesinde yenileniyor (display_page sadece page-content'i
+        # degistirir). Ad guncellendikten sonra kenar cubugu eski adi
+        # gosteriyordu; buradan aciktan tazeleniyor.
+        Output("sidebar-account-name", "children"),
+        Output("sidebar-account-avatar", "children"),
         Input("account-tick", "data"),
     )
     def load_account(_tick):
@@ -520,6 +526,8 @@ def register_callbacks(app):
             not persistent,
             user.get("email", "—"),
             html.Div(rows),
+            name,               # kenar cubugu adi
+            _initials(name),    # kenar cubugu avatari
         )
 
     @app.callback(
