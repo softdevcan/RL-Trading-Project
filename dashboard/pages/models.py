@@ -14,8 +14,10 @@ import plotly.graph_objects as go
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER, BLUE, GREEN, PURPLE, ORANGE, RED, YELLOW,
-    ALGO_COLORS, DARK_TEMPLATE, empty_figure, apply_dark_template,
+    ALGO_COLORS, DARK_TEMPLATE, empty_figure, apply_theme_template,
+    plot_palette, plot_rgba,
 )
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 
@@ -25,8 +27,8 @@ def layout():
     return html.Div([
         dcc.Store(id="models-store", data=[]),
 
-        html.H4("Model Karsilastirma", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Birden fazla modeli karsilastir ve detaylari incele", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Model Karsilastirma",
+                           "Birden fazla modeli karsilastir ve detaylari incele"),
 
         # Model selection
         dbc.Card([
@@ -188,11 +190,12 @@ def register_callbacks(app):
 
         # Grouped bar chart
         fig = go.Figure()
-        fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=BLUE))
-        fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=GREEN))
-        fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=PURPLE))
+        P = plot_palette()
+        fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=P["blue"]))
+        fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=P["green"]))
+        fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=P["purple"]))
         fig.update_layout(barmode="group", height=300)
-        apply_dark_template(fig)
+        apply_theme_template(fig)
 
         return rows, fig
 
@@ -270,13 +273,13 @@ def _build_modal_portfolio_chart(metrics):
             y=values,
             mode="lines",
             fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.15)",
-            line={"color": BLUE, "width": 2},
+            fillcolor=plot_rgba("blue", 0.15),
+            line={"color": plot_palette()["blue"], "width": 2},
             name="Portfoy",
         ))
     else:
         return empty_figure("Portfoy gecmisi yok")
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=300, showlegend=False)
     return fig
 
@@ -286,10 +289,11 @@ def _build_activity_chart(metrics):
     sell = metrics.get("sell_count") or metrics.get("total_sells") or 0
     hold = metrics.get("hold_count") or metrics.get("total_holds") or 0
 
+    P = plot_palette()
     fig = go.Figure()
     fig.add_trace(go.Bar(name="Al", x=["Al", "Sat", "Bekle"], y=[buy, sell, hold],
-                         marker_color=[GREEN, RED, YELLOW]))
-    apply_dark_template(fig)
+                         marker_color=[P["green"], P["red"], P["yellow"]]))
+    apply_theme_template(fig)
     fig.update_layout(height=250, showlegend=False, title_text="Islem Aktivitesi")
     return fig
 

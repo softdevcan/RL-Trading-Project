@@ -14,8 +14,10 @@ import plotly.graph_objects as go
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN,
-    ALGO_COLORS, DARK_TEMPLATE, empty_figure, apply_dark_template,
+    algo_badge_class, DARK_TEMPLATE, empty_figure, apply_theme_template,
+    plot_palette, algo_plot_colors,
 )
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 
@@ -26,8 +28,8 @@ def layout():
         dcc.Interval(id="academic-poll", interval=5_000, disabled=True, n_intervals=0),
         dcc.Store(id="academic-report-store", data={}),
 
-        html.H4("Akademik Analiz", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Model performans raporu ve akademik metrikler", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Akademik Analiz",
+                           "Model performans raporu ve akademik metrikler"),
 
         # Generate report button + status
         dbc.Row([
@@ -194,11 +196,11 @@ def _render_comparison_table(comparison):
     rows = [header]
     for m in models:
         algo = m.get("algorithm", "—").upper()
-        color = ALGO_COLORS.get(algo, BLUE)
+        badge_class = algo_badge_class(algo)
         ret = m.get("total_return", 0) or 0
         rows.append(dbc.Row([
             dbc.Col(html.Small(str(m.get("name", "—"))[:25], style={"color": TEXT}), width=3),
-            dbc.Col(dbc.Badge(algo, style={"backgroundColor": color}, pill=True), width=1),
+            dbc.Col(dbc.Badge(algo, pill=True, className=badge_class), width=1),
             dbc.Col(html.Small(f"{ret:.1%}" if isinstance(ret, float) else str(ret), style={"color": GREEN if (ret or 0) > 0 else RED}), width=2),
             dbc.Col(html.Small(f"{m.get('sharpe_ratio', 0):.2f}" if m.get('sharpe_ratio') else "—", style={"color": BLUE}), width=2),
             dbc.Col(html.Small(f"{m.get('max_drawdown', 0):.1%}" if m.get('max_drawdown') else "—", style={"color": RED}), width=2),
@@ -211,7 +213,8 @@ def _build_portfolio_chart(comparison):
     """Line chart per model using equity curves."""
     fig = go.Figure()
     models = comparison.get("models", []) if comparison else []
-    colors = [BLUE, GREEN, PURPLE, ORANGE, CYAN, YELLOW]
+    P = plot_palette()
+    colors = [P["blue"], P["green"], P["purple"], P["orange"], P["cyan"], P["yellow"]]
     for i, m in enumerate(models):
         curve = m.get("equity_curve", m.get("portfolio_history", []))
         if curve:
@@ -222,7 +225,7 @@ def _build_portfolio_chart(comparison):
             ))
     if not models:
         return empty_figure("Model verisi yok")
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=300, legend={"orientation": "h", "y": 1.1})
     return fig
 
@@ -231,7 +234,9 @@ def _build_scatter_chart(comparison):
     """Risk (Max DD) vs Return scatter."""
     fig = go.Figure()
     models = comparison.get("models", []) if comparison else []
-    colors = [ALGO_COLORS.get(m.get("algorithm", "").upper(), BLUE) for m in models]
+    P = plot_palette()
+    algo_hex = algo_plot_colors()
+    colors = [algo_hex.get(m.get("algorithm", "").upper(), P["blue"]) for m in models]
 
     xs = [abs(m.get("max_drawdown", 0) or 0) for m in models]
     ys = [m.get("total_return", 0) or 0 for m in models]
@@ -246,7 +251,7 @@ def _build_scatter_chart(comparison):
         marker={"color": colors, "size": 12},
         hovertemplate="<b>%{text}</b><br>Max DD: %{x:.1%}<br>Getiri: %{y:.1%}<extra></extra>",
     ))
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=300, xaxis_title="Max Drawdown", yaxis_title="Toplam Getiri")
     return fig
 
@@ -262,12 +267,13 @@ def _build_metrics_chart(comparison):
     sortinos = [m.get("sortino_ratio") or 0 for m in models]
     calmars = [m.get("calmar_ratio") or 0 for m in models]
 
+    P = plot_palette()
     fig = go.Figure()
-    fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=BLUE))
-    fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=GREEN))
-    fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=PURPLE))
+    fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=P["blue"]))
+    fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=P["green"]))
+    fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=P["purple"]))
     fig.update_layout(barmode="group", height=300)
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     return fig
 
 
@@ -281,13 +287,14 @@ def _build_winrate_chart(comparison):
     winrates = [(m.get("win_rate") or 0) * 100 for m in models]
     trades = [m.get("total_trades") or 0 for m in models]
 
+    P = plot_palette()
     fig = go.Figure()
     fig.add_trace(go.Bar(name="Kazanma %", x=names, y=winrates,
-                          marker_color=GREEN, yaxis="y1"))
+                          marker_color=P["green"], yaxis="y1"))
     fig.add_trace(go.Scatter(name="Islem Sayisi", x=names, y=trades,
-                              mode="lines+markers", marker={"color": ORANGE},
+                              mode="lines+markers", marker={"color": P["orange"]},
                               yaxis="y2"))
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(
         height=300,
         yaxis={"title": "Kazanma %"},

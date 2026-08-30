@@ -1,0 +1,581 @@
+# Faz 8 — UI/UX: Aydınlık Tema + Bileşen Okunabilirliği
+
+**Durum:** ✅ Uygulandı · **Tarih:** 2026-08-30
+
+> Aşağıdaki plan uygulandı. Uygulama sırasında planın dışına çıkılan üç yer
+> ve canlıda yakalanan üç kusur **"Uygulama notları"** başlığında (belgenin
+> sonunda) kayıtlı — plan metni tasarım kararlarını, o bölüm gerçekte ne
+> olduğunu anlatıyor.
+>
+> Doğrulama: `test_theme_contrast` 75/75, `test_theme_preference` 31/31,
+> `test_auth` 28/28, `test_workspace_isolation` 18/18; 10 sayfa × 2 tema
+> gerçek tarayıcıda (Chrome/CDP) görsel kontrol.
+
+Amaç: panoya çalışır bir **aydınlık tema** kazandırmak ve bileşenleri
+sadelik/okunabilirlik yönünde profesyonelleştirmek. Referans olarak kullanıcının
+paylaştığı portföy uygulaması ekranı alındı — **kopyalanmıyor**, yalnızca yön
+veriyor: yüksek beyaz alan, ince kenarlıklar, düşük renk gürültüsü, tek bir
+vurgu rengi, kompakt filtre satırı, yumuşak gölge yerine sınır çizgisi.
+
+---
+
+## Context — ölçülen mevcut durum
+
+| Bulgu | Değer | Sonuç |
+|---|---|---|
+| Bootstrap teması | `dbc.themes.DARKLY` (`dashboard/app.py:66`) | Derlenmiş **koyu** CSS; aydınlık tema fiziksel olarak mümkün değil |
+| `custom.css` | 480 satır, neredeyse tamamı `!important` | `!important` yığınının sebebi DARKLY ile çekişme |
+| Inline stile gömülü tema sabiti | **~550 kullanım** (`TEXT_MUTED` 131, `TEXT` 97, `CARD2` 75, `CARD` 69, aksanlar ~135) | Python'da hex'e çevrilip HTML `style=` içine yazılıyor → çalışma anında tema değişimine tepki veremez |
+| Plotly | 63 `apply_dark_template`/`empty_figure` çağrısı, 14 `dcc.Graph`, ~28 satırda doğrudan hex aksan | Grafikler `var()` kabul etmez; ayrı palet gerekir |
+| Tema tanımının kopya sayısı | **3** — `dashboard/theme.py`, `assets/custom.css` `:root`, `app/auth/templates/*.html` `:root` | Tek kaynak yok; renk değişimi 3 yerde elle |
+| Sayfa başlığı kalıbı | 9 sayfada aynı `H4 + P` bloğu elle tekrar | Bileşenleşmemiş |
+
+### Zaten var olan kontrast hatası (ölçüldü)
+
+Mevcut koyu temanın aksan renkleri kart zemininde (`#1e293b`) WCAG AA'yı
+geçmiyor — bu Faz 8'in çözdüğü **mevcut** bir kusur, yeni bir gereksinim değil:
+
+```
+FAIL 3.98  BLUE   #3b82f6 / #1e293b
+FAIL 3.89  RED    #ef4444 / #1e293b
+FAIL 3.70  PURPLE #a855f7 / #1e293b
+PASS 6.42  GREEN  #22c55e
+PASS 7.63  YELLOW #eab308
+```
+
+---
+
+## Hedefler
+
+1. Aydınlık / koyu / sistem — üç durumlu tema tercihi, sayfa yenilemeden
+   anahtarlanabilir, **kullanıcı hesabına** kayıtlı (tarayıcıya değil).
+2. Tema tek kaynaktan tanımlansın (tokens.css) — Python, CSS ve auth şablonları
+   aynı değerleri okusun.
+3. Her metin/zemin çifti **her iki temada** WCAG AA ≥ 4.5:1 (UI sınırları ≥ 3:1).
+4. Bileşen sayısı azalsın, tekrar eden kalıplar tek bileşene insin.
+5. Renk yalnızca **anlam** taşıdığında kullanılsın (kâr/zarar, durum); dekoratif
+   renk kaldırılsın.
+
+### Kapsam dışı
+
+- Sayfa bilgi mimarisi / menü yapısı değişikliği (mevcut 9 sayfa aynı kalır).
+- Yeni grafik türü, yeni API ucu, backend davranışı.
+- Referans ekranın birebir taklidi (Kanban, üst arama çubuğu, bildirim vb.).
+
+---
+
+## Faz A — Token katmanı (temel; diğer her şey buna dayanır)
+
+### A.1 — `DARKLY` → `BOOTSTRAP` taban
+
+`dashboard/app.py:66` `external_stylesheets` içindeki `dbc.themes.DARKLY`
+yerine `dbc.themes.BOOTSTRAP` (nötr taban). Böylece renk kararını tamamen
+bizim token katmanımız verir.
+
+**Yan fayda:** `custom.css`'teki `!important`ların önemli kısmı gereksizleşir;
+A.2 sırasında temizlenir (dosyanın ~%30 küçülmesi bekleniyor).
+
+**Risk:** DARKLY'nin bize bedava verdiği koyu varsayılanlar (modal, tooltip,
+dropdown iç kısımları) kaybolur → A.2'de açıkça tanımlanmalı. Doğrulama listesi
+Faz E'de.
+
+### A.2 — `dashboard/assets/00-tokens.css` (yeni)
+
+Dash `assets/` dosyalarını **alfabetik** yükler; `00-` öneki tokenların
+`custom.css`'ten önce gelmesini garanti eder.
+
+Üç durum için kaskad (bkz. B.1): aydınlık taban `:root`'ta durur, koyu blok
+**iki kez** yazılır — bir kez damgasız `system` hâli için media sorgusunda,
+bir kez açık seçim için `[data-theme="dark"]` olarak. `:not([data-theme="light"])`
+koruması, kullanıcı aydınlığı açıkça seçtiğinde koyu bir işletim sistemi
+temasının onu ezmesini engeller.
+
+```css
+:root {                          /* AYDINLIK — taban */
+  --bg:            #f6f8fb;
+  --surface:       #ffffff;
+  --surface-2:     #f1f5f9;
+  --surface-hover: #eef2f7;
+  --border:        #e2e8f0;
+  --border-strong: #8595a9;
+  --text:          #0f172a;
+  --muted:         #556275;
+  --primary:       #2563eb;
+  --profit:        #15803d;
+  --loss:          #b91c1c;
+  --warn:          #b45309;
+  --info:          #0e7490;
+  --accent:        #7e22ce;
+  --orange:        #c2410c;
+  --on-primary:    #ffffff;
+  --shadow:        0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.04);
+}
+
+/* KOYU — 1) damgasız "system" hâli */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { /* ...aynı koyu tokenlar... */ }
+}
+
+/* KOYU — 2) açıkça seçilmiş hâli */
+:root[data-theme="dark"] {
+  --bg:            #0f172a;
+  --surface:       #1e293b;
+  --surface-2:     #334155;
+  --surface-hover: #3b4a5f;
+  --border:        #334155;
+  --border-strong: #64748b;
+  --text:          #e2e8f0;
+  --muted:         #a8b6c9;
+  --primary:       #93c5fd;
+  --profit:        #4ade80;
+  --loss:          #fca5a5;
+  --warn:          #fbbf24;
+  --info:          #22d3ee;
+  --accent:        #d8b4fe;
+  --orange:        #fb923c;
+  --on-primary:    #0f172a;
+  --shadow:        0 1px 3px rgba(0,0,0,.35);
+}
+```
+
+**Ölçülen kontrast** (her token, kendi temasının **en kötü** zemini üzerinde —
+`bg` / `surface` / `surface-2` üçlüsünün minimumu):
+
+| Token | Aydınlık | oran | Koyu | oran |
+|---|---|---|---|---|
+| `--text` | `#0f172a` | 16.30 | `#e2e8f0` | 8.40 |
+| `--muted` | `#556275` | 5.65 | `#a8b6c9` | 5.03 |
+| `--primary` | `#2563eb` | 4.72 | `#93c5fd` | 5.74 |
+| `--profit` | `#15803d` | 4.58 | `#4ade80` | 5.94 |
+| `--loss` | `#b91c1c` | 5.91 | `#fca5a5` | 5.46 |
+| `--warn` | `#b45309` | 4.58 | `#fbbf24` | 6.20 |
+| `--info` | `#0e7490` | 4.89 | `#22d3ee` | 5.73 |
+| `--accent` | `#7e22ce` | 6.37 | `#d8b4fe` | 5.86 |
+| `--orange` | `#c2410c` | 4.73 | `#fb923c` | 4.58 |
+
+Hepsi AA (≥4.5). `--border-strong` metin değil, UI sınırı: aydınlık 3.06,
+koyu 3.07 — AA non-text eşiği 3.0 sağlanıyor.
+
+> Not: mevcut `#94a3b8` (koyu muted) `--surface-2` üzerinde 4.04 ile kalıyordu;
+> `#a8b6c9` ile 5.03'e çıkıyor. Koyu tema **ölçülebilir biçimde iyileşiyor**,
+> sadece "aydınlık ekleniyor" değil.
+
+### A.3 — `dashboard/theme.py` yeniden yapılandırma
+
+Kritik ayrım: **DOM'a giden renk `var()` olur, Plotly'ye giden renk hex kalır.**
+
+```python
+# --- DOM katmanı: inline style'da kullanılır, temaya kendiliğinden uyar ---
+BG         = "var(--bg)"
+CARD       = "var(--surface)"
+CARD2      = "var(--surface-2)"
+BORDER     = "var(--border)"
+TEXT       = "var(--text)"
+TEXT_MUTED = "var(--muted)"
+GREEN  = "var(--profit)";  RED    = "var(--loss)"
+BLUE   = "var(--primary)"; YELLOW = "var(--warn)"
+PURPLE = "var(--accent)";  CYAN   = "var(--info)";  ORANGE = "var(--orange)"
+```
+
+Bu tek dosyalık değişiklik **~550 çağrı yerinin tamamını** dokunmadan temaya
+duyarlı hale getirir: `{"color": TEXT}` → `{"color": "var(--text)"}` tarayıcıda
+sorunsuz çalışır, `f"1px solid {CARD2}"` gibi f-string kullanımları da bozulmaz.
+
+**İstisna — Plotly.** `go.Bar(marker_color=BLUE)` `var()` kabul etmez. Bu yüzden
+ayrı hex palet:
+
+```python
+PLOT = {
+  "light": {"bg": "#ffffff", "grid": "#e2e8f0", "text": "#0f172a",
+            "muted": "#556275", "blue": "#2563eb", "green": "#15803d", ...},
+  "dark":  {"bg": "#1e293b", "grid": "#334155", "text": "#e2e8f0",
+            "muted": "#a8b6c9", "blue": "#93c5fd", "green": "#4ade80", ...},
+}
+
+def current_theme() -> str:      # çerezden okur (auth_context._from_cookie kalıbı)
+def plot_palette() -> dict:      # PLOT[current_theme()]
+def apply_theme_template(fig):   # apply_dark_template'in yerini alır
+```
+
+`apply_dark_template` **kaldırılmaz**, `apply_theme_template`'e delege eden bir
+takma ad olarak kalır → 63 çağrı yeri tek seferde bozulmaz, kademeli geçilir.
+
+Dokunulacak Plotly satırları: `marker_color=`, `line={"color": ...}`,
+`fillcolor=`, `ALGO_COLORS` — grep ile **~28 satır**, sabiti `plot_palette()`
+sözlüğünden okuyacak şekilde değiştirilir. `ALGO_COLORS` da temaya göre çözülen
+bir fonksiyona (`algo_colors()`) dönüşür.
+
+### A.4 — Auth şablonları aynı tokenları paylaşsın
+
+`app/auth/templates/login.html` ve `change_password.html` içindeki kopya
+`:root` blokları silinir; `<link rel="stylesheet" href="/static/tokens.css">`
+ile aynı dosya okunur. Tek fiziksel kaynak: **`static/tokens.css`**;
+`dashboard/assets/00-tokens.css` onu `@import` eder.
+
+---
+
+## Faz B — Tema tercihi (kullanıcı bazlı, 3 durumlu)
+
+Tercih üç değer alır: **`light` · `dark` · `system`**. `system` gerçek bir
+üçüncü durumdur, "koyu"nun eş anlamlısı değil: işletim sistemi teması
+değiştiğinde pano da o an değişir.
+
+### B.1 — Nerede saklanır
+
+Tercih **kullanıcıya** ait, tarayıcıya değil — başka makineden giren aynı
+temayı bulur. Veritabanı kaynak, çerez okuma önbelleği:
+
+| Katman | Ne tutar | Neden |
+|---|---|---|
+| `users.theme` (DB) | `light` / `dark` / `system` | Kalıcı kaynak, cihazdan bağımsız |
+| `theme` çerezi | aynı üç değerden biri | Sunucu her istekte DB'ye gitmesin |
+| `theme_resolved` çerezi | `light` / `dark` | `system` seçiliyken **istemcinin çözdüğü** sonuç — Plotly figürünü sunucuda doğru palette üretmenin tek yolu |
+
+Akış:
+
+- **Giriş** — `POST /auth/login` yanıtı `user.theme`'i okur, iki çerezi de yazar
+  (`app/auth/cookies.py` içine `set_theme_cookies`, `set_auth_cookies`'in
+  yanına). Çerezleri silinmiş tarayıcı bir sonraki girişte tercihi geri alır.
+- **Değişiklik** — `PATCH /auth/preferences {theme}` → DB + çerezler + denetim
+  kaydı yok (kişisel tercih, audit gürültüsü olmasın).
+- **Her istek** — sunucu yalnızca çerez okur; DB turu yok.
+- **`system` seçiliyken** — istemcideki
+  `matchMedia("(prefers-color-scheme: dark)")` dinleyicisi işletim sistemi
+  tercihi değişince `theme_resolved`'ı günceller ve `data-theme` damgasını
+  koyar/kaldırır.
+
+Üç durumun DOM karşılığı:
+
+| Tercih | `<html>` damgası | Hangi CSS bloğu kazanır |
+|---|---|---|
+| `light` | `data-theme="light"` | `:root` (aydınlık) |
+| `dark` | `data-theme="dark"` | `:root[data-theme="dark"]` |
+| `system` | damga **yok** | `@media (prefers-color-scheme: dark)` |
+
+Bu yüzden `00-tokens.css` koyu bloğu **iki kez** yazılır: bir kez
+`@media (prefers-color-scheme: dark)` içinde (damgasız hâl), bir kez
+`:root[data-theme="dark"]` olarak (açık seçim). Aydınlık, `:root` tabanında
+kalır ve `data-theme="light"` damgası koyu media sorgusunu yener.
+
+### B.2 — Şema değişikliği ve göç (dikkat)
+
+`User` modeline tek sütun:
+
+```python
+theme: Mapped[str] = mapped_column(String(8), default="system")
+```
+
+**Tuzak:** projede alembic yok; `app/auth/db.py::init_db()` yalnızca
+`Base.metadata.create_all()` çağırıyor — bu **var olan** tabloya sütun eklemez.
+Mevcut `data/auth/*.db` sessizce eski şemada kalır ve ilk sorguda
+`no such column: users.theme` ile patlar. Bu yüzden `init_db()` içine
+idempotent, additive bir adım gerekiyor:
+
+```python
+# PRAGMA table_info(users) ile kontrol; sütun yoksa ekle
+ALTER TABLE users ADD COLUMN theme VARCHAR(8) NOT NULL DEFAULT 'system'
+```
+
+`User.to_dict()` ve `GET /auth/me` alanı döndürür.
+
+### B.3 — Hesabım sayfası (`/dash/account`)
+
+Yeni Dash sayfası; **her rol** erişir — viewer dahil, çünkü tema okuma
+yetkisiyle ilgisi olmayan kişisel bir tercih. Kenar çubuğundaki kullanıcı
+rozetinden açılır.
+
+İçerik:
+
+- **Görünüm** — üç seçenekli segment kontrolü: *Aydınlık · Koyu · Sistem*.
+  Her seçeneğin altında o temanın küçük önizleme şeridi (zemin + kart + metin),
+  böylece seçim yapmadan önce görülür.
+- **Hesap** — e-posta, ad soyad, rol, son giriş (salt okunur).
+- **Güvenlik** — mevcut `/change-password` sayfasına bağlantı.
+
+> `/dash/users` **admin** sayfasıdır ve öyle kalır; tema kişisel tercih olduğu
+> için oraya taşınmıyor. Adminin bir başkasının temasını değiştirmesi gerekirse
+> ayrı bir istek olarak ele alınmalı.
+
+### B.4 — Kenar çubuğu hızlı anahtarı
+
+Hesabım'a gitmeden değiştirebilmek için kenar çubuğunda üç durumu sırayla
+dolaşan tek düğme: ☀ Aydınlık → ☾ Koyu → ◐ Sistem. Aynı
+`PATCH /auth/preferences` ucunu çağırır — iki yüzey de tek kaynağa yazar,
+ayrışma olmaz. Uygulama anında (clientside), kayıt arka planda.
+
+### B.5 — FOUC yok
+
+`dash_app.index_string` özelleştirilir; `<head>` içine küçük bir **senkron**
+script konur: `theme` çerezini okur, `system` ise `matchMedia` ile çözer,
+`<body>` boyanmadan `document.documentElement.dataset.theme`'i ayarlar.
+Böylece yanlış temayla tek kare çizim olmaz.
+
+### B.6 — Halihazırda çizilmiş Plotly figürleri
+
+Aynı clientside callback `document.querySelectorAll('.js-plotly-plot')` üzerinde
+`Plotly.relayout(el, {...})` çağırarak `paper_bgcolor`, `plot_bgcolor`, font ve
+eksen renklerini günceller. **Trace renkleri** (kâr yeşili vb.) `relayout` ile
+değişmez; onlar bir sonraki callback yenilemesinde doğru palette gelir. Bu
+kabul edilebilir: trace renkleri iki temada da AA geçiyor (A.2 tablosu).
+
+---
+
+## Faz C — Bileşen seti (sadelik + okunabilirlik)
+
+Referanstan alınan ilkeler, somut kurallara çevrilmiş hali:
+
+### C.1 — Tipografi ölçeği
+
+Şu an her yerde 11/12/13/14/28px karışık. Tek ölçek:
+
+| Rol | Boyut | Ağırlık | Renk |
+|---|---|---|---|
+| Sayfa başlığı | 20px | 600 | `--text` |
+| Sayfa alt metni | 13px | 400 | `--muted` |
+| Kart başlığı | 14px | 600 | `--text` |
+| Gövde | 13px | 400 | `--text` |
+| KPI değeri | 26px | 650, `tabular-nums` | duruma göre |
+| Etiket/üst-bilgi | 11px, `0.06em` harf aralığı | 600 | `--muted` |
+
+`letter-spacing` + `text-transform: uppercase` yalnızca **etiket** rolünde.
+Şu an `metric_card` ve `.section-title` bunu ayrı ayrı tanımlıyor → tek sınıf.
+
+### C.2 — `PageHeader` bileşeni (yeni)
+
+9 sayfada elle tekrar eden `dbc.Row[H4 + P] + sağda rozet` kalıbı tek
+bileşene iner: `create_page_header(title, subtitle, actions=None)`.
+Referanstaki gibi başlık bloğu solda, eylemler sağda, altında ince ayırıcı.
+
+### C.3 — `MetricCard` v2
+
+Değişiklikler:
+- Değer rengi **varsayılan olarak `--text`**; renk yalnızca değer bir yön
+  taşıdığında (getiri +/−, drawdown). Şu an 5 kartın 5'i farklı renkte →
+  görsel gürültü, hiyerarşi yok.
+- İkon `--muted`, 14px, sabit; dekoratif renk yok.
+- Sayılar `font-variant-numeric: tabular-nums` (sütunlar hizalanır).
+- Kenarlık `--border`, gölge `--shadow` (koyu temada gölge neredeyse görünmez,
+  aydınlıkta kartı zeminden ayırır).
+
+### C.4 — Kart / bölüm
+
+- Gölge yerine **ince kenarlık** birincil ayırıcı (referansın en belirgin
+  özelliği).
+- `border-radius` 8px tek değer (şu an 4/6/8/12/20 karışık).
+- `card-header` yalnızca başlık + isteğe bağlı eylem; alt çizgi `--border`.
+- İç boşluk 16px/18px yerine tek `--pad: 18px`.
+
+### C.5 — Filtre satırı kalıbı
+
+Referanstaki "Kişi / Öncelik / Deadline / Sırala" barı: etiket **üstte**, 11px
+`--muted`, kontrol altta, kontroller tek satırda eşit aralıklı, kart içinde.
+`data.py`, `prediction.py`, `hyperopt.py`, `academic.py` bu kalıba geçer →
+`create_filter_bar(fields)` bileşeni.
+
+### C.6 — Tablolar
+
+- Zebra şerit yok; satır ayırıcı 1px `--border`.
+- Sayısal sütunlar **sağa dayalı** + `tabular-nums`.
+- Başlık satırı 11px uppercase `--muted`, zemin `--surface-2`.
+- Satır yüksekliği 38px (şu an sıkışık).
+- `style_header`/`style_cell`/`style_data` sözlükleri tek yerde:
+  `dashboard/components/table.py::TABLE_STYLES`.
+
+### C.7 — Durum ve boş durum
+
+`create_state_block(kind, message)` — `loading` / `empty` / `error` üçlüsü tek
+bileşen. Şu an her sayfa `html.P("Yukleniyor...", style={"color": TEXT_MUTED})`
+kalıbını elle tekrar ediyor.
+
+### C.8 — Kenar çubuğu
+
+Referanstaki gibi bölüm başlığıyla gruplanır:
+*Analiz* (Dashboard, Akademik, Modeller) / *İşlem* (Trading, Tahmin) /
+*Sistem* (Eğitim, Veri, HiperParam, Kullanıcılar). Aktif öğe dolgu yerine
+**sol kenar çubuğu + hafif zemin** (aydınlıkta tam dolgu ağır durur).
+
+---
+
+## Faz D — Sayfa geçişi
+
+A ve B bittiğinde sayfalar zaten **çalışır** durumda olur (`var()` sayesinde).
+Bu faz görsel cilalama; sayfa sayfa, birbirinden bağımsız:
+
+| Sıra | Sayfa | Neden bu sırada | Yük |
+|---|---|---|---|
+| 1 | `home.py` | Vitrin; kalıpları burada oturt | Orta (28 style) |
+| 2 | `training.py` | Az stil, hızlı kazanım | Düşük (21) |
+| 3 | `models.py` | Grafik ağırlıklı, Plotly paletini test eder | Düşük (15) |
+| 4 | `daily_trading.py` | Tablo kalıbı (C.6) burada oturur | Orta (28) |
+| 5 | `academic.py` | 4 grafik | Orta (24) |
+| 6 | `users.py` | Tablo + modal | Düşük (17) |
+| 7 | `hyperopt.py` | Filtre barı ağır (15 Row) | Yüksek (38) |
+| 8 | `data.py` | En çok kontrol, chip seçici | Yüksek (49) |
+| 9 | `prediction.py` | **En ağır** — 89 style, 4 grafik, mum grafiği | En yüksek |
+
+---
+
+## Faz E — Doğrulama
+
+### E.1 — Otomatik kontrast denetimi
+
+`tests/test_theme_contrast.py` (standalone, `python` ile çalışır):
+`static/tokens.css` ayrıştırılır, her `--text`/`--muted`/aksan tokenı her üç
+zemin tokenıyla eşleştirilip WCAG oranı hesaplanır; **< 4.5 ise fail**
+(sınır tokenları için < 3.0). Palet ileride değişirse regresyon anında yakalanır.
+
+### E.2 — Kaçak hex denetimi
+
+Aynı test dosyasında grep tabanlı kural: `dashboard/pages/*.py` içinde
+`#rrggbb` **yasak** (Plotly paletini içeren `theme.py` muaf). Şu an 2 kaçak var
+(`data.py`, `app.py`) — plan bitiminde 0 olmalı.
+
+### E.3 — Tema tercihi testi
+
+`tests/test_theme_preference.py` (standalone):
+
+- Eski şemalı bir SQLite dosyası üretilip `init_db()` çağrılır → `theme`
+  sütununun eklendiği ve mevcut satırların `system` aldığı doğrulanır
+  (B.2 göçü). İkinci çağrı hata vermemeli (idempotent).
+- `PATCH /auth/preferences` üç geçerli değeri kabul eder, dördüncüyü reddeder.
+- Girişten sonra `theme` ve `theme_resolved` çerezleri set edilir.
+- Viewer rolü kendi tercihini değiştirebilir; başkasının hesabına yazamaz.
+
+### E.4 — Görsel doğrulama
+
+10 sayfa (yeni `account` dahil) × 3 tema durumu. `system` için işletim
+sistemi teması iki yönde de denenir. Kontrol edilenler: hiçbir yerde
+açık-zemin/açık-yazı; DARKLY kaldırıldıktan sonra modal / dropdown / tooltip /
+takvim iç kısımlarının boyanmış olması; grafik ekseni, legend ve hover etiketi;
+sayfa açılışında yanlış temayla tek kare çizim olmaması (B.5).
+
+### E.5 — Regresyon
+
+- `python tests/test_auth.py` — login şablonu (A.4) ve login yanıtı (B.1) değişti.
+- `python tests/test_workspace_isolation.py` — yeni `/auth/preferences` ucu
+  RBAC matrisini bozmamalı.
+- Tüm sayfalar 200 dönüyor, callback hatası yok (Faz 5 smoke test kalıbı).
+
+---
+
+## Riskler
+
+| Risk | Etki | Önlem |
+|---|---|---|
+| DARKLY kaldırılınca bazı dbc iç kısımları koyu temada beyaz kalır | Yüksek — koyu tema regresyonu | E.3 görsel liste; `custom.css`'te modal/dropdown/tooltip/takvim blokları zaten var, tokenlara bağlanacak |
+| Plotly `relayout` trace renklerini güncellemez | Düşük — anahtarlama sonrası grafik bir tur eski renkte | Trace renkleri iki temada da AA geçiyor; sonraki yenilemede düzelir |
+| **`users` tablosuna sütun eklenmesi mevcut DB'ye uygulanmaz** — alembic yok, `create_all()` ALTER etmez | **Yüksek** — çalışan kurulum `no such column: users.theme` ile açılmaz | `init_db()` içinde `PRAGMA table_info` kontrollü additive ALTER (B.2) + eski şemayla açılan test (E.3) |
+| `system` seçiliyken sunucunun Plotly paletini bilememesi | Orta — grafik ters temada çizilir | `theme_resolved` çerezi istemcide çözülüp yazılır (B.1); `matchMedia` dinleyicisi OS değişiminde günceller |
+| Çerez tabanlı tema + WSGI mount | Orta | `auth_context._from_cookie()` aynı yolu zaten kullanıyor, kanıtlanmış kalıp |
+| `var()` inline style'da eski tarayıcı | Yok sayılır | Hedef modern Chrome/Edge; `var()` uzun süredir destekli |
+| 550 çağrı yerinin sessizce bozulması | Orta | E.2 kaçak hex denetimi + sayfa sayfa görsel kontrol |
+
+---
+
+## Efor tahmini
+
+| Faz | İş | Tahmin |
+|---|---|---|
+| A | Token katmanı + theme.py + Plotly paleti + auth şablonları | ~1 gün |
+| B | 3 durumlu tercih: DB sütunu + göç, `/auth/preferences`, Hesabım sayfası, kenar çubuğu anahtarı, FOUC, clientside relayout | ~1 gün |
+| C | 6 bileşen (PageHeader, MetricCard v2, FilterBar, Table, StateBlock, Sidebar) | ~1 gün |
+| D | 9 sayfa cilalama | ~1.5 gün |
+| E | Testler + görsel doğrulama + düzeltmeler | ~0.5 gün |
+
+**Toplam ~5 gün.** A+B tek başına teslim edilebilir: o noktada üç durumlu tema
+tercihi hesaba kayıtlı olarak çalışır ve pano okunur; C/D olmadan sadece
+"cilasız" olur.
+
+---
+
+## Kritik dosyalar
+
+| Dosya | Değişiklik |
+|---|---|
+| `dashboard/app.py` | DARKLY→BOOTSTRAP, `index_string` (FOUC), `/dash/account` rotası |
+| `app/auth/models.py` | `User.theme` sütunu + `to_dict()` (B.2) |
+| `app/auth/db.py` | `init_db()` içine idempotent additive ALTER (B.2) |
+| `app/auth/cookies.py` | `set_theme_cookies()` — `theme` + `theme_resolved` (B.1) |
+| `app/auth/routes.py` | `PATCH /auth/preferences`; login yanıtı tema çerezlerini yazar |
+| `dashboard/pages/account.py` | **YENİ** — Hesabım: 3 durumlu tema seçimi (B.3) |
+| `dashboard/theme.py` | DOM `var()` katmanı + `PLOT` hex paleti + `apply_theme_template` |
+| `static/tokens.css` | **YENİ** — tek kaynak token tanımı |
+| `dashboard/assets/00-tokens.css` | **YENİ** — `@import "/static/tokens.css"` |
+| `dashboard/assets/custom.css` | `!important` temizliği, tokenlara bağlanma |
+| `dashboard/assets/theme-toggle.js` | **YENİ** — clientside anahtar + Plotly relayout |
+| `dashboard/components/page_header.py` | **YENİ** (C.2) |
+| `dashboard/components/filter_bar.py` | **YENİ** (C.5) |
+| `dashboard/components/table.py` | **YENİ** (C.6) |
+| `dashboard/components/state_block.py` | **YENİ** (C.7) |
+| `dashboard/components/metric_card.py` | v2 (C.3) |
+| `dashboard/components/sidebar.py` | Gruplama (C.8) + 3 durumlu hızlı anahtar (B.4) + Hesabım bağlantısı |
+| `dashboard/pages/*.py` | 9 sayfa (Faz D) |
+| `app/auth/templates/*.html` | Kopya `:root` silinir (A.4) |
+| `tests/test_theme_contrast.py` | **YENİ** (E.1, E.2) |
+| `tests/test_theme_preference.py` | **YENİ** (E.3) — göç, uç nokta, çerezler, RBAC |
+
+---
+
+## Uygulama notları
+
+Planın dışına çıkılan yerler ve canlı doğrulamada yakalanan kusurlar.
+
+### Plandan sapmalar
+
+**1. Algoritma rozetleri inline stil yerine sınıf kullanıyor.**
+Plan `ALGO_COLORS` sözlüğünü inline `backgroundColor` olarak vermeye devam
+ediyordu. Çalışmadı: `dbc.Badge` kendi `bg-secondary` sınıfını basıyor ve
+Bootstrap'in utility kuralları `!important` taşıdığı için inline renk sessizce
+eziliyordu — rozet hem aydınlıkta hem koyuda yanlış renkteydi ve bu ancak
+tarayıcıda hesaplanmış stile bakınca görüldü. Çözüm:
+`theme.py::algo_badge_class()` + `custom.css`'te `.badge.algo-badge.algo-ppo`
+gibi sınıf eşleşmeleri. Tanınmayan algoritma nötr `--surface-2` kalıyor.
+
+**2. Bootstrap renk varyantlarının tamamı ezilmek zorunda kaldı.**
+DARKLY kalkınca ezilmeyen her varyant Bootstrap'in kendi rengine düşüyor.
+`.btn-outline-warning` tanımsızdı ve Bootstrap'in `#ffc107` sarısı beyaz zeminde
+~1.6:1 kalıyordu — Veri sayfasındaki "Yeniden İndir (tam)" düğmesi okunmuyordu.
+Eksik varyantlar (`btn-outline-warning/info`, `btn-info`, `btn-light/dark`,
+`alert-primary/secondary`) eklendi ve `test_theme_contrast.py`'ye bir bekçi
+kondu: sayfalarda kullanılan her `color="..."` varyantı için dört seçicinin
+(`.btn-*`, `.btn-outline-*`, `.badge.bg-*`, `.alert-*`) tanımlı olması aranıyor.
+
+**3. `PATCH /auth/preferences` kendi CSRF kontrolünü yapıyor.**
+`AuthGateMiddleware` CSRF'i yalnızca `/api/*` yazmalarında doğruluyor; bu uç
+`/auth/*` altında. SameSite=Lax zaten çapraz siteden PATCH'i kesiyor ama uç
+durum değiştirdiği için ikinci katman olarak kontrol uca eklendi. Ayrıca gövde
+elle ayrıştırılırken geçersiz değer 500 veriyordu; gövde FastAPI parametresine
+çevrildi (artık 422).
+
+### Canlı doğrulamada yakalananlar
+
+- **`_metric_val` kart ölçeğini eziyordu.** `home.py`'deki yardımcı, değere
+  kendi `fontSize`/`fontWeight`/`color`'ını basıyordu; layout'taki C.3
+  değişikliği bu yüzden ekrana yansımıyordu, beş kart hâlâ beş ayrı renkteydi.
+  Yardımcı `.metric-value` sınıfına ve `tone` parametresine geçirildi. Ton artık
+  **biçimlenmiş metinden değil ham sayıdan** çıkarılıyor: `"394.3%"` işaretsiz
+  ama pozitif — metne bakan bir çözüm bunu nötr sayardı.
+- **Tema düğmesi etiketi güncellenmiyordu.** `theme-toggle.js` açılışta
+  `#page-content`'i izliyordu; Dash arayüzü `DOMContentLoaded`'dan sonra React
+  ile çizildiği için kenar çubuğu o an henüz yoktu. İzleme `document.body`
+  alt ağacına alındı (rAF ile birleştirilmiş).
+- **`empty_figure` artık eksenleri gizliyor** — boş grafik "veri yok" derken
+  1'den 6'ya boş bir eksen göstermesin diye.
+
+### Ölçülen sonuç
+
+| | Önce | Sonra |
+|---|---|---|
+| Tema sayısı | 1 (koyu) | 3 durum (aydınlık / koyu / sistem), hesaba kayıtlı |
+| Tema tanımının kopyası | 3 | 1 (`static/tokens.css`) |
+| AA'yı geçmeyen renk | 4 (BLUE 3.98, RED 3.89, PURPLE 3.70, MUTED 4.04) | 0 (en düşük 4.58) |
+| Sayfa kodunda kaçak hex | 2 | 0 (test bekçilik ediyor) |
+| Tema testi | yok | 106 kontrol (kontrast + tercih) |
+
+---
+
+## Belge Güncelleme Notu
+
+Faz kapanışında güncellendi: `CLAUDE.md` (Development Plan, proje yapısı, tests
+listesi, "Tema (Faz 8)" bölümü ve Do-NOT maddeleri),
+`docs/development/roadmap.md` (Faz 8 girdisi), `docs/README.md` (indeks).

@@ -20,7 +20,8 @@ from dash import html, dcc, ctx
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
-from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED
+from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED, BLUE, RED
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 # BIST-30 sembolleri ve kısa adlar
@@ -97,10 +98,9 @@ def layout():
     five_years_ago = today - timedelta(days=5 * 365)
 
     return html.Div([
-        html.H4("Veri Yönetimi", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P(
+        create_page_header(
+            "Veri Yönetimi",
             "Veri kaynaklarını seçin, eksik günleri güncelleyin veya tümünü yeniden indirin.",
-            style={"color": TEXT_MUTED, "marginBottom": "24px"},
         ),
 
         dcc.Store(id="data-status-store"),
@@ -302,7 +302,7 @@ def layout():
                         dcc.Loading(
                             html.Div(id="data-earliest-result", className="mt-2"),
                             type="dot",
-                            color="#0dcaf0",
+                            color=BLUE,
                         ),
                     ], md=5),
 
@@ -855,7 +855,7 @@ def _render_update_result(result: dict) -> Any:
         if "error" in res:
             lines.append(html.Li(
                 [html.Strong(src_label), f": Hata — {res['error']}"],
-                style={"color": "#f87171"},
+                style={"color": RED},
             ))
         elif res.get("mode") == "skip":
             lines.append(html.Li([html.Strong(src_label), ": Zaten güncel."]))

@@ -127,6 +127,14 @@ class Settings(BaseSettings):
     SESSION_COOKIE_NAME: str = "rlt_session"
     REFRESH_COOKIE_NAME: str = "rlt_refresh"
     CSRF_COOKIE_NAME: str = "rlt_csrf"
+    # Tema cerezleri (Faz 8). HttpOnly DEGIL: <head>'deki FOUC engelleyici
+    # script ve tema anahtari bunlari JS'ten okur/yazar.
+    #   THEME       -> kullanici tercihi: light | dark | system
+    #   THEME_RESOLVED -> istemcinin cozdugu sonuc: light | dark
+    # Ikincisi olmadan sunucu "system" seciliyken Plotly figurunu hangi
+    # palette uretecegini bilemez.
+    THEME_COOKIE_NAME: str = "rlt_theme"
+    THEME_RESOLVED_COOKIE_NAME: str = "rlt_theme_r"
     COOKIE_SECURE: bool = False   # HTTPS arkasinda True yapilmali
     COOKIE_SAMESITE: str = "lax"  # Dash POST'lari icin lax yeterli, CSRF'i keser
     COOKIE_DOMAIN: str = ""

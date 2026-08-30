@@ -35,6 +35,7 @@ Proje mimarisi ve roadmap:
 - [**phase3-implementation.md**](development/phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
 - [**phase-6-backend-performance.md**](development/phase-6-backend-performance.md) — Faz 6: backend performans & eğitim throughput sprint'i (DL ince ayar, sembol paralelliği, eğitim manifesti, güvenilirlik) + GPU test/kapanış kaydı
 - [**phase7-auth.md**](development/phase7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
+- [**phase-8-ui-theming.md**](development/phase-8-ui-theming.md) — Faz 8: aydınlık/koyu/sistem teması, token katmanı, bileşen sadeleştirme, kontrast denetimi
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
 
 ---

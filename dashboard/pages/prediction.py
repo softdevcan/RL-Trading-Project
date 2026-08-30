@@ -23,10 +23,12 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from dash import ALL, Input, Output, State, ctx, dcc, html
 
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 from dashboard.theme import (
     BLUE, CARD, CARD2, GOLD, GREEN, ORANGE, PURPLE, RED, TEXT, TEXT_MUTED, YELLOW,
-    apply_dark_template, empty_figure,
+    apply_theme_template, empty_figure, plot_palette, plot_rgba,
 )
 from prediction.feature_groups import (
     DEFAULT_TARGET_TYPE, TARGET_TYPES, default_groups, groups_by_category,
@@ -53,9 +55,8 @@ def layout():
         dcc.Store(id="pred-symbols-store", data=[]),
         dcc.Store(id="pred-models-store", data=[]),
 
-        html.H4("Fiyat Tahmini", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Model egit, egitilmis modellerle tahmin uret.",
-               style={"color": TEXT_MUTED, "marginBottom": "16px"}),
+        create_page_header("Fiyat Tahmini",
+                           "Model egit, egitilmis modellerle tahmin uret."),
 
         # Altin ozeti — kompakt seritler
         _gold_summary_section(),
@@ -184,7 +185,7 @@ def _train_tab():
                                              style={"color": TEXT, "fontWeight": "600"})),
                     dbc.CardBody(html.Div(
                         id="train-models-table",
-                        children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}),
+                        children=create_state_block("loading"),
                     )),
                 ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
             ], md=8),
@@ -773,6 +774,7 @@ def _build_price_chart(data: Dict) -> go.Figure:
     bbu = data.get("bb_upper") or []
     bbl = data.get("bb_lower") or []
 
+    P = plot_palette()
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True,
         row_heights=[0.78, 0.22], vertical_spacing=0.04,
@@ -788,7 +790,7 @@ def _build_price_chart(data: Dict) -> go.Figure:
         fig.add_trace(go.Scatter(
             x=dates, y=bbl, mode="lines", name="BB alt",
             line={"color": "rgba(148,163,184,0.0)"}, fill="tonexty",
-            fillcolor="rgba(168,85,247,0.10)", showlegend=False,
+            fillcolor=plot_rgba("purple", 0.10), showlegend=False,
             hoverinfo="skip",
         ), row=1, col=1)
 
@@ -797,25 +799,25 @@ def _build_price_chart(data: Dict) -> go.Figure:
         fig.add_trace(go.Candlestick(
             x=dates, open=o, high=h, low=l, close=c,
             name="OHLC",
-            increasing={"line": {"color": GREEN}, "fillcolor": GREEN},
-            decreasing={"line": {"color": RED}, "fillcolor": RED},
+            increasing={"line": {"color": P["green"]}, "fillcolor": P["green"]},
+            decreasing={"line": {"color": P["red"]}, "fillcolor": P["red"]},
         ), row=1, col=1)
     elif c:
         fig.add_trace(go.Scatter(
             x=dates, y=c, mode="lines", name="Kapanis",
-            line={"color": BLUE, "width": 2},
+            line={"color": P["blue"], "width": 2},
         ), row=1, col=1)
 
     # MA'lar
     if ma20:
         fig.add_trace(go.Scatter(
             x=dates, y=ma20, mode="lines", name="MA20",
-            line={"color": YELLOW, "width": 1.2},
+            line={"color": P["yellow"], "width": 1.2},
         ), row=1, col=1)
     if ma50:
         fig.add_trace(go.Scatter(
             x=dates, y=ma50, mode="lines", name="MA50",
-            line={"color": ORANGE, "width": 1.2},
+            line={"color": P["orange"], "width": 1.2},
         ), row=1, col=1)
 
     # Volume bar
@@ -823,16 +825,16 @@ def _build_price_chart(data: Dict) -> go.Figure:
         colors = []
         for i in range(len(v)):
             if i == 0 or not c or c[i] is None or c[i - 1] is None:
-                colors.append(TEXT_MUTED)
+                colors.append(P["muted"])
             else:
-                colors.append(GREEN if c[i] >= c[i - 1] else RED)
+                colors.append(P["green"] if c[i] >= c[i - 1] else P["red"])
         fig.add_trace(go.Bar(
             x=dates, y=v, name="Hacim",
             marker={"color": colors, "opacity": 0.6},
             showlegend=False,
         ), row=2, col=1)
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(
         height=460,
         margin={"l": 50, "r": 20, "t": 10, "b": 40},
@@ -859,14 +861,14 @@ def _build_gold_chart(history):
         prices = [r.get("price", r.get("try_per_gram", r.get("value", 0))) for r in records]
         fig.add_trace(go.Scatter(
             x=dates, y=prices, mode="lines",
-            fill="tozeroy", fillcolor="rgba(245,158,11,0.15)",
-            line={"color": GOLD, "width": 2}, name="Altin (TRY/gr)",
+            fill="tozeroy", fillcolor=plot_rgba("gold", 0.15),
+            line={"color": plot_palette()["gold"], "width": 2}, name="Altin (TRY/gr)",
             hovertemplate="<b>%{x}</b><br>₺%{y:,.2f}<extra></extra>",
         ))
     else:
         return empty_figure("Altin gecmisi yok")
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=200,
                       margin={"l": 50, "r": 10, "t": 10, "b": 40})
     return fig
@@ -1001,6 +1003,7 @@ def _render_model_predictions(result):
 
 
 def _build_vs_actual_chart(chart_data):
+    P = plot_palette()
     fig = go.Figure()
     actual = chart_data.get("actual", [])
     predicted = chart_data.get("predicted", [])
@@ -1008,15 +1011,15 @@ def _build_vs_actual_chart(chart_data):
 
     if actual:
         fig.add_trace(go.Scatter(x=dates[:len(actual)], y=actual, mode="lines",
-                                  name="Gercek", line={"color": TEXT_MUTED, "width": 1.5}))
+                                  name="Gercek", line={"color": P["muted"], "width": 1.5}))
     if predicted:
         fig.add_trace(go.Scatter(x=dates[:len(predicted)], y=predicted, mode="lines",
-                                  name="Tahmin", line={"color": BLUE, "width": 2,
+                                  name="Tahmin", line={"color": P["blue"], "width": 2,
                                                         "dash": "dot"}))
     if not actual and not predicted:
         return empty_figure("Veri yok")
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=280, legend={"orientation": "h", "y": 1.1})
     return fig
 
@@ -1028,15 +1031,16 @@ def _build_accuracy_chart(chart_data):
     if not acc and not mae:
         return empty_figure("Dogruluk verisi yok")
 
+    P = plot_palette()
     fig = go.Figure()
     if acc:
         fig.add_trace(go.Scatter(y=acc, mode="lines+markers", name="Dogruluk",
-                                  line={"color": GREEN}, yaxis="y1"))
+                                  line={"color": P["green"]}, yaxis="y1"))
     if mae:
         fig.add_trace(go.Scatter(y=mae, mode="lines+markers", name="MAE",
-                                  line={"color": RED, "dash": "dot"}, yaxis="y2"))
+                                  line={"color": P["red"], "dash": "dot"}, yaxis="y2"))
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=280, yaxis={"title": "Dogruluk"},
                       yaxis2={"title": "MAE", "overlaying": "y", "side": "right"},
                       legend={"orientation": "h", "y": 1.1})

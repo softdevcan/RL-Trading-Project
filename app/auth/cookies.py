@@ -66,6 +66,40 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str |
     return csrf
 
 
+def set_theme_cookies(response: Response, theme: str, resolved: str | None = None) -> None:
+    """Gorunum tercihini cereze yaz (Faz 8, B.1).
+
+    Oturum cerezlerinden farkli olarak **HttpOnly degil**: <head>'deki FOUC
+    engelleyici script ve tema anahtari bunlari JS'ten okur.
+
+    `resolved` yalnizca tercih light/dark iken kesin bilinir; "system" secildi
+    ise karari tarayici verir ve cerezi kendisi tazeler — burada silinir ki
+    sunucu eski/yanlis bir degeri okumasin.
+    """
+    s = get_settings()
+    kwargs = {
+        "httponly": False,
+        "secure": s.COOKIE_SECURE,
+        "samesite": s.COOKIE_SAMESITE,
+        "max_age": 365 * 86400,
+        "path": "/",
+    }
+    if s.COOKIE_DOMAIN:
+        kwargs["domain"] = s.COOKIE_DOMAIN
+
+    response.set_cookie(s.THEME_COOKIE_NAME, theme, **kwargs)
+
+    if resolved is None:
+        resolved = theme if theme in ("light", "dark") else None
+
+    if resolved in ("light", "dark"):
+        response.set_cookie(s.THEME_RESOLVED_COOKIE_NAME, resolved, **kwargs)
+    else:
+        response.delete_cookie(
+            s.THEME_RESOLVED_COOKIE_NAME, path="/", domain=s.COOKIE_DOMAIN or None
+        )
+
+
 def clear_auth_cookies(response: Response) -> None:
     s = get_settings()
     domain = s.COOKIE_DOMAIN or None

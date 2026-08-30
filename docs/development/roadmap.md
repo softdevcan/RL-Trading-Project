@@ -106,6 +106,16 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 
 Çerez tabanlı JWT oturum, bcrypt, roller (admin/user/viewer), admin-only kayıt, denetim kaydı, hibrit kullanıcı izolasyonu (piyasa verisi ortak; model/sonuç/karar/manifest kullanıcı bazlı). Detay: [phase7-auth.md](phase7-auth.md).
 
+### ✅ Faz 8 — UI/UX: Aydınlık Tema + Bileşen Okunabilirliği
+
+- **Token katmanı:** `dbc.themes.DARKLY` → `BOOTSTRAP`; tüm renkler tek kaynakta (`static/tokens.css`). `dashboard/theme.py` sabitleri artık `var(--token)` döndürüyor → ~550 inline stil çağrı yerine dokunmadan temaya duyarlı oldu. Plotly `var()` kabul etmediği için ayrı hex palet (`plot_palette()` + `apply_theme_template()`), tema çerezden çözülüyor.
+- **3 durumlu tercih:** aydınlık / koyu / **sistem**. Tarayıcıya değil **hesaba** kayıtlı (`users.theme`); `PATCH /auth/preferences`, yeni `/dash/account` (Hesabım) sayfası ve kenar çubuğunda üç durumu dolaşan hızlı düğme. `<head>`'de senkron script ile FOUC yok.
+- **Şema göçü:** alembic yok ve `create_all()` var olan tabloyu değiştirmiyor → `init_db()` içine idempotent additive `ALTER` eklendi; eski şemayla açılan test bunu doğruluyor.
+- **Bileşenler:** `PageHeader`, `MetricCard v2` (renk yalnızca yön taşıyan değerde), `FilterBar`, `TABLE_STYLES`, `StateBlock`; kenar çubuğu üç gruba ayrıldı.
+- **Kontrast:** her metin tokeni kendi temasının **en kötü** zemininde WCAG AA ≥ 4.5:1 (en düşük 4.58). Mevcut koyu temada AA'yı geçmeyen 4 renk (BLUE 3.98, RED 3.89, PURPLE 3.70, MUTED 4.04) bu arada düzeldi. `tests/test_theme_contrast.py` paleti kalıcı olarak bekçiliyor.
+
+Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
+
 ---
 
 ## Gelecek — Tez Yol Haritası

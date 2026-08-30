@@ -1,0 +1,121 @@
+{# Giris/parola sayfalarinin ortak <head> icerigi (Faz 8, A.4).
+
+   Faz 8 oncesi her sablon kendi :root paletini tasiyordu — panoyla birlikte
+   ucuncu bir kopya. Artik ikisi de static/tokens.css okuyor.
+
+   FOUC engelleyici script pano ile ayni isi yapar (bkz. dashboard/app.py):
+   <body> boyanmadan once temayi damgalar. Cikis yapildiginda tema cerezi
+   silinmedigi icin giris ekrani da kullanicinin temasinda acilir. #}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="/static/tokens.css">
+<script>
+(function () {
+  try {
+    var m = document.cookie.match(/(?:^|; )rlt_theme=([^;]*)/);
+    var pref = m ? decodeURIComponent(m[1]) : "system";
+    if (["light", "dark", "system"].indexOf(pref) === -1) pref = "system";
+    if (pref === "system") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", pref);
+    }
+    var resolved = pref !== "system" ? pref
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+         ? "dark" : "light");
+    document.cookie = "rlt_theme_r=" + resolved + ";path=/;max-age=31536000;samesite=lax";
+  } catch (e) { /* tokens.css tabani (aydinlik) gecerli kalir */ }
+})();
+</script>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    padding: 24px;
+  }
+
+  .card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: var(--shadow-pop);
+  }
+
+  h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -0.01em; }
+  .sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--muted);
+  }
+
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+  }
+  input:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 0;
+    border-color: var(--primary);
+  }
+
+  button {
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--primary-fill);
+    color: var(--on-fill);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--primary-fill-hover); }
+
+  /* Uyari kutulari: notr yuzey + anlamli metin/kenar. Yari saydam renkli
+     zemin iki temada farkli davraniyor ve kontrasti tahmine birakiyordu. */
+  .alert, .notice {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-strong);
+  }
+  .alert  { border-left-color: var(--loss); color: var(--loss); }
+  .notice { border-left-color: var(--warn); color: var(--warn); }
+
+  .rules { color: var(--muted); font-size: 12px; margin: -6px 0 18px; line-height: 1.6; }
+
+  .foot { margin-top: 16px; text-align: center; color: var(--muted); font-size: 12px; }
+  .foot a { color: var(--primary); }
+
+  code {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+</style>

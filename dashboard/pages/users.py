@@ -15,6 +15,7 @@ from dash import Input, Output, State, ALL, ctx
 import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable
 
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER, BLUE, GREEN, RED, YELLOW,
@@ -54,11 +55,10 @@ def layout():
     return html.Div([
         dcc.Store(id="users-refresh-tick", data=0),
 
-        html.H4("Kullanici Yonetimi", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P(
+        create_page_header(
+            "Kullanici Yonetimi",
             "Hesaplari yonetici acar; kullanici ilk giriste parolasini degistirir. "
             "Her kullanicinin modelleri, sonuclari ve gunluk kararlari kendi calisma alaninda tutulur.",
-            style={"color": TEXT_MUTED, "marginBottom": "24px"},
         ),
 
         html.Div(id="users-alert"),

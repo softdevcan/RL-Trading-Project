@@ -12,6 +12,7 @@ from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
 from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, ORANGE, RED, YELLOW, empty_figure
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 # Backend /config/* endpoint'leri ulasilamadiginda kullanilan emniyet listeleri.
@@ -47,8 +48,8 @@ def layout():
         dcc.Store(id="training-store", data={}),
 
         # Header
-        html.H4("Model Egitimi", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Yeni RL modeli egit ve durumunu izle", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Model Egitimi",
+                           "Yeni RL modeli egit ve durumunu izle"),
 
         dbc.Row([
             # ── Left: Training form ─────────────────────────────────────────

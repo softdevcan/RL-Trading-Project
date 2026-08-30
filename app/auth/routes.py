@@ -23,8 +23,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.auth import security, service
-from app.auth.cookies import clear_auth_cookies, set_auth_cookies
+from app.auth.cookies import clear_auth_cookies, set_auth_cookies, set_theme_cookies
 from app.auth.db import get_db
+from app.auth.models import Theme
 from app.auth.deps import CurrentUser, get_optional_user
 from app.auth.service import AuthError
 from app.core.config import get_settings
@@ -80,6 +81,12 @@ class LoginRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=1)
+
+
+class PreferencesRequest(BaseModel):
+    """Gorunum tercihi. Uc gecerli deger disina cikilamaz."""
+
+    theme: str = Field(pattern="^(light|dark|system)$")
 
 
 # ── HTML sayfalari ────────────────────────────────────────────────────────
@@ -179,6 +186,9 @@ async def login(request: Request, db: Annotated[Session, Depends(get_db)]):
             "next": destination,
         })
     csrf = set_auth_cookies(response, access, refresh)
+    # Tercih hesapta durur; cerez yalnizca okuma onbellegidir. Cerezi silinmis
+    # (ya da baska makinedeki) tarayici temayi burada geri alir.
+    set_theme_cookies(response, user.theme or Theme.DEFAULT)
     if not is_form:
         response.headers["X-CSRF-Token"] = csrf
     return response
@@ -222,6 +232,44 @@ async def me(user: CurrentUser) -> dict:
     data = user.to_dict()
     data["workspace"] = workspace_root(user.id)
     return data
+
+
+@router.patch("/auth/preferences")
+async def update_preferences(
+    request: Request,
+    body: PreferencesRequest,
+    user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> Response:
+    """Kullanicinin kendi gorunum tercihini gunceller (Faz 8, B.1).
+
+    Her rol kendi tercihini degistirebilir — viewer dahil; tema okuma
+    yetkisiyle ilgisi olmayan kisisel bir ayardir. Kimse baskasinin
+    tercihine yazamaz: hedef her zaman oturumdaki kullanicidir.
+
+    `resolved` istege bagli: tercih "system" iken tarayicinin o an cozdugu
+    deger. Sunucu Plotly figurunu bununla dogru palette uretir.
+    """
+    # AuthGateMiddleware CSRF'i yalnizca /api/* yazmalarinda dogruluyor; bu uc
+    # /auth/* altinda ve durum degistiriyor, o yuzden kontrol burada yapilir.
+    # (SameSite=Lax zaten capraz siteden PATCH'i keser — bu ikinci katman.)
+    if not security.csrf_matches(
+        request.cookies.get(get_settings().CSRF_COOKIE_NAME),
+        request.headers.get("X-CSRF-Token"),
+    ):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "CSRF dogrulamasi basarisiz")
+
+    db_user = service.get_user(db, user.id)
+    if db_user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Kullanici bulunamadi")
+
+    db_user.theme = body.theme
+    db.commit()
+
+    resolved = request.headers.get("X-Theme-Resolved", "")
+    response = JSONResponse({"status": "ok", "theme": body.theme})
+    set_theme_cookies(response, body.theme, resolved if resolved in ("light", "dark") else None)
+    return response
 
 
 @router.post("/auth/change-password")

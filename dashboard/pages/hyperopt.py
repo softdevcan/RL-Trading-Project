@@ -19,8 +19,9 @@ import dash_bootstrap_components as dbc
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW,
-    ALGO_COLORS, empty_figure, apply_dark_template,
+    algo_badge_class, empty_figure, apply_theme_template,
 )
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 # Backend /config/* ulasilamadiginda kullanilan emniyet listeleri.
@@ -89,8 +90,8 @@ def layout():
         dcc.Store(id="hyperopt-modal-study-id", data=None),
         dcc.Store(id="hyperopt-data-range", data=data_range),
 
-        html.H4("Hiper Parametre Optimizasyonu", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Optuna ile otomatik hiper parametre arama", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Hiper Parametre Optimizasyonu",
+                           "Optuna ile otomatik hiper parametre arama"),
 
         dbc.Row([
             # ── Form panel ──────────────────────────────────────────────────
@@ -519,13 +520,13 @@ def _render_studies_grid(studies):
         progress = int(n_trials / total_trials * 100) if total_trials else 0
 
         status_color = "success" if status == "complete" else "warning" if status == "running" else "secondary"
-        algo_color = ALGO_COLORS.get(algo, BLUE)
+        badge_class = algo_badge_class(algo)
 
         cols.append(dbc.Col(
             dbc.Card([
                 dbc.CardBody([
                     dbc.Row([
-                        dbc.Col(dbc.Badge(algo, style={"backgroundColor": algo_color}, pill=True), width="auto"),
+                        dbc.Col(dbc.Badge(algo, pill=True, className=badge_class), width="auto"),
                         dbc.Col(dbc.Badge(status.upper(), color=status_color, pill=True), width="auto", className="ms-auto"),
                     ], className="mb-2"),
                     html.Div(str(s.get("study_name", sid))[:30],

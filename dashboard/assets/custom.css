@@ -1,215 +1,299 @@
-/* RL Trading Dashboard – comprehensive dark theme */
+/* ============================================================================
+   RL Trading — bilesen stilleri
+   ----------------------------------------------------------------------------
+   Renk DEGERI burada yok; hepsi static/tokens.css'ten gelen degiskenler.
+   Yeni bir hex yazmak istiyorsan once oraya token ekle (ve kontrasti olc).
 
-/* ── Google Font ────────────────────────────────────────────────────────── */
+   Taban artik dbc.themes.BOOTSTRAP (notr). Faz 8 oncesi DARKLY vardi ve bu
+   dosyadaki !important yigininin buyuk kismi onunla cekismekten geliyordu;
+   kalanlar ucuncu parti bilesenler icin (react-select, Radix takvim,
+   dash-table) hala gerekli.
+   ========================================================================== */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── CSS variables ──────────────────────────────────────────────────────── */
-:root {
-  --bg:      #0f172a;
-  --card:    #1e293b;
-  --card2:   #334155;
-  --border:  #475569;
-  --text:    #e2e8f0;
-  --muted:   #94a3b8;
-  --blue:    #3b82f6;
-  --blue-d:  #1d4ed8;
-  --green:   #22c55e;
-  --red:     #ef4444;
-  --yellow:  #eab308;
-  --radius:  8px;
-  --radius-sm: 6px;
-}
-
-/* ── Reset & base ───────────────────────────────────────────────────────── */
+/* ── Taban ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background-color: var(--bg) !important;
-  color: var(--text) !important;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  font-size: 14px;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 13px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #64748b; }
+/* Sayilarin sutunlarda hizalanmasi (C.1/C.6) */
+.tabular, td, th, .metric-value { font-variant-numeric: tabular-nums; }
 
-/* ── Cards ──────────────────────────────────────────────────────────────── */
+a { color: var(--primary); }
+a:hover { color: var(--primary); }
+
+hr { border-color: var(--border); opacity: 1; }
+
+/* Klavye odagi her zaman gorunur olmali */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ── Tipografi olcegi (C.1) ─────────────────────────────────────────────── */
+.page-title    { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; margin: 0; }
+.page-subtitle { font-size: 13px; color: var(--muted); margin: 0; }
+.card-title-sm { font-size: 14px; font-weight: 600; color: var(--text); }
+.metric-value  { font-size: 26px; font-weight: 650; line-height: 1; letter-spacing: -0.02em; }
+
+/* Etiket rolu — uppercase + harf araligi YALNIZCA burada */
+.section-title,
+.field-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--muted) !important;
+  margin-bottom: 6px !important;
+  display: block;
+}
+
+.text-muted { color: var(--muted) !important; }
+
+/* ── Kaydirma cubugu ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Kartlar (C.4) — golge degil, ince kenarlik ─────────────────────────── */
 .card {
-  background-color: var(--card) !important;
-  border: 1px solid var(--card2) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 .card-header {
-  background-color: transparent !important;
-  border-bottom: 1px solid var(--card2) !important;
-  padding: 14px 18px !important;
+  background-color: transparent;
+  border-bottom: 1px solid var(--border);
+  padding: 14px var(--pad);
+  color: var(--text);
+  font-weight: 600;
 }
 .card-body {
-  color: var(--text) !important;
-  padding: 16px 18px !important;
+  color: var(--text);
+  padding: 16px var(--pad);
+}
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid var(--border);
 }
 
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
+/* ── Kenar cubugu (C.8) ─────────────────────────────────────────────────── */
+#sidebar { background-color: var(--surface); border-right: 1px solid var(--border); }
+
 #sidebar .nav-link {
   color: var(--muted) !important;
   border-radius: var(--radius-sm);
-  transition: background 0.15s, color 0.15s;
+  transition: background-color .15s, color .15s, border-color .15s;
   font-size: 13px;
   font-weight: 500;
+  border-left: 3px solid transparent;
 }
 #sidebar .nav-link:hover {
-  background-color: var(--card2) !important;
+  background-color: var(--surface-hover) !important;
   color: var(--text) !important;
 }
+/* Aktif oge: dolgu yerine sol kenar + hafif zemin (aydinlikta dolgu agir durur) */
 #sidebar .nav-link.active {
-  background-color: var(--blue-d) !important;
-  color: #fff !important;
+  background-color: var(--surface-2) !important;
+  color: var(--text) !important;
+  border-left-color: var(--primary);
+  font-weight: 600;
 }
 
-/* ── Buttons ────────────────────────────────────────────────────────────── */
+.sidebar-group {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 14px 20px 4px;
+}
+
+/* ── Dugmeler ───────────────────────────────────────────────────────────── */
 .btn {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  border-radius: var(--radius-sm) !important;
-  transition: all 0.15s !important;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: background-color .15s, border-color .15s, color .15s;
 }
-.btn-primary  { background-color: var(--blue-d) !important; border-color: var(--blue-d) !important; }
-.btn-primary:hover  { background-color: #1e40af !important; border-color: #1e40af !important; }
-.btn-success  { background-color: #16a34a !important; border-color: #16a34a !important; }
-.btn-success:hover  { background-color: #15803d !important; }
-.btn-warning  { color: #fbbf24 !important; border-color: #fbbf24 !important; }
-.btn-warning:hover  { background-color: rgba(251,191,36,0.12) !important; }
-.btn-danger   { background-color: #dc2626 !important; border-color: #dc2626 !important; }
-.btn-secondary { background-color: var(--card2) !important; border-color: var(--border) !important; color: var(--text) !important; }
-.btn-secondary:hover { background-color: var(--border) !important; }
-.btn-outline-primary { color: var(--blue) !important; border-color: var(--blue) !important; }
-.btn-outline-primary:hover { background-color: rgba(59,130,246,0.15) !important; color: var(--blue) !important; }
-.btn-outline-secondary { color: var(--muted) !important; border-color: var(--border) !important; }
-.btn-outline-secondary:hover { background-color: var(--card2) !important; color: var(--text) !important; }
-.btn-outline-danger { color: var(--red) !important; border-color: var(--red) !important; }
-.btn-outline-danger:hover { background-color: rgba(239,68,68,0.12) !important; }
 
-/* ── Form controls ──────────────────────────────────────────────────────── */
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-warning {
+  color: var(--on-fill) !important;
+}
+.btn-primary  { background-color: var(--primary-fill); border-color: var(--primary-fill); }
+.btn-primary:hover,
+.btn-primary:focus  { background-color: var(--primary-fill-hover); border-color: var(--primary-fill-hover); }
+.btn-success  { background-color: var(--profit-fill); border-color: var(--profit-fill); }
+.btn-success:hover  { background-color: var(--profit-fill-hover); border-color: var(--profit-fill-hover); }
+.btn-danger   { background-color: var(--loss-fill); border-color: var(--loss-fill); }
+.btn-danger:hover   { background-color: var(--loss-fill-hover); border-color: var(--loss-fill-hover); }
+.btn-warning  { background-color: var(--warn-fill); border-color: var(--warn-fill); }
+.btn-warning:hover  { background-color: var(--warn-fill-hover); border-color: var(--warn-fill-hover); }
+
+.btn-secondary {
+  background-color: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.btn-secondary:hover { background-color: var(--surface-hover); color: var(--text); }
+
+.btn-outline-primary   { color: var(--primary); border-color: var(--primary); background: transparent; }
+.btn-outline-primary:hover   { background-color: var(--surface-2); color: var(--primary); border-color: var(--primary); }
+.btn-outline-secondary { color: var(--muted); border-color: var(--border-strong); background: transparent; }
+.btn-outline-secondary:hover { background-color: var(--surface-hover); color: var(--text); }
+.btn-outline-danger    { color: var(--loss); border-color: var(--loss); background: transparent; }
+.btn-outline-danger:hover    { background-color: var(--surface-2); color: var(--loss); border-color: var(--loss); }
+.btn-outline-success   { color: var(--profit); border-color: var(--profit); background: transparent; }
+.btn-outline-success:hover   { background-color: var(--surface-2); color: var(--profit); border-color: var(--profit); }
+/* Bunlar tanimsiz birakilirsa Bootstrap'in kendi sarisi (#ffc107) ve
+   turkuazi (#0dcaf0) devreye giriyor; ikisi de beyaz zeminde ~1.6:1. */
+.btn-outline-warning   { color: var(--warn); border-color: var(--warn); background: transparent; }
+.btn-outline-warning:hover   { background-color: var(--surface-2); color: var(--warn); border-color: var(--warn); }
+.btn-outline-info      { color: var(--info); border-color: var(--info); background: transparent; }
+.btn-outline-info:hover      { background-color: var(--surface-2); color: var(--info); border-color: var(--info); }
+.btn-info { background-color: var(--info); border-color: var(--info); color: var(--on-fill) !important; }
+.btn-info:hover { filter: brightness(.92); color: var(--on-fill) !important; }
+.btn-light, .btn-outline-light { color: var(--text); border-color: var(--border-strong); background-color: var(--surface-2); }
+.btn-dark, .btn-outline-dark   { color: var(--text); border-color: var(--border-strong); background-color: var(--surface-2); }
+
+.btn:disabled, .btn.disabled { opacity: .55; }
+
+/* ── Form kontrolleri ───────────────────────────────────────────────────── */
 .form-control,
 .form-select {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
   color: var(--text) !important;
   border-radius: var(--radius-sm) !important;
   font-size: 13px !important;
 }
-.form-control::placeholder { color: var(--muted) !important; }
+.form-control::placeholder { color: var(--muted) !important; opacity: 1; }
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--blue) !important;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
-  background-color: var(--card2) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent) !important;
+  background-color: var(--surface) !important;
   color: var(--text) !important;
 }
+.form-control:disabled, .form-select:disabled {
+  background-color: var(--surface-2) !important;
+  color: var(--muted) !important;
+}
 
-/* ── Checklist & Switch ─────────────────────────────────────────────────── */
-.form-check-label { color: var(--text) !important; font-size: 13px; cursor: pointer; }
+.input-group-text {
+  background-color: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--muted);
+}
+
+/* Checkbox / radio / switch */
+.form-check-label { color: var(--text); font-size: 13px; cursor: pointer; }
 .form-check-input {
-  background-color: var(--card2) !important;
-  border-color: var(--border) !important;
+  background-color: var(--surface);
+  border-color: var(--border-strong);
 }
 .form-check-input:checked {
-  background-color: var(--blue-d) !important;
-  border-color: var(--blue-d) !important;
+  background-color: var(--primary-fill);
+  border-color: var(--primary-fill);
 }
+.form-check-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
 .form-switch .form-check-input {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e") !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238595a9'/%3e%3c/svg%3e");
 }
+:root[data-theme="dark"] .form-switch .form-check-input,
 .form-switch .form-check-input:checked {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
 }
 
-/* ── dcc.Dropdown (Dash v2 – react-select based) ────────────────────────── */
+/* ── dcc.Dropdown (react-select) ────────────────────────────────────────── */
 .dash-dropdown .Select-control,
 .Select-control {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   color: var(--text) !important;
   min-height: 38px;
 }
-.Select-control:hover { border-color: var(--blue) !important; }
+.Select-control:hover { border-color: var(--primary) !important; }
 .Select-multi-value-wrapper,
 .Select-value { background-color: transparent !important; }
 .Select-value-label,
 .Select-placeholder,
-.Select--multi .Select-value-label {
-  color: var(--text) !important;
-}
+.Select--multi .Select-value-label { color: var(--text) !important; }
+.Select-placeholder { color: var(--muted) !important; }
 .Select-input > input { color: var(--text) !important; background: transparent !important; }
 .Select-menu-outer,
 .Select-menu {
-  background-color: var(--card) !important;
+  background-color: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
   z-index: 9999 !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+  box-shadow: var(--shadow-pop) !important;
 }
-.Select-option { background-color: var(--card) !important; color: var(--text) !important; font-size: 13px; }
+.Select-option { background-color: var(--surface) !important; color: var(--text) !important; font-size: 13px; }
 .Select-option:hover,
-.Select-option.is-focused { background-color: var(--card2) !important; }
-.Select-option.is-selected { background-color: var(--blue-d) !important; color: #fff !important; }
-.Select-arrow-zone { color: var(--muted) !important; }
+.Select-option.is-focused { background-color: var(--surface-hover) !important; }
+.Select-option.is-selected { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
+.Select-arrow-zone,
 .Select-clear-zone,
 .Select-clear { color: var(--muted) !important; }
 
-/* Multi-value chips inside dropdown */
 .Select--multi .Select-value {
-  background-color: var(--blue-d) !important;
+  background-color: var(--primary-fill) !important;
   border: none !important;
   border-radius: 4px !important;
   margin: 2px !important;
 }
-.Select--multi .Select-value-label { color: #fff !important; font-size: 12px !important; }
+.Select--multi .Select-value-label { color: var(--on-fill) !important; font-size: 12px !important; }
 .Select--multi .Select-value-icon {
-  color: rgba(255,255,255,0.7) !important;
-  border-right: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--on-fill) !important;
+  opacity: .7;
+  border-right: 1px solid color-mix(in srgb, var(--on-fill) 25%, transparent) !important;
 }
-.Select--multi .Select-value-icon:hover {
-  background-color: rgba(0,0,0,0.2) !important;
-  color: #fff !important;
-}
+.Select--multi .Select-value-icon:hover { opacity: 1; }
 
-/* Newer Dash react-select v5 class overrides */
+/* react-select v5 sinif adlari degisken; oznitelik seciciyle yakalaniyor */
 [class*="-control"] {
-  background-color: var(--card2) !important;
-  border-color: var(--border) !important;
+  background-color: var(--surface) !important;
+  border-color: var(--border-strong) !important;
   color: var(--text) !important;
 }
 [class*="-menu"] {
-  background-color: var(--card) !important;
+  background-color: var(--surface) !important;
   border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-pop) !important;
   z-index: 9999 !important;
 }
-[class*="-option"] { background-color: var(--card) !important; color: var(--text) !important; }
-[class*="-option"]:hover { background-color: var(--card2) !important; }
+[class*="-option"] { background-color: var(--surface) !important; color: var(--text) !important; }
+[class*="-option"]:hover { background-color: var(--surface-hover) !important; }
 [class*="-placeholder"] { color: var(--muted) !important; }
 [class*="-singleValue"] { color: var(--text) !important; }
 [class*="-Input"] input { color: var(--text) !important; }
-[class*="-multiValue"] { background-color: var(--blue-d) !important; border-radius: 4px !important; }
-[class*="-multiValueLabel"] { color: #fff !important; font-size: 12px !important; }
-[class*="-multiValueRemove"]:hover { background-color: rgba(0,0,0,0.2) !important; color: #fff !important; }
+[class*="-multiValue"] { background-color: var(--primary-fill) !important; border-radius: 4px !important; }
+[class*="-multiValueLabel"] { color: var(--on-fill) !important; font-size: 12px !important; }
+[class*="-multiValueRemove"] { color: var(--on-fill) !important; }
 [class*="-indicatorSeparator"] { background-color: var(--border) !important; }
-[class*="-dropdownIndicator"] { color: var(--muted) !important; }
+[class*="-dropdownIndicator"],
 [class*="-clearIndicator"] { color: var(--muted) !important; }
 
-/* ── DatePickerRange (Dash 2.x – new component with dash-datepicker-* classes) ── */
-
-/* Input wrapper (the visible field) */
+/* ── DatePickerRange (Radix tabanli) ────────────────────────────────────── */
 .dash-datepicker-input-wrapper {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -217,225 +301,260 @@ body {
   gap: 4px !important;
   width: 100% !important;
   cursor: text !important;
-  transition: border-color 0.15s !important;
+  transition: border-color .15s !important;
 }
 .dash-datepicker-input-wrapper:hover,
-.dash-datepicker-input-wrapper:focus-within {
-  border-color: var(--blue) !important;
-  outline: none !important;
-}
+.dash-datepicker-input-wrapper:focus-within { border-color: var(--primary) !important; }
 
-/* Actual text inputs inside the wrapper */
 body .dash-datepicker-input-wrapper .dash-datepicker-input,
 body .dash-datepicker-input,
 .dash-datepicker-input {
   background: transparent !important;
-  background-color: transparent !important;
-  color: #e2e8f0 !important;
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text) !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
   font-size: 13px !important;
   font-family: inherit !important;
-  font-weight: 400 !important;
-  caret-color: #e2e8f0 !important;
   min-width: 75px !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
 }
 body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .dash-datepicker-input::placeholder {
-  color: #94a3b8 !important;
-  -webkit-text-fill-color: #94a3b8 !important;
-}
-
-/* Arrow between start/end and the dropdown caret */
-.dash-datepicker-range-arrow,
-.dash-datepicker-caret-icon {
   color: var(--muted) !important;
-  flex-shrink: 0;
-  opacity: 0.7;
+  -webkit-text-fill-color: var(--muted) !important;
 }
 
-/* Calendar popup – Radix popover */
-[data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
-}
+.dash-datepicker-range-arrow,
+.dash-datepicker-caret-icon { color: var(--muted) !important; flex-shrink: 0; }
+
+[data-radix-popper-content-wrapper] { z-index: 9999 !important; }
 [data-radix-popper-content-wrapper] > div,
 .dash-datepicker-calendar {
-  background-color: var(--card) !important;
+  background-color: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+  box-shadow: var(--shadow-pop) !important;
   color: var(--text) !important;
   padding: 12px !important;
 }
-
-/* Day cells */
-[data-radix-popper-content-wrapper] [role="gridcell"] button {
+/* Takvim icindeki her sey once metin rengine cekilir, sonra istisnalar */
+[data-radix-popper-content-wrapper] * {
   color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+[data-radix-popper-content-wrapper] [role="columnheader"] {
+  color: var(--muted) !important;
+  -webkit-text-fill-color: var(--muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+[data-radix-popper-content-wrapper] [role="gridcell"] button {
   border-radius: 4px !important;
   background: transparent !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:hover {
-  background-color: var(--card2) !important;
+  background-color: var(--surface-hover) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
 [data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
-  background-color: var(--blue-d) !important;
-  color: #fff !important;
+  background-color: var(--primary-fill) !important;
+  color: var(--on-fill) !important;
+  -webkit-text-fill-color: var(--on-fill) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
-  color: var(--border) !important;
+  color: var(--muted) !important;
+  -webkit-text-fill-color: var(--muted) !important;
+  opacity: .45;
   cursor: not-allowed;
 }
-
-/* Column headers (Mon, Tue…) */
-[data-radix-popper-content-wrapper] [role="columnheader"] {
-  color: var(--muted) !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-}
-
-/* Month/year caption & all text inside popup */
-[data-radix-popper-content-wrapper] * {
-  color: #e2e8f0 !important;
-}
-
-/* Month select & year input inside calendar navigation */
+[data-radix-popper-content-wrapper] button { background-color: transparent !important; }
+[data-radix-popper-content-wrapper] button:hover { background-color: var(--surface-hover) !important; }
 [data-radix-popper-content-wrapper] select,
 [data-radix-popper-content-wrapper] input[type="number"],
 [data-radix-popper-content-wrapper] input[type="text"] {
-  background-color: #334155 !important;
-  background: #334155 !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #475569 !important;
+  background-color: var(--surface-2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: 4px !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
 }
 [data-radix-popper-content-wrapper] select option {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
 }
 
-/* Nav buttons (prev/next month) */
-[data-radix-popper-content-wrapper] button {
-  background-color: transparent !important;
-  color: #e2e8f0 !important;
-}
-[data-radix-popper-content-wrapper] button:hover {
-  background-color: #334155 !important;
-}
-
-/* Day numbers — override DARKLY blue/purple link colors */
-[data-radix-popper-content-wrapper] [role="gridcell"] button {
-  color: #e2e8f0 !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
-}
-[data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
-[data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
-  background-color: #1d4ed8 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-[data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
-  color: #475569 !important;
-  -webkit-text-fill-color: #475569 !important;
-  cursor: not-allowed;
-}
-
-/* ── Tables ─────────────────────────────────────────────────────────────── */
+/* ── Tablolar (C.6) ─────────────────────────────────────────────────────── */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
-  background-color: var(--card2) !important;
+  background-color: var(--surface-2) !important;
   color: var(--muted) !important;
-  border-bottom: 2px solid var(--border) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border-strong) !important;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  padding: 10px 12px !important;
 }
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
-  background-color: var(--card) !important;
+  background-color: var(--surface) !important;
   color: var(--text) !important;
-  border-bottom: 1px solid var(--card2) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
   font-size: 13px;
+  height: 38px !important;
+  padding: 0 12px !important;
+  font-variant-numeric: tabular-nums;
 }
+/* Zebra serit yok — ayirici tek cizgi (C.6) */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover td {
-  background-color: var(--card2) !important;
+  background-color: var(--surface-hover) !important;
+}
+.dash-table-container .previous-next-container,
+.dash-table-container .dash-filter input {
+  color: var(--text) !important;
 }
 
-/* ── Badges ─────────────────────────────────────────────────────────────── */
+/* Duz HTML tablolar */
+.table { color: var(--text); border-color: var(--border); }
+.table > :not(caption) > * > * { background-color: transparent; color: var(--text); border-bottom-color: var(--border); }
+.table thead th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-strong);
+}
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Rozetler ───────────────────────────────────────────────────────────── */
 .badge {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  padding: 4px 10px !important;
-  border-radius: 20px !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.badge.bg-primary   { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
+.badge.bg-success   { background-color: var(--profit-fill) !important;  color: var(--on-fill) !important; }
+.badge.bg-danger    { background-color: var(--loss-fill) !important;    color: var(--on-fill) !important; }
+.badge.bg-warning   { background-color: var(--warn-fill) !important;    color: var(--on-fill) !important; }
+.badge.bg-secondary { background-color: var(--surface-2) !important;    color: var(--text) !important; }
+.badge.bg-info      { background-color: var(--info) !important;         color: var(--on-fill) !important; }
+
+/* Algoritma rozeti.
+   Renk sinifla veriliyor, inline stille degil: dbc.Badge kendi `bg-secondary`
+   sinifini basiyor ve Bootstrap utility'leri `!important` tasidigi icin inline
+   backgroundColor sessizce eziliyordu. Taninmayan algoritma notr kalir. */
+.badge.algo-badge {
+  background-color: var(--surface-2) !important;
+  color: var(--text) !important;
+}
+.badge.algo-badge.algo-ppo { background-color: var(--primary-fill) !important; color: var(--on-fill) !important; }
+.badge.algo-badge.algo-a2c { background-color: var(--profit-fill) !important;  color: var(--on-fill) !important; }
+.badge.algo-badge.algo-sac { background-color: var(--accent) !important;       color: var(--on-fill) !important; }
+.badge.algo-badge.algo-td3 { background-color: var(--orange) !important;       color: var(--on-fill) !important; }
+
+/* ── Uyari kutulari ─────────────────────────────────────────────────────
+   Yari saydam renkli zemin yerine notr yuzey + anlamli metin/kenar:
+   boylece her iki temada da kontrast onceden dogrulanmis cift kullanilir. */
+.alert {
+  border-radius: var(--radius);
+  font-size: 13px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  color: var(--text);
+}
+.alert-success   { border-left-color: var(--profit); color: var(--profit); }
+.alert-danger    { border-left-color: var(--loss);   color: var(--loss); }
+.alert-warning   { border-left-color: var(--warn);   color: var(--warn); }
+.alert-info      { border-left-color: var(--info);   color: var(--info); }
+.alert-primary   { border-left-color: var(--primary); color: var(--primary); }
+.alert-secondary { border-left-color: var(--border-strong); color: var(--text); }
+.alert .btn-close { filter: none; opacity: .6; }
+:root[data-theme="dark"] .alert .btn-close { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .alert .btn-close { filter: invert(1); }
 }
 
-/* ── Alerts ─────────────────────────────────────────────────────────────── */
-.alert { border-radius: var(--radius) !important; font-size: 13px !important; }
-.alert-success { background-color: rgba(34,197,94,0.12) !important; border-color: rgba(34,197,94,0.3) !important; color: #86efac !important; }
-.alert-warning { background-color: rgba(234,179,8,0.12) !important; border-color: rgba(234,179,8,0.3) !important; color: #fde68a !important; }
-.alert-danger  { background-color: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.3) !important; color: #fca5a5 !important; }
-.alert-info    { background-color: rgba(59,130,246,0.12) !important; border-color: rgba(59,130,246,0.3) !important; color: #93c5fd !important; }
-.alert .btn-close { filter: invert(1); }
-
-/* ── Progress bar ───────────────────────────────────────────────────────── */
-.progress { background-color: var(--card2) !important; border-radius: 4px; height: 6px; }
-.progress-bar { border-radius: 4px; }
+/* ── Ilerleme cubugu ────────────────────────────────────────────────────── */
+.progress { background-color: var(--surface-2); border-radius: 4px; height: 6px; }
+.progress-bar { border-radius: 4px; background-color: var(--primary-fill); }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
-.modal-content  { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
-.modal-header   { border-bottom: 1px solid var(--card2) !important; }
-.modal-footer   { border-top: 1px solid var(--card2) !important; }
-.modal-title    { color: var(--text) !important; }
-.modal-backdrop { background-color: rgba(0,0,0,0.7) !important; }
+.modal-content {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+}
+.modal-header { border-bottom: 1px solid var(--border); }
+.modal-footer { border-top: 1px solid var(--border); }
+.modal-title  { color: var(--text); }
+.modal-backdrop.show { opacity: .55; }
+:root[data-theme="dark"] .modal-backdrop.show { opacity: .7; }
+.modal .btn-close { opacity: .6; }
+:root[data-theme="dark"] .modal .btn-close { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .modal .btn-close { filter: invert(1); }
+  :root:not([data-theme="light"]) .modal-backdrop.show { opacity: .7; }
+}
 
-/* ── Tabs ───────────────────────────────────────────────────────────────── */
-.nav-tabs { border-bottom: 1px solid var(--card2) !important; }
+/* ── Sekmeler ───────────────────────────────────────────────────────────── */
+.nav-tabs { border-bottom: 1px solid var(--border); }
 .nav-tabs .nav-link { color: var(--muted); border: 1px solid transparent; font-size: 13px; }
-.nav-tabs .nav-link:hover { color: var(--text); border-color: var(--card2); }
-.nav-tabs .nav-link.active { background-color: var(--card); border-color: var(--card2) var(--card2) var(--card); color: var(--text); }
+.nav-tabs .nav-link:hover { color: var(--text); border-color: transparent; }
+.nav-tabs .nav-link.active {
+  background-color: transparent;
+  border-color: transparent transparent var(--primary);
+  border-bottom-width: 2px;
+  color: var(--text);
+  font-weight: 600;
+}
 
-/* ── Toast ──────────────────────────────────────────────────────────────── */
-.toast { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
+/* ── Toast / tooltip / popover ──────────────────────────────────────────── */
+.toast, .popover {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+.toast-header { background-color: var(--surface-2); color: var(--text); border-bottom-color: var(--border); }
+.tooltip-inner { background-color: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.tooltip .tooltip-arrow::before { border-top-color: var(--surface-2); }
+.popover-header { background-color: var(--surface-2); color: var(--text); border-bottom-color: var(--border); }
+.popover-body { color: var(--text); }
+
+/* ── Acilir menu (dbc.DropdownMenu) ─────────────────────────────────────── */
+.dropdown-menu {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-pop);
+  border-radius: var(--radius-sm);
+}
+.dropdown-item { color: var(--text); font-size: 13px; }
+.dropdown-item:hover, .dropdown-item:focus { background-color: var(--surface-hover); color: var(--text); }
+.dropdown-item.active { background-color: var(--primary-fill); color: var(--on-fill); }
+.dropdown-divider { border-top-color: var(--border); }
+
+/* ── Liste grubu ────────────────────────────────────────────────────────── */
+.list-group-item {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
 
 /* ── Plotly modebar ─────────────────────────────────────────────────────── */
 .js-plotly-plot .plotly .modebar { background: transparent !important; }
 .js-plotly-plot .plotly .modebar-btn path { fill: var(--muted) !important; }
+.js-plotly-plot .plotly .modebar-btn:hover path { fill: var(--text) !important; }
 
-/* ── HR ─────────────────────────────────────────────────────────────────── */
-hr { border-color: var(--card2) !important; opacity: 1 !important; }
-
-/* ── Utility classes ────────────────────────────────────────────────────── */
-.text-muted { color: var(--muted) !important; }
-.section-title {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: var(--muted) !important;
-  margin-bottom: 10px !important;
-  display: block;
-}
-
-/* ── BIST Chip Selector ─────────────────────────────────────────────────── */
-.bist-chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 4px 0;
-}
-.bist-chip-list .form-check {
-  padding: 0 !important;
-  margin: 0 !important;
-  display: inline-flex;
-}
+/* ── BIST sembol cipleri ────────────────────────────────────────────────── */
+.bist-chip-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+.bist-chip-list .form-check { padding: 0 !important; margin: 0 !important; display: inline-flex; }
 .bist-chip-list .form-check-input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
 }
 .bist-chip-list .form-check-label {
   cursor: pointer;
@@ -444,37 +563,101 @@ hr { border-color: var(--card2) !important; opacity: 1 !important; }
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid var(--border);
-  background-color: var(--card2);
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
   color: var(--muted);
-  transition: all 0.15s ease;
+  transition: background-color .15s, color .15s, border-color .15s;
   user-select: none;
   white-space: nowrap;
 }
 .bist-chip-list .form-check-label:hover {
-  border-color: var(--blue);
+  border-color: var(--primary);
   color: var(--text);
-  background-color: rgba(59,130,246,0.1);
+  background-color: var(--surface-hover);
 }
 .bist-chip-list .form-check-input:checked + .form-check-label {
-  background-color: var(--blue-d);
-  border-color: var(--blue-d);
-  color: #ffffff;
+  background-color: var(--primary-fill);
+  border-color: var(--primary-fill);
+  color: var(--on-fill);
 }
-.bist-chip-list .form-check-input:checked + .form-check-label:hover {
-  background-color: #1e40af;
-  border-color: #1e40af;
+.bist-chip-list .form-check-input:focus-visible + .form-check-label {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-/* ── Source status rows ─────────────────────────────────────────────────── */
+/* ── Kaynak durum satirlari ─────────────────────────────────────────────── */
 .source-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid var(--card2);
+  border-bottom: 1px solid var(--border);
 }
 .source-row:last-child { border-bottom: none; }
 
-/* ── Collapse transition ────────────────────────────────────────────────── */
-.collapsing { transition: height 0.25s ease !important; }
+/* ── Sayfa basligi (C.2) ────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Tema secenegi (B.3) ────────────────────────────────────────────────── */
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.theme-option:hover { background-color: var(--surface-hover); color: var(--text); }
+.theme-option.active {
+  background-color: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+
+#theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+#theme-toggle:hover { background-color: var(--surface-hover); color: var(--text); }
+
+/* ── Durum bloklari (C.7) ───────────────────────────────────────────────── */
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.state-block i { font-size: 20px; opacity: .7; }
+.state-block.state-error { color: var(--loss); }
+
+/* ── Gecisler ───────────────────────────────────────────────────────────── */
+.collapsing { transition: height .25s ease !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

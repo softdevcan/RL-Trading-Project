@@ -21,8 +21,10 @@ import plotly.graph_objects as go
 
 from dashboard.theme import (
     CARD, CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, YELLOW, PURPLE,
-    DARK_TEMPLATE, empty_figure, apply_dark_template,
+    DARK_TEMPLATE, empty_figure, apply_theme_template,
+    plot_palette, plot_rgba,
 )
+from dashboard.components.page_header import create_page_header
 import dashboard.api_client as api
 
 BIST30_SYMBOLS = [
@@ -40,8 +42,8 @@ def layout():
     return html.Div([
         dcc.Store(id="dt-decision-store", data={}),
 
-        html.H4("Gunluk Trading", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Model karari al ve portfoy uygula", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Gunluk Trading",
+                           "Model karari al ve portfoy uygula"),
 
         dbc.Row([
             # ── Left panel: settings ─────────────────────────────────────────
@@ -454,13 +456,13 @@ def _build_portfolio_chart(history):
         fig.add_trace(go.Scatter(
             x=dates, y=values, mode="lines",
             fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.12)",
-            line={"color": BLUE, "width": 2},
+            fillcolor=plot_rgba("blue", 0.12),
+            line={"color": plot_palette()["blue"], "width": 2},
             hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
         ))
     else:
         return empty_figure("Portfoy gecmisi yok")
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=280)
     return fig

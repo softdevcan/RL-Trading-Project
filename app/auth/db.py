@@ -91,9 +91,50 @@ def get_db() -> Iterator[Session]:
         db.close()
 
 
+# Faz 8 sonrasi eklenen sutunlar. create_all() VAR OLAN tabloyu degistirmez;
+# alembic de yok. Bu yuzden eksik sutunlar acilista elle eklenir.
+#
+# Kural: yalnizca ADDITIVE ve NULL-guvenli degisiklikler buraya girer
+# (yeni sutun + DEFAULT). Sutun silme/tip degistirme gercek bir gec araci
+# ister — buraya yazma.
+_ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
+    # (tablo, sutun, ALTER govdesi)
+    ("users", "theme", "ALTER TABLE users ADD COLUMN theme VARCHAR(8) NOT NULL DEFAULT 'system'"),
+)
+
+
+def _existing_columns(conn, table: str) -> set[str]:
+    """Tablodaki sutun adlari. Tablo yoksa bos kume."""
+    from sqlalchemy import inspect
+
+    inspector = inspect(conn)
+    if table not in inspector.get_table_names():
+        return set()
+    return {col["name"] for col in inspector.get_columns(table)}
+
+
+def _apply_additive_columns() -> None:
+    """Eksik sutunlari ekle. Idempotent: var olanlara dokunmaz."""
+    from sqlalchemy import text
+
+    engine = get_engine()
+    with engine.begin() as conn:
+        for table, column, statement in _ADDITIVE_COLUMNS:
+            columns = _existing_columns(conn, table)
+            if not columns or column in columns:
+                continue
+            conn.execute(text(statement))
+            log.info("Auth DB gecisi: %s.%s eklendi", table, column)
+
+
 def init_db() -> None:
-    """Tablolari olustur (idempotent). Uygulama acilisinda cagrilir."""
+    """Tablolari olustur ve eksik sutunlari tamamla (idempotent).
+
+    Uygulama acilisinda cagrilir. Iki adim ayri: create_all yeni kurulumu,
+    _apply_additive_columns mevcut kurulumu halleder.
+    """
     Base.metadata.create_all(bind=get_engine())
+    _apply_additive_columns()
     log.info("Auth DB hazir: %s", get_settings().AUTH_DB_URL)
 
 

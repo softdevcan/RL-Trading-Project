@@ -2,7 +2,7 @@
 
 ## Project Summary
 Deep Reinforcement Learning-based algorithmic trading system for BIST-30 stocks.
-Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user) tamamlandı.
+Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user), Phase 8 (UI/UX: aydınlık tema + bileşen okunabilirliği) tamamlandı.
 
 ## Language
 Respond in the same language the user writes in.
@@ -69,11 +69,18 @@ env/                  # RL Environment (NOT venv!)
   trading_env.py      # Gymnasium custom environment + ATR sizing + Kelly criterion
   reward_functions.py # PSR reward (total_trades bug FIXED)
 dashboard/            # Dash frontend (Plotly Dash, /dash/ altında mount)
-  app.py              # Dash factory + PrefixMiddleware
-  pages/              # home, training, data, models, daily_trading, prediction, academic, hyperopt
-  components/         # sidebar, metric_card
-  theme.py            # Renk teması
-static/               # Sadece favicon
+  app.py              # Dash factory + PrefixMiddleware + FOUC engelleyici index_string
+  pages/              # home, training, data, models, daily_trading, prediction,
+                      # academic, hyperopt, users, account (Faz 8: Hesabım)
+  components/         # sidebar, metric_card, page_header, filter_bar, table, state_block
+  theme.py            # Faz 8: DOM icin var(--token) + Plotly icin hex palet
+  assets/
+    00-tokens.css     # static/tokens.css'i @import eder (alfabetik once yuklenir)
+    custom.css        # Bilesen stilleri — icinde HEX YOK, hepsi token
+    theme-toggle.js   # 3 durumlu anahtar + matchMedia + Plotly yeniden boyama
+static/
+  tokens.css          # Faz 8: TEMA TOKENLARININ TEK KAYNAGI (pano + giris sayfalari)
+  favicon.ico
 tests/                # Test scripts
 scripts/              # Standalone scripts (training, debug, reports)
 docs/                 # Documentation (development plan, guides)
@@ -110,6 +117,8 @@ python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
+python tests/test_theme_contrast.py        # Faz 8: token kontrasti + kacak hex (51 kontrol)
+python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -123,6 +132,19 @@ python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache t
 - Faz 6 manifest de kullanici bazli: `prediction/manifest.py` → `runs_dir()`/`find_manifest()`;
   `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
 - Detay: `docs/development/phase7-auth.md`, `docs/development/phase-6-backend-performance.md`
+
+### Tema (Faz 8)
+- **Renk degeri yalnizca `static/tokens.css`'te.** Sayfa/bilesen kodunda hex yasak;
+  `tests/test_theme_contrast.py` kacaklari yakalar (`dashboard/pages/account.py` muaf —
+  iki temanin onizlemesini ayni anda gostermek zorunda).
+- Uc durum: `light` / `dark` / `system`. `system` = DOM'da damga YOK, karari
+  `@media (prefers-color-scheme)` verir. Bu yuzden koyu blok tokens.css'te **iki kez**
+  yazilir; ikisi ayrisirsa test kalir.
+- Tercih **hesaba** bagli (`users.theme`), cerez yalnizca okuma onbellegi.
+  `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
+- **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
+  Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
+- Detay: `docs/development/phase-8-ui-theming.md`
 
 ### Data pipeline
 ```
@@ -176,6 +198,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
+- Sayfa/bileşen koduna hex renk yazma — `static/tokens.css`'e token ekle, kontrastı ölç
+- Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
+- `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
+  alembic yok, `create_all()` var olan tabloyu değiştirmez
 
 ### Veri butunlugu (ONEMLI)
 - **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in
@@ -220,6 +246,9 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - Güvenilirlik: sessiz model/fold düşmesi görünür, fallback işareti + strict mod (cache yolu dahil: `data/macro/macro_data_quality.json`), eğitim manifesti, checkpoint/resume, merkezi seed
   - Kapanış koşumu (T7, 5 sembol): 533.9s → **157.6s (−%70.5)** perf knob'ları açıkken; resume 1.0s; 5/5 sembol `ok` (5 model)
   - **DL perf knob'ları default OFF (opt-in)**: tam pipeline'da RNG sırasını kaydırıp golden'ı değiştirdikleri için (davranış dondurma). Sıfırdan retrain'de açılır, golden o donanımda yenilenir.
+- Faz 8 (UI/UX): Tamamlandı — aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu),
+  tek kaynak token katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
+  6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA hatası da düzeldi)
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu
