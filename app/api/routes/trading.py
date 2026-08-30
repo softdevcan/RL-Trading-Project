@@ -21,12 +21,12 @@ from app.schemas.trading import (
     TrainingRequest, TrainingStatus, TrainingEstimate, ModelMetrics,
     ModelInfo, TrainingResponse,
     DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
-    PortfolioSnapshot, PortfolioHistoryResponse,
+    PortfolioSnapshot, PortfolioHistoryResponse, PortfolioValuation,
     ModelComparisonResponse
 )
 from app.core.config import get_settings
 from app.auth import workspace as ws
-from app.auth.deps import RequireWriter
+from app.auth.deps import CurrentUser, RequireWriter
 from app.auth.models import Role
 from app.services import training_eta
 from app.services import background_jobs as jobs
@@ -1663,10 +1663,28 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
             raise HTTPException(status_code=400, detail=str(exc))
         logger.info(f"Trade universe source: {universe_source}")
 
-        # Normalize whatever shares the client sent to BIST `.IS` form.
+        # Portfoy: istek acikca vermediyse takip edilen kagit portfoyden gelir.
+        # Eskiden pano bakiyeyi 100.000 varsayilaniyla ve elle doldurulan 5
+        # satirlik formdan kuruyordu; dunku pozisyonlar bugunku karara hic
+        # girmiyor, "gun sonunda elimizde ne kaldi" sorusunun cevabi hicbir
+        # yerde olusmuyordu. Acikca verilen deger yine kazanir.
+        from app.services import portfolio as pf
+
+        tracked = pf.load_portfolio()
+        if request.balance is None or request.shares is None:
+            logger.info(
+                f"Portfoy kagit portfoyden yuklendi: nakit {tracked['cash']:,.2f}, "
+                f"{len(tracked['positions'])} pozisyon"
+            )
+        balance = float(request.balance if request.balance is not None
+                        else tracked["cash"])
+        source_shares = (request.shares if request.shares is not None
+                         else pf.shares_map(tracked))
+
+        # Normalize whatever shares we ended up with to BIST `.IS` form.
         user_shares = {
             (k if "." in k else f"{k}.IS"): int(v)
-            for k, v in (request.shares or {}).items()
+            for k, v in (source_shares or {}).items()
         }
         # Align portfolio to the trade universe (fill missing with 0).
         normalized_shares = {sym: user_shares.get(sym, 0) for sym in trade_universe}
@@ -1681,7 +1699,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
 
         # 4. Build state
         state = build_live_state(
-            balance=request.balance,
+            balance=balance,
             shares_owned=normalized_shares,
             market_data=market_data,
             target_date=target_date,
@@ -1719,7 +1737,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
             action=action,
             symbols=symbols,
             current_prices=current_prices,
-            balance=request.balance,
+            balance=balance,
             shares_owned=normalized_shares,
             risk_params=risk_params,
             max_shares_per_trade=request.max_shares_per_trade
@@ -1727,13 +1745,13 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
 
         # 8. Calculate portfolio before/after
         portfolio_before = calculate_portfolio_value(
-            balance=request.balance,
+            balance=balance,
             shares=normalized_shares,
             prices=current_prices
         )
 
         portfolio_after = simulate_portfolio_after_trades(
-            balance=request.balance,
+            balance=balance,
             shares=normalized_shares,
             decisions=decisions
         )
@@ -1790,6 +1808,96 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _audit_portfolio_reset(user, initial_capital: float) -> None:
+    """Portfoy sifirlama denetim kaydina yazilir — gecmis bakiyeyi silen bir islem.
+
+    Denetim yazimi basarisiz olursa sifirlama GERI ALINMAZ (dosya zaten
+    yazildi); hata yalnizca loglanir.
+    """
+    try:
+        from app.auth import service
+        from app.auth.db import session_scope
+
+        with session_scope() as db:
+            service.audit(db, "portfolio.reset", user=user,
+                          detail={"initial_capital": initial_capital})
+    except Exception as exc:  # pragma: no cover - denetim kaydi kritik yol degil
+        logger.warning(f"Portfoy sifirlama denetim kaydina yazilamadi: {exc}")
+
+
+def _decision_prices(decision_data: dict) -> dict:
+    """Kararin icindeki sembol fiyatlarini cikar.
+
+    Karar uretilirken her sembol icin o gunun kapanisi `decisions[i].price`
+    alanina yazilir; islemler de bu fiyatlarla simule edilir. Degerlemede ayni
+    fiyatlari kullanmak, uygulama anini kararla tutarli kilar (yeniden veri
+    cekmek gerekmez ve gecmise donuk uygulamada da dogru gunun fiyati kalir).
+    """
+    return {
+        d["symbol"]: float(d.get("price") or 0.0)
+        for d in decision_data.get("decisions", [])
+        if d.get("price")
+    }
+
+
+@router.get("/portfolio", response_model=PortfolioValuation)
+async def get_portfolio(user: CurrentUser, date: Optional[str] = None):
+    """Kagit portfoyu guncel fiyatlarla degerle (mark-to-market).
+
+    Kar/zarar ancak pozisyon BASKA BIR GUNUN fiyatiyla degerlenince olusur;
+    kararin `summary.daily_return_pct` alani bunu olcmez (orada alim-satim ayni
+    gunun ayni fiyatlariyla simule edilir, geriye yalnizca komisyon kalir).
+    """
+    from app.services import portfolio as pf
+    from app.services.daily_trading import (
+        fetch_latest_market_data,
+        get_current_prices,
+    )
+
+    tracked = pf.load_portfolio()
+    symbols = list(tracked["positions"].keys())
+    prices: dict = {}
+    priced_on = None
+
+    if symbols:
+        target_date = date or datetime.now().strftime("%Y-%m-%d")
+        try:
+            market_data = await fetch_latest_market_data(
+                symbols=symbols, target_date=target_date, lookback_days=30
+            )
+            prices = get_current_prices(market_data, target_date)
+            priced_on = market_data.attrs.get("actual_date")
+        except Exception as exc:  # noqa: BLE001
+            # Fiyat cekilemezse portfoyu gizlemek yerine maliyetle degerle;
+            # `missing_prices` hangi sembolun fiyatsiz oldugunu soyler.
+            logger.warning(f"Portfoy fiyatlanamadi ({exc}); maliyet kullanildi")
+
+    valuation = pf.value_portfolio(tracked, prices)
+    valuation["priced_on"] = priced_on
+    return valuation
+
+
+@router.post("/portfolio/reset", response_model=PortfolioValuation)
+async def reset_portfolio_endpoint(
+    user: RequireWriter,
+    initial_capital: float = 100_000.0,
+):
+    """Kagit portfoyu baslangic sermayesiyle sifirla.
+
+    Gecmis dosyalarina (trade_decisions.json, portfolio_history.csv) DOKUNMAZ:
+    silmek geri alinamaz ve kullanici yalnizca portfoyu sifirlamak istemis
+    olabilir. Gecmisi de temizlemek ayri bir istek olmali.
+    """
+    from app.services import portfolio as pf
+
+    if initial_capital <= 0:
+        raise HTTPException(status_code=400,
+                            detail="Baslangic sermayesi sifirdan buyuk olmali")
+    fresh = pf.reset_portfolio(initial_capital)
+    _audit_portfolio_reset(user, initial_capital)
+    return pf.value_portfolio(fresh, {})
+
+
 @router.post("/apply-decision")
 async def apply_decision(date: str, user: RequireWriter):
     """
@@ -1801,7 +1909,10 @@ async def apply_decision(date: str, user: RequireWriter):
     Returns:
         Success message and updated portfolio
     """
-    from app.services.daily_trading import append_to_portfolio_history
+    from app.services.daily_trading import (
+        append_to_portfolio_history,
+        load_portfolio_history,
+    )
 
     try:
         logger.info(f"Applying decision for date: {date}")
@@ -1826,19 +1937,71 @@ async def apply_decision(date: str, user: RequireWriter):
 
         decision_data = all_decisions[date]
 
-        # Append to portfolio history
-        append_to_portfolio_history(
-            date=date,
-            portfolio_after=decision_data["portfolio_after"],
-            daily_return_pct=decision_data["summary"]["daily_return_pct"]
+        # Kagit portfoyu ilerlet. Eskiden yalnizca `portfolio_after` anlik
+        # goruntusu CSV'ye yaziliyordu; portfoyun kendisi hicbir yerde
+        # tutulmadigi icin ertesi gunun karari yine sifirdan basliyordu.
+        from app.services import portfolio as pf
+
+        before = pf.load_portfolio()
+        after, apply_summary = pf.apply_decisions(
+            before, decision_data.get("decisions", []), date
+        )
+        if apply_summary["already_applied"]:
+            # Iki kez uygulamak pozisyonu iki katina cikarirdi.
+            valuation = pf.value_portfolio(after, _decision_prices(decision_data))
+            return {
+                "message": f"{date} tarihli karar zaten uygulanmis",
+                "already_applied": True,
+                "portfolio": valuation,
+                "summary": decision_data["summary"],
+            }
+
+        pf.save_portfolio(after)
+
+        # Degerleme kararin KENDI fiyatlariyla yapilir: o gunun kapanisidir ve
+        # islemler de o fiyatlarla simule edilmistir.
+        prices = _decision_prices(decision_data)
+        valuation = pf.value_portfolio(after, prices)
+
+        # Gercek gunluk getiri: bir onceki kaydin toplam degerine gore.
+        # `decision_data["summary"]["daily_return_pct"]` BU DEGILDIR — orada
+        # alim-satim ayni gunun ayni fiyatlariyla simule edildigi icin geriye
+        # yalnizca komisyon kalir ve deger tanim geregi ~0 cikar.
+        history = load_portfolio_history(days=2)
+        prev_values = history.get("portfolio_values") or []
+        prev_total = prev_values[-1] if prev_values else valuation["initial_capital"]
+        daily_return_pct = (
+            (valuation["total_value"] - prev_total) / prev_total * 100
+            if prev_total else 0.0
         )
 
-        logger.info(f"Decision applied successfully for {date}")
+        append_to_portfolio_history(
+            date=date,
+            portfolio_after={
+                "balance": valuation["cash"],
+                "shares": {p["symbol"]: p["shares"] for p in valuation["positions"]},
+                "portfolio_value": valuation["total_value"],
+            },
+            daily_return_pct=daily_return_pct,
+            realized_pnl=valuation["realized_pnl"],
+            unrealized_pnl=valuation["unrealized_pnl"],
+            total_pnl=valuation["total_pnl"],
+        )
+
+        logger.info(
+            f"{date} uygulandi: {apply_summary['executed_trades']} islem, "
+            f"toplam deger {valuation['total_value']:,.2f}, "
+            f"kar/zarar {valuation['total_pnl']:+,.2f} "
+            f"({valuation['total_pnl_pct']:+.2f}%)"
+        )
 
         return {
             "message": f"Decision for {date} applied successfully",
-            "portfolio": decision_data["portfolio_after"],
-            "summary": decision_data["summary"]
+            "already_applied": False,
+            "portfolio": valuation,
+            "applied": apply_summary,
+            "daily_return_pct": daily_return_pct,
+            "summary": decision_data["summary"],
         }
 
     except HTTPException:

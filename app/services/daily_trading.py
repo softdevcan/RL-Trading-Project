@@ -1014,7 +1014,10 @@ def save_daily_decision(
 def append_to_portfolio_history(
     date: str,
     portfolio_after: dict,
-    daily_return_pct: float
+    daily_return_pct: float,
+    realized_pnl: Optional[float] = None,
+    unrealized_pnl: Optional[float] = None,
+    total_pnl: Optional[float] = None,
 ):
     """
     Append to portfolio history CSV
@@ -1022,7 +1025,12 @@ def append_to_portfolio_history(
     Args:
         date: Date
         portfolio_after: Portfolio snapshot
-        daily_return_pct: Daily return percentage
+        daily_return_pct: Gunluk getiri — bir ONCEKI kaydin toplam degerine
+            gore. Kararin `summary.daily_return_pct` alani bu DEGILDIR: orada
+            alim-satim ayni gunun ayni fiyatlariyla simule edildigi icin geriye
+            yalnizca komisyon kalir ve deger tanim geregi ~0 cikar.
+        realized_pnl / unrealized_pnl / total_pnl: kagit portfoyun o gunku
+            mark-to-market kirilimi (opsiyonel — eski satirlarda bos kalir)
     """
     logger.info(f"Appending to portfolio history: {date}")
 
@@ -1035,6 +1043,11 @@ def append_to_portfolio_history(
         'portfolio_value': portfolio_after['portfolio_value'],
         'daily_return_pct': daily_return_pct
     }
+    for key, val in (('realized_pnl', realized_pnl),
+                     ('unrealized_pnl', unrealized_pnl),
+                     ('total_pnl', total_pnl)):
+        if val is not None:
+            new_row[key] = val
 
     # Add shares columns
     for symbol, shares in portfolio_after['shares'].items():
@@ -1078,9 +1091,17 @@ def load_portfolio_history(days: int = 30) -> dict:
     df = pd.read_csv(history_file)
     df = df.tail(days)
 
-    return {
+    out = {
         "dates": df['date'].tolist(),
         "portfolio_values": df['portfolio_value'].tolist(),
         "daily_returns": df['daily_return_pct'].tolist(),
         "balances": df['balance'].tolist()
     }
+    # Kar/zarar kirilimi yalnizca yeni satirlarda var; eski dosyalarda kolon
+    # hic bulunmayabilir. Bos liste dondurmek cagirani dallanmaya zorlardi.
+    for col in ('realized_pnl', 'unrealized_pnl', 'total_pnl'):
+        out[col + 's'] = (
+            [None if pd.isna(v) else float(v) for v in df[col]]
+            if col in df.columns else [None] * len(df)
+        )
+    return out

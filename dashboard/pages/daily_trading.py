@@ -92,27 +92,49 @@ def layout():
 
                         html.Hr(),
 
-                        # Portfolio inputs
-                        html.Label("Mevcut Portfoy", className="section-title"),
-                        html.Label("Bakiye (₺)", className="section-title"),
-                        dbc.Input(id="dt-balance", type="number", value=100_000,
-                                  min=0, className="mb-2"),
-                        *[
+                        # Portfoy girisi. Varsayilan: takip edilen kagit
+                        # portfoyden gelir — eskiden bakiye her zaman 100.000
+                        # varsayilanindan ve bu 5 satirlik formdan kuruluyordu,
+                        # yani dunku pozisyonlar bugunku karara hic girmiyordu.
+                        # Elle giris tek seferlik deneme icin duruyor.
+                        dbc.Checklist(
+                            id="dt-manual-portfolio",
+                            options=[{"label": "Portfoyu elle gir", "value": "manual"}],
+                            value=[],
+                            switch=True,
+                            className="mb-2",
+                        ),
+                        html.Div(
+                            id="dt-manual-hint",
+                            children="Karar, takip edilen kagit portfoyle alinir.",
+                            className="section-title",
+                            style={"color": TEXT_MUTED, "marginBottom": "8px"},
+                        ),
+                        dbc.Collapse(
                             html.Div([
-                                html.Label(f"Hisse {i+1}", className="section-title"),
-                                dbc.Row([
-                                    dbc.Col(dcc.Dropdown(
-                                        id=f"dt-sym-{i}",
-                                        options=[{"label": s, "value": s} for s in BIST30_SYMBOLS],
-                                        value=DEFAULT_SYMBOLS[i] if i < len(DEFAULT_SYMBOLS) else None,
-                                        clearable=True,
-                                                                            ), width=7),
-                                    dbc.Col(dbc.Input(id=f"dt-qty-{i}", type="number", value=0, min=0,
-                                                      placeholder="Adet"), width=5),
-                                ], className="mb-2"),
-                            ])
-                            for i in range(5)
-                        ],
+                                html.Label("Bakiye (₺)", className="section-title"),
+                                dbc.Input(id="dt-balance", type="number", value=100_000,
+                                          min=0, className="mb-2"),
+                                *[
+                                    html.Div([
+                                        html.Label(f"Hisse {i+1}", className="section-title"),
+                                        dbc.Row([
+                                            dbc.Col(dcc.Dropdown(
+                                                id=f"dt-sym-{i}",
+                                                options=[{"label": s, "value": s} for s in BIST30_SYMBOLS],
+                                                value=DEFAULT_SYMBOLS[i] if i < len(DEFAULT_SYMBOLS) else None,
+                                                clearable=True,
+                                            ), width=7),
+                                            dbc.Col(dbc.Input(id=f"dt-qty-{i}", type="number", value=0, min=0,
+                                                              placeholder="Adet"), width=5),
+                                        ], className="mb-2"),
+                                    ])
+                                    for i in range(5)
+                                ],
+                            ]),
+                            id="dt-manual-collapse",
+                            is_open=False,
+                        ),
 
                         html.Hr(),
 
@@ -145,6 +167,27 @@ def layout():
 
             # ── Right panel: results ─────────────────────────────────────────
             dbc.Col([
+                # Portfoy — "gun sonunda elimizde ne kaldi" sorusunun cevabi.
+                # Sayfa acilista durumu sorar (uzun suren isler kuralinin
+                # esdegeri: `dcc.Store`'a guvenilmez, gezinince sifirlanir).
+                dbc.Card([
+                    dbc.CardHeader([
+                        html.Span("Portfoy", className="card-title-sm"),
+                        html.Span(id="dt-portfolio-asof",
+                                  style={"color": TEXT_MUTED, "marginLeft": "12px",
+                                         "fontSize": "13px"}),
+                        dbc.Button(
+                            [html.I(className="bi bi-arrow-clockwise")],
+                            id="dt-portfolio-refresh",
+                            color="secondary",
+                            outline=True,
+                            size="sm",
+                            className="float-end",
+                        ),
+                    ]),
+                    dbc.CardBody(html.Div(id="dt-portfolio-block")),
+                ], className="mb-3"),
+
                 # History selector — gecmis kararlari gormek icin tarih dropdown.
                 dbc.Card([
                     dbc.CardHeader(html.Span("Gecmis Kararlar", className="card-title-sm")),
@@ -238,29 +281,33 @@ def register_callbacks(app):
             State("dt-sym-2", "value"), State("dt-qty-2", "value"),
             State("dt-sym-3", "value"), State("dt-qty-3", "value"),
             State("dt-sym-4", "value"), State("dt-qty-4", "value"),
+            State("dt-manual-portfolio", "value"),
         ],
         prevent_initial_call=True,
     )
     def get_decision(decide_n, model, risk, dt, max_shares, balance,
-                     s0, q0, s1, q1, s2, q2, s3, q3, s4, q4):
+                     s0, q0, s1, q1, s2, q2, s3, q3, s4, q4, manual):
         if not decide_n or not model:
             empty_msg = html.P("Model secin ve 'Karar Al' butonuna basin.", style={"color": TEXT_MUTED})
             return empty_msg, html.Span(), empty_figure(), {}, html.Span(), dash.no_update
-
-        holdings = {}
-        for sym, qty in [(s0, q0), (s1, q1), (s2, q2), (s3, q3), (s4, q4)]:
-            if sym and qty:
-                normalized = sym if "." in sym else f"{sym}.IS"
-                holdings[normalized] = int(qty)
 
         payload = {
             "model_name": model,
             "risk_mode": risk or "moderate",
             "date": str(dt) if dt else str(date.today()),
             "max_shares_per_trade": int(max_shares or 5),
-            "balance": float(balance or 100_000),
-            "shares": holdings,
         }
+        # Elle mod kapaliyken bakiye/pozisyon GONDERILMEZ: backend takip edilen
+        # kagit portfoyden yukler. Eskiden her karar 100.000 varsayilaniyla ve
+        # bu formdaki 5 satirla aliniyordu, dunku pozisyonlar hic girmiyordu.
+        if manual:
+            holdings = {}
+            for sym, qty in [(s0, q0), (s1, q1), (s2, q2), (s3, q3), (s4, q4)]:
+                if sym and qty:
+                    normalized = sym if "." in sym else f"{sym}.IS"
+                    holdings[normalized] = int(qty)
+            payload["balance"] = float(balance or 100_000)
+            payload["shares"] = holdings
 
         result = api.get_daily_decision(payload)
         if not result:
@@ -323,25 +370,71 @@ def register_callbacks(app):
         hist = api.get_decisions_history() or {"dates": []}
         return [{"label": d, "value": d} for d in (hist.get("dates") or [])]
 
+    # Elle giris anahtari: acikken form gorunur, kapaliyken portfoy backend'den.
+    @app.callback(
+        [Output("dt-manual-collapse", "is_open"),
+         Output("dt-manual-hint", "children")],
+        Input("dt-manual-portfolio", "value"),
+    )
+    def toggle_manual_portfolio(value):
+        manual = bool(value)
+        hint = ("Girilen bakiye ve pozisyonlar kullanilir; portfoy ilerlemez."
+                if manual else
+                "Karar, takip edilen kagit portfoyle alinir.")
+        return manual, hint
+
+    # Portfoy blogu: sayfa acilista ve her uygulamadan sonra tazelenir.
+    # `dcc.Store`'a guvenilmez — sayfa her gezinmede yeniden uretilir.
+    @app.callback(
+        [Output("dt-portfolio-block", "children"),
+         Output("dt-portfolio-asof", "children")],
+        [Input("dt-portfolio-refresh", "n_clicks"),
+         Input("dt-apply-btn", "n_clicks")],
+    )
+    def refresh_portfolio(_refresh, _applied):
+        return _render_portfolio(api.get_portfolio())
+
     @app.callback(
         [Output("dt-action-result", "children", allow_duplicate=True)],
         Input("dt-apply-btn", "n_clicks"),
-        State("dt-decision-store", "data"),
+        [State("dt-decision-store", "data"),
+         State("dt-manual-portfolio", "value")],
         prevent_initial_call=True,
     )
-    def apply_decision(n, decision):
+    def apply_decision(n, decision, manual):
         if not n or not decision:
             return [html.Span()]
         decision_date = decision.get("date") if isinstance(decision, dict) else None
         if not decision_date:
             return [dbc.Alert("Once 'Karar Al' ile bir karar uretilmeli.", color="warning", dismissable=True)]
-        result = api.apply_decision(decision_date)
-        if result:
+        if manual:
+            # Elle girilen portfoyle uretilen karari kagit portfoye islemek
+            # pozisyonu uydurma bir baslangictan ilerletirdi.
             return [dbc.Alert(
-                [html.I(className="bi bi-check-circle me-2"), "Karar basariyla uygulandı."],
-                color="success", dismissable=True,
+                "Elle girilen portfoyle alinan karar uygulanamaz — "
+                "'Portfoyu elle gir' anahtarini kapatip karari yenileyin.",
+                color="warning", dismissable=True,
             )]
-        return [dbc.Alert("Uygulama basarisiz.", color="danger", dismissable=True)]
+        result = api.apply_decision(decision_date)
+        if not result:
+            return [dbc.Alert("Uygulama basarisiz.", color="danger", dismissable=True)]
+        if result.get("already_applied"):
+            return [dbc.Alert(
+                f"{decision_date} tarihli karar zaten uygulanmis — portfoy degismedi.",
+                color="info", dismissable=True,
+            )]
+        applied = result.get("applied") or {}
+        val = result.get("portfolio") or {}
+        msg = [html.I(className="bi bi-check-circle me-2"),
+               f"{applied.get('executed_trades', 0)} islem uygulandi. "
+               f"Toplam deger {_money(val.get('total_value'))}, "
+               f"kar/zarar {_signed_money(val.get('total_pnl'))} "
+               f"({_signed_pct(val.get('total_pnl_pct'))})."]
+        skipped = applied.get("skipped") or []
+        if skipped:
+            msg.append(html.Div(f"Atlanan: {'; '.join(skipped)}",
+                                style={"fontSize": "12px", "marginTop": "6px"}))
+        return [dbc.Alert(msg, color="success", dismissable=True)]
 
     @app.callback(
         Output("dt-download", "data"),
@@ -356,6 +449,127 @@ def register_callbacks(app):
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _money(v):
+    try:
+        return f"₺{float(v):,.2f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def _signed_money(v):
+    try:
+        return f"{'+' if float(v) >= 0 else '-'}₺{abs(float(v)):,.2f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def _signed_pct(v):
+    try:
+        return f"{float(v):+.2f}%"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def _pnl_color(v):
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return TEXT_MUTED
+    if f > 0:
+        return GREEN
+    if f < 0:
+        return RED
+    return TEXT_MUTED
+
+
+def _render_portfolio(val):
+    """Kagit portfoyun ozeti + pozisyon tablosu.
+
+    Ust satirdaki `total_pnl` GERCEK kar/zarardir: pozisyon bugunun fiyatiyla
+    degerlenir. Karar kartindaki "gunluk getiri" bunu olcmez — orada alim-satim
+    ayni gunun ayni fiyatlariyla simule edilir ve geriye yalnizca komisyon
+    kalir.
+    """
+    if not val:
+        return create_state_block("empty", "Portfoy okunamadi."), ""
+
+    positions = val.get("positions") or []
+    asof = val.get("priced_on")
+    asof_text = f"({asof} fiyatlariyla)" if asof else ""
+
+    def metric(label, value, color=TEXT):
+        return dbc.Col([
+            html.Div(label, className="section-title", style={"color": TEXT_MUTED}),
+            html.Div(value, style={"color": color, "fontSize": "18px",
+                                   "fontWeight": "600"}),
+        ], width=6, lg=3, className="mb-2")
+
+    pnl = val.get("total_pnl")
+    summary = dbc.Row([
+        metric("Nakit", _money(val.get("cash"))),
+        metric("Pozisyon Degeri", _money(val.get("position_value"))),
+        metric("Toplam Deger", _money(val.get("total_value"))),
+        metric("Kar/Zarar", f"{_signed_money(pnl)} ({_signed_pct(val.get('total_pnl_pct'))})",
+               _pnl_color(pnl)),
+    ])
+
+    breakdown = html.Div([
+        html.Span(f"Baslangic {_money(val.get('initial_capital'))}", style={"color": TEXT_MUTED}),
+        html.Span(" · ", style={"color": TEXT_MUTED}),
+        html.Span(f"gerceklesmis {_signed_money(val.get('realized_pnl'))}",
+                  style={"color": _pnl_color(val.get("realized_pnl"))}),
+        html.Span(" · ", style={"color": TEXT_MUTED}),
+        html.Span(f"gerceklesmemis {_signed_money(val.get('unrealized_pnl'))}",
+                  style={"color": _pnl_color(val.get("unrealized_pnl"))}),
+        html.Span(" · ", style={"color": TEXT_MUTED}),
+        html.Span(f"komisyon {_money(val.get('total_commission'))}",
+                  style={"color": TEXT_MUTED}),
+    ], style={"fontSize": "13px", "marginTop": "4px", "marginBottom": "12px"})
+
+    if not positions:
+        table = create_state_block(
+            "empty",
+            "Acik pozisyon yok — karar alip 'Uygula' dediginde burada gorunur.",
+        )
+    else:
+        header = dbc.Row([
+            dbc.Col(html.Small("Sembol", className="section-title"), width=3),
+            dbc.Col(html.Small("Adet", className="section-title"), width=1),
+            dbc.Col(html.Small("Maliyet", className="section-title"), width=2),
+            dbc.Col(html.Small("Fiyat", className="section-title"), width=2),
+            dbc.Col(html.Small("Deger", className="section-title"), width=2),
+            dbc.Col(html.Small("Kar/Zarar", className="section-title"), width=2),
+        ])
+        rows = [header]
+        for p in positions:
+            price_text = _money(p.get("price"))
+            if not p.get("price_available", True):
+                # Fiyati cekilemeyen sembol maliyetiyle degerlendi; isaretlenmezse
+                # "hic degismemis" gibi okunur.
+                price_text += " *"
+            rows.append(dbc.Row([
+                dbc.Col(html.Span(p.get("symbol", "—"), style={"color": TEXT}), width=3),
+                dbc.Col(html.Span(str(p.get("shares", 0)), style={"color": TEXT}), width=1),
+                dbc.Col(html.Span(_money(p.get("avg_cost")), style={"color": TEXT_MUTED}), width=2),
+                dbc.Col(html.Span(price_text, style={"color": TEXT}), width=2),
+                dbc.Col(html.Span(_money(p.get("value")), style={"color": TEXT}), width=2),
+                dbc.Col(html.Span(
+                    f"{_signed_money(p.get('unrealized_pnl'))} "
+                    f"({_signed_pct(p.get('unrealized_pnl_pct'))})",
+                    style={"color": _pnl_color(p.get("unrealized_pnl"))}), width=2),
+            ], className="py-1"))
+        table = html.Div(rows)
+
+    children = [summary, breakdown, table]
+    if val.get("missing_prices"):
+        children.append(html.Div(
+            f"* Fiyati alinamayan sembol maliyetiyle degerlendi: "
+            f"{', '.join(val['missing_prices'])}",
+            style={"color": TEXT_MUTED, "fontSize": "12px", "marginTop": "8px"},
+        ))
+    return html.Div(children), asof_text
+
 
 def _render_decision_table(result):
     decisions = result.get("decisions", result.get("trades", []))

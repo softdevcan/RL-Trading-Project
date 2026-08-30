@@ -35,6 +35,7 @@ app/                  # FastAPI backend
     templates/        # login.html, change_password.html
   schemas/            # Pydantic models
   services/           # Business logic (model_analysis.py, daily_trading.py, prediction_service.py)
+    portfolio.py      # Kagit portfoy: pozisyon, ortalama maliyet, mark-to-market P&L
     training_eta.py   # Egitim suresi tahmini: on tahmin + canli ETA, gecmis kosumlardan ogrenir
   core/config.py      # Configuration
   main.py             # FastAPI app
@@ -115,6 +116,9 @@ python tests/test_training_status.py        # /train/status progress, sembol uya
                                            #        donunce geri gelmesi (19 kontrol)
 python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinance (tz'li)
                                            #        birlesimi, sessiz sembol dusmesi (18 kontrol)
+python tests/test_paper_portfolio.py      # Kagit portfoy: ortalama maliyet,
+                                           #        gerceklesmis/gerceklesmemis kar,
+                                           #        cift uygulama bekcisi (43 kontrol)
 python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans),
                                            #        taslak satir, kapsam esigi,
                                            #        panel onbellegi (21 kontrol)
@@ -374,6 +378,33 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Evren dogru sayida cikip durum yine de uymazsa (faz 2 modeli: hisse basina 17
   ozellik + 6 makro; `build_live_state` 10 uretir) rota SB3'a girmeden 400 ile
   nedeni soyler.
+
+### Kagit portfoy ve kar/zarar (ONEMLI)
+- **`summary.daily_return_pct` KAR/ZARAR DEGILDIR.** `portfolio_before` ve
+  `portfolio_after` ayni gunun ayni fiyatlariyla hesaplanir; alim-satim
+  nakit<->hisse takasi oldugu icin portfoy degeri degismez, geriye yalnizca
+  komisyon kalir. Metrik tanim geregi ~0 veya negatif cikar (olculdu:
+  100.000,00 -> 99.998,99 = "-0,0010%", komisyon 1,01 TL). Kar/zarar icin
+  `portfolio.value_portfolio()` kullan — pozisyonu BASKA BIR GUNUN fiyatiyla
+  degerler.
+- Tek gercek kaynak `workspaces/<uid>/data/live_trading/portfolio.json`
+  (`app/services/portfolio.py`). `daily_trading.py` kararin NASIL uretildigini,
+  `portfolio.py` SONUCUNU bilir.
+- **Nakit tanimlari `interpret_actions_with_risk` ile ayni olmali:**
+  `BUY -> cost = adet*fiyat*(1+komisyon)` (komisyon DAHIL),
+  `SELL -> revenue = adet*fiyat*(1-komisyon)` (DUSULMUS). `avg_cost` bu yuzden
+  komisyon dahil tutulur; aksi halde gerceklesmis kar komisyon kadar sisik cikar.
+- **Ayni tarih iki kez uygulanmaz** (`applied_dates`) — "Uygula"ya iki kez
+  basmak pozisyonu iki katina cikarirdi.
+- `/daily-decision` icin `balance`/`shares` artik OPSIYONEL: verilmezse
+  portfoyden yuklenir. Panoda "Portfoyu elle gir" anahtari acikken gonderilir
+  ve o karar UYGULANAMAZ (uydurma bir baslangictan ilerletirdi).
+- Fiyati cekilemeyen sembol ortalama maliyetiyle degerlenir ve
+  `missing_prices` ile raporlanir — 0 saymak portfoyu kucuk, sessiz kalmak
+  kar/zarari sahte gosterirdi.
+- `POST /portfolio/reset` gecmis dosyalarina DOKUNMAZ (trade_decisions.json,
+  portfolio_history.csv); silmek geri alinamaz, ayri bir istek olmali.
+- Test: `python tests/test_paper_portfolio.py` (43 kontrol)
 
 ### Panel tazeligi ve yfinance taslak satiri (ONEMLI)
 - **Tazelik olcutu takvim gunu DEGIL, kapanmis olmasi beklenen son SEANS.**

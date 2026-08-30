@@ -176,12 +176,18 @@ class DailyDecisionRequest(BaseModel):
     model_name: str = Field(
         description="Name of the trained model to use"
     )
-    balance: float = Field(
-        description="Current cash balance",
+    # Ikisi de opsiyonel: verilmezse kagit portfoyden (portfolio.json) yuklenir.
+    # Pano eskiden bakiyeyi 100.000 varsayilaniyla ve elle doldurulan 5 satirlik
+    # formdan kuruyordu, yani dunku pozisyonlar bugunku karara hic girmiyordu.
+    # Acikca verilen deger yine kazanir (geriye uyumluluk + tek seferlik deneme).
+    balance: Optional[float] = Field(
+        default=None,
+        description="Cash balance; omit to use the tracked paper portfolio",
         gt=0
     )
-    shares: Dict[str, int] = Field(
-        description="Current shares owned for each symbol"
+    shares: Optional[Dict[str, int]] = Field(
+        default=None,
+        description="Shares owned; omit to use the tracked paper portfolio"
     )
     risk_mode: Literal["conservative", "moderate", "aggressive"] = Field(
         default="moderate",
@@ -287,6 +293,45 @@ class PortfolioHistoryResponse(BaseModel):
     portfolio_values: List[float]
     daily_returns: List[float]
     balances: List[float]
+
+
+class PositionValuation(BaseModel):
+    """Tek pozisyonun guncel fiyatla degerlenmis hali."""
+    symbol: str
+    shares: int
+    avg_cost: float
+    price: float
+    value: float
+    cost_basis: float
+    unrealized_pnl: float
+    unrealized_pnl_pct: float
+    # Fiyati cekilemeyen sembol ortalama maliyetiyle degerlenir; bayrak
+    # olmadan kar/zarar sahte bir "0 degisim" gibi gorunurdu.
+    price_available: bool = True
+
+
+class PortfolioValuation(BaseModel):
+    """Kagit portfoyun mark-to-market ozeti.
+
+    `total_pnl` gercek kar/zarardir: pozisyon BUGUNUN fiyatiyla degerlenir.
+    Kararin `summary.daily_return_pct` alani bunu olcmez — orada alim-satim
+    ayni gunun ayni fiyatlariyla simule edildigi icin geriye yalnizca komisyon
+    kalir ve deger tanim geregi ~0 cikar.
+    """
+    initial_capital: float
+    cash: float
+    position_value: float
+    total_value: float
+    realized_pnl: float
+    unrealized_pnl: float
+    total_pnl: float
+    total_pnl_pct: float
+    total_commission: float
+    positions: List[PositionValuation]
+    missing_prices: List[str] = []
+    last_applied_date: Optional[str] = None
+    applied_days: int = 0
+    priced_on: Optional[str] = None
 
 
 class ModelComparisonResponse(BaseModel):

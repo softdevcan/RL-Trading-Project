@@ -349,6 +349,16 @@ def get_latest_portfolio() -> Dict:
     return _get("/trading/latest-portfolio") or {}
 
 
+def get_portfolio(date: str = None) -> Dict:
+    """Kagit portfoy, guncel fiyatlarla degerlenmis (mark-to-market)."""
+    return _get("/trading/portfolio", params={"date": date} if date else None) or {}
+
+
+def reset_portfolio(initial_capital: float = 100_000.0) -> Dict:
+    return _post("/trading/portfolio/reset",
+                 params={"initial_capital": initial_capital}) or {}
+
+
 def get_portfolio_history() -> Dict:
     return _get("/trading/portfolio-history") or {}
 
