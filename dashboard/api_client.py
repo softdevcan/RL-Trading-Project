@@ -152,6 +152,30 @@ def _post_raw(path: str, json: Optional[Dict] = None) -> Dict:
         return {"ok": False, "status": 0, "body": {"detail": str(exc)}}
 
 
+def _request_raw(method: str, path: str, json: Optional[Dict] = None) -> Dict:
+    """PATCH/DELETE — hata govdesini de dondurur.
+
+    `_request` hatayi yutup None donuyor; hesap ekranlarinda kullaniciya
+    "neden olmadi" demek gerektigi icin durum kodu ve govde saklanir.
+    """
+    headers, cookies = _forward_auth()
+
+    async def _do():
+        async with _client(cookies, headers) as client:
+            r = await client.request(method, path, json=json, timeout=TIMEOUT)
+            try:
+                body = r.json()
+            except Exception:
+                body = {"detail": r.text[:300]}
+            return {"ok": r.is_success, "status": r.status_code, "body": body}
+
+    try:
+        return _run(_do())
+    except Exception as exc:
+        _api_log.warning("%s %s%s failed: %s", method, API_BASE, path, exc)
+        return {"ok": False, "status": 0, "body": {"detail": str(exc)}}
+
+
 # ── Kullanici yonetimi (admin) ─────────────────────────────────────────────
 
 def list_users() -> List[Dict]:
@@ -182,6 +206,27 @@ def delete_user(user_id: str) -> Dict:
 def get_audit_log(limit: int = 100) -> List[Dict]:
     data = _get("/admin/audit", params={"limit": limit}) or {}
     return data.get("entries", [])
+
+
+# ── Kendi hesabi (her rol, viewer dahil) ───────────────────────────────────
+# Yetki kontrolu uc noktada: hedef her zaman oturumdaki kullanici, govdeden
+# kullanici kimligi gecilmez (bkz. app/api/routes/account.py).
+
+def get_account() -> Dict:
+    """Profil alanlari + calisma alani kullanimi (tek cagri)."""
+    return _get("/account/me") or {}
+
+
+def update_profile(full_name: str) -> Dict:
+    return _request_raw("PATCH", "/account/profile", json={"full_name": full_name})
+
+
+def get_own_sessions() -> Dict:
+    return _get("/account/sessions") or {}
+
+
+def revoke_other_sessions() -> Dict:
+    return _post_raw("/account/sessions/revoke-others", json=None)
 
 
 # ── Trading ────────────────────────────────────────────────────────────────

@@ -7,9 +7,14 @@
 > sonunda) kayıtlı — plan metni tasarım kararlarını, o bölüm gerçekte ne
 > olduğunu anlatıyor.
 >
-> Doğrulama: `test_theme_contrast` 84/84, `test_theme_preference` 31/31,
-> `test_auth` 28/28, `test_workspace_isolation` 18/18; 10 sayfa × 2 tema
-> gerçek tarayıcıda (Chrome/CDP) görsel kontrol.
+> Doğrulama: `test_theme_contrast` 86/86, `test_theme_preference` 31/31,
+> `test_account_profile` 64/64, `test_auth` 28/28,
+> `test_workspace_isolation` 18/18; 10 sayfa × 2 tema gerçek tarayıcıda
+> (Chrome/CDP) görsel kontrol.
+>
+> **Faz F (2026-08-30)** — Hesabım sayfası panoda *bulunamıyordu*; kenar
+> çubuğundaki tek giriş noktası düz metin görünümündeki bir addı. O tur
+> "Faz F — Profil sayfası" başlığında.
 
 Amaç: panoya çalışır bir **aydınlık tema** kazandırmak ve bileşenleri
 sadelik/okunabilirlik yönünde profesyonelleştirmek. Referans olarak kullanıcının
@@ -635,8 +640,125 @@ kalıyordu; yığın açıkça verildi.
 
 ---
 
+## Faz F — Profil sayfası (2026-08-30)
+
+B.3 bir "Hesabım" sayfası üretmişti, ama panoyu kullanan biri için **yoktu**:
+kenar çubuğunun altındaki kullanıcı adı `textDecoration: none` ile duz metin
+gibi duruyordu, hover'a kadar link olduğu belli olmuyordu ve menüde karşılığı
+yoktu. Ayrıca sayfa yalnızca tema seçiciydi — B.3'ün söz verdiği "son giriş"
+bile eksikti.
+
+### F.1 — Giriş noktası
+
+Kenar çubuğu alt bölümü `dbc.NavLink`'e çevrildi: baş harf avatarı + ad + rol
++ chevron, hover zemini ve `active="exact"` ile aktif sayfa vurgusu. Çıkış
+bağlantısı ve tema anahtarı alta ayrı bir kontrol satırına indi. Tüm renkler
+token; yeni sınıflar `custom.css`'te (`sidebar-footer`, `sidebar-account`,
+`account-avatar`, …).
+
+> **Tuzak:** `dbc.NavLink` yalnızca sayılı prop kabul ediyor
+> (`active/href/target/className/style/...`). `title` verilince **tüm Dash
+> ağacı** render edilemiyor ve `/dash/` 500 dönüyordu — `test_workspace_isolation`
+> bunu 4 fail ile yakaladı. İpucu metni sarmalayan `html.Div`'e taşındı.
+
+### F.2 — Sayfa gerçek bir profil sayfasına çıktı
+
+| Kart | İçerik |
+|---|---|
+| **Profil** | Avatar, ad soyad **düzenlenebilir**, e-posta (kilitli — giriş anahtarı), rol + açıklaması |
+| **Hesap** | Son giriş, hesap açılışı, hesabı açan, çalışma alanı kullanımı (dosya + boyut) |
+| **Görünüm** | Değişmedi — üç durumlu tema, clientside |
+| **Güvenlik** | Parola değiştir + **aktif oturumlar** + "Diğer oturumları kapat" |
+
+Zaman damgaları `"30.08.2026 14:32 UTC"` olarak yazılıyor; kayıtlar naive-UTC
+tutulduğu için etiketsiz göstermek "yerel saat" izlenimi verirdi.
+
+### F.3 — `/api/account/*` (yeni)
+
+`/auth/*` tarayıcının **doğrudan** çağırdığı yüzey (giriş formu, clientside
+tema anahtarı) ve orada CSRF'i ucun kendisi doğrulamak zorunda. Profil/oturum
+uçlarını pano callback'leri `api_client` üzerinden çağırdığı için `/api/*`
+altına kondu: CSRF, RBAC ve çalışma alanı bağlamı mevcut kapıdan geliyor —
+`/api/admin/*` ile aynı kalıp.
+
+```
+GET   /api/account/me                      hesap alanları + çalışma alanı özeti
+PATCH /api/account/profile                 {full_name}
+GET   /api/account/sessions                gruplanmış aktif oturumlar
+POST  /api/account/sessions/revoke-others  bu tarayıcı hariç hepsini kapat
+```
+
+Hepsi `CurrentUser` — viewer dahil her rol. Hedef **her zaman** oturumdaki
+kullanıcı; gövdeden kullanıcı kimliği alınmıyor, `role`/`is_active`/`email`
+şemada yok. Böylece kendi rolünü yükseltme yolu yapısal olarak kapalı
+(test bunu gövdeye o alanları koyarak doğruluyor).
+
+### F.4 — Oturum kapatma: grace penceresi açığı (bulundu ve kapatıldı)
+
+`rotate_session`, iptal edilmiş bir jti 30 sn içinde tekrar kullanılırsa bunu
+"eşzamanlı yenileme yarışı" sayıp **yeni bir oturum veriyor**
+(`REFRESH_REUSE_GRACE_SEC` — Dash'in paralel callback'leri için konmuş, doğru
+bir önlem). Ama "diğer oturumları kapat" düğmesi kayıtları yalnızca
+`revoked_at` ile işaretleseydi bu pencere iptali de geçersiz kılardı:
+`/auth/refresh` CSRF istemiyor, dolayısıyla çalınmış bir refresh çerezini
+elinde tutan taraf saniyede bir yenileyerek kapatmayı atlatabilirdi.
+
+Çözüm: **kasıtlı iptalde kayıt silinir**, işaretlenmez → `record is None` →
+`session_unknown` → 401; grace yolu hiç çalışmaz. `revoke_all_sessions`
+(admin/parola/deaktivasyon yolları) davranışını korudu; asimetri
+`revoke_other_sessions` docstring'inde gerekçesiyle yazılı. İz denetim
+kaydında (`account.revoke_sessions`).
+
+**Kalan sınır (bilinçli):** iptal refresh token'ını öldürür, ama access JWT
+stateless — diğer taraf en fazla `ACCESS_TOKEN_EXPIRE_MINUTES` kadar (varsayılan
+30 dk) okumaya devam edebilir. Bu, admin'in `revoke-sessions` ucunda da böyle;
+değiştirmek access token'ı da DB'ye bağlamak demek.
+
+### F.5 — Oturum listesi neden gruplu
+
+Rotasyon her sessiz yenilemede yeni satır yazıp eskisini iptal ediyor, ama
+grace penceresindeki eşzamanlı yenilemeler aynı tarayıcı için birden fazla
+**geçerli** satır bırakabiliyor. Ham listelemek "3 aktif oturum" gibi yanlış
+bir sayı üretirdi; satırlar `(ip, user_agent)` ile gruplanıyor, `tokens` alanı
+kaç kayda karşılık geldiğini saklamadan veriyor. UA "Chrome · Windows" gibi
+okunur bir etikete çevriliyor — tanınmayan UA uydurulmuyor, kırpılarak
+gösteriliyor.
+
+### F.6 — Testler
+
+`tests/test_account_profile.py` — **64 kontrol**: uçlar, doğrulama, CSRF,
+viewer'ın kendi profilini yönetmesi, rol yükseltme denemesi, oturum gruplama,
+iptalden sonra kapatılan oturumun grace penceresinden dönememesi, denetim
+kaydı, `_device_label` birim kontrolleri.
+
+Son bölüm **Dash callback'lerini gerçek HTTP yolundan** tetikliyor
+(`/dash/_dash-update-component`): layout render testi callback *gövdesindeki*
+hatayı yakalamıyor — Faz C'de budanmış bir import tam da böyle kaçmıştı.
+
+`test_theme_contrast.py`'ye 10. denetim eklendi: tasarım sistemimizin kendi
+önekli sınıfları (`sidebar-`, `account-`, `metric-`, …) `custom.css`'te tanımlı
+olmalı. Bağlanmayan sınıf hata vermiyor, bileşeni sessizce biçimsiz bırakıyor.
+Stil taşımayan iki kanca (`theme-label`, `sidebar-link`) gerekçesiyle muaf.
+
+### Ölçülen sonuç (Faz F)
+
+| | Önce | Sonra |
+|---|---|---|
+| Profil sayfasına görünür giriş | yok (düz metin ad) | avatar satırı + hover + aktif vurgu |
+| Hesabım sayfasındaki kart | 3 (tema, salt-okunur hesap, parola linki) | 4 (profil düzenleme, hesap, tema, güvenlik+oturumlar) |
+| Kullanıcının kendi düzenleyebildiği alan | tema | tema + ad soyad |
+| Kendi oturumlarını görme/kapatma | yok (yalnızca admin) | var |
+| İptalin grace penceresiyle atlatılabilmesi | mümkündü | kapalı (kayıt siliniyor) |
+| Hesap testi | yok | 64 kontrol |
+
+---
+
 ## Belge Güncelleme Notu
 
 Faz kapanışında güncellendi: `CLAUDE.md` (Development Plan, proje yapısı, tests
 listesi, "Tema (Faz 8)" bölümü ve Do-NOT maddeleri),
 `docs/development/roadmap.md` (Faz 8 girdisi), `docs/README.md` (indeks).
+
+Faz F sonrası güncellendi: `CLAUDE.md` (proje yapısı — `app/api/routes/account.py`,
+tests listesi — `test_account_profile.py`, "Hesap ve profil (Faz 8/F)" bölümü),
+`docs/README.md` (Faz 8 satırının açıklaması).

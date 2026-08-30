@@ -1,19 +1,28 @@
-"""Hesabim sayfasi — gorunum tercihi ve hesap bilgileri (Faz 8, B.3).
+"""Hesabim sayfasi — profil, gorunum tercihi ve oturum guvenligi.
 
-Her rol erisir, viewer dahil: tema okuma yetkisiyle ilgisi olmayan kisisel
-bir tercihtir. Kullanici yonetimi (/dash/users) admin sayfasidir ve ayri kalir.
+Her rol erisir, viewer dahil: burada yonetilenler yetki degil kisisel hesap
+ayarlaridir. Kullanici yonetimi (/dash/users) admin sayfasidir ve ayri kalir.
 
-Tema secimi SUNUCU TURU GEREKTIRMEZ: dugmelere `data-theme-set` konur,
-assets/theme-toggle.js tiklamayi yakalar, damgayi ve cerezi gunceller,
-sonra PATCH /auth/preferences ile hesaba yazar. Bu yuzden burada tema icin
-Dash callback'i yok — anlik tepki icin kasitli bir tercih.
+Iki farkli calisma bicimi bir arada — kasitli:
+
+1. **Tema secimi sunucu turu GEREKTIRMEZ.** Dugmelere `data-theme-set` konur,
+   assets/theme-toggle.js tiklamayi yakalar, damgayi ve cerezi gunceller,
+   sonra PATCH /auth/preferences ile hesaba yazar. Anlik tepki icin.
+2. **Profil/oturum islemleri sunucu callback'i kullanir** (`/api/account/*`).
+   Bunlar DB durumu degistirir ve sonucu geri okunmali.
+
+Bu yuzden tema karti callback ciktilarinin DISINDA durur: yeniden cizilirse
+theme-toggle.js'in koydugu `active` sinifi ve `aria-pressed` durumu silinir.
 """
 
-from dash import html
+from dash import html, dcc, no_update
+from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
+import dashboard.api_client as api
 from dashboard.auth_context import current_user, display_name
 from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED
 
 ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
@@ -31,12 +40,83 @@ THEME_OPTIONS = [
 ]
 
 
+# ── Bicimlendirme yardimcilari ────────────────────────────────────────────
+
+def _fmt_dt(value: str | None) -> str:
+    """ISO zaman damgasini "30.08.2026 14:32 UTC" olarak yaz.
+
+    UTC etiketi bilincli: kayitlar naive-UTC tutuluyor (bkz. models.utcnow).
+    Etiketsiz gostermek "yerel saat" izlenimi verirdi ve son giris saatine
+    bakan kullaniciyi yaniltirdi.
+    """
+    if not value:
+        return "—"
+    try:
+        date, _, rest = value.partition("T")
+        year, month, day = date.split("-")
+        return f"{day}.{month}.{year} {rest[:5]} UTC"
+    except Exception:
+        return str(value)[:19].replace("T", " ")
+
+
+def _fmt_size(num_bytes: int) -> str:
+    size = float(num_bytes or 0)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} GB"
+
+
+def _initials(name: str) -> str:
+    parts = [p for p in (name or "").replace(".", " ").split() if p]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+def _info_row(label: str, value, last: bool = False):
+    return html.Div(
+        [
+            html.Span(label, style={"color": TEXT_MUTED, "fontSize": "13px"}),
+            html.Span(value, style={"color": TEXT, "fontSize": "13px", "fontWeight": "500"}),
+        ],
+        style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "alignItems": "center",
+            "gap": "12px",
+            "padding": "10px 0",
+            "borderBottom": "none" if last else f"1px solid {BORDER}",
+        },
+    )
+
+
+def _role_badge(role: str):
+    return html.Span(
+        [
+            html.Span(
+                ROLE_LABELS.get(role, role),
+                style={"backgroundColor": CARD2, "color": TEXT, "fontSize": "11px",
+                       "padding": "3px 9px", "borderRadius": "10px", "fontWeight": "600"},
+            ),
+            html.Small(ROLE_HELP.get(role, ""),
+                       style={"color": TEXT_MUTED, "marginLeft": "8px"}),
+        ]
+    )
+
+
+# ── Gorunum karti (clientside; callback ciktisi DEGIL) ────────────────────
+
 def _theme_preview(kind: str):
     """Secenegin altindaki kucuk onizleme seridi.
 
     Renkler kasitli olarak TOKENLARDAN BAGIMSIZ: iki tema da ayni anda
     gorunmeli ki secim yapmadan once karsilastirilabilsin. Her seridin
-    metin/zemin cifti kendi paletinden gelir.
+    metin/zemin cifti kendi paletinden gelir. (test_theme_contrast bu dosyayi
+    "kacak hex" denetiminden bu yuzden muaf tutuyor.)
     """
     palettes = {
         "light": {"bg": "#f6f8fb", "surface": "#ffffff", "border": "#e2e8f0",
@@ -128,63 +208,85 @@ def _theme_card():
     )
 
 
-def _info_row(label: str, value, last: bool = False):
-    return html.Div(
+# ── Profil karti (govdesi statik, degerleri callback doldurur) ────────────
+
+def _profile_card():
+    """Ad soyad duzenlemesi + degistirilemeyen kimlik alanlari.
+
+    Girdi kutusu ve dugme LAYOUT'TA statik durur; callback yalnizca
+    `value`/`children` doldurur. Boylece State(...) her zaman var olan bir
+    bileseni gosterir ve kaydetme sirasinda odak kaybolmaz.
+    """
+    return dbc.Card(
         [
-            html.Span(label, style={"color": TEXT_MUTED, "fontSize": "13px"}),
-            html.Span(value, style={"color": TEXT, "fontSize": "13px", "fontWeight": "500"}),
-        ],
-        style={
-            "display": "flex",
-            "justifyContent": "space-between",
-            "alignItems": "center",
-            "padding": "10px 0",
-            "borderBottom": "none" if last else f"1px solid {BORDER}",
-        },
+            dbc.CardHeader(html.Span("Profil", className="card-title-sm")),
+            dbc.CardBody(
+                [
+                    html.Div(
+                        [
+                            html.Span(id="account-avatar", className="account-avatar-lg"),
+                            html.Div(
+                                [
+                                    html.Div(id="account-display-name",
+                                             className="account-display-name"),
+                                    html.Div(id="account-role-line"),
+                                ],
+                                style={"minWidth": "0"},
+                            ),
+                        ],
+                        className="account-identity",
+                    ),
+                    html.Hr(),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    html.Label("Ad Soyad", className="section-title"),
+                                    # debounce YOK: `value` yalnizca State olarak
+                                    # okunuyor, sunucuya trafik binmiyor. Debounce
+                                    # acikken deger blur'da guncellendigi icin
+                                    # "yaz ve hemen Kaydet'e tikla" akisinda eski
+                                    # deger gonderilme riski var.
+                                    dbc.Input(id="account-name-input", type="text",
+                                              placeholder="Ad Soyad", maxLength=120),
+                                ],
+                                md=8,
+                            ),
+                            dbc.Col(
+                                dbc.Button(
+                                    [html.I(className="bi bi-check2 me-1"), "Kaydet"],
+                                    id="account-name-save", color="primary",
+                                    className="w-100",
+                                ),
+                                md=4, className="d-flex align-items-end",
+                            ),
+                        ],
+                        className="g-3",
+                    ),
+                    html.Div(
+                        [
+                            html.I(className="bi bi-lock me-2"),
+                            html.Span(id="account-email"),
+                            html.Small(
+                                " · giris adresiniz, yalnizca yonetici degistirebilir",
+                                style={"color": TEXT_MUTED},
+                            ),
+                        ],
+                        style={"color": TEXT_MUTED, "fontSize": "12px",
+                               "marginTop": "12px"},
+                    ),
+                    html.Div(id="account-alert", className="mt-3"),
+                ]
+            ),
+        ]
     )
 
 
-def _account_card():
-    user = current_user() or {}
-    role = user.get("role", "user")
-
-    if not user:
-        # AUTH_ENABLED=False ile calisirken oturum yok
-        body = html.P(
-            "Kimlik dogrulama kapali; hesap bilgisi yok. Gorunum tercihi "
-            "yalnizca bu tarayicida saklanir.",
-            style={"color": TEXT_MUTED, "margin": 0},
-        )
-    else:
-        body = html.Div(
-            [
-                _info_row("Ad Soyad", display_name()),
-                _info_row("E-posta", user.get("email", "—")),
-                _info_row(
-                    "Rol",
-                    html.Span(
-                        [
-                            html.Span(
-                                ROLE_LABELS.get(role, role),
-                                style={"backgroundColor": CARD2, "color": TEXT,
-                                       "fontSize": "11px", "padding": "3px 9px",
-                                       "borderRadius": "10px", "fontWeight": "600"},
-                            ),
-                            html.Small(
-                                ROLE_HELP.get(role, ""),
-                                style={"color": TEXT_MUTED, "marginLeft": "8px"},
-                            ),
-                        ]
-                    ),
-                    last=True,
-                ),
-            ]
-        )
-
+def _info_card():
     return dbc.Card(
         [
             dbc.CardHeader(html.Span("Hesap", className="card-title-sm")),
-            dbc.CardBody(body),
+            dbc.CardBody(html.Div(id="account-info-body")),
         ]
     )
 
@@ -204,6 +306,10 @@ def _security_card():
                         href="/change-password",
                         className="btn btn-outline-secondary",
                     ),
+                    html.Hr(),
+                    html.Label("Aktif oturumlar", className="section-title"),
+                    html.Div(id="account-sessions-body"),
+                    html.Div(id="account-session-alert", className="mt-2"),
                 ]
             ),
         ]
@@ -215,26 +321,212 @@ def _security_card():
 def layout():
     return html.Div(
         [
+            # Her yazma isleminden sonra artar; okuma callback'ini tetikler.
+            dcc.Store(id="account-tick", data=0),
+
             create_page_header(
                 "Hesabim",
-                "Gorunum tercihi ve hesap bilgileri",
+                "Profil bilgileri, gorunum tercihi ve oturum guvenligi",
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(_profile_card(), lg=7, className="mb-4"),
+                    dbc.Col(_info_card(), lg=5, className="mb-4"),
+                ]
             ),
             dbc.Row(
                 [
                     dbc.Col(_theme_card(), lg=7, className="mb-4"),
-                    dbc.Col(
-                        html.Div(
-                            [_account_card(), html.Div(_security_card(), className="mt-4")]
-                        ),
-                        lg=5, className="mb-4",
-                    ),
+                    dbc.Col(_security_card(), lg=5, className="mb-4"),
                 ]
             ),
         ]
     )
 
 
+# ── Callback'ler ──────────────────────────────────────────────────────────
+
+def _session_row(item: dict, last: bool):
+    """Tek bir aktif oturum satiri.
+
+    `tokens` alani 1'den buyukse ayni tarayici icin birden fazla gecerli
+    kayit var demektir (es zamanli sessiz yenileme). Bunu ayri oturum gibi
+    saymak yaniltici olur; gruplama sunucuda yapiliyor, burada yalnizca
+    gosteriliyor.
+    """
+    badges = []
+    if item.get("current"):
+        badges.append(
+            html.Span("bu tarayici", className="badge bg-primary",
+                      style={"fontSize": "10px", "marginLeft": "8px"})
+        )
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.I(className="bi bi-display me-2", style={"color": TEXT_MUTED}),
+                    html.Span(item.get("device") or "Bilinmeyen istemci",
+                              style={"color": TEXT, "fontSize": "13px",
+                                     "fontWeight": "500"}),
+                    *badges,
+                ],
+                style={"display": "flex", "alignItems": "center"},
+            ),
+            html.Div(
+                f"{item.get('ip') or 'IP yok'} · son yenileme "
+                f"{_fmt_dt(item.get('last_seen'))}",
+                style={"color": TEXT_MUTED, "fontSize": "11px", "marginTop": "2px"},
+            ),
+        ],
+        style={
+            "padding": "9px 0",
+            "borderBottom": "none" if last else f"1px solid {BORDER}",
+        },
+    )
+
+
 def register_callbacks(app):
-    """Tema secimi clientside calisiyor (bkz. modul dokumani) — sunucu
-    callback'i gerekmiyor. Fonksiyon, app.py'nin tek tip cagrisi icin var."""
-    return
+    @app.callback(
+        Output("account-avatar", "children"),
+        Output("account-display-name", "children"),
+        Output("account-role-line", "children"),
+        Output("account-name-input", "value"),
+        Output("account-name-input", "disabled"),
+        Output("account-name-save", "disabled"),
+        Output("account-email", "children"),
+        Output("account-info-body", "children"),
+        Input("account-tick", "data"),
+    )
+    def load_account(_tick):
+        data = api.get_account() or {}
+        user = data.get("user") or current_user() or {}
+        persistent = bool(data.get("persistent"))
+        workspace = data.get("workspace") or {}
+
+        name = user.get("full_name") or display_name()
+        role = user.get("role", "user")
+
+        rows = [
+            _info_row("Son giris", _fmt_dt(user.get("last_login_at"))),
+            _info_row("Hesap acilisi", _fmt_dt(user.get("created_at"))),
+            _info_row("Hesabi acan", user.get("created_by") or "—"),
+        ]
+        if workspace.get("exists"):
+            rows.append(_info_row(
+                "Calisma alani",
+                f"{workspace.get('files', 0)} dosya · {_fmt_size(workspace.get('bytes', 0))}",
+                last=True,
+            ))
+        else:
+            # Henuz egitim/tahmin yapilmamis hesapta dizin bos olabilir.
+            rows.append(_info_row("Calisma alani", "Henuz dosya yok", last=True))
+
+        if not persistent:
+            rows.insert(0, dbc.Alert(
+                "Kimlik dogrulama kapali (AUTH_ENABLED=False). Hesap kaydi yok; "
+                "gorunum tercihi yalnizca bu tarayicida saklanir.",
+                color="warning", className="py-2",
+                style={"fontSize": "12px"},
+            ))
+
+        return (
+            _initials(name),
+            name,
+            _role_badge(role),
+            user.get("full_name", ""),
+            not persistent,
+            not persistent,
+            user.get("email", "—"),
+            html.Div(rows),
+        )
+
+    @app.callback(
+        Output("account-alert", "children"),
+        Output("account-tick", "data"),
+        Input("account-name-save", "n_clicks"),
+        State("account-name-input", "value"),
+        State("account-tick", "data"),
+        prevent_initial_call=True,
+    )
+    def save_name(n_clicks, value, tick):
+        if not n_clicks:
+            return no_update, no_update
+
+        name = (value or "").strip()
+        if not name:
+            # Sunucu da reddeder (min_length=1); burada durmak bir tur ASGI
+            # cagrisini ve "422" gorunumunu engelliyor.
+            return dbc.Alert("Ad soyad bos olamaz.", color="danger",
+                             className="py-2 mb-0"), no_update
+
+        result = api.update_profile(name)
+        if result.get("ok"):
+            return (
+                dbc.Alert("Profil guncellendi.", color="success",
+                          className="py-2 mb-0", duration=4000),
+                (tick or 0) + 1,
+            )
+
+        detail = (result.get("body") or {}).get("detail") or "Guncelleme basarisiz."
+        return dbc.Alert(str(detail), color="danger", className="py-2 mb-0"), no_update
+
+    @app.callback(
+        Output("account-sessions-body", "children"),
+        Input("account-tick", "data"),
+    )
+    def load_sessions(_tick):
+        data = api.get_own_sessions() or {}
+        sessions = data.get("sessions") or []
+
+        if not sessions:
+            return create_state_block(
+                "empty", "Aktif oturum bilgisi yok",
+                "Kimlik dogrulama kapaliyken oturum kaydi tutulmaz.",
+            )
+
+        rows = [_session_row(item, last=(i == len(sessions) - 1))
+                for i, item in enumerate(sessions)]
+
+        others = sum(1 for s in sessions if not s.get("current"))
+        rows.append(
+            dbc.Button(
+                [html.I(className="bi bi-box-arrow-right me-1"),
+                 "Diger oturumlari kapat"],
+                id="account-revoke-btn",
+                color="danger", outline=True, size="sm",
+                disabled=others == 0,
+                className="mt-3",
+            )
+        )
+        if others == 0:
+            rows.append(html.Small(
+                "Baska aktif oturum yok.",
+                style={"color": TEXT_MUTED, "display": "block", "marginTop": "6px"},
+            ))
+        return html.Div(rows)
+
+    @app.callback(
+        Output("account-session-alert", "children"),
+        Output("account-tick", "data", allow_duplicate=True),
+        Input("account-revoke-btn", "n_clicks"),
+        State("account-tick", "data"),
+        prevent_initial_call=True,
+    )
+    def revoke_others(n_clicks, tick):
+        if not n_clicks:
+            return no_update, no_update
+
+        result = api.revoke_other_sessions()
+        if result.get("ok"):
+            count = (result.get("body") or {}).get("revoked", 0)
+            message = (f"{count} oturum kapatildi." if count
+                       else "Kapatilacak baska oturum yoktu.")
+            return (
+                dbc.Alert(message, color="success", className="py-2 mb-0",
+                          duration=4000),
+                (tick or 0) + 1,
+            )
+
+        detail = (result.get("body") or {}).get("detail") or "Islem basarisiz."
+        return dbc.Alert(str(detail), color="danger", className="py-2 mb-0"), no_update

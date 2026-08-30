@@ -68,9 +68,11 @@ app.add_middleware(
 # Include routers
 from app.auth.routes import router as auth_router
 from app.api.routes import admin as admin_routes
+from app.api.routes import account as account_routes
 
 app.include_router(auth_router)                      # /login, /auth/*
 app.include_router(admin_routes.router, prefix="/api")  # /api/admin/*
+app.include_router(account_routes.router, prefix="/api")  # /api/account/* (kendi hesabi)
 app.include_router(health.router)
 app.include_router(items.router)
 app.include_router(trading.router, prefix="/api")

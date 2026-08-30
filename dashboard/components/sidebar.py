@@ -9,7 +9,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 
 from dashboard.auth_context import current_user, display_name, is_admin
-from dashboard.theme import BORDER, CARD, CARD2, TEXT, TEXT_MUTED, SIDEBAR_STYLE
+from dashboard.theme import BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
 
 # Gruplar sirayla cizilir; admin grubu yalnizca admin icin eklenir.
 NAV_GROUPS = [
@@ -65,8 +65,55 @@ def _theme_button() -> html.Button:
     )
 
 
+def _initials(name: str) -> str:
+    """Avatar icin en fazla iki harf. E-posta gelirse ilk harfi kullanilir."""
+    parts = [p for p in (name or "").replace(".", " ").split() if p]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+def _account_link(user: dict) -> html.Div:
+    """Hesabim'a giden acikca tiklanabilir satir.
+
+    Onceki hali dusuk gorunurluktendi: yalnizca ad, `textDecoration: none`
+    ile duz metin gibi duruyordu — link oldugu ancak uzerine gelinince
+    anlasiliyordu. Simdi avatar + ad + rol + chevron, hover zemini ve
+    `active="exact"` ile aktif sayfa vurgusu var (dbc aktif durumu
+    dcc.Location'dan cozer, sunucu turu gerekmez).
+
+    `title` sarmalayan Div'de: dbc.NavLink yalnizca sayili prop kabul ediyor
+    (active/href/target/...), `title` verilince tum Dash agaci render
+    edilemiyor — /dash/ 500 donuyordu. Sarmalayici ayni alani kapladigi icin
+    ipucu davranisi degismiyor.
+    """
+    role = user.get("role", "user")
+    name = display_name()
+    return html.Div(
+        dbc.NavLink(
+            [
+                html.Span(_initials(name), className="account-avatar"),
+                html.Span(
+                    [
+                        html.Span(name, className="account-name"),
+                        html.Span(ROLE_LABELS.get(role, role), className="account-role"),
+                    ],
+                    className="account-text",
+                ),
+                html.I(className="bi bi-chevron-right account-chevron"),
+            ],
+            href="/dash/account",
+            active="exact",
+            className="sidebar-account",
+        ),
+        title=f"{user.get('email', '')} - Hesabim, gorunum ve guvenlik",
+    )
+
+
 def _user_footer():
-    """Kullanici rozeti + gorunum anahtari + cikis.
+    """Hesap satiri + gorunum anahtari + cikis.
 
     Auth kapaliyken hesap satiri gosterilmez ama gorunum anahtari kalir —
     tema tercihi kimlik dogrulamadan bagimsiz calisir (cerezde saklanir).
@@ -75,60 +122,20 @@ def _user_footer():
 
     rows = []
     if user:
-        role = user.get("role", "user")
-        rows.append(
+        rows.append(_account_link(user))
+
+    controls = [_theme_button()]
+    if user:
+        controls.append(
             html.A(
-                [
-                    html.I(className="bi bi-person-circle me-2", style={"color": TEXT_MUTED}),
-                    html.Span(
-                        display_name(),
-                        style={
-                            "color": TEXT, "fontSize": "13px", "fontWeight": "600",
-                            "overflow": "hidden", "textOverflow": "ellipsis",
-                            "whiteSpace": "nowrap", "maxWidth": "120px",
-                            "display": "inline-block", "verticalAlign": "middle",
-                        },
-                    ),
-                ],
-                href="/dash/account",
-                title=f"{user.get('email', '')} — Hesabim",
-                style={"textDecoration": "none", "display": "flex",
-                       "alignItems": "center", "marginBottom": "8px"},
+                [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
+                href="/logout",
+                className="sidebar-logout",
             )
         )
-        rows.append(
-            html.Div(
-                [
-                    html.Span(
-                        ROLE_LABELS.get(role, role),
-                        style={
-                            "backgroundColor": CARD2, "color": TEXT,
-                            "fontSize": "10px", "padding": "2px 8px",
-                            "borderRadius": "10px", "fontWeight": "600",
-                        },
-                    ),
-                    html.A(
-                        [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
-                        href="/logout",
-                        style={"color": TEXT_MUTED, "fontSize": "11px",
-                               "textDecoration": "none"},
-                    ),
-                ],
-                style={"display": "flex", "alignItems": "center",
-                       "justifyContent": "space-between", "marginBottom": "10px"},
-            )
-        )
+    rows.append(html.Div(controls, className="sidebar-controls"))
 
-    rows.append(_theme_button())
-
-    return html.Div(
-        rows,
-        style={
-            "position": "absolute", "bottom": "0", "left": "0", "right": "0",
-            "padding": "12px 16px", "borderTop": f"1px solid {BORDER}",
-            "backgroundColor": CARD,
-        },
-    )
+    return html.Div(rows, className="sidebar-footer")
 
 
 def create_sidebar():
@@ -171,6 +178,6 @@ def create_sidebar():
             dbc.Nav(nav_children, vertical=True, pills=True),
             _user_footer(),
         ],
-        style={**SIDEBAR_STYLE, "paddingBottom": "120px"},
+        style={**SIDEBAR_STYLE, "paddingBottom": "150px"},
         id="sidebar",
     )

@@ -6,7 +6,7 @@ import json
 import logging
 from datetime import timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.auth import security
@@ -285,6 +285,60 @@ def revoke_all_sessions(db: Session, user_id: str) -> int:
     for row in rows:
         row.revoked_at = now
         count += 1
+    return count
+
+
+def list_sessions(db: Session, user_id: str) -> list[SessionToken]:
+    """Kullanicinin gecerli oturum kayitlari, yeniden eskiye.
+
+    "Gecerli" = iptal edilmemis VE suresi dolmamis. Rotasyon her yenilemede
+    eskisini iptal edip yenisini yazdigi icin normalde tarayici basina tek
+    satir kalir; es zamanli yenileme yarisinda (grace penceresi, bkz.
+    REFRESH_REUSE_GRACE_SEC) ayni tarayici icin birden fazla gecerli satir
+    olusabilir. Cagiran taraf bunlari (ip, user_agent) ile gruplar.
+    """
+    rows = db.execute(
+        select(SessionToken)
+        .where(
+            SessionToken.user_id == user_id,
+            SessionToken.revoked_at.is_(None),
+            SessionToken.expires_at > utcnow(),
+        )
+        .order_by(desc(SessionToken.issued_at))
+    ).scalars()
+    return list(rows)
+
+
+def revoke_other_sessions(db: Session, user_id: str, keep_jti: str) -> int:
+    """Verilen jti disindaki tum oturumlari kapat (kasitli iptal).
+
+    `revoke_all_sessions`tan iki farki var:
+
+    1. Cagiran kullanici kendi oturumundan dusmez. `keep_jti` bos ise
+       (refresh cerezi yoksa) hepsi kapanir — kimligi bilinmeyen bir oturumu
+       "benimki" sayip ayakta birakmak yanlis olurdu.
+    2. Kayitlar **silinir**, `revoked_at` ile isaretlenmez. Sebep: iptal
+       edilmis bir jti REFRESH_REUSE_GRACE_SEC (30 sn) icinde tekrar
+       kullanilirsa `rotate_session` bunu "es zamanli yenileme yarisi" sayip
+       YENI bir oturum veriyor. O grace penceresi Dash'in paralel
+       callback'leri icin var, ama kasitli iptali de gecersiz kilardi:
+       /auth/refresh CSRF istemedigi icin, calinan bir refresh cerezini elinde
+       tutan taraf saniyede bir yenileyerek "diger oturumlari kapat"i
+       atlatabilirdi. Silinen kayitta `record is None` -> session_unknown ->
+       401; grace yolu hic calismaz.
+
+    Kaydin izi denetim kaydinda kalir (account.revoke_sessions).
+    """
+    count = 0
+    rows = db.execute(
+        select(SessionToken).where(SessionToken.user_id == user_id)
+    ).scalars()
+    for row in rows:
+        if keep_jti and row.jti == keep_jti:
+            continue
+        db.delete(row)
+        if row.revoked_at is None:
+            count += 1  # kullaniciya "kac AKTIF oturum kapandi" denir
     return count
 
 

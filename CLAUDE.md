@@ -21,7 +21,8 @@ Respond in the same language the user writes in.
 ## Project Structure
 ```
 app/                  # FastAPI backend
-  api/routes/         # API endpoints (trading.py, health.py, prediction.py, admin.py)
+  api/routes/         # API endpoints (trading.py, health.py, prediction.py, admin.py,
+                      #                account.py — kullanicinin kendi hesabi)
   auth/               # Faz 7: kimlik dogrulama, yetkilendirme, calisma alanlari
     models.py         # User / SessionToken / AuditLog (SQLAlchemy)
     db.py             # SQLite engine + init_db
@@ -118,8 +119,11 @@ python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozum
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
-                                           #        ucuncu parti cakismasi (84 kontrol)
+                                           #        ucuncu parti cakismasi, kendi
+                                           #        CSS siniflarimiz (86 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
+python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
+                                           #          Dash callback smoke (64 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -153,6 +157,27 @@ python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, C
 - **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
   Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
 - Detay: `docs/development/phase-8-ui-theming.md`
+
+### Hesap ve profil (Faz 8/F)
+- Sayfa: `/dash/account` ("Hesabim") — kenar cubugu altindaki **avatar satiri**
+  buraya gider (`dashboard/components/sidebar.py::_account_link`). Her rol erisir.
+- Uclar: `app/api/routes/account.py` → `GET /api/account/me`,
+  `PATCH /api/account/profile`, `GET /api/account/sessions`,
+  `POST /api/account/sessions/revoke-others`. Hepsi `CurrentUser`.
+- **Neden `/api/*`, `/auth/*` degil:** pano callback'leri `api_client` uzerinden
+  cagiriyor; `/api/*` altinda CSRF + RBAC middleware'den bedava geliyor.
+  `/auth/*` tarayicinin dogrudan cagirdigi yuzey (giris formu, tema anahtari) —
+  orada CSRF ucun kendi isi.
+- **Hedef her zaman oturumdaki kullanici**; govdeden kullanici kimligi ALINMAZ.
+  `role`/`is_active`/`email` semada yok → kendi rolunu yukseltme yolu kapali.
+- **Kasitli oturum iptali kaydi SILER**, `revoked_at` ile isaretlemez: iptal
+  edilmis jti 30 sn'lik grace penceresinde (`REFRESH_REUSE_GRACE_SEC`) yeniden
+  kullanilirsa `rotate_session` yeni oturum veriyor; isaretleme birakmak
+  "diger oturumlari kapat"i atlatilabilir kilardi (bkz.
+  `service.revoke_other_sessions` docstring'i).
+- `dbc.NavLink`'e `title` VERME — kabul etmedigi prop tum Dash agacini
+  render edilemez yapar, `/dash/` 500 doner. Ipucunu sarmalayan Div'e koy.
+- Detay: `docs/development/phase-8-ui-theming.md` → "Faz F — Profil sayfasi"
 
 ### Data pipeline
 ```
@@ -257,6 +282,9 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Faz 8 (UI/UX): Tamamlandı — aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu),
   tek kaynak token katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
   6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA hatası da düzeldi)
+  - Faz F: profil sayfası — kenar çubuğunda görünür giriş noktası, ad soyad düzenleme,
+    son giriş/çalışma alanı özeti, kendi oturumlarını görme ve kapatma (`/api/account/*`);
+    kasıtlı oturum iptalinin grace penceresiyle atlatılabilmesi kapatıldı
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu

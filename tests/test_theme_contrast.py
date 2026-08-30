@@ -314,6 +314,30 @@ def main() -> int:
             check(f"{selector} tanimli", selector in custom_css,
                   "Bootstrap varsayilani sizacak")
 
+    print("\n10) Kendi CSS siniflarimiz tanimli mi")
+    # Baglanmayan bir sinif hata VERMEZ, bileseni sessizce bicimsiz birakir.
+    # Yalnizca tasarim sistemimizin kendi onekleri taranir; Bootstrap yardimci
+    # siniflari (me-2, d-flex, ...) kapsam disi.
+    OWN_PREFIXES = ("sidebar-", "account-", "card-title", "state-", "metric-",
+                    "theme-", "section-", "page-", "filter-")
+    # Stil TASIMAYAN, kasitli istisnalar:
+    #   theme-label  — theme-toggle.js'in metnini gunceldigi kanca
+    #   sidebar-link — isaret; bicimi `#sidebar .nav-link` kuralindan geliyor
+    NON_STYLE = {"theme-label", "sidebar-link"}
+
+    own_classes: set[str] = set()
+    for path in scan:
+        text = open(path, encoding="utf-8").read()
+        for value in re.findall(r'className="([^"]+)"', text):
+            own_classes.update(
+                token for token in value.split() if token.startswith(OWN_PREFIXES)
+            )
+    undefined_css = sorted(
+        name for name in own_classes - NON_STYLE if f".{name}" not in custom_css
+    )
+    check("Kendi siniflarimiz custom.css'te tanimli", not undefined_css,
+          f"tanimsiz: {undefined_css}")
+
     print("\n" + "=" * 60)
     print(f"  Gecen: {len(PASSED)}   Kalan: {len(FAILED)}")
     if FAILED:

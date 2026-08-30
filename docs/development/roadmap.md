@@ -113,6 +113,7 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 - **Şema göçü:** alembic yok ve `create_all()` var olan tabloyu değiştirmiyor → `init_db()` içine idempotent additive `ALTER` eklendi; eski şemayla açılan test bunu doğruluyor.
 - **Bileşenler:** `PageHeader`, `MetricCard v2` (renk yalnızca yön taşıyan değerde), `FilterBar`, `TABLE_STYLES`, `StateBlock`; kenar çubuğu üç gruba ayrıldı.
 - **Kontrast:** her metin tokeni kendi temasının **en kötü** zemininde WCAG AA ≥ 4.5:1 (en düşük 4.58). Mevcut koyu temada AA'yı geçmeyen 4 renk (BLUE 3.98, RED 3.89, PURPLE 3.70, MUTED 4.04) bu arada düzeldi. `tests/test_theme_contrast.py` paleti kalıcı olarak bekçiliyor.
+- **Faz F — profil sayfası:** Hesabım sayfası panoda bulunamıyordu (kenar çubuğundaki tek giriş noktası düz metin görünümündeki bir addı). Avatar satırına çevrildi; sayfa gerçek bir profil sayfası oldu: ad soyad düzenleme, son giriş / hesap açılışı / çalışma alanı özeti, **kendi oturumlarını görme ve kapatma**. Yeni uçlar `/api/account/*` (hepsi `CurrentUser`, hedef her zaman oturumdaki kullanıcı). Bu arada kasıtlı oturum iptalinin 30 sn'lik grace penceresiyle atlatılabildiği bulundu ve kapatıldı. `tests/test_account_profile.py` 64 kontrol.
 
 Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
 
