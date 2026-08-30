@@ -100,6 +100,11 @@ class TrainingStatus(BaseModel):
     start_time: Optional[str] = None
     metrics: Dict = {}
     error: Optional[str] = None
+    # Kosumun gercekten kac sembolle yapildigi ve panelden dusen semboller.
+    # Sessiz kalirsa kullanici 30 sembol sandigi bir modeli 5 sembolle
+    # egitmis olur (bkz. trading.py, sembol hizalamasi).
+    n_symbols: Optional[int] = None
+    warnings: List[str] = []
 
     # ── ETA (Faz 8) ───────────────────────────────────────────────────────────
     phase_name: Optional[str] = Field(

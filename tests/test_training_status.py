@@ -92,6 +92,29 @@ def main() -> int:
               r.status_code == 200 and r.json()["progress"] == 1.0,
               f"(got {r.status_code} {r.text[:120]})")
 
+        print("\n3) Sembol evreni ve uyarilar disari cikiyor mu")
+        # `split_data` kronolojik boldugu icin, sembollerin gecmisleri esit
+        # degilse bolumlerin sembol sayisi farkli cikiyor ve model bir
+        # gozlem boyutunda egitilip baskasiyla degerlendiriliyordu. Rota
+        # artik hizaliyor; kullanicinin BUNU GORMESI sart, yoksa 30 sembol
+        # sandigi modeli 5 sembolle egitmis olur.
+        set_state(is_training=False, state="completed",
+                  current_step=10, total_steps=10, n_symbols=5,
+                  warnings=["Panelde 30 sembol var ama egitim penceresinde 5 tanesi bulunuyor"])
+        r = c.get("/api/trading/train/status")
+        body = r.json() if r.status_code == 200 else {}
+        check("n_symbols yanitta var", body.get("n_symbols") == 5,
+              f"(got {body.get('n_symbols')})")
+        check("Uyari yanitta tasiniyor",
+              body.get("warnings") and "30 sembol" in body["warnings"][0],
+              f"(got {body.get('warnings')})")
+
+        set_state(is_training=True, state="running", current_step=1, total_steps=10)
+        r = c.get("/api/trading/train/status")
+        check("Uyari yokken alan bos liste",
+              r.status_code == 200 and r.json().get("warnings") == [],
+              f"(got {r.text[:120]})")
+
         _training_states.clear()
 
     print("\n" + "=" * 60)

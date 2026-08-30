@@ -173,6 +173,23 @@ def _eta_row(status):
     ], className="mb-2")
 
 
+def _with_warnings(block, status):
+    """Backend uyarilarini durum blogunun basina koy.
+
+    Sembol hizalamasi gibi durumlar sessiz kalirsa kullanici 30 sembol
+    sandigi bir modeli 5 sembolle egitmis olur — koşum "basarili" gorunur,
+    kapsam farkli olur. Uyari yoksa blok oldugu gibi doner.
+    """
+    messages = status.get("warnings") or []
+    if not messages:
+        return block
+    return html.Div(
+        [dbc.Alert([html.I(className="bi bi-exclamation-triangle me-2"), m],
+                   color="warning", className="py-2")
+         for m in messages] + [block]
+    )
+
+
 def _running_status(status):
     step = status.get("current_step", 0)
     total = status.get("total_steps", 1) or 1
@@ -362,9 +379,9 @@ def register_callbacks(app):
         state = status.get("state", status.get("status", "idle"))
 
         if state == "running":
-            return _running_status(status), False
+            return _with_warnings(_running_status(status), status), False
         elif state == "completed":
-            return _completed_status(status), True
+            return _with_warnings(_completed_status(status), status), True
         elif state == "error":
             return _error_status(status), True
         return _idle_status(), True

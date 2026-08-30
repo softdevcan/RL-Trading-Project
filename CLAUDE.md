@@ -110,7 +110,7 @@ python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
-python tests/test_training_status.py        # /train/status progress kirpma (5 kontrol)
+python tests/test_training_status.py        # /train/status progress + sembol uyarisi (8 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
@@ -311,6 +311,23 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 - `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
   alembic yok, `create_all()` var olan tabloyu değiştirmez
+
+### Sembol evreni ve train/test bolmesi (ONEMLI)
+- Gozlem uzayi sembol sayisina bagli: `1 + n + 5n + 5n`. 5 sembol -> 56,
+  30 sembol -> 331 ozellik.
+- `DataFetcher.split_data()` **KRONOLOJIK** boler ve sembol uyelugine bakmaz.
+  Sembollerin gecmisleri esit degilse bolumlerin sembol sayisi FARKLI cikar:
+  ```
+  train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
+  test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
+  ```
+  Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict` asamasinda
+  `Unexpected observation shape` ile patliyor ve HICBIR kosum tamamlanamiyordu.
+- Egitim rotasi artik val/test'i **egitim bolumunun sembol evrenine hizaliyor**
+  ve dusen sembolleri `training_state["warnings"]` ile panoya tasiyor. Sessiz
+  hizalama YAPMA: kullanici 30 sembol sandigi modeli 5 sembolle egitmis olur.
+- Kalici cozum veride: eksik sembollerin tam gecmisini indir (Veri sayfasi ->
+  "Yeniden Indir (tam)").
 
 ### Veri butunlugu (ONEMLI)
 - **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in

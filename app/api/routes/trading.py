@@ -69,6 +69,9 @@ def _empty_training_state() -> Dict[str, Any]:
         # bitti mi" sorusunu bununla cevapliyor; learn_end_ts degerlendirme
         # oncesini isaretledigi icin ayri tutuluyor.
         "finished_ts": None,
+        # Kosumun gercek sembol evreni + kullaniciya gosterilecek uyarilar
+        "n_symbols": None,
+        "warnings": [],
     }
 
 
@@ -375,6 +378,8 @@ async def get_training_status():
         start_time=training_state.get("start_time"),
         metrics=training_state.get("metrics", {}),
         error=training_state.get("error"),
+        n_symbols=training_state.get("n_symbols"),
+        warnings=training_state.get("warnings") or [],
         phase_name=training_state.get("phase_name"),
         elapsed_seconds=elapsed,
         elapsed_text=training_eta.humanize(elapsed) if elapsed is not None else None,
@@ -1127,6 +1132,38 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             fetcher.save_data(df, 'stock_data_with_indicators.csv')
 
         train_df, val_df, test_df = fetcher.split_data(df)
+
+        # Gozlem uzayi sembol sayisina bagli (1 + n + 5n + 5n). `split_data`
+        # KRONOLOJIK bolduğu icin, paneldeki sembollerin gecmisleri esit
+        # degilse bolumlerin sembol sayisi FARKLI cikar. Canli ornek:
+        #   train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
+        #   test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
+        # Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict`
+        # asamasinda patliyordu ve HICBIR kosum tamamlanamiyordu.
+        #
+        # Modelin evreni EGITIM bolumunun sembolleridir; degerlendirme ve
+        # dogrulama ona hizalanir. Sessizce yapmak yanlis olur — dusen sembol
+        # varsa durum kaydina yazilir ve panoda gorunur.
+        train_symbols = set(train_df.index.get_level_values('symbol').unique())
+        panel_symbols = set(df.index.get_level_values('symbol').unique())
+        dropped = sorted(panel_symbols - train_symbols)
+
+        if dropped:
+            def _align(frame):
+                mask = frame.index.get_level_values('symbol').isin(train_symbols)
+                return frame[mask]
+
+            val_df, test_df = _align(val_df), _align(test_df)
+            warning = (
+                f"Panelde {len(panel_symbols)} sembol var ama egitim penceresinde "
+                f"yalnizca {len(train_symbols)} tanesinin gecmisi bulunuyor; "
+                f"model bu {len(train_symbols)} sembolle egitildi ve ayni "
+                f"sembollerle degerlendirildi. Disarida kalan: {', '.join(dropped)}. "
+                f"Tum sembolleri kapsamak icin Veri sayfasindan tam gecmisi indirin."
+            )
+            logger.warning(warning)
+            training_state["warnings"] = [warning]
+        training_state["n_symbols"] = len(train_symbols)
 
         # Load Phase 2 data if needed
         fundamental_df = None
