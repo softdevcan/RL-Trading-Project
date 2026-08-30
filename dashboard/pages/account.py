@@ -17,12 +17,14 @@ theme-toggle.js'in koydugu `active` sinifi ve `aria-pressed` durumu silinir.
 
 from dash import html, dcc, no_update
 from dash import Input, Output, State
+from dash.dash_table import DataTable
 import dash_bootstrap_components as dbc
 
 import dashboard.api_client as api
 from dashboard.auth_context import current_user, display_name
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
+from dashboard.components.table import TABLE_STYLES
 from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED
 
 ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
@@ -38,6 +40,30 @@ THEME_OPTIONS = [
     ("dark", "Koyu", "bi-moon-stars", "Her zaman koyu zemin."),
     ("system", "Sistem", "bi-circle-half", "Isletim sisteminizi izler."),
 ]
+
+# Denetim kaydindaki ham eylem adlari kullaniciya gosterilmez; /dash/users
+# (admin) ham kodu gosteriyor, burada okunur karsiligi veriliyor.
+ACTION_LABELS = {
+    "login": "Giris",
+    "logout": "Cikis",
+    "password.change": "Parola degisikligi",
+    "account.update": "Profil guncellemesi",
+    "account.revoke_sessions": "Diger oturumlar kapatildi",
+    "session.reuse_detected": "Oturum jetonu tekrar kullanildi",
+    # Admin rolundeki kullanici kendi etkinliginde bunlari da gorur
+    "user.create": "Kullanici olusturuldu",
+    "user.update": "Kullanici guncellendi",
+    "user.delete": "Kullanici silindi",
+    "user.password_reset": "Kullanici parolasi sifirlandi",
+    "user.revoke_sessions": "Kullanicinin oturumlari kapatildi",
+}
+
+LOGIN_FAIL_REASONS = {
+    "bad_password": "parola hatali",
+    "locked": "hesap kilitli",
+    "inactive": "hesap devre disi",
+    "lockout_triggered": "cok fazla hatali deneme — hesap kilitlendi",
+}
 
 
 # ── Bicimlendirme yardimcilari ────────────────────────────────────────────
@@ -316,6 +342,31 @@ def _security_card():
     )
 
 
+def _activity_card():
+    """Kendi hesap etkinligi.
+
+    Amaci tek bir soruya cevap vermek: "benden baska biri bu hesaba girmeye
+    calisti mi?" Basarisiz girisler sebebiyle birlikte gorunur; yoneticinin bu
+    hesap uzerindeki islemleri KAPSAM DISI (gerekce:
+    `service.list_audit_for_user`).
+    """
+    return dbc.Card(
+        [
+            dbc.CardHeader(html.Span("Son etkinlik", className="card-title-sm")),
+            dbc.CardBody(
+                [
+                    html.P(
+                        "Hesabinizla ilgili son 20 olay. Tanimadiginiz bir giris "
+                        "gorurseniz parolanizi degistirin ve diger oturumlari kapatin.",
+                        style={"color": TEXT_MUTED, "marginBottom": "14px"},
+                    ),
+                    html.Div(id="account-activity-body"),
+                ]
+            ),
+        ]
+    )
+
+
 # ── Layout ────────────────────────────────────────────────────────────────
 
 def layout():
@@ -340,6 +391,7 @@ def layout():
                     dbc.Col(_security_card(), lg=5, className="mb-4"),
                 ]
             ),
+            dbc.Row(dbc.Col(_activity_card(), lg=12, className="mb-4")),
         ]
     )
 
@@ -384,6 +436,35 @@ def _session_row(item: dict, last: bool):
             "borderBottom": "none" if last else f"1px solid {BORDER}",
         },
     )
+
+
+def _activity_detail(entry: dict) -> str:
+    """Ham `detail` sozlugunu tek satirlik okunur ozete cevir.
+
+    Bilinmeyen bir eylem gelirse (yeni audit action eklenirse) `target`
+    gosterilir; bos donmektense elde olani vermek dogru — ekran sessizce
+    bilgi kaybetmesin.
+    """
+    action = entry.get("action", "")
+    detail = entry.get("detail") or {}
+
+    if action == "login" and not entry.get("success"):
+        reason = detail.get("reason", "")
+        return LOGIN_FAIL_REASONS.get(reason, reason)
+
+    if action == "account.update":
+        change = detail.get("full_name") or {}
+        if change:
+            return f"{change.get('from') or '(bos)'} -> {change.get('to') or '(bos)'}"
+
+    if action in ("account.revoke_sessions", "user.revoke_sessions"):
+        return f"{detail.get('revoked', 0)} oturum"
+
+    if action == "user.create":
+        role = detail.get("role", "")
+        return f"{entry.get('target', '')} ({role})" if role else entry.get("target", "")
+
+    return entry.get("target", "")
 
 
 def register_callbacks(app):
@@ -505,6 +586,51 @@ def register_callbacks(app):
                 style={"color": TEXT_MUTED, "display": "block", "marginTop": "6px"},
             ))
         return html.Div(rows)
+
+    @app.callback(
+        Output("account-activity-body", "children"),
+        Input("account-tick", "data"),
+    )
+    def load_activity(_tick):
+        entries = api.get_own_activity(20)
+        if not entries:
+            return create_state_block(
+                "empty", "Kayitli etkinlik yok",
+                "Girisler, parola degisiklikleri ve oturum islemleri burada listelenir.",
+            )
+
+        rows = [
+            {
+                "ts": _fmt_dt(entry.get("ts")),
+                "action": ACTION_LABELS.get(entry.get("action", ""),
+                                            entry.get("action", "")),
+                "result": "Basarili" if entry.get("success") else "Basarisiz",
+                "ip": entry.get("ip") or "—",
+                "detail": _activity_detail(entry),
+            }
+            for entry in entries
+        ]
+        return DataTable(
+            id="account-activity-table",
+            columns=[
+                {"name": "Zaman", "id": "ts"},
+                {"name": "Olay", "id": "action"},
+                {"name": "Sonuc", "id": "result"},
+                {"name": "IP", "id": "ip"},
+                {"name": "Ayrinti", "id": "detail"},
+            ],
+            data=rows,
+            page_size=8,
+            sort_action="native",
+            # Basarisiz satir goze carpsin: renk burada ANLAM tasiyor
+            # (Faz 8 C.3 kurali), dekoratif degil.
+            style_data_conditional=[{
+                "if": {"filter_query": '{result} = "Basarisiz"', "column_id": "result"},
+                "color": "var(--rlt-loss)",
+                "fontWeight": "600",
+            }],
+            **TABLE_STYLES,
+        )
 
     @app.callback(
         Output("account-session-alert", "children"),

@@ -225,6 +225,11 @@ def get_own_sessions() -> Dict:
     return _get("/account/sessions") or {}
 
 
+def get_own_activity(limit: int = 20) -> List[Dict]:
+    data = _get("/account/activity", params={"limit": limit}) or {}
+    return data.get("entries", [])
+
+
 def revoke_other_sessions() -> Dict:
     return _post_raw("/account/sessions/revoke-others", json=None)
 

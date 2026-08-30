@@ -123,7 +123,8 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        CSS siniflarimiz (86 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
-                                           #          Dash callback smoke (64 kontrol)
+                                           #          etkinlik kaydi, Dash callback
+                                           #          smoke (82 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -163,7 +164,8 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   buraya gider (`dashboard/components/sidebar.py::_account_link`). Her rol erisir.
 - Uclar: `app/api/routes/account.py` → `GET /api/account/me`,
   `PATCH /api/account/profile`, `GET /api/account/sessions`,
-  `POST /api/account/sessions/revoke-others`. Hepsi `CurrentUser`.
+  `POST /api/account/sessions/revoke-others`, `GET /api/account/activity`.
+  Hepsi `CurrentUser`.
 - **Neden `/api/*`, `/auth/*` degil:** pano callback'leri `api_client` uzerinden
   cagiriyor; `/api/*` altinda CSRF + RBAC middleware'den bedava geliyor.
   `/auth/*` tarayicinin dogrudan cagirdigi yuzey (giris formu, tema anahtari) —
@@ -175,6 +177,10 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   kullanilirsa `rotate_session` yeni oturum veriyor; isaretleme birakmak
   "diger oturumlari kapat"i atlatilabilir kilardi (bkz.
   `service.revoke_other_sessions` docstring'i).
+- **Kendi etkinligi yalnizca `user_id` ile filtrelenir**, `target` ile DEGIL:
+  yoneticinin bu hesap uzerindeki islemi o satirda YONETICIYI tasir; gostermek
+  admin kimligini ve IP'sini yonetici olmayan bir yuzeye sizdirirdi
+  (`service.list_audit_for_user`).
 - `dbc.NavLink`'e `title` VERME — kabul etmedigi prop tum Dash agacini
   render edilemez yapar, `/dash/` 500 doner. Ipucunu sarmalayan Div'e koy.
 - Detay: `docs/development/phase-8-ui-theming.md` → "Faz F — Profil sayfasi"

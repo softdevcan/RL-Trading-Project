@@ -20,9 +20,10 @@ degil, kisisel hesap ayaridir.
 
 from __future__ import annotations
 
+import json
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -189,6 +190,41 @@ async def list_own_sessions(
     rows = service.list_sessions(db, user.id)
     sessions = _group_sessions(rows, _current_jti(request))
     return {"sessions": sessions, "count": len(sessions), "tokens": len(rows)}
+
+
+@router.get("/activity")
+async def list_own_activity(
+    user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+    limit: int = Query(20, ge=1, le=100),
+) -> dict:
+    """Kendi hesap etkinligi — "birisi hesabima girmeye calisti mi" sorusu.
+
+    Kapsam karari `service.list_audit_for_user` docstring'inde: yalnizca
+    `user_id` eslesen satirlar, yoneticinin bu hesap uzerindeki islemleri
+    degil.
+
+    `detail` ayristirilip sozluk olarak donuyor (kullanicinin kendi verisi:
+    basarisizlik sebebi, kapatilan oturum sayisi, ad degisikligi). Etiketlere
+    cevirmek arayuzun isi — uc ham kalir.
+    """
+    rows = service.list_audit_for_user(db, user.id, limit=limit)
+
+    entries = []
+    for row in rows:
+        try:
+            detail = json.loads(row.detail) if row.detail else {}
+        except (ValueError, TypeError):
+            detail = {}
+        entries.append({
+            "ts": as_utc(row.ts).isoformat() if row.ts else None,
+            "action": row.action,
+            "target": row.target or "",
+            "success": bool(row.success),
+            "ip": row.ip or "",
+            "detail": detail if isinstance(detail, dict) else {},
+        })
+    return {"entries": entries, "count": len(entries)}
 
 
 @router.post("/sessions/revoke-others")

@@ -13,8 +13,11 @@ Ne dogrular:
               — diger oturumlar kapanir, cagiran oturum ayakta kalir,
                 kapatilan oturum grace penceresinden GERI DONEMEZ
   7. Denetim kaydi (account.update / account.revoke_sessions)
-  8. _device_label birim kontrolleri
-  9. Dash callback'leri gercek HTTP yolundan calisiyor mu — layout render
+  8. GET /api/account/activity   — kendi etkinligi; baska hesabin ve
+                                   yoneticinin bu hesap uzerindeki
+                                   islemlerinin sizmamasi
+  9. _device_label birim kontrolleri
+ 10. Dash callback'leri gercek HTTP yolundan calisiyor mu — layout render
      testi callback GOVDESINDEKI hatayi yakalamaz (Faz 8 notu), o yuzden
      dordu de /dash/_dash-update-component uzerinden tetiklenir
 """
@@ -102,6 +105,9 @@ def main() -> int:
                     must_change_password=False)
         create_user(db, email="view@test.local", password="ViewPass123",
                     full_name="Viewer Eski", role=Role.VIEWER, created_by="test",
+                    must_change_password=False)
+        create_user(db, email="root@test.local", password="RootPass1234",
+                    full_name="Root Admin", role=Role.ADMIN, created_by="test",
                     must_change_password=False)
     check("Kullanicilar olusturuldu", True)
 
@@ -243,7 +249,68 @@ def main() -> int:
             check("Yenileme denemesi yeni oturum uretmedi", len(rows) == 1,
                   f"(got {len(rows)})")
 
-    print("\n8) Oturumsuz erisim")
+    print("\n8) GET /api/account/activity")
+    with TestClient(app) as c:
+        check("Viewer giris yapti (etkinlik)", login(c, "view@test.local", "ViewPass123"))
+
+        r = c.get("/api/account/activity")
+        check("activity 200 donuyor", r.status_code == 200, f"(got {r.status_code})")
+        entries = r.json().get("entries", []) if r.status_code == 200 else []
+        check("Giris kaydi listede", any(e["action"] == "login" and e["success"]
+                                         for e in entries),
+              f"(got {[e['action'] for e in entries]})")
+        check("Kendi e-postasi tekrar edilmiyor",
+              all("email" not in e for e in entries))
+        check("detail sozluk olarak donuyor",
+              all(isinstance(e.get("detail"), dict) for e in entries))
+
+        # Baska kullanicinin satirlari sizmamali
+        check("Baska hesabin etkinligi gorunmuyor",
+              not any("alice" in str(e) or "bob" in str(e) for e in entries),
+              f"(got {entries})")
+
+        r = c.get("/api/account/activity", params={"limit": 0})
+        check("limit=0 reddedildi", r.status_code == 422, f"(got {r.status_code})")
+        r = c.get("/api/account/activity", params={"limit": 500})
+        check("limit=500 reddedildi", r.status_code == 422, f"(got {r.status_code})")
+        r = c.get("/api/account/activity", params={"limit": 1})
+        check("limit uygulaniyor", len(r.json().get("entries", [])) == 1,
+              f"(got {len(r.json().get('entries', []))})")
+
+    # Basarisiz giris kendi etkinliginde SEBEBIYLE birlikte gorunmeli
+    with TestClient(app) as c:
+        c.post("/auth/login", json={"email": "view@test.local", "password": "YanlisParola1"})
+        check("Viewer tekrar giris yapti", login(c, "view@test.local", "ViewPass123"))
+        entries = c.get("/api/account/activity").json().get("entries", [])
+        failed = [e for e in entries if e["action"] == "login" and not e["success"]]
+        check("Basarisiz giris kaydedildi", bool(failed), f"(got {entries[:3]})")
+        check("Basarisizlik sebebi tasiniyor",
+              bool(failed) and failed[0]["detail"].get("reason") == "bad_password",
+              f"(got {failed[0]['detail'] if failed else None})")
+
+    # Yoneticinin bu hesap uzerindeki islemi kullaniciya gosterilmez:
+    # o satir user_id olarak YONETICIYI tasir, gostermek admin kimligini
+    # ve IP'sini yonetici olmayan bir yuzeye sizdirirdi.
+    with session_scope() as db:
+        viewer_id = db.query(User).filter(User.email == "view@test.local").first().id
+    with TestClient(app) as admin_c:
+        check("Admin giris yapti", login(admin_c, "root@test.local", "RootPass1234"))
+        r = admin_c.post(f"/api/admin/users/{viewer_id}/revoke-sessions",
+                         headers=csrf_headers(admin_c))
+        check("Admin oturum iptali calisti", r.status_code == 200, f"(got {r.status_code})")
+        own = admin_c.get("/api/account/activity").json().get("entries", [])
+        check("Admin kendi etkinliginde islemi goruyor",
+              any(e["action"] == "user.revoke_sessions" for e in own),
+              f"(got {[e['action'] for e in own]})")
+
+    with TestClient(app) as c:
+        login(c, "view@test.local", "ViewPass123")
+        entries = c.get("/api/account/activity").json().get("entries", [])
+        check("Hedef kullanici admin islemini gormuyor",
+              not any(e["action"] == "user.revoke_sessions" for e in entries),
+              f"(got {[e['action'] for e in entries]})")
+
+    print("\n9) Oturumsuz erisim")
     with TestClient(app) as c:
         r = c.get("/api/account/me")
         check("Oturumsuz me reddedildi", r.status_code in (401, 403),
@@ -253,7 +320,7 @@ def main() -> int:
         check("Oturumsuz yazma reddedildi", r.status_code in (401, 403),
               f"(got {r.status_code})")
 
-    print("\n9) Cihaz etiketi")
+    print("\n10) Cihaz etiketi")
     from app.api.routes.account import _device_label, _group_sessions
 
     check("Chrome/Windows cozuldu",
@@ -288,7 +355,7 @@ def main() -> int:
           any(g["tokens"] == 2 for g in grouped), f"(got {[g['tokens'] for g in grouped]})")
     check("Mevcut oturum basa alindi", grouped[0]["current"] is True)
 
-    print("\n10) Dash callback'leri (gercek HTTP yolu)")
+    print("\n11) Dash callback'leri (gercek HTTP yolu)")
     # Sayfa layout'u sorunsuz render olsa bile callback GOVDESI patlayabilir
     # (Faz 8'de f-string icindeki budanmis bir import boyle kacmisti). Dordu de
     # tarayicinin kullandigi ucdan tetiklenir.
@@ -341,6 +408,12 @@ def main() -> int:
         r = fire(c, "account-sessions-body.children", [0])
         check("Oturum callback'i calisti", r.status_code == 200, f"(got {r.status_code})")
         check("Mevcut tarayici isaretlendi", "bu tarayici" in r.text)
+
+        r = fire(c, "account-activity-body.children", [0])
+        check("Etkinlik callback'i calisti", r.status_code == 200, f"(got {r.status_code})")
+        check("Etkinlik tablosu ham eylem kodu degil etiket basiyor",
+              "Giris" in r.text and '"login"' not in r.text,
+              f"(got {r.text[:200]})")
 
         r = fire(c, "account-alert", [1], ["Bob Guncel", 0])
         check("Kaydet callback'i calisti", r.status_code == 200, f"(got {r.status_code})")

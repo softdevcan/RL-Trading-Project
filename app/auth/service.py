@@ -342,6 +342,31 @@ def revoke_other_sessions(db: Session, user_id: str, keep_jti: str) -> int:
     return count
 
 
+def list_audit_for_user(db: Session, user_id: str, limit: int = 20) -> list[AuditLog]:
+    """Kullanicinin KENDI denetim satirlari, yeniden eskiye.
+
+    Filtre `user_id` uzerinden — yani "benim yaptigim / benim oturumumda olan"
+    olaylar: girisler (basarili ve basarisiz), cikis, parola degisikligi,
+    profil guncellemesi, oturum iptali, jeton tekrar kullanimi tespiti.
+
+    `target` eslesmesi KASITLI olarak disarida: bir yoneticinin bu hesap
+    uzerinde yaptigi islemler (rol degisimi, parola sifirlama) o satirlarda
+    `user_id` olarak YONETICIYI tasir; onlari buraya almak yoneticinin
+    kimligini ve IP'sini yonetici olmayan bir yuzeye sizdirirdi. Yonetici
+    tarafi zaten /dash/users -> Denetim Kaydi'nda gorunuyor.
+
+    Basarisiz girislerde `no_such_user` satiri hic eslesmez (user_id NULL) —
+    oturum acmis bir kullanici icin zaten anlamsiz.
+    """
+    rows = db.execute(
+        select(AuditLog)
+        .where(AuditLog.user_id == user_id)
+        .order_by(desc(AuditLog.ts))
+        .limit(limit)
+    ).scalars()
+    return list(rows)
+
+
 def purge_expired_sessions(db: Session) -> int:
     """Suresi dolmus kayitlari temizle (acilista cagrilir)."""
     rows = db.execute(select(SessionToken).where(SessionToken.expires_at < utcnow())).scalars()

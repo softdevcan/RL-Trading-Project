@@ -8,7 +8,7 @@
 > olduğunu anlatıyor.
 >
 > Doğrulama: `test_theme_contrast` 86/86, `test_theme_preference` 31/31,
-> `test_account_profile` 64/64, `test_auth` 28/28,
+> `test_account_profile` 82/82, `test_auth` 28/28,
 > `test_workspace_isolation` 18/18; 10 sayfa × 2 tema gerçek tarayıcıda
 > (Chrome/CDP) görsel kontrol.
 >
@@ -669,6 +669,7 @@ token; yeni sınıflar `custom.css`'te (`sidebar-footer`, `sidebar-account`,
 | **Hesap** | Son giriş, hesap açılışı, hesabı açan, çalışma alanı kullanımı (dosya + boyut) |
 | **Görünüm** | Değişmedi — üç durumlu tema, clientside |
 | **Güvenlik** | Parola değiştir + **aktif oturumlar** + "Diğer oturumları kapat" |
+| **Son etkinlik** | Kendi denetim kaydı: girişler (başarılı/başarısız + sebep), çıkış, parola değişimi, oturum iptali |
 
 Zaman damgaları `"30.08.2026 14:32 UTC"` olarak yazılıyor; kayıtlar naive-UTC
 tutulduğu için etiketsiz göstermek "yerel saat" izlenimi verirdi.
@@ -686,6 +687,7 @@ GET   /api/account/me                      hesap alanları + çalışma alanı �
 PATCH /api/account/profile                 {full_name}
 GET   /api/account/sessions                gruplanmış aktif oturumlar
 POST  /api/account/sessions/revoke-others  bu tarayıcı hariç hepsini kapat
+GET   /api/account/activity                kendi denetim kaydı (son N olay)
 ```
 
 Hepsi `CurrentUser` — viewer dahil her rol. Hedef **her zaman** oturumdaki
@@ -724,9 +726,30 @@ kaç kayda karşılık geldiğini saklamadan veriyor. UA "Chrome · Windows" gib
 okunur bir etikete çevriliyor — tanınmayan UA uydurulmuyor, kırpılarak
 gösteriliyor.
 
-### F.6 — Testler
+### F.6 — Son etkinlik: neyin gösterildiği, neyin gösterilmediği
 
-`tests/test_account_profile.py` — **64 kontrol**: uçlar, doğrulama, CSRF,
+`GET /api/account/activity` kullanıcının kendi denetim satırlarını döndürüyor.
+Filtre **yalnızca `user_id`** üzerinden — yani "benim yaptığım / benim
+oturumumda olan" olaylar: girişler (başarılı ve **başarısız, sebebiyle**),
+çıkış, parola değişimi, profil güncellemesi, oturum iptali, jeton tekrar
+kullanımı tespiti.
+
+**`target` eşleşmesi kasıtlı olarak dışarıda.** Bir yöneticinin bu hesap
+üzerinde yaptığı işlem (rol değişimi, parola sıfırlama, oturum kapatma) o
+satırda `user_id` olarak **yöneticiyi** taşıyor; onları kullanıcı yüzeyine
+almak yöneticinin kimliğini ve IP'sini yönetici olmayan bir ekrana
+sızdırırdı. Yönetici tarafı zaten `/dash/users` → Denetim Kaydı'nda görünüyor.
+Test bunu iki yönlü doğruluyor: admin kendi etkinliğinde işlemi **görüyor**,
+hedef kullanıcı **görmüyor**.
+
+Uç ham veri döndürüyor (`action`, `success`, ayrıştırılmış `detail`); ham
+eylem kodunu okunur etikete çevirmek arayüzün işi (`ACTION_LABELS`,
+`LOGIN_FAIL_REASONS`). Başarısız satır `--rlt-loss` ile işaretleniyor — renk
+burada **anlam** taşıyor, C.3'ün dekoratif renk yasağıyla çelişmiyor.
+
+### F.7 — Testler
+
+`tests/test_account_profile.py` — **82 kontrol**: uçlar, doğrulama, CSRF,
 viewer'ın kendi profilini yönetmesi, rol yükseltme denemesi, oturum gruplama,
 iptalden sonra kapatılan oturumun grace penceresinden dönememesi, denetim
 kaydı, `_device_label` birim kontrolleri.
@@ -749,7 +772,8 @@ Stil taşımayan iki kanca (`theme-label`, `sidebar-link`) gerekçesiyle muaf.
 | Kullanıcının kendi düzenleyebildiği alan | tema | tema + ad soyad |
 | Kendi oturumlarını görme/kapatma | yok (yalnızca admin) | var |
 | İptalin grace penceresiyle atlatılabilmesi | mümkündü | kapalı (kayıt siliniyor) |
-| Hesap testi | yok | 64 kontrol |
+| Hesabına yönelik başarısız giriş denemesini görme | yok | var (sebebiyle) |
+| Hesap testi | yok | 82 kontrol |
 
 ---
 
