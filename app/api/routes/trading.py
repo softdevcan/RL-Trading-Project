@@ -21,12 +21,13 @@ from app.schemas.trading import (
     TrainingRequest, TrainingStatus, TrainingEstimate, ModelMetrics,
     ModelInfo, TrainingResponse,
     DailyDecisionRequest, DailyDecisionResponse, TradeDecision,
-    PortfolioSnapshot, PortfolioHistoryResponse,
+    PortfolioSnapshot, PortfolioHistoryResponse, PortfolioValuation,
     ModelComparisonResponse
 )
 from app.core.config import get_settings
 from app.auth import workspace as ws
-from app.auth.deps import RequireWriter
+from app.auth.deps import CurrentUser, RequireWriter
+from app.auth.models import Role
 from app.services import training_eta
 from app.services import background_jobs as jobs
 
@@ -64,6 +65,13 @@ def _empty_training_state() -> Dict[str, Any]:
         "run_start_ts": None,
         "learn_start_ts": None,
         "estimate": None,
+        # Kosumun BITTIGI an (basarili ya da hatali). Bildirim zili "yakinda
+        # bitti mi" sorusunu bununla cevapliyor; learn_end_ts degerlendirme
+        # oncesini isaretledigi icin ayri tutuluyor.
+        "finished_ts": None,
+        # Kosumun gercek sembol evreni + kullaniciya gosterilecek uyarilar
+        "n_symbols": None,
+        "warnings": [],
     }
 
 
@@ -326,9 +334,15 @@ async def get_training_status():
     """Get current training status (aktif kullaniciya ait)"""
     training_state = get_training_state()
 
+    # SB3 `total_timesteps`'i tam tutturmaz: ogrenme `n_steps` bloklariyla
+    # ilerledigi icin son blok hedefi asabiliyor (olculdu: 1.001472). Sema
+    # `progress`'i [0,1] ile sinirliyor, dolayisiyla ham oran YANIT
+    # DOGRULAMASINI dusuruyordu -> /train/status 500 veriyor, pano egitim
+    # boyunca ilerleme ve ETA gosteremiyordu. Oran burada kirpilir; sema
+    # sozlesmesi (le=1) oldugu gibi kalir.
     progress = 0.0
     if training_state["total_steps"] > 0:
-        progress = training_state["current_step"] / training_state["total_steps"]
+        progress = min(1.0, training_state["current_step"] / training_state["total_steps"])
 
     # ETA: devam eden kosumda gozlenen hizdan, isinma penceresinde on tahminden.
     # ETA bir ek ozellik; pano ilerleme takibi bu uca bagli oldugu icin buradaki
@@ -364,6 +378,8 @@ async def get_training_status():
         start_time=training_state.get("start_time"),
         metrics=training_state.get("metrics", {}),
         error=training_state.get("error"),
+        n_symbols=training_state.get("n_symbols"),
+        warnings=training_state.get("warnings") or [],
         phase_name=training_state.get("phase_name"),
         elapsed_seconds=elapsed,
         elapsed_text=training_eta.humanize(elapsed) if elapsed is not None else None,
@@ -983,35 +999,81 @@ def get_earliest_date(source: str = "borsapy"):
 
 @router.delete("/models/{model_name}")
 async def delete_model(model_name: str, user: RequireWriter):
-    """Delete a trained model.
+    """Egitilmis modeli sil.
 
-    Yalnizca kullanicinin KENDI calisma alanindaki model silinebilir; ortak
-    (kullanici oncesi) modeller salt-okunurdur — bir kullanici digerlerinin
-    gordugu modeli silemez.
+    Iki katman var:
+
+    - **Kendi calisma alanindaki model** — sahibi siler (RequireWriter).
+    - **Ortak (kullanici oncesi) model** — herkese gorunur oldugu icin bir
+      kullanici digerlerinin gordugunu silememeli; YALNIZCA YONETICI siler.
+
+    Ikinci madde Faz 7'de "kimse silemez" idi. Pratikte bu, kullanici sistemi
+    oncesinde egitilmis deneme modellerini panodan temizlemenin HICBIR yolunu
+    birakmiyordu — tek cikis kapsayicinin baglandigi dizine elle girmekti.
+    Yonetici zaten operatordur (hesap silebilir, parola sifirlayabilir);
+    ortak yapitlarin temizligi de onun isi. Silme ortak dizini etkiledigi
+    icin denetim kaydina yazilir.
     """
     model_name = sanitize_model_name(model_name)
-    model_path = os.path.join(ws.models_dir(), f"{model_name}.zip")
+    own_path = os.path.join(ws.models_dir(), f"{model_name}.zip")
 
-    if not os.path.exists(model_path):
-        if ws.find_file("models", f"{model_name}.zip"):
+    if os.path.exists(own_path):
+        model_path, is_shared = own_path, False
+    else:
+        found = ws.find_file("models", f"{model_name}.zip")
+        if not found:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model not found: {model_name}"
+            )
+        if user.role != Role.ADMIN:
             raise HTTPException(
                 status_code=403,
-                detail="Bu model ortak (salt-okunur) dizinde; silinemez."
+                detail=("Bu model ortak (kullanici oncesi) dizinde; herkese gorunur. "
+                        "Yalnizca yonetici silebilir."),
             )
-        raise HTTPException(
-            status_code=404,
-            detail=f"Model not found: {model_name}"
-        )
+        model_path, is_shared = found, True
 
-    # Delete model file
     os.remove(model_path)
 
-    # Delete metrics if exists
-    metrics_file = os.path.join(ws.results_dir(), f"{model_name}_metrics.json")
+    # Modelin yaninda duran tanim dosyasi (`<model>.meta.json`) da gider —
+    # `.zip` silinip tanim kalirsa dizinde sahibi olmayan bir dosya birikir.
+    from app.services.daily_trading import model_meta_path
+    meta_file = model_meta_path(model_path)
+    if os.path.exists(meta_file):
+        os.remove(meta_file)
+
+    # Metrik JSON'u modelin BULUNDUGU katmandan silinir: ortak bir modelin
+    # metrigi ortak results/ altindadir, kullanicininki kendi alaninda.
+    metrics_dir = ws.shared_dir("results") if is_shared else ws.results_dir()
+    metrics_file = os.path.join(metrics_dir, f"{model_name}_metrics.json")
     if os.path.exists(metrics_file):
         os.remove(metrics_file)
 
-    return {"message": f"Model {model_name} deleted successfully"}
+    if is_shared:
+        _audit_shared_model_delete(user, model_name)
+
+    return {
+        "message": f"Model {model_name} deleted successfully",
+        "shared": is_shared,
+    }
+
+
+def _audit_shared_model_delete(user, model_name: str) -> None:
+    """Ortak dizinden silme denetim kaydina yazilir — herkesi etkiler.
+
+    Denetim yazimi basarisiz olursa SILME GERI ALINMAZ (dosya zaten gitti);
+    hata yalnizca loglanir, kullaniciya basarisiz gibi gosterilmez.
+    """
+    try:
+        from app.auth import service
+        from app.auth.db import session_scope
+
+        with session_scope() as db:
+            service.audit(db, "model.delete_shared", user=user, target=model_name,
+                          detail={"scope": "shared"})
+    except Exception as exc:  # pragma: no cover - denetim kaydi kritik yol degil
+        logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
@@ -1077,6 +1139,38 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             fetcher.save_data(df, 'stock_data_with_indicators.csv')
 
         train_df, val_df, test_df = fetcher.split_data(df)
+
+        # Gozlem uzayi sembol sayisina bagli (1 + n + 5n + 5n). `split_data`
+        # KRONOLOJIK bolduğu icin, paneldeki sembollerin gecmisleri esit
+        # degilse bolumlerin sembol sayisi FARKLI cikar. Canli ornek:
+        #   train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
+        #   test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
+        # Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict`
+        # asamasinda patliyordu ve HICBIR kosum tamamlanamiyordu.
+        #
+        # Modelin evreni EGITIM bolumunun sembolleridir; degerlendirme ve
+        # dogrulama ona hizalanir. Sessizce yapmak yanlis olur — dusen sembol
+        # varsa durum kaydina yazilir ve panoda gorunur.
+        train_symbols = set(train_df.index.get_level_values('symbol').unique())
+        panel_symbols = set(df.index.get_level_values('symbol').unique())
+        dropped = sorted(panel_symbols - train_symbols)
+
+        if dropped:
+            def _align(frame):
+                mask = frame.index.get_level_values('symbol').isin(train_symbols)
+                return frame[mask]
+
+            val_df, test_df = _align(val_df), _align(test_df)
+            warning = (
+                f"Panelde {len(panel_symbols)} sembol var ama egitim penceresinde "
+                f"yalnizca {len(train_symbols)} tanesinin gecmisi bulunuyor; "
+                f"model bu {len(train_symbols)} sembolle egitildi ve ayni "
+                f"sembollerle degerlendirildi. Disarida kalan: {', '.join(dropped)}. "
+                f"Tum sembolleri kapsamak icin Veri sayfasindan tam gecmisi indirin."
+            )
+            logger.warning(warning)
+            training_state["warnings"] = [warning]
+        training_state["n_symbols"] = len(train_symbols)
 
         # Load Phase 2 data if needed
         fundamental_df = None
@@ -1303,6 +1397,28 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         model_path = os.path.join(models_root, model_name)
         model.save(model_path)
 
+        # Modelin evrenini modelin yanina yaz. Model ADI evreni ANLATMIYOR:
+        # yukarida gorulecegi gibi egitim `get_symbols(phase)` listesini yalnizca
+        # veri cekerken kullanir, egitimi panelin tamamiyla yapar — "phase1" adli
+        # bir model 30 sembolle egitilmis olabilir. Gunluk karar ucu evreni
+        # adindan tahmin edince durum vektoru yanlis uzunlukta cikiyor ve SB3
+        # "Unexpected observation shape" ile patliyordu. Sira onemli: durum
+        # vektoru sembolleri env'deki sirayla diziyor.
+        from app.services.daily_trading import write_model_meta
+        write_model_meta(model_path, {
+            "model_name": model_name,
+            "algorithm": request.algorithm,
+            "phase": request.phase,
+            "symbols": list(temp_env.symbols),
+            "n_symbols": int(temp_env.n_stocks),
+            "obs_dim": int(temp_env.observation_space.shape[0]),
+            "action_dim": int(action_dim),
+            "total_timesteps": request.total_timesteps,
+            "initial_balance": request.initial_balance,
+            "max_shares_per_trade": request.max_shares_per_trade,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        })
+
         # Evaluate on test set
         def make_test_env():
             return make_env(
@@ -1399,6 +1515,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["metrics"] = metrics_with_config
         training_state["current_step"] = request.total_timesteps
         training_state["phase_name"] = "completed"
+        training_state["finished_ts"] = time.time()
 
         # Bu kosumu ETA gecmisine yaz — bir sonraki tahminin dayanagi olur.
         # Kayit basarisiz olursa egitim yine basarili sayilir.
@@ -1429,6 +1546,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["state"] = "error"
         training_state["error"] = str(e)
         training_state["phase_name"] = "error"
+        training_state["finished_ts"] = time.time()
         raise
 
 
@@ -1490,6 +1608,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
     """
     from app.services.daily_trading import (
         get_risk_parameters,
+        resolve_trade_universe,
         fetch_latest_market_data,
         build_live_state,
         get_current_prices,
@@ -1529,23 +1648,43 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         target_date = request.date or datetime.now().strftime("%Y-%m-%d")
 
         # The trade universe MUST match what the model saw during training,
-        # otherwise the state vector size mismatches the obs space. Derive it
-        # from the model name (phase1/phase2) instead of trusting whatever
-        # set the UI happened to send. The user-supplied `shares` is treated
-        # as a sparse declaration of current holdings — missing entries are
-        # filled with 0.
-        # Phase 1 and 2 share the same 5-symbol universe; phase 2 only adds
-        # fundamental/macro features on top. Phase 3 adds GOLD_GRAM_TRY.
-        from data.bist30_symbols import PHASE1_SYMBOLS, PHASE3_SYMBOLS
-        if "phase3" in model_name_lower:
-            trade_universe = list(PHASE3_SYMBOLS)
-        else:
-            trade_universe = list(PHASE1_SYMBOLS)
+        # otherwise the state vector size mismatches the obs space. The model
+        # NAME does not carry it: training uses `get_symbols(phase)` only to
+        # fetch data and then trains on whatever the loaded panel contains, so
+        # a "phase1" model can well have 30 symbols. Ask the model itself
+        # (sidecar meta → training panel → name constants, each checked against
+        # the action space). The user-supplied `shares` is treated as a sparse
+        # declaration of current holdings — missing entries are filled with 0.
+        try:
+            trade_universe, universe_source = resolve_trade_universe(
+                model, model_path, request.model_name
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        logger.info(f"Trade universe source: {universe_source}")
 
-        # Normalize whatever shares the client sent to BIST `.IS` form.
+        # Portfoy: istek acikca vermediyse takip edilen kagit portfoyden gelir.
+        # Eskiden pano bakiyeyi 100.000 varsayilaniyla ve elle doldurulan 5
+        # satirlik formdan kuruyordu; dunku pozisyonlar bugunku karara hic
+        # girmiyor, "gun sonunda elimizde ne kaldi" sorusunun cevabi hicbir
+        # yerde olusmuyordu. Acikca verilen deger yine kazanir.
+        from app.services import portfolio as pf
+
+        tracked = pf.load_portfolio()
+        if request.balance is None or request.shares is None:
+            logger.info(
+                f"Portfoy kagit portfoyden yuklendi: nakit {tracked['cash']:,.2f}, "
+                f"{len(tracked['positions'])} pozisyon"
+            )
+        balance = float(request.balance if request.balance is not None
+                        else tracked["cash"])
+        source_shares = (request.shares if request.shares is not None
+                         else pf.shares_map(tracked))
+
+        # Normalize whatever shares we ended up with to BIST `.IS` form.
         user_shares = {
             (k if "." in k else f"{k}.IS"): int(v)
-            for k, v in (request.shares or {}).items()
+            for k, v in (source_shares or {}).items()
         }
         # Align portfolio to the trade universe (fill missing with 0).
         normalized_shares = {sym: user_shares.get(sym, 0) for sym in trade_universe}
@@ -1560,7 +1699,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
 
         # 4. Build state
         state = build_live_state(
-            balance=request.balance,
+            balance=balance,
             shares_owned=normalized_shares,
             market_data=market_data,
             target_date=target_date,
@@ -1568,6 +1707,23 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         )
 
         # 5. Model inference
+        # Son kontrol: evren dogru sayida olsa da durum vektoru hala yanlis
+        # uzunlukta cikabilir (ornegin faz 2 modeli — hisse basina 17 ozellik +
+        # 6 makro bekler, `build_live_state` 10 ozellik uretir). SB3'un ham
+        # "Unexpected observation shape" hatasi kullaniciya hicbir sey
+        # anlatmiyordu; nedeni burada soyluyoruz.
+        expected_obs = getattr(model.observation_space, "shape", None)
+        if expected_obs is not None and state.shape != tuple(expected_obs):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Durum vektoru {state.shape[0]} uzunlugunda uretildi ama model "
+                    f"{expected_obs[0]} bekliyor ({len(trade_universe)} sembol, evren "
+                    f"kaynagi: {universe_source}). Model muhtemelen bu ucun "
+                    f"uretemedigi ek ozelliklerle egitildi (faz 2: fundamental + makro). "
+                    f"Faz 1/3 modeliyle deneyin."
+                ),
+            )
         logger.info("Running model inference...")
         action, _states = model.predict(state, deterministic=True)
         logger.info(f"Model output (raw action): {action}")
@@ -1581,7 +1737,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
             action=action,
             symbols=symbols,
             current_prices=current_prices,
-            balance=request.balance,
+            balance=balance,
             shares_owned=normalized_shares,
             risk_params=risk_params,
             max_shares_per_trade=request.max_shares_per_trade
@@ -1589,13 +1745,13 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
 
         # 8. Calculate portfolio before/after
         portfolio_before = calculate_portfolio_value(
-            balance=request.balance,
+            balance=balance,
             shares=normalized_shares,
             prices=current_prices
         )
 
         portfolio_after = simulate_portfolio_after_trades(
-            balance=request.balance,
+            balance=balance,
             shares=normalized_shares,
             decisions=decisions
         )
@@ -1652,6 +1808,96 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _audit_portfolio_reset(user, initial_capital: float) -> None:
+    """Portfoy sifirlama denetim kaydina yazilir — gecmis bakiyeyi silen bir islem.
+
+    Denetim yazimi basarisiz olursa sifirlama GERI ALINMAZ (dosya zaten
+    yazildi); hata yalnizca loglanir.
+    """
+    try:
+        from app.auth import service
+        from app.auth.db import session_scope
+
+        with session_scope() as db:
+            service.audit(db, "portfolio.reset", user=user,
+                          detail={"initial_capital": initial_capital})
+    except Exception as exc:  # pragma: no cover - denetim kaydi kritik yol degil
+        logger.warning(f"Portfoy sifirlama denetim kaydina yazilamadi: {exc}")
+
+
+def _decision_prices(decision_data: dict) -> dict:
+    """Kararin icindeki sembol fiyatlarini cikar.
+
+    Karar uretilirken her sembol icin o gunun kapanisi `decisions[i].price`
+    alanina yazilir; islemler de bu fiyatlarla simule edilir. Degerlemede ayni
+    fiyatlari kullanmak, uygulama anini kararla tutarli kilar (yeniden veri
+    cekmek gerekmez ve gecmise donuk uygulamada da dogru gunun fiyati kalir).
+    """
+    return {
+        d["symbol"]: float(d.get("price") or 0.0)
+        for d in decision_data.get("decisions", [])
+        if d.get("price")
+    }
+
+
+@router.get("/portfolio", response_model=PortfolioValuation)
+async def get_portfolio(user: CurrentUser, date: Optional[str] = None):
+    """Kagit portfoyu guncel fiyatlarla degerle (mark-to-market).
+
+    Kar/zarar ancak pozisyon BASKA BIR GUNUN fiyatiyla degerlenince olusur;
+    kararin `summary.daily_return_pct` alani bunu olcmez (orada alim-satim ayni
+    gunun ayni fiyatlariyla simule edilir, geriye yalnizca komisyon kalir).
+    """
+    from app.services import portfolio as pf
+    from app.services.daily_trading import (
+        fetch_latest_market_data,
+        get_current_prices,
+    )
+
+    tracked = pf.load_portfolio()
+    symbols = list(tracked["positions"].keys())
+    prices: dict = {}
+    priced_on = None
+
+    if symbols:
+        target_date = date or datetime.now().strftime("%Y-%m-%d")
+        try:
+            market_data = await fetch_latest_market_data(
+                symbols=symbols, target_date=target_date, lookback_days=30
+            )
+            prices = get_current_prices(market_data, target_date)
+            priced_on = market_data.attrs.get("actual_date")
+        except Exception as exc:  # noqa: BLE001
+            # Fiyat cekilemezse portfoyu gizlemek yerine maliyetle degerle;
+            # `missing_prices` hangi sembolun fiyatsiz oldugunu soyler.
+            logger.warning(f"Portfoy fiyatlanamadi ({exc}); maliyet kullanildi")
+
+    valuation = pf.value_portfolio(tracked, prices)
+    valuation["priced_on"] = priced_on
+    return valuation
+
+
+@router.post("/portfolio/reset", response_model=PortfolioValuation)
+async def reset_portfolio_endpoint(
+    user: RequireWriter,
+    initial_capital: float = 100_000.0,
+):
+    """Kagit portfoyu baslangic sermayesiyle sifirla.
+
+    Gecmis dosyalarina (trade_decisions.json, portfolio_history.csv) DOKUNMAZ:
+    silmek geri alinamaz ve kullanici yalnizca portfoyu sifirlamak istemis
+    olabilir. Gecmisi de temizlemek ayri bir istek olmali.
+    """
+    from app.services import portfolio as pf
+
+    if initial_capital <= 0:
+        raise HTTPException(status_code=400,
+                            detail="Baslangic sermayesi sifirdan buyuk olmali")
+    fresh = pf.reset_portfolio(initial_capital)
+    _audit_portfolio_reset(user, initial_capital)
+    return pf.value_portfolio(fresh, {})
+
+
 @router.post("/apply-decision")
 async def apply_decision(date: str, user: RequireWriter):
     """
@@ -1663,7 +1909,10 @@ async def apply_decision(date: str, user: RequireWriter):
     Returns:
         Success message and updated portfolio
     """
-    from app.services.daily_trading import append_to_portfolio_history
+    from app.services.daily_trading import (
+        append_to_portfolio_history,
+        load_portfolio_history,
+    )
 
     try:
         logger.info(f"Applying decision for date: {date}")
@@ -1688,19 +1937,71 @@ async def apply_decision(date: str, user: RequireWriter):
 
         decision_data = all_decisions[date]
 
-        # Append to portfolio history
-        append_to_portfolio_history(
-            date=date,
-            portfolio_after=decision_data["portfolio_after"],
-            daily_return_pct=decision_data["summary"]["daily_return_pct"]
+        # Kagit portfoyu ilerlet. Eskiden yalnizca `portfolio_after` anlik
+        # goruntusu CSV'ye yaziliyordu; portfoyun kendisi hicbir yerde
+        # tutulmadigi icin ertesi gunun karari yine sifirdan basliyordu.
+        from app.services import portfolio as pf
+
+        before = pf.load_portfolio()
+        after, apply_summary = pf.apply_decisions(
+            before, decision_data.get("decisions", []), date
+        )
+        if apply_summary["already_applied"]:
+            # Iki kez uygulamak pozisyonu iki katina cikarirdi.
+            valuation = pf.value_portfolio(after, _decision_prices(decision_data))
+            return {
+                "message": f"{date} tarihli karar zaten uygulanmis",
+                "already_applied": True,
+                "portfolio": valuation,
+                "summary": decision_data["summary"],
+            }
+
+        pf.save_portfolio(after)
+
+        # Degerleme kararin KENDI fiyatlariyla yapilir: o gunun kapanisidir ve
+        # islemler de o fiyatlarla simule edilmistir.
+        prices = _decision_prices(decision_data)
+        valuation = pf.value_portfolio(after, prices)
+
+        # Gercek gunluk getiri: bir onceki kaydin toplam degerine gore.
+        # `decision_data["summary"]["daily_return_pct"]` BU DEGILDIR — orada
+        # alim-satim ayni gunun ayni fiyatlariyla simule edildigi icin geriye
+        # yalnizca komisyon kalir ve deger tanim geregi ~0 cikar.
+        history = load_portfolio_history(days=2)
+        prev_values = history.get("portfolio_values") or []
+        prev_total = prev_values[-1] if prev_values else valuation["initial_capital"]
+        daily_return_pct = (
+            (valuation["total_value"] - prev_total) / prev_total * 100
+            if prev_total else 0.0
         )
 
-        logger.info(f"Decision applied successfully for {date}")
+        append_to_portfolio_history(
+            date=date,
+            portfolio_after={
+                "balance": valuation["cash"],
+                "shares": {p["symbol"]: p["shares"] for p in valuation["positions"]},
+                "portfolio_value": valuation["total_value"],
+            },
+            daily_return_pct=daily_return_pct,
+            realized_pnl=valuation["realized_pnl"],
+            unrealized_pnl=valuation["unrealized_pnl"],
+            total_pnl=valuation["total_pnl"],
+        )
+
+        logger.info(
+            f"{date} uygulandi: {apply_summary['executed_trades']} islem, "
+            f"toplam deger {valuation['total_value']:,.2f}, "
+            f"kar/zarar {valuation['total_pnl']:+,.2f} "
+            f"({valuation['total_pnl_pct']:+.2f}%)"
+        )
 
         return {
             "message": f"Decision for {date} applied successfully",
-            "portfolio": decision_data["portfolio_after"],
-            "summary": decision_data["summary"]
+            "already_applied": False,
+            "portfolio": valuation,
+            "applied": apply_summary,
+            "daily_return_pct": daily_return_pct,
+            "summary": decision_data["summary"],
         }
 
     except HTTPException:

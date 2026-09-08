@@ -20,7 +20,9 @@ from dash import html, dcc, ctx
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
-from dashboard.theme import CARD, CARD2, TEXT, TEXT_MUTED
+from dashboard.theme import CARD2, TEXT, TEXT_MUTED, BLUE, RED
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 # BIST-30 sembolleri ve kısa adlar
@@ -97,10 +99,9 @@ def layout():
     five_years_ago = today - timedelta(days=5 * 365)
 
     return html.Div([
-        html.H4("Veri Yönetimi", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P(
+        create_page_header(
+            "Veri Yönetimi",
             "Veri kaynaklarını seçin, eksik günleri güncelleyin veya tümünü yeniden indirin.",
-            style={"color": TEXT_MUTED, "marginBottom": "24px"},
         ),
 
         dcc.Store(id="data-status-store"),
@@ -113,7 +114,7 @@ def layout():
                     dbc.Col(
                         html.Span(
                             "Veri Kaynakları",
-                            style={"color": TEXT, "fontWeight": "600"},
+                            className="card-title-sm",
                         ),
                         className="d-flex align-items-center",
                     ),
@@ -270,7 +271,7 @@ def layout():
                     is_open=False,
                 ),
 
-                html.Hr(style={"borderColor": CARD2}),
+                html.Hr(),
 
                 # Aksiyon butonları + tarih aralığı
                 dbc.Row([
@@ -302,7 +303,7 @@ def layout():
                         dcc.Loading(
                             html.Div(id="data-earliest-result", className="mt-2"),
                             type="dot",
-                            color="#0dcaf0",
+                            color=BLUE,
                         ),
                     ], md=5),
 
@@ -340,7 +341,7 @@ def layout():
 
                 html.Div(id="data-action-result", className="mt-3"),
             ]),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # ── Veri özeti + dosya listesi ───────────────────────────────────────
         dbc.Row([
@@ -348,19 +349,19 @@ def layout():
                 dbc.Card([
                     dbc.CardHeader(html.Span(
                         "Veri Kaynağı Özeti",
-                        style={"color": TEXT, "fontWeight": "600"},
+                        className="card-title-sm",
                     )),
                     dbc.CardBody(html.Div(id="data-info-panel")),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=5, className="mb-4"),
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.Span(
                         "Mevcut Dosyalar",
-                        style={"color": TEXT, "fontWeight": "600"},
+                        className="card-title-sm",
                     )),
                     dbc.CardBody(html.Div(id="data-list-panel")),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=7, className="mb-4"),
         ]),
 
@@ -368,10 +369,10 @@ def layout():
         dbc.Card([
             dbc.CardHeader(html.Span(
                 "BIST-30 Hisse Listesi",
-                style={"color": TEXT, "fontWeight": "600"},
+                className="card-title-sm",
             )),
             dbc.CardBody(_bist30_badges()),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+        ]),
     ])
 
 
@@ -855,7 +856,7 @@ def _render_update_result(result: dict) -> Any:
         if "error" in res:
             lines.append(html.Li(
                 [html.Strong(src_label), f": Hata — {res['error']}"],
-                style={"color": "#f87171"},
+                style={"color": RED},
             ))
         elif res.get("mode") == "skip":
             lines.append(html.Li([html.Strong(src_label), ": Zaten güncel."]))
@@ -882,7 +883,7 @@ def _render_update_result(result: dict) -> Any:
 
 def _render_dataset_list(datasets: list) -> Any:
     if not datasets:
-        return html.P("Kayıtlı veri seti yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Kayıtlı veri seti yok.")
 
     rows = []
     for ds in datasets:

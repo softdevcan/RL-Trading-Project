@@ -1,0 +1,9 @@
+/* Tema tokenlari — tek kaynak static/tokens.css.
+ *
+ * Dash assets/ dosyalarini ALFABETIK yukler; "00-" oneki bu dosyanin
+ * custom.css'ten once gelmesini garanti eder.
+ *
+ * Ayni dosyayi giris sayfalari da <link> ile okur, boylece pano ile
+ * /login arasinda renk ayrismasi olmaz.
+ */
+@import url("/static/tokens.css");

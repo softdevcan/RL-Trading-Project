@@ -152,6 +152,30 @@ def _post_raw(path: str, json: Optional[Dict] = None) -> Dict:
         return {"ok": False, "status": 0, "body": {"detail": str(exc)}}
 
 
+def _request_raw(method: str, path: str, json: Optional[Dict] = None) -> Dict:
+    """PATCH/DELETE — hata govdesini de dondurur.
+
+    `_request` hatayi yutup None donuyor; hesap ekranlarinda kullaniciya
+    "neden olmadi" demek gerektigi icin durum kodu ve govde saklanir.
+    """
+    headers, cookies = _forward_auth()
+
+    async def _do():
+        async with _client(cookies, headers) as client:
+            r = await client.request(method, path, json=json, timeout=TIMEOUT)
+            try:
+                body = r.json()
+            except Exception:
+                body = {"detail": r.text[:300]}
+            return {"ok": r.is_success, "status": r.status_code, "body": body}
+
+    try:
+        return _run(_do())
+    except Exception as exc:
+        _api_log.warning("%s %s%s failed: %s", method, API_BASE, path, exc)
+        return {"ok": False, "status": 0, "body": {"detail": str(exc)}}
+
+
 # ── Kullanici yonetimi (admin) ─────────────────────────────────────────────
 
 def list_users() -> List[Dict]:
@@ -184,10 +208,51 @@ def get_audit_log(limit: int = 100) -> List[Dict]:
     return data.get("entries", [])
 
 
+# ── Kendi hesabi (her rol, viewer dahil) ───────────────────────────────────
+# Yetki kontrolu uc noktada: hedef her zaman oturumdaki kullanici, govdeden
+# kullanici kimligi gecilmez (bkz. app/api/routes/account.py).
+
+def get_account() -> Dict:
+    """Profil alanlari + calisma alani kullanimi (tek cagri)."""
+    return _get("/account/me") or {}
+
+
+def update_profile(full_name: str) -> Dict:
+    return _request_raw("PATCH", "/account/profile", json={"full_name": full_name})
+
+
+def get_own_sessions() -> Dict:
+    return _get("/account/sessions") or {}
+
+
+def get_own_activity(limit: int = 20) -> List[Dict]:
+    data = _get("/account/activity", params={"limit": limit}) or {}
+    return data.get("entries", [])
+
+
+def get_notifications() -> List[Dict]:
+    """Ust cubuk zili. Ucuz uc: yalnizca bellekteki calisma durumlarini okur."""
+    data = _get("/account/notifications") or {}
+    return data.get("items", [])
+
+
+def revoke_other_sessions() -> Dict:
+    return _post_raw("/account/sessions/revoke-others", json=None)
+
+
 # ── Trading ────────────────────────────────────────────────────────────────
 
 def get_health() -> Dict:
     return _get("/trading/health") or {}
+
+
+def delete_model(model_name: str) -> Dict:
+    """Egitilmis modeli sil.
+
+    Ortak (kullanici oncesi) dizindeki modeller salt-okunur: uc 403 doner ve
+    govdedeki mesaj kullaniciya gosterilir, o yuzden ham yanit dondurulur.
+    """
+    return _request_raw("DELETE", f"/trading/models/{model_name}")
 
 
 def get_models() -> List[Dict]:
@@ -284,6 +349,16 @@ def get_latest_portfolio() -> Dict:
     return _get("/trading/latest-portfolio") or {}
 
 
+def get_portfolio(date: str = None) -> Dict:
+    """Kagit portfoy, guncel fiyatlarla degerlenmis (mark-to-market)."""
+    return _get("/trading/portfolio", params={"date": date} if date else None) or {}
+
+
+def reset_portfolio(initial_capital: float = 100_000.0) -> Dict:
+    return _post("/trading/portfolio/reset",
+                 params={"initial_capital": initial_capital}) or {}
+
+
 def get_portfolio_history() -> Dict:
     return _get("/trading/portfolio-history") or {}
 
@@ -330,6 +405,15 @@ def get_config_feature_groups() -> Dict:
 
 def start_hyperopt(payload: Dict) -> Dict:
     return _post("/hyperopt/start", json=payload) or {}
+
+
+def delete_hyperopt_study(study_id: str) -> Dict:
+    """Optimizasyon kaydini kalici olarak sil (calisan study 409 verir)."""
+    return _request_raw("DELETE", f"/hyperopt/studies/{study_id}")
+
+
+def cancel_hyperopt_study(study_id: str) -> Dict:
+    return _post_raw(f"/hyperopt/studies/{study_id}/cancel", json=None)
 
 
 def get_hyperopt_studies() -> List[Dict]:
@@ -383,6 +467,11 @@ def get_prediction_symbols() -> List[Dict]:
 def train_prediction(payload: Dict) -> Dict:
     """Arka plan egitimi tetikle; 202 Accepted hemen doner."""
     return _post("/prediction/train", json=payload) or {}
+
+
+def get_prediction_active_trainings() -> Dict:
+    """Kullanicinin tum tahmin egitimi kayitlari (sayfa acilisinda gerekli)."""
+    return _get("/prediction/train/active") or {"runs": [], "running": 0}
 
 
 def get_prediction_train_status(

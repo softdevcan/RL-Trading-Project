@@ -130,8 +130,16 @@ with use_workspace(user_id):      # arka plan görevleri için (ContextVar taş�
 
 **Geriye dönük uyumluluk:** `WORKSPACE_SHOW_LEGACY=True` iken kullanıcı sistemi
 öncesi eğitilmiş `models/` ve `results/` içeriği herkese **salt-okunur** görünür.
-Yeni her şey kullanıcının kendi alanına yazılır; kimse ortak dizindeki bir modeli
-silemez (403).
+Yeni her şey kullanıcının kendi alanına yazılır; `user` rolü ortak dizindeki bir
+modeli silemez (403).
+
+> **Güncelleme (Faz 8/I).** Bu madde önce "**kimse** silemez" idi. Pratikte
+> bu, kullanıcı sisteminden önce eğitilmiş deneme modellerini panodan
+> temizlemenin hiçbir yolunu bırakmıyordu — tek çıkış dosya sistemine elle
+> girmekti. Artık **yönetici silebilir**: operatör zaten hesap siliyor, parola
+> sıfırlıyor; ortak yapıtların temizliği de onun işi. Silme herkesi
+> etkilediği için denetim kaydına yazılır (`model.delete_shared`).
+> `user`/`viewer` için değişen bir şey yok.
 
 `AUTH_ENABLED=False` veya istek bağlamı yoksa (script, test) çözümleyici eski
 global dizinlere düşer — mevcut davranış birebir korunur.

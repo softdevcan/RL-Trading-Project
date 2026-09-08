@@ -11,9 +11,9 @@ Bu belge projenin **geçmişini (tamamlanan fazlar)** ve **gelecek yol haritası
 
 ---
 
-## Güncel Durum (2026-07-25)
+## Güncel Durum (2026-08-30)
 
-Faz 1-3 + Faz 6 (backend perf/dayanıklılık) + Faz 7 (auth/multi-user) tamamlandı. Tek-ajanlı temel altyapı, ensemble tahmin sistemi, risk yönetimi, hızlandırılmış/gözlemlenebilir eğitim ve kullanıcı bazlı izolasyon çalışır durumda. Sonraki adım **tez için çoklu-ajan mimariye** geçiş (Milestone 0-4).
+Faz 1-3 + Faz 6 (backend perf/dayanıklılık) + Faz 7 (auth/multi-user) + Faz 8 (UI/UX) tamamlandı. Tek-ajanlı temel altyapı, ensemble tahmin sistemi, risk yönetimi, hızlandırılmış/gözlemlenebilir eğitim ve kullanıcı bazlı izolasyon çalışır durumda. Sonraki adım **tez için çoklu-ajan mimariye** geçiş (Milestone 0-4).
 
 | Katman | Durum | Konum |
 |---|---|---|
@@ -105,6 +105,24 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 ### ✅ Faz 7 — Auth & Multi-User
 
 Çerez tabanlı JWT oturum, bcrypt, roller (admin/user/viewer), admin-only kayıt, denetim kaydı, hibrit kullanıcı izolasyonu (piyasa verisi ortak; model/sonuç/karar/manifest kullanıcı bazlı). Detay: [phase7-auth.md](phase7-auth.md).
+
+### ✅ Faz 8 — UI/UX: Tema, Profil, Üst Çubuk ve Yapıt Yönetimi
+- **Token katmanı:** `dbc.themes.DARKLY` → `BOOTSTRAP`; tüm renkler tek kaynakta (`static/tokens.css`). `dashboard/theme.py` sabitleri artık `var(--token)` döndürüyor → ~550 inline stil çağrı yerine dokunmadan temaya duyarlı oldu. Plotly `var()` kabul etmediği için ayrı hex palet (`plot_palette()` + `apply_theme_template()`), tema çerezden çözülüyor.
+- **3 durumlu tercih:** aydınlık / koyu / **sistem**. Tarayıcıya değil **hesaba** kayıtlı (`users.theme`); `PATCH /auth/preferences`, yeni `/dash/account` (Hesabım) sayfası ve kenar çubuğunda üç durumu dolaşan hızlı düğme. `<head>`'de senkron script ile FOUC yok.
+- **Şema göçü:** alembic yok ve `create_all()` var olan tabloyu değiştirmiyor → `init_db()` içine idempotent additive `ALTER` eklendi; eski şemayla açılan test bunu doğruluyor.
+- **Bileşenler:** `PageHeader`, `MetricCard v2` (renk yalnızca yön taşıyan değerde), `TABLE_STYLES`, `StateBlock`; kenar çubuğu üç gruba ayrıldı. (`FilterBar` da yazılmıştı ama hiçbir sayfaya bağlanmadı — Faz H'de silindi.)
+- **Kontrast:** her metin tokeni kendi temasının **en kötü** zemininde WCAG AA ≥ 4.5:1 (en düşük 4.58). Mevcut koyu temada AA'yı geçmeyen 4 renk (BLUE 3.98, RED 3.89, PURPLE 3.70, MUTED 4.04) bu arada düzeldi. `tests/test_theme_contrast.py` paleti kalıcı olarak bekçiliyor.
+- **Faz F — profil sayfası:** Hesabım sayfası panoda bulunamıyordu (kenar çubuğundaki tek giriş noktası düz metin görünümündeki bir addı). Avatar satırına çevrildi; sayfa gerçek bir profil sayfası oldu: ad soyad düzenleme, son giriş / hesap açılışı / çalışma alanı özeti, **kendi oturumlarını görme ve kapatma**. Yeni uçlar `/api/account/*` (hepsi `CurrentUser`, hedef her zaman oturumdaki kullanıcı). Bu arada kasıtlı oturum iptalinin 30 sn'lik grace penceresiyle atlatılabildiği bulundu ve kapatıldı. Ayrica kullanicinin kendi denetim kaydi (basarisiz giris denemeleri dahil) `GET /api/account/activity` ile sayfada gorunuyor. `tests/test_account_profile.py` 84 kontrol.
+- **Faz G — üst çubuk:** kenar çubuğu "nereye gidebilirim"i anlatıyordu; üst çubuk "neredeyim ve buradan ne yapabilirim"i ekledi. Kırıntı (grup › sayfa, başlığı tekrarlamaz), belgelenen akışı izleyen bağlamsal eylem, sayfalar üzerinde role duyarlı komut paleti araması. Görünüm anahtarı kenar çubuğundan **taşındı** (çoğaltılmadı — iki kopya olsaydı biri tıklanınca diğerinin etiketi güncellenmezdi). Zil, bellekteki çalışma durumlarından (RL + tahmin eğitimi) beslenen bir **durum özeti**; kalıcı bildirim tablosu yok, veri tazeliği maliyeti yüzünden bilinçli olarak dışarıda. Yol üstünde `--rlt-` göçünden kalan bir kaçak: marka ikonu tanımsız `var(--primary)` kullanıyordu. `tests/test_topbar.py` 39 kontrol.
+- **Görsel doğrulama (F+G):** 9 sayfa × 2 tema, headless Chrome/CDP ile ekran görüntüsü + hesaplanmış stil ölçümü. Yerleşim temiz; üç kusur çıktı ve düzeltildi: bildirim zili `dbc.DropdownMenu`'nün `btn-primary` varyantını alıp dolgulu mavi çıkıyordu, **devre dışı dolgulu düğmeler uygulama genelinde** Bootstrap'in ham `#0d6efd`'sine düşüyordu (`.btn-*:disabled` ezilmemiş), Dashboard'daki boş portföy grafiği `{"history": []}` durumunda mesajsız/eksenli kalıyordu.
+- **Faz H — dar ekran + ölü bileşen:** varsayım "dar ekranda düzen bozuluyor" idi, **ölçüm çürüttü** — 1280/1024/820/640'ta hiçbir taşma veya yatay kaydırma yok. Gerçek sorun darlıktı (640px'de menü ekranın %34'ü); ≤820px'de kenar çubuğu 64px ikon rayına iniyor, kullanılabilir alan 640px'de 372 → 528px. Masaüstü değişmedi. İki tur boyunca hiçbir sayfaya bağlanmayan `create_filter_bar` silindi.
+- **Faz I — yapıt silme:** eğitilmiş modeller ve optimizasyon çalışmaları panodan silinemiyordu; deneme koşumları ekranı kalıcı kirletiyordu. Model için uç vardı ama **arayüz yoktu**; hiperparametre için silme yeteneği **hiç yoktu** (`DELETE` aslında iptal ediyordu, çalışmayan kayda 404 dönüyordu). `DELETE /hyperopt/studies/{id}` gerçek silmeye çevrildi, iptal `POST .../cancel` oldu — ikisi durum bakımından ayrık olduğu için geçiş veri kaybı doğurmuyor. Faz 7'nin "kimse ortak dizindeki modeli silemez" kuralı iki katmana ayrıldı (`user` silemez, `admin` siler + denetim kaydı): eski kural kullanıcı sisteminden önce eğitilmiş deneme modellerini temizlemenin hiçbir yolunu bırakmıyordu. Yol üstünde iki gedik: `/hyperopt/start` **hiç RBAC taşımıyordu** (viewer optimizasyon başlatabiliyordu — düzeltildi) ve Optuna deposu çalışma alanına göre çözülmüyor (çalışmalar tüm kullanıcılar arasında ortak — belgelendi, **Faz 7 kapsamında ayrı iş**). `tests/test_delete_artifacts.py` 32 kontrol.
+
+- **Canlı test turu (kapanış sonrası):** sistem uçtan uca çalıştırıldı ve beş kusur çıktı — hiçbiri test paketinde görünmüyordu. `/train/status` koşum sonunda 500 veriyordu (ilerleme oranı 1'i aşıyor, ETA de onunla ölüyordu); `dbc.Spinner(className=...)` ilerleme bloğunu hiç çizdirmiyordu; **hiçbir eğitim tamamlanamıyordu** (kronolojik split train'e 5, test'e 30 sembol veriyor → gözlem uzayı uyuşmazlığı); sayfadan çıkıp dönünce ilerleme kayboluyordu; tahmin eğitimi panoda hiç görünmüyordu. Üçü için bekçi eklendi (`test_dash_props`, `test_training_status`).
+
+**Doğrulama:** 347 kontrol (9 paket), 9 sayfa × 2 tema görsel kontrol, container'da canlı teyit. Optuna deposu izolasyonu Faz 7'ye devredildi.
+
+Detay: [phase-8-ui-theming.md](phase-8-ui-theming.md).
 
 ---
 

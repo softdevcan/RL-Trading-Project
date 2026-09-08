@@ -446,6 +446,24 @@ class DataFetcher:
         existing['date'] = dates_ex
         existing = existing.set_index(['symbol', 'date'])
 
+        # yfinance seans kapanmadan once OHLC'si NaN, volume'u DOLU bir taslak
+        # satir dondurur. Diske yazilirsa iki zarar birden:
+        #   1) panelde tamamen bos bir gun kalir (28.08.2026'da 30 sembolun
+        #      tamami boyle gelmisti),
+        #   2) `min_last_date` o gune kayar, `fetch_from` ertesi gun olur ve o
+        #      seansin GERCEK verisi bir daha HIC cekilmez — kalici bosluk.
+        # Filtre YALNIZCA yeni veriye uygulanir: `existing` ham panel ve icinde
+        # 2005 oncesi duzeltme artefaktlarindan gelen negatif fiyatlar var
+        # (bkz. CLAUDE.md "Veri butunlugu"); onlari burada silmek gecmisi
+        # sessizce degistirirdi.
+        stub_rows = int((~(new_data['close'].notna() & (new_data['close'] > 0))).sum())
+        if stub_rows:
+            new_data = new_data[new_data['close'].notna() & (new_data['close'] > 0)]
+            logger.warning(
+                f"{stub_rows} taslak satir (gecersiz kapanis) diske yazilmadi; "
+                f"o seans bir sonraki cekimde yeniden denenecek"
+            )
+
         combined = pd.concat([existing, new_data])
         combined = combined[~combined.index.duplicated(keep='last')]
         combined = combined.sort_index()
@@ -454,6 +472,7 @@ class DataFetcher:
         return {
             'mode': 'incremental',
             'new_rows': len(new_data),
+            'skipped_stub_rows': stub_rows,
             'total_rows': len(combined),
             'fetch_from': fetch_from,
             'fetch_to': today_str,

@@ -18,11 +18,14 @@ import plotly.graph_objects as go
 _log = logging.getLogger(__name__)
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER,
-    GREEN, RED, BLUE, PURPLE, ORANGE, YELLOW, CYAN, GOLD,
-    DARK_TEMPLATE, ALGO_COLORS, empty_figure, apply_dark_template,
+    CARD2, TEXT, TEXT_MUTED, GREEN, RED, YELLOW, GOLD, algo_badge_class, empty_figure,
+    apply_theme_template, plot_palette, plot_rgba, algo_plot_colors,
 )
-from dashboard.components.metric_card import create_metric_card
+from dashboard.components.metric_card import (
+    create_metric_card, tone_color, tone_for_number,
+)
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
 
@@ -33,39 +36,44 @@ def layout():
         # Auto-refresh interval (every 30 s)
         dcc.Interval(id="home-interval", interval=30_000, n_intervals=0),
 
-        # Page header
-        dbc.Row([
-            dbc.Col([
-                html.H4("Dashboard", style={"color": TEXT, "marginBottom": "4px"}),
-                html.P("Sistem ozeti ve portfoy performansi", style={"color": TEXT_MUTED, "margin": 0}),
-            ], width="auto"),
-            dbc.Col([
-                html.Div(id="home-status-badge"),
-            ], width="auto", className="ms-auto d-flex align-items-center"),
-        ], className="mb-4 align-items-center"),
+        create_page_header(
+            "Dashboard",
+            "Sistem ozeti ve portfoy performansi",
+            actions=html.Div(id="home-status-badge"),
+        ),
 
         # Metric cards row
         dbc.Row([
-            dbc.Col(create_metric_card("Toplam Getiri", "—", "", GREEN, "bi bi-graph-up", card_id="home-metric-return"), md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Sharpe Orani", "—", "", BLUE, "bi bi-calculator", card_id="home-metric-sharpe"), md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Max Drawdown", "—", "", RED, "bi bi-arrow-down-circle", card_id="home-metric-drawdown"), md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Portfoy Degeri", "—", "", YELLOW, "bi bi-wallet2", card_id="home-metric-portfolio"), md=3, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Toplam Islem", "—", "", PURPLE, "bi bi-arrow-left-right", card_id="home-metric-trades"), md=3, sm=4, xs=6, className="mb-3"),
+            dbc.Col(create_metric_card("Toplam Getiri", "—", "", icon="bi bi-graph-up",
+                                       card_id="home-metric-return", tone="auto"),
+                    md=2, sm=4, xs=6, className="mb-3"),
+            dbc.Col(create_metric_card("Sharpe Orani", "—", "", icon="bi bi-calculator",
+                                       card_id="home-metric-sharpe"),
+                    md=2, sm=4, xs=6, className="mb-3"),
+            dbc.Col(create_metric_card("Max Drawdown", "—", "", icon="bi bi-arrow-down-circle",
+                                       card_id="home-metric-drawdown", tone="loss"),
+                    md=2, sm=4, xs=6, className="mb-3"),
+            dbc.Col(create_metric_card("Portfoy Degeri", "—", "", icon="bi bi-wallet2",
+                                       card_id="home-metric-portfolio"),
+                    md=3, sm=4, xs=6, className="mb-3"),
+            dbc.Col(create_metric_card("Toplam Islem", "—", "", icon="bi bi-arrow-left-right",
+                                       card_id="home-metric-trades"),
+                    md=3, sm=4, xs=6, className="mb-3"),
         ], className="mb-4"),
 
         # Charts row
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Performansi", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Portfoy Performansi", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="home-portfolio-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Algoritma Karsilastirma", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Algoritma Karsilastirma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="home-algo-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=4, className="mb-4"),
         ]),
 
@@ -73,15 +81,15 @@ def layout():
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("RL Modeller", style={"color": TEXT, "fontWeight": "600"})),
-                    dbc.CardBody(html.Div(id="home-models-list", children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}))),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    dbc.CardHeader(html.Span("RL Modeller", className="card-title-sm")),
+                    dbc.CardBody(html.Div(id="home-models-list", children=create_state_block("loading"))),
+                ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", style={"color": TEXT, "fontWeight": "600"})),
-                    dbc.CardBody(html.Div(id="home-pred-models-list", children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}))),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", className="card-title-sm")),
+                    dbc.CardBody(html.Div(id="home-pred-models-list", children=create_state_block("loading"))),
+                ]),
             ], md=6, className="mb-4"),
         ]),
     ])
@@ -131,6 +139,7 @@ def register_callbacks(app):
 
         # ── Aggregate metrics from best model ──────────────────────────────
         total_return = sharpe = drawdown = portfolio = trades = "—"
+        return_tone = drawdown_tone = "neutral"
         if models:
             best = None
             best_sharpe = -999
@@ -143,18 +152,21 @@ def register_callbacks(app):
             if best:
                 ret = api.model_return(best)
                 total_return = f"{ret:.1%}" if ret is not None else "—"
+                return_tone = tone_for_number(ret)
                 sharpe = f"{best.get('sharpe_ratio', 0):.2f}"
                 dd = best.get("max_drawdown", 0) or 0
                 drawdown = f"{dd:.1%}"
+                # Drawdown negatif gelir; sifirdan uzaklasmasi kotudur
+                drawdown_tone = "loss" if dd else "neutral"
                 pv = best.get("final_portfolio_value", 0) or 0
                 portfolio = f"₺{pv:,.0f}"
                 trades = str(best.get("total_trades", 0) or 0)
 
-        metric_return = _metric_val(total_return, GREEN)
-        metric_sharpe = _metric_val(sharpe, BLUE)
-        metric_drawdown = _metric_val(drawdown, RED)
-        metric_portfolio = _metric_val(portfolio, YELLOW)
-        metric_trades = _metric_val(trades, PURPLE)
+        metric_return = _metric_val(total_return, return_tone)
+        metric_sharpe = _metric_val(sharpe)
+        metric_drawdown = _metric_val(drawdown, drawdown_tone)
+        metric_portfolio = _metric_val(portfolio)
+        metric_trades = _metric_val(trades)
 
         # ── Portfolio performance chart ────────────────────────────────────
         portfolio_fig = _build_portfolio_chart(history)
@@ -185,30 +197,38 @@ def register_callbacks(app):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _metric_val(value, color):
-    return html.Span(value, style={"color": color, "fontSize": "26px", "fontWeight": "700"})
+def _metric_val(value, tone: str = "neutral"):
+    """Kart degeri. Boyut/agirlik `.metric-value` sinifindan gelir — burada
+    tekrar tanimlanirsa kart olcegi sayfadan sayfaya kayiyor (C.1/C.3)."""
+    return html.Span(value, className="metric-value",
+                     style={"color": tone_color(tone)})
 
 
 def _build_portfolio_chart(history):
-    fig = go.Figure()
-    if history:
-        records = history.get("history", []) if isinstance(history, dict) else []
-        if records:
-            dates = [r.get("date", "") for r in records]
-            values = [r.get("value", 0) for r in records]
-            fig.add_trace(go.Scatter(
-                x=dates, y=values,
-                mode="lines",
-                fill="tozeroy",
-                fillcolor="rgba(59,130,246,0.15)",
-                line={"color": BLUE, "width": 2},
-                name="Portfoy",
-                hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
-            ))
-    else:
-        fig = empty_figure("Portfoy gecmisi yok")
+    # Dallanma KAYIT uzerinden yapilir: uc {"history": []} donebiliyor, yani
+    # `history` dogru ama icinde kayit yok. Onceki kurgu (`if history:` ->
+    # `if records:`) o durumda hicbir dala girmeyip cizgisiz, mesajsiz,
+    # varsayilan -1..6 eksenli bos bir grafik birakiyordu — panoda boyle
+    # gorundu, gorsel dogrulamada yakalandi.
+    records = history.get("history", []) if isinstance(history, dict) else []
 
-    apply_dark_template(fig)
+    if not records:
+        fig = empty_figure("Portfoy gecmisi yok")
+    else:
+        fig = go.Figure()
+        dates = [r.get("date", "") for r in records]
+        values = [r.get("value", 0) for r in records]
+        fig.add_trace(go.Scatter(
+            x=dates, y=values,
+            mode="lines",
+            fill="tozeroy",
+            fillcolor=plot_rgba("blue", 0.15),
+            line={"color": plot_palette()["blue"], "width": 2},
+            name="Portfoy",
+            hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
+        ))
+
+    apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=280, margin={"l": 50, "r": 10, "t": 10, "b": 40})
     return fig
 
@@ -232,14 +252,15 @@ def _build_algo_chart(models, metrics_by_model=None):
     if not names:
         return empty_figure("Metrik yok")
 
-    colors = [ALGO_COLORS.get(n, BLUE) for n in names]
+    algo_hex = algo_plot_colors()
+    colors = [algo_hex.get(n, plot_palette()["blue"]) for n in names]
     fig.add_trace(go.Bar(
         x=names, y=sharpes,
         marker_color=colors,
         name="Sharpe",
         hovertemplate="<b>%{x}</b><br>Sharpe: %{y:.2f}<extra></extra>",
     ))
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=280, margin={"l": 40, "r": 10, "t": 10, "b": 40})
     return fig
 
@@ -291,7 +312,7 @@ def _build_pred_models_list(models):
 
 def _build_models_list(models):
     if not models:
-        return html.P("Egitilmis model bulunamadi.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Egitilmis model bulunamadi.")
 
     rows = []
     for m in models:
@@ -299,10 +320,10 @@ def _build_models_list(models):
         algo = m.get("algorithm", "—").upper()
         phase = m.get("phase", "—")
         created = m.get("created_at", m.get("timestamp", "—"))
-        color = ALGO_COLORS.get(algo, BLUE)
+        badge_class = algo_badge_class(algo)
         rows.append(
             dbc.Row([
-                dbc.Col(dbc.Badge(algo, style={"backgroundColor": color}, pill=True), width="auto"),
+                dbc.Col(dbc.Badge(algo, pill=True, className=badge_class), width="auto"),
                 dbc.Col(html.Span(name, style={"color": TEXT, "fontSize": "13px"}), width=5),
                 dbc.Col(html.Small(f"Faz {phase}", style={"color": TEXT_MUTED}), width="auto"),
                 dbc.Col(html.Small(str(created)[:10], style={"color": TEXT_MUTED}), width="auto", className="ms-auto"),

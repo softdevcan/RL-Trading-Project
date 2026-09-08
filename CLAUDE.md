@@ -2,7 +2,7 @@
 
 ## Project Summary
 Deep Reinforcement Learning-based algorithmic trading system for BIST-30 stocks.
-Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user) tamamlandı.
+Based on Ansari et al. (2024) paper. Phase 1 (POC), Phase 2 (Advanced Prediction System), Phase 3 (Production improvements), Phase 6 (Backend perf & training throughput), Phase 7 (Auth & multi-user), Phase 8 (UI/UX: tema + profil + üst çubuk + yapıt yönetimi) tamamlandı.
 
 ## Language
 Respond in the same language the user writes in.
@@ -21,7 +21,8 @@ Respond in the same language the user writes in.
 ## Project Structure
 ```
 app/                  # FastAPI backend
-  api/routes/         # API endpoints (trading.py, health.py, prediction.py, admin.py)
+  api/routes/         # API endpoints (trading.py, health.py, prediction.py, admin.py,
+                      #                account.py — kullanicinin kendi hesabi)
   auth/               # Faz 7: kimlik dogrulama, yetkilendirme, calisma alanlari
     models.py         # User / SessionToken / AuditLog (SQLAlchemy)
     db.py             # SQLite engine + init_db
@@ -34,6 +35,7 @@ app/                  # FastAPI backend
     templates/        # login.html, change_password.html
   schemas/            # Pydantic models
   services/           # Business logic (model_analysis.py, daily_trading.py, prediction_service.py)
+    portfolio.py      # Kagit portfoy: pozisyon, ortalama maliyet, mark-to-market P&L
     training_eta.py   # Egitim suresi tahmini: on tahmin + canli ETA, gecmis kosumlardan ogrenir
   core/config.py      # Configuration
   main.py             # FastAPI app
@@ -69,11 +71,18 @@ env/                  # RL Environment (NOT venv!)
   trading_env.py      # Gymnasium custom environment + ATR sizing + Kelly criterion
   reward_functions.py # PSR reward (total_trades bug FIXED)
 dashboard/            # Dash frontend (Plotly Dash, /dash/ altında mount)
-  app.py              # Dash factory + PrefixMiddleware
-  pages/              # home, training, data, models, daily_trading, prediction, academic, hyperopt
-  components/         # sidebar, metric_card
-  theme.py            # Renk teması
-static/               # Sadece favicon
+  app.py              # Dash factory + PrefixMiddleware + FOUC engelleyici index_string
+  pages/              # home, training, data, models, daily_trading, prediction,
+                      # academic, hyperopt, users, account (Faz 8: Hesabım)
+  components/         # sidebar, topbar, metric_card, page_header, table, state_block
+  theme.py            # Faz 8: DOM icin var(--token) + Plotly icin hex palet
+  assets/
+    00-tokens.css     # static/tokens.css'i @import eder (alfabetik once yuklenir)
+    custom.css        # Bilesen stilleri — icinde HEX YOK, hepsi token
+    theme-toggle.js   # 3 durumlu anahtar + matchMedia + Plotly yeniden boyama
+static/
+  tokens.css          # Faz 8: TEMA TOKENLARININ TEK KAYNAGI (pano + giris sayfalari)
+  favicon.ico
 tests/                # Test scripts
 scripts/              # Standalone scripts (training, debug, reports)
 docs/                 # Documentation (development plan, guides)
@@ -102,6 +111,20 @@ python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
+python tests/test_training_status.py        # /train/status progress, sembol uyarisi,
+                                           #        RL + tahmin egitimi durumunun sayfaya
+                                           #        donunce geri gelmesi (19 kontrol)
+python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinance (tz'li)
+                                           #        birlesimi, sessiz sembol dusmesi (18 kontrol)
+python tests/test_paper_portfolio.py      # Kagit portfoy: ortalama maliyet,
+                                           #        gerceklesmis/gerceklesmemis kar,
+                                           #        cift uygulama bekcisi (43 kontrol)
+python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans),
+                                           #        taslak satir, kapsam esigi,
+                                           #        panel onbellegi (21 kontrol)
+python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
+                                           #        ADINDAN degil MODELDEN cozulur (22 kontrol)
+python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
@@ -110,6 +133,18 @@ python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
+python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
+                                           #        ucuncu parti cakismasi, kendi
+                                           #        CSS siniflarimiz, devre disi
+                                           #        varyantlar (92 kontrol)
+python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
+python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
+                                           #          bildirimler (39 kontrol)
+python tests/test_delete_artifacts.py      # Faz 8/I: model + optimizasyon kaydi
+                                           #          silme, RBAC (32 kontrol)
+python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
+                                           #          etkinlik kaydi, Dash callback
+                                           #          smoke (84 kontrol)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -123,6 +158,105 @@ python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache t
 - Faz 6 manifest de kullanici bazli: `prediction/manifest.py` → `runs_dir()`/`find_manifest()`;
   `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
 - Detay: `docs/development/phase7-auth.md`, `docs/development/phase-6-backend-performance.md`
+
+### Tema (Faz 8)
+- **Renk degeri yalnizca `static/tokens.css`'te.** Sayfa/bilesen kodunda hex yasak;
+  `tests/test_theme_contrast.py` kacaklari yakalar (`dashboard/pages/account.py` muaf —
+  iki temanin onizlemesini ayni anda gostermek zorunda).
+- Uc durum: `light` / `dark` / `system`. `system` = DOM'da damga YOK, karari
+  `@media (prefers-color-scheme)` verir. Bu yuzden koyu blok tokens.css'te **iki kez**
+  yazilir; ikisi ayrisirsa test kalir.
+- **Tokenlar `--rlt-` onekli.** Dash DataTable kendi bundle'inda `--muted`,
+  `--border`, `--accent` tanimliyor ve oneksiz adlari tablo icinde golgeliyor
+  (tablo basligi 1.35:1 cikiyordu). Yeni token eklerken oneki koru.
+- **Yeni bir `dcc.*` bileseni eklerken sinif ailesini custom.css'e bagla.**
+  Dash surumleri DOM'u degistiriyor (`dcc.Dropdown` artik `button.dash-dropdown`,
+  react-select degil); baglanmayan aile Dash'in kendi renginde kalir.
+  `test_theme_contrast.py` bunu denetliyor.
+- Tercih **hesaba** bagli (`users.theme`), cerez yalnizca okuma onbellegi.
+  `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
+- **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
+  Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
+- Detay: `docs/development/phase-8-ui-theming.md`
+
+### Ust cubuk ve bildirimler (Faz 8/G)
+- Bilesen: `dashboard/components/topbar.py`. Kenar cubugu tam boy kalir, ust
+  cubuk YALNIZCA icerik alanini kaplar (`theme.py::TOPBAR_STYLE`,
+  `left: SIDEBAR_WIDTH`); `CONTENT_STYLE` ust boslugu `calc(54px + 24px)`.
+- **Gorunum anahtari ust cubukta**, kenar cubugunda degil ve TEK KOPYA.
+  `theme-toggle.js` `getElementById` kullaniyor; iki kopya olursa birine
+  tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam bir tane
+  oldugunu denetliyor.
+- **Kenar cubugu menusune madde eklerken `topbar.ROUTE_INDEX`'i unutma** —
+  aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
+  (`tests/test_topbar.py` yapisal bekci). `NEXT_STEP` haritasi da yalnizca
+  var olan rotalara isaret etmeli.
+- Arama role duyarli: `viewer`/`user` icin Yonetim grubu onerilmez.
+- **Bildirimler OLAY GUNLUGU DEGIL, DURUM OZETI**: `GET /api/account/notifications`
+  bellekteki calisma durumlarindan uretir (`trading._training_states`,
+  `prediction_service._training_state`) — kalici tablo, "okundu" isareti yok.
+  Is bitince satir kendiliginden kaybolur.
+- Veri tazeligi bilincli olarak KAPSAM DISI: `/trading/data/status` paneli
+  CSV'den okuyor, 60 sn'de bir yoklanamaz.
+- "Bitti" satirlari 12 saatlik pencereyle sinirli (`NOTIFY_RECENT_SECONDS`);
+  zaman damgasi olmayan `completed` HIC gosterilmez. Bunun icin
+  `trading.py` kosum bitisini `finished_ts`'e yazar.
+- **Bilinen ve KABUL EDILMIS davranis:** zil 60 sn'de bir yokladigi icin acik
+  bir sekme sessiz yenilemeyi tetikler ve oturumu canli tutar. Ust sinir
+  refresh token'in azami omru (`REFRESH_TOKEN_EXPIRE_DAYS`). Degistirmek
+  gerekirse: cadansi dusur ya da zili yalnizca acilinca yoklat (rozet sayaci
+  gider).
+
+### Dar ekran (Faz 8/H)
+- <=820px'de kenar cubugu 64px **ikon rayina** iner; masaustu degismez.
+  Olculdu: 1280/1024/820/640'ta tasma veya yatay kaydirma YOK — sorun bozulma
+  degil darlikti (640px'de menu ekranin %34'u).
+- Menu etiketleri `nav-label` span'inde ki CSS yalnizca yaziyi gizleyebilsin;
+  ipucu icin her madde `title` tasiyan bir Div'e sarili (**dbc.NavLink `title`
+  kabul etmiyor** — verilince tum Dash agaci render edilemez, `/dash/` 500).
+- **Medya sorgusu inline stili `!important` olmadan ezemez.** Konum/genislik
+  `theme.py`'den inline geldigi icin ray kurallari `!important` kullanir;
+  menu bosluklari bu yuzden inline'dan `#sidebar .nav-link` kuralina tasindi.
+- Telefon boyu (<=480px) HEDEF DEGIL ve oyle iddia edilmiyor.
+
+### Yapit silme (Faz 8/I)
+- Model: `DELETE /api/trading/models/{name}` (RequireWriter). Panoda: Modeller
+  sayfasinda cok secimli liste + "Secilenleri sil".
+- **Ortak (kullanici oncesi) model iki katmanli**: `user` silemez (403, mesaj
+  yoneticiyi isaret eder), `admin` siler + `model.delete_shared` denetim kaydi.
+  Faz 7'de "kimse silemez" idi; o kural deneme modellerini panodan
+  temizlemenin hicbir yolunu birakmiyordu.
+- Optimizasyon: `DELETE /api/hyperopt/studies/{id}` **kaydi kalici siler**;
+  iptal ayri uctadir (`POST /studies/{id}/cancel`). Calisan kosum silmede 409.
+- **`OPTUNA_STORAGE` calisma alanina gore COZULMUYOR** — depo kokune sabit
+  bagli, yani optimizasyon calismalari tum kullanicilar arasinda ORTAK.
+  Bilinen gedik, ayri is olarak ele alinmali (bkz. Faz 8/I.3).
+
+### Hesap ve profil (Faz 8/F)
+- Sayfa: `/dash/account` ("Hesabim") — kenar cubugu altindaki **avatar satiri**
+  buraya gider (`dashboard/components/sidebar.py::_account_link`). Her rol erisir.
+- Uclar: `app/api/routes/account.py` → `GET /api/account/me`,
+  `PATCH /api/account/profile`, `GET /api/account/sessions`,
+  `POST /api/account/sessions/revoke-others`, `GET /api/account/activity`,
+  `GET /api/account/notifications`. Hepsi `CurrentUser`.
+- **Neden `/api/*`, `/auth/*` degil:** pano callback'leri `api_client` uzerinden
+  cagiriyor; `/api/*` altinda CSRF + RBAC middleware'den bedava geliyor.
+  `/auth/*` tarayicinin dogrudan cagirdigi yuzey (giris formu, tema anahtari) —
+  orada CSRF ucun kendi isi.
+- **Hedef her zaman oturumdaki kullanici**; govdeden kullanici kimligi ALINMAZ.
+  `role`/`is_active`/`email` semada yok → kendi rolunu yukseltme yolu kapali.
+- **Kasitli oturum iptali kaydi SILER**, `revoked_at` ile isaretlemez: iptal
+  edilmis jti 30 sn'lik grace penceresinde (`REFRESH_REUSE_GRACE_SEC`) yeniden
+  kullanilirsa `rotate_session` yeni oturum veriyor; isaretleme birakmak
+  "diger oturumlari kapat"i atlatilabilir kilardi (bkz.
+  `service.revoke_other_sessions` docstring'i).
+- **Kendi etkinligi yalnizca `user_id` ile filtrelenir**, `target` ile DEGIL:
+  yoneticinin bu hesap uzerindeki islemi o satirda YONETICIYI tasir; gostermek
+  admin kimligini ve IP'sini yonetici olmayan bir yuzeye sizdirirdi
+  (`service.list_audit_for_user`).
+- `dbc.NavLink`'e `title` VERME — kabul etmedigi prop tum Dash agacini
+  render edilemez yapar, `/dash/` 500 doner. Ipucunu sarmalayan Div'e koy.
+- Detay: `docs/development/phase-8-ui-theming.md` → "Faz F — Profil sayfasi"
 
 ### Data pipeline
 ```
@@ -169,6 +303,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Add `models/`, `results/`, `logs/`, `workspaces/`, `data/auth/` to git
 - `AUTH_ENABLED=False` ile sunucuya cikma — pano ve tum API herkese acik kalir
 - Yeni yazma ucu eklerken `RequireWriter`/`RequireAdmin` bagimliligini atlama
+  (Faz 8/I'de yakalandi: `/api/hyperopt/start` hic RBAC tasimiyordu, viewer
+  GPU'da optimizasyon baslatabiliyordu)
 - Arka plan gorevine kullanici kimligini tasimayi unutma (`ws.use_workspace(user_id)`) —
   aksi halde dosyalar yanlis calisma alanina yazilir
 - `models/`, `results/`, `data/live_trading` gibi yollari koda sabitleme;
@@ -176,6 +312,124 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
+- Sayfa/bileşen koduna hex renk yazma — `static/tokens.css`'e token ekle, kontrastı ölç
+- Yeni bir `dbc` bileşeni eklerken **hesaplanmış stile bak**: dbc kendi renk
+  varyant sınıfını basıyor (`DropdownMenu` → `btn-primary`, `Badge` → `bg-secondary`)
+  ve aynı özgüllükteki kendi kuralımızı kaskadda yenebiliyor. Test seçicinin
+  *var olduğunu* doğruluyor, *kazandığını* değil
+- **`className` her `dbc` bileşeninde yok.** Dash tanımadığı kwarg'ı yok saymaz,
+  `TypeError` fırlatır — hata da çalışma anında, callback gövdesinde patlar.
+  `dbc.Spinner` → `spinner_class_name`, `dbc.NavLink` → `title` kabul etmiyor.
+  `tests/test_dash_props.py` tüm çağrıları gerçek prop listesiyle karşılaştırır
+- Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
+- `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
+  alembic yok, `create_all()` var olan tabloyu değiştirmez
+
+### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
+- `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
+  **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat
+  dugmesi acar" kalibi bu yuzden bozuk: baska sayfaya gidip donen kullanici
+  surmekte olan isin ilerlemesini bir daha goremez.
+- Kural: uzun suren bir isin sayfasi **acilista durumu sormali** ve yoklamayi
+  ona gore acmali (`training.py::layout` -> `_status_block`,
+  `hyperopt.py::layout` -> calisan study'yi listeden bulur).
+- Ayrica calisan isin kimligini yalnizca `dcc.Store`'da tutma — store da
+  sifirlanir; kimlik backend'den geri bulunabilmeli. Tahmin egitiminde
+  `/prediction/train/status` SEMBOL istiyor, sayfa donuste neyi soracagini
+  bilmiyordu; `GET /api/prediction/train/active` listeyi backend'den verir.
+- Yoklamayi is bitince KAPAT (`disabled=True`), yoksa sayfa acik kaldigi
+  surece bos yere sorgu atar.
+
+### Sembol evreni ve train/test bolmesi (ONEMLI)
+- Gozlem uzayi sembol sayisina bagli: `1 + n + 5n + 5n`. 5 sembol -> 56,
+  30 sembol -> 331 ozellik.
+- `DataFetcher.split_data()` **KRONOLOJIK** boler ve sembol uyelugine bakmaz.
+  Sembollerin gecmisleri esit degilse bolumlerin sembol sayisi FARKLI cikar:
+  ```
+  train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
+  test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
+  ```
+  Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict` asamasinda
+  `Unexpected observation shape` ile patliyor ve HICBIR kosum tamamlanamiyordu.
+- Egitim rotasi artik val/test'i **egitim bolumunun sembol evrenine hizaliyor**
+  ve dusen sembolleri `training_state["warnings"]` ile panoya tasiyor. Sessiz
+  hizalama YAPMA: kullanici 30 sembol sandigi modeli 5 sembolle egitmis olur.
+- Kalici cozum veride: eksik sembollerin tam gecmisini indir (Veri sayfasi ->
+  "Yeniden Indir (tam)").
+
+### Modelin sembol evreni model ADINDAN cozulmez (ONEMLI)
+- Egitim rotasi `get_symbols(phase)` listesini YALNIZCA veri cekerken kullanir;
+  egitimi yuklenen panelin tamamiyla yapar. Yani `ppo_phase1_...` adli bir model
+  pekala 30 sembolle egitilmistir (obs=331, PHASE1_SYMBOLS ise 5 -> obs=56).
+  `/trading/daily-decision` evreni adindan tahmin edince durum vektoru 56
+  cikiyordu ve SB3 `predict` asamasinda patliyordu:
+  `Unexpected observation shape (56,) ... please use (331,)`.
+- Tek gercek kaynak MODELIN KENDISI: `action_space.shape[0]` = sembol sayisi.
+  `daily_trading.resolve_trade_universe()` adaylari bu sayiya gore eler:
+  yan dosya -> egitim paneli (yeniden uretilir) -> ad tabanli sabitler.
+- **Yeni modeller kendi evrenini tasir**: egitim `model.save()` yanina
+  `<model>.meta.json` yazar (`write_model_meta`). Eski modeller icin:
+  `python scripts/backfill_model_meta.py --write` (once `--write`siz deneme kosumu).
+- **Sembol SIRASI onemli** — durum vektoru sembolleri env'deki sirayla diziyor
+  (`TradingEnv.symbols` = panelin gorunme sirasi). `sorted()` uygulamak state'i
+  sessizce bozar; cozumleyici sirayi oldugu gibi tasir.
+- Model silinince yan dosya da silinir (`delete_model`); `list_models` yalnizca
+  `.zip` suzdugu icin meta dosyasi model gibi listelenmez.
+- Evren dogru sayida cikip durum yine de uymazsa (faz 2 modeli: hisse basina 17
+  ozellik + 6 makro; `build_live_state` 10 uretir) rota SB3'a girmeden 400 ile
+  nedeni soyler.
+
+### Kagit portfoy ve kar/zarar (ONEMLI)
+- **`summary.daily_return_pct` KAR/ZARAR DEGILDIR.** `portfolio_before` ve
+  `portfolio_after` ayni gunun ayni fiyatlariyla hesaplanir; alim-satim
+  nakit<->hisse takasi oldugu icin portfoy degeri degismez, geriye yalnizca
+  komisyon kalir. Metrik tanim geregi ~0 veya negatif cikar (olculdu:
+  100.000,00 -> 99.998,99 = "-0,0010%", komisyon 1,01 TL). Kar/zarar icin
+  `portfolio.value_portfolio()` kullan — pozisyonu BASKA BIR GUNUN fiyatiyla
+  degerler.
+- Tek gercek kaynak `workspaces/<uid>/data/live_trading/portfolio.json`
+  (`app/services/portfolio.py`). `daily_trading.py` kararin NASIL uretildigini,
+  `portfolio.py` SONUCUNU bilir.
+- **Nakit tanimlari `interpret_actions_with_risk` ile ayni olmali:**
+  `BUY -> cost = adet*fiyat*(1+komisyon)` (komisyon DAHIL),
+  `SELL -> revenue = adet*fiyat*(1-komisyon)` (DUSULMUS). `avg_cost` bu yuzden
+  komisyon dahil tutulur; aksi halde gerceklesmis kar komisyon kadar sisik cikar.
+- **Ayni tarih iki kez uygulanmaz** (`applied_dates`) — "Uygula"ya iki kez
+  basmak pozisyonu iki katina cikarirdi.
+- `/daily-decision` icin `balance`/`shares` artik OPSIYONEL: verilmezse
+  portfoyden yuklenir. Panoda "Portfoyu elle gir" anahtari acikken gonderilir
+  ve o karar UYGULANAMAZ (uydurma bir baslangictan ilerletirdi).
+- Fiyati cekilemeyen sembol ortalama maliyetiyle degerlenir ve
+  `missing_prices` ile raporlanir — 0 saymak portfoyu kucuk, sessiz kalmak
+  kar/zarari sahte gosterirdi.
+- `POST /portfolio/reset` gecmis dosyalarina DOKUNMAZ (trade_decisions.json,
+  portfolio_history.csv); silmek geri alinamaz, ayri bir istek olmali.
+- Test: `python tests/test_paper_portfolio.py` (43 kontrol)
+
+### Panel tazeligi ve yfinance taslak satiri (ONEMLI)
+- **Tazelik olcutu takvim gunu DEGIL, kapanmis olmasi beklenen son SEANS.**
+  `cached_last < end_date.date()` sorusu 30 Agustos Pazar hedefinde CSV 28
+  Agustos Cuma'ya kadar dolu olsa bile dogru cikiyordu; tek karar istegi 30 CSV
+  okumasi + **30 yfinance indirmesi** yapiyordu, sonuc hic degismeden.
+  `daily_trading.last_expected_session()` hafta sonunu geriye sarar. Resmi BIST
+  tatilleri bilinmiyor; o gunlerde tek bosuna tur atilir, TTL onbellegi keser.
+- **yfinance seans kapanmadan once OHLC'si NaN, volume'u DOLU taslak satir
+  dondurur.** Bu satir diske yazilirsa iki zarar birden: panelde tamamen bos
+  bir gun kalir **ve** `fetch_incremental`'in `min_last_date`'i o gune kayar,
+  `fetch_from` ertesi gun olur, o seansin gercek verisi bir daha HIC cekilmez.
+  Filtre `fetch_incremental`'da **yalnizca yeni veriye** uygulanir — `existing`
+  ham panel ve 2005 oncesi negatif fiyat artefaktlarini tasiyor (asagiya bak);
+  oraya `close > 0` uygulamak gecmisi sessizce degistirirdi.
+- **`actual_date` sembol kapsamina bakar** (`MIN_SESSION_COVERAGE`, %90).
+  Panelin bir kismi tazelenip kalani tazelenmeyince (28.08.2026: 30 sembolden
+  3'u) en son tarihte yalnizca o 3 sembolun kapanisi oluyordu; kalan 27 sembol
+  tek tek bir onceki gune dusuyor, durum vektoru **iki gunun karisimini**
+  tasiyordu. Esigi gecemeyen gun atlanir.
+- Panel `(semboller, hedef, lookback, CSV mtime)` anahtariyla 15 dk onbellege
+  alinir. Veri sayfasi yeni veri indirince mtime degisir, onbellek TTL
+  beklemeden duser. Testte `dt.clear_panel_cache()` cagir — yoksa ikinci
+  cagriyi onbellek karsilar ve test sahte yesil verir.
+- Test: `python tests/test_panel_freshness.py` (21 kontrol)
 
 ### Veri butunlugu (ONEMLI)
 - **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in
@@ -220,6 +474,29 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - Güvenilirlik: sessiz model/fold düşmesi görünür, fallback işareti + strict mod (cache yolu dahil: `data/macro/macro_data_quality.json`), eğitim manifesti, checkpoint/resume, merkezi seed
   - Kapanış koşumu (T7, 5 sembol): 533.9s → **157.6s (−%70.5)** perf knob'ları açıkken; resume 1.0s; 5/5 sembol `ok` (5 model)
   - **DL perf knob'ları default OFF (opt-in)**: tam pipeline'da RNG sırasını kaydırıp golden'ı değiştirdikleri için (davranış dondurma). Sıfırdan retrain'de açılır, golden o donanımda yenilenir.
+- Faz 8 (UI/UX): Tamamlandı — kapsam tur tur genişledi, tamamı
+  `docs/development/phase-8-ui-theming.md`'de
+  - A–E: aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu), tek kaynak token
+    katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
+    6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA
+    hatası da düzeldi)
+  - F: profil sayfası — kenar çubuğunda görünür giriş noktası, ad soyad düzenleme,
+    son giriş/çalışma alanı özeti, kendi oturumlarını görme ve kapatma, kendi
+    denetim kaydı (`/api/account/*`); kasıtlı oturum iptalinin grace penceresiyle
+    atlatılabilmesi kapatıldı
+  - G: üst çubuk — kırıntı, belgelenen akışı izleyen bağlamsal eylem, role duyarlı
+    sayfa araması, taşınan görünüm anahtarı ve bellekteki çalışma durumlarından
+    beslenen bildirim zili
+  - Görsel doğrulama: 9 sayfa × 2 tema (headless Chrome/CDP). Üç kusur çıktı:
+    zil `btn-primary` varyantını alıyordu, **devre dışı dolgulu düğmeler uygulama
+    genelinde** Bootstrap'in ham paletine düşüyordu, boş portföy grafiği
+    mesajsız/eksenli kalıyordu
+  - H: ≤820px'de ikon rayı (ölçüm "düzen bozuluyor" varsayımını çürüttü — sorun
+    darlıktı); iki turdur kullanılmayan `FilterBar` silindi
+  - I: eğitilmiş model ve optimizasyon kaydı silme. Yol üstünde iki gedik:
+    `/hyperopt/start` hiç RBAC taşımıyordu (viewer optimizasyon başlatabiliyordu),
+    ortak model için Faz 7'nin "kimse silemez" kuralı hiçbir çıkış yolu
+    bırakmıyordu → yönetici katmanı eklendi
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu

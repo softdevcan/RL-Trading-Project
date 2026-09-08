@@ -1,138 +1,195 @@
-"""Left sidebar navigation component."""
+"""Sol kenar cubugu (Faz 8, C.8).
+
+Menu uc gruba ayrildi; duz bir 8 maddelik liste yerine ne aradigini bilen
+kullanicinin dogrudan bulabilecegi bir yapi. Altta hesap satiri ve cikis.
+
+Gorunum anahtari Faz 8/G'de ust cubuga tasindi (bkz. `topbar.py`).
+"""
 
 from dash import html
 import dash_bootstrap_components as dbc
 
 from dashboard.auth_context import current_user, display_name, is_admin
-from dashboard.theme import CARD, CARD2, BORDER, TEXT, TEXT_MUTED, BLUE, GREEN, SIDEBAR_STYLE
+from dashboard.theme import BLUE, BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
 
-NAV_ITEMS = [
-    {"label": "Dashboard",   "icon": "bi bi-speedometer2",  "href": "/dash/"},
-    {"label": "Egitim",      "icon": "bi bi-cpu",            "href": "/dash/training"},
-    {"label": "Veri",        "icon": "bi bi-database",       "href": "/dash/data"},
-    {"label": "Modeller",    "icon": "bi bi-diagram-3",      "href": "/dash/models"},
-    {"label": "Trading",     "icon": "bi bi-graph-up-arrow", "href": "/dash/daily-trading"},
-    {"label": "Tahmin",      "icon": "bi bi-lightning-charge","href": "/dash/prediction"},
-    {"label": "Akademik",    "icon": "bi bi-journal-bookmark","href": "/dash/academic"},
-    {"label": "HiperParam",  "icon": "bi bi-sliders",        "href": "/dash/hyperopt"},
+# Gruplar sirayla cizilir; admin grubu yalnizca admin icin eklenir.
+NAV_GROUPS = [
+    ("Analiz", [
+        {"label": "Dashboard", "icon": "bi bi-speedometer2", "href": "/dash/"},
+        {"label": "Modeller", "icon": "bi bi-diagram-3", "href": "/dash/models"},
+        {"label": "Akademik", "icon": "bi bi-journal-bookmark", "href": "/dash/academic"},
+    ]),
+    ("Islem", [
+        {"label": "Trading", "icon": "bi bi-graph-up-arrow", "href": "/dash/daily-trading"},
+        {"label": "Tahmin", "icon": "bi bi-lightning-charge", "href": "/dash/prediction"},
+    ]),
+    ("Sistem", [
+        {"label": "Egitim", "icon": "bi bi-cpu", "href": "/dash/training"},
+        {"label": "Veri", "icon": "bi bi-database", "href": "/dash/data"},
+        {"label": "HiperParam", "icon": "bi bi-sliders", "href": "/dash/hyperopt"},
+    ]),
 ]
 
-# Yalnizca admin rolu gorur
-ADMIN_NAV_ITEMS = [
+ADMIN_GROUP = ("Yonetim", [
     {"label": "Kullanicilar", "icon": "bi bi-people", "href": "/dash/users"},
-]
+])
 
 ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
-ROLE_COLORS = {"admin": GREEN, "user": BLUE, "viewer": TEXT_MUTED}
 
 
-def _user_footer():
-    """Aktif kullanici rozeti + cikis. Auth kapaliysa gosterilmez."""
-    user = current_user()
-    if not user:
-        return None
+def _nav_link(item: dict) -> html.Div:
+    """Menu maddesi.
 
-    role = user.get("role", "user")
+    Etiket ayri bir span'de (`nav-label`): dar ekranda kenar cubugu ikon
+    rayina inerken CSS'in yalnizca yaziyi gizleyebilmesi icin. Sarmalayici
+    Div `title` tasiyor — rayda yalnizca ikon gorundugunde ipucu tek
+    kalan ayirt edici. (dbc.NavLink `title` propunu kabul etmiyor; verilince
+    tum Dash agaci render edilemiyor.)
+
+    Bosluk/kenar bosluklari inline degil `#sidebar .nav-link` kuralinda:
+    medya sorgusunun `!important` olmadan ezebilmesi icin.
+    """
     return html.Div(
-        [
-            html.Div(
-                [
-                    html.I(className="bi bi-person-circle me-2", style={"color": TEXT_MUTED}),
-                    html.Span(
-                        display_name(),
-                        style={
-                            "color": TEXT, "fontSize": "13px", "fontWeight": "600",
-                            "overflow": "hidden", "textOverflow": "ellipsis",
-                            "whiteSpace": "nowrap", "maxWidth": "130px", "display": "inline-block",
-                            "verticalAlign": "middle",
-                        },
-                        title=user.get("email", ""),
-                    ),
-                ],
-                style={"display": "flex", "alignItems": "center", "marginBottom": "6px"},
-            ),
-            html.Div(
-                [
-                    html.Span(
-                        ROLE_LABELS.get(role, role),
-                        style={
-                            "backgroundColor": CARD2, "color": ROLE_COLORS.get(role, TEXT_MUTED),
-                            "fontSize": "10px", "padding": "2px 8px", "borderRadius": "10px",
-                            "fontWeight": "600",
-                        },
-                    ),
-                    html.A(
-                        [html.I(className="bi bi-box-arrow-right me-1"), "Cikis"],
-                        href="/logout",
-                        style={"color": TEXT_MUTED, "fontSize": "11px", "textDecoration": "none"},
-                    ),
-                ],
-                style={"display": "flex", "alignItems": "center", "justifyContent": "space-between"},
-            ),
-        ],
-        style={
-            "position": "absolute", "bottom": "0", "left": "0", "right": "0",
-            "padding": "12px 16px", "borderTop": f"1px solid {BORDER}",
-            "backgroundColor": CARD,
-        },
+        dbc.NavLink(
+            [
+                html.I(className=item["icon"]),
+                html.Span(item["label"], className="nav-label"),
+            ],
+            href=item["href"],
+            active="exact",
+            className="sidebar-link",
+        ),
+        title=item["label"],
     )
 
 
-def create_sidebar():
-    """Return the sidebar navigation element.
+def _initials(name: str) -> str:
+    """Avatar icin en fazla iki harf. E-posta gelirse ilk harfi kullanilir."""
+    parts = [p for p in (name or "").replace(".", " ").split() if p]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
 
-    Not: Kullanici rozeti istege gore degistiginden layout, `app.py` icinde
-    her sayfa yuklemesinde yeniden uretilir (callable layout).
+
+def _account_link(user: dict) -> html.Div:
+    """Hesabim'a giden acikca tiklanabilir satir.
+
+    Onceki hali dusuk gorunurluktendi: yalnizca ad, `textDecoration: none`
+    ile duz metin gibi duruyordu — link oldugu ancak uzerine gelinince
+    anlasiliyordu. Simdi avatar + ad + rol + chevron, hover zemini ve
+    `active="exact"` ile aktif sayfa vurgusu var (dbc aktif durumu
+    dcc.Location'dan cozer, sunucu turu gerekmez).
+
+    Auth KAPALIYKEN de cizilir ("Misafir"): o modda hesap yok ama Hesabim
+    sayfasindaki gorunum tercihi calisiyor ve oraya baska giris yolu
+    kalmiyordu. Yan fayda: `sidebar-account-name`/`-avatar` kimlikleri her
+    zaman DOM'da, boylece ad guncelleme callback'i var olmayan bir bilesene
+    yazmaya calismiyor.
+
+    `title` sarmalayan Div'de: dbc.NavLink yalnizca sayili prop kabul ediyor
+    (active/href/target/...), `title` verilince tum Dash agaci render
+    edilemiyor — /dash/ 500 donuyordu. Sarmalayici ayni alani kapladigi icin
+    ipucu davranisi degismiyor.
     """
-    nav_links = []
-    items = NAV_ITEMS + (ADMIN_NAV_ITEMS if is_admin() else [])
-    for item in items:
-        nav_links.append(
-            dbc.NavLink(
-                [
-                    html.I(className=f"{item['icon']} me-2"),
-                    item["label"],
-                ],
-                href=item["href"],
-                active="exact",
-                className="sidebar-link",
-                style={
-                    "color": TEXT_MUTED,
-                    "padding": "10px 20px",
-                    "borderRadius": "6px",
-                    "margin": "2px 8px",
-                    "transition": "all 0.15s",
-                    "fontSize": "14px",
-                    "fontWeight": "500",
-                },
+    name = display_name()
+    role = user.get("role")
+    subtitle = ROLE_LABELS.get(role, role) if role else "Kimlik dogrulama kapali"
+    email = user.get("email", "")
+    return html.Div(
+        dbc.NavLink(
+            [
+                html.Span(_initials(name), id="sidebar-account-avatar",
+                          className="account-avatar"),
+                html.Span(
+                    [
+                        html.Span(name, id="sidebar-account-name",
+                                  className="account-name"),
+                        html.Span(subtitle, className="account-role"),
+                    ],
+                    className="account-text",
+                ),
+                html.I(className="bi bi-chevron-right account-chevron"),
+            ],
+            href="/dash/account",
+            active="exact",
+            className="sidebar-account",
+        ),
+        title=(f"{email} - Hesabim, gorunum ve guvenlik" if email
+               else "Hesabim - gorunum ayarlari"),
+    )
+
+
+def _user_footer():
+    """Hesap satiri + cikis.
+
+    Gorunum anahtari Faz 8/G'de ust cubuga tasindi: menunun dibi, sik
+    kullanilan bir kontrol icin yanlis yerdi. Tek kopya var, cogaltilmadi.
+
+    Hesap satiri her durumda cizilir; auth kapaliyken "Misafir" olur
+    (gerekce `_account_link` docstring'inde).
+    """
+    user = current_user()
+
+    rows = [_account_link(user or {})]
+
+    if user:
+        rows.append(
+            html.Div(
+                html.A(
+                    [html.I(className="bi bi-box-arrow-right"),
+                     html.Span("Cikis", className="nav-label ms-1")],
+                    href="/logout",
+                    className="sidebar-logout",
+                ),
+                className="sidebar-controls",
             )
         )
 
+    return html.Div(rows, className="sidebar-footer")
+
+
+def create_sidebar():
+    """Kenar cubugunu dondur.
+
+    Not: Kullanici rozeti ve admin grubu role gore degistiginden layout,
+    `app.py` icinde her sayfa yuklemesinde yeniden uretilir (callable layout).
+    """
+    groups = list(NAV_GROUPS) + ([ADMIN_GROUP] if is_admin() else [])
+
+    nav_children = []
+    for title, items in groups:
+        nav_children.append(html.Div(title, className="sidebar-group"))
+        nav_children.extend(_nav_link(item) for item in items)
+
     return html.Div(
         [
-            # Brand header
+            # Marka
             html.Div(
                 [
                     html.Div(
                         [
-                            html.I(className="bi bi-robot me-2", style={"color": BLUE, "fontSize": "20px"}),
-                            html.Span("RL Trading", style={"color": TEXT, "fontWeight": "700", "fontSize": "16px"}),
+                            html.I(className="bi bi-robot me-2",
+                                   style={"color": BLUE, "fontSize": "19px"}),
+                            html.Span("RL Trading", className="brand-text",
+                                      style={"color": TEXT, "fontWeight": "700",
+                                             "fontSize": "16px"}),
                         ],
                         style={"display": "flex", "alignItems": "center"},
                     ),
-                    html.Small("BIST-30 System", style={"color": TEXT_MUTED, "fontSize": "11px"}),
+                    html.Small("by softdevcan", className="brand-text",
+                               style={"color": TEXT_MUTED, "fontSize": "11px"}),
                 ],
                 style={
                     "padding": "20px 20px 16px",
                     "borderBottom": f"1px solid {BORDER}",
-                    "marginBottom": "8px",
+                    "marginBottom": "4px",
                 },
             ),
-            # Navigation
-            dbc.Nav(nav_links, vertical=True, pills=True),
-            # Aktif kullanici + cikis (auth aciksa)
+            dbc.Nav(nav_children, vertical=True, pills=True),
             _user_footer(),
         ],
-        style={**SIDEBAR_STYLE, "paddingBottom": "70px"},
+        style={**SIDEBAR_STYLE, "paddingBottom": "120px"},
         id="sidebar",
     )

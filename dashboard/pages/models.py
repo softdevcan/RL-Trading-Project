@@ -6,15 +6,20 @@ API endpoints used:
   GET /api/trading/models/{name}/metrics
 """
 
-from dash import html, dcc
+from dash import html, dcc, no_update
 from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable
 import plotly.graph_objects as go
 
 from dashboard.theme import (
-    CARD, CARD2, TEXT, TEXT_MUTED, BORDER, BLUE, GREEN, PURPLE, ORANGE, RED, YELLOW,
-    ALGO_COLORS, DARK_TEMPLATE, empty_figure, apply_dark_template,
+    TEXT, TEXT_MUTED, GREEN, RED, empty_figure, apply_theme_template, plot_palette,
+    plot_rgba,
+)
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
+from dashboard.components.table import (
+    TABLE_STYLES, numeric_columns, tone_rules_formatted,
 )
 import dashboard.api_client as api
 
@@ -24,9 +29,11 @@ import dashboard.api_client as api
 def layout():
     return html.Div([
         dcc.Store(id="models-store", data=[]),
+        # Silme sonrasi listeyi tazeler
+        dcc.Store(id="models-delete-tick", data=0),
 
-        html.H4("Model Karsilastirma", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Birden fazla modeli karsilastir ve detaylari incele", style={"color": TEXT_MUTED, "marginBottom": "24px"}),
+        create_page_header("Model Karsilastirma",
+                           "Birden fazla modeli karsilastir ve detaylari incele"),
 
         # Model selection
         dbc.Card([
@@ -43,16 +50,39 @@ def layout():
                                    id="models-deselect-all", size="sm", color="secondary", outline=True),
                     ], md=4, className="d-flex align-items-end"),
                     dbc.Col([
+                        dbc.Button([html.I(className="bi bi-trash me-1"), "Secilenleri sil"],
+                                   id="models-delete-btn", size="sm", color="danger",
+                                   outline=True, disabled=True),
+                    ], md=2, className="d-flex align-items-end"),
+                    dbc.Col([
                         dbc.Button([html.I(className="bi bi-arrow-clockwise me-2"), "Yenile"],
                                    id="models-refresh-btn", color="secondary", outline=True, className="w-100"),
                     ], md=2, className="d-flex align-items-end ms-auto"),
                 ], className="g-3"),
+                html.Div(id="models-delete-alert", className="mt-3"),
             ])
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
+
+        # Silme onayi — geri alinamaz bir islem, tek tikla olmamali
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Modelleri sil")),
+                dbc.ModalBody(html.Div(id="models-delete-body")),
+                dbc.ModalFooter([
+                    dbc.Button("Vazgec", id="models-delete-cancel",
+                               color="secondary", outline=True, className="me-2"),
+                    dbc.Button([html.I(className="bi bi-trash me-1"), "Sil"],
+                               id="models-delete-confirm", color="danger"),
+                ]),
+            ],
+            id="models-delete-modal",
+            is_open=False,
+            centered=True,
+        ),
 
         # Comparison table
         dbc.Card([
-            dbc.CardHeader(html.Span("Karsilastirma Tablosu", style={"color": TEXT, "fontWeight": "600"})),
+            dbc.CardHeader(html.Span("Karsilastirma Tablosu", className="card-title-sm")),
             dbc.CardBody([
                 DataTable(
                     id="models-table",
@@ -70,38 +100,30 @@ def layout():
                     data=[],
                     page_size=10,
                     sort_action="native",
-                    style_table={"overflowX": "auto"},
-                    style_header={
-                        "backgroundColor": CARD2,
-                        "color": TEXT_MUTED,
-                        "fontWeight": "600",
-                        "fontSize": "12px",
-                        "textTransform": "uppercase",
-                        "border": f"1px solid {BORDER}",
-                    },
-                    style_cell={
-                        "backgroundColor": CARD,
-                        "color": TEXT,
-                        "border": f"1px solid {CARD2}",
-                        "fontSize": "13px",
-                        "padding": "8px 12px",
-                        "textAlign": "left",
-                    },
-                    style_data_conditional=[
-                        {"if": {"row_index": "odd"}, "backgroundColor": CARD2},
-                    ],
+                    **TABLE_STYLES,
+                    # Sayilar saga dayali; basamak sayisi degisen degerler
+                    # sola dayaliyken alt alta hizalanmiyordu (C.6).
+                    style_cell_conditional=numeric_columns(
+                        "total_return", "sharpe_ratio", "sortino_ratio",
+                        "calmar_ratio", "max_drawdown", "win_rate",
+                    ),
+                    # Renk yalnizca yon tasiyan sutunlarda
+                    style_data_conditional=(
+                        tone_rules_formatted("total_return")
+                        + tone_rules_formatted("max_drawdown")
+                    ),
                     row_selectable="single",
                 ),
             ]),
-        ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "24px"}),
+        ], className="mb-4"),
 
         # Charts
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Sharpe / Sortino / Calmar", style={"color": TEXT, "fontWeight": "600"})),
+                    dbc.CardHeader(html.Span("Sharpe / Sortino / Calmar", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="models-bar-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=12, className="mb-4"),
         ]),
 
@@ -131,10 +153,11 @@ def register_callbacks(app):
 
     @app.callback(
         [Output("models-checklist", "options"), Output("models-store", "data")],
-        Input("models-refresh-btn", "n_clicks"),
+        [Input("models-refresh-btn", "n_clicks"),
+         Input("models-delete-tick", "data")],
         prevent_initial_call=False,
     )
-    def refresh_models(n):
+    def refresh_models(n, _tick):
         models = api.get_models()
         opts = [{"label": _model_label(m), "value": m.get("name", "")} for m in models]
         return opts, models
@@ -150,6 +173,76 @@ def register_callbacks(app):
         if ctx.triggered_id == "models-select-all":
             return [o["value"] for o in (opts or [])]
         return []
+
+    @app.callback(
+        Output("models-delete-btn", "disabled"),
+        Input("models-checklist", "value"),
+    )
+    def toggle_delete_enabled(selected):
+        return not selected
+
+    @app.callback(
+        [Output("models-delete-modal", "is_open"),
+         Output("models-delete-body", "children")],
+        [Input("models-delete-btn", "n_clicks"),
+         Input("models-delete-cancel", "n_clicks"),
+         Input("models-delete-confirm", "n_clicks")],
+        State("models-checklist", "value"),
+        prevent_initial_call=True,
+    )
+    def toggle_delete_modal(open_n, cancel_n, confirm_n, selected):
+        from dash import ctx
+        if ctx.triggered_id != "models-delete-btn":
+            return False, no_update
+        names = selected or []
+        body = html.Div([
+            html.P(f"{len(names)} model kalici olarak silinecek. Bu islem geri alinamaz.",
+                   style={"color": TEXT}),
+            html.Ul([html.Li(n, style={"color": TEXT_MUTED, "fontSize": "13px"})
+                     for n in names]),
+            html.Small(
+                "Model dosyasi ve varsa metrik JSON'u silinir. Ortak (kullanici "
+                "oncesi) dizindeki modeller salt-okunurdur ve atlanir.",
+                style={"color": TEXT_MUTED},
+            ),
+        ])
+        return True, body
+
+    @app.callback(
+        [Output("models-delete-alert", "children"),
+         Output("models-delete-tick", "data"),
+         Output("models-checklist", "value", allow_duplicate=True)],
+        Input("models-delete-confirm", "n_clicks"),
+        [State("models-checklist", "value"), State("models-delete-tick", "data")],
+        prevent_initial_call=True,
+    )
+    def delete_selected(n_clicks, selected, tick):
+        if not n_clicks or not selected:
+            return no_update, no_update, no_update
+
+        ok, failed = [], []
+        for name in selected:
+            result = api.delete_model(name)
+            if result.get("ok"):
+                ok.append(name)
+            else:
+                detail = (result.get("body") or {}).get("detail") or f"HTTP {result.get('status')}"
+                failed.append(f"{name}: {detail}")
+
+        blocks = []
+        if ok:
+            blocks.append(dbc.Alert(f"{len(ok)} model silindi.", color="success",
+                                    className="py-2 mb-2", duration=4000))
+        if failed:
+            # Her basarisiz satir ayri gosterilir: 403 (ortak dizin) ile 404
+            # (baska bir yerde zaten silinmis) farkli sebepler.
+            blocks.append(dbc.Alert(
+                [html.Div("Silinemeyenler:", style={"fontWeight": "600"})]
+                + [html.Div(f, style={"fontSize": "12px"}) for f in failed],
+                color="danger", className="py-2 mb-0",
+            ))
+
+        return html.Div(blocks), (tick or 0) + 1, []
 
     @app.callback(
         [Output("models-table", "data"), Output("models-bar-chart", "figure")],
@@ -188,11 +281,12 @@ def register_callbacks(app):
 
         # Grouped bar chart
         fig = go.Figure()
-        fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=BLUE))
-        fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=GREEN))
-        fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=PURPLE))
+        P = plot_palette()
+        fig.add_trace(go.Bar(name="Sharpe", x=names, y=sharpes, marker_color=P["blue"]))
+        fig.add_trace(go.Bar(name="Sortino", x=names, y=sortinos, marker_color=P["green"]))
+        fig.add_trace(go.Bar(name="Calmar", x=names, y=calmars, marker_color=P["purple"]))
         fig.update_layout(barmode="group", height=300)
-        apply_dark_template(fig)
+        apply_theme_template(fig)
 
         return rows, fig
 
@@ -270,13 +364,13 @@ def _build_modal_portfolio_chart(metrics):
             y=values,
             mode="lines",
             fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.15)",
-            line={"color": BLUE, "width": 2},
+            fillcolor=plot_rgba("blue", 0.15),
+            line={"color": plot_palette()["blue"], "width": 2},
             name="Portfoy",
         ))
     else:
         return empty_figure("Portfoy gecmisi yok")
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=300, showlegend=False)
     return fig
 
@@ -286,10 +380,11 @@ def _build_activity_chart(metrics):
     sell = metrics.get("sell_count") or metrics.get("total_sells") or 0
     hold = metrics.get("hold_count") or metrics.get("total_holds") or 0
 
+    P = plot_palette()
     fig = go.Figure()
     fig.add_trace(go.Bar(name="Al", x=["Al", "Sat", "Bekle"], y=[buy, sell, hold],
-                         marker_color=[GREEN, RED, YELLOW]))
-    apply_dark_template(fig)
+                         marker_color=[P["green"], P["red"], P["yellow"]]))
+    apply_theme_template(fig)
     fig.update_layout(height=250, showlegend=False, title_text="Islem Aktivitesi")
     return fig
 
@@ -320,7 +415,7 @@ def _render_modal_metrics(metrics):
 def _render_trades_table(metrics):
     trades = metrics.get("trades") or metrics.get("trade_history") or []
     if not trades:
-        return html.P("Islem gecmisi yok.", style={"color": TEXT_MUTED, "marginTop": "16px"})
+        return create_state_block("empty", "Islem gecmisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Tarih", className="section-title"), width=3),

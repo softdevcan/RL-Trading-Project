@@ -23,10 +23,12 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from dash import ALL, Input, Output, State, ctx, dcc, html
 
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 from dashboard.theme import (
-    BLUE, CARD, CARD2, GOLD, GREEN, ORANGE, PURPLE, RED, TEXT, TEXT_MUTED, YELLOW,
-    apply_dark_template, empty_figure,
+    BLUE, CARD2, GOLD, GREEN, RED, TEXT, TEXT_MUTED, YELLOW, apply_theme_template,
+    empty_figure, plot_palette, plot_rgba,
 )
 from prediction.feature_groups import (
     DEFAULT_TARGET_TYPE, TARGET_TYPES, default_groups, groups_by_category,
@@ -47,15 +49,75 @@ CATEGORY_LABEL = {
 
 # ─── Layout ───────────────────────────────────────────────────────────────────
 
+_RUN_STATE_LABELS = {
+    "running": ("Suruyor", "bi-arrow-repeat", "info"),
+    "completed": ("Tamamlandi", "bi-check-circle", "success"),
+    "error": ("Hata", "bi-x-circle", "danger"),
+}
+
+
+def _active_runs() -> list:
+    """Kullanicinin tahmin egitimi kayitlari (bos liste = hic kosum yok)."""
+    return (api.get_prediction_active_trainings() or {}).get("runs") or []
+
+
+def _has_running() -> bool:
+    return any(r.get("state") == "running" for r in _active_runs())
+
+
+def _training_runs_block(runs: list):
+    """Tahmin egitimi kayitlarini goster.
+
+    Sayfa onceden yalnizca "arka planda baslatildi" diye TEK SEFERLIK bir
+    uyari basiyor, bir daha hic guncellemiyordu: kullanici bitti mi surüyor
+    mu anlayamiyordu, sayfadan cikip donunce o uyari da kayboluyordu.
+
+    Ilerleme YUZDESI YOK ve uydurulmuyor — tahmin egitimi adim sayaci
+    yayinlamiyor; durum + gecen/biten zaman gosteriliyor.
+    """
+    if not runs:
+        return None
+
+    rows = []
+    for run in runs:
+        state = run.get("state", "idle")
+        label, icon, color = _RUN_STATE_LABELS.get(state, (state, "bi-question-circle", "secondary"))
+        stamp = run.get("finished_at") or run.get("started_at") or ""
+        detail = run.get("error") or run.get("source") or ""
+        rows.append(dbc.Row([
+            dbc.Col(html.Span(run.get("symbol", "—"), className="card-title-sm"), width=4),
+            dbc.Col(dbc.Badge([html.I(className=f"bi {icon} me-1"), label],
+                              color=color, pill=True), width=4),
+            dbc.Col(html.Small(str(stamp)[:19].replace("T", " "),
+                               style={"color": TEXT_MUTED}), width=4),
+        ], className="mb-2 align-items-center") if not detail else dbc.Row([
+            dbc.Col(html.Span(run.get("symbol", "—"), className="card-title-sm"), width=4),
+            dbc.Col(dbc.Badge([html.I(className=f"bi {icon} me-1"), label],
+                              color=color, pill=True), width=4),
+            dbc.Col([
+                html.Small(str(stamp)[:19].replace("T", " "),
+                           style={"color": TEXT_MUTED, "display": "block"}),
+                html.Small(str(detail)[:120], style={"color": TEXT_MUTED}),
+            ], width=4),
+        ], className="mb-2 align-items-center"))
+
+    return dbc.Card([
+        dbc.CardHeader(html.Span("Egitim Durumu", className="card-title-sm")),
+        dbc.CardBody(rows),
+    ])
+
+
 def layout():
     return html.Div([
         dcc.Interval(id="pred-refresh", interval=60_000, n_intervals=0),
+        # Tahmin egitimi yoklamasi: yalnizca calisan kosum varken acik.
+        dcc.Interval(id="pred-train-poll", interval=3_000, n_intervals=0,
+                     disabled=not _has_running()),
         dcc.Store(id="pred-symbols-store", data=[]),
         dcc.Store(id="pred-models-store", data=[]),
 
-        html.H4("Fiyat Tahmini", style={"color": TEXT, "marginBottom": "4px"}),
-        html.P("Model egit, egitilmis modellerle tahmin uret.",
-               style={"color": TEXT_MUTED, "marginBottom": "16px"}),
+        create_page_header("Fiyat Tahmini",
+                           "Model egit, egitilmis modellerle tahmin uret."),
 
         # Altin ozeti — kompakt seritler
         _gold_summary_section(),
@@ -78,12 +140,12 @@ def _gold_summary_section():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(html.Span("Altin Fiyatlari",
-                                  style={"color": TEXT, "fontWeight": "600"}),
+                                  className="card-title-sm"),
                         md=2, className="d-flex align-items-center"),
                 dbc.Col(dbc.Row(id="pred-gold-cards", className="g-2"), md=10),
             ], className="align-items-center"),
         ], style={"padding": "12px 16px"}),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}", "marginBottom": "16px"})
+    ], className="mb-3")
 
 
 # ─── Tab: Model Egit ──────────────────────────────────────────────────────────
@@ -94,7 +156,7 @@ def _train_tab():
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.Span("Yeni Model Egit",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody([
                         html.Label("Kategori", className="section-title"),
                         dcc.Dropdown(
@@ -105,13 +167,13 @@ def _train_tab():
                                 {"label": "Doviz",             "value": "fx"},
                             ],
                             value="gold", clearable=False,
-                            style={"marginBottom": "12px", "color": CARD},
+                            style={"marginBottom": "12px"},
                         ),
 
                         html.Label("Sembol", className="section-title"),
                         dcc.Dropdown(id="train-symbol", options=[], value=None,
                                      placeholder="Sembol sec...", clearable=False,
-                                     style={"marginBottom": "12px", "color": CARD}),
+                                     style={"marginBottom": "12px"}),
 
                         html.Div(id="train-source-wrapper", children=[
                             html.Label("Veri Kaynagi", className="section-title"),
@@ -133,7 +195,7 @@ def _train_tab():
                         dcc.Dropdown(
                             id="train-horizon", options=HORIZONS,
                             value="daily", clearable=False,
-                            style={"marginBottom": "20px", "color": CARD},
+                            style={"marginBottom": "20px"},
                         ),
 
                         dbc.Button(
@@ -141,8 +203,13 @@ def _train_tab():
                             id="train-btn", color="primary", className="w-100",
                         ),
                         html.Div(id="train-result", className="mt-3"),
+                        # Egitim durumu — sayfa acilista backend'e sorar, boylece
+                        # baska bir ekrana gidip donen kullanici surmekte olan
+                        # kosumu gorur (egitim sayfasindaki ayni kalip).
+                        html.Div(id="pred-train-status", className="mt-3",
+                                 children=_training_runs_block(_active_runs())),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
 
                 # Feature grup secim paneli
                 _feature_groups_card(),
@@ -157,7 +224,7 @@ def _train_tab():
                     dbc.CardHeader(dbc.Row([
                         dbc.Col(html.Span(id="train-chart-title",
                                           children="Fiyat Grafigi",
-                                          style={"color": TEXT, "fontWeight": "600"})),
+                                          className="card-title-sm")),
                         dbc.Col(dcc.Dropdown(
                             id="train-chart-range",
                             options=[
@@ -176,17 +243,16 @@ def _train_tab():
                         figure=empty_figure("Sembol secince fiyat grafigi gelir"),
                         config={"displayModeBar": False},
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-                          "marginBottom": "16px"}),
+                ], className="mb-3"),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Egitilmis Modeller",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(html.Div(
                         id="train-models-table",
-                        children=html.P("Yukleniyor...", style={"color": TEXT_MUTED}),
+                        children=create_state_block("loading"),
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8),
         ]),
     ])
@@ -234,7 +300,7 @@ def _feature_groups_card():
     return dbc.Card([
         dbc.CardHeader(dbc.Row([
             dbc.Col(html.Span("Ozellik Gruplari",
-                              style={"color": TEXT, "fontWeight": "600"})),
+                              className="card-title-sm")),
             dbc.Col(dbc.ButtonGroup([
                 dbc.Button("Hepsi", id="features-select-all",
                            size="sm", color="secondary", outline=True),
@@ -245,8 +311,7 @@ def _feature_groups_card():
             ], size="sm"), width="auto"),
         ], className="align-items-center justify-content-between")),
         dbc.CardBody(sections),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-              "marginTop": "16px"})
+    ], className="mt-3")
 
 
 def _target_type_card():
@@ -263,7 +328,7 @@ def _target_type_card():
     ]
     return dbc.Card([
         dbc.CardHeader(html.Span("Hedef Tipi",
-                                 style={"color": TEXT, "fontWeight": "600"})),
+                                 className="card-title-sm")),
         dbc.CardBody([
             dcc.RadioItems(
                 id="train-target-type",
@@ -274,8 +339,7 @@ def _target_type_card():
                             "alignItems": "flex-start"},
             ),
         ]),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-              "marginTop": "16px"})
+    ], className="mt-3")
 
 
 # ─── Tab: Tahmin Yap ──────────────────────────────────────────────────────────
@@ -286,13 +350,13 @@ def _predict_tab():
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.Span("Tahmin Ayarlari",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody([
                         html.Label("Egitilmis Model", className="section-title"),
                         dcc.Dropdown(
                             id="predict-model", options=[], value=None,
                             placeholder="Egitilmis bir model sec...",
-                            clearable=False, style={"marginBottom": "16px", "color": CARD},
+                            clearable=False, style={"marginBottom": "16px"},
                         ),
                         html.Small(
                             "Yalnizca egitilmis modeller listelenir. "
@@ -312,15 +376,14 @@ def _predict_tab():
                         ),
                         html.Div(id="predict-action-result", className="mt-3"),
                     ]),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Altin Fiyat Gecmisi",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="pred-gold-chart", figure=empty_figure(),
                                            config={"displayModeBar": False})),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}",
-                          "marginTop": "16px"}),
+                ], className="mt-3"),
             ], md=4),
 
             dbc.Col([
@@ -330,30 +393,30 @@ def _predict_tab():
                 dbc.Row([
                     dbc.Col(dbc.Card([
                         dbc.CardHeader(html.Span("Tahmin vs Gercek",
-                                                 style={"color": TEXT, "fontWeight": "600"})),
+                                                 className="card-title-sm")),
                         dbc.CardBody(dcc.Graph(id="predict-vs-actual-chart",
                                                figure=empty_figure(),
                                                config={"displayModeBar": False})),
-                    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    ]),
                             md=7, className="mb-3"),
                     dbc.Col(dbc.Card([
                         dbc.CardHeader(html.Span("Dogruluk Trendi",
-                                                 style={"color": TEXT, "fontWeight": "600"})),
+                                                 className="card-title-sm")),
                         dbc.CardBody(dcc.Graph(id="predict-accuracy-chart",
                                                figure=empty_figure(),
                                                config={"displayModeBar": False})),
-                    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                    ]),
                             md=5, className="mb-3"),
                 ]),
 
                 dbc.Card([
                     dbc.CardHeader(html.Span("Tahmin Gecmisi",
-                                             style={"color": TEXT, "fontWeight": "600"})),
+                                             className="card-title-sm")),
                     dbc.CardBody(html.Div(
                         id="predict-history-table",
-                        children=html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                        children=create_state_block("empty", "Henuz tahmin yok."),
                     )),
-                ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"}),
+                ]),
             ], md=8),
         ]),
     ])
@@ -428,10 +491,29 @@ def register_callbacks(app):
         )
         return opts, sources[0], {"display": "block"}, hint
 
+    @app.callback(
+        [Output("pred-train-status", "children"),
+         Output("pred-train-poll", "disabled")],
+        Input("pred-train-poll", "n_intervals"),
+    )
+    def poll_prediction_training(_n):
+        """Egitim kayitlarini tazele; calisan kosum kalmayinca yoklamayi kapat.
+
+        Kapatmak onemli: bitmis kosumlar icin 3 sn'de bir sorgu atmanin
+        anlami yok, sayfa acik kaldigi surece surer.
+        """
+        runs = _active_runs()
+        block = _training_runs_block(runs)
+        still_running = any(r.get("state") == "running" for r in runs)
+        return block, not still_running
+
     # ── Egitim sekmesi: butonla egit, durumu goster
     @app.callback(
         [Output("train-result", "children"),
-         Output("pred-models-store", "data", allow_duplicate=True)],
+         Output("pred-models-store", "data", allow_duplicate=True),
+         # Baslatir baslatmaz yoklamayi ac; yoksa durum blogu bir sonraki
+         # sayfa yuklemesine kadar guncellenmezdi.
+         Output("pred-train-poll", "disabled", allow_duplicate=True)],
         Input("train-btn", "n_clicks"),
         [State("train-symbol", "value"),
          State("train-horizon", "value"),
@@ -446,7 +528,7 @@ def register_callbacks(app):
                        tech_groups, macro_groups, alt_groups, target_type):
         models = api.get_prediction_models() or []
         if not n or not symbol:
-            return "", models
+            return "", models, True
 
         payload: Dict[str, Any] = {"symbol": symbol, "horizon": horizon or "daily"}
         if source:
@@ -467,7 +549,7 @@ def register_callbacks(app):
             err = result.get("detail", "Bilinmeyen hata") if result else "Sunucu yanit vermedi"
             return (dbc.Alert([html.I(className="bi bi-x-circle me-2"),
                                f"Egitim baslatilamadi: {err}"],
-                              color="danger", dismissable=True), models)
+                              color="danger", dismissable=True), models, True)
 
         already_running = "zaten" in (result.get("message") or "")
         icon = "bi-hourglass-split" if already_running else "bi-play-circle"
@@ -488,7 +570,8 @@ def register_callbacks(app):
                 style={"color": TEXT_MUTED},
             ),
         ]
-        return dbc.Alert(body, color="info", dismissable=True), models
+        # Egitim basladi -> yoklamayi ac (False = disabled degil)
+        return dbc.Alert(body, color="info", dismissable=True), models, False
 
     # ── Egitim sekmesi: feature secim hizli butonlari (Hepsi/Hicbiri/Varsayilan)
     @app.callback(
@@ -573,7 +656,7 @@ def register_callbacks(app):
     )
     def make_prediction(n, model_value, models):
         blank = (html.Div(), empty_figure(), empty_figure(),
-                 html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                 create_state_block("empty", "Henuz tahmin yok."),
                  html.Div(), "")
         if not n or not model_value:
             return blank
@@ -591,7 +674,7 @@ def register_callbacks(app):
             alert = dbc.Alert([html.I(className="bi bi-x-circle me-2"), err],
                               color="danger", dismissable=True)
             return (html.Div(), empty_figure(), empty_figure(),
-                    html.P("Henuz tahmin yok.", style={"color": TEXT_MUTED}),
+                    create_state_block("empty", "Henuz tahmin yok."),
                     html.Div(), alert)
 
         result = predictions[0]
@@ -726,7 +809,7 @@ def _render_models_table(models: List[Dict]):
 
 def _render_gold_cards(gold):
     if not gold:
-        return [dbc.Col(html.P("Altin verisi yok.", style={"color": TEXT_MUTED}))]
+        return [dbc.Col(create_state_block("empty", "Altin verisi yok."))]
 
     items = [
         ("TRY/gram", gold.get("try_per_gram", gold.get("price_try", "—")), GOLD),
@@ -773,6 +856,7 @@ def _build_price_chart(data: Dict) -> go.Figure:
     bbu = data.get("bb_upper") or []
     bbl = data.get("bb_lower") or []
 
+    P = plot_palette()
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True,
         row_heights=[0.78, 0.22], vertical_spacing=0.04,
@@ -788,7 +872,7 @@ def _build_price_chart(data: Dict) -> go.Figure:
         fig.add_trace(go.Scatter(
             x=dates, y=bbl, mode="lines", name="BB alt",
             line={"color": "rgba(148,163,184,0.0)"}, fill="tonexty",
-            fillcolor="rgba(168,85,247,0.10)", showlegend=False,
+            fillcolor=plot_rgba("purple", 0.10), showlegend=False,
             hoverinfo="skip",
         ), row=1, col=1)
 
@@ -797,25 +881,25 @@ def _build_price_chart(data: Dict) -> go.Figure:
         fig.add_trace(go.Candlestick(
             x=dates, open=o, high=h, low=l, close=c,
             name="OHLC",
-            increasing={"line": {"color": GREEN}, "fillcolor": GREEN},
-            decreasing={"line": {"color": RED}, "fillcolor": RED},
+            increasing={"line": {"color": P["green"]}, "fillcolor": P["green"]},
+            decreasing={"line": {"color": P["red"]}, "fillcolor": P["red"]},
         ), row=1, col=1)
     elif c:
         fig.add_trace(go.Scatter(
             x=dates, y=c, mode="lines", name="Kapanis",
-            line={"color": BLUE, "width": 2},
+            line={"color": P["blue"], "width": 2},
         ), row=1, col=1)
 
     # MA'lar
     if ma20:
         fig.add_trace(go.Scatter(
             x=dates, y=ma20, mode="lines", name="MA20",
-            line={"color": YELLOW, "width": 1.2},
+            line={"color": P["yellow"], "width": 1.2},
         ), row=1, col=1)
     if ma50:
         fig.add_trace(go.Scatter(
             x=dates, y=ma50, mode="lines", name="MA50",
-            line={"color": ORANGE, "width": 1.2},
+            line={"color": P["orange"], "width": 1.2},
         ), row=1, col=1)
 
     # Volume bar
@@ -823,16 +907,16 @@ def _build_price_chart(data: Dict) -> go.Figure:
         colors = []
         for i in range(len(v)):
             if i == 0 or not c or c[i] is None or c[i - 1] is None:
-                colors.append(TEXT_MUTED)
+                colors.append(P["muted"])
             else:
-                colors.append(GREEN if c[i] >= c[i - 1] else RED)
+                colors.append(P["green"] if c[i] >= c[i - 1] else P["red"])
         fig.add_trace(go.Bar(
             x=dates, y=v, name="Hacim",
             marker={"color": colors, "opacity": 0.6},
             showlegend=False,
         ), row=2, col=1)
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(
         height=460,
         margin={"l": 50, "r": 20, "t": 10, "b": 40},
@@ -859,14 +943,14 @@ def _build_gold_chart(history):
         prices = [r.get("price", r.get("try_per_gram", r.get("value", 0))) for r in records]
         fig.add_trace(go.Scatter(
             x=dates, y=prices, mode="lines",
-            fill="tozeroy", fillcolor="rgba(245,158,11,0.15)",
-            line={"color": GOLD, "width": 2}, name="Altin (TRY/gr)",
+            fill="tozeroy", fillcolor=plot_rgba("gold", 0.15),
+            line={"color": plot_palette()["gold"], "width": 2}, name="Altin (TRY/gr)",
             hovertemplate="<b>%{x}</b><br>₺%{y:,.2f}<extra></extra>",
         ))
     else:
         return empty_figure("Altin gecmisi yok")
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(showlegend=False, height=200,
                       margin={"l": 50, "r": 10, "t": 10, "b": 40})
     return fig
@@ -956,7 +1040,7 @@ def _render_result_card(result, symbol, source, meta):
             ]),
             *(_render_model_predictions(result) if result.get("model_predictions") else []),
         ])
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+    ])
 
 
 def _render_ensemble_agreement(result):
@@ -1001,6 +1085,7 @@ def _render_model_predictions(result):
 
 
 def _build_vs_actual_chart(chart_data):
+    P = plot_palette()
     fig = go.Figure()
     actual = chart_data.get("actual", [])
     predicted = chart_data.get("predicted", [])
@@ -1008,15 +1093,15 @@ def _build_vs_actual_chart(chart_data):
 
     if actual:
         fig.add_trace(go.Scatter(x=dates[:len(actual)], y=actual, mode="lines",
-                                  name="Gercek", line={"color": TEXT_MUTED, "width": 1.5}))
+                                  name="Gercek", line={"color": P["muted"], "width": 1.5}))
     if predicted:
         fig.add_trace(go.Scatter(x=dates[:len(predicted)], y=predicted, mode="lines",
-                                  name="Tahmin", line={"color": BLUE, "width": 2,
+                                  name="Tahmin", line={"color": P["blue"], "width": 2,
                                                         "dash": "dot"}))
     if not actual and not predicted:
         return empty_figure("Veri yok")
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=280, legend={"orientation": "h", "y": 1.1})
     return fig
 
@@ -1028,15 +1113,16 @@ def _build_accuracy_chart(chart_data):
     if not acc and not mae:
         return empty_figure("Dogruluk verisi yok")
 
+    P = plot_palette()
     fig = go.Figure()
     if acc:
         fig.add_trace(go.Scatter(y=acc, mode="lines+markers", name="Dogruluk",
-                                  line={"color": GREEN}, yaxis="y1"))
+                                  line={"color": P["green"]}, yaxis="y1"))
     if mae:
         fig.add_trace(go.Scatter(y=mae, mode="lines+markers", name="MAE",
-                                  line={"color": RED, "dash": "dot"}, yaxis="y2"))
+                                  line={"color": P["red"], "dash": "dot"}, yaxis="y2"))
 
-    apply_dark_template(fig)
+    apply_theme_template(fig)
     fig.update_layout(height=280, yaxis={"title": "Dogruluk"},
                       yaxis2={"title": "MAE", "overlaying": "y", "side": "right"},
                       legend={"orientation": "h", "y": 1.1})
@@ -1069,15 +1155,15 @@ def _render_performance(perf):
         return html.Div()
     return dbc.Card([
         dbc.CardHeader(html.Span("Performans Metrikleri",
-                                 style={"color": TEXT, "fontWeight": "600"})),
+                                 className="card-title-sm")),
         dbc.CardBody(dbc.Row(items, className="g-2")),
-    ], style={"backgroundColor": CARD, "border": f"1px solid {CARD2}"})
+    ])
 
 
 def _render_history_table(hist):
     records = hist.get("history", hist.get("predictions", [])) if isinstance(hist, dict) else []
     if not records:
-        return html.P("Tahmin gecmisi yok.", style={"color": TEXT_MUTED})
+        return create_state_block("empty", "Tahmin gecmisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Tarih", className="section-title"), width=3),

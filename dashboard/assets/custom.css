@@ -1,441 +1,1013 @@
-/* RL Trading Dashboard – comprehensive dark theme */
+/* ============================================================================
+   RL Trading — bilesen stilleri
+   ----------------------------------------------------------------------------
+   Renk DEGERI burada yok; hepsi static/tokens.css'ten gelen degiskenler.
+   Yeni bir hex yazmak istiyorsan once oraya token ekle (ve kontrasti olc).
 
-/* ── Google Font ────────────────────────────────────────────────────────── */
+   Taban artik dbc.themes.BOOTSTRAP (notr). Faz 8 oncesi DARKLY vardi ve bu
+   dosyadaki !important yigininin buyuk kismi onunla cekismekten geliyordu;
+   kalanlar ucuncu parti bilesenler icin (react-select, Radix takvim,
+   dash-table) hala gerekli.
+   ========================================================================== */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── CSS variables ──────────────────────────────────────────────────────── */
-:root {
-  --bg:      #0f172a;
-  --card:    #1e293b;
-  --card2:   #334155;
-  --border:  #475569;
-  --text:    #e2e8f0;
-  --muted:   #94a3b8;
-  --blue:    #3b82f6;
-  --blue-d:  #1d4ed8;
-  --green:   #22c55e;
-  --red:     #ef4444;
-  --yellow:  #eab308;
-  --radius:  8px;
-  --radius-sm: 6px;
-}
-
-/* ── Reset & base ───────────────────────────────────────────────────────── */
+/* ── Taban ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background-color: var(--bg) !important;
-  color: var(--text) !important;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  font-size: 14px;
+  background-color: var(--rlt-bg);
+  color: var(--rlt-text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 13px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #64748b; }
+/* Sayilarin sutunlarda hizalanmasi (C.1/C.6) */
+.tabular, td, th, .metric-value { font-variant-numeric: tabular-nums; }
 
-/* ── Cards ──────────────────────────────────────────────────────────────── */
+a { color: var(--rlt-primary); }
+a:hover { color: var(--rlt-primary); }
+
+hr { border-color: var(--rlt-border); opacity: 1; }
+
+/* Klavye odagi her zaman gorunur olmali */
+:focus-visible {
+  outline: 2px solid var(--rlt-primary);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ── Tipografi olcegi (C.1) ─────────────────────────────────────────────── */
+.page-title    { font-size: 20px; font-weight: 600; color: var(--rlt-text); letter-spacing: -0.01em; margin: 0; }
+.page-subtitle { font-size: 13px; color: var(--rlt-muted); margin: 0; }
+.card-title-sm { font-size: 14px; font-weight: 600; color: var(--rlt-text); }
+.metric-value  { font-size: 26px; font-weight: 650; line-height: 1; letter-spacing: -0.02em; }
+
+/* Etiket rolu — uppercase + harf araligi YALNIZCA burada */
+.section-title {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--rlt-muted) !important;
+  margin-bottom: 6px !important;
+  display: block;
+}
+
+.text-muted { color: var(--rlt-muted) !important; }
+
+/* ── Kaydirma cubugu ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rlt-border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--rlt-muted); }
+
+/* ── Kartlar (C.4) — golge degil, ince kenarlik ─────────────────────────── */
 .card {
-  background-color: var(--card) !important;
-  border: 1px solid var(--card2) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  border-radius: var(--rlt-radius);
+  box-shadow: var(--rlt-shadow);
 }
 .card-header {
-  background-color: transparent !important;
-  border-bottom: 1px solid var(--card2) !important;
-  padding: 14px 18px !important;
+  background-color: transparent;
+  border-bottom: 1px solid var(--rlt-border);
+  padding: 14px var(--rlt-pad);
+  color: var(--rlt-text);
+  font-weight: 600;
 }
 .card-body {
-  color: var(--text) !important;
-  padding: 16px 18px !important;
+  color: var(--rlt-text);
+  padding: 16px var(--rlt-pad);
+}
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid var(--rlt-border);
 }
 
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
+/* ── Ust cubuk (Faz 8/G) ────────────────────────────────────────────────── */
+/* Konum/yukseklik theme.py::TOPBAR_STYLE'dan geliyor (kenar cubugundaki
+   kalibin aynisi); burasi yalnizca gorunum. */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  background-color: var(--rlt-surface);
+  border-bottom: 1px solid var(--rlt-border);
+}
+.topbar-spacer { flex: 1 1 auto; }
+
+.topbar-crumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.topbar-group {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rlt-muted);
+  white-space: nowrap;
+}
+.topbar-sep { font-size: 9px; color: var(--rlt-muted); }
+.topbar-page {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rlt-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.topbar-next { white-space: nowrap; }
+
+.topbar-search { width: 210px; font-size: 13px; }
+
+/* Bildirim zili — icerik /api/account/notifications'tan gelir. */
+/* dbc.DropdownMenu toggle dugmesine kendi renk varyantini basiyor
+   (varsayilan color="primary" -> `btn btn-primary`). `.topbar-bell` onunla
+   AYNI ozgullukte oldugu icin dosyada sonra gelen `.btn-primary` kazaniyor
+   ve zil dolgulu mavi cikiyordu — sayfanin birincil eylemi gibi duruyordu.
+   Seciciyi `.topbar ... .btn` ile ozgullestirmek, hangi varyantin bastigina
+   bakmadan sorunu kapatiyor. */
+.topbar .topbar-bell.btn {
+  position: relative;
+  background-color: transparent;
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-muted) !important;
+  border-radius: var(--rlt-radius-sm);
+  padding: 4px 10px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.topbar .topbar-bell.btn:hover,
+.topbar .topbar-bell.btn:focus,
+.topbar .topbar-bell.btn.show {
+  background-color: var(--rlt-surface-hover);
+  color: var(--rlt-text) !important;
+  border-color: var(--rlt-border-strong);
+  box-shadow: none;
+}
+
+.topbar-badge {
+  display: inline-block;
+  min-width: 17px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  color: var(--rlt-on-fill);
+  background-color: var(--rlt-primary-fill);
+}
+/* Sayac yokken rozet hic yer kaplamasin — bos daire "0 bildirim" gibi durur */
+.topbar-badge.is-empty { display: none; }
+.topbar-badge.is-info { background-color: var(--rlt-primary-fill); }
+.topbar-badge.is-success { background-color: var(--rlt-profit-fill); }
+.topbar-badge.is-error { background-color: var(--rlt-loss-fill); }
+
+.topbar-notify .dropdown-menu { min-width: 300px; max-width: 360px; }
+
+.topbar-notify-item { white-space: normal; }
+.topbar-notify-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rlt-text);
+}
+.topbar-notify-body {
+  display: block;
+  font-size: 11px;
+  color: var(--rlt-muted);
+}
+/* Sol kenar seridi: turu renkle degil KONUMLA da isaretler, boylece renk tek
+   basina bilgi tasimaz (renk korlugu). */
+.topbar-notify-item { border-left: 3px solid transparent; }
+.topbar-notify-item.is-info { border-left-color: var(--rlt-primary); }
+.topbar-notify-item.is-success { border-left-color: var(--rlt-profit); }
+.topbar-notify-item.is-error { border-left-color: var(--rlt-loss); }
+
+.topbar-notify-empty {
+  font-size: 12px;
+  color: var(--rlt-muted);
+}
+
+/* Dar ekranda once kirinti, sonra baglamsal eylem yer acar; arama ve tema
+   anahtari her zaman kalir. */
+@media (max-width: 1100px) {
+  .topbar-next { display: none; }
+}
+@media (max-width: 820px) {
+  .topbar-crumb { display: none; }
+}
+
+/* ── Kenar cubugu (C.8) ─────────────────────────────────────────────────── */
+#sidebar { background-color: var(--rlt-surface); border-right: 1px solid var(--rlt-border); }
+
 #sidebar .nav-link {
-  color: var(--muted) !important;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s, color 0.15s;
+  color: var(--rlt-muted) !important;
+  border-radius: var(--rlt-radius-sm);
+  transition: background-color .15s, color .15s, border-color .15s;
   font-size: 13px;
   font-weight: 500;
+  border-left: 3px solid transparent;
+  /* Onceden _nav_link'te inline'di; medya sorgusunun `!important` olmadan
+     ezebilmesi icin buraya alindi. */
+  padding: 9px 17px;
+  margin: 1px 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
 #sidebar .nav-link:hover {
-  background-color: var(--card2) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface-hover) !important;
+  color: var(--rlt-text) !important;
 }
+/* Aktif oge: dolgu yerine sol kenar + hafif zemin (aydinlikta dolgu agir durur) */
 #sidebar .nav-link.active {
-  background-color: var(--blue-d) !important;
-  color: #fff !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border-left-color: var(--rlt-primary);
+  font-weight: 600;
 }
 
-/* ── Buttons ────────────────────────────────────────────────────────────── */
+.sidebar-group {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rlt-muted);
+  padding: 14px 20px 4px;
+}
+
+/* ── Kenar cubugu alt bolumu: hesap satiri ──────────────────────────────── */
+/* Onceki hal yalnizca duz bir ad metniydi (textDecoration:none); Hesabim
+   sayfasina gidilebildigi ekrandan anlasilmiyordu. Simdi avatar + ad + rol +
+   chevron, hover zemini ve aktif sayfa vurgusu var. */
+.sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--rlt-border);
+  background-color: var(--rlt-surface);
+}
+
+#sidebar .sidebar-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+#sidebar .sidebar-account.active { font-weight: 500; }
+
+.account-avatar {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--rlt-surface-2);
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.account-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.3;
+}
+.account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rlt-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-role { font-size: 11px; color: var(--rlt-muted); }
+
+.account-chevron {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--rlt-muted);
+  transition: transform .15s, color .15s;
+}
+#sidebar .sidebar-account:hover .account-chevron {
+  transform: translateX(2px);
+  color: var(--rlt-text);
+}
+
+.sidebar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sidebar-logout {
+  color: var(--rlt-muted);
+  font-size: 12px;
+  text-decoration: none;
+  padding: 3px 8px;
+  border-radius: var(--rlt-radius-sm);
+  transition: background-color .15s, color .15s;
+}
+.sidebar-logout:hover {
+  color: var(--rlt-loss);
+  background-color: var(--rlt-surface-hover);
+}
+
+/* ── Hesabim: profil kimlik blogu ───────────────────────────────────────── */
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.account-avatar-lg {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--rlt-surface-2);
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+.account-display-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rlt-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 3px;
+}
+
+/* ── Dar ekran: kenar cubugu ikon rayina iner ───────────────────────────── */
+/* Olculdu (1280/1024/820/640): hicbir genislikte tasma veya yatay kaydirma
+   YOK — Bootstrap izgarasi sutunlari yigiyor, tablolar kendi overflow-x'inde.
+   Sorun bozulma degil darlik: 640px'de 220px'lik menu ekranin %34'u.
+   Rayda 64px'e inip icerige 156px geri veriliyor.
+   Konum/genislik theme.py'de INLINE geldigi icin burada `!important` sart. */
+@media (max-width: 820px) {
+  #sidebar { width: 64px !important; padding-bottom: 96px !important; }
+  .topbar  { left: 64px !important; padding: 0 12px !important; }
+  #page-content { margin-left: 64px !important; padding-left: 14px !important;
+                  padding-right: 14px !important; }
+
+  /* Yalnizca yazi gizlenir; ikon ve tiklama alani kalir. Ipucu sarmalayici
+     Div'in `title`'inda (bkz. sidebar._nav_link). */
+  .nav-label, .sidebar-group, .brand-text, .account-text, .account-chevron {
+    display: none !important;
+  }
+
+  #sidebar .nav-link {
+    justify-content: center;
+    padding: 10px 0;
+    margin: 2px 6px;
+    gap: 0;
+  }
+  #sidebar .nav-link i { font-size: 16px; }
+
+  .sidebar-footer { padding: 8px 6px 10px; }
+  #sidebar .sidebar-account { justify-content: center; padding: 8px 0; gap: 0; }
+  .sidebar-controls { justify-content: center; }
+
+  /* Marka bloğu ray genisliginde ortalanir */
+  #sidebar > div:first-child { padding: 16px 0 12px !important; text-align: center; }
+  #sidebar > div:first-child > div { justify-content: center; }
+  #sidebar > div:first-child i { margin-right: 0 !important; }
+}
+
+/* ── Dugmeler ───────────────────────────────────────────────────────────── */
 .btn {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  border-radius: var(--radius-sm) !important;
-  transition: all 0.15s !important;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--rlt-radius-sm);
+  transition: background-color .15s, border-color .15s, color .15s;
 }
-.btn-primary  { background-color: var(--blue-d) !important; border-color: var(--blue-d) !important; }
-.btn-primary:hover  { background-color: #1e40af !important; border-color: #1e40af !important; }
-.btn-success  { background-color: #16a34a !important; border-color: #16a34a !important; }
-.btn-success:hover  { background-color: #15803d !important; }
-.btn-warning  { color: #fbbf24 !important; border-color: #fbbf24 !important; }
-.btn-warning:hover  { background-color: rgba(251,191,36,0.12) !important; }
-.btn-danger   { background-color: #dc2626 !important; border-color: #dc2626 !important; }
-.btn-secondary { background-color: var(--card2) !important; border-color: var(--border) !important; color: var(--text) !important; }
-.btn-secondary:hover { background-color: var(--border) !important; }
-.btn-outline-primary { color: var(--blue) !important; border-color: var(--blue) !important; }
-.btn-outline-primary:hover { background-color: rgba(59,130,246,0.15) !important; color: var(--blue) !important; }
-.btn-outline-secondary { color: var(--muted) !important; border-color: var(--border) !important; }
-.btn-outline-secondary:hover { background-color: var(--card2) !important; color: var(--text) !important; }
-.btn-outline-danger { color: var(--red) !important; border-color: var(--red) !important; }
-.btn-outline-danger:hover { background-color: rgba(239,68,68,0.12) !important; }
 
-/* ── Form controls ──────────────────────────────────────────────────────── */
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-warning {
+  color: var(--rlt-on-fill) !important;
+}
+.btn-primary  { background-color: var(--rlt-primary-fill); border-color: var(--rlt-primary-fill); }
+.btn-primary:hover,
+.btn-primary:focus  { background-color: var(--rlt-primary-fill-hover); border-color: var(--rlt-primary-fill-hover); }
+.btn-success  { background-color: var(--rlt-profit-fill); border-color: var(--rlt-profit-fill); }
+.btn-success:hover  { background-color: var(--rlt-profit-fill-hover); border-color: var(--rlt-profit-fill-hover); }
+.btn-danger   { background-color: var(--rlt-loss-fill); border-color: var(--rlt-loss-fill); }
+.btn-danger:hover   { background-color: var(--rlt-loss-fill-hover); border-color: var(--rlt-loss-fill-hover); }
+.btn-warning  { background-color: var(--rlt-warn-fill); border-color: var(--rlt-warn-fill); }
+.btn-warning:hover  { background-color: var(--rlt-warn-fill-hover); border-color: var(--rlt-warn-fill-hover); }
+
+.btn-secondary {
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-border-strong);
+  color: var(--rlt-text);
+}
+.btn-secondary:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+
+.btn-outline-primary   { color: var(--rlt-primary); border-color: var(--rlt-primary); background: transparent; }
+.btn-outline-primary:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-primary); border-color: var(--rlt-primary); }
+.btn-outline-secondary { color: var(--rlt-muted); border-color: var(--rlt-border-strong); background: transparent; }
+.btn-outline-secondary:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+.btn-outline-danger    { color: var(--rlt-loss); border-color: var(--rlt-loss); background: transparent; }
+.btn-outline-danger:hover    { background-color: var(--rlt-surface-2); color: var(--rlt-loss); border-color: var(--rlt-loss); }
+.btn-outline-success   { color: var(--rlt-profit); border-color: var(--rlt-profit); background: transparent; }
+.btn-outline-success:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-profit); border-color: var(--rlt-profit); }
+/* Bunlar tanimsiz birakilirsa Bootstrap'in kendi sarisi (#ffc107) ve
+   turkuazi (#0dcaf0) devreye giriyor; ikisi de beyaz zeminde ~1.6:1. */
+.btn-outline-warning   { color: var(--rlt-warn); border-color: var(--rlt-warn); background: transparent; }
+.btn-outline-warning:hover   { background-color: var(--rlt-surface-2); color: var(--rlt-warn); border-color: var(--rlt-warn); }
+.btn-outline-info      { color: var(--rlt-info); border-color: var(--rlt-info); background: transparent; }
+.btn-outline-info:hover      { background-color: var(--rlt-surface-2); color: var(--rlt-info); border-color: var(--rlt-info); }
+.btn-info { background-color: var(--rlt-info); border-color: var(--rlt-info); color: var(--rlt-on-fill) !important; }
+.btn-info:hover { filter: brightness(.92); color: var(--rlt-on-fill) !important; }
+.btn-light, .btn-outline-light { color: var(--rlt-text); border-color: var(--rlt-border-strong); background-color: var(--rlt-surface-2); }
+.btn-dark, .btn-outline-dark   { color: var(--rlt-text); border-color: var(--rlt-border-strong); background-color: var(--rlt-surface-2); }
+
+.btn:disabled, .btn.disabled { opacity: .55; }
+/* Bootstrap'in `.btn-primary:disabled` kurali (0,2,0) bizim `.btn-primary`
+   (0,1,0) kuralimizdan OZGUL; ezilmezse devre disi her dolgulu dugme
+   Bootstrap'in ham rengine duser (#0d6efd / #198754 / ...). Ekranda
+   "devre disi ama bizim paletimizde degil" diye gorunuyordu. */
+.btn-primary:disabled, .btn-primary.disabled {
+  background-color: var(--rlt-primary-fill); border-color: var(--rlt-primary-fill);
+}
+.btn-success:disabled, .btn-success.disabled {
+  background-color: var(--rlt-profit-fill); border-color: var(--rlt-profit-fill);
+}
+.btn-danger:disabled, .btn-danger.disabled {
+  background-color: var(--rlt-loss-fill); border-color: var(--rlt-loss-fill);
+}
+.btn-warning:disabled, .btn-warning.disabled {
+  background-color: var(--rlt-warn-fill); border-color: var(--rlt-warn-fill);
+}
+.btn-info:disabled, .btn-info.disabled {
+  background-color: var(--rlt-info); border-color: var(--rlt-info);
+}
+.btn-secondary:disabled, .btn-secondary.disabled {
+  background-color: var(--rlt-surface-2); border-color: var(--rlt-border-strong);
+  color: var(--rlt-text);
+}
+
+/* ── Form kontrolleri ───────────────────────────────────────────────────── */
 .form-control,
 .form-select {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important;
-  border-radius: var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  color: var(--rlt-text) !important;
+  border-radius: var(--rlt-radius-sm) !important;
   font-size: 13px !important;
 }
-.form-control::placeholder { color: var(--muted) !important; }
+.form-control::placeholder { color: var(--rlt-muted) !important; opacity: 1; }
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--blue) !important;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
-  background-color: var(--card2) !important;
-  color: var(--text) !important;
+  border-color: var(--rlt-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rlt-primary) 22%, transparent) !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
+}
+.form-control:disabled, .form-select:disabled {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-muted) !important;
 }
 
-/* ── Checklist & Switch ─────────────────────────────────────────────────── */
-.form-check-label { color: var(--text) !important; font-size: 13px; cursor: pointer; }
+.input-group-text {
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-border-strong);
+  color: var(--rlt-muted);
+}
+
+/* Checkbox / radio / switch */
+.form-check-label { color: var(--rlt-text); font-size: 13px; cursor: pointer; }
 .form-check-input {
-  background-color: var(--card2) !important;
-  border-color: var(--border) !important;
+  background-color: var(--rlt-surface);
+  border-color: var(--rlt-border-strong);
 }
 .form-check-input:checked {
-  background-color: var(--blue-d) !important;
-  border-color: var(--blue-d) !important;
+  background-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-primary-fill);
 }
+.form-check-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--rlt-primary) 22%, transparent); }
 .form-switch .form-check-input {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e") !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238595a9'/%3e%3c/svg%3e");
 }
+:root[data-theme="dark"] .form-switch .form-check-input,
 .form-switch .form-check-input:checked {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
 }
 
-/* ── dcc.Dropdown (Dash v2 – react-select based) ────────────────────────── */
-.dash-dropdown .Select-control,
-.Select-control {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-sm) !important;
-  color: var(--text) !important;
+/* ── dcc.Dropdown — YENI yapi (dash-dropdown-*) ─────────────────────────
+   Dash'in guncel dcc.Dropdown'i react-select kullanmiyor; kendi
+   `button.dash-dropdown` yapisini ciziyor. Asagidaki react-select kurallari
+   bu yapiya HIC uymuyordu ve acilir kutular koyu temada beyaz kaliyordu.
+   Sinif listesi dash/dcc bundle'indan alindi. */
+.dash-dropdown-wrapper { color: var(--rlt-text); }
+
+button.dash-dropdown {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+  font-size: 13px !important;
   min-height: 38px;
 }
-.Select-control:hover { border-color: var(--blue) !important; }
+button.dash-dropdown:hover { border-color: var(--rlt-primary) !important; }
+button.dash-dropdown:focus-visible {
+  border-color: var(--rlt-primary) !important;
+  outline: 2px solid var(--rlt-primary);
+  outline-offset: 1px;
+}
+
+.dash-dropdown-value { color: var(--rlt-text) !important; }
+.dash-dropdown-placeholder { color: var(--rlt-muted) !important; }
+.dash-dropdown-trigger-icon,
+.dash-dropdown-search-icon,
+.dash-dropdown-clear { color: var(--rlt-muted) !important; }
+.dash-dropdown-clear:hover { color: var(--rlt-text) !important; }
+
+/* Secili deger duz metindir — cip degil. (Ilk denemede cip yapilmisti ve
+   tek secimli kutularda her deger mavi bir rozet gibi gorunuyordu.) */
+.dash-dropdown-value-item {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+}
+
+/* Coklu secimde "N selected" sayaci — notr, bagirmayan bir rozet */
+.dash-dropdown-value-count {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+}
+
+/* Acilir liste */
+.dash-dropdown-content,
+.dash-dropdown-options {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
+  color: var(--rlt-text) !important;
+  z-index: 9999 !important;
+}
+.dash-dropdown-option {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+  font-size: 13px !important;
+}
+.dash-dropdown-option:hover,
+.dash-dropdown-option[data-highlighted],
+.dash-dropdown-option[aria-selected="true"] {
+  background-color: var(--rlt-surface-hover) !important;
+  color: var(--rlt-text) !important;
+}
+.dash-dropdown-option[aria-selected="true"] { font-weight: 600; }
+
+.dash-dropdown-search,
+.dash-dropdown-search-container input {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+}
+.dash-dropdown-search::placeholder,
+.dash-dropdown-search-container input::placeholder {
+  color: var(--rlt-muted) !important;
+}
+
+.dash-dropdown-actions { border-top: 1px solid var(--rlt-border) !important; }
+.dash-dropdown-action-button {
+  background: transparent !important;
+  color: var(--rlt-primary) !important;
+  font-size: 12px !important;
+}
+.dash-dropdown-action-button:hover { background-color: var(--rlt-surface-hover) !important; }
+
+/* ── dcc.Dropdown (react-select — eski surumler) ────────────────────────── */
+.dash-dropdown .Select-control,
+.Select-control {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+  min-height: 38px;
+}
+.Select-control:hover { border-color: var(--rlt-primary) !important; }
 .Select-multi-value-wrapper,
 .Select-value { background-color: transparent !important; }
 .Select-value-label,
 .Select-placeholder,
-.Select--multi .Select-value-label {
-  color: var(--text) !important;
-}
-.Select-input > input { color: var(--text) !important; background: transparent !important; }
+.Select--multi .Select-value-label { color: var(--rlt-text) !important; }
+.Select-placeholder { color: var(--rlt-muted) !important; }
+.Select-input > input { color: var(--rlt-text) !important; background: transparent !important; }
 .Select-menu-outer,
 .Select-menu {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: 0 0 var(--rlt-radius-sm) var(--rlt-radius-sm) !important;
   z-index: 9999 !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
 }
-.Select-option { background-color: var(--card) !important; color: var(--text) !important; font-size: 13px; }
+.Select-option { background-color: var(--rlt-surface) !important; color: var(--rlt-text) !important; font-size: 13px; }
 .Select-option:hover,
-.Select-option.is-focused { background-color: var(--card2) !important; }
-.Select-option.is-selected { background-color: var(--blue-d) !important; color: #fff !important; }
-.Select-arrow-zone { color: var(--muted) !important; }
+.Select-option.is-focused { background-color: var(--rlt-surface-hover) !important; }
+.Select-option.is-selected { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
+.Select-arrow-zone,
 .Select-clear-zone,
-.Select-clear { color: var(--muted) !important; }
+.Select-clear { color: var(--rlt-muted) !important; }
 
-/* Multi-value chips inside dropdown */
 .Select--multi .Select-value {
-  background-color: var(--blue-d) !important;
+  background-color: var(--rlt-primary-fill) !important;
   border: none !important;
   border-radius: 4px !important;
   margin: 2px !important;
 }
-.Select--multi .Select-value-label { color: #fff !important; font-size: 12px !important; }
+.Select--multi .Select-value-label { color: var(--rlt-on-fill) !important; font-size: 12px !important; }
 .Select--multi .Select-value-icon {
-  color: rgba(255,255,255,0.7) !important;
-  border-right: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--rlt-on-fill) !important;
+  opacity: .7;
+  border-right: 1px solid color-mix(in srgb, var(--rlt-on-fill) 25%, transparent) !important;
 }
-.Select--multi .Select-value-icon:hover {
-  background-color: rgba(0,0,0,0.2) !important;
-  color: #fff !important;
-}
+.Select--multi .Select-value-icon:hover { opacity: 1; }
 
-/* Newer Dash react-select v5 class overrides */
+/* react-select v5 sinif adlari degisken; oznitelik seciciyle yakalaniyor */
 [class*="-control"] {
-  background-color: var(--card2) !important;
-  border-color: var(--border) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  border-color: var(--rlt-border-strong) !important;
+  color: var(--rlt-text) !important;
 }
 [class*="-menu"] {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
   z-index: 9999 !important;
 }
-[class*="-option"] { background-color: var(--card) !important; color: var(--text) !important; }
-[class*="-option"]:hover { background-color: var(--card2) !important; }
-[class*="-placeholder"] { color: var(--muted) !important; }
-[class*="-singleValue"] { color: var(--text) !important; }
-[class*="-Input"] input { color: var(--text) !important; }
-[class*="-multiValue"] { background-color: var(--blue-d) !important; border-radius: 4px !important; }
-[class*="-multiValueLabel"] { color: #fff !important; font-size: 12px !important; }
-[class*="-multiValueRemove"]:hover { background-color: rgba(0,0,0,0.2) !important; color: #fff !important; }
-[class*="-indicatorSeparator"] { background-color: var(--border) !important; }
-[class*="-dropdownIndicator"] { color: var(--muted) !important; }
-[class*="-clearIndicator"] { color: var(--muted) !important; }
+[class*="-option"] { background-color: var(--rlt-surface) !important; color: var(--rlt-text) !important; }
+[class*="-option"]:hover { background-color: var(--rlt-surface-hover) !important; }
+[class*="-placeholder"] { color: var(--rlt-muted) !important; }
+[class*="-singleValue"] { color: var(--rlt-text) !important; }
+[class*="-Input"] input { color: var(--rlt-text) !important; }
+[class*="-multiValue"] { background-color: var(--rlt-primary-fill) !important; border-radius: 4px !important; }
+[class*="-multiValueLabel"] { color: var(--rlt-on-fill) !important; font-size: 12px !important; }
+[class*="-multiValueRemove"] { color: var(--rlt-on-fill) !important; }
+[class*="-indicatorSeparator"] { background-color: var(--rlt-border) !important; }
+[class*="-dropdownIndicator"],
+[class*="-clearIndicator"] { color: var(--rlt-muted) !important; }
 
-/* ── DatePickerRange (Dash 2.x – new component with dash-datepicker-* classes) ── */
+/* ── dcc.Slider / RangeSlider (dash-slider-*) ───────────────────────────
+   Dash'in kendi paleti: mor dolgu, isaretler rgba(0,9,38,.9). Koyu kartta
+   isaretler goze gorunmez oluyordu (~1.2:1). */
+.dash-slider-track { background-color: var(--rlt-surface-2) !important; }
+.dash-slider-range { background-color: var(--rlt-primary-fill) !important; }
+.dash-slider-thumb {
+  background-color: var(--rlt-primary-fill) !important;
+  border-color: var(--rlt-surface) !important;
+}
+.dash-slider-thumb:focus-visible { outline: 2px solid var(--rlt-primary); outline-offset: 2px; }
 
-/* Input wrapper (the visible field) */
+.dash-slider-mark { color: var(--rlt-text) !important; font-size: 11px !important; }
+.dash-slider-mark-outside-selection { color: var(--rlt-muted) !important; }
+.dash-slider-dot { background-color: var(--rlt-primary-fill) !important; border: none !important; }
+.dash-slider-dot-outside-selection { background-color: var(--rlt-border-strong) !important; }
+
+.dash-slider-tooltip {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border) !important;
+}
+
+/* dcc.Input / slider yan kutusu (dash-input-*)
+   `.dash-range-slider-input` beyaz zeminde --rlt-text ile geliyordu: 1.14:1,
+   yani icindeki sayi gorunmuyordu. */
+.dash-input-container,
+.dash-input,
+.dash-textarea {
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
+  color: var(--rlt-text) !important;
+}
+.dash-input-element,
+.dash-range-slider-min-input,
+.dash-range-slider-max-input {
+  background-color: transparent !important;
+  color: var(--rlt-text) !important;
+  border: none !important;
+  font-size: 13px !important;
+}
+.dash-input-element::placeholder { color: var(--rlt-muted) !important; }
+.dash-input-container:focus-within { border-color: var(--rlt-primary) !important; }
+.dash-input-stepper { color: var(--rlt-muted) !important; background: transparent !important; }
+.dash-input-stepper:hover { color: var(--rlt-text) !important; }
+
+/* ── dcc.Checklist / RadioItems (dash-options-*) ────────────────────────── */
+.dash-options-list-option-text { color: var(--rlt-text) !important; font-size: 13px !important; }
+.dash-options-list-option-wrapper:hover { background-color: var(--rlt-surface-hover) !important; }
+.dash-options-list-option-checkbox {
+  accent-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-border-strong) !important;
+}
+
+/* ── dcc.Loading (dash-spinner-*) ───────────────────────────────────────── */
+.dash-spinner-container, .dash-loading-title { color: var(--rlt-muted) !important; }
+.dash-dot-spinner-bounce, .dash-sk-child, .dash-bar { background-color: var(--rlt-primary) !important; }
+.dash-cube-side { background-color: var(--rlt-primary) !important; }
+
+/* ── DatePickerRange (Radix tabanli) ────────────────────────────────────── */
+/* Dis kapsayici beyaz kaliyordu: ic sarmalayici 44px, kapsayici 60px —
+   koyu temada altta 16px'lik beyaz serit gorunuyordu. */
+.dash-datepicker { background-color: transparent !important; }
+
 .dash-datepicker-input-wrapper {
-  background-color: var(--card2) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-sm) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
+  border-radius: var(--rlt-radius-sm) !important;
   display: inline-flex !important;
   align-items: center !important;
   padding: 5px 10px !important;
   gap: 4px !important;
   width: 100% !important;
   cursor: text !important;
-  transition: border-color 0.15s !important;
+  transition: border-color .15s !important;
 }
 .dash-datepicker-input-wrapper:hover,
-.dash-datepicker-input-wrapper:focus-within {
-  border-color: var(--blue) !important;
-  outline: none !important;
-}
+.dash-datepicker-input-wrapper:focus-within { border-color: var(--rlt-primary) !important; }
 
-/* Actual text inputs inside the wrapper */
 body .dash-datepicker-input-wrapper .dash-datepicker-input,
 body .dash-datepicker-input,
 .dash-datepicker-input {
   background: transparent !important;
-  background-color: transparent !important;
-  color: #e2e8f0 !important;
+  color: var(--rlt-text) !important;
+  -webkit-text-fill-color: var(--rlt-text) !important;
+  caret-color: var(--rlt-text) !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
   font-size: 13px !important;
   font-family: inherit !important;
-  font-weight: 400 !important;
-  caret-color: #e2e8f0 !important;
   min-width: 75px !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
 }
 body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .dash-datepicker-input::placeholder {
-  color: #94a3b8 !important;
-  -webkit-text-fill-color: #94a3b8 !important;
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
 }
 
-/* Arrow between start/end and the dropdown caret */
 .dash-datepicker-range-arrow,
-.dash-datepicker-caret-icon {
-  color: var(--muted) !important;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
+.dash-datepicker-caret-icon { color: var(--rlt-muted) !important; flex-shrink: 0; }
 
-/* Calendar popup – Radix popover */
-[data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
-}
+[data-radix-popper-content-wrapper] { z-index: 9999 !important; }
 [data-radix-popper-content-wrapper] > div,
 .dash-datepicker-calendar {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
-  color: var(--text) !important;
+  background-color: var(--rlt-surface) !important;
+  border: 1px solid var(--rlt-border) !important;
+  border-radius: var(--rlt-radius) !important;
+  box-shadow: var(--rlt-shadow-pop) !important;
+  color: var(--rlt-text) !important;
   padding: 12px !important;
 }
-
-/* Day cells */
+/* Takvim icindeki her sey once metin rengine cekilir, sonra istisnalar */
+[data-radix-popper-content-wrapper] * {
+  color: var(--rlt-text) !important;
+  -webkit-text-fill-color: var(--rlt-text) !important;
+}
+[data-radix-popper-content-wrapper] [role="columnheader"] {
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
 [data-radix-popper-content-wrapper] [role="gridcell"] button {
-  color: var(--text) !important;
   border-radius: 4px !important;
   background: transparent !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:hover {
-  background-color: var(--card2) !important;
+  background-color: var(--rlt-surface-hover) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
 [data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
-  background-color: var(--blue-d) !important;
-  color: #fff !important;
+  background-color: var(--rlt-primary-fill) !important;
+  color: var(--rlt-on-fill) !important;
+  -webkit-text-fill-color: var(--rlt-on-fill) !important;
 }
 [data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
-  color: var(--border) !important;
+  color: var(--rlt-muted) !important;
+  -webkit-text-fill-color: var(--rlt-muted) !important;
+  opacity: .45;
   cursor: not-allowed;
 }
-
-/* Column headers (Mon, Tue…) */
-[data-radix-popper-content-wrapper] [role="columnheader"] {
-  color: var(--muted) !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-}
-
-/* Month/year caption & all text inside popup */
-[data-radix-popper-content-wrapper] * {
-  color: #e2e8f0 !important;
-}
-
-/* Month select & year input inside calendar navigation */
+[data-radix-popper-content-wrapper] button { background-color: transparent !important; }
+[data-radix-popper-content-wrapper] button:hover { background-color: var(--rlt-surface-hover) !important; }
 [data-radix-popper-content-wrapper] select,
 [data-radix-popper-content-wrapper] input[type="number"],
 [data-radix-popper-content-wrapper] input[type="text"] {
-  background-color: #334155 !important;
-  background: #334155 !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #475569 !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+  border: 1px solid var(--rlt-border-strong) !important;
   border-radius: 4px !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
 }
 [data-radix-popper-content-wrapper] select option {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
 }
 
-/* Nav buttons (prev/next month) */
-[data-radix-popper-content-wrapper] button {
-  background-color: transparent !important;
-  color: #e2e8f0 !important;
-}
-[data-radix-popper-content-wrapper] button:hover {
-  background-color: #334155 !important;
-}
-
-/* Day numbers — override DARKLY blue/purple link colors */
-[data-radix-popper-content-wrapper] [role="gridcell"] button {
-  color: #e2e8f0 !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
-}
-[data-radix-popper-content-wrapper] [role="gridcell"] button[aria-selected="true"],
-[data-radix-popper-content-wrapper] [role="gridcell"] button[data-selected="true"] {
-  background-color: #1d4ed8 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-[data-radix-popper-content-wrapper] [role="gridcell"] button:disabled {
-  color: #475569 !important;
-  -webkit-text-fill-color: #475569 !important;
-  cursor: not-allowed;
-}
-
-/* ── Tables ─────────────────────────────────────────────────────────────── */
+/* ── Tablolar (C.6) ─────────────────────────────────────────────────────── */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
-  background-color: var(--card2) !important;
-  color: var(--muted) !important;
-  border-bottom: 2px solid var(--border) !important;
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-muted) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--rlt-border-strong) !important;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  padding: 10px 12px !important;
 }
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
-  background-color: var(--card) !important;
-  color: var(--text) !important;
-  border-bottom: 1px solid var(--card2) !important;
+  background-color: var(--rlt-surface) !important;
+  color: var(--rlt-text) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--rlt-border) !important;
   font-size: 13px;
+  height: 38px !important;
+  padding: 0 12px !important;
+  font-variant-numeric: tabular-nums;
 }
+/* Zebra serit yok — ayirici tek cizgi (C.6) */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover td {
-  background-color: var(--card2) !important;
+  background-color: var(--rlt-surface-hover) !important;
+}
+.dash-table-container .previous-next-container,
+.dash-table-container .dash-filter input {
+  color: var(--rlt-text) !important;
 }
 
-/* ── Badges ─────────────────────────────────────────────────────────────── */
+/* Duz HTML tablolar */
+.table { color: var(--rlt-text); border-color: var(--rlt-border); }
+.table > :not(caption) > * > * { background-color: transparent; color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
+.table thead th {
+  color: var(--rlt-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--rlt-border-strong);
+}
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Rozetler ───────────────────────────────────────────────────────────── */
 .badge {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  padding: 4px 10px !important;
-  border-radius: 20px !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.badge.bg-primary   { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
+.badge.bg-success   { background-color: var(--rlt-profit-fill) !important;  color: var(--rlt-on-fill) !important; }
+.badge.bg-danger    { background-color: var(--rlt-loss-fill) !important;    color: var(--rlt-on-fill) !important; }
+.badge.bg-warning   { background-color: var(--rlt-warn-fill) !important;    color: var(--rlt-on-fill) !important; }
+.badge.bg-secondary { background-color: var(--rlt-surface-2) !important;    color: var(--rlt-text) !important; }
+.badge.bg-info      { background-color: var(--rlt-info) !important;         color: var(--rlt-on-fill) !important; }
+
+/* Algoritma rozeti.
+   Renk sinifla veriliyor, inline stille degil: dbc.Badge kendi `bg-secondary`
+   sinifini basiyor ve Bootstrap utility'leri `!important` tasidigi icin inline
+   backgroundColor sessizce eziliyordu. Taninmayan algoritma notr kalir. */
+.badge.algo-badge {
+  background-color: var(--rlt-surface-2) !important;
+  color: var(--rlt-text) !important;
+}
+.badge.algo-badge.algo-ppo { background-color: var(--rlt-primary-fill) !important; color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-a2c { background-color: var(--rlt-profit-fill) !important;  color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-sac { background-color: var(--rlt-accent) !important;       color: var(--rlt-on-fill) !important; }
+.badge.algo-badge.algo-td3 { background-color: var(--rlt-orange) !important;       color: var(--rlt-on-fill) !important; }
+
+/* ── Uyari kutulari ─────────────────────────────────────────────────────
+   Yari saydam renkli zemin yerine notr yuzey + anlamli metin/kenar:
+   boylece her iki temada da kontrast onceden dogrulanmis cift kullanilir. */
+.alert {
+  border-radius: var(--rlt-radius);
+  font-size: 13px;
+  background-color: var(--rlt-surface-2);
+  border: 1px solid var(--rlt-border);
+  border-left: 3px solid var(--rlt-border-strong);
+  color: var(--rlt-text);
+}
+.alert-success   { border-left-color: var(--rlt-profit); color: var(--rlt-profit); }
+.alert-danger    { border-left-color: var(--rlt-loss);   color: var(--rlt-loss); }
+.alert-warning   { border-left-color: var(--rlt-warn);   color: var(--rlt-warn); }
+.alert-info      { border-left-color: var(--rlt-info);   color: var(--rlt-info); }
+.alert-primary   { border-left-color: var(--rlt-primary); color: var(--rlt-primary); }
+.alert-secondary { border-left-color: var(--rlt-border-strong); color: var(--rlt-text); }
+.alert .btn-close { filter: none; opacity: .6; }
+:root[data-theme="dark"] .alert .btn-close { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .alert .btn-close { filter: invert(1); }
 }
 
-/* ── Alerts ─────────────────────────────────────────────────────────────── */
-.alert { border-radius: var(--radius) !important; font-size: 13px !important; }
-.alert-success { background-color: rgba(34,197,94,0.12) !important; border-color: rgba(34,197,94,0.3) !important; color: #86efac !important; }
-.alert-warning { background-color: rgba(234,179,8,0.12) !important; border-color: rgba(234,179,8,0.3) !important; color: #fde68a !important; }
-.alert-danger  { background-color: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.3) !important; color: #fca5a5 !important; }
-.alert-info    { background-color: rgba(59,130,246,0.12) !important; border-color: rgba(59,130,246,0.3) !important; color: #93c5fd !important; }
-.alert .btn-close { filter: invert(1); }
-
-/* ── Progress bar ───────────────────────────────────────────────────────── */
-.progress { background-color: var(--card2) !important; border-radius: 4px; height: 6px; }
-.progress-bar { border-radius: 4px; }
+/* ── Ilerleme cubugu ────────────────────────────────────────────────────── */
+.progress { background-color: var(--rlt-surface-2); border-radius: 4px; height: 6px; }
+.progress-bar { border-radius: 4px; background-color: var(--rlt-primary-fill); }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
-.modal-content  { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
-.modal-header   { border-bottom: 1px solid var(--card2) !important; }
-.modal-footer   { border-top: 1px solid var(--card2) !important; }
-.modal-title    { color: var(--text) !important; }
-.modal-backdrop { background-color: rgba(0,0,0,0.7) !important; }
+.modal-content {
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  color: var(--rlt-text);
+  border-radius: var(--rlt-radius);
+}
+.modal-header { border-bottom: 1px solid var(--rlt-border); }
+.modal-footer { border-top: 1px solid var(--rlt-border); }
+.modal-title  { color: var(--rlt-text); }
+.modal-backdrop.show { opacity: .55; }
+:root[data-theme="dark"] .modal-backdrop.show { opacity: .7; }
+.modal .btn-close { opacity: .6; }
+:root[data-theme="dark"] .modal .btn-close { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .modal .btn-close { filter: invert(1); }
+  :root:not([data-theme="light"]) .modal-backdrop.show { opacity: .7; }
+}
 
-/* ── Tabs ───────────────────────────────────────────────────────────────── */
-.nav-tabs { border-bottom: 1px solid var(--card2) !important; }
-.nav-tabs .nav-link { color: var(--muted); border: 1px solid transparent; font-size: 13px; }
-.nav-tabs .nav-link:hover { color: var(--text); border-color: var(--card2); }
-.nav-tabs .nav-link.active { background-color: var(--card); border-color: var(--card2) var(--card2) var(--card); color: var(--text); }
+/* ── Sekmeler ───────────────────────────────────────────────────────────── */
+.nav-tabs { border-bottom: 1px solid var(--rlt-border); }
+.nav-tabs .nav-link { color: var(--rlt-muted); border: 1px solid transparent; font-size: 13px; }
+.nav-tabs .nav-link:hover { color: var(--rlt-text); border-color: transparent; }
+.nav-tabs .nav-link.active {
+  background-color: transparent;
+  border-color: transparent transparent var(--rlt-primary);
+  border-bottom-width: 2px;
+  color: var(--rlt-text);
+  font-weight: 600;
+}
 
-/* ── Toast ──────────────────────────────────────────────────────────────── */
-.toast { background-color: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; }
+/* ── Toast / tooltip / popover ──────────────────────────────────────────── */
+.toast, .popover {
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  color: var(--rlt-text);
+  box-shadow: var(--rlt-shadow-pop);
+}
+.toast-header { background-color: var(--rlt-surface-2); color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
+.tooltip-inner { background-color: var(--rlt-surface-2); color: var(--rlt-text); border: 1px solid var(--rlt-border); }
+.tooltip .tooltip-arrow::before { border-top-color: var(--rlt-surface-2); }
+.popover-header { background-color: var(--rlt-surface-2); color: var(--rlt-text); border-bottom-color: var(--rlt-border); }
+.popover-body { color: var(--rlt-text); }
+
+/* ── Acilir menu (dbc.DropdownMenu) ─────────────────────────────────────── */
+.dropdown-menu {
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border);
+  box-shadow: var(--rlt-shadow-pop);
+  border-radius: var(--rlt-radius-sm);
+}
+.dropdown-item { color: var(--rlt-text); font-size: 13px; }
+.dropdown-item:hover, .dropdown-item:focus { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+.dropdown-item.active { background-color: var(--rlt-primary-fill); color: var(--rlt-on-fill); }
+.dropdown-divider { border-top-color: var(--rlt-border); }
+
+/* ── Liste grubu ────────────────────────────────────────────────────────── */
+.list-group-item {
+  background-color: var(--rlt-surface);
+  border-color: var(--rlt-border);
+  color: var(--rlt-text);
+}
 
 /* ── Plotly modebar ─────────────────────────────────────────────────────── */
 .js-plotly-plot .plotly .modebar { background: transparent !important; }
-.js-plotly-plot .plotly .modebar-btn path { fill: var(--muted) !important; }
+.js-plotly-plot .plotly .modebar-btn path { fill: var(--rlt-muted) !important; }
+.js-plotly-plot .plotly .modebar-btn:hover path { fill: var(--rlt-text) !important; }
 
-/* ── HR ─────────────────────────────────────────────────────────────────── */
-hr { border-color: var(--card2) !important; opacity: 1 !important; }
-
-/* ── Utility classes ────────────────────────────────────────────────────── */
-.text-muted { color: var(--muted) !important; }
-.section-title {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: var(--muted) !important;
-  margin-bottom: 10px !important;
-  display: block;
-}
-
-/* ── BIST Chip Selector ─────────────────────────────────────────────────── */
-.bist-chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 4px 0;
-}
-.bist-chip-list .form-check {
-  padding: 0 !important;
-  margin: 0 !important;
-  display: inline-flex;
-}
+/* ── BIST sembol cipleri ────────────────────────────────────────────────── */
+.bist-chip-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+.bist-chip-list .form-check { padding: 0 !important; margin: 0 !important; display: inline-flex; }
 .bist-chip-list .form-check-input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
 }
 .bist-chip-list .form-check-label {
   cursor: pointer;
@@ -444,37 +1016,101 @@ hr { border-color: var(--card2) !important; opacity: 1 !important; }
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid var(--border);
-  background-color: var(--card2);
-  color: var(--muted);
-  transition: all 0.15s ease;
+  border: 1px solid var(--rlt-border-strong);
+  background-color: var(--rlt-surface);
+  color: var(--rlt-muted);
+  transition: background-color .15s, color .15s, border-color .15s;
   user-select: none;
   white-space: nowrap;
 }
 .bist-chip-list .form-check-label:hover {
-  border-color: var(--blue);
-  color: var(--text);
-  background-color: rgba(59,130,246,0.1);
+  border-color: var(--rlt-primary);
+  color: var(--rlt-text);
+  background-color: var(--rlt-surface-hover);
 }
 .bist-chip-list .form-check-input:checked + .form-check-label {
-  background-color: var(--blue-d);
-  border-color: var(--blue-d);
-  color: #ffffff;
+  background-color: var(--rlt-primary-fill);
+  border-color: var(--rlt-primary-fill);
+  color: var(--rlt-on-fill);
 }
-.bist-chip-list .form-check-input:checked + .form-check-label:hover {
-  background-color: #1e40af;
-  border-color: #1e40af;
+.bist-chip-list .form-check-input:focus-visible + .form-check-label {
+  outline: 2px solid var(--rlt-primary);
+  outline-offset: 2px;
 }
 
-/* ── Source status rows ─────────────────────────────────────────────────── */
+/* ── Kaynak durum satirlari ─────────────────────────────────────────────── */
 .source-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid var(--card2);
+  border-bottom: 1px solid var(--rlt-border);
 }
 .source-row:last-child { border-bottom: none; }
 
-/* ── Collapse transition ────────────────────────────────────────────────── */
-.collapsing { transition: height 0.25s ease !important; }
+/* ── Sayfa basligi (C.2) ────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--rlt-border);
+}
+
+/* ── Tema secenegi (B.3) ────────────────────────────────────────────────── */
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background-color: var(--rlt-surface);
+  border: 1px solid var(--rlt-border-strong);
+  border-radius: var(--rlt-radius-sm);
+  color: var(--rlt-muted);
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.theme-option:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+.theme-option.active {
+  background-color: var(--rlt-surface-2);
+  border-color: var(--rlt-primary);
+  color: var(--rlt-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--rlt-primary);
+}
+
+#theme-toggle {
+  background: transparent;
+  border: 1px solid var(--rlt-border-strong);
+  color: var(--rlt-muted);
+  border-radius: var(--rlt-radius-sm);
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+#theme-toggle:hover { background-color: var(--rlt-surface-hover); color: var(--rlt-text); }
+
+/* ── Durum bloklari (C.7) ───────────────────────────────────────────────── */
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--rlt-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.state-block i { font-size: 20px; opacity: .7; }
+.state-block.state-error { color: var(--rlt-loss); }
+
+/* ── Gecisler ───────────────────────────────────────────────────────────── */
+.collapsing { transition: height .25s ease !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
