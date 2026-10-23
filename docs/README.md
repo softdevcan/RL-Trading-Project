@@ -37,6 +37,7 @@ Proje mimarisi ve roadmap:
 - [**phase7-auth.md**](development/phase7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
 - [**phase-8-ui-theming.md**](development/phase-8-ui-theming.md) — Faz 8: aydınlık/koyu/sistem teması ve token katmanı (A–E), profil sayfası (F), üst çubuk + bildirimler (G), dar ekranda ikon rayı (H), model ve optimizasyon kaydı silme (I). Kapsam özeti belgenin sonundaki "Kapanış özeti"nde.
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
+- [**phase-9-research-validity-plan.md**](development/phase-9-research-validity-plan.md) — Faz 9 planı (onay bekliyor, 2026-10-07): sızıntı ve değerlendirme açıklarının kapatılması (A–G), Makale 2 deney tasarımı, MARL tasarım kararları (M1–M8); tam metinle doğrulanan 10 yeni bulgu (DSR formül hatası, G2 ≡ DebUnc eşdeğerliği dahil)
 - [**prediction-timeseries-models.md**](development/prediction-timeseries-models.md) — Ensemble'a ARIMA/SARIMAX eklemenin değerlendirmesi: getiri vs. volatilite yapısı ve mevsimsellik ölçümü (30 sembol, 76.058 gözlem); GARCH ve yön meta-learner'ı önerileri (salt analiz, 2026-08-30)
 
 ---
@@ -45,9 +46,12 @@ Proje mimarisi ve roadmap:
 
 Tez kapsamını, akademik konumu ve süreç planını içeren dokümanlar:
 
-- [**vision-and-scope.md**](thesis/vision-and-scope.md) — Tez vizyonu, literatür konumu, tasarım seçenekleri değerlendirmesi, kapsam (in/out), başarı kriterleri, milestone haritası ve makale hedefleri
-- [**seminar-overview.md**](thesis/seminar-overview.md) — Danışman görüşmesi / seminer için proje tanıtım belgesi (Faz 1-3 özeti + tez vizyonu + tartışma noktaları)
-- [**seminar-presentation.md**](thesis/seminar-presentation.md) — 10 slaytlık seminer sunumu içeriği (her slayt: başlık + maddeler + konuşma metni + görsel önerisi; Notebook LM için)
+- [**vision-and-scope.md**](thesis/vision-and-scope.md) — **Kanonik tez belgesi (v0.2, 2026-10-06).** Tez vizyonu, doğrulanmış literatür konumu ve G1–G5 boşluk tablosu, tasarım seçenekleri, kapsam (in/out), değerlendirme protokolü, başarı kriterleri, milestone haritası, makale hedefleri, doğrulanmış kaynakça
+- [**literature-table.md**](thesis/literature-table.md) — **Seçilmiş kaynakça (2026-10-07): 169 kayıt değerlendirildi, 148 seçildi** (85 SCIE/SSCI dergi, 41 üst düzey konferans). Her kaynak için başlık, yazar, yıl, yayın yeri, indeks, atıf, anahtar kelimeler, erişim ve rol; tez/kod bileşenlerini kaynaklara bağlayan kapsam matrisi (açık: 0); elenenler ve yerlerine kullanılacaklar. **Tezin ve makalelerin kaynak tabanı budur**
+- [**literature-review-verification.md**](thesis/literature-review-verification.md) — Ekim 2026 literatür taramasının bağımsız doğrulaması: kaynak gerçekliği (Crossref/arXiv), künye düzeltmeleri, tam metin iddia kontrolleri, eklenen kaynaklar ve kodda doğrulanan sızıntı/protokol açıkları (2026-10-06)
+- [**literature-review-prompt.md**](thesis/literature-review-prompt.md) — Literatür taramasını üreten araştırma promptu (tarama yönteminin kaydı)
+- [**seminar-overview.md**](thesis/seminar-overview.md) — Danışman görüşmesi / seminer için proje tanıtım belgesi (Faz 1-3 özeti + tez vizyonu + tartışma noktaları). *Mayıs 2026 anlık görüntüsü; geçerliliğini yitiren ifadeler belgenin başındaki sürüm notunda*
+- [**seminar-presentation.md**](thesis/seminar-presentation.md) — 10 slaytlık seminer sunumu içeriği (her slayt: başlık + maddeler + konuşma metni + görsel önerisi; Notebook LM için). *Mayıs 2026 anlık görüntüsü* — diğer seminer materyalleri (`seminar-*.md`) de aynı durumda
 
 ---
 
@@ -55,7 +59,9 @@ Tez kapsamını, akademik konumu ve süreç planını içeren dokümanlar:
 
 Harici dokümanlar ve tez:
 
-- [**tez-final.pdf**](reference/tez-final.pdf) — Tez final sürümü
+- [**tez-final.pdf**](reference/tez-final.pdf) — *BIST-30 Endeksinde Derin Pekiştirmeli Öğrenme ile Algoritmik Ticaret Stratejilerinin Karşılaştırmalı Analizi* (Faz 1-2 sonuçları). Doğrulamada bulunan tutarsızlıklar: [literature-review-verification.md §4](thesis/literature-review-verification.md)
+- [**Literatür Taraması ... (Ekim 2026).md**](<reference/Literatür Taraması Tahmin-Destekli İletişimli MARL ile BIST-30 Portföy Yönetimi (Ekim 2026).md>) — 121 kaynaklı literatür taraması (claude.ai Research çıktısı). Künye/kalite düzeltmeleri için doğrulama raporu esas alınmalı
+- [**papers/**](reference/papers/README.md) — 66 makalenin tam metin arşivi (PDF'ler git dışı) + elle getirilecek 19 kaynağın bağlantıları
 - [**evds-python-kilavuz.pdf**](reference/evds-python-kilavuz.pdf) — TCMB EVDS Python kılavuzu
 - [**evds-web-servis-kilavuz.pdf**](reference/evds-web-servis-kilavuz.pdf) — TCMB EVDS Web Servis kılavuzu
 

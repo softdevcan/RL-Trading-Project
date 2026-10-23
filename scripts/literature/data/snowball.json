@@ -1,0 +1,2991 @@
+{
+ "https://openalex.org/W7131680175": {
+  "title": "Nash Equilibrium in Sustainable Finance: Designing a Game-Theoretic DSS for Compliance-Aligned Portfolio Optimization",
+  "year": 2026,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2026.3668480",
+  "cites": 0,
+  "via": [
+   "Zhang2025_GAT",
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7167666033": {
+  "title": "Distribution-Robust Graph Representation Learning for Portfolio Optimization",
+  "year": 2026,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math14142468",
+  "cites": 0,
+  "via": [
+   "Zhang2025_GAT",
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4411385133": {
+  "title": "A Review of Agent-Based Models for Energy Commodity Markets and Their Natural Integration with RL Models",
+  "year": 2025,
+  "venue": "Energies",
+  "vtype": "journal",
+  "issn": "1996-1073",
+  "doi": "https://doi.org/10.3390/en18123171",
+  "cites": 11,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W4408860870": {
+  "title": "Investor Preference-Aware Portfolio Optimization with Deep Reinforcement Learning",
+  "year": 2025,
+  "venue": "International Conference on Consumer Electronics",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/icce63647.2025.10930205",
+  "cites": 0,
+  "via": [
+   "Fang2023",
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4411866136": {
+  "title": "A customized image editing framework for diverse prohibited and restricted products in illegal online transactions",
+  "year": 2025,
+  "venue": "Scientific Reports",
+  "vtype": "journal",
+  "issn": "2045-2322",
+  "doi": "https://doi.org/10.1038/s41598-025-07043-0",
+  "cites": 0,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W4416303648": {
+  "title": "Large investment model",
+  "year": 2025,
+  "venue": "Frontiers of Information Technology & Electronic Engineering",
+  "vtype": "journal",
+  "issn": "2095-9184",
+  "doi": "https://doi.org/10.1631/fitee.2500268",
+  "cites": 0,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W4417447838": {
+  "title": "Reinforcement Learning for Optimal Execution Problem in Rebalancing Transport Asset Positions",
+  "year": 2025,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-3-032-13615-2_59",
+  "cites": 0,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W7126262679": {
+  "title": "Hybrid approaches in smart sensing for detecting buying intent: performance, reasoning, and real-world deployment",
+  "year": 2026,
+  "venue": "International Journal on Smart Sensing and Intelligent Systems",
+  "vtype": "journal",
+  "issn": "1178-5608",
+  "doi": "https://doi.org/10.2478/ijssis-2026-0003",
+  "cites": 0,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W7197028960": {
+  "title": "Compass: Navigating Global Marine Lead Data Integration through Expert-Guided LLM Agent",
+  "year": 2026,
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3770855.3819001",
+  "cites": 0,
+  "via": [
+   "Fang2023"
+  ]
+ },
+ "https://openalex.org/W7160994224": {
+  "title": "Human–AI Collaboration in Risk- and Uncertainty-Aware Portfolio Reinforcement Learning: A Critical Review",
+  "year": 2026,
+  "venue": "Information",
+  "vtype": "journal",
+  "issn": "2078-2489",
+  "doi": "https://doi.org/10.3390/info17050476",
+  "cites": 1,
+  "via": [
+   "Li2024_MASA",
+   "Sun2025_CAIS",
+   "Kim2025_MAMA",
+   "Ansari2024",
+   "Yang2020_Ensemble",
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7154612165": {
+  "title": "Risk-Aware Portfolio Optimization via Constrained Distributional Policy Gradient Methods",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/isiber68248.2026.11470216",
+  "cites": 0,
+  "via": [
+   "Li2024_MASA"
+  ]
+ },
+ "https://openalex.org/W7211938565": {
+  "title": "HG-MARL: A Hierarchical Graph-Based Multi-Agent Reinforcement Learning Framework for Adaptive Policy Simulation in Circular Economies",
+  "year": 2026,
+  "venue": "Circular Economy and Sustainability",
+  "vtype": "journal",
+  "issn": "2730-597X",
+  "doi": "https://doi.org/10.1007/s43615-026-01130-8",
+  "cites": 0,
+  "via": [
+   "Li2024_MASA"
+  ]
+ },
+ "https://openalex.org/W7213405954": {
+  "title": "Next-Gen Women Safety: AI-Powered Proactive Protection & Legal Guidance",
+  "year": 2026,
+  "venue": "International Conference on Trends in Quantum Computing and Emerging Business Technologies (TQCEBT)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/tqcebt67648.2026.11681393",
+  "cites": 0,
+  "via": [
+   "Li2024_MASA"
+  ]
+ },
+ "https://openalex.org/W7213787618": {
+  "title": "From Agent-Based Models to LLM-Based Financial Agents: A PRISMA-Based Systematic Review, Multidimensional Taxonomy, and Future Research Agenda",
+  "year": 2026,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.7493756",
+  "cites": 0,
+  "via": [
+   "Li2024_MASA",
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4410039590": {
+  "title": "The Evolution of Reinforcement Learning in Quantitative Finance: A Survey",
+  "year": 2025,
+  "venue": "ACM Computing Surveys",
+  "vtype": "journal",
+  "issn": "0360-0300",
+  "doi": "https://doi.org/10.1145/3733714",
+  "cites": 35,
+  "via": [
+   "Lee2020_MAPS",
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4406484022": {
+  "title": "Explainable post hoc portfolio management financial policy of a Deep Reinforcement Learning agent",
+  "year": 2025,
+  "venue": "PLoS ONE",
+  "vtype": "journal",
+  "issn": "1932-6203",
+  "doi": "https://doi.org/10.1371/journal.pone.0315528",
+  "cites": 13,
+  "via": [
+   "Lee2020_MAPS",
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4406633991": {
+  "title": "Deep reinforcement learning portfolio model based on mixture of experts",
+  "year": 2025,
+  "venue": "Applied Intelligence",
+  "vtype": "journal",
+  "issn": "0924-669X",
+  "doi": "https://doi.org/10.1007/s10489-025-06242-6",
+  "cites": 9,
+  "via": [
+   "Lee2020_MAPS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7135075882": {
+  "title": "Adaptive LLM-based multi-agent systems to enhance quantitative trading performance",
+  "year": 2026,
+  "venue": "PeerJ Computer Science",
+  "vtype": "journal",
+  "issn": "2376-5992",
+  "doi": "https://doi.org/10.7717/peerj-cs.3630",
+  "cites": 2,
+  "via": [
+   "Lee2020_MAPS"
+  ]
+ },
+ "https://openalex.org/W4415736668": {
+  "title": "Wealth-Voyager: Navigating IntelligentWealth Management with a Multi-Agent Framework",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3766918.3766944",
+  "cites": 1,
+  "via": [
+   "Lee2020_MAPS",
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4416800190": {
+  "title": "Reinforcement Learning in Portfolio Management: A Survey of Methods and Trends",
+  "year": 2025,
+  "venue": "Asia-Pacific Signal and Information Processing Association Annual Summit and Conference (APSIPA ASC)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/apsipaasc65261.2025.11249355",
+  "cites": 1,
+  "via": [
+   "Lee2020_MAPS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416260961": {
+  "title": "Harnessing Quantum Finance and Sentiment for Multi-agent-Driven Financial Prediction",
+  "year": 2025,
+  "venue": "Communications in computer and information science",
+  "vtype": "book series",
+  "issn": "1865-0929",
+  "doi": "https://doi.org/10.1007/978-981-95-4109-6_1",
+  "cites": 0,
+  "via": [
+   "Lee2020_MAPS"
+  ]
+ },
+ "https://openalex.org/W4416923556": {
+  "title": "Multi-Agent Deep Reinforcement Optimization for Crypto Trading",
+  "year": 2025,
+  "venue": "IEEE International Conference on Cyber Security and Cloud Computing (CSCloud)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/cscloud66326.2025.00060",
+  "cites": 0,
+  "via": [
+   "Lee2020_MAPS"
+  ]
+ },
+ "https://openalex.org/W7160597885": {
+  "title": "Intelligent Multi-Agent Architecture Leveraging Large Language Models for Transparent, Interactive Financial Analysis and Strategic Investment Recommendation",
+  "year": 2026,
+  "venue": "International Conference on Intelligent Computing and Control Systems (ICICCS)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iciccs67901.2026.11502854",
+  "cites": 0,
+  "via": [
+   "Lee2020_MAPS"
+  ]
+ },
+ "https://openalex.org/W7168088083": {
+  "title": "A Robust Stablizing Transformer with Deep Reinforcement Learning for Risk-Adjusted Equity Trading Strategies",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-3-032-16168-0_6",
+  "cites": 0,
+  "via": [
+   "Lee2020_MAPS",
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4406062782": {
+  "title": "Future of Artificial Intelligence—Machine Learning Trends in Pathology and Medicine",
+  "year": 2025,
+  "venue": "Modern Pathology",
+  "vtype": "journal",
+  "issn": "0893-3952",
+  "doi": "https://doi.org/10.1016/j.modpat.2025.100705",
+  "cites": 182,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4414298172": {
+  "title": "Machine learning in cancer prognostic and diagnostic biomarkers: A promising approach for early cancer detection",
+  "year": 2025,
+  "venue": "Sensors and Actuators Reports",
+  "vtype": "journal",
+  "issn": "2666-0539",
+  "doi": "https://doi.org/10.1016/j.snr.2025.100385",
+  "cites": 14,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4409695791": {
+  "title": "A Survey on recent advances in reinforcement learning for intelligent investment decision-making optimization",
+  "year": 2025,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2025.127540",
+  "cites": 10,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W7117450297": {
+  "title": "Dynamic Portfolio Optimization with Data-Aware Multi-Agent Reinforcement Learning and Adaptive Risk Control",
+  "year": 2025,
+  "venue": "International Conference on Artificial Intelligence and Intelligent Information Processing (AIIIP)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3778534.3778676",
+  "cites": 12,
+  "via": [
+   "Huang2022_MSPM",
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7140864064": {
+  "title": "Artificial intelligence methods for financial market prediction: A systematic review",
+  "year": 2026,
+  "venue": "Computers & Electrical Engineering",
+  "vtype": "journal",
+  "issn": "0045-7906",
+  "doi": "https://doi.org/10.1016/j.compeleceng.2026.111110",
+  "cites": 5,
+  "via": [
+   "Huang2022_MSPM",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7117539611": {
+  "title": "Factor-based deep reinforcement learning for asset allocation: Comparative analysis of static and dynamic beta reward designs",
+  "year": 2025,
+  "venue": "PLoS ONE",
+  "vtype": "journal",
+  "issn": "1932-6203",
+  "doi": "https://doi.org/10.1371/journal.pone.0332779",
+  "cites": 3,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4417004335": {
+  "title": "Reinforcement learning to develop policies for fair and productive employment: A case study on wage theft within the day-laborer community",
+  "year": 2025,
+  "venue": "PLOS complex systems.",
+  "vtype": "journal",
+  "issn": "2837-8830",
+  "doi": "https://doi.org/10.1371/journal.pcsy.0000079",
+  "cites": 1,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W4407428936": {
+  "title": "A Comprehensive Survey on the Integration of Reinforcement Learning and NLP for Stock Market Trading",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5135573",
+  "cites": 1,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W7139048711": {
+  "title": "Artificial Intelligence for Quantitative Finance: A RAG-Augmented Multi-Agent Framework for Robust Equity Strategy Discovery",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3788149.3788249",
+  "cites": 0,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W7152970628": {
+  "title": "Collaborative Multi-agent LLMs for Autonomous Portfolio Management: An Empirical Study of Distributed AI Decision-Making in Financial Markets",
+  "year": 2026,
+  "venue": "Communications in computer and information science",
+  "vtype": "book series",
+  "issn": "1865-0929",
+  "doi": "https://doi.org/10.1007/978-3-032-22062-2_7",
+  "cites": 0,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W7162436045": {
+  "title": "Optimizing agricultural portfolios under uncertainty: a deep reinforcement learning approach with risk and cost constraints in emerging markets",
+  "year": 2026,
+  "venue": "Journal of Agribusiness in Developing and Emerging Economies",
+  "vtype": "journal",
+  "issn": "2044-0839",
+  "doi": "https://doi.org/10.1108/jadee-06-2025-0251",
+  "cites": 0,
+  "via": [
+   "Huang2022_MSPM"
+  ]
+ },
+ "https://openalex.org/W7164850786": {
+  "title": "Multi-Agent Deep Reinforcement Learning with Dynamic Portfolio Weighting: A Novel Approach to Algorithmic Trading",
+  "year": 2026,
+  "venue": "Sakarya University Journal of Computer and Information Sciences",
+  "vtype": "journal",
+  "issn": "2636-8129",
+  "doi": "https://doi.org/10.35377/saucis...1825313",
+  "cites": 0,
+  "via": [
+   "Huang2022_MSPM",
+   "Sun2025_CAIS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4413475006": {
+  "title": "SSCL‐GBM: A Semi‐Supervised Stock Prediction Approach With Custom Loss Function",
+  "year": 2025,
+  "venue": "Journal of Mathematics",
+  "vtype": "journal",
+  "issn": "2314-4629",
+  "doi": "https://doi.org/10.1155/jom/5991303",
+  "cites": 7,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W4416234910": {
+  "title": "APMPO: A Portfolio Management Policy Optimization Framework with Adaptive Reinforcement Learning Algorithm",
+  "year": 2025,
+  "venue": "Communications in computer and information science",
+  "vtype": "book series",
+  "issn": "1865-0929",
+  "doi": "https://doi.org/10.1007/978-981-95-4094-5_27",
+  "cites": 7,
+  "via": [
+   "Sun2025_CAIS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4415930793": {
+  "title": "Modular Reinforcement Learning for Multi-Market Portfolio Optimization",
+  "year": 2025,
+  "venue": "Information",
+  "vtype": "journal",
+  "issn": "2078-2489",
+  "doi": "https://doi.org/10.3390/info16110961",
+  "cites": 2,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7134189531": {
+  "title": "Mixture-of-Experts Liquid Financial Mamba Framework for Portfolio Management Based on Deep Reinforcement Learning",
+  "year": 2025,
+  "venue": "IEEE International Conference on Big Data (BigData)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/bigdata66926.2025.11402266",
+  "cites": 2,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7134197204": {
+  "title": "Dynamic Knowledge Graph-Guided Deep Reinforcement Learning with Hierarchical Semantics Transformer for Portfolio Management",
+  "year": 2025,
+  "venue": "IEEE International Conference on Big Data (BigData)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/bigdata66926.2025.11402192",
+  "cites": 2,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W4415213351": {
+  "title": "Deep Reinforcement Learning for Long-Short Portfolio Optimization",
+  "year": 2025,
+  "venue": "Computational Economics",
+  "vtype": "journal",
+  "issn": "0927-7099",
+  "doi": "https://doi.org/10.1007/s10614-025-11143-4",
+  "cites": 2,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W4416112532": {
+  "title": "MTS: A deep reinforcement learning portfolio management framework with time-awareness and short-selling",
+  "year": 2026,
+  "venue": "Intelligent Data Analysis",
+  "vtype": "journal",
+  "issn": "1088-467X",
+  "doi": "https://doi.org/10.1177/1088467x261416593",
+  "cites": 1,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W4407424293": {
+  "title": "Memory Instance Gated Transformer Reinforcement Learning for Portfolio Management",
+  "year": 2025,
+  "venue": "IEEE International Conference on Big Data (BigData)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/bigdata66926.2025.11400947",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7155087160": {
+  "title": "Adaptive World Model with Latent Generation Algorithm for Deep Reinforcement Learning in Portfolio Optimization",
+  "year": 2026,
+  "venue": "IEEE International Conference on Acoustics Speech and Signal Processing",
+  "vtype": "conference",
+  "issn": "1520-6149",
+  "doi": "https://doi.org/10.1109/icassp55912.2026.11460397",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7161835593": {
+  "title": "Hybrid Multi-Agent Decision Support System for Momentum-Based Financial Trading",
+  "year": 2026,
+  "venue": "International Conference on Research Methodologies in Knowledge Management, Artificial Intelligence and Telecommunication Engineering (RMKMATE)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/rmkmate69073.2026.11518584",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7167461953": {
+  "title": "KPA-Former: The Knowledge-Primed Attentional Former with LLM-Grounded data for Financial Portfolio Management",
+  "year": 2026,
+  "venue": "International Conference on Computer Supported Cooperative Work in Design (CSCWD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/cscwd68734.2026.11582057",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7167489030": {
+  "title": "A Signal-driven Hierarchical Cross-Attention Portfolio Agent with Deep Reinforcement Learning",
+  "year": 2026,
+  "venue": "International Conference on Computer Supported Cooperative Work in Design (CSCWD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/cscwd68734.2026.11582012",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS",
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7167735062": {
+  "title": "A self-adjusting Decision Support System for strategic project portfolio prioritization using integrated AHP and reinforcement learning",
+  "year": 2026,
+  "venue": "Applied Operations and Analytics",
+  "vtype": "journal",
+  "issn": "2996-6892",
+  "doi": "https://doi.org/10.1080/29966892.2026.2694891",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7171403806": {
+  "title": "Volatility Regime-Dependent Portfolio Optimization: Empirical Analysis of Deep Reinforcement Learning Agents",
+  "year": 2026,
+  "venue": "Asia-Pacific Financial Markets",
+  "vtype": "journal",
+  "issn": "1380-2011",
+  "doi": "https://doi.org/10.1007/s10690-026-09629-8",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7171554466": {
+  "title": "Intelligent Optimization of Deep Reinforcement Learning Control Algorithm for Flotation Process",
+  "year": 2026,
+  "venue": "Journal of Sustainable Metallurgy",
+  "vtype": "journal",
+  "issn": "2199-3823",
+  "doi": "https://doi.org/10.1007/s40831-026-01602-z",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7171621900": {
+  "title": "Deep Reinforcement Learning-based Portfolio Optimization using Proximal Policy Optimization",
+  "year": 2026,
+  "venue": "International Conference on Computing Methodologies and Communication (ICCMC)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iccmc69250.2026.11624947",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7213545126": {
+  "title": "Horizon-Dependent Architecture Selection for Anchor-Guided GRU–Transformer Portfolio Policies",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3829441.3829535",
+  "cites": 0,
+  "via": [
+   "Sun2025_CAIS"
+  ]
+ },
+ "https://openalex.org/W7171670513": {
+  "title": "Hellhound v12.5 (Apex-King): A Correlation-Driven Deterministic Framework for Web Application Offensive Security and Attack Chain Analysis",
+  "year": 2026,
+  "venue": "International Conference on Computing Methodologies and Communication (ICCMC)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iccmc69250.2026.11625138",
+  "cites": 0,
+  "via": [
+   "Kim2025_MAMA"
+  ]
+ },
+ "https://openalex.org/W4417337623": {
+  "title": "Portfolio Optimization System (POS): A Deep Reinforcement Learning Approach for Market-Adaptive Investment Strategies",
+  "year": 2025,
+  "venue": "International Conference on Electrical, Computer, Communications and Mechatronics Engineering (ICECCME)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iceccme64568.2025.11277752",
+  "cites": 1,
+  "via": [
+   "Khemlichi2025_MPLS"
+  ]
+ },
+ "https://openalex.org/W4407937639": {
+  "title": "The Mathematics of Group Relative Policy Optimization : A Multi-Agent Reinforcement Learning Approach",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5080865",
+  "cites": 0,
+  "via": [
+   "Das2019_TarMAC"
+  ]
+ },
+ "https://openalex.org/W4408079804": {
+  "title": "Multi-agent Cluster Target Coverage Control Based on Hierarchical Planning",
+  "year": 2025,
+  "venue": "Lecture notes in electrical engineering",
+  "vtype": "book series",
+  "issn": "1876-1100",
+  "doi": "https://doi.org/10.1007/978-981-96-2240-5_45",
+  "cites": 0,
+  "via": [
+   "Das2019_TarMAC"
+  ]
+ },
+ "https://openalex.org/W4410418138": {
+  "title": "Enhancing multi-agent communication through credibility and reward-based optimisation",
+  "year": 2025,
+  "venue": "International Journal of General Systems",
+  "vtype": "journal",
+  "issn": "0308-1079",
+  "doi": "https://doi.org/10.1080/03081079.2025.2503785",
+  "cites": 0,
+  "via": [
+   "Das2019_TarMAC",
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W4406611551": {
+  "title": "Prioritized Information Bottleneck Theoretic Framework With Distributed Online Learning for Edge Video Analytics",
+  "year": 2025,
+  "venue": "IEEE Transactions on Networking",
+  "vtype": "journal",
+  "issn": "2998-4157",
+  "doi": "https://doi.org/10.1109/ton.2025.3526148",
+  "cites": 41,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7125813926": {
+  "title": "Communication Learning in Multi-Agent Systems From Graph Modeling Perspective",
+  "year": 2026,
+  "venue": "IEEE Transactions on Knowledge and Data Engineering",
+  "vtype": "journal",
+  "issn": "1041-4347",
+  "doi": "https://doi.org/10.1109/tkde.2026.3658366",
+  "cites": 7,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7154685956": {
+  "title": "On-Orbit Space AI: Federated, Multi-Agent, and Collaborative Algorithms for Satellite Constellations",
+  "year": 2026,
+  "venue": "Algorithms",
+  "vtype": "journal",
+  "issn": "1999-4893",
+  "doi": "https://doi.org/10.3390/a19040318",
+  "cites": 4,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7155933205": {
+  "title": "Routing and Scheduling of Mobile Energy Storage Systems for Distribution Network Resilience Enhancement Based on a Hybrid Data-Model Driven Approach",
+  "year": 2026,
+  "venue": "IEEE Transactions on Sustainable Energy",
+  "vtype": "journal",
+  "issn": "1949-3029",
+  "doi": "https://doi.org/10.1109/tste.2026.3687999",
+  "cites": 3,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W4409172999": {
+  "title": "TMAC: a Transformer-based partially observable multi-agent communication method",
+  "year": 2025,
+  "venue": "PeerJ Computer Science",
+  "vtype": "journal",
+  "issn": "2376-5992",
+  "doi": "https://doi.org/10.7717/peerj-cs.2758",
+  "cites": 2,
+  "via": [
+   "Niu2021_MAGIC",
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W7124558565": {
+  "title": "A multi-agent reinforcement learning scheduling algorithm integrating state graph and task graph structural modeling for ride-sharing dispatching",
+  "year": 2026,
+  "venue": "Scientific Reports",
+  "vtype": "journal",
+  "issn": "2045-2322",
+  "doi": "https://doi.org/10.1038/s41598-026-35004-8",
+  "cites": 2,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W4417201696": {
+  "title": "Signaling-Driven Incentive Communication for Enhanced Multiagent Reinforcement Learning in Dynamic Environments",
+  "year": 2025,
+  "venue": "IEEE Transactions on Cybernetics",
+  "vtype": "journal",
+  "issn": "2168-2267",
+  "doi": "https://doi.org/10.1109/tcyb.2025.3625137",
+  "cites": 1,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7128704041": {
+  "title": "A Multi-UAV Cooperative Coverage Method Based on Sparse Dual-Attention Reinforcement Learning",
+  "year": 2026,
+  "venue": "IEEE Robotics and Automation Letters",
+  "vtype": "journal",
+  "issn": "2377-3766",
+  "doi": "https://doi.org/10.1109/lra.2026.3664265",
+  "cites": 1,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7105594144": {
+  "title": "Adaptive Graph Coordination Strategy in Multiagent Reinforcement Learning",
+  "year": 2025,
+  "venue": "IEEE Transactions on Games",
+  "vtype": "journal",
+  "issn": "2475-1502",
+  "doi": "https://doi.org/10.1109/tg.2025.3629681",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7125098375": {
+  "title": "Hammurabi: Establish Cooperative Order From Pre-Trained Policies in Multi-UAV Networks",
+  "year": 2026,
+  "venue": "IEEE Transactions on Parallel and Distributed Systems",
+  "vtype": "journal",
+  "issn": "1045-9219",
+  "doi": "https://doi.org/10.1109/tpds.2026.3654605",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7131119598": {
+  "title": "STCo: A Communication-Efficient Spatiotemporal Context-Aware Framework for V2V Collaborative Perception",
+  "year": 2026,
+  "venue": "IEEE Internet of Things Journal",
+  "vtype": "journal",
+  "issn": "2327-4662",
+  "doi": "https://doi.org/10.1109/jiot.2026.3667134",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7134190402": {
+  "title": "Enabling Stochastic Dynamic Games for Robotic Swarms",
+  "year": 2026,
+  "venue": "Advanced Intelligent Systems",
+  "vtype": "journal",
+  "issn": "2640-4567",
+  "doi": "https://doi.org/10.1002/aisy.202501196",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7138931043": {
+  "title": "Goal-Aware Subgraph Partitioning for Efficient Communication in Multi-Agent Reinforcement Learning",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3788149.3788252",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7155358063": {
+  "title": "Consensus-Driven Event-Based Graph Information Bottleneck for Integrated Communication and Control",
+  "year": 2026,
+  "venue": "IEEE Transactions on Vehicular Technology",
+  "vtype": "journal",
+  "issn": "0018-9545",
+  "doi": "https://doi.org/10.1109/tvt.2026.3686780",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7160753742": {
+  "title": "Reinforcement Learning for Swarm Intelligent Systems: A Comprehensive Survey",
+  "year": 2026,
+  "venue": "Lecture notes in electrical engineering",
+  "vtype": "book series",
+  "issn": "1876-1100",
+  "doi": "https://doi.org/10.1007/978-981-95-8329-4_20",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7165375320": {
+  "title": "Aligning Global and Local Belief through Communication in Multi-Agent Reinforcement Learning",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iciice69672.2026.11565479",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7165754477": {
+  "title": "Contrastive Dual-Level Communication Optimization for Multi-Agent Systems",
+  "year": 2026,
+  "venue": "Chinese Control and Decision Conference (CCDC)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ccdc69976.2026.11560271",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7167242158": {
+  "title": "Federated Multiagent Reinforcement Learning With Knowledge Reuse for Robust Cooperation in Edge-Intelligent IoT Systems",
+  "year": 2026,
+  "venue": "IEEE Internet of Things Journal",
+  "vtype": "journal",
+  "issn": "2327-4662",
+  "doi": "https://doi.org/10.1109/jiot.2026.3710025",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7170193190": {
+  "title": "Decentralized Spatiotemporal A2C with Graph Attention Communication Bottleneck for Multi-Agent Traffic Signal Control",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ddcls71227.2026.11610556",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7171360050": {
+  "title": "Don’t Fire Together: Desynchronised Communication Scheduling for Bandwidth-Limited Multi-Robot Exploration",
+  "year": 2026,
+  "venue": "Sensors",
+  "vtype": "journal",
+  "issn": "1424-8220",
+  "doi": "https://doi.org/10.3390/s26154778",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7171952401": {
+  "title": "Surrogate-Guided Graph Policy Learning for Real-Time Coordination of Mobile Agents",
+  "year": 2026,
+  "venue": "Proceedings/IEEE International Conference on Mobile Data Management",
+  "vtype": "conference",
+  "issn": "1551-6245",
+  "doi": "https://doi.org/10.1109/mdm71479.2026.00031",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7204099272": {
+  "title": "Geometry-Aware Reinforcement Learning for Robust Quadrotor Formation Control under Intermittent Communication",
+  "year": 2026,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.7345462",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7208781478": {
+  "title": "Priority-guided gated cooperative correction for coverage control with multiple unmanned aerial vehicles",
+  "year": 2026,
+  "venue": "Engineering Applications of Artificial Intelligence",
+  "vtype": "journal",
+  "issn": "0952-1976",
+  "doi": "https://doi.org/10.1016/j.engappai.2026.116173",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7212114414": {
+  "title": "A Learnable Sparse Attention Graph Architecture for Heterogeneous Multi-UAV Air-to-Ground Mission Planning",
+  "year": 2026,
+  "venue": "Drones",
+  "vtype": "journal",
+  "issn": "2504-446X",
+  "doi": "https://doi.org/10.3390/drones10090687",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7214196733": {
+  "title": "An Asymmetric Dual-Graph Actor–Critic for Scheduling Heterogeneous Directed-Energy Systems in Counter-UAV Defense",
+  "year": 2026,
+  "venue": "Aerospace",
+  "vtype": "journal",
+  "issn": "2226-4310",
+  "doi": "https://doi.org/10.3390/aerospace13100863",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC"
+  ]
+ },
+ "https://openalex.org/W7214201579": {
+  "title": "Learning Dimensional Rational Communication for Multi-Agent Cooperation",
+  "year": 2026,
+  "venue": "Research Square",
+  "vtype": "repository",
+  "issn": null,
+  "doi": "https://doi.org/10.21203/rs.3.rs-9520084/v1",
+  "cites": 0,
+  "via": [
+   "Niu2021_MAGIC",
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W4409796470": {
+  "title": "Robust Training in Multiagent Deep Reinforcement Learning Against Optimal Adversary",
+  "year": 2025,
+  "venue": "IEEE Transactions on Systems Man and Cybernetics Systems",
+  "vtype": "journal",
+  "issn": "2168-2216",
+  "doi": "https://doi.org/10.1109/tsmc.2025.3561276",
+  "cites": 4,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W4406094377": {
+  "title": "The Impact of Strategic Communication in Coopetitive Multiagent Settings",
+  "year": 2025,
+  "venue": "IEEE Transactions on Computational Social Systems",
+  "vtype": "journal",
+  "issn": "2329-924X",
+  "doi": "https://doi.org/10.1109/tcss.2024.3522676",
+  "cites": 2,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W7104651874": {
+  "title": "Multiagent Target–Attacker–Defender Differential Games With Anomalous Defenders Under Limited Perception",
+  "year": 2025,
+  "venue": "IEEE Transactions on Automatic Control",
+  "vtype": "journal",
+  "issn": "0018-9286",
+  "doi": "https://doi.org/10.1109/tac.2025.3631483",
+  "cites": 1,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W4412980795": {
+  "title": "IBGP: Imperfect Byzantine Generals Problem for Zero-Shot Robustness in Communicative Multi-agent Systems",
+  "year": 2025,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-3-032-00686-8_37",
+  "cites": 0,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W4413262401": {
+  "title": "Trustworthy Distributed Mirror Learning for Secure and Private Multi-Agent Coordination",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5383405",
+  "cites": 0,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W7116849749": {
+  "title": "Safe Multi-Agent Communication Reinforcement Learning for Cooperative Transport: An Attention-based Mechanism",
+  "year": 2025,
+  "venue": "IEEE International Conference on Unmanned Systems (ICUS)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/icus66297.2025.11295202",
+  "cites": 0,
+  "via": [
+   "Yu2024_ADMAC"
+  ]
+ },
+ "https://openalex.org/W4405965158": {
+  "title": "Why am I willing to collaborate with AI? Exploring the desire for collaboration in human-AI hybrid group brainstorming",
+  "year": 2025,
+  "venue": "Kybernetes",
+  "vtype": "journal",
+  "issn": "0368-492X",
+  "doi": "https://doi.org/10.1108/k-08-2024-2105",
+  "cites": 9,
+  "via": [
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W4415626526": {
+  "title": "Communication-Aware Task Allocation for the UAV Swarm via Multiobjective Asynchronous Policy Learning",
+  "year": 2025,
+  "venue": "IEEE Transactions on Aerospace and Electronic Systems",
+  "vtype": "journal",
+  "issn": "0018-9251",
+  "doi": "https://doi.org/10.1109/taes.2025.3626306",
+  "cites": 2,
+  "via": [
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W7169653063": {
+  "title": "Hierarchical Multi-agent Reinforcement Learning with Selective Intrinsic Motivation in LEO Satellite Systems",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-981-92-3381-6_40",
+  "cites": 0,
+  "via": [
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W7172059303": {
+  "title": "EGP2: A sample-efficient and generalizable reinforcement learning framework for UAV path planning",
+  "year": 2026,
+  "venue": "Robotics and Autonomous Systems",
+  "vtype": "journal",
+  "issn": "0921-8890",
+  "doi": "https://doi.org/10.1016/j.robot.2026.105670",
+  "cites": 0,
+  "via": [
+   "Sun2021_IMMAC"
+  ]
+ },
+ "https://openalex.org/W4408167059": {
+  "title": "Financial Time Series Forecasting: A Comprehensive Review of Signal Processing and Optimization-Driven Intelligent Models",
+  "year": 2025,
+  "venue": "Computational Economics",
+  "vtype": "journal",
+  "issn": "0927-7099",
+  "doi": "https://doi.org/10.1007/s10614-025-10899-z",
+  "cites": 12,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W4409197546": {
+  "title": "Enhancing financial product forecasting accuracy using EMD and feature selection with ensemble models",
+  "year": 2025,
+  "venue": "Journal of Open Innovation Technology Market and Complexity",
+  "vtype": "journal",
+  "issn": "2199-8531",
+  "doi": "https://doi.org/10.1016/j.joitmc.2025.100531",
+  "cites": 11,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W4408190054": {
+  "title": "Adaptive Non-Stationary Fuzzy Time Series Forecasting with Bayesian Networks",
+  "year": 2025,
+  "venue": "Sensors",
+  "vtype": "journal",
+  "issn": "1424-8220",
+  "doi": "https://doi.org/10.3390/s25051628",
+  "cites": 9,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W4412153642": {
+  "title": "Overestimated stock market forecasts resulting from the one-time denoising",
+  "year": 2025,
+  "venue": "Applied Intelligence",
+  "vtype": "journal",
+  "issn": "0924-669X",
+  "doi": "https://doi.org/10.1007/s10489-025-06720-x",
+  "cites": 1,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W4414638557": {
+  "title": "Decomposing Economic Indicators: A Study of Compensation, GDP, and Employment Rate in Germany Through Empirical Mode Decomposition",
+  "year": 2025,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-981-96-5726-1_29",
+  "cites": 0,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W7165964919": {
+  "title": "Enhancing stock market prediction: Addressing non-linear complexities using advanced machine learning algorithms",
+  "year": 2026,
+  "venue": "AIP conference proceedings",
+  "vtype": "journal",
+  "issn": "0094-243X",
+  "doi": "https://doi.org/10.1063/5.0331118",
+  "cites": 0,
+  "via": [
+   "Carnelossi2017_EMDbias"
+  ]
+ },
+ "https://openalex.org/W4414022612": {
+  "title": "Long Short-Term Memory Networks: A Comprehensive Survey",
+  "year": 2025,
+  "venue": "AI",
+  "vtype": "journal",
+  "issn": "2673-2688",
+  "doi": "https://doi.org/10.3390/ai6090215",
+  "cites": 109,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4408021028": {
+  "title": "Data-driven deep learning model for short-term wind power prediction assisted with WGAN-GP data preprocessing",
+  "year": 2025,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2025.127068",
+  "cites": 28,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4410248510": {
+  "title": "Using a seasonal and trend decomposition algorithm to improve machine learning prediction of inflow from the Yellow River, China, into the sea",
+  "year": 2025,
+  "venue": "Frontiers in Marine Science",
+  "vtype": "journal",
+  "issn": "2296-7745",
+  "doi": "https://doi.org/10.3389/fmars.2025.1540912",
+  "cites": 8,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7124738870": {
+  "title": "PDR-STGCN: An Enhanced STGCN with Multi-Scale Periodic Fusion and a Dynamic Relational Graph for Traffic Forecasting",
+  "year": 2026,
+  "venue": "Systems",
+  "vtype": "journal",
+  "issn": "2079-8954",
+  "doi": "https://doi.org/10.3390/systems14010102",
+  "cites": 5,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4413295520": {
+  "title": "Stop unrealistic data preprocessing in wind speed forecasting: approaches and discussions on preventing future data leakage",
+  "year": 2025,
+  "venue": "Applied Mathematical Modelling",
+  "vtype": "journal",
+  "issn": "0307-904X",
+  "doi": "https://doi.org/10.1016/j.apm.2025.116376",
+  "cites": 3,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7124715949": {
+  "title": "A hybrid deep learning framework for day-ahead PV forecasting using coarse-grained weather data",
+  "year": 2026,
+  "venue": "Renewable Energy",
+  "vtype": "journal",
+  "issn": "0960-1481",
+  "doi": "https://doi.org/10.1016/j.renene.2026.125306",
+  "cites": 3,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4412615525": {
+  "title": "The Application of KNN-Optimized Hybrid Models in Landslide Displacement Prediction",
+  "year": 2025,
+  "venue": "Eng—Advances in Engineering",
+  "vtype": "journal",
+  "issn": "2673-4117",
+  "doi": "https://doi.org/10.3390/eng6080169",
+  "cites": 2,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7160091076": {
+  "title": "Operationally oriented Multi-Horizon electricity demand forecasting for industrial building zones using deep learning ensembles",
+  "year": 2026,
+  "venue": "Energy and Buildings",
+  "vtype": "journal",
+  "issn": "0378-7788",
+  "doi": "https://doi.org/10.1016/j.enbuild.2026.117568",
+  "cites": 1,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4414242221": {
+  "title": "Frequency-Modulated Transformer Self-Attention for Advanced Infectious Disease Prediction",
+  "year": 2025,
+  "venue": "ACM Transactions on Intelligent Systems and Technology",
+  "vtype": "journal",
+  "issn": "2157-6904",
+  "doi": "https://doi.org/10.1145/3768162",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4414606716": {
+  "title": "Adaptive processing of non-stationary ship lubrication signals under sporadic impulsive noise",
+  "year": 2025,
+  "venue": "Ocean Engineering",
+  "vtype": "journal",
+  "issn": "0029-8018",
+  "doi": "https://doi.org/10.1016/j.oceaneng.2025.122693",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7119485580": {
+  "title": "Efficient and Accurate Epilepsy Seizure Prediction and Detection Based on Multi-Teacher Knowledge Distillation RGF-Model",
+  "year": 2026,
+  "venue": "Brain Sciences",
+  "vtype": "journal",
+  "issn": "2076-3425",
+  "doi": "https://doi.org/10.3390/brainsci16010083",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7123363460": {
+  "title": "A Narrative Review on Digital Phenotyping, Emotional Volatility and Machine Learning Techniques",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/icdiss68238.2025.11320615",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7125484295": {
+  "title": "Residual dynamic spatio-temporal graph attention network for enhanced urban traffic origin/destination demand calibration",
+  "year": 2026,
+  "venue": "Engineering Computations",
+  "vtype": "journal",
+  "issn": "0264-4401",
+  "doi": "https://doi.org/10.1108/ec-09-2024-0900",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7139131705": {
+  "title": "Uncertainty-First Forecasting of the South African Equity Market Using Deep Learning and Temporal Conformal Prediction",
+  "year": 2026,
+  "venue": "Big Data and Cognitive Computing",
+  "vtype": "journal",
+  "issn": "2504-2289",
+  "doi": "https://doi.org/10.3390/bdcc10030093",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7160330044": {
+  "title": "MEMS-Based Intelligent Sensing Method for Roadbed Collapse Deformation Prediction in Coastal Environments",
+  "year": 2026,
+  "venue": "Coatings",
+  "vtype": "journal",
+  "issn": "2079-6412",
+  "doi": "https://doi.org/10.3390/coatings16050554",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7160442995": {
+  "title": "Profit-Optimal Machine Learning for Purchase Intent Prediction: Calibration, Temporal Validation, and Economic Constraints",
+  "year": 2025,
+  "venue": "International Conference on Computer and Information Technology (ICCIT)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iccit68739.2025.11491498",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7161058321": {
+  "title": "A Physics-Guided Deep Learning Method for Temporal InSAR Surface Deformation Monitoring and Prediction: A Case Study of Lishi District, Shanxi Province, China",
+  "year": 2026,
+  "venue": "Remote Sensing",
+  "vtype": "journal",
+  "issn": "2072-4292",
+  "doi": "https://doi.org/10.3390/rs18101553",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7161155830": {
+  "title": "Artificial Intelligence in Atmospheric Composition Studies for Sustainable Air Quality Management: Spatiotemporal Concentration Forecasting and Emission Inference from Mobile and Point Sources",
+  "year": 2026,
+  "venue": "Sustainability",
+  "vtype": "journal",
+  "issn": "2071-1050",
+  "doi": "https://doi.org/10.3390/su18104838",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7166508582": {
+  "title": "A Dynamic-Response-Enhanced Active Current Prediction Method for Synchronous Reluctance Motors Under Multi-Operating-Condition Switching",
+  "year": 2026,
+  "venue": "Processes",
+  "vtype": "journal",
+  "issn": "2227-9717",
+  "doi": "https://doi.org/10.3390/pr14132111",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7167023174": {
+  "title": "Short-Term Prediction and Temporal Causality Analysis of Total Nitrogen in Wastewater Treatment Plant Effluent Based on LT-PR-LSTM",
+  "year": 2026,
+  "venue": "Water",
+  "vtype": "journal",
+  "issn": "2073-4441",
+  "doi": "https://doi.org/10.3390/w18131607",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7167912533": {
+  "title": "Modeling Student Study Space Occupancy Patterns through Passive Wi-Fi Sensing on a Smart Campus",
+  "year": 2026,
+  "venue": "International Joint Conference on Computer Science and Software Engineering",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/jcsse68839.2026.11596716",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7202203322": {
+  "title": "Simulation-Based Multi-Horizon Forecasting of Train-Induced Carbody Acceleration for an Integrated Station–Bridge Building: A Yichang North Railway Station Case Study",
+  "year": 2026,
+  "venue": "Buildings",
+  "vtype": "journal",
+  "issn": "2075-5309",
+  "doi": "https://doi.org/10.3390/buildings16163191",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7202252740": {
+  "title": "Benchmarking RF, KNN, MLP, and CNN for FFT-Based PV Arc Fault Detection: Scaling Choice, Temporal Cross-Validation, and Latency Trade-Offs Toward Edge Deployment",
+  "year": 2026,
+  "venue": "Energies",
+  "vtype": "journal",
+  "issn": "1996-1073",
+  "doi": "https://doi.org/10.3390/en19163787",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7204850911": {
+  "title": "Temporal Modeling of Weekly Dengue Cases in Marikina City: A Time-Respecting Comparison of Classical, Machine Learning, and Deep Temporal Models",
+  "year": 2026,
+  "venue": "Research Square",
+  "vtype": "repository",
+  "issn": null,
+  "doi": "https://doi.org/10.21203/rs.3.rs-10307931/v1",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7207660336": {
+  "title": "Analysis of information leakage in decomposition-based GNSS coordinate time series prediction",
+  "year": 2026,
+  "venue": "Advances in Space Research",
+  "vtype": "journal",
+  "issn": "0273-1177",
+  "doi": "https://doi.org/10.1016/j.asr.2026.08.090",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7212127339": {
+  "title": "Privacy-Preserving Fall Detection System in an Edge–Cloud Framework",
+  "year": 2026,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-3-032-27515-8_12",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7212191830": {
+  "title": "A Hybrid Deep Learning Model for Short-Term Load Forecasting Based on ITCN-CA-LSTM",
+  "year": 2026,
+  "venue": "Journal of Electrical Engineering and Technology",
+  "vtype": "journal",
+  "issn": "1975-0102",
+  "doi": "https://doi.org/10.1007/s42835-026-02929-z",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7213234477": {
+  "title": "Safety-oriented CNN-attention-GRU hybrid network for remaining useful life prediction of lithium-ion batteries",
+  "year": 2026,
+  "venue": "Journal of Physics Conference Series",
+  "vtype": "journal",
+  "issn": "1742-6588",
+  "doi": "https://doi.org/10.1088/1742-6596/3316/1/012016",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7213403476": {
+  "title": "An Interpretable Gated Convolutional Transformer Optimized by an Improved Black Kite Algorithm for Runoff Prediction",
+  "year": 2026,
+  "venue": "Water",
+  "vtype": "journal",
+  "issn": "2073-4441",
+  "doi": "https://doi.org/10.3390/w18182321",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W7215105108": {
+  "title": "A Leakage-Free, Auto-Tuned Rolling-Window VMD Framework for Fair Benchmarking of Seasonal Ultra-Short-Term Photovoltaic Power Forecasting",
+  "year": 2026,
+  "venue": "International Conference on Mechanical, Electronics and Electrical and Automation Control (METMS)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/metms70800.2026.11705907",
+  "cites": 0,
+  "via": [
+   "Yang2024_EMDleak"
+  ]
+ },
+ "https://openalex.org/W4411424241": {
+  "title": "Decomposition-Ensemble Approach for Realized Volatility Prediction",
+  "year": 2025,
+  "venue": "Computational Economics",
+  "vtype": "journal",
+  "issn": "0927-7099",
+  "doi": "https://doi.org/10.1007/s10614-025-11020-0",
+  "cites": 7,
+  "via": [
+   "Zhang2024_RollingCEEMDAN"
+  ]
+ },
+ "https://openalex.org/W4412176475": {
+  "title": "The Sentiment Augmented GARCH-LSTM Hybrid Model for Value-at-Risk Forecasting",
+  "year": 2025,
+  "venue": "Computational Economics",
+  "vtype": "journal",
+  "issn": "0927-7099",
+  "doi": "https://doi.org/10.1007/s10614-025-11042-8",
+  "cites": 6,
+  "via": [
+   "Zhang2024_RollingCEEMDAN"
+  ]
+ },
+ "https://openalex.org/W4412347707": {
+  "title": "Feature Distillation and Aggregation Scheme Via Multilayer Decomposition and Stacked Clustering Technique for Cryptocurrency Price Prediction",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5348346",
+  "cites": 0,
+  "via": [
+   "Zhang2024_RollingCEEMDAN"
+  ]
+ },
+ "https://openalex.org/W4407948952": {
+  "title": "A Novel RMS-Driven Deep Reinforcement Learning for Optimized Portfolio Management in Stock Trading",
+  "year": 2025,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2025.3546099",
+  "cites": 29,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4406997907": {
+  "title": "A Combined Algorithm Approach for Optimizing Portfolio Performance in Automated Trading: A Study of SET50 Stocks",
+  "year": 2025,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math13030461",
+  "cites": 6,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4410130743": {
+  "title": "Vision-based approach to knee osteoarthritis and Parkinson’s disease detection utilizing human gait patterns",
+  "year": 2025,
+  "venue": "PeerJ Computer Science",
+  "vtype": "journal",
+  "issn": "2376-5992",
+  "doi": "https://doi.org/10.7717/peerj-cs.2857",
+  "cites": 5,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4410864815": {
+  "title": "K-Means Clustering for Portfolio Optimization: Symmetry in Risk–Return Tradeoff, Liquidity, Profitability, and Solvency",
+  "year": 2025,
+  "venue": "Symmetry",
+  "vtype": "journal",
+  "issn": "2073-8994",
+  "doi": "https://doi.org/10.3390/sym17060847",
+  "cites": 5,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4412782157": {
+  "title": "APPLICATION OF MATHEMATICAL MODELING IN FINANCE: A REVIEW",
+  "year": 2025,
+  "venue": "Fractals",
+  "vtype": "journal",
+  "issn": "0218-348X",
+  "doi": "https://doi.org/10.1142/s0218348x25300119",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4414550784": {
+  "title": "AI in Finance: Computational Methods for Market Analysis and Risk Management",
+  "year": 2025,
+  "venue": "Information systems engineering and management",
+  "vtype": "journal",
+  "issn": "3004-958X",
+  "doi": "https://doi.org/10.1007/978-3-031-96871-6_6",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7128297985": {
+  "title": "Beyond Profit: An Analysis of Risk and Return Metrics in Automated Trading Systems",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-3-032-15993-9_12",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7128384345": {
+  "title": "Optimizing cryptocurrency trades with twin delayed DDPG: Adaptive multi-factor reward function with diverse data sources",
+  "year": 2026,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2026.131527",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7160280653": {
+  "title": "Scalper Major: A Computational Solution for Automated Trading in High Volatility Environments",
+  "year": 2026,
+  "venue": "Anais do Simpósio Brasileiro de Sistemas de Informação (SBSI)",
+  "vtype": "conference",
+  "issn": "3086-4836",
+  "doi": "https://doi.org/10.5753/sbsi.2026.248290",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7103903827": {
+  "title": "Reinforcement Learning in Finance: From Current Practice to Standards and Frameworks",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5703882",
+  "cites": 1,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4413980767": {
+  "title": "Optimizing Portfolio Allocation with Deep Q-Learning: A Reinforcement Learning Approach",
+  "year": 2025,
+  "venue": "International Conference for Emerging Technology (INCET)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/incet64471.2025.11140422",
+  "cites": 0,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7166829006": {
+  "title": "A Blockchain-Enabled Digital Twin Framework for Sustainable Portfolio Optimization",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ci2a69097.2026.11576874",
+  "cites": 0,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7167632167": {
+  "title": "Smart power market trading systems enhanced through advanced algorithmic optimization",
+  "year": 2026,
+  "venue": "Electric Power Systems Research",
+  "vtype": "journal",
+  "issn": "0378-7796",
+  "doi": "https://doi.org/10.1016/j.epsr.2026.113704",
+  "cites": 0,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W7169686795": {
+  "title": "A Multi-agent Reinforcement Learning Approach with Self-attention for Multi-stock Portfolio Trading",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-981-92-2888-1_19",
+  "cites": 0,
+  "via": [
+   "Ansari2024"
+  ]
+ },
+ "https://openalex.org/W4409220872": {
+  "title": "MCI-GRU: Stock prediction model based on multi-head cross-attention and improved GRU",
+  "year": 2025,
+  "venue": "Neurocomputing",
+  "vtype": "journal",
+  "issn": "0925-2312",
+  "doi": "https://doi.org/10.1016/j.neucom.2025.130168",
+  "cites": 27,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4412939561": {
+  "title": "FinMem: A Performance-Enhanced LLM Trading Agent With Layered Memory and Character Design",
+  "year": 2025,
+  "venue": "IEEE Transactions on Big Data",
+  "vtype": "journal",
+  "issn": "2332-7790",
+  "doi": "https://doi.org/10.1109/tbdata.2025.3593370",
+  "cites": 22,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4410944112": {
+  "title": "Enhancing trading strategies by combining incremental reinforcement learning and self-supervised prediction",
+  "year": 2025,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2025.128297",
+  "cites": 13,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4409535629": {
+  "title": "Global Cross-Market Trading Optimization Using Iterative Combined Algorithm: A Multi-Asset Approach with Stocks and Cryptocurrencies",
+  "year": 2025,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math13081317",
+  "cites": 8,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4406873058": {
+  "title": "A novel strongly-typed Genetic Programming algorithm for combining sentiment and technical analysis for algorithmic trading",
+  "year": 2025,
+  "venue": "Knowledge-Based Systems",
+  "vtype": "journal",
+  "issn": "0950-7051",
+  "doi": "https://doi.org/10.1016/j.knosys.2025.113054",
+  "cites": 7,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4414171700": {
+  "title": "Enhancing deep reinforcement learning for stock trading: a reward shaping approach via expert feedback",
+  "year": 2025,
+  "venue": "Knowledge and Information Systems",
+  "vtype": "journal",
+  "issn": "0219-1377",
+  "doi": "https://doi.org/10.1007/s10115-025-02562-8",
+  "cites": 5,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7118182951": {
+  "title": "A Hybrid SVR-Based Framework for Cryptocurrency Price Forecasting and Strategy Backtesting",
+  "year": 2026,
+  "venue": "Applied Artificial Intelligence",
+  "vtype": "journal",
+  "issn": "0883-9514",
+  "doi": "https://doi.org/10.1080/08839514.2026.2612793",
+  "cites": 5,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4413225557": {
+  "title": "A Deep Reinforcement Learning Framework for Strategic Indian NIFTY 50 Index Trading",
+  "year": 2025,
+  "venue": "AI",
+  "vtype": "journal",
+  "issn": "2673-2688",
+  "doi": "https://doi.org/10.3390/ai6080183",
+  "cites": 3,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4407626504": {
+  "title": "SDELP-DDPG: Stochastic differential equations with Lévy processes-driven deep deterministic policy gradient for portfolio management",
+  "year": 2025,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2025.126822",
+  "cites": 4,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4408612909": {
+  "title": "A robust approach to resiliency enhancement of distribution system using ensembled deep reinforcement learning",
+  "year": 2025,
+  "venue": "Energy Systems",
+  "vtype": "journal",
+  "issn": "1868-3967",
+  "doi": "https://doi.org/10.1007/s12667-025-00729-4",
+  "cites": 4,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4406354214": {
+  "title": "Effective Learning Mechanism Based on Reward-Oriented Hierarchies for Sim-to-Real Adaption in Autonomous Driving Systems",
+  "year": 2025,
+  "venue": "IEEE Transactions on Intelligent Transportation Systems",
+  "vtype": "journal",
+  "issn": "1524-9050",
+  "doi": "https://doi.org/10.1109/tits.2024.3524882",
+  "cites": 3,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4406731463": {
+  "title": "Exploring Leading Practices in Algorithmic Trading",
+  "year": 2025,
+  "venue": "Advances in finance, accounting, and economics book series",
+  "vtype": "book series",
+  "issn": "2327-5677",
+  "doi": "https://doi.org/10.4018/979-8-3693-8186-1.ch006",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4409269310": {
+  "title": "Hybrids of Reinforcement Learning and Evolutionary Computation in Finance: A Survey",
+  "year": 2025,
+  "venue": "ACM Computing Surveys",
+  "vtype": "journal",
+  "issn": "0360-0300",
+  "doi": "https://doi.org/10.1145/3728634",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4414247080": {
+  "title": "A New Method Based on Hierarchical Belief Rule Base with Balanced Accuracy and Interpretability for Stock Price Trend Prediction",
+  "year": 2025,
+  "venue": "Symmetry",
+  "vtype": "journal",
+  "issn": "2073-8994",
+  "doi": "https://doi.org/10.3390/sym17091550",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416114004": {
+  "title": "Explaining Neural Networks: Hierarchical Backpropagated Ensemble Learning",
+  "year": 2025,
+  "venue": "IEEE Transactions on Neural Networks and Learning Systems",
+  "vtype": "journal",
+  "issn": "2162-237X",
+  "doi": "https://doi.org/10.1109/tnnls.2025.3625434",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416214746": {
+  "title": "Reinforcement Learning in Multi-Asset Trading: Integrating Temporal-Frequency Features and Novel Risk-Adaptability Indices",
+  "year": 2025,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2025.3633234",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416649813": {
+  "title": "train_fmu_gym: A Functional Mock-up Unit-Based Framework to Train Reinforcement Learning Agents for Multi-Physical Systems",
+  "year": 2025,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2025.3636787",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4414039849": {
+  "title": "FinRL Contests: Data‐Driven Financial Reinforcement Learning Agents for Stock and Crypto Trading",
+  "year": 2025,
+  "venue": "Artificial Intelligence for Engineering",
+  "vtype": "journal",
+  "issn": "3067-2481",
+  "doi": "https://doi.org/10.1049/aie2.12004",
+  "cites": 3,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4410546879": {
+  "title": "Deep Q network with action retention for going long and short selling",
+  "year": 2025,
+  "venue": "Applied Soft Computing",
+  "vtype": "journal",
+  "issn": "1568-4946",
+  "doi": "https://doi.org/10.1016/j.asoc.2025.113252",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4413267794": {
+  "title": "IMed-CNN: Ensemble Learning Approach With Systematic Model Dropout for Enhanced Medical Image Classification Using Image Channels and Pixel Intervals",
+  "year": 2025,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2025.3593046",
+  "cites": 2,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416822322": {
+  "title": "Green fees: Sustainability impacts on portfolio management",
+  "year": 2025,
+  "venue": "International Review of Financial Analysis",
+  "vtype": "journal",
+  "issn": "1057-5219",
+  "doi": "https://doi.org/10.1016/j.irfa.2025.104812",
+  "cites": 1,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4417160650": {
+  "title": "Feature configuration effects in DRL portfolio management: a risk-focused evaluation under market stress",
+  "year": 2025,
+  "venue": "Quantitative Finance",
+  "vtype": "journal",
+  "issn": "1469-7688",
+  "doi": "https://doi.org/10.1080/14697688.2025.2592822",
+  "cites": 1,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7115084932": {
+  "title": "RiskawareTrader: A Reinforcement Learning based Portfolio Optimization for Risk Averter",
+  "year": 2025,
+  "venue": "International Journal of Computational Intelligence Systems",
+  "vtype": "journal",
+  "issn": "1875-6883",
+  "doi": "https://doi.org/10.1007/s44196-025-01094-x",
+  "cites": 1,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4411447111": {
+  "title": "A New DAPO Algorithm for Stock Trading",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ids66066.2025.00013",
+  "cites": 1,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4413167416": {
+  "title": "ChronosRL: embeddings-based reinforcement learning agent for financial trading",
+  "year": 2025,
+  "venue": "Procedia Computer Science",
+  "vtype": "journal",
+  "issn": "1877-0509",
+  "doi": "https://doi.org/10.1016/j.procs.2025.07.132",
+  "cites": 1,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4406863899": {
+  "title": "Whose Right Is It Anyway? Challenging the Copyright Claim of AI in India",
+  "year": 2025,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-981-97-8457-8_25",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4409815606": {
+  "title": "Analyzing and Predicting the Volatile Market Patterns for Trading in International Markets Using a Digital Twin",
+  "year": 2025,
+  "venue": "Communications in computer and information science",
+  "vtype": "book series",
+  "issn": "1865-0929",
+  "doi": "https://doi.org/10.1007/978-3-031-89813-6_9",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4411447026": {
+  "title": "Option-Driven Sentiment in FinRL: a PPO Approach to Trading",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ids66066.2025.00020",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4411505650": {
+  "title": "Comparative Analysis of Reinforcement Learning Algorithms for Decision Making in Algorithmic Trading",
+  "year": 2025,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-981-96-2179-8_31",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4412453824": {
+  "title": "Proliferation of SMEs in South Africa: modelling the challenges and outcomes of selling-to-finish",
+  "year": 2025,
+  "venue": "International Journal of Business Ecosystem and Strategy (2687-2293)",
+  "vtype": "journal",
+  "issn": "2687-2293",
+  "doi": "https://doi.org/10.36096/ijbes.v7i3.796",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4412789863": {
+  "title": "Research on dynamic multi-strategy integration of quantitative trading based on deep reinforcement learning",
+  "year": 2025,
+  "venue": "Guangdong-Hong Kong-Macao Greater Bay Area International Conference on Digital Economy and Artificial Intelligence (DEAI)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3745238.3745272",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4414080711": {
+  "title": "Adaptive Asset Allocation With Hierarchical Reinforcement Learning",
+  "year": 2025,
+  "venue": "IGI Global eBooks",
+  "vtype": "ebook platform",
+  "issn": null,
+  "doi": "https://doi.org/10.4018/979-8-3373-2838-6.ch006",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416242275": {
+  "title": "Enhancing Decision-Making in Complex Environments: A Multi-Expert Decision System and Simulation-Driven Efficiency Measurement Approach",
+  "year": 2025,
+  "venue": "Group Decision and Negotiation",
+  "vtype": "journal",
+  "issn": "0926-2644",
+  "doi": "https://doi.org/10.1007/s10726-025-09937-w",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4416593133": {
+  "title": "Generalized Fitted Q‐Iteration With Clustered Data",
+  "year": 2025,
+  "venue": "Stat",
+  "vtype": "journal",
+  "issn": "2049-1573",
+  "doi": "https://doi.org/10.1002/sta4.70112",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7117327826": {
+  "title": "Minimal shortfall strategies for liquidation of a basket of stocks using reinforcement learning",
+  "year": 2025,
+  "venue": "International Journal of Financial Engineering",
+  "vtype": "journal",
+  "issn": "2424-7863",
+  "doi": "https://doi.org/10.1142/s2424786325500264",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7118797121": {
+  "title": "Dynamic factor-informed reinforcement learning for enhancing portfolio optimization",
+  "year": 2026,
+  "venue": "Financial Innovation",
+  "vtype": "journal",
+  "issn": "2199-4730",
+  "doi": "https://doi.org/10.1186/s40854-025-00803-x",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7124174787": {
+  "title": "Optimizing stock portfolios with deep reinforcement learning after FNN-based fundamental analysis",
+  "year": 2026,
+  "venue": "Quantitative Finance",
+  "vtype": "journal",
+  "issn": "1469-7688",
+  "doi": "https://doi.org/10.1080/14697688.2025.2604770",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7125945315": {
+  "title": "Leveraging Transformer-Based Pretrained Embeddings for Reinforcement Learning in Cryptocurrency Trading",
+  "year": 2025,
+  "venue": "Conference proceedings/Conference proceedings - IEEE International Conference on Systems, Man, and Cybernetics",
+  "vtype": "conference",
+  "issn": "1062-922X",
+  "doi": "https://doi.org/10.1109/smc58881.2025.11343101",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7126245069": {
+  "title": "Language Model Orchestrated Financial Agents: An Open-Source Framework",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iconat66879.2025.11362528",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7128299538": {
+  "title": "Performance Evaluation of Bidirectional Long Short-Term Memory Optimizers for Prediction of Stock Market Prices",
+  "year": 2026,
+  "venue": "Lecture notes in networks and systems",
+  "vtype": "book series",
+  "issn": "2367-3370",
+  "doi": "https://doi.org/10.1007/978-981-95-3486-9_25",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7134899637": {
+  "title": "Reinforcement Learning for the Development of Trading Strategies with Market-Uncorrelated Returns",
+  "year": 2025,
+  "venue": "Proceedings/Proceedings - International Conference of the Chilean Computer Science Society",
+  "vtype": "conference",
+  "issn": "1522-4902",
+  "doi": "https://doi.org/10.1109/sccc67219.2025.11420568",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7138935366": {
+  "title": "A deep reinforcement learning-based automated stock market trading agent",
+  "year": 2026,
+  "venue": "AIP conference proceedings",
+  "vtype": "journal",
+  "issn": "0094-243X",
+  "doi": "https://doi.org/10.1063/5.0317673",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7155034247": {
+  "title": "Multi-Expert Proximal Policy Optimization with Sharpe-Driven Selection for Adaptive Financial Trading Using Reinforcement Learning Framework",
+  "year": 2026,
+  "venue": "International Conference on Innovative Computing, Intelligent Communication and Smart Electrical Systems (ICSES)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/icses66558.2026.11478991",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7157657346": {
+  "title": "Attention-Driven Deep RL for Portfolio Management: Temporal and Asset-Wise Signals",
+  "year": 2026,
+  "venue": "Communications in computer and information science",
+  "vtype": "book series",
+  "issn": "1865-0929",
+  "doi": "https://doi.org/10.1007/978-981-92-0126-6_3",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7162641929": {
+  "title": "Adversarial Learning for Fraud Detection",
+  "year": 2026,
+  "venue": "Springer eBooks",
+  "vtype": "ebook platform",
+  "issn": null,
+  "doi": "https://doi.org/10.1007/978-3-032-18765-9_11",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7164175644": {
+  "title": "Confidence-Aware Reward Shaping for Crypto Trading: A Comparative Study of Lightweight Uncertainty Estimation Methods",
+  "year": 2026,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math14122075",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7164297264": {
+  "title": "Trading Policy Optimization Using Deep Reinforcement Learning for the Dhaka Stock Exchange",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/qpain69676.2026.11545904",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7164682091": {
+  "title": "A multimodal data-driven ensemble deep reinforcement learning model for automated cryptocurrency trading",
+  "year": 2026,
+  "venue": "International Journal of Data Science and Analytics",
+  "vtype": "journal",
+  "issn": "2364-415X",
+  "doi": "https://doi.org/10.1007/s41060-026-01175-w",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7166132437": {
+  "title": "Incorporating Realistic Margin Constraints: A Data-Driven Deep Reinforcement Learning Framework for Advanced Portfolio Management",
+  "year": 2026,
+  "venue": "IEEE Transactions on Knowledge and Data Engineering",
+  "vtype": "journal",
+  "issn": "1041-4347",
+  "doi": "https://doi.org/10.1109/tkde.2026.3701681",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7166659831": {
+  "title": "Enhancing Model Generalization in Index Futures Markets via Evolutionary Optimization and Data Leakage-Free Feature Engineering",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-3-032-30488-9_34",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7166860028": {
+  "title": "Deep Reinforcement Learning Framework for Automated Trading Decision Support Systems",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/ci2a69097.2026.11576883",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7167470376": {
+  "title": "459Chapter 19 Deep Reinforcement Learning in Financial Trading and Management",
+  "year": 2026,
+  "venue": "De Gruyter eBooks",
+  "vtype": "ebook platform",
+  "issn": null,
+  "doi": "https://doi.org/10.1515/9783111633909-019",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7167572746": {
+  "title": "A Unified Multi-Modal Framework for Intelligent Financial Systems: Integrating Reinforcement Learning, High-Frequency Trading, and Game-Theoretic Approaches with Cross-Modal Sentiment Analysis",
+  "year": 2026,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math14132437",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7167833660": {
+  "title": "Systematic review of reinforcement learning for automated equity portfolio management from single agent to multi agent systems",
+  "year": 2026,
+  "venue": "Discover Computing",
+  "vtype": "journal",
+  "issn": "2948-2992",
+  "doi": "https://doi.org/10.1007/s10791-026-10336-1",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7168147241": {
+  "title": "AlphaSeek: Trajectory-Level Self-iterative Factor Mining Framework for Multi-source Financial Data",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-981-92-3400-4_22",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7169811349": {
+  "title": "Paradigm Shift in Quantitative Investment Driven by Large Language Models and Graph Spatiotemporal Networks: A Deep Empirical Study based on Market-Implied Sentiment and Neuro-Symbolic Systems",
+  "year": 2026,
+  "venue": "WSEAS Transactions on Circuits and Systems archive",
+  "vtype": "journal",
+  "issn": "1109-2734",
+  "doi": "https://doi.org/10.37394/23201.2026.25.23",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7171487767": {
+  "title": "Enhanced Diffusion Policy for Robust Multimodal Stock Trading through the Integration of Technical Indicators and Fundamental News",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iicai70155.2026.11621054",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7171867413": {
+  "title": "Dynamics of Boltzmannian temporal difference reinforcement learning in social dilemmas",
+  "year": 2026,
+  "venue": "Chaos Solitons & Fractals",
+  "vtype": "journal",
+  "issn": "0960-0779",
+  "doi": "https://doi.org/10.1016/j.chaos.2026.118875",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7197002970": {
+  "title": "Generative AI and Large Language Models for Financial Markets: From Behavioral Prediction to Autonomous Trading",
+  "year": 2026,
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3770855.3816459",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7203878465": {
+  "title": "Portfolio Optimization with TD3 Algorithm Using Technical Indicators",
+  "year": 2026,
+  "venue": "EAI/Springer Innovations in Communication and Computing",
+  "vtype": "book series",
+  "issn": "2522-8595",
+  "doi": "https://doi.org/10.1007/978-3-032-32104-6_55",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7204605644": {
+  "title": "A survey on LLM-enhanced reinforcement learning in financial markets",
+  "year": 2026,
+  "venue": "Discover Artificial Intelligence",
+  "vtype": "journal",
+  "issn": "2731-0809",
+  "doi": "https://doi.org/10.1007/s44163-026-02018-0",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7204722079": {
+  "title": "Intelligent agents: architectures, learning paradigms, deployment models, and applications",
+  "year": 2026,
+  "venue": "Evolutionary Intelligence",
+  "vtype": "journal",
+  "issn": "1864-5909",
+  "doi": "https://doi.org/10.1007/s12065-026-01259-3",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7213391848": {
+  "title": "Ensemble Deep Reinforcement Learning (DRL) for Adaptive Crypto Trading with Risk Control",
+  "year": 2026,
+  "venue": "International Conference on Trends in Quantum Computing and Emerging Business Technologies (TQCEBT)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/tqcebt67648.2026.11681775",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W7214123526": {
+  "title": "Dynamic-Flooding Transformer Ensembles for Reinforcement-Learning-Based Equity Market Timing",
+  "year": 2026,
+  "venue": "IEEE Access",
+  "vtype": "journal",
+  "issn": "2169-3536",
+  "doi": "https://doi.org/10.1109/access.2026.3734627",
+  "cites": 0,
+  "via": [
+   "Yang2020_Ensemble"
+  ]
+ },
+ "https://openalex.org/W4411955230": {
+  "title": "A multivariate time series prediction model based on the KAN network",
+  "year": 2025,
+  "venue": "Scientific Reports",
+  "vtype": "journal",
+  "issn": "2045-2322",
+  "doi": "https://doi.org/10.1038/s41598-025-07654-7",
+  "cites": 17,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4410636618": {
+  "title": "Ploutos: Towards Explainable Stock Movement Prediction with Financial Large Language Model",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3701716.3715254",
+  "cites": 8,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4408787756": {
+  "title": "Unraveling asset pricing with AI: A systematic literature review",
+  "year": 2025,
+  "venue": "Applied Soft Computing",
+  "vtype": "journal",
+  "issn": "1568-4946",
+  "doi": "https://doi.org/10.1016/j.asoc.2025.112978",
+  "cites": 7,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4411396480": {
+  "title": "Stock investment selection via time series subpatterns and multi-relationship fusion",
+  "year": 2025,
+  "venue": "Pattern Recognition",
+  "vtype": "journal",
+  "issn": "0031-3203",
+  "doi": "https://doi.org/10.1016/j.patcog.2025.111919",
+  "cites": 7,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4414705030": {
+  "title": "EMAT: Enhanced Multi-Aspect Attention Transformer for Financial Time Series Forecasting",
+  "year": 2025,
+  "venue": "Entropy",
+  "vtype": "journal",
+  "issn": "1099-4300",
+  "doi": "https://doi.org/10.3390/e27101029",
+  "cites": 7,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4409149792": {
+  "title": "Learning Universal Multi-level Market Irrationality Factors to Improve Stock Return Forecasting",
+  "year": 2025,
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3690624.3709328",
+  "cites": 5,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4416078608": {
+  "title": "Mixture-of-KAN for Multivariate Time Series Forecasting",
+  "year": 2025,
+  "venue": "ACM International Conference on Information and Knowledge Management (CIKM)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3746252.3760836",
+  "cites": 3,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4416428015": {
+  "title": "GHOST: Sentiment-gated mamba and stock-wise tokenization attention for enhanced stock prediction",
+  "year": 2025,
+  "venue": "Expert Systems with Applications",
+  "vtype": "journal",
+  "issn": "0957-4174",
+  "doi": "https://doi.org/10.1016/j.eswa.2025.130474",
+  "cites": 2,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4416814814": {
+  "title": "Adv-SHNets: a stock movement prediction framework based on hierarchy LSTM networks",
+  "year": 2025,
+  "venue": "International Journal of Data Science and Analytics",
+  "vtype": "journal",
+  "issn": "2364-415X",
+  "doi": "https://doi.org/10.1007/s41060-025-00915-8",
+  "cites": 2,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4407666437": {
+  "title": "A Comprehensive Investigation of Reinforcement Learning-based Financial Quantitative Analysis: Taking Stock Trading and Risk Control as Examples",
+  "year": 2025,
+  "venue": "ITM Web of Conferences",
+  "vtype": "journal",
+  "issn": "2271-2097",
+  "doi": "https://doi.org/10.1051/itmconf/20257301010",
+  "cites": 2,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4411549660": {
+  "title": "CSPO: Cross-Market Synergistic Stock Price Movement Forecasting with Pseudo-volatility Optimization",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3701716.3715216",
+  "cites": 2,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4410636952": {
+  "title": "MERA: Mixture of Experts with Retrieval-Augmented Representation for Modeling Diversified Stock Patterns",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3701716.3715513",
+  "cites": 1,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4412514765": {
+  "title": "CDFNet: Collaborative Decomposition and Forecasting Network for Time Series",
+  "year": 2025,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-981-96-9875-2_38",
+  "cites": 1,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4414334067": {
+  "title": "Risk-Aware Crypto Price Prediction Using DQN with Volatility-Adjusted Rewards Across Multi-Period State Representations",
+  "year": 2025,
+  "venue": "Mathematics",
+  "vtype": "journal",
+  "issn": "2227-7390",
+  "doi": "https://doi.org/10.3390/math13183012",
+  "cites": 1,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7123433102": {
+  "title": "KG-TRT2V: Fusing Knowledge Graph and Time2vec based Transformer for Stock Movement Prediction",
+  "year": 2025,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/bdai66031.2025.11325201",
+  "cites": 1,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4411551139": {
+  "title": "FD-RLPO: Feature Domain-based Reinforcement Learning Framework for Portfolio Optimization",
+  "year": 2025,
+  "venue": "International Conference on Computer Supported Cooperative Work in Design (CSCWD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/cscwd64889.2025.11033372",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4412560279": {
+  "title": "From Bias to Behavior: Learning Bull-Bear Market Dynamics with Contrastive Modeling to Be Shown on Acceptance",
+  "year": 2025,
+  "venue": "SSRN Electronic Journal",
+  "vtype": "repository",
+  "issn": "1556-5068",
+  "doi": "https://doi.org/10.2139/ssrn.5362064",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4412790038": {
+  "title": "AI-Powered Portfolio Management: Leveraging Multiple Reinforcement Learning Algorithms for Dynamic Factor Investing in HK market",
+  "year": 2025,
+  "venue": "Guangdong-Hong Kong-Macao Greater Bay Area International Conference on Digital Economy and Artificial Intelligence (DEAI)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3745238.3745369",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W4416016833": {
+  "title": "Adaptive Bidirectional State Space Model for High-frequency Portfolio Management",
+  "year": 2025,
+  "venue": "ACM International Conference on Information and Knowledge Management (CIKM)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3746252.3761246",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7125633527": {
+  "title": "QuantVisExplorer: a multi-perspective visual analytics system for quantitative investment",
+  "year": 2026,
+  "venue": "Journal of Visualization",
+  "vtype": "journal",
+  "issn": "1343-8875",
+  "doi": "https://doi.org/10.1007/s12650-026-01106-8",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7167235375": {
+  "title": "Multi-modal fusion approaches for stock market prediction: A comprehensive survey",
+  "year": 2026,
+  "venue": "Pattern Recognition",
+  "vtype": "journal",
+  "issn": "0031-3203",
+  "doi": "https://doi.org/10.1016/j.patcog.2026.114384",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7168156776": {
+  "title": "DeepIndicator: A Decision-Aware Multi-factor Rebalancing Framework via Reinforcement Learning",
+  "year": 2026,
+  "venue": "Lecture notes in computer science",
+  "vtype": "book series",
+  "issn": "0302-9743",
+  "doi": "https://doi.org/10.1007/978-981-92-3400-4_27",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7171309689": {
+  "title": "FIRFormer : Transformer With Frequency‐Aware Fusion and Recalibrated Attention for Time Series Forecasting",
+  "year": 2026,
+  "venue": "Expert Systems",
+  "vtype": "journal",
+  "issn": "0266-4720",
+  "doi": "https://doi.org/10.1111/exsy.70378",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7196961339": {
+  "title": "Causal-DFM: Diffusion-Based Causal-Invariant Dynamic Factor Model for Stock Return Prediction",
+  "year": 2026,
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3770855.3818050",
+  "cites": 0,
+  "via": [
+   "Gao2023_StockFormer"
+  ]
+ },
+ "https://openalex.org/W7167259811": {
+  "title": "Evolution of Portfolio Selection Literature: A Bibliometric Study with Emphasis on AI, ML, and DEA Models",
+  "year": 2026,
+  "venue": "Lecture notes in operations research",
+  "vtype": "book series",
+  "issn": "2731-040X",
+  "doi": "https://doi.org/10.1007/978-3-032-23493-3_7",
+  "cites": 1,
+  "via": [
+   "Choi2024_DeepClair"
+  ]
+ },
+ "https://openalex.org/W7155182246": {
+  "title": "A deep reinforcement learning approach for portfolio rebalancing with Dragon Pullback multi-stage candlestick pattern embedding",
+  "year": 2026,
+  "venue": "Engineering Applications of Artificial Intelligence",
+  "vtype": "journal",
+  "issn": "0952-1976",
+  "doi": "https://doi.org/10.1016/j.engappai.2026.114876",
+  "cites": 1,
+  "via": [
+   "Ayari2025"
+  ]
+ },
+ "https://openalex.org/W4407426708": {
+  "title": "Artificial Intelligence Applications in Financial Technology",
+  "year": 2025,
+  "venue": "Journal of theoretical and applied electronic commerce research",
+  "vtype": "journal",
+  "issn": "0718-1876",
+  "doi": "https://doi.org/10.3390/jtaer20010029",
+  "cites": 11,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7135425110": {
+  "title": "Adaptive alpha weighting with PPO: enhancing prompt-based LLM-generated alphas in quant trading",
+  "year": 2026,
+  "venue": "International Journal of Data Science and Analytics",
+  "vtype": "journal",
+  "issn": "2364-415X",
+  "doi": "https://doi.org/10.1007/s41060-026-01072-2",
+  "cites": 1,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7160011467": {
+  "title": "Hybrid LSTM and PPO Networks for Dynamic Portfolio Optimization",
+  "year": 2025,
+  "venue": "Artificial Intelligence and Cloud Computing Conference (AICCC)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1145/3789982.3790022",
+  "cites": 1,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W4410569329": {
+  "title": "Reinforcement Learning for Dynamic Portfolio Optimization in Fintech",
+  "year": 2025,
+  "venue": "Journal of Information Systems Engineering & Management",
+  "vtype": "journal",
+  "issn": "2468-4376",
+  "doi": "https://doi.org/10.52783/jisem.v10i45s.9118",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W4411770125": {
+  "title": "Optimal asset allocation using visual programming techniques: A quantitative analysis based on an ESG portfolio",
+  "year": 2025,
+  "venue": "International Journal of Financial Engineering",
+  "vtype": "journal",
+  "issn": "2424-7863",
+  "doi": "https://doi.org/10.1142/s2424786325500045",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7117362961": {
+  "title": "Text based hierarchical risk parity (TBHRP)",
+  "year": 2025,
+  "venue": "Financial markets and portfolio management",
+  "vtype": "journal",
+  "issn": "1555-4961",
+  "doi": "https://doi.org/10.1007/s11408-025-00491-8",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7162113326": {
+  "title": "Conceptual Model of Risk Based Artificial Intelligence Management System in Financial Technology",
+  "year": 2026,
+  "venue": null,
+  "vtype": null,
+  "issn": null,
+  "doi": "https://doi.org/10.1109/iccraids67816.2026.11519573",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7166505366": {
+  "title": "Adaptive equity investing strategies via attention-based deep reinforcement learning",
+  "year": 2026,
+  "venue": "Pacific-Basin Finance Journal",
+  "vtype": "journal",
+  "issn": "0927-538X",
+  "doi": "https://doi.org/10.1016/j.pacfin.2026.103284",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7169578012": {
+  "title": "The role of deep reinforcement learning in portfolio optimization with cryptocurrency inclusion: a systematic literature review",
+  "year": 2026,
+  "venue": "Procedia Computer Science",
+  "vtype": "journal",
+  "issn": "1877-0509",
+  "doi": "https://doi.org/10.1016/j.procs.2026.07.009",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ },
+ "https://openalex.org/W7202209102": {
+  "title": "Yapay Arı Kolonisi Tabanlı Portföy Optimizasyonu ve Derin Pekiştirmeli Öğrenme ile Hibrit Risk Yönetimi",
+  "year": 2026,
+  "venue": "Signal Processing and Communications Applications Conference (SIU)",
+  "vtype": "conference",
+  "issn": null,
+  "doi": "https://doi.org/10.1109/siu71813.2026.11636838",
+  "cites": 0,
+  "via": [
+   "Millea2022_HRP"
+  ]
+ }
+}

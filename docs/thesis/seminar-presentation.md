@@ -1,5 +1,7 @@
 # Seminer Sunumu — 10 Slayt İçeriği (Notebook LM için)
 
+> **⚠️ Sürüm notu (2026-10-06):** Mayıs 2026 seminer materyali; kayıt olarak değiştirilmeden korunuyor. "Leakage yok", "literatürde karşılığı yok / BIST'te çalışma yok denecek kadar az" ifadeleri ve TATS'ın katkı gibi sunulması Ekim 2026 literatür doğrulamasıyla geçerliliğini yitirdi. Güncel durum: [seminar-overview.md](seminar-overview.md) başındaki sürüm notu ve [vision-and-scope.md](vision-and-scope.md) v0.2.
+
 **Kullanım:** Her slayt için **(a) başlık**, **(b) slayta yazılacak madde/metin**, **(c) konuşma metni (anlatım)**, **(d) görsel önerisi / nasıl üretilir** verilmiştir. Notebook LM'e slayt slayt verebilir, ya da bu dosyayı kaynak olarak yükleyip aşağıdaki prompt'u verebilirsin. Görselleri kendin Plotly/draw.io/Excalidraw/mermaid.live ile veya bu repodaki dashboard ekran görüntüleriyle üretebilirsin.
 
 **Sunum süresi tahmini:** 13-17 dakika (slayt başına ~1-1.5 dk; Gantt ve yayın slaytları kısa tutulabilir).

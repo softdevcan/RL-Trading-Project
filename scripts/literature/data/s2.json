@@ -1,0 +1,3718 @@
+{
+ "Ansari2024": {
+  "paperId": "304eddf9f8eb34a6f7b53cb999765eca3a03cf2b",
+  "externalIds": {
+   "DBLP": "journals/access/AnsariGBLMR24",
+   "DOI": "10.1109/ACCESS.2024.3418510",
+   "CorpusId": 270713725
+  },
+  "publicationVenue": {
+   "id": "2633f5b2-c15c-49fe-80f5-07523e770c26",
+   "name": "IEEE Access",
+   "type": "journal",
+   "issn": "2169-3536",
+   "url": "http://www.ieee.org/publications_standards/publications/ieee_access.html",
+   "alternate_urls": [
+    "http://ieeexplore.ieee.org/servlet/opac?punumber=6287639"
+   ]
+  },
+  "title": "A Multifaceted Approach to Stock Market Trading Using Reinforcement Learning",
+  "venue": "IEEE Access",
+  "year": 2024,
+  "citationCount": 10,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "18076775",
+    "name": "Yasmeen Ansari"
+   },
+   {
+    "authorId": "9250788",
+    "name": "S. Gillani"
+   },
+   {
+    "authorId": "2046959684",
+    "name": "Maryam Bukhari"
+   },
+   {
+    "authorId": "2171157411",
+    "name": "Byeong Guk Lee"
+   },
+   {
+    "authorId": "143792811",
+    "name": "M. Maqsood"
+   },
+   {
+    "authorId": "2237923517",
+    "name": "Seungmin Rho"
+   }
+  ]
+ },
+ "Lee2020_MAPS": {
+  "paperId": "5f485757243d69c61ef332c9ed5566e56a3ad88f",
+  "externalIds": {
+   "MAG": "3104176526",
+   "ArXiv": "2007.05402",
+   "DBLP": "journals/corr/abs-2007-05402",
+   "DOI": "10.24963/ijcai.2020/623",
+   "CorpusId": 267926179
+  },
+  "publicationVenue": {
+   "id": "67f7f831-711a-43c8-8785-1e09005359b5",
+   "name": "International Joint Conference on Artificial Intelligence",
+   "type": "conference",
+   "alternate_names": [
+    "Int Jt Conf Artif Intell",
+    "IJCAI"
+   ],
+   "url": "http://www.ijcai.org/"
+  },
+  "title": "MAPS: Multi-Agent reinforcement learning-based Portfolio management System",
+  "venue": "International Joint Conference on Artificial Intelligence",
+  "year": 2020,
+  "citationCount": 46,
+  "influentialCitationCount": 6,
+  "authors": [
+   {
+    "authorId": "2287764304",
+    "name": "Jin-Ho Lee"
+   },
+   {
+    "authorId": "2054540583",
+    "name": "Raehyun Kim"
+   },
+   {
+    "authorId": "70541105",
+    "name": "Seokho Yi"
+   },
+   {
+    "authorId": "2274215892",
+    "name": "Jaewoo Kang"
+   }
+  ]
+ },
+ "Huang2022_MSPM": {
+  "paperId": "1a32788f3b4e34962bc91040bbc4a12e8d48ebc1",
+  "externalIds": {
+   "PubMedCentral": "8856562",
+   "DBLP": "journals/corr/abs-2102-03502",
+   "ArXiv": "2102.03502",
+   "DOI": "10.1371/journal.pone.0263689",
+   "CorpusId": 231846835,
+   "PubMed": "35180235"
+  },
+  "publicationVenue": {
+   "id": "0aed7a40-85f3-4c66-9e1b-c1556c57001b",
+   "name": "PLoS ONE",
+   "type": "journal",
+   "alternate_names": [
+    "Plo ONE",
+    "PLOS ONE",
+    "PLO ONE"
+   ],
+   "issn": "1932-6203",
+   "url": "https://journals.plos.org/plosone/",
+   "alternate_urls": [
+    "http://www.plosone.org/"
+   ]
+  },
+  "title": "MSPM: A modularized and scalable multi-agent reinforcement learning-based system for financial portfolio management",
+  "venue": "PLoS ONE",
+  "year": 2021,
+  "citationCount": 40,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "2151324431",
+    "name": "Zhenhan Huang"
+   },
+   {
+    "authorId": "2820127",
+    "name": "Fumihide Tanaka"
+   }
+  ]
+ },
+ "Li2024_MASA": {
+  "paperId": "6c44420f393062b69ffd947dfab513767d30b7da",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2402-00515",
+   "ArXiv": "2402.00515",
+   "DOI": "10.48550/arXiv.2402.00515",
+   "CorpusId": 267364984
+  },
+  "publicationVenue": {
+   "id": "6c3a9833-5fac-49d3-b7e7-64910bd40b4e",
+   "name": "Adaptive Agents and Multi-Agent Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Adapt Agent Multi-agent Syst",
+    "International Joint Conference on Autonomous Agents & Multiagent Systems",
+    "Adapt Agent Multi-agents Syst",
+    "AAMAS",
+    "Adaptive Agents and Multi-Agents Systems",
+    "Int Jt Conf Auton Agent  Multiagent Syst"
+   ],
+   "url": "http://www.ifaamas.org/"
+  },
+  "title": "Developing A Multi-Agent and Self-Adaptive Framework with Deep Reinforcement Learning for Dynamic Portfolio Risk Management",
+  "venue": "Adaptive Agents and Multi-Agent Systems",
+  "year": 2024,
+  "citationCount": 18,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "2282330790",
+    "name": "Zheng-Long Li"
+   },
+   {
+    "authorId": "2282136444",
+    "name": "Vincent Tam"
+   },
+   {
+    "authorId": "2323632242",
+    "name": "K. L. Yeung"
+   }
+  ]
+ },
+ "Hao2025": {
+  "paperId": "74d176113845510b3624105c46cf72b1265f91e7",
+  "externalIds": {
+   "DOI": "10.1145/3746709.3746915",
+   "CorpusId": 281029755
+  },
+  "publicationVenue": null,
+  "title": "Collaborative Multi-Agent Reinforcement Learning Model for Portfolio Management",
+  "venue": "Proceedings of the 2025 6th International Conference on Computer Information and Big Data Applications",
+  "year": 2025,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2069718115",
+    "name": "Jin-Xin Hao"
+   },
+   {
+    "authorId": "2291078608",
+    "name": "Minghan Gao"
+   },
+   {
+    "authorId": "2379182278",
+    "name": "Youyun Han"
+   },
+   {
+    "authorId": "2291078320",
+    "name": "Qiang Gao"
+   }
+  ]
+ },
+ "Zhang2025_GAT": {
+  "paperId": "41aef079df5b68032c1c49d82994cf7a92f274b2",
+  "externalIds": {
+   "PubMedCentral": "12824360",
+   "DOI": "10.1038/s41598-025-32408-w",
+   "CorpusId": 284275010,
+   "PubMed": "41455760"
+  },
+  "publicationVenue": {
+   "id": "f99f77b7-b1b6-44d3-984a-f288e9884b9b",
+   "name": "Scientific Reports",
+   "type": "journal",
+   "alternate_names": [
+    "Sci Rep"
+   ],
+   "issn": "2045-2322",
+   "url": "http://www.nature.com/srep/",
+   "alternate_urls": [
+    "http://www.nature.com/srep/index.html"
+   ]
+  },
+  "title": "Graph attention-based heterogeneous multi-agent deep reinforcement learning for adaptive portfolio optimization",
+  "venue": "Scientific Reports",
+  "year": 2025,
+  "citationCount": 4,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2357494252",
+    "name": "Bingqi Zhang"
+   }
+  ]
+ },
+ "Sun2025_CAIS": {
+  "paperId": "4a21239e081ac5ab06091a70b88325b7784409d3",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2501-06832",
+   "ArXiv": "2501.06832",
+   "DOI": "10.1007/s40747-025-01884-y",
+   "CorpusId": 275471165
+  },
+  "publicationVenue": {
+   "id": "d30c9917-b233-46f4-a644-8e5cdf6d6c5e",
+   "name": "Complex & Intelligent Systems",
+   "type": "journal",
+   "alternate_names": [
+    "Complex  Intell Syst"
+   ],
+   "issn": "2199-4536",
+   "url": "https://link.springer.com/journal/40747",
+   "alternate_urls": [
+    "http://link.springer.com/journal/40747"
+   ]
+  },
+  "title": "A novel multi-agent dynamic portfolio optimization learning system based on hierarchical deep reinforcement learning",
+  "venue": "Complex & Intelligent Systems",
+  "year": 2025,
+  "citationCount": 20,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2068169846",
+    "name": "Ruoyu Sun"
+   },
+   {
+    "authorId": "2340756600",
+    "name": "Yue Xi"
+   },
+   {
+    "authorId": "40445042",
+    "name": "Angelos Stefanidis"
+   },
+   {
+    "authorId": "47653961",
+    "name": "Zhengyong Jiang"
+   },
+   {
+    "authorId": "2256158550",
+    "name": "Jiong-Long Su"
+   }
+  ]
+ },
+ "Khemlichi2025_MPLS": {
+  "paperId": "5fe4430e69af5b44d139867d60f2f1e9fd6b2ab1",
+  "externalIds": {
+   "DOI": "10.18280/mmep.120612",
+   "CorpusId": 280209713
+  },
+  "publicationVenue": null,
+  "title": "MPLS: A Modular Portfolio Learning System for Adaptive Portfolio Optimization",
+  "venue": "Mathematical Modelling of Engineering Problems",
+  "year": 2025,
+  "citationCount": 5,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2066896644",
+    "name": "Firdaous Khemlichi"
+   },
+   {
+    "authorId": "2328130",
+    "name": "Y. I. Khamlichi"
+   },
+   {
+    "authorId": "2487411511",
+    "name": "S. Ben Ali"
+   }
+  ]
+ },
+ "Kim2025_MAMA": {
+  "paperId": "b0ff41deda606c33443092438b776a8ba350808b",
+  "externalIds": {
+   "DBLP": "journals/access/KimL25k",
+   "DOI": "10.1109/ACCESS.2025.3632201",
+   "CorpusId": 283040178
+  },
+  "publicationVenue": {
+   "id": "2633f5b2-c15c-49fe-80f5-07523e770c26",
+   "name": "IEEE Access",
+   "type": "journal",
+   "issn": "2169-3536",
+   "url": "http://www.ieee.org/publications_standards/publications/ieee_access.html",
+   "alternate_urls": [
+    "http://ieeexplore.ieee.org/servlet/opac?punumber=6287639"
+   ]
+  },
+  "title": "Multi-Asset Multi-Agent Reinforcement Learning for Portfolio Management",
+  "venue": "IEEE Access",
+  "year": 2025,
+  "citationCount": 3,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2155565705",
+    "name": "Sang-Ho Kim"
+   },
+   {
+    "authorId": "2152545273",
+    "name": "Ki-Hoon Lee"
+   }
+  ]
+ },
+ "Yan2025": {
+  "paperId": "0577a22cfe8bc20203818579d1008d8acadbd363",
+  "externalIds": {
+   "DOI": "10.3390/electronics14051036",
+   "CorpusId": 276834807
+  },
+  "publicationVenue": {
+   "id": "ccd8e532-73c6-414f-bc91-271bbb2933e2",
+   "name": "Electronics",
+   "type": "journal",
+   "issn": "1450-5843",
+   "alternate_issns": [
+    "2079-9292",
+    "0883-4989"
+   ],
+   "url": "http://www.electronics.etfbl.net/",
+   "alternate_urls": [
+    "http://www.e-helvetica.nb.admin.ch/directAccess?callnumber=bel-247562",
+    "http://nbn-resolving.de/urn/resolver.pl?urn=urn:nbn:ch:bel-247562",
+    "https://www.mdpi.com/journal/electronics"
+   ]
+  },
+  "title": "A Deep-Reinforcement-Learning-Based Multi-Source Information Fusion Portfolio Management Approach via Sector Rotation",
+  "venue": "Electronics",
+  "year": 2025,
+  "citationCount": 6,
+  "influentialCitationCount": 1,
+  "authors": [
+   {
+    "authorId": "2276334157",
+    "name": "Yuxiao Yan"
+   },
+   {
+    "authorId": "2145156048",
+    "name": "Chang-Sheng Zhang"
+   },
+   {
+    "authorId": "2203303340",
+    "name": "Yang An"
+   },
+   {
+    "authorId": "2119454518",
+    "name": "Bin Zhang"
+   }
+  ]
+ },
+ "Chen2026_MARS": null,
+ "Ren2025_SAMP": {
+  "paperId": "f858b6f30aef1b0af7aa84c2d47dd983c459ed77",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2512-22895",
+   "ArXiv": "2512.22895",
+   "DOI": "10.48550/arXiv.2512.22895",
+   "CorpusId": 284311442
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "SAMP-HDRL: Segmented Allocation with Momentum-Adjusted Utility for Multi-agent Portfolio Management via Hierarchical Deep Reinforcement Learning",
+  "venue": "arXiv.org",
+  "year": 2025,
+  "citationCount": 1,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2087287353",
+    "name": "Xiaotian Ren"
+   },
+   {
+    "authorId": "2126496606",
+    "name": "Nuerxiati Abudurexiti"
+   },
+   {
+    "authorId": "47653961",
+    "name": "Zhengyong Jiang"
+   },
+   {
+    "authorId": "40445042",
+    "name": "Angelos Stefanidis"
+   },
+   {
+    "authorId": "2274418270",
+    "name": "Hongbin Liu"
+   },
+   {
+    "authorId": "2256158550",
+    "name": "Jiong-Long Su"
+   }
+  ]
+ },
+ "Kang2025_RLBHRP": {
+  "paperId": "db1498027294bcc4da370fc9a19f905f2a1a92c1",
+  "externalIds": {
+   "ArXiv": "2508.11856",
+   "CorpusId": 280677444
+  },
+  "publicationVenue": null,
+  "title": "Optimal Portfolio Construction -- A Reinforcement Learning Embedded Bayesian Hierarchical Risk Parity (RL-BHRP) Approach",
+  "venue": "",
+  "year": 2025,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2295283490",
+    "name": "Shao-Bo Kang"
+   },
+   {
+    "authorId": "2165002044",
+    "name": "Zeying Tian"
+   }
+  ]
+ },
+ "Coriat2025_HARLF": {
+  "paperId": "f0c126d84584950e0e243f10a0686950ef4da08a",
+  "externalIds": {
+   "ArXiv": "2507.18560",
+   "DBLP": "journals/corr/abs-2507-18560",
+   "DOI": "10.48550/arXiv.2507.18560",
+   "CorpusId": 280017786
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "HARLF: Hierarchical Reinforcement Learning and Lightweight LLM-Driven Sentiment Integration for Financial Portfolio Optimization",
+  "venue": "arXiv.org",
+  "year": 2025,
+  "citationCount": 2,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "6615538",
+    "name": "B. Coriat"
+   },
+   {
+    "authorId": "2064931395",
+    "name": "E. Benhamou"
+   }
+  ]
+ },
+ "Rout2026_Review": {
+  "paperId": "0b036d3c1db730418fd2503fa8c78c09b946cac6",
+  "externalIds": {
+   "DOI": "10.1007/s10791-026-10336-1",
+   "CorpusId": 290016337
+  },
+  "publicationVenue": null,
+  "title": "Systematic review of reinforcement learning for automated equity portfolio management from single agent to multi agent systems",
+  "venue": "Discover Computing",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2429315711",
+    "name": "Aditi Kumar Rout"
+   },
+   {
+    "authorId": "2288266215",
+    "name": "U. D. Acharya"
+   },
+   {
+    "authorId": "3200408",
+    "name": "Prakash K. Aithal"
+   },
+   {
+    "authorId": "2270519238",
+    "name": "Arpita Sharma"
+   }
+  ]
+ },
+ "Hung2026_SelfAttn": {
+  "paperId": "017336a9112b6d9cff88080fc0b076d40a20bf16",
+  "externalIds": {
+   "DBLP": "conf/ieaaie/HungH26",
+   "DOI": "10.1007/978-981-92-2888-1_19",
+   "CorpusId": 290968595
+  },
+  "publicationVenue": {
+   "id": "12b0a7ac-61a5-4dcf-9931-dab24274efd6",
+   "name": "International Conference on Industrial, Engineering and Other Applications of Applied Intelligent Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Int Conf Ind Eng Other Appl Appl Intell Syst",
+    "IEA/AIE-",
+    "Int Conf Ind Eng  Other Appl Appl Intell Syst",
+    "International Conference Industrial, Engineering & Other Applications Applied Intelligent Systems",
+    "IEA/AIE",
+    "Industrial and Engineering Applications of Artificial Intelligence and Expert Systems",
+    "Ind Eng Appl Artif Intell Expert Syst"
+   ],
+   "url": "https://link.springer.com/conference/ieaaie"
+  },
+  "title": "A Multi-agent Reinforcement Learning Approach with Self-attention for Multi-stock Portfolio Trading",
+  "venue": "International Conference on Industrial, Engineering and Other Applications of Applied Intelligent Systems",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "70568375",
+    "name": "Y. Hung"
+   },
+   {
+    "authorId": "2456528057",
+    "name": "Kuo-Chan Huang"
+   }
+  ]
+ },
+ "Yuan2026_EAAI": {
+  "paperId": "2c90141cb09d1c470474a2fd15dbf33c9f3cd542",
+  "externalIds": {
+   "DBLP": "journals/eaai/YuanWGGQLZ26",
+   "DOI": "10.1016/j.engappai.2026.114130",
+   "CorpusId": 285521010
+  },
+  "publicationVenue": {
+   "id": "1a24ea21-4c37-41d8-9e76-ab802d4afb3e",
+   "name": "Engineering applications of artificial intelligence",
+   "type": "journal",
+   "alternate_names": [
+    "Eng appl artif intell",
+    "Eng Appl Artif Intell",
+    "Engineering Applications of Artificial Intelligence"
+   ],
+   "issn": "0952-1976",
+   "url": "http://www.sciencedirect.com/science/journal/09521976"
+  },
+  "title": "Adaptive multi-agent stock trading decision support system based on deep reinforcement learning",
+  "venue": "Engineering applications of artificial intelligence",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2302916571",
+    "name": "Xu Yuan"
+   },
+   {
+    "authorId": "2362863145",
+    "name": "Jiaqiang Wang"
+   },
+   {
+    "authorId": "2261751046",
+    "name": "Shaokui Gu"
+   },
+   {
+    "authorId": "2362753283",
+    "name": "Yi Guo"
+   },
+   {
+    "authorId": "2290669316",
+    "name": "Ange Qi"
+   },
+   {
+    "authorId": "2362725767",
+    "name": "Shijin Li"
+   },
+   {
+    "authorId": "2402230552",
+    "name": "Liang Zhao"
+   }
+  ]
+ },
+ "ManiShankar2026": null,
+ "Ozturk2026_CWDE": null,
+ "Chaudhari2026_MAETS": null,
+ "Fang2023": {
+  "paperId": "45e23e8a576003dbba035c74f820f1c254c83a5d",
+  "externalIds": {
+   "DBLP": "conf/kdd/FangTRL00L00L23",
+   "ArXiv": "2307.03119",
+   "DOI": "10.1145/3580305.3599856",
+   "CorpusId": 259360940
+  },
+  "publicationVenue": {
+   "id": "a0edb93b-1e95-4128-a295-6b1659149cef",
+   "name": "Knowledge Discovery and Data Mining",
+   "type": "conference",
+   "alternate_names": [
+    "KDD",
+    "Knowl Discov Data Min"
+   ],
+   "url": "http://www.acm.org/sigkdd/"
+  },
+  "title": "Learning Multi-Agent Intention-Aware Communication for Optimal Multi-Order Execution in Finance",
+  "venue": "Knowledge Discovery and Data Mining",
+  "year": 2023,
+  "citationCount": 18,
+  "influentialCitationCount": 1,
+  "authors": [
+   {
+    "authorId": "10283826",
+    "name": "Yuchen Fang"
+   },
+   {
+    "authorId": "2112472585",
+    "name": "Zhen-Yu Tang"
+   },
+   {
+    "authorId": "38824987",
+    "name": "Kan Ren"
+   },
+   {
+    "authorId": "1390517481",
+    "name": "Weiqing Liu"
+   },
+   {
+    "authorId": "2004786514",
+    "name": "Li Zhao"
+   },
+   {
+    "authorId": "143901037",
+    "name": "J. Bian"
+   },
+   {
+    "authorId": "2135905119",
+    "name": "Dongsheng Li"
+   },
+   {
+    "authorId": "2108309275",
+    "name": "Wei-Nan Zhang"
+   },
+   {
+    "authorId": "2156098229",
+    "name": "Yong Yu"
+   },
+   {
+    "authorId": "2110264337",
+    "name": "Tie-Yan Liu"
+   }
+  ]
+ },
+ "Shi2025": {
+  "paperId": "4258cc2fae45b46a80d8a0d836f88d99bef5166b",
+  "externalIds": {
+   "ArXiv": "2511.13614",
+   "DBLP": "journals/corr/abs-2511-13614",
+   "DOI": "10.48550/arXiv.2511.13614",
+   "CorpusId": 283073123
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "Market-Dependent Communication in Multi-Agent Alpha Generation",
+  "venue": "arXiv.org",
+  "year": 2025,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2332311098",
+    "name": "Jerick Shi"
+   },
+   {
+    "authorId": "3180700",
+    "name": "Burton Hollifield"
+   }
+  ]
+ },
+ "Sukhbaatar2016_CommNet": {
+  "paperId": "50295c19e177480ba3599300de1ab837cc62b08c",
+  "externalIds": {
+   "DBLP": "conf/nips/SukhbaatarSF16",
+   "MAG": "2964338167",
+   "ArXiv": "1605.07736",
+   "CorpusId": 6925519
+  },
+  "publicationVenue": {
+   "id": "d9720b90-d60b-48bc-9df8-87a30b9a60dd",
+   "name": "Neural Information Processing Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Neural Inf Process Syst",
+    "NeurIPS",
+    "NIPS"
+   ],
+   "url": "http://neurips.cc/"
+  },
+  "title": "Learning Multiagent Communication with Backpropagation",
+  "venue": "Neural Information Processing Systems",
+  "year": 2016,
+  "citationCount": 1427,
+  "influentialCitationCount": 129,
+  "authors": [
+   {
+    "authorId": "2265067",
+    "name": "Sainbayar Sukhbaatar"
+   },
+   {
+    "authorId": "3149531",
+    "name": "Arthur Szlam"
+   },
+   {
+    "authorId": "2276554",
+    "name": "R. Fergus"
+   }
+  ]
+ },
+ "Foerster2016_DIAL": {
+  "paperId": "0772905d40b9afa3dc087a88184f09f3b3e1464f",
+  "externalIds": {
+   "DBLP": "journals/corr/FoersterAFW16a",
+   "MAG": "2951097037",
+   "ArXiv": "1605.06676",
+   "CorpusId": 53391180
+  },
+  "publicationVenue": {
+   "id": "d9720b90-d60b-48bc-9df8-87a30b9a60dd",
+   "name": "Neural Information Processing Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Neural Inf Process Syst",
+    "NeurIPS",
+    "NIPS"
+   ],
+   "url": "http://neurips.cc/"
+  },
+  "title": "Learning to Communicate with Deep Multi-Agent Reinforcement Learning",
+  "venue": "Neural Information Processing Systems",
+  "year": 2016,
+  "citationCount": 2016,
+  "influentialCitationCount": 160,
+  "authors": [
+   {
+    "authorId": "145356667",
+    "name": "Jakob N. Foerster"
+   },
+   {
+    "authorId": "3365565",
+    "name": "Yannis Assael"
+   },
+   {
+    "authorId": "1737568",
+    "name": "N. de Freitas"
+   },
+   {
+    "authorId": "1766767",
+    "name": "S. Whiteson"
+   }
+  ]
+ },
+ "Das2019_TarMAC": {
+  "paperId": "ea18b3279afe3ffd54da5147dd5c1872315725bf",
+  "externalIds": {
+   "MAG": "2949525051",
+   "DBLP": "conf/icml/DasGRBPRP19",
+   "ArXiv": "1810.11187",
+   "CorpusId": 53080508
+  },
+  "publicationVenue": {
+   "id": "fc0a208c-acb7-47dc-a0d4-af8190e21d29",
+   "name": "International Conference on Machine Learning",
+   "type": "conference",
+   "alternate_names": [
+    "ICML",
+    "Int Conf Mach Learn"
+   ],
+   "url": "https://icml.cc/"
+  },
+  "title": "TarMAC: Targeted Multi-Agent Communication",
+  "venue": "International Conference on Machine Learning",
+  "year": 2018,
+  "citationCount": 582,
+  "influentialCitationCount": 68,
+  "authors": [
+   {
+    "authorId": "2313517",
+    "name": "Abhishek Das"
+   },
+   {
+    "authorId": "81588783",
+    "name": "Théophile Gervet"
+   },
+   {
+    "authorId": "8365320",
+    "name": "Joshua Romoff"
+   },
+   {
+    "authorId": "1746610",
+    "name": "Dhruv Batra"
+   },
+   {
+    "authorId": "153432684",
+    "name": "Devi Parikh"
+   },
+   {
+    "authorId": "2066127975",
+    "name": "Michael G. Rabbat"
+   },
+   {
+    "authorId": "145134886",
+    "name": "Joelle Pineau"
+   }
+  ]
+ },
+ "Iqbal2019_MAAC": {
+  "paperId": "929bef0066bad871ba971b673c053112d055d29f",
+  "externalIds": {
+   "MAG": "2962966033",
+   "DBLP": "journals/corr/abs-1810-02912",
+   "ArXiv": "1810.02912",
+   "CorpusId": 52939327
+  },
+  "publicationVenue": {
+   "id": "fc0a208c-acb7-47dc-a0d4-af8190e21d29",
+   "name": "International Conference on Machine Learning",
+   "type": "conference",
+   "alternate_names": [
+    "ICML",
+    "Int Conf Mach Learn"
+   ],
+   "url": "https://icml.cc/"
+  },
+  "title": "Actor-Attention-Critic for Multi-Agent Reinforcement Learning",
+  "venue": "International Conference on Machine Learning",
+  "year": 2018,
+  "citationCount": 1011,
+  "influentialCitationCount": 99,
+  "authors": [
+   {
+    "authorId": "2899335",
+    "name": "Shariq Iqbal"
+   },
+   {
+    "authorId": "145757665",
+    "name": "F. Sha"
+   }
+  ]
+ },
+ "Yang2018_MeanField": {
+  "paperId": "633870d249f03d39849224adc3381712fbb23ed8",
+  "externalIds": {
+   "MAG": "2963039558",
+   "DBLP": "conf/icml/YangLLZZW18",
+   "ArXiv": "1802.05438",
+   "CorpusId": 3318551
+  },
+  "publicationVenue": {
+   "id": "fc0a208c-acb7-47dc-a0d4-af8190e21d29",
+   "name": "International Conference on Machine Learning",
+   "type": "conference",
+   "alternate_names": [
+    "ICML",
+    "Int Conf Mach Learn"
+   ],
+   "url": "https://icml.cc/"
+  },
+  "title": "Mean Field Multi-Agent Reinforcement Learning",
+  "venue": "International Conference on Machine Learning",
+  "year": 2018,
+  "citationCount": 744,
+  "influentialCitationCount": 88,
+  "authors": [
+   {
+    "authorId": "47796324",
+    "name": "Yaodong Yang"
+   },
+   {
+    "authorId": "48846956",
+    "name": "Rui Luo"
+   },
+   {
+    "authorId": "36069327",
+    "name": "Minne Li"
+   },
+   {
+    "authorId": "143849609",
+    "name": "M. Zhou"
+   },
+   {
+    "authorId": "2108309275",
+    "name": "Wei-Nan Zhang"
+   },
+   {
+    "authorId": "48094081",
+    "name": "Jun Wang"
+   }
+  ]
+ },
+ "Velickovic2018_GAT": {
+  "paperId": "33998aff64ce51df8dee45989cdca4b6b1329ec4",
+  "externalIds": {
+   "MAG": "2766453196",
+   "DBLP": "journals/corr/abs-1710-10903",
+   "ArXiv": "1710.10903",
+   "DOI": "10.17863/CAM.48429",
+   "CorpusId": 3292002
+  },
+  "publicationVenue": {
+   "id": "939c6e1d-0d17-4d6e-8a82-66d960df0e40",
+   "name": "International Conference on Learning Representations",
+   "type": "conference",
+   "alternate_names": [
+    "Int Conf Learn Represent",
+    "ICLR"
+   ],
+   "url": "https://iclr.cc/"
+  },
+  "title": "Graph Attention Networks",
+  "venue": "International Conference on Learning Representations",
+  "year": 2017,
+  "citationCount": 28735,
+  "influentialCitationCount": 3950,
+  "authors": [
+   {
+    "authorId": "3444569",
+    "name": "Petar Velickovic"
+   },
+   {
+    "authorId": "7153363",
+    "name": "Guillem Cucurull"
+   },
+   {
+    "authorId": "8742492",
+    "name": "Arantxa Casanova"
+   },
+   {
+    "authorId": "144290131",
+    "name": "Adriana Romero"
+   },
+   {
+    "authorId": "2392269716",
+    "name": "Pietro Lió"
+   },
+   {
+    "authorId": "1751762",
+    "name": "Yoshua Bengio"
+   }
+  ]
+ },
+ "Guo2023_Email": null,
+ "Jiang2024_Teammate": {
+  "paperId": "a2cdc4560d6284d78078e3b45fa4ad8ff403122e",
+  "externalIds": {
+   "DBLP": "journals/ijon/JiangZLXZZ24",
+   "DOI": "10.1016/j.neucom.2024.127638",
+   "CorpusId": 268949334
+  },
+  "publicationVenue": {
+   "id": "df12d289-f447-47d3-8846-75e39de3ab57",
+   "name": "Neurocomputing",
+   "type": "journal",
+   "issn": "0925-2312",
+   "url": "http://www.elsevier.com/locate/neucom",
+   "alternate_urls": [
+    "http://www.sciencedirect.com/science/journal/09252312"
+   ]
+  },
+  "title": "Multi-agent cooperative strategy with explicit teammate modeling and targeted informative communication",
+  "venue": "Neurocomputing",
+  "year": 2024,
+  "citationCount": 11,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2379545004",
+    "name": "Ruirui Jiang"
+   },
+   {
+    "authorId": "2214727953",
+    "name": "Xue-Tao Zhang"
+   },
+   {
+    "authorId": "2242966199",
+    "name": "Yi-Sha Liu"
+   },
+   {
+    "authorId": "2353215361",
+    "name": "Yi Xu"
+   },
+   {
+    "authorId": "2322453401",
+    "name": "Xue-Bo Zhang"
+   },
+   {
+    "authorId": "144666671",
+    "name": "Yan Zhuang"
+   }
+  ]
+ },
+ "Hu2024_CommFormer": {
+  "paperId": "cafd9fdf8492640eeb59c3c4152d7bf9f1d4811c",
+  "externalIds": {
+   "ArXiv": "2405.08550",
+   "DBLP": "conf/iclr/Hu00T24",
+   "DOI": "10.48550/arXiv.2405.08550",
+   "CorpusId": 269761403
+  },
+  "publicationVenue": {
+   "id": "939c6e1d-0d17-4d6e-8a82-66d960df0e40",
+   "name": "International Conference on Learning Representations",
+   "type": "conference",
+   "alternate_names": [
+    "Int Conf Learn Represent",
+    "ICLR"
+   ],
+   "url": "https://iclr.cc/"
+  },
+  "title": "Learning Multi-Agent Communication from Graph Modeling Perspective",
+  "venue": "International Conference on Learning Representations",
+  "year": 2024,
+  "citationCount": 86,
+  "influentialCitationCount": 9,
+  "authors": [
+   {
+    "authorId": "2176837980",
+    "name": "Sheng-Chao Hu"
+   },
+   {
+    "authorId": "2144035454",
+    "name": "Li Shen"
+   },
+   {
+    "authorId": "2301417989",
+    "name": "Ya Zhang"
+   },
+   {
+    "authorId": "2135519749",
+    "name": "Da-Cheng Tao"
+   }
+  ]
+ },
+ "Fan2025_GraphModeling": null,
+ "Li2025_ExpoComm": {
+  "paperId": "3e00ce67e42215dd85fdbc1b881debdd1571889f",
+  "externalIds": {
+   "DBLP": "conf/iclr/LiWBZ25",
+   "ArXiv": "2502.19717",
+   "DOI": "10.48550/arXiv.2502.19717",
+   "CorpusId": 276647939
+  },
+  "publicationVenue": {
+   "id": "939c6e1d-0d17-4d6e-8a82-66d960df0e40",
+   "name": "International Conference on Learning Representations",
+   "type": "conference",
+   "alternate_names": [
+    "Int Conf Learn Represent",
+    "ICLR"
+   ],
+   "url": "https://iclr.cc/"
+  },
+  "title": "Exponential Topology-enabled Scalable Communication in Multi-agent Reinforcement Learning",
+  "venue": "International Conference on Learning Representations",
+  "year": 2025,
+  "citationCount": 12,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "2276448213",
+    "name": "Xin-Ran Li"
+   },
+   {
+    "authorId": "2284816195",
+    "name": "Xiaolu Wang"
+   },
+   {
+    "authorId": "2303257958",
+    "name": "Chen-Jia Bai"
+   },
+   {
+    "authorId": "2276524447",
+    "name": "Jun Zhang"
+   }
+  ]
+ },
+ "Wojtala2025_MACTAS": {
+  "paperId": "5d95d812343f57022337eb94812179e8747d0c3e",
+  "externalIds": {
+   "ArXiv": "2508.13661",
+   "CorpusId": 280686487
+  },
+  "publicationVenue": null,
+  "title": "Communication-Enhanced Tutoring for Efficient Decentralized Multi-Agent Reinforcement Learning",
+  "venue": "",
+  "year": 2025,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2376267142",
+    "name": "Maciej Wojtala"
+   },
+   {
+    "authorId": "2376267785",
+    "name": "B. Stefańczyk"
+   },
+   {
+    "authorId": "2373717868",
+    "name": "D. Bogucki"
+   },
+   {
+    "authorId": null,
+    "name": "Łukasz Lepak"
+   },
+   {
+    "authorId": "2376267935",
+    "name": "Pawel Wawrzy'nski"
+   }
+  ]
+ },
+ "Wittner2026_Survey": {
+  "paperId": "e41129526d4a3caf78b9a47ae0e9cddbc5b2eed3",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2601-12886",
+   "ArXiv": "2601.12886",
+   "DOI": "10.48550/arXiv.2601.12886",
+   "CorpusId": 284909938
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "Communication Methods in Multi-Agent Reinforcement Learning",
+  "venue": "arXiv.org",
+  "year": 2026,
+  "citationCount": 1,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "92656258",
+    "name": "Christopher E Wittner"
+   }
+  ]
+ },
+ "Yu2024_ADMAC": null,
+ "Yoffe2024_DebUnc": {
+  "paperId": "e47ffd4dc9faf2640365ebe86c506bca8b1d7ef9",
+  "externalIds": {
+   "ArXiv": "2407.06426",
+   "DBLP": "conf/emnlp/YoffeAW25",
+   "DOI": "10.18653/v1/2025.findings-emnlp.1265",
+   "CorpusId": 271064977
+  },
+  "publicationVenue": {
+   "id": "41bf9ed3-85b3-4c90-b015-150e31690253",
+   "name": "Conference on Empirical Methods in Natural Language Processing",
+   "type": "conference",
+   "alternate_names": [
+    "Empir Method Nat Lang Process",
+    "Empirical Methods in Natural Language Processing",
+    "Conf Empir Method Nat Lang Process",
+    "EMNLP"
+   ],
+   "url": "https://www.aclweb.org/portal/emnlp"
+  },
+  "title": "DebUnc: Improving Large Language Model Agent Communication With Uncertainty Metrics",
+  "venue": "Conference on Empirical Methods in Natural Language Processing",
+  "year": 2024,
+  "citationCount": 15,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "2164988411",
+    "name": "Luke Yoffe"
+   },
+   {
+    "authorId": "2039956094",
+    "name": "Alfonso Amayuelas"
+   },
+   {
+    "authorId": "2310569060",
+    "name": "W. Wang"
+   }
+  ]
+ },
+ "Farr2026_Herding": {
+  "paperId": "31a8fd022ff8659b7a3341e98f7d0578b4d5526d",
+  "externalIds": {
+   "ArXiv": "2605.06988",
+   "DBLP": "journals/corr/abs-2605-06988",
+   "DOI": "10.48550/arXiv.2605.06988",
+   "CorpusId": 288110665
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "The Cost of Consensus: Malignant Epistemic Herding and Adaptive Gating in Distributed Multi-Agent Search",
+  "venue": "arXiv.org",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2316125802",
+    "name": "David Farr"
+   },
+   {
+    "authorId": "2316125786",
+    "name": "Iain J. Cruickshank"
+   },
+   {
+    "authorId": "2326296428",
+    "name": "Kate Starbird"
+   },
+   {
+    "authorId": "2316126619",
+    "name": "Jevin West"
+   }
+  ]
+ },
+ "deWitt2020_IPPO": {
+  "paperId": "e17e02fcfa7791b9e37d115694e89b657ecca1c8",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2011-09533",
+   "ArXiv": "2011.09533",
+   "MAG": "3099689767",
+   "CorpusId": 227054146
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "Is Independent Learning All You Need in the StarCraft Multi-Agent Challenge?",
+  "venue": "arXiv.org",
+  "year": 2020,
+  "citationCount": 629,
+  "influentialCitationCount": 69,
+  "authors": [
+   {
+    "authorId": "47542438",
+    "name": "C. S. D. Witt"
+   },
+   {
+    "authorId": "49857577",
+    "name": "Tarun Gupta"
+   },
+   {
+    "authorId": "2026863982",
+    "name": "Denys Makoviichuk"
+   },
+   {
+    "authorId": "79875630",
+    "name": "Viktor Makoviychuk"
+   },
+   {
+    "authorId": "143635540",
+    "name": "P. Torr"
+   },
+   {
+    "authorId": "9492808",
+    "name": "Mingfei Sun"
+   },
+   {
+    "authorId": "1766767",
+    "name": "S. Whiteson"
+   }
+  ]
+ },
+ "Yu2022_MAPPO": {
+  "paperId": "3a315c81a98851f0614c09fef6a14c30d6a1e63c",
+  "externalIds": {
+   "ArXiv": "2103.01955",
+   "DBLP": "conf/nips/YuVVGWBW22",
+   "DOI": "10.52202/068431-1787",
+   "CorpusId": 232092445
+  },
+  "publicationVenue": {
+   "id": "d9720b90-d60b-48bc-9df8-87a30b9a60dd",
+   "name": "Neural Information Processing Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Neural Inf Process Syst",
+    "NeurIPS",
+    "NIPS"
+   ],
+   "url": "http://neurips.cc/"
+  },
+  "title": "The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games",
+  "venue": "Neural Information Processing Systems",
+  "year": 2021,
+  "citationCount": 2878,
+  "influentialCitationCount": 351,
+  "authors": [
+   {
+    "authorId": "2110962386",
+    "name": "Chao Yu"
+   },
+   {
+    "authorId": "1999664196",
+    "name": "Akash Velu"
+   },
+   {
+    "authorId": "13430868",
+    "name": "Eugene Vinitsky"
+   },
+   {
+    "authorId": "2149257459",
+    "name": "Jia-Xuan Gao"
+   },
+   {
+    "authorId": "2153607473",
+    "name": "Yu Wang"
+   },
+   {
+    "authorId": "1705102",
+    "name": "A. Bayen"
+   },
+   {
+    "authorId": "2108052525",
+    "name": "Yi Wu"
+   }
+  ]
+ },
+ "Terry2021_PettingZoo": {
+  "paperId": "3a70562df004e08d91b125e6d15255e31e445efa",
+  "externalIds": {
+   "ArXiv": "2009.14471",
+   "CorpusId": 222066674
+  },
+  "publicationVenue": null,
+  "title": "PettingZoo: Gym for Multi-Agent Reinforcement Learning",
+  "venue": "",
+  "year": 2020,
+  "citationCount": 478,
+  "influentialCitationCount": 42,
+  "authors": [
+   {
+    "authorId": "153204999",
+    "name": "J. K. Terry"
+   },
+   {
+    "authorId": "2056120610",
+    "name": "Benjamin Black"
+   },
+   {
+    "authorId": "34659542",
+    "name": "Nathaniel Grammel"
+   },
+   {
+    "authorId": "2051798853",
+    "name": "M. Jayakumar"
+   },
+   {
+    "authorId": "1723419097",
+    "name": "Ananth Hari"
+   },
+   {
+    "authorId": "2165381307",
+    "name": "Ryan Sullivan"
+   },
+   {
+    "authorId": "2111820310",
+    "name": "L. Santos"
+   },
+   {
+    "authorId": "2226755530",
+    "name": "R. Pérez"
+   },
+   {
+    "authorId": "1972440058",
+    "name": "Caroline Horsch"
+   },
+   {
+    "authorId": "1976106051",
+    "name": "Clemens Dieffendahl"
+   },
+   {
+    "authorId": "1693750261",
+    "name": "Niall L. Williams"
+   },
+   {
+    "authorId": "1976100877",
+    "name": "Yashas Lokesh"
+   },
+   {
+    "authorId": "145451543",
+    "name": "Praveen Ravi"
+   }
+  ]
+ },
+ "Yang2020_Ensemble": {
+  "paperId": "b8e1ab5f279018a2d6f677d55aa306ac6703fa47",
+  "externalIds": {
+   "DBLP": "conf/icaif/YangLZW20",
+   "MAG": "3088749011",
+   "ArXiv": "2511.12120",
+   "DOI": "10.1145/3383455.3422540",
+   "CorpusId": 225206052
+  },
+  "publicationVenue": {
+   "id": "5276bfc2-b6f9-4564-83fa-df391a9ea260",
+   "name": "International Conference on AI in Finance",
+   "type": "conference",
+   "alternate_names": [
+    "ICAIF",
+    "Int Conf AI Finance"
+   ]
+  },
+  "title": "Deep reinforcement learning for automated stock trading: an ensemble strategy",
+  "venue": "International Conference on AI in Finance",
+  "year": 2020,
+  "citationCount": 340,
+  "influentialCitationCount": 30,
+  "authors": [
+   {
+    "authorId": "1504453822",
+    "name": "Hong-Yang Yang"
+   },
+   {
+    "authorId": "4029028",
+    "name": "Xiao-Yang Liu"
+   },
+   {
+    "authorId": "70587322",
+    "name": "Shan-Li Zhong"
+   },
+   {
+    "authorId": "30910424",
+    "name": "Anwar Walid"
+   }
+  ]
+ },
+ "Gao2023_StockFormer": {
+  "paperId": "9f6eb784ffc460cba56077b4b8739d4eb9115f18",
+  "externalIds": {
+   "DBLP": "conf/ijcai/GaoWY23",
+   "DOI": "10.24963/ijcai.2023/530",
+   "CorpusId": 260858821
+  },
+  "publicationVenue": {
+   "id": "67f7f831-711a-43c8-8785-1e09005359b5",
+   "name": "International Joint Conference on Artificial Intelligence",
+   "type": "conference",
+   "alternate_names": [
+    "Int Jt Conf Artif Intell",
+    "IJCAI"
+   ],
+   "url": "http://www.ijcai.org/"
+  },
+  "title": "StockFormer: Learning Hybrid Trading Machines with Predictive Coding",
+  "venue": "International Joint Conference on Artificial Intelligence",
+  "year": 2023,
+  "citationCount": 54,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "2112136022",
+    "name": "Siyu Gao"
+   },
+   {
+    "authorId": "3530540",
+    "name": "Yun-Bo Wang"
+   },
+   {
+    "authorId": "2157189845",
+    "name": "Xiaokang Yang"
+   }
+  ]
+ },
+ "Choi2024_DeepClair": {
+  "paperId": "71a5633ceb02ae175d0f0610b4f3efe0b314b1de",
+  "externalIds": {
+   "DBLP": "conf/cikm/ChoiKGLK24",
+   "ArXiv": "2407.13427",
+   "DOI": "10.1145/3627673.3680008",
+   "CorpusId": 271270348
+  },
+  "publicationVenue": {
+   "id": "7431ff67-91dc-41fa-b322-1b1ca657025f",
+   "name": "International Conference on Information and Knowledge Management",
+   "type": "conference",
+   "alternate_names": [
+    "Conference on Information and Knowledge Management",
+    "Conf Inf Knowl Manag",
+    "Int Conf Inf Knowl Manag",
+    "CIKM"
+   ],
+   "url": "http://www.cikm.org/"
+  },
+  "title": "DeepClair: Utilizing Market Forecasts for Effective Portfolio Selection",
+  "venue": "International Conference on Information and Knowledge Management",
+  "year": 2024,
+  "citationCount": 5,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "153656803",
+    "name": "Donghee Choi"
+   },
+   {
+    "authorId": "2311993390",
+    "name": "Jinkyu Kim"
+   },
+   {
+    "authorId": "2187857050",
+    "name": "Mogan Gim"
+   },
+   {
+    "authorId": "2287764304",
+    "name": "Jin-Ho Lee"
+   },
+   {
+    "authorId": "2274215892",
+    "name": "Jaewoo Kang"
+   }
+  ]
+ },
+ "Lyu2025_RTSPnO": {
+  "paperId": "17659353ecebe417eac380d7d7e354ac5107af72",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2505-24835",
+   "ArXiv": "2505.24835",
+   "DOI": "10.1145/3711896.3737268",
+   "CorpusId": 279070787
+  },
+  "publicationVenue": {
+   "id": "a0edb93b-1e95-4128-a295-6b1659149cef",
+   "name": "Knowledge Discovery and Data Mining",
+   "type": "conference",
+   "alternate_names": [
+    "KDD",
+    "Knowl Discov Data Min"
+   ],
+   "url": "http://www.acm.org/sigkdd/"
+  },
+  "title": "Timing is Important: Risk-aware Fund Allocation based on Time-Series Forecasting",
+  "venue": "Knowledge Discovery and Data Mining",
+  "year": 2025,
+  "citationCount": 1,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "1704274486",
+    "name": "Fuyuan Lyu"
+   },
+   {
+    "authorId": "1490934712",
+    "name": "Linfeng Du"
+   },
+   {
+    "authorId": "81049933",
+    "name": "Yunpeng Weng"
+   },
+   {
+    "authorId": "2488800055",
+    "name": "Qiufang Ying"
+   },
+   {
+    "authorId": "2264681553",
+    "name": "Zhiyan Xu"
+   },
+   {
+    "authorId": "2407925456",
+    "name": "Wen Zou"
+   },
+   {
+    "authorId": "2328250099",
+    "name": "Hao-Lun Wu"
+   },
+   {
+    "authorId": "2261430143",
+    "name": "Xiu-Qiang He"
+   },
+   {
+    "authorId": "2240611823",
+    "name": "Xing Tang"
+   }
+  ]
+ },
+ "Kazemdehbashi2026_TATS": {
+  "paperId": "f9cfa435d8a01757d7323542b9a3bb355e6ab0af",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2601-12706",
+   "ArXiv": "2601.12706",
+   "DOI": "10.48550/arXiv.2601.12706",
+   "CorpusId": 284910145
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "Trend-Adjusted Time Series Models with an Application to Gold Price Forecasting",
+  "venue": "arXiv.org",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2302325008",
+    "name": "Sina Kazemdehbashi"
+   }
+  ]
+ },
+ "Torres2011_CEEMDAN": {
+  "paperId": "0222fa6e53ceb5fbcabfdcdfa79c23fd53b32e9e",
+  "externalIds": {
+   "MAG": "2125056386",
+   "DBLP": "conf/icassp/TorresCSF11",
+   "DOI": "10.1109/ICASSP.2011.5947265",
+   "CorpusId": 17857432
+  },
+  "publicationVenue": {
+   "id": "0d6f7fba-7092-46b3-8039-93458dba736b",
+   "name": "IEEE International Conference on Acoustics, Speech, and Signal Processing",
+   "type": "conference",
+   "alternate_names": [
+    "Int Conf Acoust Speech Signal Process",
+    "IEEE Int Conf Acoust Speech Signal Process",
+    "ICASSP",
+    "International Conference on Acoustics, Speech, and Signal Processing"
+   ],
+   "url": "http://ieeexplore.ieee.org/xpl/conhome.jsp?punumber=1000002"
+  },
+  "title": "A complete ensemble empirical mode decomposition with adaptive noise",
+  "venue": "IEEE International Conference on Acoustics, Speech, and Signal Processing",
+  "year": 2011,
+  "citationCount": 2420,
+  "influentialCitationCount": 170,
+  "authors": [
+   {
+    "authorId": "145548390",
+    "name": "M. E. Torres"
+   },
+   {
+    "authorId": "1996610",
+    "name": "M. A. Colominas"
+   },
+   {
+    "authorId": "2788047",
+    "name": "G. Schlotthauer"
+   },
+   {
+    "authorId": "1721271",
+    "name": "P. Flandrin"
+   }
+  ]
+ },
+ "Colominas2014_ICEEMDAN": {
+  "paperId": "fc0f9d8642a332a64481a790a4fa719aa1c7ed5b",
+  "externalIds": {
+   "MAG": "2009465763",
+   "DBLP": "journals/bspc/ColominasST14",
+   "DOI": "10.1016/j.bspc.2014.06.009",
+   "CorpusId": 28599257
+  },
+  "publicationVenue": {
+   "id": "1bac31b4-014a-4981-ae41-af2a40acc162",
+   "name": "Biomedical Signal Processing and Control",
+   "type": "journal",
+   "alternate_names": [
+    "Biomed Signal Process Control"
+   ],
+   "issn": "1746-8094",
+   "url": "https://www.journals.elsevier.com/biomedical-signal-processing-and-control",
+   "alternate_urls": [
+    "http://www.sciencedirect.com/science/journal/17468094"
+   ]
+  },
+  "title": "Improved complete ensemble EMD: A suitable tool for biomedical signal processing",
+  "venue": "Biomedical Signal Processing and Control",
+  "year": 2014,
+  "citationCount": 1380,
+  "influentialCitationCount": 104,
+  "authors": [
+   {
+    "authorId": "1996610",
+    "name": "M. A. Colominas"
+   },
+   {
+    "authorId": "2788047",
+    "name": "G. Schlotthauer"
+   },
+   {
+    "authorId": "145548390",
+    "name": "M. E. Torres"
+   }
+  ]
+ },
+ "Carnelossi2017_EMDbias": {
+  "paperId": "175d82387cd90824a7bfd4ee0acaa1344a8bfe36",
+  "externalIds": {
+   "DBLP": "journals/eswa/FurlanetoOMC17",
+   "MAG": "2599804474",
+   "DOI": "10.1016/j.eswa.2017.03.053",
+   "CorpusId": 37628653
+  },
+  "publicationVenue": {
+   "id": "987139ae-a65d-49bb-aaf6-fb764dc40b19",
+   "name": "Expert systems with applications",
+   "type": "journal",
+   "alternate_names": [
+    "Expert syst appl",
+    "Expert Systems With Applications",
+    "Expert Syst Appl"
+   ],
+   "issn": "0957-4174",
+   "url": "https://www.journals.elsevier.com/expert-systems-with-applications/",
+   "alternate_urls": [
+    "https://www.sciencedirect.com/journal/expert-systems-with-applications",
+    "http://www.sciencedirect.com/science/journal/09574174"
+   ]
+  },
+  "title": "Bias effect on predicting market trends with EMD",
+  "venue": "Expert systems with applications",
+  "year": 2017,
+  "citationCount": 24,
+  "influentialCitationCount": 2,
+  "authors": [
+   {
+    "authorId": "10737091",
+    "name": "Dennis Carnelossi Furlaneto"
+   },
+   {
+    "authorId": "144925520",
+    "name": "L. E. S. de Oliveira"
+   },
+   {
+    "authorId": "50534501",
+    "name": "David Menotti"
+   },
+   {
+    "authorId": "1805618",
+    "name": "G. Cavalcanti"
+   }
+  ]
+ },
+ "Yang2024_EMDleak": {
+  "paperId": "d59563d494b7a77b03ebbebee1fe280c6bc61ab2",
+  "externalIds": {
+   "PubMedCentral": "11569228",
+   "DOI": "10.1038/s41598-024-80018-9",
+   "CorpusId": 274115301,
+   "PubMed": "39550475"
+  },
+  "publicationVenue": {
+   "id": "f99f77b7-b1b6-44d3-984a-f288e9884b9b",
+   "name": "Scientific Reports",
+   "type": "journal",
+   "alternate_names": [
+    "Sci Rep"
+   ],
+   "issn": "2045-2322",
+   "url": "http://www.nature.com/srep/",
+   "alternate_urls": [
+    "http://www.nature.com/srep/index.html"
+   ]
+  },
+  "title": "Research on information leakage in time series prediction based on empirical mode decomposition",
+  "venue": "Scientific Reports",
+  "year": 2024,
+  "citationCount": 35,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2293677109",
+    "name": "Xinyi Yang"
+   },
+   {
+    "authorId": "2311999313",
+    "name": "Jingyi Li"
+   },
+   {
+    "authorId": "2331172857",
+    "name": "Xuchu Jiang"
+   }
+  ]
+ },
+ "Zhang2024_RollingCEEMDAN": {
+  "paperId": "f8fc1bcd1f01c08e97c5bb86859b6565a2ddd41b",
+  "externalIds": {
+   "DOI": "10.1007/s10614-024-10732-z",
+   "CorpusId": 273333796
+  },
+  "publicationVenue": {
+   "id": "94b5909e-18e0-4cac-9e9d-731ff1c58823",
+   "name": "Computational Economics",
+   "type": "journal",
+   "alternate_names": [
+    "Comput Econ"
+   ],
+   "issn": "0927-7099",
+   "url": "https://link.springer.com/journal/10614"
+  },
+  "title": "Realized Volatility Forecasting for Stocks and Futures Indices with Rolling CEEMDAN and Machine Learning Models",
+  "venue": "Computational Economics",
+  "year": 2024,
+  "citationCount": 6,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2325943204",
+    "name": "Yuetong Zhang"
+   },
+   {
+    "authorId": "2301847290",
+    "name": "Ying Peng"
+   },
+   {
+    "authorId": "2507156",
+    "name": "Yu-Ping Song"
+   }
+  ]
+ },
+ "Valdivieso2026_LeakNotDecomp": null,
+ "Hewamalage2023": {
+  "paperId": "cf9bd64987384198ba52b61e8a46c4ff39232914",
+  "externalIds": {
+   "ArXiv": "2203.10716",
+   "DBLP": "journals/datamine/HewamalageAB23",
+   "PubMedCentral": "9718476",
+   "DOI": "10.1007/s10618-022-00894-5",
+   "CorpusId": 247594079,
+   "PubMed": "36504672"
+  },
+  "publicationVenue": {
+   "id": "d263025a-9eaf-443f-9bbf-72377e8d22a6",
+   "name": "Data mining and knowledge discovery",
+   "type": "journal",
+   "alternate_names": [
+    "Data Mining and Knowledge Discovery",
+    "Data Min Knowl Discov",
+    "Data min knowl discov"
+   ],
+   "issn": "1384-5810",
+   "url": "https://www.springer.com/computer/database+management+&+information+retrieval/journal/10618",
+   "alternate_urls": [
+    "https://link.springer.com/journal/10618",
+    "http://www.springer.com/computer/database+management+&+information+retrieval/journal/10618"
+   ]
+  },
+  "title": "Forecast evaluation for data scientists: common pitfalls and best practices",
+  "venue": "Data mining and knowledge discovery",
+  "year": 2022,
+  "citationCount": 281,
+  "influentialCitationCount": 18,
+  "authors": [
+   {
+    "authorId": "9222292",
+    "name": "Hansika Hewamalage"
+   },
+   {
+    "authorId": "48603596",
+    "name": "Klaus Ackermann"
+   },
+   {
+    "authorId": "1734286",
+    "name": "C. Bergmeir"
+   }
+  ]
+ },
+ "Lones2024_Pitfalls": {
+  "paperId": "63d458d31f1d5f5f857f20e3a86fb171b9f72179",
+  "externalIds": {
+   "ArXiv": "2108.02497",
+   "PubMedCentral": "11573893",
+   "DBLP": "journals/patterns/Lones24",
+   "DOI": "10.1016/j.patter.2024.101046",
+   "CorpusId": 236924652,
+   "PubMed": "39569205"
+  },
+  "publicationVenue": {
+   "id": "17bac89e-3dba-467a-b9d4-71e3baefb08b",
+   "name": "Patterns",
+   "type": "journal",
+   "issn": "2666-3899",
+   "url": "https://www.cell.com/patterns",
+   "alternate_urls": [
+    "https://www.sciencedirect.com/journal/patterns"
+   ]
+  },
+  "title": "Avoiding common machine learning pitfalls",
+  "venue": "Patterns",
+  "year": 2021,
+  "citationCount": 193,
+  "influentialCitationCount": 11,
+  "authors": [
+   {
+    "authorId": "1729755",
+    "name": "M. Lones"
+   }
+  ]
+ },
+ "Rahimikia2025_TSFM": {
+  "paperId": "af8d9a72cf46dd49eac97b200719cb1609527662",
+  "externalIds": {
+   "ArXiv": "2511.18578",
+   "DBLP": "journals/corr/abs-2511-18578",
+   "DOI": "10.2139/ssrn.577056",
+   "CorpusId": 283243969
+  },
+  "publicationVenue": {
+   "id": "1901e811-ee72-4b20-8f7e-de08cd395a10",
+   "name": "arXiv.org",
+   "alternate_names": [
+    "ArXiv"
+   ],
+   "issn": "2331-8422",
+   "url": "https://arxiv.org"
+  },
+  "title": "Re(Visiting) Time Series Foundation Models in Finance",
+  "venue": "arXiv.org",
+  "year": 2025,
+  "citationCount": 10,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "51026318",
+    "name": "Eghbal Rahimikia"
+   },
+   {
+    "authorId": "2277854081",
+    "name": "Hao Ni"
+   },
+   {
+    "authorId": "2108442272",
+    "name": "Weiguan Wang"
+   }
+  ]
+ },
+ "Lim2021_TFT": {
+  "paperId": "6a9d69fb35414b8461573df333dba800f254519f",
+  "externalIds": {
+   "MAG": "2996331899",
+   "DBLP": "journals/corr/abs-1912-09363",
+   "ArXiv": "1912.09363",
+   "DOI": "10.1016/J.IJFORECAST.2021.03.012",
+   "CorpusId": 209414891
+  },
+  "publicationVenue": {
+   "id": "4dbabcb6-59c3-4b9e-9d1f-a380e2618cd2",
+   "name": "International Journal of Forecasting",
+   "type": "journal",
+   "alternate_names": [
+    "Int J Forecast"
+   ],
+   "issn": "0169-2070",
+   "url": "http://www.elsevier.com/wps/find/journaldescription.cws_home/505555/description#description",
+   "alternate_urls": [
+    "http://www.sciencedirect.com/science/journal/01692070",
+    "http://www.forecasters.org/ijf"
+   ]
+  },
+  "title": "Temporal Fusion Transformers for Interpretable Multi-horizon Time Series Forecasting",
+  "venue": "International Journal of Forecasting",
+  "year": 2019,
+  "citationCount": 3440,
+  "influentialCitationCount": 294,
+  "authors": [
+   {
+    "authorId": "143845299",
+    "name": "Bryan Lim"
+   },
+   {
+    "authorId": "2676352",
+    "name": "Sercan Ö. Arik"
+   },
+   {
+    "authorId": "1983856",
+    "name": "Nicolas Loeff"
+   },
+   {
+    "authorId": "1945962",
+    "name": "Tomas Pfister"
+   }
+  ]
+ },
+ "Guo2017_Calibration": {
+  "paperId": "d65ce2b8300541414bfe51d03906fca72e93523c",
+  "externalIds": {
+   "MAG": "2950953798",
+   "ArXiv": "1706.04599",
+   "DBLP": "conf/icml/GuoPSW17",
+   "CorpusId": 28671436
+  },
+  "publicationVenue": {
+   "id": "fc0a208c-acb7-47dc-a0d4-af8190e21d29",
+   "name": "International Conference on Machine Learning",
+   "type": "conference",
+   "alternate_names": [
+    "ICML",
+    "Int Conf Mach Learn"
+   ],
+   "url": "https://icml.cc/"
+  },
+  "title": "On Calibration of Modern Neural Networks",
+  "venue": "International Conference on Machine Learning",
+  "year": 2017,
+  "citationCount": 10262,
+  "influentialCitationCount": 1687,
+  "authors": [
+   {
+    "authorId": "144993411",
+    "name": "Chuan Guo"
+   },
+   {
+    "authorId": "10804137",
+    "name": "Geoff Pleiss"
+   },
+   {
+    "authorId": "2117103358",
+    "name": "Yu Sun"
+   },
+   {
+    "authorId": "7446832",
+    "name": "Kilian Q. Weinberger"
+   }
+  ]
+ },
+ "Moody2001": {
+  "paperId": "1a4999c918c6206cd9804c48f7dce1bac6ec5b4a",
+  "externalIds": {
+   "MAG": "2169015875",
+   "DBLP": "journals/tnn/MoodyS01",
+   "DOI": "10.1109/72.935097",
+   "CorpusId": 3137380,
+   "PubMed": "18249919"
+  },
+  "publicationVenue": null,
+  "title": "Learning to trade via direct reinforcement",
+  "venue": "IEEE Trans. Neural Networks",
+  "year": 2001,
+  "citationCount": 585,
+  "influentialCitationCount": 38,
+  "authors": [
+   {
+    "authorId": "145016534",
+    "name": "J. Moody"
+   },
+   {
+    "authorId": "1869642",
+    "name": "M. Saffell"
+   }
+  ]
+ },
+ "Ayari2025": {
+  "paperId": "1332aca04ede8546f784b92f94ab01e5dfae44c1",
+  "externalIds": {
+   "DOI": "10.1080/14697688.2025.2592822",
+   "CorpusId": 283823602
+  },
+  "publicationVenue": {
+   "id": "90133c2d-7d7c-4c61-8d86-64f2844bd42f",
+   "name": "Quantitative finance (Print)",
+   "type": "journal",
+   "alternate_names": [
+    "Quantitative Finance",
+    "Quant finance (print",
+    "Quant Finance"
+   ],
+   "issn": "1469-7688",
+   "url": "http://www.routledge.com/",
+   "alternate_urls": [
+    "http://www.tandfonline.com/loi/rquf20",
+    "http://www.tandfonline.com/toc/rquf20/current"
+   ]
+  },
+  "title": "Feature configuration effects in DRL portfolio management: a risk-focused evaluation under market stress",
+  "venue": "Quantitative finance (Print)",
+  "year": 2025,
+  "citationCount": 1,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2335252730",
+    "name": "Rayan Ayari"
+   }
+  ]
+ },
+ "Zhang2020_DRLTrading": {
+  "paperId": "4b27b8b28b0959989e144ac7273aacfe05267cf8",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-1911-10107",
+   "MAG": "3012223895",
+   "ArXiv": "1911.10107",
+   "DOI": "10.3905/jfds.2020.1.030",
+   "CorpusId": 208248040
+  },
+  "publicationVenue": {
+   "id": "416e012e-addf-4119-9545-20281520b489",
+   "name": "The Journal of Financial Data Science",
+   "type": "journal",
+   "alternate_names": [
+    "J Financial Data Sci"
+   ],
+   "issn": "2640-3943",
+   "url": "https://jfds.pm-research.com/"
+  },
+  "title": "Deep Reinforcement Learning for Trading",
+  "venue": "The Journal of Financial Data Science",
+  "year": 2019,
+  "citationCount": 275,
+  "influentialCitationCount": 20,
+  "authors": [
+   {
+    "authorId": "1557269572",
+    "name": "Zihao Zhang"
+   },
+   {
+    "authorId": "8106073",
+    "name": "Stefan Zohren"
+   },
+   {
+    "authorId": "143841496",
+    "name": "Stephen J. Roberts"
+   }
+  ]
+ },
+ "Millea2022_HRP": {
+  "paperId": "b28b8e0edaeca35a8462e24c0283402ec7e91aaa",
+  "externalIds": {
+   "DOI": "10.3390/ijfs11010010",
+   "CorpusId": 255336518
+  },
+  "publicationVenue": {
+   "id": "7a374625-d401-46df-bfd4-9637275974e1",
+   "name": "International Journal of Financial Studies",
+   "type": "journal",
+   "alternate_names": [
+    "Int J Financial Stud"
+   ],
+   "issn": "2227-7072",
+   "url": "http://www.e-helvetica.nb.admin.ch/directAccess?callnumber=bel-281817",
+   "alternate_urls": [
+    "https://www.mdpi.com/journal/ijfs",
+    "http://nbn-resolving.de/urn/resolver.pl?urn=urn:nbn:ch:bel-281817"
+   ]
+  },
+  "title": "Using Deep Reinforcement Learning with Hierarchical Risk Parity for Portfolio Optimization",
+  "venue": "International Journal of Financial Studies",
+  "year": 2022,
+  "citationCount": 23,
+  "influentialCitationCount": 1,
+  "authors": [
+   {
+    "authorId": "71442843",
+    "name": "Adrian Millea"
+   },
+   {
+    "authorId": "1694989",
+    "name": "A. Edalat"
+   }
+  ]
+ },
+ "LopezdePrado2016_HRP": {
+  "paperId": "f1c44fb9774e4ccce73e197cba25d69ea45dbfe1",
+  "externalIds": {
+   "MAG": "3122780569",
+   "DOI": "10.3905/jpm.2016.42.4.059",
+   "CorpusId": 219236039
+  },
+  "publicationVenue": {
+   "id": "18d502d0-c13c-4049-a2bd-02bfdf26b214",
+   "name": "Journal of Portfolio Management",
+   "type": "journal",
+   "alternate_names": [
+    "J Portf Manag",
+    "The Journal of Portfolio Management"
+   ],
+   "issn": "0095-4918",
+   "alternate_issns": [
+    "2168-8656"
+   ],
+   "url": "http://www.iijpm.com/",
+   "alternate_urls": [
+    "http://www.iijournals.com/JPM/"
+   ]
+  },
+  "title": "Building Diversified Portfolios that Outperform Out of Sample",
+  "venue": "Journal of Portfolio Management",
+  "year": 2016,
+  "citationCount": 228,
+  "influentialCitationCount": 32,
+  "authors": [
+   {
+    "authorId": "1741105308",
+    "name": "Marcos M. López de Prado"
+   }
+  ]
+ },
+ "Ledoit2004_Shrinkage": {
+  "paperId": "b40890f3d917379ac4bd2e0933a134d45b4dc251",
+  "externalIds": {
+   "MAG": "2062125287",
+   "DOI": "10.1016/S0047-259X(03)00096-4",
+   "CorpusId": 17238653
+  },
+  "publicationVenue": null,
+  "title": "A well-conditioned estimator for large-dimensional covariance matrices",
+  "venue": "",
+  "year": 2004,
+  "citationCount": 3136,
+  "influentialCitationCount": 378,
+  "authors": [
+   {
+    "authorId": "3180396",
+    "name": "Olivier Ledoit"
+   },
+   {
+    "authorId": "2258720061",
+    "name": "Michael Wolf"
+   }
+  ]
+ },
+ "DeMiguel2009": {
+  "paperId": "5056fa2683e15c4c84d13c3dbfb949dc133850a3",
+  "externalIds": {
+   "MAG": "2163969674",
+   "DOI": "10.1093/RFS/HHM075",
+   "CorpusId": 1073674
+  },
+  "publicationVenue": null,
+  "title": "Optimal Versus Naive Diversification: How Inefficient is the 1/N Portfolio Strategy?",
+  "venue": "",
+  "year": 2009,
+  "citationCount": 3271,
+  "influentialCitationCount": 338,
+  "authors": [
+   {
+    "authorId": "1785216",
+    "name": "V. DeMiguel"
+   },
+   {
+    "authorId": "2088479",
+    "name": "Lorenzo Garlappi"
+   },
+   {
+    "authorId": "39116899",
+    "name": "Raman Uppal"
+   }
+  ]
+ },
+ "Bailey2014_DSR": {
+  "paperId": "950f37470615dc6ae6e1f45f735408af11c48251",
+  "externalIds": {
+   "MAG": "2166245717",
+   "DOI": "10.3905/jpm.2014.40.5.094",
+   "CorpusId": 33944837
+  },
+  "publicationVenue": {
+   "id": "18d502d0-c13c-4049-a2bd-02bfdf26b214",
+   "name": "Journal of Portfolio Management",
+   "type": "journal",
+   "alternate_names": [
+    "J Portf Manag",
+    "The Journal of Portfolio Management"
+   ],
+   "issn": "0095-4918",
+   "alternate_issns": [
+    "2168-8656"
+   ],
+   "url": "http://www.iijpm.com/",
+   "alternate_urls": [
+    "http://www.iijournals.com/JPM/"
+   ]
+  },
+  "title": "The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality",
+  "venue": "Journal of Portfolio Management",
+  "year": 2014,
+  "citationCount": 179,
+  "influentialCitationCount": 11,
+  "authors": [
+   {
+    "authorId": "2411249191",
+    "name": "David H. Bailey"
+   },
+   {
+    "authorId": "1741105308",
+    "name": "Marcos M. López de Prado"
+   }
+  ]
+ },
+ "Bailey2017_PBO": null,
+ "Ledoit2008_SharpeTest": {
+  "paperId": "70129c93fc9d8590b6aa079026ba59967d199e52",
+  "externalIds": {
+   "MAG": "1984038545",
+   "DOI": "10.1016/J.JEMPFIN.2008.03.002",
+   "CorpusId": 30051706
+  },
+  "publicationVenue": null,
+  "title": "Robust Performance Hypothesis Testing with the Sharpe Ratio",
+  "venue": "",
+  "year": 2008,
+  "citationCount": 907,
+  "influentialCitationCount": 113,
+  "authors": [
+   {
+    "authorId": "3180396",
+    "name": "Olivier Ledoit"
+   },
+   {
+    "authorId": "2258720061",
+    "name": "Michael Wolf"
+   }
+  ]
+ },
+ "Hansen2011_MCS": null,
+ "Diebold1995_DM": null,
+ "Diebold2015_DM20": {
+  "paperId": "c7e208d3b8e3f8f14366aff6233991e0f4fb6e8a",
+  "externalIds": {
+   "MAG": "2007694684",
+   "DOI": "10.1080/07350015.2014.983236",
+   "CorpusId": 6714629
+  },
+  "publicationVenue": null,
+  "title": "Comparing Predictive Accuracy, Twenty Years Later: A Personal Perspective on the Use and Abuse of Diebold–Mariano Tests",
+  "venue": "",
+  "year": 2015,
+  "citationCount": 552,
+  "influentialCitationCount": 66,
+  "authors": [
+   {
+    "authorId": "3064569",
+    "name": "F. Diebold"
+   }
+  ]
+ },
+ "Harvey1997_HLN": {
+  "paperId": "775714e25283aa6bc361f01308c3c4a93ed8fb83",
+  "externalIds": {
+   "MAG": "2000842688",
+   "DOI": "10.1016/S0169-2070(96)00719-4",
+   "CorpusId": 120982077
+  },
+  "publicationVenue": null,
+  "title": "Testing the equality of prediction mean squared errors",
+  "venue": "",
+  "year": 1997,
+  "citationCount": 2046,
+  "influentialCitationCount": 160,
+  "authors": [
+   {
+    "authorId": "49072538",
+    "name": "D. I. Harvey"
+   },
+   {
+    "authorId": "3298692",
+    "name": "S. Leybourne"
+   },
+   {
+    "authorId": "48515582",
+    "name": "P. Newbold"
+   }
+  ]
+ },
+ "NeweyWest1987": null,
+ "Politis1994_StatBoot": {
+  "paperId": "4cf01507070ef68e7bbf5c9421b21d4ede10feac",
+  "externalIds": {
+   "MAG": "2076396344",
+   "DOI": "10.1080/01621459.1994.10476870",
+   "CorpusId": 123546936
+  },
+  "publicationVenue": null,
+  "title": "The stationary bootstrap",
+  "venue": "",
+  "year": 1994,
+  "citationCount": 2769,
+  "influentialCitationCount": 243,
+  "authors": [
+   {
+    "authorId": "2230454",
+    "name": "D. Politis"
+   },
+   {
+    "authorId": "2152560",
+    "name": "Joseph P. Romano"
+   }
+  ]
+ },
+ "Benjamini1995_FDR": {
+  "paperId": "fcef2258a963f3d3984a486185ddc4349c43aa35",
+  "externalIds": {
+   "MAG": "2110065044",
+   "DOI": "10.1111/J.2517-6161.1995.TB02031.X",
+   "CorpusId": 45174121
+  },
+  "publicationVenue": null,
+  "title": "Controlling the false discovery rate: a practical and powerful approach to multiple testing",
+  "venue": "",
+  "year": 1995,
+  "citationCount": 111008,
+  "influentialCitationCount": 14893,
+  "authors": [
+   {
+    "authorId": "1808156",
+    "name": "Y. Benjamini"
+   },
+   {
+    "authorId": "48775815",
+    "name": "Y. Hochberg"
+   }
+  ]
+ },
+ "Agarwal2021_Precipice": {
+  "paperId": "558ca2e8c7eb56edd77a52b084e6cc24dffe5bcd",
+  "externalIds": {
+   "DBLP": "conf/nips/AgarwalSCCB21",
+   "ArXiv": "2108.13264",
+   "CorpusId": 237353084
+  },
+  "publicationVenue": {
+   "id": "d9720b90-d60b-48bc-9df8-87a30b9a60dd",
+   "name": "Neural Information Processing Systems",
+   "type": "conference",
+   "alternate_names": [
+    "Neural Inf Process Syst",
+    "NeurIPS",
+    "NIPS"
+   ],
+   "url": "http://neurips.cc/"
+  },
+  "title": "Deep Reinforcement Learning at the Edge of the Statistical Precipice",
+  "venue": "Neural Information Processing Systems",
+  "year": 2021,
+  "citationCount": 1073,
+  "influentialCitationCount": 138,
+  "authors": [
+   {
+    "authorId": "29767024",
+    "name": "Rishabh Agarwal"
+   },
+   {
+    "authorId": "51881243",
+    "name": "Max Schwarzer"
+   },
+   {
+    "authorId": "39163115",
+    "name": "P. S. Castro"
+   },
+   {
+    "authorId": "1760871",
+    "name": "Aaron C. Courville"
+   },
+   {
+    "authorId": "1792298",
+    "name": "Marc G. Bellemare"
+   }
+  ]
+ },
+ "Henderson2018_Matters": {
+  "paperId": "33690ff21ef1efb576410e656f2e60c89d0307d6",
+  "externalIds": {
+   "MAG": "2754517384",
+   "DBLP": "conf/aaai/0002IBPPM18",
+   "ArXiv": "1709.06560",
+   "DOI": "10.1609/aaai.v32i1.11694",
+   "CorpusId": 4674781
+  },
+  "publicationVenue": {
+   "id": "bdc2e585-4e48-4e36-8af1-6d859763d405",
+   "name": "AAAI Conference on Artificial Intelligence",
+   "type": "conference",
+   "alternate_names": [
+    "National Conference on Artificial Intelligence",
+    "National Conf Artif Intell",
+    "AAAI Conf Artif Intell",
+    "AAAI"
+   ],
+   "url": "http://www.aaai.org/"
+  },
+  "title": "Deep Reinforcement Learning that Matters",
+  "venue": "AAAI Conference on Artificial Intelligence",
+  "year": 2017,
+  "citationCount": 2568,
+  "influentialCitationCount": 123,
+  "authors": [
+   {
+    "authorId": "40068904",
+    "name": "Peter Henderson"
+   },
+   {
+    "authorId": "18014232",
+    "name": "Riashat Islam"
+   },
+   {
+    "authorId": "143902541",
+    "name": "Philip Bachman"
+   },
+   {
+    "authorId": "145134886",
+    "name": "Joelle Pineau"
+   },
+   {
+    "authorId": "144368601",
+    "name": "Doina Precup"
+   },
+   {
+    "authorId": "2462512",
+    "name": "D. Meger"
+   }
+  ]
+ },
+ "Jain2019_AttnNot": {
+  "paperId": "1e83c20def5c84efa6d4a0d80aa3159f55cb9c3f",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-1902-10186",
+   "ArXiv": "1902.10186",
+   "MAG": "2934842096",
+   "ACL": "N19-1357",
+   "DOI": "10.18653/v1/N19-1357",
+   "CorpusId": 67855860
+  },
+  "publicationVenue": {
+   "id": "01103732-3808-4930-b8e4-7e9e68d5c68d",
+   "name": "North American Chapter of the Association for Computational Linguistics",
+   "type": "conference",
+   "alternate_names": [
+    "North Am Chapter Assoc Comput Linguistics",
+    "NAACL"
+   ],
+   "url": "https://www.aclweb.org/portal/naacl"
+  },
+  "title": "Attention is not Explanation",
+  "venue": "North American Chapter of the Association for Computational Linguistics",
+  "year": 2019,
+  "citationCount": 2113,
+  "influentialCitationCount": 124,
+  "authors": [
+   {
+    "authorId": "49837811",
+    "name": "Sarthak Jain"
+   },
+   {
+    "authorId": "1912476",
+    "name": "Byron C. Wallace"
+   }
+  ]
+ },
+ "Wiegreffe2019_AttnNotNot": {
+  "paperId": "ce177672b00ddf46e4906157a7e997ca9338b8b9",
+  "externalIds": {
+   "MAG": "2970726176",
+   "DBLP": "journals/corr/abs-1908-04626",
+   "ArXiv": "1908.04626",
+   "ACL": "D19-1002",
+   "DOI": "10.18653/v1/D19-1002",
+   "CorpusId": 199552244
+  },
+  "publicationVenue": {
+   "id": "41bf9ed3-85b3-4c90-b015-150e31690253",
+   "name": "Conference on Empirical Methods in Natural Language Processing",
+   "type": "conference",
+   "alternate_names": [
+    "Empir Method Nat Lang Process",
+    "Empirical Methods in Natural Language Processing",
+    "Conf Empir Method Nat Lang Process",
+    "EMNLP"
+   ],
+   "url": "https://www.aclweb.org/portal/emnlp"
+  },
+  "title": "Attention is not not Explanation",
+  "venue": "Conference on Empirical Methods in Natural Language Processing",
+  "year": 2019,
+  "citationCount": 1320,
+  "influentialCitationCount": 49,
+  "authors": [
+   {
+    "authorId": "35823986",
+    "name": "Sarah Wiegreffe"
+   },
+   {
+    "authorId": "1826312",
+    "name": "Yuval Pinter"
+   }
+  ]
+ },
+ "Beyhan2026_EPFAD": {
+  "paperId": "6cfcda50aa8405770fedb4ae300f8f52cf7e8a10",
+  "externalIds": {
+   "DOI": "10.30784/epfad.1811319",
+   "CorpusId": 287046119
+  },
+  "publicationVenue": null,
+  "title": "Dynamic Portfolio Optimization with Deep Reinforcement Learning: Evidence from Borsa Istanbul",
+  "venue": "Ekonomi Politika ve Finans Arastirmalari Dergisi",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "1381474662",
+    "name": "Hidayet Beyhan"
+   },
+   {
+    "authorId": "2082778889",
+    "name": "E. Ergin"
+   },
+   {
+    "authorId": "2080005724",
+    "name": "Binali Selman Eren"
+   }
+  ]
+ },
+ "Akyapak2025_ASYU": {
+  "paperId": "43b30e737c03f71c25dbd2c97895ffc034233677",
+  "externalIds": {
+   "DOI": "10.1109/ASYU67174.2025.11208408",
+   "CorpusId": 282613675
+  },
+  "publicationVenue": null,
+  "title": "A Reinforcement Learning Approach to Stock Trading with Macroeconomic Indicators",
+  "venue": "2025 Innovations in Intelligent Systems and Applications Conference (ASYU)",
+  "year": 2025,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": null,
+    "name": "Ömer Faruk Akyapak"
+   },
+   {
+    "authorId": "1500422055",
+    "name": "Ilhan Tunc"
+   }
+  ]
+ },
+ "Karacam2026_BIR": {
+  "paperId": "af34f3151be8edcf23a2e3f44f094376614baf24",
+  "externalIds": {
+   "DOI": "10.1016/j.bir.2026.100834",
+   "CorpusId": 287898751
+  },
+  "publicationVenue": {
+   "id": "d9a28192-3588-46f8-ac68-c0f566daf68b",
+   "name": "Borsa Istanbul Review",
+   "type": "journal",
+   "alternate_names": [
+    "Borsa Istanb Rev"
+   ],
+   "issn": "2214-8450",
+   "url": "https://www.journals.elsevier.com/borsa-istanbul-review/",
+   "alternate_urls": [
+    "http://www.sciencedirect.com/science/journal/aip/22148450"
+   ]
+  },
+  "title": "Inferring latent trading motivations in Borsa Istanbul: A comparative inverse reinforcement learning approach",
+  "venue": "Borsa Istanbul Review",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2432402537",
+    "name": "Kubilay Karacam"
+   },
+   {
+    "authorId": "70094862",
+    "name": "M. Y. Ulukuş"
+   }
+  ]
+ },
+ "Ergenc2025": {
+  "paperId": "611e388ec57b63f2f5423dc91c0c00dd72ff1c07",
+  "externalIds": {
+   "DOI": "10.2478/revecp-2025-0005",
+   "CorpusId": 281369290
+  },
+  "publicationVenue": {
+   "id": "372664a1-de55-4554-b0a9-ad0e8213d820",
+   "name": "Review of Economic Perspectives",
+   "type": "journal",
+   "alternate_names": [
+    "Rev Econ Perspect"
+   ],
+   "issn": "1213-2446",
+   "url": "http://www.degruyter.com/view/j/revecp",
+   "alternate_urls": [
+    "http://nho.econ.muni.cz/"
+   ]
+  },
+  "title": "A Supervised Machine Learning in Financial Forecasting: Identifying Effective Models for the BIST100 Index",
+  "venue": "Review of Economic Perspectives",
+  "year": 2025,
+  "citationCount": 2,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2135046251",
+    "name": "Cansu Ergenç"
+   },
+   {
+    "authorId": "2352529389",
+    "name": "Rafet Aktaş"
+   }
+  ]
+ },
+ "Erdag2026": {
+  "paperId": "5331f2fef762dd70db1aa5f8fff7c72f9f235a8f",
+  "externalIds": {
+   "DOI": "10.1108/rbf-12-2025-0531",
+   "CorpusId": 290603939
+  },
+  "publicationVenue": {
+   "id": "1d8293ea-3100-4206-a423-d2b196928a4d",
+   "name": "Review of Behavioral Finance",
+   "type": "journal",
+   "alternate_names": [
+    "Rev Behav Finance"
+   ],
+   "issn": "1940-5987",
+   "url": "https://www.emerald.com/insight/publication/issn/1940-5979",
+   "alternate_urls": [
+    "http://www.emeraldinsight.com.ezproxy.ub.gu.se/products/journals/journals.htm?id=rbf",
+    "http://onlinelibrary.wiley.com/journal/10.1002/(ISSN)1940-5987",
+    "http://www3.interscience.wiley.com/journal/121355847/home"
+   ]
+  },
+  "title": "Structural drivers and forecasting dynamics of the BIST100 index: a hybrid ML/DL approach integrating liquidity, sentiment and macroeconomic factors",
+  "venue": "Review of Behavioral Finance",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2453742460",
+    "name": "Alptekin Erdağ"
+   },
+   {
+    "authorId": "46430439",
+    "name": "M. F. Uçar"
+   },
+   {
+    "authorId": "47888308",
+    "name": "İ. Tarhan"
+   }
+  ]
+ },
+ "CBAYAR2026_Rebalancing": {
+  "paperId": "25c1928a597693d6cf454b0aa7db7f1f7c0f5a79",
+  "externalIds": {
+   "DOI": "10.18026/cbayarsos.1905022",
+   "CorpusId": 292610933
+  },
+  "publicationVenue": {
+   "id": "e6d938a8-595b-418e-9db7-3cd359688e89",
+   "name": "Celal Bayar Üniversitesi Sosyal Bilimler Dergisi",
+   "alternate_names": [
+    "Celal Bayar Üniversitesi Sos Bilim Derg"
+   ],
+   "issn": "2146-2844",
+   "url": "https://www.ceeol.com/search/journal-detail?id=78"
+  },
+  "title": "BIST Katılım 30 Endeksi Kapsamındaki Portföylerde Yeniden Dengeleme Stratejilerinin Karşılaştırması",
+  "venue": "Celal Bayar Üniversitesi Sosyal Bilimler Dergisi",
+  "year": 2026,
+  "citationCount": 0,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "2092986208",
+    "name": "Selim Baha Yıldız"
+   },
+   {
+    "authorId": "2493505864",
+    "name": "Ümit Hasan Gözkonan"
+   }
+  ]
+ },
+ "Thongkairat2025_SET50": {
+  "paperId": "9d98f1ee7291a86f6251b0ee519e31c1b0ecefb5",
+  "externalIds": {
+   "DOI": "10.3390/math13030461",
+   "CorpusId": 276030893
+  },
+  "publicationVenue": {
+   "id": "6175efe8-6f8e-4cbe-8cee-d154f4e78627",
+   "name": "Mathematics",
+   "issn": "2227-7390",
+   "url": "http://www.e-helvetica.nb.admin.ch/directAccess?callnumber=bel-283014",
+   "alternate_urls": [
+    "http://nbn-resolving.de/urn/resolver.pl?urn=urn:nbn:ch:bel-283014",
+    "https://www.mdpi.com/journal/mathematics"
+   ]
+  },
+  "title": "A Combined Algorithm Approach for Optimizing Portfolio Performance in Automated Trading: A Study of SET50 Stocks",
+  "venue": "Mathematics",
+  "year": 2025,
+  "citationCount": 7,
+  "influentialCitationCount": 0,
+  "authors": [
+   {
+    "authorId": "52124127",
+    "name": "Sukrit Thongkairat"
+   },
+   {
+    "authorId": "2283161330",
+    "name": "Woraphon Yamaka"
+   }
+  ]
+ },
+ "Sattar2025_RMS": {
+  "paperId": "882ec5764b7820d5b09f083aa2f24f32482f1b42",
+  "externalIds": {
+   "DBLP": "journals/access/SattarSGBRF25",
+   "DOI": "10.1109/ACCESS.2025.3546099",
+   "CorpusId": 276658158
+  },
+  "title": "A Novel RMS-Driven Deep Reinforcement Learning for Optimized Portfolio Management in Stock Trading",
+  "venue": "IEEE Access",
+  "year": 2025,
+  "citationCount": 25
+ },
+ "Pippas2025_CSUR": {
+  "paperId": "342a3e1b9bc9c09fc549efd44bbe825048792901",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2408-10932",
+   "ArXiv": "2408.10932",
+   "DOI": "10.1145/3733714",
+   "CorpusId": 271909804
+  },
+  "title": "The Evolution of Reinforcement Learning in Quantitative Finance: A Survey",
+  "venue": "ACM Computing Surveys",
+  "year": 2024,
+  "citationCount": 39
+ },
+ "Wang2025_ESWAsurvey": {
+  "paperId": "09914b2d13a578323354b44677a366ae2f27e2c9",
+  "externalIds": {
+   "DBLP": "journals/eswa/WangLNYLD25",
+   "DOI": "10.1016/j.eswa.2025.127540",
+   "CorpusId": 278052082
+  },
+  "title": "A Survey on recent advances in reinforcement learning for intelligent investment decision-making optimization",
+  "venue": "Expert systems with applications",
+  "year": 2025,
+  "citationCount": 14
+ },
+ "Hambly2023_MF": {
+  "paperId": "f8ff28c02b5d1aa27803330ee1676a0a7d93176b",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2112-04553",
+   "ArXiv": "2112.04553",
+   "DOI": "10.1111/mafi.12382",
+   "CorpusId": 244750730
+  },
+  "title": "Recent advances in reinforcement learning in finance",
+  "venue": "Social Science Research Network",
+  "year": 2021,
+  "citationCount": 318
+ },
+ "Jiang2017_DRLPortfolio": {
+  "paperId": "b3f9a777cf1a00a4601264a6451f0c6876a4d0f6",
+  "externalIds": {
+   "MAG": "2731083990",
+   "ArXiv": "1706.10059",
+   "DBLP": "journals/corr/JiangXL17",
+   "CorpusId": 41923363
+  },
+  "title": "A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem",
+  "venue": "arXiv.org",
+  "year": 2017,
+  "citationCount": 509
+ },
+ "Deng2017_TNNLS": {
+  "paperId": "f96478d0694f18384934fc19a2655170f32e2d8c",
+  "externalIds": {
+   "DBLP": "journals/tnn/DengBKRD17",
+   "MAG": "2344786740",
+   "DOI": "10.1109/TNNLS.2016.2522401",
+   "CorpusId": 9398383,
+   "PubMed": "26890927"
+  },
+  "title": "Deep Direct Reinforcement Learning for Financial Signal Representation and Trading",
+  "venue": "IEEE Transactions on Neural Networks and Learning Systems",
+  "year": 2017,
+  "citationCount": 814
+ },
+ "Theate2021_ESWA": {
+  "paperId": "95ff34ee03133e924d340f26041a8d2e459e17a8",
+  "externalIds": {
+   "MAG": "3016228233",
+   "ArXiv": "2004.06627",
+   "DBLP": "journals/corr/abs-2004-06627",
+   "DOI": "10.1016/j.eswa.2021.114632",
+   "CorpusId": 215729771
+  },
+  "title": "An Application of Deep Reinforcement Learning to Algorithmic Trading",
+  "venue": "Expert systems with applications",
+  "year": 2020,
+  "citationCount": 234
+ },
+ "Liu2021_FinRL": {
+  "paperId": "69b0012f366367a3bb2d182aa0a8ebae35b95255",
+  "externalIds": {
+   "MAG": "3214214829",
+   "DBLP": "conf/icaif/LiuYGW21",
+   "ArXiv": "2111.09395",
+   "DOI": "10.1145/3490354.3494366",
+   "CorpusId": 243899513
+  },
+  "title": "FinRL: deep reinforcement learning framework to automate trading in quantitative finance",
+  "venue": "International Conference on AI in Finance",
+  "year": 2021,
+  "citationCount": 182
+ },
+ "Schulman2017_PPO": {
+  "paperId": "dce6f9d4017b1785979e7520fd0834ef8cf02f4b",
+  "externalIds": {
+   "MAG": "2736601468",
+   "ArXiv": "1707.06347",
+   "DBLP": "journals/corr/SchulmanWDRK17",
+   "CorpusId": 28695052
+  },
+  "title": "Proximal Policy Optimization Algorithms",
+  "venue": "arXiv.org",
+  "year": 2017,
+  "citationCount": 31850
+ },
+ "Mnih2016_A3C": {
+  "paperId": "69e76e16740ed69f4dc55361a3d319ac2f1293dd",
+  "externalIds": {
+   "MAG": "2964043796",
+   "DBLP": "journals/corr/MnihBMGLHSK16",
+   "ArXiv": "1602.01783",
+   "CorpusId": 6875312
+  },
+  "title": "Asynchronous Methods for Deep Reinforcement Learning",
+  "venue": "International Conference on Machine Learning",
+  "year": 2016,
+  "citationCount": 10396
+ },
+ "Fujimoto2018_TD3": {
+  "paperId": "4debb99c0c63bfaa97dd433bc2828e4dac81c48b",
+  "externalIds": {
+   "MAG": "2963923407",
+   "DBLP": "conf/icml/FujimotoHM18",
+   "ArXiv": "1802.09477",
+   "CorpusId": 3544558
+  },
+  "title": "Addressing Function Approximation Error in Actor-Critic Methods",
+  "venue": "International Conference on Machine Learning",
+  "year": 2018,
+  "citationCount": 7568
+ },
+ "Lillicrap2016_DDPG": {
+  "paperId": "024006d4c2a89f7acacc6e4438d156525b60a98f",
+  "externalIds": {
+   "DBLP": "journals/corr/LillicrapHPHETS15",
+   "ArXiv": "1509.02971",
+   "MAG": "2173248099",
+   "CorpusId": 16326763
+  },
+  "title": "Continuous control with deep reinforcement learning",
+  "venue": "International Conference on Learning Representations",
+  "year": 2015,
+  "citationCount": 16142
+ },
+ "Towers2024_Gymnasium": {
+  "paperId": "91d134d06b4c076507992c546ca35865a184fee1",
+  "externalIds": {
+   "ArXiv": "2407.17032",
+   "CorpusId": 290088643
+  },
+  "title": "Gymnasium: A Standard Interface for Reinforcement Learning Environments",
+  "venue": "",
+  "year": 2024,
+  "citationCount": 5
+ },
+ "Lowe2017_MADDPG": {
+  "paperId": "7c3ece1ba41c415d7e81cfa5ca33a8de66efd434",
+  "externalIds": {
+   "MAG": "2623431351",
+   "ArXiv": "1706.02275",
+   "DBLP": "conf/nips/LoweWTHAM17",
+   "CorpusId": 26419660
+  },
+  "title": "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments",
+  "venue": "Neural Information Processing Systems",
+  "year": 2017,
+  "citationCount": 6499
+ },
+ "Rashid2020_QMIX": {
+  "paperId": "3f5f13c6f5c659754086a7faa51d6bc60f577cd1",
+  "externalIds": {
+   "ArXiv": "2003.08839",
+   "DBLP": "journals/corr/abs-2003-08839",
+   "MAG": "2963762747",
+   "CorpusId": 213176860
+  },
+  "title": "Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning",
+  "venue": "Journal of machine learning research",
+  "year": 2020,
+  "citationCount": 1648
+ },
+ "Foerster2018_COMA": {
+  "paperId": "2b292ff89d808fba10579871591a22f1649cd039",
+  "externalIds": {
+   "ArXiv": "1705.08926",
+   "MAG": "2617547828",
+   "DBLP": "conf/aaai/FoersterFANW18",
+   "DOI": "10.1609/aaai.v32i1.11794",
+   "CorpusId": 19141434
+  },
+  "title": "Counterfactual Multi-Agent Policy Gradients",
+  "venue": "AAAI Conference on Artificial Intelligence",
+  "year": 2017,
+  "citationCount": 2820
+ },
+ "Christianos2021_SePS": {
+  "paperId": "742e45f9ccf43fdfb3bc565e3bd0f7252902c0d3",
+  "externalIds": {
+   "DBLP": "journals/corr/abs-2102-07475",
+   "ArXiv": "2102.07475",
+   "CorpusId": 231924963
+  },
+  "title": "Scaling Multi-Agent Reinforcement Learning with Selective Parameter Sharing",
+  "venue": "International Conference on Machine Learning",
+  "year": 2021,
+  "citationCount": 191
+ },
+ "Liang2018_RLlib": {
+  "paperId": "1e5f4c62b36dc90e3a45b717005b446d52a1b1d7",
+  "externalIds": {
+   "MAG": "2964335069",
+   "DBLP": "journals/corr/abs-1712-09381",
+   "ArXiv": "1712.09381",
+   "CorpusId": 195346744
+  },
+  "title": "Ray RLLib: A Composable and Scalable Reinforcement Learning Library",
+  "venue": "Neural Information Processing Systems",
+  "year": 2017,
+  "citationCount": 182
+ },
+ "Fey2019_PyG": {
+  "paperId": "63a513832f56addb67be81a2fa399b233f3030fc",
+  "externalIds": {
+   "MAG": "2918342466",
+   "DBLP": "journals/corr/abs-1903-02428",
+   "ArXiv": "1903.02428",
+   "CorpusId": 70349949
+  },
+  "title": "Fast Graph Representation Learning with PyTorch Geometric",
+  "venue": "arXiv.org",
+  "year": 2019,
+  "citationCount": 5734
+ },
+ "HernandezLeal2019_Survey": {
+  "paperId": "3f43f08611cbcfba62bb9e0c5339c2a8f0cc3e4b",
+  "externalIds": {
+   "MAG": "2971871057",
+   "DBLP": "journals/corr/abs-1810-05587",
+   "ArXiv": "1810.05587",
+   "DOI": "10.1007/s10458-019-09421-1",
+   "CorpusId": 202540003
+  },
+  "title": "A survey and critique of multiagent deep reinforcement learning",
+  "venue": "Autonomous Agents and Multi-Agent Systems",
+  "year": 2018,
+  "citationCount": 769
+ },
+ "Gronauer2022_Survey": {
+  "paperId": "98cb29c03a0882fde368db28ade214c57c3239d6",
+  "externalIds": {
+   "DBLP": "journals/air/GronauerD22",
+   "MAG": "3156295478",
+   "DOI": "10.1007/s10462-021-09996-w",
+   "CorpusId": 234833859
+  },
+  "title": "Multi-agent deep reinforcement learning: a survey",
+  "venue": "Artificial Intelligence Review",
+  "year": 2021,
+  "citationCount": 1022
+ },
+ "Zhu2024_CommSurvey": {
+  "paperId": "d60742f6c1df48bc820a26564ae51cf527732ae2",
+  "externalIds": {
+   "ArXiv": "2203.08975",
+   "DBLP": "conf/atal/ZhuD024",
+   "DOI": "10.1007/s10458-023-09633-6",
+   "CorpusId": 247518595
+  },
+  "title": "A survey of multi-agent deep reinforcement learning with communication",
+  "venue": "Autonomous Agents and Multi-Agent Systems",
+  "year": 2022,
+  "citationCount": 353
+ },
+ "Lin2025_CAROC": {
+  "paperId": "c4f944a4f50ad0aea91ddbaeb2502d2ff41b8ae2",
+  "externalIds": {
+   "DOI": "10.1080/03081079.2025.2503785",
+   "CorpusId": 278685599
+  },
+  "title": "Enhancing multi-agent communication through credibility and reward-based optimisation",
+  "venue": "International Journal of General Systems",
+  "year": 2025,
+  "citationCount": 1
+ },
+ "Hu2026_CommFormerTKDE": {
+  "paperId": "1456c971a4cf46c36727bc8110e9bc6d5946c33a",
+  "externalIds": {
+   "DBLP": "journals/tkde/HuFSZT26",
+   "DOI": "10.1109/TKDE.2026.3658366",
+   "CorpusId": 273798497
+  },
+  "title": "Communication Learning in Multi-Agent Systems From Graph Modeling Perspective",
+  "venue": "IEEE Transactions on Knowledge and Data Engineering",
+  "year": 2026,
+  "citationCount": 7
+ },
+ "Vaswani2017_Attention": {
+  "paperId": "204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+  "externalIds": {
+   "MAG": "2626778328",
+   "DBLP": "journals/corr/VaswaniSPUJGKP17",
+   "ArXiv": "1706.03762",
+   "CorpusId": 13756489
+  },
+  "title": "Attention is All you Need",
+  "venue": "Neural Information Processing Systems",
+  "year": 2017,
+  "citationCount": 195530
+ },
+ "Mantegna1999_Hierarchy": {
+  "paperId": "0f3e4ba38b5959848042ef5ea4095f17fae6740a",
+  "externalIds": {
+   "ArXiv": "cond-mat/9802256",
+   "MAG": "2138144286",
+   "DOI": "10.1007/s100510050929",
+   "CorpusId": 16976422
+  },
+  "title": "Hierarchical structure in financial markets",
+  "venue": "",
+  "year": 1998,
+  "citationCount": 2040
+ },
+ "Feng2019_RelationalRank": {
+  "paperId": "b278f34cde7fb0e94e271ecfa7b0a0ed84c4d866",
+  "externalIds": {
+   "MAG": "2952502281",
+   "ArXiv": "1809.09441",
+   "DBLP": "journals/tois/FengHWLLC19",
+   "DOI": "10.1145/3309547",
+   "CorpusId": 52823666
+  },
+  "title": "Temporal Relational Ranking for Stock Prediction",
+  "venue": "ACM Trans. Inf. Syst.",
+  "year": 2018,
+  "citationCount": 587
+ },
+ "Chen2016_XGBoost": {
+  "paperId": "26bc9195c6343e4d7f434dd65b4ad67efe2be27a",
+  "externalIds": {
+   "DBLP": "conf/kdd/ChenG16",
+   "MAG": "2295598076",
+   "ArXiv": "1603.02754",
+   "DOI": "10.1145/2939672.2939785",
+   "CorpusId": 4650265
+  },
+  "title": "XGBoost: A Scalable Tree Boosting System",
+  "venue": "Knowledge Discovery and Data Mining",
+  "year": 2016,
+  "citationCount": 63248
+ },
+ "Prokhorenkova2018_CatBoost": {
+  "paperId": "69767af9550b193813735c509d9747e56a675339",
+  "externalIds": {
+   "DBLP": "journals/corr/DorogushGGKPV17",
+   "ArXiv": "1706.09516",
+   "MAG": "2734096527",
+   "CorpusId": 195348048
+  },
+  "title": "Fighting biases with dynamic boosting",
+  "venue": "arXiv.org",
+  "year": 2017,
+  "citationCount": 110
+ },
+ "Hochreiter1997_LSTM": {
+  "paperId": "2e9d221c206e9503ceb452302d68d10e293f2a10",
+  "externalIds": {
+   "DBLP": "journals/neco/HochreiterS97",
+   "MAG": "2064675550",
+   "DOI": "10.1162/neco.1997.9.8.1735",
+   "CorpusId": 1915014,
+   "PubMed": "9377276"
+  },
+  "title": "Long Short-Term Memory",
+  "venue": "Neural Computation",
+  "year": 1997,
+  "citationCount": 111139
+ },
+ "Schuster1997_BiRNN": {
+  "paperId": "e23c34414e66118ecd9b08cf0cd4d016f59b0b85",
+  "externalIds": {
+   "DBLP": "journals/tsp/SchusterP97",
+   "MAG": "2131774270",
+   "DOI": "10.1109/78.650093",
+   "CorpusId": 18375389
+  },
+  "title": "Bidirectional recurrent neural networks",
+  "venue": "IEEE Transactions on Signal Processing",
+  "year": 1997,
+  "citationCount": 10201
+ },
+ "Graves2005_BiLSTM": {
+  "paperId": "5536d42ce80e129be8cae172ed1b7659c769d31d",
+  "externalIds": {
+   "MAG": "2079735306",
+   "DOI": "10.1016/J.NEUNET.2005.06.042",
+   "CorpusId": 1856462
+  },
+  "title": "2005 Special Issue: Framewise phoneme classification with bidirectional LSTM and other neural network architectures",
+  "venue": "",
+  "year": 2005,
+  "citationCount": 5191
+ },
+ "Wolpert1992_Stacking": {
+  "paperId": "bbc25a700e51984e560eae27df1587baa92e3afe",
+  "externalIds": {
+   "MAG": "28412257",
+   "DOI": "10.1016/S0893-6080(05)80023-1",
+   "CorpusId": 5895004
+  },
+  "title": "Original Contribution: Stacked generalization",
+  "venue": "",
+  "year": 1992,
+  "citationCount": 6836
+ },
+ "Breiman1996_StackedReg": {
+  "paperId": "a1477f71c2edb741750301e5016cb9284ea1639b",
+  "externalIds": {
+   "DBLP": "journals/ml/Breiman96a",
+   "DOI": "10.1007/BF00117832",
+   "CorpusId": 11152531
+  },
+  "title": "Stacked regressions",
+  "venue": "Machine-mediated learning",
+  "year": 2004,
+  "citationCount": 1432
+ },
+ "Hoerl1970_Ridge": null,
+ "Breiman2001_RF": {
+  "paperId": "8e0be569ea77b8cb29bb0e8b031887630fe7a96c",
+  "externalIds": {
+   "MAG": "2342146255",
+   "DBLP": "reference/ml/X17sy",
+   "DOI": "10.1023/A:1010933404324",
+   "CorpusId": 89141
+  },
+  "title": "Random Forests",
+  "venue": "Machine-mediated learning",
+  "year": 2001,
+  "citationCount": 125705
+ },
+ "Kraskov2004_MI": {
+  "paperId": "5729e9bc42a8c006fcdeaf6ca3434fabf49e7e7c",
+  "externalIds": {
+   "MAG": "2092939357",
+   "ArXiv": "cond-mat/0305641",
+   "DOI": "10.1103/PhysRevE.69.066138",
+   "CorpusId": 1269438,
+   "PubMed": "15244698"
+  },
+  "title": "Estimating mutual information.",
+  "venue": "Physical review. E, Statistical, nonlinear, and soft matter physics",
+  "year": 2003,
+  "citationCount": 4372
+ },
+ "Ross2014_MI": {
+  "paperId": "ab99cb06acad1011ae0cc791cb7b35b74577cdfc",
+  "externalIds": {
+   "PubMedCentral": "3929353",
+   "MAG": "2082290707",
+   "DOI": "10.1371/journal.pone.0087357",
+   "CorpusId": 8950163,
+   "PubMed": "24586270"
+  },
+  "title": "Mutual Information between Discrete and Continuous Data Sets",
+  "venue": "PLoS ONE",
+  "year": 2014,
+  "citationCount": 847
+ },
+ "Akiba2019_Optuna": {
+  "paperId": "4cdf2fad22afc865999747336c7399fe422e6e8e",
+  "externalIds": {
+   "DBLP": "conf/kdd/AkibaSYOK19",
+   "MAG": "2962897394",
+   "ArXiv": "1907.10902",
+   "DOI": "10.1145/3292500.3330701",
+   "CorpusId": 196194314
+  },
+  "title": "Optuna: A Next-generation Hyperparameter Optimization Framework",
+  "venue": "Knowledge Discovery and Data Mining",
+  "year": 2019,
+  "citationCount": 11923
+ },
+ "Bergmeir2012_TSCV": {
+  "paperId": "f93f1a82d37ce0e6eeb421c89a441258bc7cf329",
+  "externalIds": {
+   "MAG": "1981780459",
+   "DBLP": "journals/isci/BergmeirB12",
+   "DOI": "10.1016/j.ins.2011.12.028",
+   "CorpusId": 44568420
+  },
+  "title": "On the use of cross-validation for time series predictor evaluation",
+  "venue": "Information Sciences",
+  "year": 2012,
+  "citationCount": 1276
+ },
+ "Bergmeir2018_TSCV": {
+  "paperId": "22a3ade55b42a4abcdf1ae55ea3633c047191c7a",
+  "externalIds": {
+   "MAG": "2770188460",
+   "DBLP": "journals/csda/BergmeirHK18",
+   "DOI": "10.1016/j.csda.2017.11.003",
+   "CorpusId": 26204665
+  },
+  "title": "A note on the validity of cross-validation for evaluating autoregressive time series prediction",
+  "venue": "Computational Statistics & Data Analysis",
+  "year": 2018,
+  "citationCount": 693
+ },
+ "Lundberg2017_SHAP": {
+  "paperId": "442e10a3c6640ded9408622005e3c2a8906ce4c2",
+  "externalIds": {
+   "MAG": "2618851150",
+   "DBLP": "journals/corr/LundbergL17",
+   "ArXiv": "1705.07874",
+   "DOI": "10.9728/dcs.2024.25.7.1847",
+   "CorpusId": 21889700
+  },
+  "title": "A Unified Approach to Interpreting Model Predictions",
+  "venue": "Neural Information Processing Systems",
+  "year": 2017,
+  "citationCount": 42806
+ },
+ "Lundberg2020_TreeSHAP": {
+  "paperId": "81600fd653a828d69f6160705be6814dd101beb7",
+  "externalIds": {
+   "MAG": "2999615587",
+   "DBLP": "journals/natmi/LundbergECDPNKH20",
+   "PubMedCentral": "7326367",
+   "DOI": "10.1038/s42256-019-0138-9",
+   "CorpusId": 214265509,
+   "PubMed": "32607472"
+  },
+  "title": "From Local Explanations to Global Understanding with Explainable AI for Trees",
+  "venue": "Nature Machine Intelligence",
+  "year": 2020,
+  "citationCount": 9580
+ },
+ "Gu2020_MLAssetPricing": null,
+ "Fischer2018_LSTMFinance": {
+  "paperId": "701e59358fda0d865d7b26cd954a93a5ad20fd13",
+  "externalIds": {
+   "MAG": "2624385633",
+   "DBLP": "journals/eor/FischerK18",
+   "DOI": "10.1016/j.ejor.2017.11.054",
+   "CorpusId": 207640363
+  },
+  "title": "Deep learning with long short-term memory networks for financial market predictions",
+  "venue": "European Journal of Operational Research",
+  "year": 2017,
+  "citationCount": 2656
+ },
+ "Huang1998_EMD": {
+  "paperId": "3842d81b0375dae8ae92734aa2a5d4aeed7a91d1",
+  "externalIds": {
+   "MAG": "2007221293",
+   "DOI": "10.1098/rspa.1998.0193",
+   "CorpusId": 1262186
+  },
+  "title": "The empirical mode decomposition and the Hilbert spectrum for nonlinear and non-stationary time series analysis",
+  "venue": "Proceedings of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences",
+  "year": 1998,
+  "citationCount": 21473
+ },
+ "Wu2009_EEMD": {
+  "paperId": "a97ee1d4a15c04160c323bd650e9cb9dff9dfced",
+  "externalIds": {
+   "DBLP": "journals/aada/WuH09",
+   "MAG": "2120390927",
+   "DOI": "10.1142/S1793536909000047",
+   "CorpusId": 207152935
+  },
+  "title": "Ensemble Empirical Mode Decomposition: a Noise-Assisted Data Analysis Method",
+  "venue": "Advances in Data Science and Adaptive Analysis",
+  "year": 2009,
+  "citationCount": 8202
+ },
+ "Xiong2025_OneTimeDenoise": {
+  "paperId": "0e27ea185b7c562682f3bec1ad98f086cd4d0b29",
+  "externalIds": {
+   "DBLP": "journals/apin/XiongXYW25",
+   "DOI": "10.1007/s10489-025-06720-x",
+   "CorpusId": 280070229
+  },
+  "title": "Overestimated stock market forecasts resulting from the one-time denoising",
+  "venue": "Applied intelligence (Boston)",
+  "year": 2025,
+  "citationCount": 1
+ },
+ "Pang2025_WindLeak": {
+  "paperId": "946638c4daf273ded03c53563e0cc2ab529972f5",
+  "externalIds": {
+   "DOI": "10.1016/j.apm.2025.116376",
+   "CorpusId": 280832728
+  },
+  "title": "Stop unrealistic data preprocessing in wind speed forecasting: approaches and discussions on preventing future data leakage",
+  "venue": "Applied Mathematical Modelling",
+  "year": null,
+  "citationCount": 4
+ },
+ "Kapoor2023_Leakage": {
+  "paperId": "02882aa74675b324808096609037a2dffb24c713",
+  "externalIds": {
+   "DBLP": "journals/patterns/KapoorN23",
+   "PubMedCentral": "10499856",
+   "DOI": "10.1016/j.patter.2023.100804",
+   "CorpusId": 260663045,
+   "PubMed": "37720327"
+  },
+  "title": "Leakage and the reproducibility crisis in machine-learning-based science",
+  "venue": "Patterns",
+  "year": 2023,
+  "citationCount": 1208
+ },
+ "Croushore2001_RealTime": {
+  "paperId": "0ad95e13218a08adb7b93e1b9cf567fc6084b910",
+  "externalIds": {
+   "MAG": "2083137543",
+   "DOI": "10.1016/S0304-4076(01)00072-0",
+   "CorpusId": 18788921
+  },
+  "title": "A real-time data set for macroeconomists",
+  "venue": "",
+  "year": 2001,
+  "citationCount": 764
+ },
+ "NiculescuMizil2005_Calib": {
+  "paperId": "eae3948747c9d051314c1f5851957b833aa83eca",
+  "externalIds": {
+   "DBLP": "conf/icml/Niculescu-MizilC05",
+   "MAG": "2098824882",
+   "DOI": "10.1145/1102351.1102430",
+   "CorpusId": 207158152
+  },
+  "title": "Predicting good probabilities with supervised learning",
+  "venue": "International Conference on Machine Learning",
+  "year": 2005,
+  "citationCount": 2330
+ },
+ "Naeini2015_ECE": {
+  "paperId": "8d115c3b2ee80e0754360a154a9369bc1658b607",
+  "externalIds": {
+   "DBLP": "conf/aaai/NaeiniCH15",
+   "MAG": "2254249950",
+   "PubMedCentral": "4410090",
+   "DOI": "10.1609/aaai.v29i1.9602",
+   "CorpusId": 6292807,
+   "PubMed": "25927013"
+  },
+  "title": "Obtaining Well Calibrated Probabilities Using Bayesian Binning",
+  "venue": "AAAI Conference on Artificial Intelligence",
+  "year": 2015,
+  "citationCount": 2140
+ },
+ "Brier1950": {
+  "paperId": "feee6551179612b9691f021b583d8a99b81b9b86",
+  "externalIds": {
+   "MAG": "2073241381",
+   "DOI": "10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2",
+   "CorpusId": 122906757
+  },
+  "title": "VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF PROBABILITY",
+  "venue": "",
+  "year": 1950,
+  "citationCount": 6353
+ },
+ "Markowitz1952": {
+  "paperId": "a888bbc54bcb4aa483e42bb2997b7698abf6ab63",
+  "externalIds": {
+   "MAG": "2015856032",
+   "DOI": "10.1111/j.1540-6261.1952.tb01525.x",
+   "CorpusId": 7492997
+  },
+  "title": "Portfolio Selection",
+  "venue": "",
+  "year": 1971,
+  "citationCount": 15579
+ },
+ "Sharpe1966": {
+  "paperId": "82b2413467a2b0cbfa7b3fc9c091cecd176a5f69",
+  "externalIds": {
+   "DOI": "10.1086/294846",
+   "CorpusId": 53322647
+  },
+  "title": "MUTUAL FUND PERFORMANCE*",
+  "venue": "",
+  "year": 2007,
+  "citationCount": 3570
+ },
+ "Sortino1994": {
+  "paperId": "db4b30d93414499c8ad24e5137997c402de6e264",
+  "externalIds": {
+   "MAG": "2148654185",
+   "DOI": "10.3905/joi.3.3.59",
+   "CorpusId": 155042092
+  },
+  "title": "Performance Measurement in a Downside Risk Framework",
+  "venue": "",
+  "year": 1994,
+  "citationCount": 894
+ },
+ "Lo2002_SharpeStats": {
+  "paperId": "05561b77acfdd034a585c32048819cc9ba6d1434",
+  "externalIds": {
+   "MAG": "1995808291",
+   "DOI": "10.2469/faj.v58.n4.2453",
+   "CorpusId": 18671754
+  },
+  "title": "The Statistics of Sharpe Ratios",
+  "venue": "",
+  "year": 2002,
+  "citationCount": 794
+ },
+ "Kelly1956": null,
+ "MacLean2010_Kelly": {
+  "paperId": "cb4ce4c86d0ca7aad71817d03c79cfdd41727418",
+  "externalIds": {
+   "MAG": "1985810281",
+   "DOI": "10.1080/14697688.2010.506108",
+   "CorpusId": 153510878
+  },
+  "title": "Long-term capital growth: the good and bad properties of the Kelly and fractional Kelly capital growth criteria",
+  "venue": "",
+  "year": 2010,
+  "citationCount": 84
+ },
+ "Kritzman2010_Turbulence": {
+  "paperId": "b5c9124a43c2bb18394957f10ed3bfc6b2db9f69",
+  "externalIds": {
+   "MAG": "2099233100",
+   "DOI": "10.2469/faj.v66.n5.3",
+   "CorpusId": 53478656
+  },
+  "title": "Skulls, Financial Turbulence, and Risk Management",
+  "venue": "",
+  "year": 2010,
+  "citationCount": 209
+ },
+ "Hamilton1989_Regime": {
+  "paperId": "de6046f58a05a769b5aa526d95a09c5fa5e5b42c",
+  "externalIds": {
+   "MAG": "2074812030",
+   "DOI": "10.2307/1912559",
+   "CorpusId": 12579598
+  },
+  "title": "A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle",
+  "venue": "",
+  "year": 1989,
+  "citationCount": 10135
+ },
+ "Ang2002_RegimeAlloc": {
+  "paperId": "2521155069503babc51b65fae22ee7281674ea4a",
+  "externalIds": {
+   "MAG": "2005432509",
+   "DOI": "10.1093/RFS/15.4.1137",
+   "CorpusId": 153523172
+  },
+  "title": "International Asset Allocation With Regime Shifts",
+  "venue": "",
+  "year": 2002,
+  "citationCount": 1622
+ },
+ "Nystrup2018_HMMPortfolio": {
+  "paperId": "cfae02af5dec5bd3feae3d32a2d9a89b462009c0",
+  "externalIds": {
+   "MAG": "2594258513",
+   "DOI": "10.1080/14697688.2017.1342857",
+   "CorpusId": 55917831
+  },
+  "title": "Dynamic portfolio optimization across hidden market regimes",
+  "venue": "",
+  "year": 2016,
+  "citationCount": 66
+ },
+ "Akhmedov2026_ConfReward": {
+  "paperId": "84806bc20530d103ea03cb221771026d0d43b52a",
+  "externalIds": {
+   "DOI": "10.3390/math14122075",
+   "CorpusId": 289258487
+  },
+  "title": "Confidence-Aware Reward Shaping for Crypto Trading: A Comparative Study of Lightweight Uncertainty Estimation Methods",
+  "venue": "Mathematics",
+  "year": 2026,
+  "citationCount": 0
+ },
+ "Harvey2016_CrossSection": null,
+ "White2000_RealityCheck": {
+  "paperId": "ee1014390904db3c2c7c1f81719f49450e621a70",
+  "externalIds": {
+   "MAG": "2135606128",
+   "DOI": "10.1111/1468-0262.00152",
+   "CorpusId": 3917886
+  },
+  "title": "A Reality Check for Data Snooping",
+  "venue": "",
+  "year": 2000,
+  "citationCount": 1857
+ },
+ "Hansen2005_SPA": {
+  "paperId": "83d10adb98319ab3fcc15dfa44dd3f7ff80e4bda",
+  "externalIds": {
+   "MAG": "2050902901",
+   "DOI": "10.1198/073500105000000063",
+   "CorpusId": 31771437
+  },
+  "title": "A Test for Superior Predictive Ability",
+  "venue": "",
+  "year": 2005,
+  "citationCount": 1277
+ },
+ "Brown1992_Survivorship": {
+  "paperId": "65d5e8804fba699782440a3c64b3df5326052e05",
+  "externalIds": {
+   "MAG": "1992897607",
+   "DOI": "10.1093/RFS/5.4.553",
+   "CorpusId": 154220266
+  },
+  "title": "Survivorship Bias in Performance Studies",
+  "venue": "",
+  "year": 1992,
+  "citationCount": 1119
+ },
+ "Bekaert1997_EMVol": {
+  "paperId": "da1667783407c6f86c99de1bc520b51dd9649dda",
+  "externalIds": {
+   "MAG": "1968880732",
+   "DOI": "10.1016/S0304-405X(96)00889-6",
+   "CorpusId": 8539692
+  },
+  "title": "Emerging equity market volatility",
+  "venue": "",
+  "year": 1995,
+  "citationCount": 1798
+ }
+}

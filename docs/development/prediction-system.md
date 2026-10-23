@@ -34,7 +34,7 @@ Veri Katmanı → Feature Engineering v2 → Multi-Model (5 base) → Stacking E
 
 ## Feature Engineering (`prediction/feature_engineer.py`)
 
-Tüm özellikler en az 1 gün gecikmeli (shift) — data leakage önlenir.
+Tüm özellikler en az 1 gün gecikmeli (shift). Bu, fiyat türevli özelliklerde sızıntıyı önler; ancak **tek başına yeterli değil** (2026-10-06 doğrulaması): makro seride `bfill`, TÜFE/ÜFE açıklanma gecikmesinin modellenmemesi, statik temel oranlar ve seri bütününe uygulanan ICEEMDAN ayrı sızıntı kaynaklarıdır. Ayrıntı: [roadmap.md → Bilinen Metodolojik Açıklar](roadmap.md#bilinen-metodolojik-açıklar-planlanmadı) (planlanmadı).
 
 | Grup | Özellikler |
 |---|---|
@@ -103,9 +103,9 @@ Her model çıktısı: `(predicted_price, predicted_direction, confidence)`
 | Direction Accuracy | Yön doğruluğu (%) |
 | Profit Factor | Kazanç/kayıp oranı |
 | Information Coefficient (IC) | Tahmin-gerçek korelasyonu |
-| Calibration | Güven skorunun güvenilirliği |
+| Calibration | Güven skorunun güvenilirliği (`compute_calibration`, ECE) — *tanımlı, hiçbir akıştan çağrılmıyor* |
 | Regime-based | Boğa/ayı/yatay piyasa ayrımı |
-| Diebold-Mariano | Modeller arası istatistiksel fark testi |
+| Diebold-Mariano | Modeller arası istatistiksel fark testi — *tanımlı, hiçbir akıştan çağrılmıyor; HAC varyans düzeltmesi yok* |
 | Backtest simülasyonu | Gerçekçi komisyon + slippage ile |
 
 ---

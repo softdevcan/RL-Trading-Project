@@ -11,9 +11,11 @@ Bu belge projenin **geçmişini (tamamlanan fazlar)** ve **gelecek yol haritası
 
 ---
 
-## Güncel Durum (2026-08-30)
+## Güncel Durum (2026-10-06)
 
 Faz 1-3 + Faz 6 (backend perf/dayanıklılık) + Faz 7 (auth/multi-user) + Faz 8 (UI/UX) tamamlandı. Tek-ajanlı temel altyapı, ensemble tahmin sistemi, risk yönetimi, hızlandırılmış/gözlemlenebilir eğitim ve kullanıcı bazlı izolasyon çalışır durumda. Sonraki adım **tez için çoklu-ajan mimariye** geçiş (Milestone 0-4).
+
+**2026-10-06 — literatür doğrulaması:** Ekim 2026 literatür taraması bağımsız olarak doğrulandı ([../thesis/literature-review-verification.md](../thesis/literature-review-verification.md)) ve tez vizyonu v0.2'ye güncellendi. Doğrulama sırasında kodda **akademik geçerliliği etkileyen açıklar** bulundu (veri sızıntısı + değerlendirme protokolü). Bunlar aşağıda [Bilinen Metodolojik Açıklar](#bilinen-metodolojik-açıklar-planlanmadı) başlığında kayıt altında; **henüz planlanmadı ve kod değişikliği yapılmadı.**
 
 | Katman | Durum | Konum |
 |---|---|---|
@@ -49,7 +51,7 @@ Ansari et al. metodolojisinin tam uygulaması + tahmin katmanı.
 - Fundamental veri entegrasyonu (ROE, ROA, P/E, P/B, D/E, profit margin, ...)
 - Makro veri pipeline (TCMB EVDS faiz/enflasyon + yfinance döviz/BIST100)
 - Altın/döviz pipeline (borsapy + yfinance)
-- Feature engineering v2 (10 grup özellik; en az 1 gün gecikmeli — leakage yok)
+- Feature engineering v2 (10 grup özellik; en az 1 gün gecikmeli). *2026-10-06 düzeltmesi:* "leakage yok" iddiası geri çekildi — 1 günlük gecikme fiyat türevli özellikler için yeterli, ama makro `bfill`, TÜFE/ÜFE açıklanma gecikmesi, statik temel oranlar ve tam seri ICEEMDAN sızıntı yaratıyor (bkz. [Bilinen Metodolojik Açıklar](#bilinen-metodolojik-açıklar-planlanmadı))
 - Feature selector (mutual information + permutation importance, 3 aşamalı)
 - Multi-model tahmin: XGBoost + LightGBM + CatBoost + BiLSTM (PyTorch/CUDA) + TFT
 - Stacking ensemble (Ridge / XGBoost meta-learner)
@@ -74,8 +76,8 @@ Bug fix'ler + tahmin kalitesi + risk yönetimi + açıklanabilirlik.
 - Permutation importance feature_selector'a entegre edildi
 
 **3.2 Tahmin Kalitesi:**
-- ICEEMDAN gürültü filtreleme (`prediction/iceemdan_processor.py`)
-- TATS trend-adjusted düzeltici (`prediction/tats.py`)
+- ICEEMDAN gürültü filtreleme (`prediction/iceemdan_processor.py`) — *2026-10-06:* seri bütününe uygulanıyor (sızıntı; opt-in grup)
+- TATS trend-adjusted düzeltici (`prediction/tats.py`) — *2026-10-06:* yöntem Kazemdehbashi (2026, arXiv 2601.12706) tarafından yayımlanmış; **atıf zorunlu**, tezde/makalede uyarlanan yöntem olarak sunulur
 - Global makro göstergeler: VIX, US10Y, DXY (`macro_fetcher.py` + `feature_engineer.py`)
 
 **3.3 Risk Yönetimi:**
@@ -144,7 +146,11 @@ Mevcut Faz 1-3 sistemini "kanonik baseline" olarak dondurmak, reprodüktibilite 
 
 ### Milestone 1 — Literatür + Tez Önerisi (3-5 hafta)
 Akademik çerçeve formalize + ilk makale taslağı.
-- Genişletilmiş literatür taraması (60+ makale)
+- ✅ Genişletilmiş literatür taraması (60+ makale) — 2026-10-06: 121 kaynak + bağımsız doğrulama; 4 uydurma vizyon kaynağı elendi, boşluk iddiaları daraltıldı ([vision-and-scope.md §2.5](../thesis/vision-and-scope.md))
+- ✅ Seçilmiş kaynakça (2026-10-07): 169 kayıt değerlendirildi, 148 seçildi (85 SCIE/SSCI dergi + 41 üst düzey konferans); ileri atıf taraması, Clarivate MJL kontrolü, tez/kod bileşenleri için kapsam matrisi (açık yok) — [../thesis/literature-table.md](../thesis/literature-table.md); vision-and-scope v0.3
+- ⏳ Dört 2026 tam metni (Hung & Huang, Yuan vd., CAROC, Xiong vd.) — G1, G2 ve Makale 2 ifadeleri bunlara bağlı
+- ⏳ YÖK Ulusal Tez Merkezi elle taraması (G4 iddiası buna bağlı)
+- ⚠️ Makale 2 yeniden konumlandırıldı (TATS atfı + sızıntısız ayrıştırma sorusu, vision-and-scope §6.2); gönderim, sızıntı düzeltmelerinin planlanmasına bağlı
 - Danışman revizyonu
 - Makale 2 ilk submission-ready taslak
 - **Çıktı:** Tez Bölüm 1-3 taslağı
@@ -179,6 +185,38 @@ Paketleme.
 
 ---
 
+## Bilinen Metodolojik Açıklar (planlanmadı)
+
+2026-10-06 literatür doğrulaması sırasında kodda doğrulandı. **Bu bir iş listesi değil, bulgu kaydıdır**; düzeltmelerin kapsamı, sırası ve zamanı ayrı bir planlama turunda belirlenecek. Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
+
+**Sızıntı (sonuç geçerliliği):**
+
+| # | Açık | Varsayılan hatta etkin mi? |
+|---|---|---|
+| S1 | ICEEMDAN serinin tamamına uygulanıyor; hedef filtrelenmiş fiyattan türetiliyor | Hayır (`iceemdan` opt-in) — Makale 2 bu grubu kullanacak |
+| S2 | Makro seride `bfill`: gelecekteki ilk değer geçmişe yayılıyor (yerel önbellekte 4 sütun 2026-04-23 → 2018) | **Evet** |
+| S3 | TÜFE/ÜFE açıklanma gecikmesi modellenmiyor | Gizli — yerel önbellekte EVDS verisi fallback sabitlerinde (faiz 50,0; TÜFE/ÜFE 0) |
+| S4 | Temel oranlar tek anlık değer olarak tüm geçmişe yayılıyor | Hayır (`fundamental` opt-in) |
+
+**Değerlendirme protokolü (tez/makale iddiaları):**
+
+| # | Açık |
+|---|---|
+| D1 | RL eğitim rotası SB3 modellerini tohumsuz kuruyor; tohum kaydedilmiyor (tahmin hattı `GLOBAL_SEED=42`) |
+| D2 | DM testi HAC'siz, t-testi eşleştirilmemiş; ikisi de hiçbir akıştan çağrılmıyor. Ledoit-Wolf, MCS, FDR yok. ECE fonksiyonu var ama çağrılmıyor |
+| D3 | Risksiz faiz üç yerde üç farklı değer (0 / 0,15 / 0,02) |
+| D4 | Baseline seti eksik: 1/N (yeniden dengelemeli), min-varyans, HRP yok |
+| D5 | Sembol evreni bugünkü BIST-30 (hayatta kalma yanlılığı) |
+| D6 | *2026-10-07:* Deflated Sharpe formülü yanlış — makalenin kendi örneğine 0,9004 yerine 0,4031; tek denemede her zaman 1,0 (plan Y1) |
+| D7 | *2026-10-07:* Ödüldeki "Differential Sharpe" Moody-Saffell türevi değil, EMA Sharpe düzeyi (plan Y2) |
+| D8 | *2026-10-07:* Rejim metriği gerçekleşen getiriye koşullanıyor; güven tahmin edilen yönün olasılığı değil (plan Y3, Y4) |
+
+**Planlama (2026-10-07):** Bu açıkların kapatılma planı ve MARL tasarım kararları → [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) (**onay bekliyor**). Tam metinler: [../reference/papers/README.md](../reference/papers/README.md).
+
+Hedef protokol: [../thesis/vision-and-scope.md §4.1](../thesis/vision-and-scope.md). Bu açıklardan etkilenen veri/yapılandırmayla üretilmiş sonuçlar tez/makalede ya yeniden üretilmeli ya da sınırlılık olarak beyan edilmeli. tez-final.pdf sonuçlarının hangi makro/temel veri durumuyla üretildiği ayrıca kontrol edilmeli (henüz kontrol edilmedi).
+
+---
+
 ## Kapsam Dışı (Tez Bağlamında)
 
 Tezin sınırlarını netleştirmek için **yapılmayacaklar listesi** (detay için vision-and-scope.md §4.2):
@@ -199,3 +237,5 @@ Bu belge her milestone sonunda revize edilir. Milestone durumları burada günce
 
 ### Versiyon Geçmişi
 - **2026-04-21:** Faz 1-3 durum dökümü + tez milestone haritası eklendi. Önceki (Kasım 2025) taslak "Faz 2 TODO" versiyonu arşivlendi (git history'den erişilebilir).
+- **2026-10-07:** Faz 9 planı (onay bekliyor) ve seçilmiş kaynakça (literature-table.md) eklendi; D6–D8 bulguları kayda geçti.
+- **2026-10-06:** Literatür doğrulaması işlendi: Milestone 1 literatür maddesi tamamlandı, Faz 2 "leakage yok" iddiası geri çekildi, TATS atfı eklendi, "Bilinen Metodolojik Açıklar" bölümü eklendi (planlanmadı; kod değişikliği yok).

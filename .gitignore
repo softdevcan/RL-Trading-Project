@@ -89,3 +89,9 @@ data/auth/
 *.db-wal
 *.db-shm
 .jwt_secret
+
+# Literatur PDF arsivi (ucuncu parti telifli, ~185 MB) — yalnizca icindekiler (README.md) izlenir
+docs/reference/papers/**/*.pdf
+# Kaynakca uretiminin ara ciktilari (scripts/literature/build.py her calismada yeniden yazar)
+scripts/literature/data/final_body.md
+scripts/literature/data/bib.md

@@ -64,6 +64,7 @@ Faz 2'de tamamlanan ensemble tahmin sistemi (XGBoost + LightGBM + CatBoost + BiL
   - Ridge fallback backward compat için korunuyor
 
 ### 3.2.2 — TATS (Trend-Adjusted Time Series) Sistemi ✅
+- **Kaynak (2026-10-06'da eklendi):** Kazemdehbashi, S. (2026). *Trend-Adjusted Time Series Models with an Application to Gold Price Forecasting.* arXiv 2601.12706 (2026-01-19). Makale ikili trend sınıflandırıcısıyla (XGBoost dahil yedi sınıflandırıcı denenmiş) LSTM/Bi-LSTM tahminini düzeltiyor. Bu modül 2026-03-27'de eklendi ve aynı yöntemin stacking topluluğuna uyarlamasıdır — **akademik metinlerde atıf zorunlu, katkı olarak sunulmaz.**
 - **Yeni dosya:** `prediction/tats.py`
 - **Değişen:** `prediction/models/ensemble.py`
 - **Mimari:**
@@ -81,6 +82,8 @@ Faz 2'de tamamlanan ensemble tahmin sistemi (XGBoost + LightGBM + CatBoost + BiL
   - `ICEEMDANProcessor` sınıfı: `decompose()`, `filter_noise(noise_imfs=2)` (r>0.95 korelasyon güvenlik kontrolü), `extract_imf_features()` → `imf_trend_component`, `imf_energy_ratio`
   - `PyEMD.CEEMDAN` kullanıyor, paket yoksa graceful fallback
   - `feature_engineer.py`'de `use_iceemdan=False` parametresi ile opsiyonel; IMF kolonları DataFrame'e ekleniyor
+- **Kaynaklar:** Torres vd. (ICASSP 2011, CEEMDAN); Colominas vd. (BSPC 2014, ICEEMDAN). PyEMD belgesine göre `CEEMDAN` sınıfı Colominas (2014) iyileştirmelerini içeriyor; akademik metinde "Colominas vd. (2014) iyileştirmelerini içeren PyEMD CEEMDAN" ifadesi daha güvenli.
+- **⚠️ Bilinen açık (2026-10-06, planlanmadı):** Ayrıştırma `build_features` içinde **serinin tamamına** uygulanıyor ve `data['close']` filtrelenmiş seriyle değiştirildiği için hedef değişken de filtrelenmiş fiyattan türetiliyor. Bu, literatürde yerleşik bir ileriye bakma sızıntısı (Carnelossi Furlaneto vd., ESWA 2017; Yang vd., Sci Rep 2024). Sızıntısız alternatifler: kayan pencereli ayrıştırma (Yang vd. 2024; Zhang, Peng & Song, Computational Economics 2024). Grup varsayılan olarak kapalı (`feature_groups.py`: `default: False`).
 
 ### 3.2.4 — Global Makro Göstergeler: VIX, US10Y, DXY ✅
 - **Dosyalar:** `data/macro_fetcher.py`, `prediction/feature_engineer.py`

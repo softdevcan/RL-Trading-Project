@@ -1,0 +1,170 @@
+key	group	id	note
+Ansari2024	0-Ana	doi:10.1109/ACCESS.2024.3418510	Ana referans
+Lee2020_MAPS	A-MARLportfoy	doi:10.24963/ijcai.2020/623	
+Huang2022_MSPM	A-MARLportfoy	doi:10.1371/journal.pone.0263689	
+Li2024_MASA	A-MARLportfoy	arxiv:2402.00515	AAMAS 2024
+Hao2025	A-MARLportfoy	doi:10.1145/3746709.3746915	Karma odul oncülü
+Zhang2025_GAT	A-MARLportfoy	doi:10.1038/s41598-025-32408-w	G2/G3 en yakin
+Sun2025_CAIS	A-MARLportfoy	doi:10.1007/s40747-025-01884-y	
+Khemlichi2025_MPLS	A-MARLportfoy	doi:10.18280/mmep.120612	G3 baseline
+Kim2025_MAMA	A-MARLportfoy	doi:10.1109/ACCESS.2025.3632201	
+Yan2025	A-MARLportfoy	doi:10.3390/electronics14051036	
+Chen2026_MARS	A-MARLportfoy	doi:10.1609/aaai.v40i24.39095	AAAI 2026
+Ren2025_SAMP	A-MARLportfoy	arxiv:2512.22895	
+Kang2025_RLBHRP	A-MARLportfoy	arxiv:2508.11856	
+Coriat2025_HARLF	A-MARLportfoy	arxiv:2507.18560	konumlandirma
+Zou2025_StockMARL	A-MARLportfoy	title:StockMARL	konumlandirma
+Rout2026_Review	A-MARLportfoy	doi:10.1007/s10791-026-10336-1	
+Hung2026_SelfAttn	A-MARLportfoy	doi:10.1007/978-981-92-2888-1_19	YENI 2026 - G1'e en yakin
+Yuan2026_EAAI	A-MARLportfoy	doi:10.1016/j.engappai.2026.114130	YENI 2026
+ManiShankar2026	A-MARLportfoy	doi:10.1007/978-3-032-10783-1_1	YENI 2026 tek vs cok ajan
+Ozturk2026_CWDE	A-MARLportfoy	doi:10.35377/saucis...1825313	YENI 2026 Turk dergisi, guven agirlikli topluluk
+Chaudhari2026_MAETS	A-MARLportfoy	doi:10.5281/zenodo.19364263	YENI 2026 - TNNLS iddiasi dogrulanmadi
+Fang2023	B-Iletisim	doi:10.1145/3580305.3599856	G1 finans oncülü
+Shi2025	B-Iletisim	arxiv:2511.13614	G5 motivasyon
+Sukhbaatar2016_CommNet	B-Iletisim	arxiv:1605.07736	NIPS 2016
+Foerster2016_DIAL	B-Iletisim	arxiv:1605.06676	NIPS 2016
+Das2019_TarMAC	B-Iletisim	arxiv:1810.11187	ICML 2019
+Iqbal2019_MAAC	B-Iletisim	arxiv:1810.02912	ICML 2019
+Yang2018_MeanField	B-Iletisim	arxiv:1802.05438	ICML 2018
+Velickovic2018_GAT	B-Iletisim	arxiv:1710.10903	ICLR 2018
+Niu2021_MAGIC	B-Iletisim	title:Multi-Agent Graph-Attention Communication and Teaming	AAMAS 2021
+Guo2023_Email	B-Iletisim	doi:10.24963/ijcai.2023/15	
+Jiang2024_Teammate	B-Iletisim	doi:10.1016/j.neucom.2024.127638	
+Hu2024_CommFormer	B-Iletisim	arxiv:2405.08550	ICLR 2024
+Fan2025_GraphModeling	B-Iletisim	doi:10.1609/aaai.v39i16.33813	
+Li2025_ExpoComm	B-Iletisim	arxiv:2502.19717	ICLR 2025
+Wojtala2025_MACTAS	B-Iletisim	arxiv:2508.13661	
+Wittner2026_Survey	B-Iletisim	arxiv:2601.12886	
+Sun2021_IMMAC	B-Iletisim	title:Intrinsic Motivated Multi-Agent Communication	AAMAS 2021 ozet
+Yu2024_ADMAC	B-Iletisim	doi:10.1609/aaai.v38i16.29708	AAAI 2024
+Yoffe2024_DebUnc	B-Iletisim	arxiv:2407.06426	G2 esdeger mekanizma
+Farr2026_Herding	B-Iletisim	arxiv:2605.06988	analoji
+deWitt2020_IPPO	C-MARLalgo	arxiv:2011.09533	
+Yu2022_MAPPO	C-MARLalgo	arxiv:2103.01955	NeurIPS 2022 D&B
+Terry2021_PettingZoo	C-MARLalgo	arxiv:2009.14471	NeurIPS 2021
+Bettini2024_BenchMARL	C-MARLalgo	title:BenchMARL: Benchmarking Multi-Agent Reinforcement Learning	JMLR
+Yang2020_Ensemble	D-TahminRL	doi:10.1145/3383455.3422540	
+Gao2023_StockFormer	D-TahminRL	doi:10.24963/ijcai.2023/530	
+Choi2024_DeepClair	D-TahminRL	doi:10.1145/3627673.3680008	
+Lyu2025_RTSPnO	D-TahminRL	doi:10.1145/3711896.3737268	
+Zhang2025_OPS_NeurIPS	D-TahminRL	title:Online Portfolio Selection with ML Predictions	NeurIPS 2025
+Kazemdehbashi2026_TATS	E-TahminSizinti	arxiv:2601.12706	TATS kaynagi
+Torres2011_CEEMDAN	E-TahminSizinti	doi:10.1109/ICASSP.2011.5947265	
+Colominas2014_ICEEMDAN	E-TahminSizinti	doi:10.1016/j.bspc.2014.06.009	
+Carnelossi2017_EMDbias	E-TahminSizinti	doi:10.1016/j.eswa.2017.03.053	
+Yang2024_EMDleak	E-TahminSizinti	doi:10.1038/s41598-024-80018-9	su kalitesi verisi
+Zhang2024_RollingCEEMDAN	E-TahminSizinti	doi:10.1007/s10614-024-10732-z	
+Valdivieso2026_LeakNotDecomp	E-TahminSizinti	doi:10.2139/ssrn.7422299	YENI 2026
+Hewamalage2023	E-TahminSizinti	doi:10.1007/s10618-022-00894-5	
+Lones2024_Pitfalls	E-TahminSizinti	doi:10.1016/j.patter.2024.101046	
+Rahimikia2025_TSFM	E-TahminSizinti	arxiv:2511.18578	
+Lim2021_TFT	E-TahminSizinti	doi:10.1016/j.ijforecast.2021.03.012	Kodda kullanilan TFT
+Guo2017_Calibration	E-TahminSizinti	arxiv:1706.04599	ICML 2017
+Moody2001	F-OdulRisk	doi:10.1109/72.935097	
+Ayari2025	F-OdulRisk	doi:10.1080/14697688.2025.2592822	
+Zhang2020_DRLTrading	F-OdulRisk	doi:10.3905/jfds.2020.1.030	
+Millea2022_HRP	F-OdulRisk	doi:10.3390/ijfs11010010	
+LopezdePrado2016_HRP	F-OdulRisk	doi:10.3905/jpm.2016.42.4.059	
+Ledoit2004_Shrinkage	F-OdulRisk	doi:10.1016/S0047-259X(03)00096-4	
+DeMiguel2009	G-Degerlendirme	doi:10.1093/rfs/hhm075	
+Bailey2014_DSR	G-Degerlendirme	doi:10.3905/jpm.2014.40.5.094	
+Bailey2017_PBO	G-Degerlendirme	doi:10.21314/JCF.2016.322	
+Ledoit2008_SharpeTest	G-Degerlendirme	doi:10.1016/j.jempfin.2008.03.002	
+Hansen2011_MCS	G-Degerlendirme	doi:10.3982/ECTA5771	
+Diebold1995_DM	G-Degerlendirme	doi:10.1080/07350015.1995.10524599	
+Diebold2015_DM20	G-Degerlendirme	doi:10.1080/07350015.2014.983236	
+Harvey1997_HLN	G-Degerlendirme	doi:10.1016/S0169-2070(96)00719-4	
+NeweyWest1987	G-Degerlendirme	doi:10.2307/1913610	
+Politis1994_StatBoot	G-Degerlendirme	doi:10.1080/01621459.1994.10476870	
+Benjamini1995_FDR	G-Degerlendirme	doi:10.1111/j.2517-6161.1995.tb02031.x	
+Agarwal2021_Precipice	G-Degerlendirme	arxiv:2108.13264	NeurIPS 2021
+Henderson2018_Matters	G-Degerlendirme	arxiv:1709.06560	AAAI 2018
+Jain2019_AttnNot	H-XAI	doi:10.18653/v1/N19-1357	
+Wiegreffe2019_AttnNotNot	H-XAI	doi:10.18653/v1/D19-1002	
+Candar2022_Thesis	I-BIST	title:Equity portfolio optimization using reinforcement learning: An emerging market case	ITU YL tezi
+Beyhan2026_EPFAD	I-BIST	doi:10.30784/epfad.1811319	BIST DRL oncülü
+Ege2024_Thesis	I-BIST	title:Predicting stock prices in BIST: A reinforcement learning and sentimental analysis approach	ITU YL tezi
+Altuner2022_TJEECS	I-BIST	title:A novel deep reinforcement learning based stock price prediction using knowledge graph and community aware sentiments	
+Akyapak2025_ASYU	I-BIST	doi:10.1109/ASYU67174.2025.11208408	
+Karacam2026_BIR	I-BIST	doi:10.1016/j.bir.2026.100834	
+SumerliSarigul2024	I-BIST	title:Stock Market Index Prediction Using Machine Learning Techniques: Application of BIST Indices	
+Ergenc2025	I-BIST	doi:10.2478/revecp-2025-0005	
+Erdag2026	I-BIST	doi:10.1108/rbf-12-2025-0531	
+BIR2026_InflationSurprise	I-BIST	title:Inflation surprise and stock returns: Türkiye during a period of high inflation	YENI 2026 S3 gerekcesi
+CBAYAR2026_Rebalancing	I-BIST	doi:10.18026/cbayarsos.1905022	YENI 2026 BIST 1/N karsiligi
+Thongkairat2025_SET50	I-BIST	doi:10.3390/math13030461	
+Sattar2025_RMS	A-MARLportfoy	doi:10.1109/access.2025.3546099	Ansari ekibinin devami
+Pippas2025_CSUR	J-TemelDRL	doi:10.1145/3733714	
+Wang2025_ESWAsurvey	J-TemelDRL	doi:10.1016/j.eswa.2025.127540	
+Hambly2023_MF	J-TemelDRL	doi:10.1111/mafi.12382	
+Jiang2017_DRLPortfolio	J-TemelDRL	arxiv:1706.10059	
+Deng2017_TNNLS	J-TemelDRL	doi:10.1109/TNNLS.2016.2522401	
+Theate2021_ESWA	J-TemelDRL	doi:10.1016/j.eswa.2021.114632	
+Liu2021_FinRL	J-TemelDRL	doi:10.1145/3490354.3494366	
+Schulman2017_PPO	J-TemelDRL	arxiv:1707.06347	
+Mnih2016_A3C	J-TemelDRL	arxiv:1602.01783	
+Fujimoto2018_TD3	J-TemelDRL	arxiv:1802.09477	
+Lillicrap2016_DDPG	J-TemelDRL	arxiv:1509.02971	
+Raffin2021_SB3	J-TemelDRL	title:Stable-Baselines3: Reliable Reinforcement Learning Implementations	
+Towers2024_Gymnasium	J-TemelDRL	arxiv:2407.17032	
+Lowe2017_MADDPG	C-MARLalgo	arxiv:1706.02275	
+Rashid2020_QMIX	C-MARLalgo	arxiv:2003.08839	
+Foerster2018_COMA	C-MARLalgo	arxiv:1705.08926	
+Christianos2021_SePS	C-MARLalgo	arxiv:2102.07475	
+Liang2018_RLlib	C-MARLalgo	arxiv:1712.09381	
+Fey2019_PyG	C-MARLalgo	arxiv:1903.02428	
+HernandezLeal2019_Survey	C-MARLalgo	doi:10.1007/s10458-019-09421-1	
+Gronauer2022_Survey	C-MARLalgo	doi:10.1007/s10462-021-09996-w	
+Zhu2024_CommSurvey	B-Iletisim	doi:10.1007/s10458-023-09633-6	
+Lin2025_CAROC	B-Iletisim	doi:10.1080/03081079.2025.2503785	
+Hu2026_CommFormerTKDE	B-Iletisim	doi:10.1109/tkde.2026.3658366	
+Vaswani2017_Attention	B-Iletisim	arxiv:1706.03762	
+Mantegna1999_Hierarchy	B-Iletisim	doi:10.1007/s100510050929	
+Feng2019_RelationalRank	B-Iletisim	doi:10.1145/3309547	
+Chen2016_XGBoost	K-TahminModel	doi:10.1145/2939672.2939785	
+Ke2017_LightGBM	K-TahminModel	title:LightGBM: A Highly Efficient Gradient Boosting Decision Tree	
+Prokhorenkova2018_CatBoost	K-TahminModel	arxiv:1706.09516	
+Hochreiter1997_LSTM	K-TahminModel	doi:10.1162/neco.1997.9.8.1735	
+Schuster1997_BiRNN	K-TahminModel	doi:10.1109/78.650093	
+Graves2005_BiLSTM	K-TahminModel	doi:10.1016/j.neunet.2005.06.042	
+Wolpert1992_Stacking	K-TahminModel	doi:10.1016/S0893-6080(05)80023-1	
+Breiman1996_StackedReg	K-TahminModel	doi:10.1007/BF00117832	
+Hoerl1970_Ridge	K-TahminModel	doi:10.1080/00401706.1970.10488634	
+Breiman2001_RF	K-TahminModel	doi:10.1023/A:1010933404324	
+Kraskov2004_MI	K-TahminModel	doi:10.1103/PhysRevE.69.066138	
+Ross2014_MI	K-TahminModel	doi:10.1371/journal.pone.0087357	
+Akiba2019_Optuna	K-TahminModel	doi:10.1145/3292500.3330701	
+Bergstra2011_TPE	K-TahminModel	title:Algorithms for Hyper-Parameter Optimization	
+Bergmeir2012_TSCV	K-TahminModel	doi:10.1016/j.ins.2011.12.028	
+Bergmeir2018_TSCV	K-TahminModel	doi:10.1016/j.csda.2017.11.003	
+Lundberg2017_SHAP	K-TahminModel	arxiv:1705.07874	
+Lundberg2020_TreeSHAP	K-TahminModel	doi:10.1038/s42256-019-0138-9	
+Gu2020_MLAssetPricing	K-TahminModel	doi:10.1093/rfs/hhaa009	
+Fischer2018_LSTMFinance	K-TahminModel	doi:10.1016/j.ejor.2017.11.054	
+Huang1998_EMD	E-TahminSizinti	doi:10.1098/rspa.1998.0193	
+Wu2009_EEMD	E-TahminSizinti	doi:10.1142/S1793536909000047	
+Xiong2025_OneTimeDenoise	E-TahminSizinti	doi:10.1007/s10489-025-06720-x	
+Pang2025_WindLeak	E-TahminSizinti	doi:10.1016/j.apm.2025.116376	
+Kapoor2023_Leakage	E-TahminSizinti	doi:10.1016/j.patter.2023.100804	
+LopezdePrado2018_AFML	E-TahminSizinti	title:Advances in Financial Machine Learning	
+Croushore2001_RealTime	E-TahminSizinti	title:A real-time data set for macroeconomists	
+NiculescuMizil2005_Calib	E-TahminSizinti	doi:10.1145/1102351.1102430	
+Naeini2015_ECE	E-TahminSizinti	doi:10.1609/aaai.v29i1.9602	
+Brier1950	E-TahminSizinti	title:Verification of forecasts expressed in terms of probability	
+Markowitz1952	F-OdulRisk	doi:10.1111/j.1540-6261.1952.tb01525.x	
+Sharpe1966	F-OdulRisk	doi:10.1086/294846	
+Sortino1994	F-OdulRisk	doi:10.3905/joi.3.3.59	
+Lo2002_SharpeStats	F-OdulRisk	doi:10.2469/faj.v58.n4.2453	
+Kelly1956	F-OdulRisk	doi:10.1002/j.1538-7305.1956.tb03809.x	
+MacLean2010_Kelly	F-OdulRisk	doi:10.1080/14697688.2010.506108	
+Kritzman2010_Turbulence	F-OdulRisk	doi:10.2469/faj.v66.n5.3	
+Hamilton1989_Regime	F-OdulRisk	doi:10.2307/1912559	
+Ang2002_RegimeAlloc	F-OdulRisk	doi:10.1093/rfs/15.4.1137	
+Nystrup2018_HMMPortfolio	F-OdulRisk	title:Dynamic portfolio optimization across hidden market regimes	
+Akhmedov2026_ConfReward	F-OdulRisk	doi:10.3390/math14122075	
+Harvey2016_CrossSection	G-Degerlendirme	doi:10.1093/rfs/hhv059	
+White2000_RealityCheck	G-Degerlendirme	doi:10.1111/1468-0262.00152	
+Hansen2005_SPA	G-Degerlendirme	doi:10.1198/073500105000000063	
+Brown1992_Survivorship	G-Degerlendirme	doi:10.1093/rfs/5.4.553	
+Bekaert1997_EMVol	I-BIST	doi:10.1016/S0304-405X(96)00889-6	

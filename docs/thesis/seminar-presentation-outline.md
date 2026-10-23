@@ -1,5 +1,7 @@
 # Seminar Presentation — Page-by-Page Outline
 
+> **⚠️ Version note (2026-10-06):** May 2026 seminar material, kept unchanged as a record. TATS is a published method (Kazemdehbashi 2026, arXiv 2601.12706) and must be cited, not presented as a contribution; the "no leakage" claim was withdrawn. Current state: [vision-and-scope.md](vision-and-scope.md) v0.2 (Turkish).
+
 > **Scope:** System architecture + key definitions (technical indicators, finance terms) + data sources.
 > Not a full project walkthrough. Audience = general/academic, not RL specialists.
 > Target: ~14 slides, ~15–20 min.

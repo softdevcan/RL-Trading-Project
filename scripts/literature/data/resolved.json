@@ -1,0 +1,5673 @@
+{
+ "Ansari2024": {
+  "group": "0-Ana",
+  "ident": "doi:10.1109/ACCESS.2024.3418510",
+  "note": "Ana referans",
+  "title": "A Multifaceted Approach to Stock Market Trading Using Reinforcement Learning",
+  "year": 2024,
+  "authors": [
+   "Yasmeen Ansari",
+   "Saira Andleeb Gillani",
+   "Maryam Bukhari",
+   "Byeongcheon Lee",
+   "Muazzam Maqsood",
+   "Seungmin Rho"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Access",
+  "issn_l": "2169-3536",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "IEEE Access"
+  ],
+  "cited_by": 15,
+  "cited_split": [
+   15
+  ],
+  "doi": "https://doi.org/10.1109/access.2024.3418510",
+  "oa_url": "https://doi.org/10.1109/access.2024.3418510",
+  "keywords": [
+   "algorithmic trading",
+   "stock trading",
+   "reinforcement learning",
+   "state representation",
+   "technical indicators"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4399939037"
+ },
+ "Lee2020_MAPS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.24963/ijcai.2020/623",
+  "note": "",
+  "title": "MAPS: Multi-Agent reinforcement learning-based Portfolio management System.",
+  "year": 2020,
+  "authors": [
+   "Jinho Lee",
+   "Raehyun Kim",
+   "Seok-Won Yi",
+   "Jaewoo Kang"
+  ],
+  "venue_type": "conference",
+  "venue": "International Joint Conference on Artificial Intelligence",
+  "issn_l": null,
+  "all_venues": [
+   "International Joint Conference on Artificial Intelligence",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 29,
+  "cited_split": [
+   29
+  ],
+  "doi": "https://doi.org/10.24963/ijcai.2020/623",
+  "oa_url": "https://www.ijcai.org/proceedings/2020/0623.pdf",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "portfolio management",
+   "investment strategy",
+   "stock market",
+   "portfolio diversification"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3035703686"
+ },
+ "Huang2022_MSPM": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1371/journal.pone.0263689",
+  "note": "",
+  "title": "MSPM: A modularized and scalable multi-agent reinforcement learning-based system for financial portfolio management",
+  "year": 2022,
+  "authors": [
+   "Zhenhan Huang",
+   "Fumihide Tanaka"
+  ],
+  "venue_type": "journal",
+  "venue": "PLoS ONE",
+  "issn_l": "1932-6203",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "PLoS ONE",
+   "PubMed",
+   "PubMed Central",
+   "RePEc: Research Papers in Economics",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 31,
+  "cited_split": [
+   31
+  ],
+  "doi": "https://doi.org/10.1371/journal.pone.0263689",
+  "oa_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0263689&type=printable",
+  "keywords": [
+   "financial portfolio management",
+   "multi-agent reinforcement learning",
+   "modular architecture",
+   "scalability",
+   "deep Q-network"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3158663546"
+ },
+ "Li2024_MASA": {
+  "group": "A-MARLportfoy",
+  "ident": "arxiv:2402.00515",
+  "note": "AAMAS 2024",
+  "title": "Developing a Multi-agent and Self-adaptive Framework with Deep Reinforcement Learning for Dynamic Portfolio Risk Management",
+  "year": 2024,
+  "authors": [
+   "Zhenglong Li",
+   "Vincent Tam",
+   "Kwan L. Yeung"
+  ],
+  "venue_type": "conference",
+  "venue": "Adaptive Agents and Multi-Agents Systems",
+  "issn_l": "1548-8403",
+  "all_venues": [
+   "Adaptive Agents and Multi-Agents Systems",
+   "RePEc: Research Papers in Economics",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 5,
+  "cited_split": [
+   1,
+   5,
+   1
+  ],
+  "doi": "https://doi.org/10.65109/bmry8759",
+  "oa_url": null,
+  "keywords": [
+   "portfolio risk management",
+   "multi-agent reinforcement learning",
+   "dynamic portfolio optimization",
+   "risk-return tradeoff",
+   "financial market volatility"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7124312481"
+ },
+ "Hao2025": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1145/3746709.3746915",
+  "note": "Karma odul oncülü",
+  "title": "Collaborative Multi-Agent Reinforcement Learning Model for Portfolio Management",
+  "year": 2025,
+  "authors": [
+   "Jinling Hao",
+   "Minghan Gao",
+   "Youyun Han",
+   "Qiang Gao"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Computer Information and Big Data Applications (CIBDA)",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Computer Information and Big Data Applications (CIBDA)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1145/3746709.3746915",
+  "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3746709.3746915",
+  "keywords": [
+   "portfolio management",
+   "multi-agent reinforcement learning",
+   "cooperative multi-agent systems",
+   "asset allocation",
+   "investment decision-making"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4413845151"
+ },
+ "Zhang2025_GAT": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1038/s41598-025-32408-w",
+  "note": "G2/G3 en yakin",
+  "title": "Graph attention-based heterogeneous multi-agent deep reinforcement learning for adaptive portfolio optimization",
+  "year": 2025,
+  "authors": [
+   "Bing Zhang"
+  ],
+  "venue_type": "journal",
+  "venue": "Scientific Reports",
+  "issn_l": "2045-2322",
+  "all_venues": [
+   "PubMed",
+   "PubMed Central",
+   "Scientific Reports"
+  ],
+  "cited_by": 2,
+  "cited_split": [
+   2
+  ],
+  "doi": "https://doi.org/10.1038/s41598-025-32408-w",
+  "oa_url": "https://www.nature.com/articles/s41598-025-32408-w_reference.pdf",
+  "keywords": [
+   "portfolio optimization",
+   "graph attention networks",
+   "multi-agent deep reinforcement learning",
+   "heterogeneous agents",
+   "risk assessment"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7117373027"
+ },
+ "Sun2025_CAIS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1007/s40747-025-01884-y",
+  "note": "",
+  "title": "A novel multi-agent dynamic portfolio optimization learning system based on hierarchical deep reinforcement learning",
+  "year": 2025,
+  "authors": [
+   "Ruoyu Sun",
+   "Yue Xi",
+   "Angelos Stefanidis",
+   "Zhengyong Jiang",
+   "Jionglong Su"
+  ],
+  "venue_type": "journal",
+  "venue": "Complex & Intelligent Systems",
+  "issn_l": "2198-6053",
+  "all_venues": [
+   "Complex & Intelligent Systems",
+   "DOAJ (DOAJ: Directory of Open Access Journals)"
+  ],
+  "cited_by": 21,
+  "cited_split": [
+   21
+  ],
+  "doi": "https://doi.org/10.1007/s40747-025-01884-y",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/s40747-025-01884-y.pdf",
+  "keywords": [
+   "dynamic portfolio optimization",
+   "hierarchical deep reinforcement learning",
+   "multi-agent learning",
+   "actor-critic",
+   "auxiliary agents"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4410866785"
+ },
+ "Khemlichi2025_MPLS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.18280/mmep.120612",
+  "note": "G3 baseline",
+  "title": "MPLS: A Modular Portfolio Learning System for Adaptive Portfolio Optimization",
+  "year": 2025,
+  "authors": [
+   "Firdaous Khemlichi",
+   "Youness Idrissi Khamlichi",
+   "Safae Elhaj Ben Ali"
+  ],
+  "venue_type": "journal",
+  "venue": "Mathematical Modelling and Engineering Problems",
+  "issn_l": "2369-0739",
+  "all_venues": [
+   "Mathematical Modelling and Engineering Problems"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.18280/mmep.120612",
+  "oa_url": "https://doi.org/10.18280/mmep.120612",
+  "keywords": [
+   "portfolio optimization",
+   "investment decision support"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4412422410"
+ },
+ "Kim2025_MAMA": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1109/ACCESS.2025.3632201",
+  "note": "",
+  "title": "Multi-Asset Multi-Agent Reinforcement Learning for Portfolio Management",
+  "year": 2025,
+  "authors": [
+   "Sang-Ho Kim",
+   "Ki-Hoon Lee"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Access",
+  "issn_l": "2169-3536",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "IEEE Access"
+  ],
+  "cited_by": 2,
+  "cited_split": [
+   2
+  ],
+  "doi": "https://doi.org/10.1109/access.2025.3632201",
+  "oa_url": "https://doi.org/10.1109/access.2025.3632201",
+  "keywords": [
+   "portfolio management",
+   "multi-agent reinforcement learning",
+   "security selection",
+   "concept drift",
+   "interest rates"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7105602694"
+ },
+ "Yan2025": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.3390/electronics14051036",
+  "note": "",
+  "title": "A Deep-Reinforcement-Learning-Based Multi-Source Information Fusion Portfolio Management Approach via Sector Rotation",
+  "year": 2025,
+  "authors": [
+   "Yuxiao Yan",
+   "Changsheng Zhang",
+   "Yang An",
+   "Bin Zhang"
+  ],
+  "venue_type": "journal",
+  "venue": "Electronics",
+  "issn_l": "2079-9292",
+  "all_venues": [
+   "Electronics"
+  ],
+  "cited_by": 8,
+  "cited_split": [
+   8
+  ],
+  "doi": "https://doi.org/10.3390/electronics14051036",
+  "oa_url": "https://doi.org/10.3390/electronics14051036",
+  "keywords": [
+   "portfolio management",
+   "sector rotation",
+   "deep reinforcement learning",
+   "multi-source data fusion",
+   "news data"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4408219430"
+ },
+ "Chen2026_MARS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1609/aaai.v40i24.39095",
+  "note": "AAAI 2026",
+  "title": "MARS: A Meta-Adaptive Reinforcement Learning Framework for Risk-Aware Multi-Agent Portfolio Management",
+  "year": 2026,
+  "authors": [
+   "Jiayi Chen",
+   "Jing Li",
+   "Guiling Wang"
+  ],
+  "venue_type": "conference",
+  "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+  "issn_l": "2159-5399",
+  "all_venues": [
+   "Proceedings of the AAAI Conference on Artificial Intelligence"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v40i24.39095",
+  "oa_url": "https://doi.org/10.1609/aaai.v40i24.39095",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "drawdown reduction",
+   "behavioral diversity",
+   "capital preservation"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7138352034"
+ },
+ "Ren2025_SAMP": {
+  "group": "A-MARLportfoy",
+  "ident": "arxiv:2512.22895",
+  "note": "",
+  "title": "SAMP-HDRL: Segmented Allocation with Momentum-Adjusted Utility for Multi-agent Portfolio Management via Hierarchical Deep Reinforcement Learning",
+  "year": 2025,
+  "authors": [
+   "Xiaotian Ren",
+   "Nuerxiati Abudurexiti",
+   "Zhengyong Jiang",
+   "Angelos Stefanidis",
+   "Hongbin Liu",
+   "J. Su J. Su"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2512.22895",
+  "oa_url": "https://arxiv.org/pdf/2512.22895",
+  "keywords": [
+   "hierarchical deep reinforcement learning",
+   "capital allocation",
+   "non-stationary markets",
+   "tipping points",
+   "dynamic clustering"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7117705172"
+ },
+ "Kang2025_RLBHRP": {
+  "group": "A-MARLportfoy",
+  "ident": "arxiv:2508.11856",
+  "note": "",
+  "title": "Optimal Portfolio Construction -- A Reinforcement Learning Embedded Bayesian Hierarchical Risk Parity (RL-BHRP) Approach",
+  "year": 2025,
+  "authors": [
+   "Kang, Shaofeng",
+   "Zeying Tian"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2508.11856",
+  "oa_url": "https://arxiv.org/pdf/2508.11856",
+  "keywords": [
+   "portfolio optimization",
+   "reinforcement learning",
+   "sectoral diversification",
+   "out-of-sample portfolio performance",
+   "portfolio rebalancing"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4414459768"
+ },
+ "Coriat2025_HARLF": {
+  "group": "A-MARLportfoy",
+  "ident": "arxiv:2507.18560",
+  "note": "konumlandirma",
+  "title": "HARLF: Hierarchical Reinforcement Learning and Lightweight LLM-Driven Sentiment Integration for Financial Portfolio Optimization",
+  "year": 2025,
+  "authors": [
+   "Benjamin Coriat",
+   "Eric Benhamou"
+  ],
+  "venue_type": "repository",
+  "venue": "SSRN Electronic Journal",
+  "issn_l": "1556-5068",
+  "all_venues": [
+   "SSRN Electronic Journal",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   0,
+   0,
+   1
+  ],
+  "doi": "https://doi.org/10.2139/ssrn.5365047",
+  "oa_url": "https://doi.org/10.2139/ssrn.5365047",
+  "keywords": [
+   "portfolio optimization",
+   "hierarchical reinforcement learning",
+   "large language models",
+   "sentiment analysis",
+   "business news"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4412625489"
+ },
+ "Zou2025_StockMARL": {
+  "group": "A-MARLportfoy",
+  "ident": "title:StockMARL",
+  "note": "konumlandirma",
+  "title": "StockMARL: A Novel Multi-Agent Reinforcement Learning System to Dynamically Improve Trading Strategies",
+  "year": 2025,
+  "authors": [
+   "Peiyan Zou",
+   "Peer‐Olaf Siebers"
+  ],
+  "venue_type": "journal",
+  "venue": "Procedia Computer Science",
+  "issn_l": "1877-0509",
+  "all_venues": [
+   "Procedia Computer Science",
+   "Repository@Nottingham (University of Nottingham)"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1016/j.procs.2025.12.091",
+  "oa_url": "https://doi.org/10.1016/j.procs.2025.12.091",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "stock market simulation",
+   "day trading",
+   "risk aversion",
+   "adaptive trading strategies"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7117294878"
+ },
+ "Rout2026_Review": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1007/s10791-026-10336-1",
+  "note": "",
+  "title": "Systematic review of reinforcement learning for automated equity portfolio management from single agent to multi agent systems",
+  "year": 2026,
+  "authors": [
+   "Aditi Kumar Rout",
+   "U. Dinesh Acharya",
+   "Prakash K. Aithal",
+   "Arpita Sharma"
+  ],
+  "venue_type": "journal",
+  "venue": "Discover Computing",
+  "issn_l": "2948-2992",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "Discover Computing"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1007/s10791-026-10336-1",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/s10791-026-10336-1.pdf",
+  "keywords": [
+   "portfolio management",
+   "deep reinforcement learning",
+   "multi-agent systems",
+   "single-agent reinforcement learning",
+   "deep Q-network"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7167833660"
+ },
+ "Hung2026_SelfAttn": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1007/978-981-92-2888-1_19",
+  "note": "YENI 2026 - G1'e en yakin",
+  "title": "A Multi-agent Reinforcement Learning Approach with Self-attention for Multi-stock Portfolio Trading",
+  "year": 2026,
+  "authors": [
+   "Yu-Hsun Hung",
+   "Kuo‐Chan Huang"
+  ],
+  "venue_type": "book series",
+  "venue": "Lecture notes in computer science",
+  "issn_l": "0302-9743",
+  "all_venues": [
+   "Lecture notes in computer science"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1007/978-981-92-2888-1_19",
+  "oa_url": null,
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "self-attention",
+   "deep deterministic policy gradient",
+   "agent cooperation",
+   "Sharpe ratio"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7169686795"
+ },
+ "Yuan2026_EAAI": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1016/j.engappai.2026.114130",
+  "note": "YENI 2026",
+  "title": "Adaptive multi-agent stock trading decision support system based on deep reinforcement learning",
+  "year": 2026,
+  "authors": [
+   "Xu Yuan",
+   "Jiaqiang Wang",
+   "Shaokui Gu",
+   "Yi Guo",
+   "A. N. W. Qi",
+   "Shijin Li",
+   "Liang Zhao"
+  ],
+  "venue_type": "journal",
+  "venue": "Engineering Applications of Artificial Intelligence",
+  "issn_l": "0952-1976",
+  "all_venues": [
+   "Engineering Applications of Artificial Intelligence"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1016/j.engappai.2026.114130",
+  "oa_url": null,
+  "keywords": [
+   "stock trading",
+   "multi-agent reinforcement learning",
+   "decision support system",
+   "deep reinforcement learning",
+   "dueling DQN"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7128421333"
+ },
+ "ManiShankar2026": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1007/978-3-032-10783-1_1",
+  "note": "YENI 2026 tek vs cok ajan",
+  "title": "Optimizing Algorithmic Trading Through DRL: A Comparative Analysis of Single-Agent and Multi-Agent Models",
+  "year": 2026,
+  "authors": [
+   "M. Mani Shankar",
+   "A. Sweety",
+   "Das Deepthi"
+  ],
+  "venue_type": "book series",
+  "venue": "Lecture notes in networks and systems",
+  "issn_l": "2367-3370",
+  "all_venues": [
+   "Lecture notes in networks and systems"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1007/978-3-032-10783-1_1",
+  "oa_url": null,
+  "keywords": [
+   "algorithmic trading",
+   "deep reinforcement learning",
+   "high-frequency trading",
+   "multi-agent reinforcement learning",
+   "single-agent reinforcement learning"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7118004832"
+ },
+ "Ozturk2026_CWDE": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.35377/saucis...1825313",
+  "note": "YENI 2026 Turk dergisi, guven agirlikli topluluk",
+  "title": "Multi-Agent Deep Reinforcement Learning with Dynamic Portfolio Weighting: A Novel Approach to Algorithmic Trading",
+  "year": 2026,
+  "authors": [
+   "Cemal Öztürk"
+  ],
+  "venue_type": "journal",
+  "venue": "Sakarya University Journal of Computer and Information Sciences",
+  "issn_l": "2636-8129",
+  "all_venues": [
+   "DergiPark (Istanbul University)",
+   "Sakarya University Journal of Computer and Information Sciences"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.35377/saucis...1825313",
+  "oa_url": "https://dergipark.org.tr/en/download/article-file/5427591",
+  "keywords": [
+   "multi-agent deep reinforcement learning",
+   "algorithmic trading",
+   "actor-critic algorithms",
+   "model aggregation",
+   "risk-adjusted returns"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7164850786"
+ },
+ "Chaudhari2026_MAETS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.5281/zenodo.19364263",
+  "note": "YENI 2026 - TNNLS iddiasi dogrulanmadi",
+  "title": "Multi-Agent Explainable Trading System (MAETS): A Cooperative Deep Reinforcement Learning Framework for Transparent and Risk-Aware Automated Portfolio Management",
+  "year": 2026,
+  "authors": [
+   "Mayur Chaudhari"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Transactions on Neural Networks and Learning Systems",
+  "issn_l": "2162-237X",
+  "all_venues": [
+   "IEEE Transactions on Neural Networks and Learning Systems"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.5281/zenodo.19364263",
+  "oa_url": "https://doi.org/10.5281/zenodo.19364263",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "algorithmic trading",
+   "cooperative multi-agent systems",
+   "centralized training decentralized execution",
+   "graph attention networks"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7147609785"
+ },
+ "Fang2023": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1145/3580305.3599856",
+  "note": "G1 finans oncülü",
+  "title": "Learning Multi-Agent Intention-Aware Communication for Optimal Multi-Order Execution in Finance",
+  "year": 2023,
+  "authors": [
+   "Yuchen Fang",
+   "Zhenggang Tang",
+   "Kan Ren",
+   "Weiqing Liu",
+   "Li Zhao",
+   "Jiang Bian",
+   "Dongsheng Li",
+   "Weinan Zhang",
+   "Yong Hai Yu",
+   "Tie‐Yan Liu"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 8,
+  "cited_split": [
+   8
+  ],
+  "doi": "https://doi.org/10.1145/3580305.3599856",
+  "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3580305.3599856",
+  "keywords": [
+   "order execution",
+   "multi-agent reinforcement learning",
+   "price impact",
+   "financial trading"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4383605137"
+ },
+ "Shi2025": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2511.13614",
+  "note": "G5 motivasyon",
+  "title": "Market-Dependent Communication in Multi-Agent Alpha Generation",
+  "year": 2025,
+  "authors": [
+   "Shi, Jerick",
+   "Burton Hollifield"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2511.13614",
+  "oa_url": "https://arxiv.org/pdf/2511.13614",
+  "keywords": [
+   "multi-agent systems",
+   "Generation Alpha",
+   "agent communication",
+   "organizational structure",
+   "collaborative dialogue"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4416364039"
+ },
+ "Sukhbaatar2016_CommNet": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1605.07736",
+  "note": "NIPS 2016",
+  "title": "Learning Multiagent Communication with Backpropagation",
+  "year": 2016,
+  "authors": [
+   "Sainbayar Sukhbaatar",
+   "Arthur D. Szlam",
+   "Rob Fergus"
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "arXiv (Cornell University)",
+   "neural information processing systems"
+  ],
+  "cited_by": 276,
+  "cited_split": [
+   276,
+   276
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1605.07736",
+  "oa_url": "https://arxiv.org/pdf/1605.07736",
+  "keywords": [
+   "neural network agents",
+   "backpropagation",
+   "continuous communication"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2402402867"
+ },
+ "Foerster2016_DIAL": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1605.06676",
+  "note": "NIPS 2016",
+  "title": "Learning to Communicate with Deep Multi-Agent Reinforcement Learning",
+  "year": 2016,
+  "authors": [
+   "Jakob Foerster",
+   "Yannis Assael",
+   "Nando de Freitas",
+   "Shimon Whiteson"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1055,
+  "cited_split": [
+   1055,
+   1055
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1605.06676",
+  "oa_url": "https://arxiv.org/pdf/1605.06676",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "agent communication",
+   "deep Q-learning",
+   "partial observability"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2395575420"
+ },
+ "Das2019_TarMAC": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1810.11187",
+  "note": "ICML 2019",
+  "title": "TarMAC: Targeted Multi-Agent Communication",
+  "year": 2018,
+  "authors": [
+   "Abhishek Das",
+   "Théophile Gervet",
+   "Joshua Romoff",
+   "Dhruv Batra",
+   "Devi Parikh",
+   "Michael Rabbat",
+   "Joëlle Pineau"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Machine Learning",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Machine Learning",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 25,
+  "cited_split": [
+   25,
+   25
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1810.11187",
+  "oa_url": "https://arxiv.org/pdf/1810.11187",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "targeted communication",
+   "message passing",
+   "partially observable environments",
+   "cooperative multi-agent tasks"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2898591683"
+ },
+ "Iqbal2019_MAAC": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1810.02912",
+  "note": "ICML 2019",
+  "title": "Actor-Attention-Critic for Multi-Agent Reinforcement Learning",
+  "year": 2018,
+  "authors": [
+   "Shariq Iqbal",
+   "Fei Sha"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 289,
+  "cited_split": [
+   289,
+   289
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1810.02912",
+  "oa_url": "https://arxiv.org/pdf/1810.02912",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "actor-critic",
+   "attention mechanism",
+   "centralized critic",
+   "decentralized policy"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2894976951"
+ },
+ "Yang2018_MeanField": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1802.05438",
+  "note": "ICML 2018",
+  "title": "Mean Field Multi-Agent Reinforcement Learning",
+  "year": 2018,
+  "authors": [
+   "Yaodong Yang",
+   "Rui Luo",
+   "Minne Li",
+   "Ming Quan Zhou",
+   "Weinan Zhang",
+   "Jun Wang"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Machine Learning",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Machine Learning",
+   "UCL Discovery (University College London)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 313,
+  "cited_split": [
+   313,
+   313
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1802.05438",
+  "oa_url": "https://arxiv.org/pdf/1802.05438",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "Nash equilibrium convergence",
+   "population dynamics",
+   "Ising model",
+   "model-free reinforcement learning"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2785315072"
+ },
+ "Velickovic2018_GAT": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1710.10903",
+  "note": "ICLR 2018",
+  "error": "HTTP Error 404: Not Found"
+ },
+ "Niu2021_MAGIC": {
+  "group": "B-Iletisim",
+  "ident": "title:Multi-Agent Graph-Attention Communication and Teaming",
+  "note": "AAMAS 2021",
+  "title": "Multi-Agent Graph-Attention Communication and Teaming",
+  "year": 2021,
+  "authors": [
+   "Yaru Niu",
+   "Rohan Paleja",
+   "Matthew Gombolay"
+  ],
+  "venue_type": "conference",
+  "venue": "Adaptive Agents and Multi-Agents Systems",
+  "issn_l": "1548-8403",
+  "all_venues": [
+   "Adaptive Agents and Multi-Agents Systems",
+   "Autonomous Agents and Multi-Agent Systems"
+  ],
+  "cited_by": 72,
+  "cited_split": [
+   72
+  ],
+  "doi": "https://doi.org/10.65109/yhuo7761",
+  "oa_url": null,
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "graph attention networks",
+   "communication scheduling",
+   "message passing",
+   "teaming"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3173215816"
+ },
+ "Guo2023_Email": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.24963/ijcai.2023/15",
+  "note": "",
+  "title": "Scalable Communication for Multi-Agent Reinforcement Learning via Transformer-Based Email Mechanism",
+  "year": 2023,
+  "authors": [
+   "Xudong Guo",
+   "Daming Shi",
+   "Wenhui Fan"
+  ],
+  "venue_type": "conference",
+  "venue": "International Joint Conference on Artificial Intelligence",
+  "issn_l": null,
+  "all_venues": [
+   "International Joint Conference on Artificial Intelligence"
+  ],
+  "cited_by": 11,
+  "cited_split": [
+   11
+  ],
+  "doi": "https://doi.org/10.24963/ijcai.2023/15",
+  "oa_url": "https://www.ijcai.org/proceedings/2023/0015.pdf",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "scalable communication",
+   "message forwarding",
+   "local communication",
+   "agent cooperation"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4385767399"
+ },
+ "Jiang2024_Teammate": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1016/j.neucom.2024.127638",
+  "note": "",
+  "title": "Multi-agent cooperative strategy with explicit teammate modeling and targeted informative communication",
+  "year": 2024,
+  "authors": [
+   "Rui Jiang",
+   "Xuetao Zhang",
+   "Xuetao Zhang",
+   "Yisha Liu",
+   "Yisha Liu",
+   "Xuebo Zhang",
+   "Xuebo Zhang",
+   "Yan Zhuang"
+  ],
+  "venue_type": "journal",
+  "venue": "Neurocomputing",
+  "issn_l": "0925-2312",
+  "all_venues": [
+   "Neurocomputing"
+  ],
+  "cited_by": 12,
+  "cited_split": [
+   12
+  ],
+  "doi": "https://doi.org/10.1016/j.neucom.2024.127638",
+  "oa_url": null,
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "informative communication",
+   "communication efficiency",
+   "variational autoencoder",
+   "mutual information"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4393951346"
+ },
+ "Hu2024_CommFormer": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2405.08550",
+  "note": "ICLR 2024",
+  "title": "Learning Multi-Agent Communication from Graph Modeling Perspective",
+  "year": 2024,
+  "authors": [
+   "Shengchao Hu",
+   "Li Shen",
+   "Ya Zhang",
+   "Dacheng Tao"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 4,
+  "cited_split": [
+   4,
+   4
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2405.08550",
+  "oa_url": "https://arxiv.org/pdf/2405.08550",
+  "keywords": [
+   "multi-agent communication",
+   "graph neural networks",
+   "bi-level optimization",
+   "attention mechanism",
+   "end-to-end learning"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4396944845"
+ },
+ "Fan2025_GraphModeling": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1609/aaai.v39i16.33813",
+  "note": "",
+  "title": "Towards Efficient Collaboration via Graph Modeling in Reinforcement Learning",
+  "year": 2025,
+  "authors": [
+   "Wenzhe Fan",
+   "Zishun Yu",
+   "Chengdong Ma",
+   "Changye Li",
+   "Yaodong Yang",
+   "Xinhua Zhang"
+  ],
+  "venue_type": "conference",
+  "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+  "issn_l": "2159-5399",
+  "all_venues": [
+   "AAAI Publications (The Association for the Advancement of Artificial Intelligence (AAAI))",
+   "Proceedings of the AAAI Conference on Artificial Intelligence"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v39i16.33813",
+  "oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/33813/35968",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "centralized training decentralized execution",
+   "message passing",
+   "traffic scheduling",
+   "power control"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4409364531"
+ },
+ "Li2025_ExpoComm": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2502.19717",
+  "note": "ICLR 2025",
+  "title": "Exponential Topology-enabled Scalable Communication in Multi-agent Reinforcement Learning",
+  "year": 2025,
+  "authors": [
+   "Xinran Li",
+   "Xiaolu Wang",
+   "Chenjia Bai",
+   "Jun Zhang"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "Rare & Special e-Zone (The Hong Kong University of Science and Technology)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2502.19717",
+  "oa_url": "https://arxiv.org/pdf/2502.19717",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "cooperative multi-agent systems",
+   "partial observability",
+   "information dissemination",
+   "zero-shot transfer"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4416149469"
+ },
+ "Wojtala2025_MACTAS": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2508.13661",
+  "note": "",
+  "title": "Communication-Enhanced Tutoring for Efficient Decentralized Multi-Agent Reinforcement Learning",
+  "year": 2025,
+  "authors": [
+   "Maciej Wojtala",
+   "Bogusz Stefańczyk",
+   "Dominik Bogucki",
+   "Łukasz Lepak",
+   "Paweł Wawrzyński"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2508.13661",
+  "oa_url": "https://arxiv.org/pdf/2508.13661",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "centralized training decentralized execution",
+   "value decomposition",
+   "partial observability",
+   "policy distillation"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4414992184"
+ },
+ "Wittner2026_Survey": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2601.12886",
+  "note": "",
+  "title": "Communication Methods in Multi-Agent Reinforcement Learning",
+  "year": 2026,
+  "authors": [
+   "Christoph Wittner"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2601.12886",
+  "oa_url": "https://arxiv.org/pdf/2601.12886",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "agent communication",
+   "explicit communication",
+   "implicit communication",
+   "hierarchical communication"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W7125247725"
+ },
+ "Sun2021_IMMAC": {
+  "group": "B-Iletisim",
+  "ident": "title:Intrinsic Motivated Multi-Agent Communication",
+  "note": "AAMAS 2021 ozet",
+  "title": "Intrinsic Motivated Multi-Agent Communication",
+  "year": 2021,
+  "authors": [
+   "Chuxiong Sun",
+   "Bo Wu",
+   "Rui Wang",
+   "Xiaohui Hu",
+   "Yang Xiao-ya",
+   "Cong Cong"
+  ],
+  "venue_type": "conference",
+  "venue": "Adaptive Agents and Multi-Agents Systems",
+  "issn_l": "1548-8403",
+  "all_venues": [
+   "Adaptive Agents and Multi-Agents Systems",
+   "Autonomous Agents and Multi-Agent Systems"
+  ],
+  "cited_by": 9,
+  "cited_split": [
+   9
+  ],
+  "doi": "https://doi.org/10.65109/qzej9744",
+  "oa_url": null,
+  "keywords": [
+   "multi-agent communication",
+   "intrinsic motivation",
+   "intrinsic value",
+   "gating mechanism",
+   "attention mechanism"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3174398074"
+ },
+ "Yu2024_ADMAC": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1609/aaai.v38i16.29708",
+  "note": "AAAI 2024",
+  "title": "Robust Communicative Multi-Agent Reinforcement Learning with Active Defense",
+  "year": 2024,
+  "authors": [
+   "Lebin Yu",
+   "Yunbo Qiu",
+   "Quanming Yao",
+   "Yuan Shen",
+   "Xudong Zhang",
+   "Jian Wang"
+  ],
+  "venue_type": "conference",
+  "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+  "issn_l": "2159-5399",
+  "all_venues": [
+   "AAAI Publications (The Association for the Advancement of Artificial Intelligence (AAAI))",
+   "Proceedings of the AAAI Conference on Artificial Intelligence"
+  ],
+  "cited_by": 8,
+  "cited_split": [
+   8
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v38i16.29708",
+  "oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/29708/31215",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "robust communication",
+   "active defense",
+   "adversarial attacks",
+   "noisy communication"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4393147110"
+ },
+ "Yoffe2024_DebUnc": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2407.06426",
+  "note": "G2 esdeger mekanizma",
+  "title": "DebUnc: Improving Large Language Model Agent Communication With Uncertainty Metrics",
+  "year": 2024,
+  "authors": [
+   "Luke Yoffe",
+   "Alfonso Amayuelas",
+   "William Yang Wang"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 3,
+  "cited_split": [
+   3,
+   3,
+   3
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2407.06426",
+  "oa_url": "https://arxiv.org/pdf/2407.06426",
+  "keywords": [
+   "multi-agent debate",
+   "LLM agents",
+   "uncertainty estimation",
+   "attention mechanism"
+  ],
+  "topic": "Topic Modeling",
+  "openalex": "https://openalex.org/W4400518688"
+ },
+ "Farr2026_Herding": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:2605.06988",
+  "note": "analoji",
+  "title": "The Cost of Consensus: Malignant Epistemic Herding and Adaptive Gating in Distributed Multi-Agent Search",
+  "year": 2026,
+  "authors": [
+   "David Farr",
+   "Iain J. Cruickshank",
+   "Kate Starbird",
+   "Jevin West"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2605.06988",
+  "oa_url": "https://arxiv.org/pdf/2605.06988",
+  "keywords": [
+   "multi-agent search",
+   "epistemic alignment",
+   "adaptive gating",
+   "communication overhead",
+   "bandwidth-limited communication"
+  ],
+  "topic": "Distributed Control Multi-Agent Systems",
+  "openalex": "https://openalex.org/W7160838454"
+ },
+ "deWitt2020_IPPO": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:2011.09533",
+  "note": "",
+  "error": "HTTP Error 400: Bad Request"
+ },
+ "Yu2022_MAPPO": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:2103.01955",
+  "note": "NeurIPS 2022 D&B",
+  "title": "The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games",
+  "year": 2021,
+  "authors": [
+   "Chao Yu",
+   "Akash Velu",
+   "Eugene Vinitsky",
+   "Gao, Jiaxuan",
+   "Yu Wang",
+   "Alexandre M. Bayen",
+   "Yi Wu"
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "arXiv (Cornell University)",
+   "neural information processing systems"
+  ],
+  "cited_by": 597,
+  "cited_split": [
+   597,
+   597,
+   405
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2103.01955",
+  "oa_url": "https://arxiv.org/pdf/2103.01955",
+  "keywords": [
+   "proximal policy optimization",
+   "multi-agent reinforcement learning",
+   "sample efficiency",
+   "hyperparameter optimization",
+   "StarCraft Multi-Agent Challenge"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4286748781"
+ },
+ "Terry2021_PettingZoo": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:2009.14471",
+  "note": "NeurIPS 2021",
+  "title": "PettingZoo: Gym for Multi-Agent Reinforcement Learning",
+  "year": 2020,
+  "authors": [
+   "Justin K. Terry",
+   "Benjamin Black",
+   "Nathaniel Grammel",
+   "Mario Jayakumar",
+   "Ananth Hari",
+   "Sullivan, Ryan",
+   "Luís Santos",
+   "Rodrigo Perez",
+   "Caroline Horsch",
+   "Clemens Dieffendahl",
+   "Niall L. Williams",
+   "Yashas Lokesh",
+   "Praveen Ravi"
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "arXiv (Cornell University)",
+   "neural information processing systems"
+  ],
+  "cited_by": 145,
+  "cited_split": [
+   145,
+   145,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2009.14471",
+  "oa_url": "https://arxiv.org/pdf/2009.14471",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "game environment design",
+   "Python interface",
+   "reproducibility",
+   "OpenAI Gym"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3090386093"
+ },
+ "Bettini2024_BenchMARL": {
+  "group": "C-MARLalgo",
+  "ident": "title:BenchMARL: Benchmarking Multi-Agent Reinforcement Learning",
+  "note": "JMLR",
+  "title": "BenchMARL: Benchmarking Multi-Agent Reinforcement Learning",
+  "year": 2023,
+  "authors": [
+   "Matteo Bettini",
+   "Amanda Prorok",
+   "Vincent Moens"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 5,
+  "cited_split": [
+   5
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2312.01472",
+  "oa_url": "https://arxiv.org/pdf/2312.01472",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "benchmarking",
+   "reproducibility",
+   "PyTorch",
+   "standardized reporting"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4389363807"
+ },
+ "Yang2020_Ensemble": {
+  "group": "D-TahminRL",
+  "ident": "doi:10.1145/3383455.3422540",
+  "note": "",
+  "title": "Deep reinforcement learning for automated stock trading",
+  "year": 2020,
+  "authors": [
+   "Hongyang Yang",
+   "Xiao-Yang Liu",
+   "Shan Zhong",
+   "Anwar Walid"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM International Conference on AI in Finance (ICAIF)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM International Conference on AI in Finance (ICAIF)"
+  ],
+  "cited_by": 194,
+  "cited_split": [
+   194
+  ],
+  "doi": "https://doi.org/10.1145/3383455.3422540",
+  "oa_url": null,
+  "keywords": [
+   "automated stock trading",
+   "deep reinforcement learning",
+   "actor-critic algorithms",
+   "proximal policy optimization",
+   "Advantage Actor-Critic"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3203680104"
+ },
+ "Gao2023_StockFormer": {
+  "group": "D-TahminRL",
+  "ident": "doi:10.24963/ijcai.2023/530",
+  "note": "",
+  "title": "StockFormer: Learning Hybrid Trading Machines with Predictive Coding",
+  "year": 2023,
+  "authors": [
+   "Siyu Gao",
+   "Yunbo Wang",
+   "Xiaokang Yang"
+  ],
+  "venue_type": "conference",
+  "venue": "International Joint Conference on Artificial Intelligence",
+  "issn_l": null,
+  "all_venues": [
+   "International Joint Conference on Artificial Intelligence"
+  ],
+  "cited_by": 35,
+  "cited_split": [
+   35
+  ],
+  "doi": "https://doi.org/10.24963/ijcai.2023/530",
+  "oa_url": "https://www.ijcai.org/proceedings/2023/0530.pdf",
+  "keywords": [
+   "predictive coding",
+   "transformer models",
+   "forward modeling",
+   "actor-critic",
+   "portfolio optimization"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4385767800"
+ },
+ "Choi2024_DeepClair": {
+  "group": "D-TahminRL",
+  "ident": "doi:10.1145/3627673.3680008",
+  "note": "",
+  "title": "DeepClair: Utilizing Market Forecasts for Effective Portfolio Selection",
+  "year": 2024,
+  "authors": [
+   "Donghee Choi",
+   "J.H. Kim",
+   "Mogan Gim",
+   "Jinho Lee",
+   "Jaewoo Kang"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM International Conference on Information and Knowledge Management (CIKM)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM International Conference on Information and Knowledge Management (CIKM)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1145/3627673.3680008",
+  "oa_url": "https://doi.org/10.1145/3627673.3680008",
+  "keywords": [
+   "portfolio optimization",
+   "market forecast",
+   "deep reinforcement learning",
+   "low-rank adaptation",
+   "fine-tuning"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4402345181"
+ },
+ "Lyu2025_RTSPnO": {
+  "group": "D-TahminRL",
+  "ident": "doi:10.1145/3711896.3737268",
+  "note": "",
+  "title": "Timing is Important: Risk-aware Fund Allocation based on Time-Series Forecasting",
+  "year": 2025,
+  "authors": [
+   "Fuyuan Lyu",
+   "Linfeng Du",
+   "Yunpeng Weng",
+   "Qiufang Ying",
+   "Zhiyan Xu",
+   "Wen Zou",
+   "Haolun Wu",
+   "Xiuqiang He",
+   "Xing Jia Tang"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1145/3711896.3737268",
+  "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3711896.3737268",
+  "keywords": [
+   "fund allocation",
+   "time series forecasting",
+   "predict-then-optimize",
+   "international payments",
+   "currency exchange"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4412877150"
+ },
+ "Zhang2025_OPS_NeurIPS": {
+  "group": "D-TahminRL",
+  "ident": "title:Online Portfolio Selection with ML Predictions",
+  "note": "NeurIPS 2025",
+  "title": "Online Portfolio Selection with ML Predictions",
+  "year": 2025,
+  "authors": [
+   "Ziliang Zhang",
+   "Tianming Zhao",
+   "Albert Y. Zomaya"
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "neural information processing systems"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.52202/085713-2762",
+  "oa_url": null,
+  "keywords": [
+   "online portfolio selection",
+   "machine learning prediction",
+   "trading strategies",
+   "dynamic asset allocation"
+  ],
+  "topic": "Advanced Bandit Algorithms Research",
+  "openalex": "https://openalex.org/W7197022372"
+ },
+ "Kazemdehbashi2026_TATS": {
+  "group": "E-TahminSizinti",
+  "ident": "arxiv:2601.12706",
+  "note": "TATS kaynagi",
+  "title": "Trend-Adjusted Time Series Models with an Application to Gold Price Forecasting",
+  "year": 2026,
+  "authors": [
+   "Sina Kazemdehbashi"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2601.12706",
+  "oa_url": "https://arxiv.org/pdf/2601.12706",
+  "keywords": [
+   "trend forecasting",
+   "gold price forecasting",
+   "LSTM",
+   "bidirectional LSTM",
+   "forecast error metrics"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7125108159"
+ },
+ "Torres2011_CEEMDAN": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1109/ICASSP.2011.5947265",
+  "note": "",
+  "title": "A complete ensemble empirical mode decomposition with adaptive noise",
+  "year": 2011,
+  "authors": [
+   "María Eugenia Torres",
+   "Marcelo A. Colominas",
+   "Gastón Schlotthauer",
+   "Patrick Flandrin"
+  ],
+  "venue_type": "conference",
+  "venue": "IEEE International Conference on Acoustics Speech and Signal Processing",
+  "issn_l": "1520-6149",
+  "all_venues": [
+   "IEEE International Conference on Acoustics Speech and Signal Processing"
+  ],
+  "cited_by": 2570,
+  "cited_split": [
+   2570
+  ],
+  "doi": "https://doi.org/10.1109/icassp.2011.5947265",
+  "oa_url": null,
+  "keywords": [
+   "complete ensemble empirical mode decomposition",
+   "adaptive noise",
+   "ensemble empirical mode decomposition",
+   "mode mixing",
+   "Gaussian white noise"
+  ],
+  "topic": "Machine Fault Diagnosis Techniques",
+  "openalex": "https://openalex.org/W2125056386"
+ },
+ "Colominas2014_ICEEMDAN": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.bspc.2014.06.009",
+  "note": "",
+  "title": "Improved complete ensemble EMD: A suitable tool for biomedical signal processing",
+  "year": 2014,
+  "authors": [
+   "Marcelo A. Colominas",
+   "Gastón Schlotthauer",
+   "María Eugenia Torres"
+  ],
+  "venue_type": "journal",
+  "venue": "Biomedical Signal Processing and Control",
+  "issn_l": "1746-8094",
+  "all_venues": [
+   "Biomedical Signal Processing and Control",
+   "CONICET Digital (CONICET)",
+   "Zenodo (CERN European Organization for Nuclear Research)"
+  ],
+  "cited_by": 1504,
+  "cited_split": [
+   1504
+  ],
+  "doi": "https://doi.org/10.1016/j.bspc.2014.06.009",
+  "oa_url": "https://www.sciencedirect.com/science/article/pii/S1746809414000962",
+  "keywords": [
+   "CEEMDAN",
+   "empirical mode decomposition",
+   "mode mixing",
+   "non-stationary signals",
+   "physiological signals"
+  ],
+  "topic": "Machine Fault Diagnosis Techniques",
+  "openalex": "https://openalex.org/W2009465763"
+ },
+ "Carnelossi2017_EMDbias": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.eswa.2017.03.053",
+  "note": "",
+  "title": "Bias effect on predicting market trends with EMD",
+  "year": 2017,
+  "authors": [
+   "Dennis Carnelossi Furlaneto",
+   "Luiz S. Oliveira",
+   "David Menotti",
+   "George D. C. Cavalcanti"
+  ],
+  "venue_type": "journal",
+  "venue": "Expert Systems with Applications",
+  "issn_l": "0957-4174",
+  "all_venues": [
+   "Expert Systems with Applications"
+  ],
+  "cited_by": 24,
+  "cited_split": [
+   24
+  ],
+  "doi": "https://doi.org/10.1016/j.eswa.2017.03.053",
+  "oa_url": null,
+  "keywords": [
+   "ensemble empirical mode decomposition",
+   "empirical mode decomposition",
+   "look-ahead bias",
+   "market trend forecasting",
+   "financial time series"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2599804474"
+ },
+ "Yang2024_EMDleak": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1038/s41598-024-80018-9",
+  "note": "su kalitesi verisi",
+  "title": "Research on information leakage in time series prediction based on empirical mode decomposition",
+  "year": 2024,
+  "authors": [
+   "Xinyi Yang",
+   "Jingyi Li",
+   "Xuchu Jiang"
+  ],
+  "venue_type": "journal",
+  "venue": "Scientific Reports",
+  "issn_l": "2045-2322",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "PubMed",
+   "PubMed Central",
+   "Scientific Reports"
+  ],
+  "cited_by": 30,
+  "cited_split": [
+   30
+  ],
+  "doi": "https://doi.org/10.1038/s41598-024-80018-9",
+  "oa_url": "https://www.nature.com/articles/s41598-024-80018-9.pdf",
+  "keywords": [
+   "information leakage",
+   "empirical mode decomposition",
+   "time series forecasting",
+   "water quality prediction",
+   "CEEMDAN"
+  ],
+  "topic": "Hydrological Forecasting Using AI",
+  "openalex": "https://openalex.org/W4404439040"
+ },
+ "Zhang2024_RollingCEEMDAN": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1007/s10614-024-10732-z",
+  "note": "",
+  "title": "Realized Volatility Forecasting for Stocks and Futures Indices with Rolling CEEMDAN and Machine Learning Models",
+  "year": 2024,
+  "authors": [
+   "Yuetong Zhang",
+   "Ying Peng",
+   "Yuping Song"
+  ],
+  "venue_type": "journal",
+  "venue": "Computational Economics",
+  "issn_l": "0927-7099",
+  "all_venues": [
+   "Computational Economics"
+  ],
+  "cited_by": 4,
+  "cited_split": [
+   4
+  ],
+  "doi": "https://doi.org/10.1007/s10614-024-10732-z",
+  "oa_url": null,
+  "keywords": [
+   "realized volatility forecasting",
+   "CEEMDAN",
+   "stock market indices",
+   "metal futures",
+   "random forest"
+  ],
+  "topic": "Financial Risk and Volatility Modeling",
+  "openalex": "https://openalex.org/W4403360639"
+ },
+ "Valdivieso2026_LeakNotDecomp": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.2139/ssrn.7422299",
+  "note": "YENI 2026",
+  "title": "Leakage, not decomposition: auditing decompose-then-split hybrids for short-term load forecasting",
+  "year": 2026,
+  "authors": [
+   "Víctor Valdivieso",
+   "Emilio López-Lao",
+   "Antonio Garcia Chica",
+   "Alejandro Cama-Pinto",
+   "Francisco Manuel Arrabal Campos"
+  ],
+  "venue_type": "repository",
+  "venue": "SSRN Electronic Journal",
+  "issn_l": "1556-5068",
+  "all_venues": [
+   "SSRN Electronic Journal"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.2139/ssrn.7422299",
+  "oa_url": "https://papers.ssrn.com/sol3/Delivery.cfm/6f158337-fa6c-422d-aefd-fd203cde75a5-MECA.pdf?abstractid=7422299&mirid=1",
+  "keywords": [
+   "short-term load forecasting",
+   "data leakage",
+   "signal decomposition",
+   "empirical mode decomposition",
+   "variational mode decomposition"
+  ],
+  "topic": "Energy Load and Power Forecasting",
+  "openalex": "https://openalex.org/W7210283179"
+ },
+ "Hewamalage2023": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1007/s10618-022-00894-5",
+  "note": "",
+  "title": "Forecast evaluation for data scientists: common pitfalls and best practices",
+  "year": 2022,
+  "authors": [
+   "Hansika Hewamalage",
+   "Klaus Ackermann",
+   "Christoph Bergmeir"
+  ],
+  "venue_type": "journal",
+  "venue": "Data Mining and Knowledge Discovery",
+  "issn_l": "1384-5810",
+  "all_venues": [
+   "Data Mining and Knowledge Discovery",
+   "Monash University Research Portal (Monash University)",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 257,
+  "cited_split": [
+   257
+  ],
+  "doi": "https://doi.org/10.1007/s10618-022-00894-5",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/s10618-022-00894-5.pdf",
+  "keywords": [
+   "forecast evaluation",
+   "time series forecasting",
+   "forecast error measures",
+   "non-stationarity",
+   "non-normality"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W4311129667"
+ },
+ "Lones2024_Pitfalls": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.patter.2024.101046",
+  "note": "",
+  "title": "Avoiding common machine learning pitfalls",
+  "year": 2024,
+  "authors": [
+   "Michael A. Lones"
+  ],
+  "venue_type": "journal",
+  "venue": "Patterns",
+  "issn_l": "2666-3899",
+  "all_venues": [
+   "Patterns",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 129,
+  "cited_split": [
+   129
+  ],
+  "doi": "https://doi.org/10.1016/j.patter.2024.101046",
+  "oa_url": "https://doi.org/10.1016/j.patter.2024.101046",
+  "keywords": [
+   "model evaluation",
+   "model comparison",
+   "fair comparison",
+   "research reproducibility",
+   "result reporting"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W4401951602"
+ },
+ "Rahimikia2025_TSFM": {
+  "group": "E-TahminSizinti",
+  "ident": "arxiv:2511.18578",
+  "note": "",
+  "title": "Re(Visiting) Time Series Foundation Models in Finance",
+  "year": 2025,
+  "authors": [
+   "Eghbal Rahimikia",
+   "Hao Ni",
+   "Weiguan Wang"
+  ],
+  "venue_type": "repository",
+  "venue": "SSRN Electronic Journal",
+  "issn_l": "1556-5068",
+  "all_venues": [
+   "Research Explorer (The University of Manchester)",
+   "SSRN Electronic Journal",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 2,
+  "cited_split": [
+   0,
+   2,
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.2139/ssrn.5770562",
+  "oa_url": "https://doi.org/10.2139/ssrn.5770562",
+  "keywords": [
+   "time series foundation models",
+   "financial time series forecasting",
+   "abnormal returns",
+   "zero-shot inference",
+   "fine-tuning"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4416536063"
+ },
+ "Lim2021_TFT": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.ijforecast.2021.03.012",
+  "note": "Kodda kullanilan TFT",
+  "title": "Temporal Fusion Transformers for interpretable multi-horizon time series forecasting",
+  "year": 2021,
+  "authors": [
+   "Bryan Y. Lim",
+   "Sercan Ö. Arık",
+   "Nicolas Loeff",
+   "Tomas Pfister"
+  ],
+  "venue_type": "journal",
+  "venue": "International Journal of Forecasting",
+  "issn_l": "0169-2070",
+  "all_venues": [
+   "International Journal of Forecasting",
+   "RePEc: Research Papers in Economics",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 3059,
+  "cited_split": [
+   3059
+  ],
+  "doi": "https://doi.org/10.1016/j.ijforecast.2021.03.012",
+  "oa_url": "https://www.sciencedirect.com/science/article/pii/S0169207021000637/pdf",
+  "keywords": [
+   "Temporal Fusion Transformer",
+   "interpretability",
+   "self-attention",
+   "gating mechanism",
+   "feature selection"
+  ],
+  "topic": "Time Series Analysis and Forecasting",
+  "openalex": "https://openalex.org/W2996331899"
+ },
+ "Guo2017_Calibration": {
+  "group": "E-TahminSizinti",
+  "ident": "arxiv:1706.04599",
+  "note": "ICML 2017",
+  "title": "On Calibration of Modern Neural Networks",
+  "year": 2017,
+  "authors": [
+   "Chuan Guo",
+   "Geoff Pleiss",
+   "Yu Sun",
+   "Kilian Q. Weinberger"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Machine Learning",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Machine Learning",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 2518,
+  "cited_split": [
+   2518,
+   2518
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1706.04599",
+  "oa_url": "https://arxiv.org/pdf/1706.04599",
+  "keywords": [
+   "confidence calibration",
+   "artificial neural networks",
+   "temperature scaling",
+   "Platt scaling",
+   "probability estimates"
+  ],
+  "topic": "Adversarial Robustness in Machine Learning",
+  "openalex": "https://openalex.org/W2626967530"
+ },
+ "Moody2001": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1109/72.935097",
+  "note": "",
+  "title": "Learning to trade via direct reinforcement",
+  "year": 2001,
+  "authors": [
+   "John E. Moody",
+   "Matthew Saffell"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Transactions on Neural Networks",
+  "issn_l": "1045-9227",
+  "all_venues": [
+   "IEEE Transactions on Neural Networks",
+   "PubMed"
+  ],
+  "cited_by": 543,
+  "cited_split": [
+   543
+  ],
+  "doi": "https://doi.org/10.1109/72.935097",
+  "oa_url": null,
+  "keywords": [
+   "direct reinforcement",
+   "portfolio optimization",
+   "asset allocation",
+   "trading strategies",
+   "recurrent reinforcement learning"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2169015875"
+ },
+ "Ayari2025": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1080/14697688.2025.2592822",
+  "note": "",
+  "title": "Feature configuration effects in DRL portfolio management: a risk-focused evaluation under market stress",
+  "year": 2025,
+  "authors": [
+   "Rayan Ayari"
+  ],
+  "venue_type": "journal",
+  "venue": "Quantitative Finance",
+  "issn_l": "1469-7688",
+  "all_venues": [
+   "Quantitative Finance"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1080/14697688.2025.2592822",
+  "oa_url": "https://www.tandfonline.com/doi/pdf/10.1080/14697688.2025.2592822?needAccess=true",
+  "keywords": [
+   "deep reinforcement learning",
+   "portfolio management",
+   "systematic risk",
+   "Barra",
+   "technical indicators"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4417160650"
+ },
+ "Zhang2020_DRLTrading": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.3905/jfds.2020.1.030",
+  "note": "",
+  "title": "Deep Reinforcement Learning for Trading",
+  "year": 2020,
+  "authors": [
+   "Zihao Zhang",
+   "Stefan Zohren",
+   "Stephen Roberts"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Financial Data Science",
+  "issn_l": "2640-3943",
+  "all_venues": [
+   "The Journal of Financial Data Science"
+  ],
+  "cited_by": 229,
+  "cited_split": [
+   229
+  ],
+  "doi": "https://doi.org/10.3905/jfds.2020.1.030",
+  "oa_url": null,
+  "keywords": [
+   "deep reinforcement learning",
+   "trading strategies",
+   "futures contracts",
+   "continuous action spaces",
+   "discrete action space"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3012223895"
+ },
+ "Millea2022_HRP": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.3390/ijfs11010010",
+  "note": "",
+  "title": "Using Deep Reinforcement Learning with Hierarchical Risk Parity for Portfolio Optimization",
+  "year": 2022,
+  "authors": [
+   "Adrian Millea",
+   "Abbas Edalat"
+  ],
+  "venue_type": "journal",
+  "venue": "International Journal of Financial Studies",
+  "issn_l": "2227-7072",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "International Journal of Financial Studies",
+   "RePEc: Research Papers in Economics",
+   "Spiral (Imperial College London)"
+  ],
+  "cited_by": 22,
+  "cited_split": [
+   22
+  ],
+  "doi": "https://doi.org/10.3390/ijfs11010010",
+  "oa_url": "https://www.mdpi.com/2227-7072/11/1/10/pdf?version=1673427196",
+  "keywords": [
+   "portfolio optimization",
+   "hierarchical risk parity",
+   "deep reinforcement learning",
+   "multi-agent decision making",
+   "multi-armed bandits"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4313362025"
+ },
+ "LopezdePrado2016_HRP": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.3905/jpm.2016.42.4.059",
+  "note": "",
+  "title": "Building Diversified Portfolios that Outperform Out of Sample",
+  "year": 2016,
+  "authors": [
+   "Marcos López de Prado"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Portfolio Management",
+  "issn_l": "0095-4918",
+  "all_venues": [
+   "The Journal of Portfolio Management"
+  ],
+  "cited_by": 297,
+  "cited_split": [
+   297
+  ],
+  "doi": "https://doi.org/10.3905/jpm.2016.42.4.059",
+  "oa_url": null,
+  "keywords": [
+   "hierarchical risk parity",
+   "portfolio diversification",
+   "quadratic programming",
+   "covariance matrix",
+   "singular covariance matrix"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W3122780569"
+ },
+ "Ledoit2004_Shrinkage": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1016/S0047-259X(03)00096-4",
+  "note": "",
+  "title": "A well-conditioned estimator for large-dimensional covariance matrices",
+  "year": 2003,
+  "authors": [
+   "Olivier Ledoit",
+   "Michael Wolf"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Multivariate Analysis",
+  "issn_l": "0047-259X",
+  "all_venues": [
+   "Journal of Multivariate Analysis",
+   "RePEc: Research Papers in Economics",
+   "e-Archivo (Carlos III University of Madrid)"
+  ],
+  "cited_by": 3106,
+  "cited_split": [
+   3106
+  ],
+  "doi": "https://doi.org/10.1016/s0047-259x(03)00096-4",
+  "oa_url": "https://www.sciencedirect.com/science/article/pii/S0047259X03000964/pdf",
+  "keywords": [
+   "covariance matrix estimation",
+   "sample covariance matrix",
+   "convex combination",
+   "asymptotic optimality",
+   "squared error loss"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2062125287"
+ },
+ "DeMiguel2009": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1093/rfs/hhm075",
+  "note": "",
+  "title": "Optimal Versus Naive Diversification: How Inefficient is the 1/ N Portfolio Strategy?",
+  "year": 2007,
+  "authors": [
+   "Victor DeMiguel",
+   "Lorenzo Garlappi",
+   "Raman Uppal"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Financial Studies",
+  "issn_l": "0893-9454",
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "Review of Financial Studies"
+  ],
+  "cited_by": 3329,
+  "cited_split": [
+   3329
+  ],
+  "doi": "https://doi.org/10.1093/rfs/hhm075",
+  "oa_url": null,
+  "keywords": [
+   "1/N portfolio",
+   "naive diversification",
+   "portfolio optimization",
+   "mean-variance model",
+   "estimation error"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W2163969674"
+ },
+ "Bailey2014_DSR": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.3905/jpm.2014.40.5.094",
+  "note": "",
+  "title": "The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality",
+  "year": 2014,
+  "authors": [
+   "David H. Bailey",
+   "Marcos López de Prado"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Portfolio Management",
+  "issn_l": "0095-4918",
+  "all_venues": [
+   "The Journal of Portfolio Management"
+  ],
+  "cited_by": 120,
+  "cited_split": [
+   120
+  ],
+  "doi": "https://doi.org/10.3905/jpm.2014.40.5.094",
+  "oa_url": null,
+  "keywords": [
+   "Sharpe ratio",
+   "selection bias",
+   "backtest overfitting",
+   "multiple comparisons",
+   "non-normal returns"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W3124863268"
+ },
+ "Bailey2017_PBO": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.21314/JCF.2016.322",
+  "note": "",
+  "title": "The probability of backtest overfitting",
+  "year": 2016,
+  "authors": [
+   "David H. Bailey",
+   "Jonathan Michael Borwein",
+   "Marcos López de Prado",
+   "Qiji Jim Zhu"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Computational Finance",
+  "issn_l": "1460-1559",
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "The Journal of Computational Finance",
+   "eScholarship (California Digital Library)"
+  ],
+  "cited_by": 104,
+  "cited_split": [
+   104
+  ],
+  "doi": "https://doi.org/10.21314/jcf.2016.322",
+  "oa_url": "https://escholarship.org/uc/item/4w1110bb",
+  "keywords": [
+   "backtest overfitting",
+   "investment strategy selection",
+   "asset allocation",
+   "model-free estimation",
+   "nonparametric estimation"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W2732395805"
+ },
+ "Ledoit2008_SharpeTest": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1016/j.jempfin.2008.03.002",
+  "note": "",
+  "title": "Robust performance hypothesis testing with the Sharpe ratio",
+  "year": 2008,
+  "authors": [
+   "Olivier Ledoit",
+   "Michael Wolf"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Empirical Finance",
+  "issn_l": "0927-5398",
+  "all_venues": [
+   "Journal of Empirical Finance",
+   "Zurich Open Repository and Archive (University of Zurich)"
+  ],
+  "cited_by": 997,
+  "cited_split": [
+   997
+  ],
+  "doi": "https://doi.org/10.1016/j.jempfin.2008.03.002",
+  "oa_url": "https://www.zora.uzh.ch/handle/20.500.14742/35335",
+  "keywords": [
+   "Sharpe ratio",
+   "robust inference",
+   "heavy-tailed returns",
+   "investment strategy comparison",
+   "finite sample properties"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W3121764760"
+ },
+ "Hansen2011_MCS": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.3982/ECTA5771",
+  "note": "",
+  "title": "The Model Confidence Set",
+  "year": 2011,
+  "authors": [],
+  "venue_type": "journal",
+  "venue": "Econometrica",
+  "issn_l": "0012-9682",
+  "all_venues": [
+   "Econometrica"
+  ],
+  "cited_by": 2154,
+  "cited_split": [
+   2154
+  ],
+  "doi": "https://doi.org/10.3982/ecta5771",
+  "oa_url": null,
+  "keywords": [
+   "model confidence set",
+   "model selection",
+   "inflation forecasting",
+   "Taylor rule",
+   "forecast evaluation"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2125536334"
+ },
+ "Diebold1995_DM": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1080/07350015.1995.10524599",
+  "note": "",
+  "title": "Comparing Predictive Accuracy",
+  "year": 1995,
+  "authors": [
+   "Francis X. Diebold",
+   "Roberto S. Mariano"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Business and Economic Statistics",
+  "issn_l": "0735-0015",
+  "all_venues": [
+   "Journal of Business and Economic Statistics"
+  ],
+  "cited_by": 5155,
+  "cited_split": [
+   5155
+  ],
+  "doi": "https://doi.org/10.1080/07350015.1995.10524599",
+  "oa_url": null,
+  "keywords": [
+   "forecast accuracy comparison",
+   "forecast evaluation",
+   "null hypothesis testing",
+   "asymptotic tests"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W4291327732"
+ },
+ "Diebold2015_DM20": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1080/07350015.2014.983236",
+  "note": "",
+  "title": "Comparing Predictive Accuracy, Twenty Years Later: A Personal Perspective on the Use and Abuse of Diebold–Mariano Tests",
+  "year": 2015,
+  "authors": [
+   "Francis X. Diebold"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Business and Economic Statistics",
+  "issn_l": "0735-0015",
+  "all_venues": [
+   "Journal of Business and Economic Statistics",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 515,
+  "cited_split": [
+   515
+  ],
+  "doi": "https://doi.org/10.1080/07350015.2014.983236",
+  "oa_url": null,
+  "keywords": [
+   "Diebold-Mariano test",
+   "forecast evaluation",
+   "model comparison",
+   "prediction accuracy",
+   "forecasting model comparison"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W2007694684"
+ },
+ "Harvey1997_HLN": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1016/S0169-2070(96)00719-4",
+  "note": "",
+  "title": "Testing the equality of prediction mean squared errors",
+  "year": 1997,
+  "authors": [
+   "David I. Harvey",
+   "Stephen J. Leybourne",
+   "Paul Newbold"
+  ],
+  "venue_type": "journal",
+  "venue": "International Journal of Forecasting",
+  "issn_l": "0169-2070",
+  "all_venues": [
+   "International Journal of Forecasting",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 2106,
+  "cited_split": [
+   2106
+  ],
+  "doi": "https://doi.org/10.1016/s0169-2070(96)00719-4",
+  "oa_url": null,
+  "keywords": [
+   "mean squared prediction error",
+   "forecast accuracy comparison",
+   "equality testing",
+   "forecast evaluation",
+   "hypothesis testing"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W2000842688"
+ },
+ "NeweyWest1987": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.2307/1913610",
+  "note": "",
+  "title": "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix",
+  "year": 1987,
+  "authors": [
+   "Whitney K. Newey",
+   "Kenneth D. West"
+  ],
+  "venue_type": "journal",
+  "venue": "Econometrica",
+  "issn_l": "0012-9682",
+  "all_venues": [
+   "Econometrica"
+  ],
+  "cited_by": 17664,
+  "cited_split": [
+   17664
+  ],
+  "doi": "https://doi.org/10.2307/1913610",
+  "oa_url": null,
+  "keywords": [
+   "asymptotic covariance matrix"
+  ],
+  "topic": "Advanced Statistical Methods and Models",
+  "openalex": "https://openalex.org/W2117178635"
+ },
+ "Politis1994_StatBoot": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1080/01621459.1994.10476870",
+  "note": "",
+  "title": "The Stationary Bootstrap",
+  "year": 1994,
+  "authors": [
+   "Dimitris N. Politis",
+   "Joseph P. Romano"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of the American Statistical Association",
+  "issn_l": "0162-1459",
+  "all_venues": [
+   "Helmholtz Centre for Ocean Research Kiel (GEOMAR)",
+   "Journal of the American Statistical Association"
+  ],
+  "cited_by": 2517,
+  "cited_split": [
+   2517
+  ],
+  "doi": "https://doi.org/10.1080/01621459.1994.10476870",
+  "oa_url": null,
+  "keywords": [
+   "stationary bootstrap",
+   "resampling",
+   "standard errors",
+   "confidence regions",
+   "geometric distribution"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2076396344"
+ },
+ "Benjamini1995_FDR": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1111/j.2517-6161.1995.tb02031.x",
+  "note": "",
+  "title": "Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing",
+  "year": 1995,
+  "authors": [
+   "Yoav Benjamini",
+   "Yosef Hochberg"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of the Royal Statistical Society Series B (Statistical Methodology)",
+  "issn_l": "1369-7412",
+  "all_venues": [
+   "Journal of the Royal Statistical Society Series B (Statistical Methodology)"
+  ],
+  "cited_by": 113019,
+  "cited_split": [
+   113019
+  ],
+  "doi": "https://doi.org/10.1111/j.2517-6161.1995.tb02031.x",
+  "oa_url": null,
+  "keywords": [
+   "false discovery rate",
+   "multiple comparisons",
+   "family-wise error rate",
+   "statistical power",
+   "hypothesis testing"
+  ],
+  "topic": "Statistical Methods in Clinical Trials",
+  "openalex": "https://openalex.org/W2110065044"
+ },
+ "Agarwal2021_Precipice": {
+  "group": "G-Degerlendirme",
+  "ident": "arxiv:2108.13264",
+  "note": "NeurIPS 2021",
+  "title": "Deep Reinforcement Learning at the Edge of the Statistical Precipice",
+  "year": 2021,
+  "authors": [
+   "Rishabh Agarwal",
+   "Max Schwarzer",
+   "Pablo Samuel Castro",
+   "Aaron C. Courville",
+   "Marc G. Bellemare"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 41,
+  "cited_split": [
+   41,
+   41
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2108.13264",
+  "oa_url": "https://arxiv.org/pdf/2108.13264",
+  "keywords": [
+   "statistical uncertainty",
+   "interval estimates",
+   "performance profiles",
+   "Arcade Learning Environment",
+   "Procgen"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3197485521"
+ },
+ "Henderson2018_Matters": {
+  "group": "G-Degerlendirme",
+  "ident": "arxiv:1709.06560",
+  "note": "AAAI 2018",
+  "title": "Deep Reinforcement Learning That Matters",
+  "year": 2018,
+  "authors": [
+   "Peter B. Henderson",
+   "Riashat Islam",
+   "Philip Bachman",
+   "Joëlle Pineau",
+   "Doina Precup",
+   "David Meger"
+  ],
+  "venue_type": "conference",
+  "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+  "issn_l": "2159-5399",
+  "all_venues": [
+   "AAAI Publications (The Association for the Advancement of Artificial Intelligence (AAAI))",
+   "Proceedings of the AAAI Conference on Artificial Intelligence",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1604,
+  "cited_split": [
+   345,
+   1604,
+   345
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v32i1.11694",
+  "oa_url": "https://doi.org/10.1609/aaai.v32i1.11694",
+  "keywords": [
+   "deep reinforcement learning",
+   "reproducibility",
+   "benchmark environments",
+   "non-determinism",
+   "variance"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2754517384"
+ },
+ "Jain2019_AttnNot": {
+  "group": "H-XAI",
+  "ident": "doi:10.18653/v1/N19-1357",
+  "note": "",
+  "title": "Attention is not Explanation",
+  "year": 2019,
+  "authors": [
+   "Sarthak Jain",
+   "Byron Wallace"
+  ],
+  "venue_type": "conference",
+  "venue": "Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)",
+  "issn_l": null,
+  "all_venues": [
+   "Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)"
+  ],
+  "cited_by": 617,
+  "cited_split": [
+   617
+  ],
+  "doi": "https://doi.org/10.18653/v1/n19-1357",
+  "oa_url": "https://doi.org/10.18653/v1/n19-1357",
+  "keywords": [
+   "attention",
+   "explanation",
+   "interpretability",
+   "explainable AI"
+  ],
+  "topic": "Natural Language Processing Techniques",
+  "openalex": "https://openalex.org/W2934842096"
+ },
+ "Wiegreffe2019_AttnNotNot": {
+  "group": "H-XAI",
+  "ident": "doi:10.18653/v1/D19-1002",
+  "note": "",
+  "title": "Attention is not not Explanation",
+  "year": 2019,
+  "authors": [
+   "Sarah Wiegreffe",
+   "Yuval Pinter"
+  ],
+  "venue_type": null,
+  "venue": null,
+  "issn_l": null,
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 935,
+  "cited_split": [
+   935
+  ],
+  "doi": "https://doi.org/10.18653/v1/d19-1002",
+  "oa_url": "https://www.aclweb.org/anthology/D19-1002.pdf",
+  "keywords": [
+   "attention",
+   "explanation",
+   "interpretability",
+   "neural network interpretability",
+   "attention mechanism"
+  ],
+  "topic": "Natural Language Processing Techniques",
+  "openalex": "https://openalex.org/W2968210605"
+ },
+ "Candar2022_Thesis": {
+  "group": "I-BIST",
+  "ident": "title:Equity portfolio optimization using reinforcement learning: An emerging market case",
+  "note": "ITU YL tezi",
+  "title": "Equity Portfolio Optimization Using Reinforcement Learning: Emerging Market Case",
+  "year": 2022,
+  "authors": [
+   "Mert Candar",
+   "Alp Üstündağ"
+  ],
+  "venue_type": "book series",
+  "venue": "Lecture notes in networks and systems",
+  "issn_l": "2367-3370",
+  "all_venues": [
+   "Istanbul Technical University Academic Open Archive (Istanbul Technical University)",
+   "Lecture notes in networks and systems"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1007/978-3-031-09176-6_16",
+  "oa_url": null,
+  "keywords": [
+   "portfolio optimization",
+   "reinforcement learning",
+   "stock portfolios",
+   "Markov decision process",
+   "portfolio weights"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4285235657"
+ },
+ "Beyhan2026_EPFAD": {
+  "group": "I-BIST",
+  "ident": "doi:10.30784/epfad.1811319",
+  "note": "BIST DRL oncülü",
+  "title": "Dynamic Portfolio Optimization with Deep Reinforcement Learning: Evidence from Borsa Istanbul",
+  "year": 2026,
+  "authors": [
+   "Hidayet Beyhan",
+   "Erhan Ergin",
+   "Binali Selman EREN"
+  ],
+  "venue_type": "journal",
+  "venue": "Ekonomi Politika ve Finans Arastirmalari Dergisi",
+  "issn_l": "2587-151X",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "DergiPark (Istanbul University)",
+   "Ekonomi Politika ve Finans Arastirmalari Dergisi"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.30784/epfad.1811319",
+  "oa_url": "https://dergipark.org.tr/en/download/article-file/5364807",
+  "keywords": [
+   "dynamic portfolio optimization",
+   "deep reinforcement learning",
+   "deep deterministic policy gradient",
+   "Borsa Istanbul",
+   "equally weighted portfolio"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W7144101655"
+ },
+ "Ege2024_Thesis": {
+  "group": "I-BIST",
+  "ident": "title:Predicting stock prices in BIST: A reinforcement learning and sentimental analysis approach",
+  "note": "ITU YL tezi",
+  "title": "Predicting stock prices in bist: A reinforcement learning and sentimental analysis approach",
+  "year": 2024,
+  "authors": [
+   "Eğe, Şeyma"
+  ],
+  "venue_type": "repository",
+  "venue": "Istanbul Technical University Academic Open Archive (Istanbul Technical University)",
+  "issn_l": null,
+  "all_venues": [
+   "Istanbul Technical University Academic Open Archive (Istanbul Technical University)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": null,
+  "oa_url": "https://polen.itu.edu.tr/bitstreams/54a4de52-e78c-4c59-9c2c-f4286bfac44a/download",
+  "keywords": [
+   "stock price prediction",
+   "Borsa Istanbul",
+   "reinforcement learning",
+   "sentiment analysis",
+   "financial time series forecasting"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7112315959"
+ },
+ "Altuner2022_TJEECS": {
+  "group": "I-BIST",
+  "ident": "title:A novel deep reinforcement learning based stock price prediction using knowledge graph and community aware sentiments",
+  "note": "",
+  "title": "A novel deep reinforcement learning based stock price prediction using knowledge graph and community aware sentiments",
+  "year": 2022,
+  "authors": [
+   "Anil Berk Altuner",
+   "Zeynep Hilal Kilimci"
+  ],
+  "venue_type": "journal",
+  "venue": "TURKISH JOURNAL OF ELECTRICAL ENGINEERING & COMPUTER SCIENCES",
+  "issn_l": "1300-0632",
+  "all_venues": [
+   "TURKISH JOURNAL OF ELECTRICAL ENGINEERING & COMPUTER SCIENCES"
+  ],
+  "cited_by": 18,
+  "cited_split": [
+   18
+  ],
+  "doi": "https://doi.org/10.55730/1300-0632.3862",
+  "oa_url": "https://journals.tubitak.gov.tr/cgi/viewcontent.cgi?article=3862&context=elektrik",
+  "keywords": [
+   "stock price prediction",
+   "deep reinforcement learning",
+   "deep Q-network",
+   "knowledge graphs",
+   "community sentiment"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4285194001"
+ },
+ "Akyapak2025_ASYU": {
+  "group": "I-BIST",
+  "ident": "doi:10.1109/ASYU67174.2025.11208408",
+  "note": "",
+  "title": "A Reinforcement Learning Approach to Stock Trading with Macroeconomic Indicators",
+  "year": 2025,
+  "authors": [
+   "Ömer Faruk Akyapak",
+   "İlhan Tunç"
+  ],
+  "venue_type": "conference",
+  "venue": "Innovations in Intelligent Systems and Applications Conference (ASYU)",
+  "issn_l": null,
+  "all_venues": [
+   "Bursa Technical University Institutional Repository",
+   "Innovations in Intelligent Systems and Applications Conference (ASYU)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1109/asyu67174.2025.11208408",
+  "oa_url": null,
+  "keywords": [
+   "reinforcement learning for trading",
+   "Q-learning",
+   "SARSA",
+   "stock trading",
+   "macroeconomic indicators"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4415709746"
+ },
+ "Karacam2026_BIR": {
+  "group": "I-BIST",
+  "ident": "doi:10.1016/j.bir.2026.100834",
+  "note": "",
+  "title": "Inferring latent trading motivations in Borsa Istanbul: A comparative inverse reinforcement learning approach",
+  "year": 2026,
+  "authors": [
+   "Kubilay Karacam",
+   "Mehmet Yasin Ulukuş"
+  ],
+  "venue_type": "journal",
+  "venue": "Borsa Istanbul Review",
+  "issn_l": "2214-8450",
+  "all_venues": [
+   "Borsa Istanbul Review"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1016/j.bir.2026.100834",
+  "oa_url": "https://doi.org/10.1016/j.bir.2026.100834",
+  "keywords": [
+   "inverse reinforcement learning",
+   "trading behavior",
+   "securities companies",
+   "heterogeneous agents",
+   "market microstructure"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W7156905126"
+ },
+ "SumerliSarigul2024": {
+  "group": "I-BIST",
+  "ident": "title:Stock Market Index Prediction Using Machine Learning Techniques: Application of BIST Indices",
+  "note": "",
+  "error": "max() iterable argument is empty"
+ },
+ "Ergenc2025": {
+  "group": "I-BIST",
+  "ident": "doi:10.2478/revecp-2025-0005",
+  "note": "",
+  "title": "A Supervised Machine Learning in Financial Forecasting: Identifying Effective Models for the BIST100 Index",
+  "year": 2025,
+  "authors": [
+   "Cansu Ergenç",
+   "Rafet Aktaş"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Economic Perspectives",
+  "issn_l": "1213-2446",
+  "all_venues": [
+   "AYBU AVESIS",
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "Review of Economic Perspectives"
+  ],
+  "cited_by": 3,
+  "cited_split": [
+   3
+  ],
+  "doi": "https://doi.org/10.2478/revecp-2025-0005",
+  "oa_url": "https://doi.org/10.2478/revecp-2025-0005",
+  "keywords": [
+   "financial performance prediction",
+   "BIST 100 index",
+   "stock market prediction",
+   "supervised learning",
+   "XGBoost"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4414183730"
+ },
+ "Erdag2026": {
+  "group": "I-BIST",
+  "ident": "doi:10.1108/rbf-12-2025-0531",
+  "note": "",
+  "title": "Structural drivers and forecasting dynamics of the BIST100 index: a hybrid ML/DL approach integrating liquidity, sentiment and macroeconomic factors",
+  "year": 2026,
+  "authors": [
+   "Alptekin Erdağ",
+   "Mehmet Fatih Uçar",
+   "İbrahim Ethem Tarhan"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Behavioral Finance",
+  "issn_l": "1940-5979",
+  "all_venues": [
+   "Review of Behavioral Finance"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1108/rbf-12-2025-0531",
+  "oa_url": null,
+  "keywords": [
+   "BIST 100 index",
+   "stock market prediction",
+   "liquidity",
+   "investor sentiment",
+   "Amihud illiquidity measure"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7170912795"
+ },
+ "BIR2026_InflationSurprise": {
+  "group": "I-BIST",
+  "ident": "title:Inflation surprise and stock returns: Türkiye during a period of high inflation",
+  "note": "YENI 2026 S3 gerekcesi",
+  "title": "Inflation surprise and stock returns: Türkiye during a period of high inflation",
+  "year": 2026,
+  "authors": [
+   "Faruk TAŞKIRAN"
+  ],
+  "venue_type": "journal",
+  "venue": "Borsa Istanbul Review",
+  "issn_l": "2214-8450",
+  "all_venues": [
+   "Borsa Istanbul Review"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1016/j.bir.2026.100917",
+  "oa_url": "https://www.sciencedirect.com/science/article/pii/S2214845026001377/pdf",
+  "keywords": [
+   "unexpected inflation",
+   "stock returns",
+   "Borsa Istanbul",
+   "market efficiency",
+   "news dissemination"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W7214036374"
+ },
+ "CBAYAR2026_Rebalancing": {
+  "group": "I-BIST",
+  "ident": "doi:10.18026/cbayarsos.1905022",
+  "note": "YENI 2026 BIST 1/N karsiligi",
+  "title": "BIST Katılım 30 Endeksi Kapsamındaki Portföylerde Yeniden Dengeleme Stratejilerinin Karşılaştırması",
+  "year": 2026,
+  "authors": [
+   "Selim Baha Yıldız",
+   "Ümit Hasan Gözkonan"
+  ],
+  "venue_type": "journal",
+  "venue": "Celal Bayar Üniversitesi Sosyal Bilimler Dergisi",
+  "issn_l": "2146-2844",
+  "all_venues": [
+   "Celal Bayar Üniversitesi Sosyal Bilimler Dergisi"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.18026/cbayarsos.1905022",
+  "oa_url": "https://dergipark.org.tr/tr/download/article-file/5792544",
+  "keywords": [
+   "portfolio rebalancing",
+   "Sharpe ratio",
+   "rebalancing frequency",
+   "portfolio size",
+   "transaction costs"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W7215068039"
+ },
+ "Thongkairat2025_SET50": {
+  "group": "I-BIST",
+  "ident": "doi:10.3390/math13030461",
+  "note": "",
+  "title": "A Combined Algorithm Approach for Optimizing Portfolio Performance in Automated Trading: A Study of SET50 Stocks",
+  "year": 2025,
+  "authors": [
+   "Sukrit Thongkairat",
+   "Woraphon Yamaka"
+  ],
+  "venue_type": "journal",
+  "venue": "Mathematics",
+  "issn_l": "2227-7390",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "Mathematics",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 6,
+  "cited_split": [
+   6
+  ],
+  "doi": "https://doi.org/10.3390/math13030461",
+  "oa_url": "https://www.mdpi.com/2227-7390/13/3/461/pdf?version=1738222014",
+  "keywords": [
+   "portfolio optimization",
+   "algorithmic trading",
+   "deep reinforcement learning",
+   "Advantage Actor-Critic",
+   "proximal policy optimization"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4406997907"
+ },
+ "Sattar2025_RMS": {
+  "group": "A-MARLportfoy",
+  "ident": "doi:10.1109/access.2025.3546099",
+  "note": "Ansari ekibinin devami",
+  "title": "A Novel RMS-Driven Deep Reinforcement Learning for Optimized Portfolio Management in Stock Trading",
+  "year": 2025,
+  "authors": [
+   "Asma Sattar",
+   "Amna Sarwar",
+   "Saira Andleeb Gillani",
+   "Maryam Bukhari",
+   "Seungmin Rho",
+   "Muhammad Faseeh"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Access",
+  "issn_l": "2169-3536",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "IEEE Access"
+  ],
+  "cited_by": 29,
+  "cited_split": [
+   29
+  ],
+  "doi": "https://doi.org/10.1109/access.2025.3546099",
+  "oa_url": "https://doi.org/10.1109/access.2025.3546099",
+  "keywords": [
+   "deep reinforcement learning",
+   "portfolio management",
+   "news sentiment",
+   "deep deterministic policy gradient",
+   "proximal policy optimization"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4407948952"
+ },
+ "Pippas2025_CSUR": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1145/3733714",
+  "note": "",
+  "title": "The Evolution of Reinforcement Learning in Quantitative Finance: A Survey",
+  "year": 2025,
+  "authors": [
+   "Nikolaos Pippas",
+   "Elliot Andrew Ludvig",
+   "Çağatay Turkay"
+  ],
+  "venue_type": "journal",
+  "venue": "ACM Computing Surveys",
+  "issn_l": "0360-0300",
+  "all_venues": [
+   "ACM Computing Surveys",
+   "Warwick Research Archive Portal (University of Warwick)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 35,
+  "cited_split": [
+   35
+  ],
+  "doi": "https://doi.org/10.1145/3733714",
+  "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3733714",
+  "keywords": [
+   "reinforcement learning",
+   "financial mathematics",
+   "financial markets",
+   "multi-agent reinforcement learning",
+   "transfer learning"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4410039590"
+ },
+ "Wang2025_ESWAsurvey": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1016/j.eswa.2025.127540",
+  "note": "",
+  "title": "A Survey on recent advances in reinforcement learning for intelligent investment decision-making optimization",
+  "year": 2025,
+  "authors": [
+   "Feng Wang",
+   "Shicheng Li",
+   "Shanshui Niu",
+   "Haoran Yang",
+   "Xiaodong Li",
+   "Xiaotie Deng"
+  ],
+  "venue_type": "journal",
+  "venue": "Expert Systems with Applications",
+  "issn_l": "0957-4174",
+  "all_venues": [
+   "Expert Systems with Applications"
+  ],
+  "cited_by": 10,
+  "cited_split": [
+   10
+  ],
+  "doi": "https://doi.org/10.1016/j.eswa.2025.127540",
+  "oa_url": null,
+  "keywords": [
+   "reinforcement learning",
+   "investment decision-making",
+   "portfolio optimization",
+   "trade execution",
+   "option hedging"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4409695791"
+ },
+ "Hambly2023_MF": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1111/mafi.12382",
+  "note": "",
+  "title": "Recent advances in reinforcement learning in finance",
+  "year": 2023,
+  "authors": [
+   "Ben M. Hambly",
+   "Renyuan Xu",
+   "Huining Yang"
+  ],
+  "venue_type": "journal",
+  "venue": "Mathematical Finance",
+  "issn_l": "0960-1627",
+  "all_venues": [
+   "Mathematical Finance"
+  ],
+  "cited_by": 210,
+  "cited_split": [
+   210
+  ],
+  "doi": "https://doi.org/10.1111/mafi.12382",
+  "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/mafi.12382",
+  "keywords": [
+   "reinforcement learning",
+   "finance",
+   "Markov decision process",
+   "model-free reinforcement learning",
+   "deep reinforcement learning"
+  ],
+  "topic": "Stochastic processes and financial applications",
+  "openalex": "https://openalex.org/W4362722548"
+ },
+ "Jiang2017_DRLPortfolio": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:1706.10059",
+  "note": "",
+  "title": "A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem",
+  "year": 2017,
+  "authors": [
+   "Zhengyao Jiang",
+   "Dixing Xu",
+   "Jinjun Liang"
+  ],
+  "venue_type": "repository",
+  "venue": "RePEc: Research Papers in Economics",
+  "issn_l": null,
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 139,
+  "cited_split": [
+   139,
+   139
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1706.10059",
+  "oa_url": "https://arxiv.org/pdf/1706.10059",
+  "keywords": [
+   "financial portfolio management",
+   "deep reinforcement learning",
+   "model-free reinforcement learning",
+   "reward function design",
+   "cryptocurrency trading"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2731083990"
+ },
+ "Deng2017_TNNLS": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1109/TNNLS.2016.2522401",
+  "note": "",
+  "title": "Deep Direct Reinforcement Learning for Financial Signal Representation and Trading",
+  "year": 2016,
+  "authors": [
+   "Yue Cheng Deng",
+   "Feng Bao",
+   "Youyong Kong",
+   "Zhiquan Ren",
+   "Qionghai Dai"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Transactions on Neural Networks and Learning Systems",
+  "issn_l": "2162-237X",
+  "all_venues": [
+   "IEEE Transactions on Neural Networks and Learning Systems",
+   "PubMed"
+  ],
+  "cited_by": 833,
+  "cited_split": [
+   833
+  ],
+  "doi": "https://doi.org/10.1109/tnnls.2016.2522401",
+  "oa_url": null,
+  "keywords": [
+   "deep reinforcement learning",
+   "financial trading",
+   "recurrent neural networks",
+   "backpropagation through time",
+   "gradient vanishing"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2344786740"
+ },
+ "Theate2021_ESWA": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1016/j.eswa.2021.114632",
+  "note": "",
+  "title": "An application of deep reinforcement learning to algorithmic trading",
+  "year": 2021,
+  "authors": [
+   "Thibaut Théate",
+   "Damien Ernst"
+  ],
+  "venue_type": "journal",
+  "venue": "Expert Systems with Applications",
+  "issn_l": "0957-4174",
+  "all_venues": [
+   "Expert Systems with Applications",
+   "Open Repository and Bibliography (University of Liège)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 23,
+  "cited_split": [
+   23
+  ],
+  "doi": "https://doi.org/10.1016/j.eswa.2021.114632",
+  "oa_url": "https://arxiv.org/pdf/2004.06627.pdf",
+  "keywords": [
+   "deep reinforcement learning",
+   "algorithmic trading",
+   "deep Q-network",
+   "Sharpe ratio maximization",
+   "stock market"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3016228233"
+ },
+ "Liu2021_FinRL": {
+  "group": "J-TemelDRL",
+  "ident": "doi:10.1145/3490354.3494366",
+  "note": "",
+  "title": "FinRL",
+  "year": 2021,
+  "authors": [
+   "Xiao-Yang Liu",
+   "Hongyang Yang",
+   "Jiechao Gao",
+   "Christina Dan Wang"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM International Conference on AI in Finance (ICAIF)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM International Conference on AI in Finance (ICAIF)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 84,
+  "cited_split": [
+   84
+  ],
+  "doi": "https://doi.org/10.1145/3490354.3494366",
+  "oa_url": "https://arxiv.org/pdf/2111.09395",
+  "keywords": [
+   "deep reinforcement learning",
+   "quantitative trading",
+   "trading agents",
+   "open source software framework",
+   "algorithmic trading"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W3212614390"
+ },
+ "Schulman2017_PPO": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:1707.06347",
+  "note": "",
+  "error": "HTTP Error 404: Not Found"
+ },
+ "Mnih2016_A3C": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:1602.01783",
+  "note": "",
+  "title": "Asynchronous Methods for Deep Reinforcement Learning",
+  "year": 2016,
+  "authors": [
+   "Volodymyr Mnih",
+   "Adrià Puigdomènech Badia",
+   "Mehdi Mirza",
+   "Alex Graves",
+   "Timothy Lillicrap",
+   "Tim Harley",
+   "David Silver",
+   "Koray Kavukcuoglu"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1685,
+  "cited_split": [
+   1685,
+   1685
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1602.01783",
+  "oa_url": "https://arxiv.org/pdf/1602.01783",
+  "keywords": [
+   "deep reinforcement learning",
+   "actor-critic",
+   "neural network controller",
+   "Atari",
+   "visual input"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2260756217"
+ },
+ "Fujimoto2018_TD3": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:1802.09477",
+  "note": "",
+  "title": "Addressing Function Approximation Error in Actor-Critic Methods",
+  "year": 2018,
+  "authors": [
+   "Scott Fujimoto",
+   "Herke van Hoof",
+   "David Meger"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "Data Archiving and Networked Services (DANS)",
+   "UvA-DARE (University of Amsterdam)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 2315,
+  "cited_split": [
+   2315,
+   2315,
+   385
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1802.09477",
+  "oa_url": "https://arxiv.org/pdf/1802.09477",
+  "keywords": [
+   "actor-critic",
+   "overestimation bias",
+   "double Q-learning",
+   "target network",
+   "value-based reinforcement learning"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2787938642"
+ },
+ "Lillicrap2016_DDPG": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:1509.02971",
+  "note": "",
+  "title": "Continuous control with deep reinforcement learning",
+  "year": 2015,
+  "authors": [
+   "Timothy Lillicrap",
+   "Jonathan J. Hunt",
+   "Alexander Pritzel",
+   "Nicolas Heess",
+   "Tom Erez",
+   "Yuval Tassa",
+   "David Silver",
+   "Daan Wierstra"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 10100,
+  "cited_split": [
+   10100,
+   10100
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1509.02971",
+  "oa_url": "https://arxiv.org/pdf/1509.02971",
+  "keywords": [
+   "continuous control",
+   "deep reinforcement learning",
+   "deterministic policy gradient",
+   "actor-critic",
+   "model-free reinforcement learning"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2173248099"
+ },
+ "Raffin2021_SB3": {
+  "group": "J-TemelDRL",
+  "ident": "title:Stable-Baselines3: Reliable Reinforcement Learning Implementations",
+  "note": "",
+  "title": "Stable-Baselines3: Reliable Reinforcement Learning Implementations",
+  "year": 2021,
+  "authors": [
+   "Antonin Raffin",
+   "Ashley Hill",
+   "Adam Gleave",
+   "Anssi Kanervisto",
+   "Maximilian Ernestus",
+   "Noah Dormann"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Machine Learning Research",
+  "issn_l": "1532-4435",
+  "all_venues": [
+   "Journal of Machine Learning Research",
+   "elib (German Aerospace Center)"
+  ],
+  "cited_by": 1010,
+  "cited_split": [
+   1010
+  ],
+  "doi": null,
+  "oa_url": null,
+  "keywords": [
+   "Stable-Baselines3",
+   "deep reinforcement learning",
+   "reinforcement learning algorithms",
+   "open source software",
+   "Python implementation"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3216772467"
+ },
+ "Towers2024_Gymnasium": {
+  "group": "J-TemelDRL",
+  "ident": "arxiv:2407.17032",
+  "note": "",
+  "title": "Gymnasium: A Standard Interface for Reinforcement Learning Environments",
+  "year": 2024,
+  "authors": [
+   "Towers, Mark",
+   "Kwiatkowski, Ariel",
+   "Terry, Jordan",
+   "Balis, John U.",
+   "De Cola, Gianluca",
+   "Deleu, Tristan",
+   "Manuel Goulão",
+   "Kallinteris, Andreas",
+   "Krimmel, Markus",
+   "KG, Arjun",
+   "Perez-Vicente, Rodrigo",
+   "Pierré, Andrea",
+   "Schulhoff, Sander",
+   "Tai, Jun Jet",
+   "Tan, Hannah",
+   "Younis, Omar G."
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "Zenodo (CERN European Organization for Nuclear Research)",
+   "arXiv (Cornell University)",
+   "neural information processing systems"
+  ],
+  "cited_by": 63,
+  "cited_split": [
+   63,
+   24,
+   0,
+   0
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2407.17032",
+  "oa_url": "https://arxiv.org/pdf/2407.17032",
+  "keywords": [
+   "gymnasium",
+   "reinforcement learning environment",
+   "interoperability",
+   "open-source library",
+   "reproducibility"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W6891880838"
+ },
+ "Lowe2017_MADDPG": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:1706.02275",
+  "note": "",
+  "title": "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments",
+  "year": 2017,
+  "authors": [
+   "Ryan Lowe",
+   "Yi Wu",
+   "Aviv Tamar",
+   "Jean Harb",
+   "Pieter Abbeel",
+   "Igor Mordatch"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "TIB Data Manager",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1002,
+  "cited_split": [
+   1002,
+   1002
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1706.02275",
+  "oa_url": "https://arxiv.org/pdf/1706.02275",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "actor-critic",
+   "multi-agent coordination",
+   "deep reinforcement learning"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2623431351"
+ },
+ "Rashid2020_QMIX": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:2003.08839",
+  "note": "",
+  "title": "Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning",
+  "year": 2020,
+  "authors": [
+   "Tabish Rashid",
+   "Mikayel Samvelyan",
+   "Christian Schröder de Witt",
+   "Gregory Farquhar",
+   "Jakob Foerster",
+   "Shimon Whiteson"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 427,
+  "cited_split": [
+   427,
+   427
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2003.08839",
+  "oa_url": "https://arxiv.org/pdf/2003.08839",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "QMIX",
+   "StarCraft Multi-Agent Challenge",
+   "StarCraft II"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2963762747"
+ },
+ "Foerster2018_COMA": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:1705.08926",
+  "note": "",
+  "title": "Counterfactual Multi-Agent Policy Gradients",
+  "year": 2018,
+  "authors": [
+   "Jakob Foerster",
+   "Gregory Farquhar",
+   "Triantafyllos Afouras",
+   "Nantas Nardelli",
+   "Shimon Whiteson"
+  ],
+  "venue_type": "conference",
+  "venue": "National Conference on Artificial Intelligence",
+  "issn_l": null,
+  "all_venues": [
+   "AAAI Publications (The Association for the Advancement of Artificial Intelligence (AAAI))",
+   "National Conference on Artificial Intelligence",
+   "Proceedings of the AAAI Conference on Artificial Intelligence",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1762,
+  "cited_split": [
+   445,
+   1762,
+   445
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v32i1.11794",
+  "oa_url": "https://doi.org/10.1609/aaai.v32i1.11794",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "coma",
+   "actor-critic",
+   "counterfactual baseline",
+   "StarCraft"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2617547828"
+ },
+ "Christianos2021_SePS": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:2102.07475",
+  "note": "",
+  "title": "Scaling Multi-Agent Reinforcement Learning with Selective Parameter Sharing",
+  "year": 2021,
+  "authors": [
+   "Filippos Christianos",
+   "Georgios Papoudakis",
+   "Arrasy Rahman",
+   "Stefano V. Albrecht"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 17,
+  "cited_split": [
+   17,
+   17
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2102.07475",
+  "oa_url": "https://arxiv.org/pdf/2102.07475",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "parameter sharing",
+   "sample efficiency",
+   "training speed"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3131329114"
+ },
+ "Liang2018_RLlib": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:1712.09381",
+  "note": "",
+  "title": "RLlib: Abstractions for Distributed Reinforcement Learning",
+  "year": 2017,
+  "authors": [
+   "Eric Liang",
+   "Richard Liaw",
+   "Philipp Moritz",
+   "Robert Nishihara",
+   "Roy Fox",
+   "Ken Y. Goldberg",
+   "Joseph E. Gonzalez",
+   "Michael I. Jordan",
+   "Ion Gabriel Stoica"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Machine Learning",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Machine Learning",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 328,
+  "cited_split": [
+   328,
+   328,
+   182
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1712.09381",
+  "oa_url": "https://arxiv.org/pdf/1712.09381",
+  "keywords": [
+   "distributed reinforcement learning",
+   "hierarchical control",
+   "parallelism",
+   "resource requirements",
+   "code reuse"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2811374584"
+ },
+ "Fey2019_PyG": {
+  "group": "C-MARLalgo",
+  "ident": "arxiv:1903.02428",
+  "note": "",
+  "title": "Fast Graph Representation Learning with PyTorch Geometric",
+  "year": 2019,
+  "authors": [
+   "Matthias Fey",
+   "Jan Eric Lenssen"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "TIB Data Manager",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 1220,
+  "cited_split": [
+   1220,
+   1220
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1903.02428",
+  "oa_url": "https://arxiv.org/pdf/1903.02428",
+  "keywords": [
+   "PyTorch Geometric",
+   "graph neural networks",
+   "graph representation learning",
+   "point clouds",
+   "manifolds"
+  ],
+  "topic": "Advanced Graph Neural Networks",
+  "openalex": "https://openalex.org/W2918342466"
+ },
+ "HernandezLeal2019_Survey": {
+  "group": "C-MARLalgo",
+  "ident": "doi:10.1007/s10458-019-09421-1",
+  "note": "",
+  "title": "A survey and critique of multiagent deep reinforcement learning",
+  "year": 2019,
+  "authors": [
+   "Pablo Hernández-Leal",
+   "Bilal Kartal",
+   "Matthew Edmund Taylor"
+  ],
+  "venue_type": "journal",
+  "venue": "Autonomous Agents and Multi-Agent Systems",
+  "issn_l": "1387-2532",
+  "all_venues": [
+   "Autonomous Agents and Multi-Agent Systems",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 686,
+  "cited_split": [
+   686
+  ],
+  "doi": "https://doi.org/10.1007/s10458-019-09421-1",
+  "oa_url": "https://arxiv.org/pdf/1810.05587",
+  "keywords": [
+   "multi-agent deep reinforcement learning",
+   "multi-agent learning",
+   "deep reinforcement learning",
+   "multi-agent systems",
+   "benchmarking"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W2981038142"
+ },
+ "Gronauer2022_Survey": {
+  "group": "C-MARLalgo",
+  "ident": "doi:10.1007/s10462-021-09996-w",
+  "note": "",
+  "title": "Multi-agent deep reinforcement learning: a survey",
+  "year": 2021,
+  "authors": [
+   "Sven Gronauer",
+   "Klaus J. Diepold"
+  ],
+  "venue_type": "journal",
+  "venue": "Artificial Intelligence Review",
+  "issn_l": "0269-2821",
+  "all_venues": [
+   "Artificial Intelligence Review",
+   "mediaTUM – the media and publications repository of the Technical University Munich (Technical University Munich)"
+  ],
+  "cited_by": 948,
+  "cited_split": [
+   948
+  ],
+  "doi": "https://doi.org/10.1007/s10462-021-09996-w",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/s10462-021-09996-w.pdf",
+  "keywords": [
+   "multi-agent reinforcement learning",
+   "deep reinforcement learning",
+   "emergent behavior",
+   "cooperative multi-agent systems"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W3156295478"
+ },
+ "Zhu2024_CommSurvey": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1007/s10458-023-09633-6",
+  "note": "",
+  "title": "A survey of multi-agent deep reinforcement learning with communication",
+  "year": 2024,
+  "authors": [
+   "Changxi Zhu",
+   "Mehdi M. Dastani",
+   "Shihan Wang"
+  ],
+  "venue_type": "journal",
+  "venue": "Autonomous Agents and Multi-Agent Systems",
+  "issn_l": "1387-2532",
+  "all_venues": [
+   "Autonomous Agents and Multi-Agent Systems",
+   "Utrecht University Repository (Utrecht University)"
+  ],
+  "cited_by": 158,
+  "cited_split": [
+   158
+  ],
+  "doi": "https://doi.org/10.1007/s10458-023-09633-6",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/s10458-023-09633-6.pdf",
+  "keywords": [
+   "multi-agent deep reinforcement learning",
+   "agent communication",
+   "message passing",
+   "multi-agent coordination"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4390638728"
+ },
+ "Lin2025_CAROC": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1080/03081079.2025.2503785",
+  "note": "",
+  "title": "Enhancing multi-agent communication through credibility and reward-based optimisation",
+  "year": 2025,
+  "authors": [
+   "Yi-Yu Lin",
+   "Xiao‐Jun Zeng"
+  ],
+  "venue_type": "journal",
+  "venue": "International Journal of General Systems",
+  "issn_l": "0308-1079",
+  "all_venues": [
+   "International Journal of General Systems",
+   "Research Explorer (The University of Manchester)"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.1080/03081079.2025.2503785",
+  "oa_url": "https://doi.org/10.1080/03081079.2025.2503785",
+  "keywords": [
+   "multi-agent communication",
+   "reward prediction",
+   "partially observable environments",
+   "communication overhead",
+   "exploration-exploitation balance"
+  ],
+  "topic": "Multi-Agent Systems and Negotiation",
+  "openalex": "https://openalex.org/W4410418138"
+ },
+ "Hu2026_CommFormerTKDE": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1109/tkde.2026.3658366",
+  "note": "",
+  "title": "Communication Learning in Multi-Agent Systems From Graph Modeling Perspective",
+  "year": 2026,
+  "authors": [
+   "Shengchao Hu",
+   "Ziqing Fan",
+   "Li Shen",
+   "Ya Zhang",
+   "Dacheng Tao"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Transactions on Knowledge and Data Engineering",
+  "issn_l": "1041-4347",
+  "all_venues": [
+   "DR-NTU (Nanyang Technological University)",
+   "IEEE Transactions on Knowledge and Data Engineering"
+  ],
+  "cited_by": 7,
+  "cited_split": [
+   7
+  ],
+  "doi": "https://doi.org/10.1109/tkde.2026.3658366",
+  "oa_url": null,
+  "keywords": [
+   "multi-agent systems",
+   "agent communication",
+   "graph neural networks",
+   "bi-level optimization",
+   "continuous relaxation"
+  ],
+  "topic": "Multi-Agent Systems and Negotiation",
+  "openalex": "https://openalex.org/W7125813926"
+ },
+ "Vaswani2017_Attention": {
+  "group": "B-Iletisim",
+  "ident": "arxiv:1706.03762",
+  "note": "",
+  "error": "HTTP Error 404: Not Found"
+ },
+ "Mantegna1999_Hierarchy": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1007/s100510050929",
+  "note": "",
+  "title": "Hierarchical structure in financial markets",
+  "year": 1999,
+  "authors": [
+   "Rosario N. Mantegna"
+  ],
+  "venue_type": "journal",
+  "venue": "The European Physical Journal B",
+  "issn_l": "1434-6028",
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "Springer Link (Chiba Institute of Technology)",
+   "The European Physical Journal B",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 2107,
+  "cited_split": [
+   2107
+  ],
+  "doi": "https://doi.org/10.1007/s100510050929",
+  "oa_url": "https://arxiv.org/pdf/cond-mat/9802256",
+  "keywords": [
+   "stock price time series",
+   "ultrametric spaces",
+   "hierarchical clustering",
+   "financial networks"
+  ],
+  "topic": "Complex Systems and Time Series Analysis",
+  "openalex": "https://openalex.org/W2138144286"
+ },
+ "Feng2019_RelationalRank": {
+  "group": "B-Iletisim",
+  "ident": "doi:10.1145/3309547",
+  "note": "",
+  "title": "Temporal Relational Ranking for Stock Prediction",
+  "year": 2019,
+  "authors": [
+   "Fuli Feng",
+   "Xiangnan He",
+   "Xiang Wang",
+   "Cheng Luo",
+   "Yiqun Liu",
+   "Tat-Seng Chua"
+  ],
+  "venue_type": "journal",
+  "venue": "ACM Transactions on Information Systems",
+  "issn_l": "1046-8188",
+  "all_venues": [
+   "ACM Transactions on Information Systems",
+   "National University of Singapore",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 476,
+  "cited_split": [
+   476
+  ],
+  "doi": "https://doi.org/10.1145/3309547",
+  "oa_url": "https://arxiv.org/pdf/1809.09441",
+  "keywords": [
+   "stock price prediction",
+   "stock ranking",
+   "time evolution",
+   "investment decision support",
+   "backtesting"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2893230400"
+ },
+ "Chen2016_XGBoost": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1145/2939672.2939785",
+  "note": "",
+  "title": "XGBoost",
+  "year": 2016,
+  "authors": [
+   "Tianqi Chen",
+   "Carlos Guestrin"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 54175,
+  "cited_split": [
+   54175
+  ],
+  "doi": "https://doi.org/10.1145/2939672.2939785",
+  "oa_url": "http://dl.acm.org/ft_gateway.cfm?id=2939785&type=pdf",
+  "keywords": [
+   "XGBoost",
+   "gradient boosting decision tree",
+   "gradient boosting",
+   "data sparsity",
+   "data compression"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2295598076"
+ },
+ "Ke2017_LightGBM": {
+  "group": "K-TahminModel",
+  "ident": "title:LightGBM: A Highly Efficient Gradient Boosting Decision Tree",
+  "note": "",
+  "title": "LightGBM: A Highly Efficient Gradient Boosting Decision Tree",
+  "year": 2017,
+  "authors": [
+   "Guolin Ke",
+   "Qi Meng",
+   "Thomas Finley",
+   "Taifeng Wang",
+   "Wei Chen",
+   "Weidong Ma",
+   "Qiwei Ye",
+   "Tie‐Yan Liu"
+  ],
+  "venue_type": "repository",
+  "venue": "HAL (Le Centre pour la Communication Scientifique Directe)",
+  "issn_l": null,
+  "all_venues": [
+   "HAL (Le Centre pour la Communication Scientifique Directe)"
+  ],
+  "cited_by": 9426,
+  "cited_split": [
+   9426
+  ],
+  "doi": null,
+  "oa_url": "https://hal.science/hal-03953007",
+  "keywords": [
+   "LightGBM",
+   "gradient boosting decision tree",
+   "boosting",
+   "decision tree",
+   "machine learning software"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W2768348081"
+ },
+ "Prokhorenkova2018_CatBoost": {
+  "group": "K-TahminModel",
+  "ident": "arxiv:1706.09516",
+  "note": "",
+  "title": "CatBoost: unbiased boosting with categorical features",
+  "year": 2017,
+  "authors": [
+   "Liudmila Prokhorenkova",
+   "Gleb Gusev",
+   "Aleksandr Vorobev",
+   "Anna Veronika Dorogush",
+   "Andrey Gulin"
+  ],
+  "venue_type": "conference",
+  "venue": "neural information processing systems",
+  "issn_l": "1049-5258",
+  "all_venues": [
+   "arXiv (Cornell University)",
+   "neural information processing systems"
+  ],
+  "cited_by": 1125,
+  "cited_split": [
+   1125,
+   1125
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1706.09516",
+  "oa_url": "https://arxiv.org/pdf/1706.09516",
+  "keywords": [
+   "CatBoost",
+   "gradient boosting",
+   "categorical variables",
+   "target leakage"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W2798476254"
+ },
+ "Hochreiter1997_LSTM": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1162/neco.1997.9.8.1735",
+  "note": "",
+  "title": "Long Short-Term Memory",
+  "year": 1997,
+  "authors": [
+   "Sepp Hochreiter",
+   "Jürgen Schmidhuber"
+  ],
+  "venue_type": "journal",
+  "venue": "Neural Computation",
+  "issn_l": "0899-7667",
+  "all_venues": [
+   "Neural Computation",
+   "PubMed"
+  ],
+  "cited_by": 102923,
+  "cited_split": [
+   102923
+  ],
+  "doi": "https://doi.org/10.1162/neco.1997.9.8.1735",
+  "oa_url": null,
+  "keywords": [
+   "long short-term memory",
+   "recurrent neural networks",
+   "gradient vanishing",
+   "backpropagation",
+   "backpropagation through time"
+  ],
+  "topic": "Neural Networks and Applications",
+  "openalex": "https://openalex.org/W2064675550"
+ },
+ "Schuster1997_BiRNN": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1109/78.650093",
+  "note": "",
+  "title": "Bidirectional recurrent neural networks",
+  "year": 1997,
+  "authors": [
+   "Mike Schuster",
+   "Kuldip K. Paliwal"
+  ],
+  "venue_type": "journal",
+  "venue": "IEEE Transactions on Signal Processing",
+  "issn_l": "1053-587X",
+  "all_venues": [
+   "IEEE Transactions on Signal Processing"
+  ],
+  "cited_by": 10460,
+  "cited_split": [
+   10460
+  ],
+  "doi": "https://doi.org/10.1109/78.650093",
+  "oa_url": null,
+  "keywords": [
+   "bidirectional recurrent neural network",
+   "recurrent neural networks",
+   "bidirectional training",
+   "phoneme classification",
+   "TIMIT database"
+  ],
+  "topic": "Neural Networks and Applications",
+  "openalex": "https://openalex.org/W2131774270"
+ },
+ "Graves2005_BiLSTM": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1016/j.neunet.2005.06.042",
+  "note": "",
+  "title": "Framewise phoneme classification with bidirectional LSTM and other neural network architectures",
+  "year": 2005,
+  "authors": [
+   "Alex Graves",
+   "Jürgen Schmidhuber"
+  ],
+  "venue_type": "journal",
+  "venue": "Neural Networks",
+  "issn_l": "0893-6080",
+  "all_venues": [
+   "Neural Networks",
+   "PubMed"
+  ],
+  "cited_by": 5992,
+  "cited_split": [
+   5992
+  ],
+  "doi": "https://doi.org/10.1016/j.neunet.2005.06.042",
+  "oa_url": null,
+  "keywords": [
+   "bidirectional LSTM",
+   "phoneme classification",
+   "TIMIT",
+   "recurrent neural networks",
+   "multilayer perceptron"
+  ],
+  "topic": "Speech Recognition and Synthesis",
+  "openalex": "https://openalex.org/W2079735306"
+ },
+ "Wolpert1992_Stacking": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1016/S0893-6080(05)80023-1",
+  "note": "",
+  "title": "Stacked generalization",
+  "year": 1992,
+  "authors": [
+   "David H. Wolpert"
+  ],
+  "venue_type": "journal",
+  "venue": "Neural Networks",
+  "issn_l": "0893-6080",
+  "all_venues": [
+   "Neural Networks"
+  ],
+  "cited_by": 7945,
+  "cited_split": [
+   7945
+  ],
+  "doi": "https://doi.org/10.1016/s0893-6080(05)80023-1",
+  "oa_url": null,
+  "keywords": [
+   "stacking ensemble",
+   "generalization error",
+   "bias correction",
+   "error estimation",
+   "cross-validation"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W28412257"
+ },
+ "Breiman1996_StackedReg": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1007/BF00117832",
+  "note": "",
+  "title": "Stacked regressions",
+  "year": 1996,
+  "authors": [
+   "Leo Breiman"
+  ],
+  "venue_type": "journal",
+  "venue": "Machine Learning",
+  "issn_l": "0885-6125",
+  "all_venues": [
+   "Machine Learning",
+   "UC Berkeley"
+  ],
+  "cited_by": 1182,
+  "cited_split": [
+   1182
+  ],
+  "doi": "https://doi.org/10.1007/bf00117832",
+  "oa_url": "https://link.springer.com/content/pdf/10.1007/BF00117832.pdf",
+  "keywords": [
+   "stacking regression",
+   "ensemble learning",
+   "predictor combination",
+   "cross-validation",
+   "nonnegativity constraints"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W4240294902"
+ },
+ "Hoerl1970_Ridge": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1080/00401706.1970.10488634",
+  "note": "",
+  "title": "Ridge Regression: Biased Estimation for Nonorthogonal Problems",
+  "year": 1970,
+  "authors": [
+   "Arthur E. Hoerl",
+   "Robert W. Kennard"
+  ],
+  "venue_type": "journal",
+  "venue": "Technometrics",
+  "issn_l": "0040-1706",
+  "all_venues": [
+   "Technometrics"
+  ],
+  "cited_by": 9614,
+  "cited_split": [
+   9614
+  ],
+  "doi": "https://doi.org/10.1080/00401706.1970.10488634",
+  "oa_url": null,
+  "keywords": [
+   "ridge regression",
+   "biased estimation",
+   "multicollinearity",
+   "mean squared error",
+   "parameter estimation"
+  ],
+  "topic": "Advanced Statistical Methods and Models",
+  "openalex": "https://openalex.org/W4234698323"
+ },
+ "Breiman2001_RF": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1023/A:1010933404324",
+  "note": "",
+  "title": "Random Forests",
+  "year": 2001,
+  "authors": [
+   "Leo Breiman"
+  ],
+  "venue_type": "journal",
+  "venue": "Machine Learning",
+  "issn_l": "0885-6125",
+  "all_venues": [
+   "Machine Learning",
+   "Repository of Digital Objects for Teaching Research and Culture (University of Valencia)"
+  ],
+  "cited_by": 134153,
+  "cited_split": [
+   134153
+  ],
+  "doi": "https://doi.org/10.1023/a:1010933404324",
+  "oa_url": "https://www.ine.es/up/zEkXkJIZ",
+  "keywords": [
+   "random forest",
+   "ensemble learning",
+   "classification trees",
+   "generalization error",
+   "asymptotic convergence"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2911964244"
+ },
+ "Kraskov2004_MI": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1103/PhysRevE.69.066138",
+  "note": "",
+  "title": "Estimating mutual information",
+  "year": 2004,
+  "authors": [
+   "Alexander Kraskov",
+   "Harald Stögbauer",
+   "Peter Grassberger"
+  ],
+  "venue_type": "journal",
+  "venue": "Physical Review E",
+  "issn_l": "1539-3755",
+  "all_venues": [
+   "JuSER (Forschungszentrum Jülich)",
+   "Physical Review E",
+   "PubMed",
+   "UCL Discovery (University College London)",
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 4236,
+  "cited_split": [
+   4236
+  ],
+  "doi": "https://doi.org/10.1103/physreve.69.066138",
+  "oa_url": "http://link.aps.org/pdf/10.1103/PhysRevE.69.066138",
+  "keywords": [
+   "mutual information estimation",
+   "joint probability density function",
+   "estimation bias",
+   "independent component analysis",
+   "blind source separation"
+  ],
+  "topic": "Blind Source Separation Techniques",
+  "openalex": "https://openalex.org/W2092939357"
+ },
+ "Ross2014_MI": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1371/journal.pone.0087357",
+  "note": "",
+  "title": "Mutual Information between Discrete and Continuous Data Sets",
+  "year": 2014,
+  "authors": [
+   "Brian C. Ross"
+  ],
+  "venue_type": "journal",
+  "venue": "PLoS ONE",
+  "issn_l": "1932-6203",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "Europe PMC (PubMed Central)",
+   "Figshare",
+   "PLoS ONE",
+   "PubMed",
+   "PubMed Central",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 905,
+  "cited_split": [
+   905
+  ],
+  "doi": "https://doi.org/10.1371/journal.pone.0087357",
+  "oa_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0087357&type=printable",
+  "keywords": [
+   "mutual information",
+   "joint probability estimation",
+   "Jensen-Shannon divergence",
+   "dependency discovery",
+   "gene expression"
+  ],
+  "topic": "Statistical Mechanics and Entropy",
+  "openalex": "https://openalex.org/W2082290707"
+ },
+ "Akiba2019_Optuna": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1145/3292500.3330701",
+  "note": "",
+  "title": "Optuna",
+  "year": 2019,
+  "authors": [
+   "Takuya Akiba",
+   "Shotaro Sano",
+   "Toshihiko Yanase",
+   "Takeru Ohta",
+   "Masanori Koyama"
+  ],
+  "venue_type": "conference",
+  "venue": "ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD)",
+  "issn_l": null,
+  "all_venues": [
+   "ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD)"
+  ],
+  "cited_by": 8531,
+  "cited_split": [
+   8531
+  ],
+  "doi": "https://doi.org/10.1145/3292500.3330701",
+  "oa_url": null,
+  "keywords": [
+   "hyperparameter optimization",
+   "Optuna",
+   "pruning techniques",
+   "distributed computing",
+   "interactive user interface"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W2949676527"
+ },
+ "Bergstra2011_TPE": {
+  "group": "K-TahminModel",
+  "ident": "title:Algorithms for Hyper-Parameter Optimization",
+  "note": "",
+  "title": "Algorithms for Hyper-Parameter Optimization",
+  "year": 2011,
+  "authors": [
+   "James Bergstra",
+   "R. Bardenet",
+   "Yoshua Bengio",
+   "Balázs Kégl"
+  ],
+  "venue_type": null,
+  "venue": null,
+  "issn_l": null,
+  "all_venues": [
+   "HAL (Le Centre pour la Communication Scientifique Directe)"
+  ],
+  "cited_by": 3135,
+  "cited_split": [
+   3135
+  ],
+  "doi": null,
+  "oa_url": "https://inria.hal.science/hal-00642998",
+  "keywords": [
+   "hyperparameter optimization",
+   "optimization algorithms"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W2106411961"
+ },
+ "Bergmeir2012_TSCV": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1016/j.ins.2011.12.028",
+  "note": "",
+  "title": "On the use of cross-validation for time series predictor evaluation",
+  "year": 2012,
+  "authors": [
+   "Christoph Bergmeir",
+   "José M. Benítez"
+  ],
+  "venue_type": "journal",
+  "venue": "Information Sciences",
+  "issn_l": "0020-0255",
+  "all_venues": [
+   "Information Sciences"
+  ],
+  "cited_by": 1303,
+  "cited_split": [
+   1303
+  ],
+  "doi": "https://doi.org/10.1016/j.ins.2011.12.028",
+  "oa_url": null,
+  "keywords": [
+   "time series forecasting",
+   "cross-validation",
+   "model selection",
+   "temporal dependencies",
+   "machine learning forecasting"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W1981780459"
+ },
+ "Bergmeir2018_TSCV": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1016/j.csda.2017.11.003",
+  "note": "",
+  "title": "A note on the validity of cross-validation for evaluating autoregressive time series prediction",
+  "year": 2017,
+  "authors": [
+   "Christoph Bergmeir",
+   "Rob J. Hyndman",
+   "Bonsoo Koo"
+  ],
+  "venue_type": "journal",
+  "venue": "Computational Statistics & Data Analysis",
+  "issn_l": "0167-9473",
+  "all_venues": [
+   "Computational Statistics & Data Analysis",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 739,
+  "cited_split": [
+   739
+  ],
+  "doi": "https://doi.org/10.1016/j.csda.2017.11.003",
+  "oa_url": null,
+  "keywords": [
+   "k-fold cross-validation",
+   "autoregressive models",
+   "time series forecasting",
+   "model evaluation",
+   "out-of-sample evaluation"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W2770188460"
+ },
+ "Lundberg2017_SHAP": {
+  "group": "K-TahminModel",
+  "ident": "arxiv:1705.07874",
+  "note": "",
+  "title": "A Unified Approach to Interpreting Model Predictions",
+  "year": 2017,
+  "authors": [
+   "Scott Lundberg",
+   "Su‐In Lee"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 7616,
+  "cited_split": [
+   7616,
+   7616
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.1705.07874",
+  "oa_url": "https://arxiv.org/pdf/1705.07874",
+  "keywords": [
+   "SHAP",
+   "Shapley value",
+   "model interpretability",
+   "explainable AI",
+   "feature importance"
+  ],
+  "topic": "Explainable Artificial Intelligence (XAI)",
+  "openalex": "https://openalex.org/W2618851150"
+ },
+ "Lundberg2020_TreeSHAP": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1038/s42256-019-0138-9",
+  "note": "",
+  "title": "From local explanations to global understanding with explainable AI for trees",
+  "year": 2020,
+  "authors": [
+   "Scott Lundberg",
+   "Gabriel Erion",
+   "Hugh Chen",
+   "Alex J. DeGrave",
+   "Jordan M. Prutkin",
+   "Bala G. Nair",
+   "Ronit Katz",
+   "Jonathan Himmelfarb",
+   "Nisha Bansal",
+   "Su‐In Lee"
+  ],
+  "venue_type": "journal",
+  "venue": "Nature Machine Intelligence",
+  "issn_l": "2522-5839",
+  "all_venues": [
+   "Nature Machine Intelligence",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 10521,
+  "cited_split": [
+   10521
+  ],
+  "doi": "https://doi.org/10.1038/s42256-019-0138-9",
+  "oa_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/7326367",
+  "keywords": [
+   "explainable AI",
+   "tree-based models",
+   "local explanations",
+   "mortality risk",
+   "chronic kidney disease"
+  ],
+  "topic": "Explainable Artificial Intelligence (XAI)",
+  "openalex": "https://openalex.org/W2999615587"
+ },
+ "Gu2020_MLAssetPricing": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1093/rfs/hhaa009",
+  "note": "",
+  "title": "Empirical Asset Pricing via Machine Learning",
+  "year": 2020,
+  "authors": [
+   "Shihao Gu",
+   "Bryan Kelly",
+   "Dacheng Xiu"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Financial Studies",
+  "issn_l": "0893-9454",
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "Review of Financial Studies"
+  ],
+  "cited_by": 2539,
+  "cited_split": [
+   2539
+  ],
+  "doi": "https://doi.org/10.1093/rfs/hhaa009",
+  "oa_url": "https://academic.oup.com/rfs/article-pdf/33/5/2223/33209812/hhaa009.pdf",
+  "keywords": [
+   "empirical asset pricing",
+   "machine learning",
+   "tree-based models",
+   "artificial neural networks",
+   "momentum"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W4205539948"
+ },
+ "Fischer2018_LSTMFinance": {
+  "group": "K-TahminModel",
+  "ident": "doi:10.1016/j.ejor.2017.11.054",
+  "note": "",
+  "title": "Deep learning with long short-term memory networks for financial market predictions",
+  "year": 2017,
+  "authors": [
+   "Thomas Günter Fischer",
+   "Christopher Krauß"
+  ],
+  "venue_type": "journal",
+  "venue": "European Journal of Operational Research",
+  "issn_l": "0377-2217",
+  "all_venues": [
+   "Econstor (Econstor)",
+   "European Journal of Operational Research",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 2802,
+  "cited_split": [
+   2802
+  ],
+  "doi": "https://doi.org/10.1016/j.ejor.2017.11.054",
+  "oa_url": "https://www.econstor.eu/bitstream/10419/157808/1/886576210.pdf",
+  "keywords": [
+   "long short-term memory networks",
+   "financial time series forecasting",
+   "S&P 500 constituents",
+   "out-of-sample forecasting",
+   "volatility"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2624385633"
+ },
+ "Huang1998_EMD": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1098/rspa.1998.0193",
+  "note": "",
+  "title": "The empirical mode decomposition and the Hilbert spectrum for nonlinear and non-stationary time series analysis",
+  "year": 1998,
+  "authors": [
+   "Norden Eh Huang",
+   "Zhengwei Shen",
+   "Steven R. Long",
+   "Man‐Li C. Wu",
+   "Hsing H. Shih",
+   "Quanan Zheng",
+   "Nai-chyuan Yen",
+   "C. C. Tung",
+   "Henry H. Liu"
+  ],
+  "venue_type": "journal",
+  "venue": "Proceedings of the Royal Society A Mathematical Physical and Engineering Sciences",
+  "issn_l": "1364-5021",
+  "all_venues": [
+   "HAL (Le Centre pour la Communication Scientifique Directe)",
+   "Proceedings of the Royal Society A Mathematical Physical and Engineering Sciences"
+  ],
+  "cited_by": 23843,
+  "cited_split": [
+   23843
+  ],
+  "doi": "https://doi.org/10.1098/rspa.1998.0193",
+  "oa_url": "https://hal.science/hal-04014501/document",
+  "keywords": [
+   "empirical mode decomposition",
+   "Hilbert spectrum",
+   "nonlinear time series",
+   "non-stationary time series",
+   "intrinsic mode functions"
+  ],
+  "topic": "Machine Fault Diagnosis Techniques",
+  "openalex": "https://openalex.org/W2007221293"
+ },
+ "Wu2009_EEMD": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1142/S1793536909000047",
+  "note": "",
+  "title": "ENSEMBLE EMPIRICAL MODE DECOMPOSITION: A NOISE-ASSISTED DATA ANALYSIS METHOD",
+  "year": 2008,
+  "authors": [
+   "Zhaohua Wu",
+   "Norden Eh Huang"
+  ],
+  "venue_type": "journal",
+  "venue": "Advances in Adaptive Data Analysis",
+  "issn_l": "1793-7175",
+  "all_venues": [
+   "Advances in Adaptive Data Analysis"
+  ],
+  "cited_by": 8845,
+  "cited_split": [
+   8845
+  ],
+  "doi": "https://doi.org/10.1142/s1793536909000047",
+  "oa_url": null,
+  "keywords": [
+   "ensemble empirical mode decomposition",
+   "empirical mode decomposition",
+   "intrinsic mode functions",
+   "sifting process",
+   "ensemble mean"
+  ],
+  "topic": "Machine Fault Diagnosis Techniques",
+  "openalex": "https://openalex.org/W2120390927"
+ },
+ "Xiong2025_OneTimeDenoise": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1007/s10489-025-06720-x",
+  "note": "",
+  "title": "Overestimated stock market forecasts resulting from the one-time denoising",
+  "year": 2025,
+  "authors": [
+   "Mengyuan Xiong",
+   "Kunliang Xu",
+   "Jiayi Yin",
+   "Weiqing Wang"
+  ],
+  "venue_type": "journal",
+  "venue": "Applied Intelligence",
+  "issn_l": "0924-669X",
+  "all_venues": [
+   "Applied Intelligence"
+  ],
+  "cited_by": 1,
+  "cited_split": [
+   1
+  ],
+  "doi": "https://doi.org/10.1007/s10489-025-06720-x",
+  "oa_url": null,
+  "keywords": [
+   "stock market prediction",
+   "empirical mode decomposition",
+   "variational mode decomposition",
+   "extreme learning machine",
+   "weak-form efficient market hypothesis"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W4412153642"
+ },
+ "Pang2025_WindLeak": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.apm.2025.116376",
+  "note": "",
+  "title": "Stop unrealistic data preprocessing in wind speed forecasting: approaches and discussions on preventing future data leakage",
+  "year": 2025,
+  "authors": [
+   "Junheng Pang",
+   "Sheng Xu Dong"
+  ],
+  "venue_type": "journal",
+  "venue": "Applied Mathematical Modelling",
+  "issn_l": "0307-904X",
+  "all_venues": [
+   "Applied Mathematical Modelling"
+  ],
+  "cited_by": 3,
+  "cited_split": [
+   3
+  ],
+  "doi": "https://doi.org/10.1016/j.apm.2025.116376",
+  "oa_url": null,
+  "keywords": [
+   "wind speed forecasting",
+   "data leakage",
+   "data preprocessing",
+   "empirical mode decomposition",
+   "variational mode decomposition"
+  ],
+  "topic": "Energy Load and Power Forecasting",
+  "openalex": "https://openalex.org/W4413295520"
+ },
+ "Kapoor2023_Leakage": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1016/j.patter.2023.100804",
+  "note": "",
+  "title": "Leakage and the reproducibility crisis in machine-learning-based science",
+  "year": 2023,
+  "authors": [
+   "Sayash Kapoor",
+   "Arvind Narayanan"
+  ],
+  "venue_type": "journal",
+  "venue": "Patterns",
+  "issn_l": "2666-3899",
+  "all_venues": [
+   "Patterns",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 1146,
+  "cited_split": [
+   1146
+  ],
+  "doi": "https://doi.org/10.1016/j.patter.2023.100804",
+  "oa_url": "http://www.cell.com/article/S2666389923001599/pdf",
+  "keywords": [
+   "data leakage",
+   "replication crisis",
+   "machine learning",
+   "logistic regression",
+   "overfitting"
+  ],
+  "topic": "Scientific Computing and Data Management",
+  "openalex": "https://openalex.org/W4385576721"
+ },
+ "LopezdePrado2018_AFML": {
+  "group": "E-TahminSizinti",
+  "ident": "title:Advances in Financial Machine Learning",
+  "note": "",
+  "title": "Advances in Financial Machine Learning",
+  "year": 2018,
+  "authors": [
+   "Marcos López de Prado"
+  ],
+  "venue_type": "journal",
+  "venue": "Quantitative Finance",
+  "issn_l": "1469-7688",
+  "all_venues": [
+   "Quantitative Finance",
+   "RePEc: Research Papers in Economics",
+   "Zürcher Hochschule für Angewandte Wissenschaften digital collection (Zurich University of Applied Sciences)"
+  ],
+  "cited_by": 357,
+  "cited_split": [
+   357,
+   21
+  ],
+  "doi": null,
+  "oa_url": null,
+  "keywords": [
+   "financial machine learning",
+   "big data in finance",
+   "investment decision-making",
+   "high-performance computing",
+   "backtesting"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W2968584812"
+ },
+ "Croushore2001_RealTime": {
+  "group": "E-TahminSizinti",
+  "ident": "title:A real-time data set for macroeconomists",
+  "note": "",
+  "title": "A real-time data set for macroeconomists",
+  "year": 2001,
+  "authors": [
+   "Dean Croushore",
+   "Tom Stark"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Econometrics",
+  "issn_l": "0304-4076",
+  "all_venues": [
+   "Journal of Econometrics",
+   "RePEc: Research Papers in Economics",
+   "Working paper"
+  ],
+  "cited_by": 791,
+  "cited_split": [
+   791,
+   55
+  ],
+  "doi": "https://doi.org/10.1016/s0304-4076(01)00072-0",
+  "oa_url": null,
+  "keywords": [
+   "real-time data",
+   "macroeconomic statistics",
+   "forecast evaluation",
+   "data revisions",
+   "quarterly data"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W2083137543"
+ },
+ "NiculescuMizil2005_Calib": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1145/1102351.1102430",
+  "note": "",
+  "title": "Predicting good probabilities with supervised learning",
+  "year": 2005,
+  "authors": [
+   "Alexandru Niculescu-Mizil",
+   "Rich Caruana"
+  ],
+  "venue_type": "conference",
+  "venue": "International Conference on Machine Learning",
+  "issn_l": null,
+  "all_venues": [
+   "International Conference on Machine Learning"
+  ],
+  "cited_by": 1807,
+  "cited_split": [
+   1807
+  ],
+  "doi": "https://doi.org/10.1145/1102351.1102430",
+  "oa_url": null,
+  "keywords": [
+   "probability calibration",
+   "predicted probabilities",
+   "posterior probability",
+   "boosted trees",
+   "naive Bayes"
+  ],
+  "topic": "Imbalanced Data Classification Techniques",
+  "openalex": "https://openalex.org/W2098824882"
+ },
+ "Naeini2015_ECE": {
+  "group": "E-TahminSizinti",
+  "ident": "doi:10.1609/aaai.v29i1.9602",
+  "note": "",
+  "title": "Obtaining Well Calibrated Probabilities Using Bayesian Binning",
+  "year": 2015,
+  "authors": [
+   "Mahdi Pakdaman Naeini",
+   "Gregory F. Cooper",
+   "Miloš Hauskrecht"
+  ],
+  "venue_type": "conference",
+  "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+  "issn_l": "2159-5399",
+  "all_venues": [
+   "AAAI Publications (The Association for the Advancement of Artificial Intelligence (AAAI))",
+   "Proceedings of the AAAI Conference on Artificial Intelligence",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 972,
+  "cited_split": [
+   972
+  ],
+  "doi": "https://doi.org/10.1609/aaai.v29i1.9602",
+  "oa_url": "https://doi.org/10.1609/aaai.v29i1.9602",
+  "keywords": [
+   "probability calibration",
+   "non-parametric calibration",
+   "binary classification",
+   "post-processing"
+  ],
+  "topic": "Bayesian Modeling and Causal Inference",
+  "openalex": "https://openalex.org/W2254249950"
+ },
+ "Brier1950": {
+  "group": "E-TahminSizinti",
+  "ident": "title:Verification of forecasts expressed in terms of probability",
+  "note": "",
+  "title": "VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF PROBABILITY",
+  "year": 1950,
+  "authors": [
+   "Glenn W. Brier"
+  ],
+  "venue_type": "journal",
+  "venue": "Monthly Weather Review",
+  "issn_l": "0027-0644",
+  "all_venues": [
+   "Monthly Weather Review"
+  ],
+  "cited_by": 5550,
+  "cited_split": [
+   5550
+  ],
+  "doi": "https://doi.org/10.1175/1520-0493(1950)078<0001:vofeit>2.0.co;2",
+  "oa_url": null,
+  "keywords": [
+   "forecast verification",
+   "probabilistic forecasting",
+   "forecast accuracy",
+   "weather forecasting"
+  ],
+  "topic": "Meteorological Phenomena and Simulations",
+  "openalex": "https://openalex.org/W2073241381"
+ },
+ "Markowitz1952": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1111/j.1540-6261.1952.tb01525.x",
+  "note": "",
+  "title": "PORTFOLIO SELECTION*",
+  "year": 1952,
+  "authors": [
+   "Harry M. Markowitz"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Finance",
+  "issn_l": "0022-1082",
+  "all_venues": [
+   "RePEc: Research Papers in Economics",
+   "The Journal of Finance"
+  ],
+  "cited_by": 5648,
+  "cited_split": [
+   5648
+  ],
+  "doi": "https://doi.org/10.1111/j.1540-6261.1952.tb01525.x",
+  "oa_url": null,
+  "keywords": [
+   "portfolio optimization",
+   "investment decision-making",
+   "asset allocation"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W4232474910"
+ },
+ "Sharpe1966": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1086/294846",
+  "note": "",
+  "title": "Mutual Fund Performance",
+  "year": 1966,
+  "authors": [
+   "William F. Sharpe"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Business",
+  "issn_l": "0021-9398",
+  "all_venues": [
+   "The Journal of Business"
+  ],
+  "cited_by": 3963,
+  "cited_split": [
+   3963
+  ],
+  "doi": "https://doi.org/10.1086/294846",
+  "oa_url": null,
+  "keywords": [
+   "mutual fund performance",
+   "fund returns",
+   "investment performance evaluation"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W4241584625"
+ },
+ "Sortino1994": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.3905/joi.3.3.59",
+  "note": "",
+  "title": "Performance Measurement in a Downside Risk Framework",
+  "year": 1994,
+  "authors": [
+   "Frank A. Sortino",
+   "Lee N. Price"
+  ],
+  "venue_type": "journal",
+  "venue": "The Journal of Investing",
+  "issn_l": "1068-0896",
+  "all_venues": [
+   "The Journal of Investing"
+  ],
+  "cited_by": 915,
+  "cited_split": [
+   915
+  ],
+  "doi": "https://doi.org/10.3905/joi.3.3.59",
+  "oa_url": null,
+  "keywords": [
+   "performance measurement",
+   "downside risk",
+   "downside deviation",
+   "risk-adjusted performance",
+   "portfolio performance evaluation"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W2148654185"
+ },
+ "Lo2002_SharpeStats": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.2469/faj.v58.n4.2453",
+  "note": "",
+  "title": "The Statistics of Sharpe Ratios",
+  "year": 2002,
+  "authors": [
+   "Andrew W. Lo"
+  ],
+  "venue_type": "journal",
+  "venue": "Financial Analysts Journal",
+  "issn_l": "0015-198X",
+  "all_venues": [
+   "Financial Analysts Journal",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 867,
+  "cited_split": [
+   867
+  ],
+  "doi": "https://doi.org/10.2469/faj.v58.n4.2453",
+  "oa_url": null,
+  "keywords": [
+   "Sharpe ratio",
+   "estimation error",
+   "expected returns",
+   "volatility",
+   "serial correlation"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W1995808291"
+ },
+ "Kelly1956": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1002/j.1538-7305.1956.tb03809.x",
+  "note": "",
+  "title": "A New Interpretation of Information Rate",
+  "year": 1956,
+  "authors": [
+   "J. L. Kelly"
+  ],
+  "venue_type": "journal",
+  "venue": "Bell System Technical Journal",
+  "issn_l": "0005-8580",
+  "all_venues": [
+   "Bell System Technical Journal"
+  ],
+  "cited_by": 1643,
+  "cited_split": [
+   1643
+  ],
+  "doi": "https://doi.org/10.1002/j.1538-7305.1956.tb03809.x",
+  "oa_url": null,
+  "keywords": [
+   "information rate",
+   "channel capacity",
+   "gambling",
+   "Shannon's theorem",
+   "communication channels"
+  ],
+  "topic": "Error Correcting Code Techniques",
+  "openalex": "https://openalex.org/W2034489173"
+ },
+ "MacLean2010_Kelly": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1080/14697688.2010.506108",
+  "note": "",
+  "title": "Long-term capital growth: the good and bad properties of the Kelly and fractional Kelly capital growth criteria",
+  "year": 2010,
+  "authors": [
+   "Leonard C. MacLean",
+   "Edward O. Thorp",
+   "William T. Ziemba"
+  ],
+  "venue_type": "journal",
+  "venue": "Quantitative Finance",
+  "issn_l": "1469-7688",
+  "all_venues": [
+   "Quantitative Finance",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 82,
+  "cited_split": [
+   82
+  ],
+  "doi": "https://doi.org/10.1080/14697688.2010.506108",
+  "oa_url": null,
+  "keywords": [
+   "Kelly criterion",
+   "capital growth",
+   "logarithmic utility",
+   "exponential growth rate",
+   "wealth maximization"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W1985810281"
+ },
+ "Kritzman2010_Turbulence": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.2469/faj.v66.n5.3",
+  "note": "",
+  "title": "Skulls, Financial Turbulence, and Risk Management",
+  "year": 2010,
+  "authors": [
+   "Mark P. Kritzman",
+   "Li Yuanzhen"
+  ],
+  "venue_type": "journal",
+  "venue": "Financial Analysts Journal",
+  "issn_l": "0015-198X",
+  "all_venues": [
+   "Financial Analysts Journal",
+   "RePEc: Research Papers in Economics",
+   "SSRN Electronic Journal"
+  ],
+  "cited_by": 223,
+  "cited_split": [
+   223
+  ],
+  "doi": "https://doi.org/10.2469/faj.v66.n5.3",
+  "oa_url": "https://papers.ssrn.com/sol3/Delivery.cfm?abstractid=1691756",
+  "keywords": [
+   "financial turmoil",
+   "risk management",
+   "investment performance",
+   "financial market volatility"
+  ],
+  "topic": "Financial Risk and Volatility Modeling",
+  "openalex": "https://openalex.org/W2099233100"
+ },
+ "Hamilton1989_Regime": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.2307/1912559",
+  "note": "",
+  "title": "A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle",
+  "year": 1989,
+  "authors": [
+   "James Douglas Hamilton"
+  ],
+  "venue_type": "journal",
+  "venue": "Econometrica",
+  "issn_l": "0012-9682",
+  "all_venues": [
+   "Econometrica",
+   "RePEc: Research Papers in Economics"
+  ],
+  "cited_by": 9893,
+  "cited_split": [
+   9893
+  ],
+  "doi": "https://doi.org/10.2307/1912559",
+  "oa_url": null,
+  "keywords": [
+   "non-stationary time series",
+   "business cycles",
+   "structural breaks",
+   "GNP",
+   "maximum likelihood estimation"
+  ],
+  "topic": "Monetary Policy and Economic Impact",
+  "openalex": "https://openalex.org/W2074812030"
+ },
+ "Ang2002_RegimeAlloc": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.1093/rfs/15.4.1137",
+  "note": "",
+  "title": "International Asset Allocation With Regime Shifts",
+  "year": 2002,
+  "authors": [
+   "Andrew Ang",
+   "Geert Bekaert"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Financial Studies",
+  "issn_l": "0893-9454",
+  "all_venues": [
+   "Review of Financial Studies"
+  ],
+  "cited_by": 1804,
+  "cited_split": [
+   1804
+  ],
+  "doi": "https://doi.org/10.1093/rfs/15.4.1137",
+  "oa_url": null,
+  "keywords": [
+   "international asset allocation",
+   "regime switching",
+   "international diversification",
+   "bear market",
+   "currency hedging"
+  ],
+  "topic": "Financial Risk and Volatility Modeling",
+  "openalex": "https://openalex.org/W2005432509"
+ },
+ "Nystrup2018_HMMPortfolio": {
+  "group": "F-OdulRisk",
+  "ident": "title:Dynamic portfolio optimization across hidden market regimes",
+  "note": "",
+  "title": "Dynamic portfolio optimization across hidden market regimes",
+  "year": 2017,
+  "authors": [
+   "Peter Nystrup",
+   "Henrik Madsen",
+   "Erik Lindström"
+  ],
+  "venue_type": "journal",
+  "venue": "Quantitative Finance",
+  "issn_l": "1469-7688",
+  "all_venues": [
+   "Lund University Publications (Lund University)",
+   "Quantitative Finance",
+   "RePEc: Research Papers in Economics",
+   "Technical University of Denmark, DTU Orbit (Technical University of Denmark, DTU)"
+  ],
+  "cited_by": 64,
+  "cited_split": [
+   64
+  ],
+  "doi": "https://doi.org/10.1080/14697688.2017.1342857",
+  "oa_url": "https://orbit.dtu.dk/en/publications/354c6604-1f09-416a-8339-bde107783be9",
+  "keywords": [
+   "dynamic portfolio optimization",
+   "hidden Markov models",
+   "model predictive control",
+   "time-varying parameters",
+   "transaction costs"
+  ],
+  "topic": "Risk and Portfolio Optimization",
+  "openalex": "https://openalex.org/W2594258513"
+ },
+ "Akhmedov2026_ConfReward": {
+  "group": "F-OdulRisk",
+  "ident": "doi:10.3390/math14122075",
+  "note": "",
+  "title": "Confidence-Aware Reward Shaping for Crypto Trading: A Comparative Study of Lightweight Uncertainty Estimation Methods",
+  "year": 2026,
+  "authors": [
+   "Farkhod Akhmedov",
+   "Young Im Cho",
+   "Otabek Sattarov",
+   "Yusupov Sarvarbek Sodikovich",
+   "Mallayev Oybek",
+   "Halimjon Khujamatov",
+   "Răzvan Crăciunescu"
+  ],
+  "venue_type": "journal",
+  "venue": "Mathematics",
+  "issn_l": "2227-7390",
+  "all_venues": [
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "Mathematics"
+  ],
+  "cited_by": 0,
+  "cited_split": [
+   0
+  ],
+  "doi": "https://doi.org/10.3390/math14122075",
+  "oa_url": "https://doi.org/10.3390/math14122075",
+  "keywords": [
+   "reward shaping",
+   "confidence estimation",
+   "uncertainty estimation",
+   "cryptocurrency trading",
+   "reinforcement learning for trading"
+  ],
+  "topic": "Stock Market Forecasting Methods",
+  "openalex": "https://openalex.org/W7164175644"
+ },
+ "Harvey2016_CrossSection": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1093/rfs/hhv059",
+  "note": "",
+  "title": "… and the Cross-Section of Expected Returns",
+  "year": 2015,
+  "authors": [
+   "Campbell R. Harvey",
+   "Yan Liu",
+   "Caroline Zhu"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Financial Studies",
+  "issn_l": "0893-9454",
+  "all_venues": [
+   "Review of Financial Studies"
+  ],
+  "cited_by": 2185,
+  "cited_split": [
+   2185
+  ],
+  "doi": "https://doi.org/10.1093/rfs/hhv059",
+  "oa_url": "https://academic.oup.com/rfs/article-pdf/29/1/5/24450794/hhv059.pdf",
+  "keywords": [
+   "cross-section of expected returns",
+   "multiple comparisons",
+   "false positives",
+   "significance threshold",
+   "data mining"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W4211170237"
+ },
+ "White2000_RealityCheck": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1111/1468-0262.00152",
+  "note": "",
+  "title": "A Reality Check for Data Snooping",
+  "year": 2000,
+  "authors": [
+   "Halbert White"
+  ],
+  "venue_type": "journal",
+  "venue": "Econometrica",
+  "issn_l": "0012-9682",
+  "all_venues": [
+   "Econometrica"
+  ],
+  "cited_by": 1890,
+  "cited_split": [
+   1890
+  ],
+  "doi": "https://doi.org/10.1111/1468-0262.00152",
+  "oa_url": null,
+  "keywords": [
+   "data snooping",
+   "data reuse",
+   "model selection",
+   "specification search",
+   "time series forecasting"
+  ],
+  "topic": "Statistical Methods and Inference",
+  "openalex": "https://openalex.org/W2135606128"
+ },
+ "Hansen2005_SPA": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1198/073500105000000063",
+  "note": "",
+  "title": "A Test for Superior Predictive Ability",
+  "year": 2005,
+  "authors": [
+   "Peter Reinhard Hansen"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Business and Economic Statistics",
+  "issn_l": "0735-0015",
+  "all_venues": [
+   "Carolina Digital Repository (University of North Carolina at Chapel Hill)",
+   "Journal of Business and Economic Statistics",
+   "RePEc: Research Papers in Economics",
+   "UNC Libraries"
+  ],
+  "cited_by": 1245,
+  "cited_split": [
+   1245
+  ],
+  "doi": "https://doi.org/10.1198/073500105000000063",
+  "oa_url": "https://doi.org/10.17615/wehz-da64",
+  "keywords": [
+   "superior predictive ability",
+   "reality check",
+   "data snooping",
+   "forecast evaluation",
+   "inflation forecasting"
+  ],
+  "topic": "Forecasting Techniques and Applications",
+  "openalex": "https://openalex.org/W2050902901"
+ },
+ "Brown1992_Survivorship": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1093/rfs/5.4.553",
+  "note": "",
+  "title": "Survivorship Bias in Performance Studies",
+  "year": 1992,
+  "authors": [
+   "Stephen J. Brown",
+   "William N. Goetzmann",
+   "Roger G. Ibbotson",
+   "Stephen A. Ross"
+  ],
+  "venue_type": "journal",
+  "venue": "Review of Financial Studies",
+  "issn_l": "0893-9454",
+  "all_venues": [
+   "Review of Financial Studies"
+  ],
+  "cited_by": 1164,
+  "cited_split": [
+   1164
+  ],
+  "doi": "https://doi.org/10.1093/rfs/5.4.553",
+  "oa_url": null,
+  "keywords": [
+   "survivorship bias",
+   "performance studies",
+   "time series",
+   "manager performance evaluation",
+   "equity analysis"
+  ],
+  "topic": "Financial Markets and Investment Strategies",
+  "openalex": "https://openalex.org/W1992897607"
+ },
+ "Bekaert1997_EMVol": {
+  "group": "I-BIST",
+  "ident": "doi:10.1016/S0304-405X(96)00889-6",
+  "note": "",
+  "title": "Emerging equity market volatility",
+  "year": 1997,
+  "authors": [
+   "Geert Bekaert",
+   "Campbell R. Harvey"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Financial Economics",
+  "issn_l": "0304-405X",
+  "all_venues": [
+   "Journal of Financial Economics"
+  ],
+  "cited_by": 1726,
+  "cited_split": [
+   1726
+  ],
+  "doi": "https://doi.org/10.1016/s0304-405x(96)00889-6",
+  "oa_url": null,
+  "keywords": [
+   "emerging stock markets",
+   "market volatility",
+   "capital market liberalization",
+   "capital market reform",
+   "international market integration"
+  ],
+  "topic": "Financial Risk and Volatility Modeling",
+  "openalex": "https://openalex.org/W3123289511"
+ }
+}

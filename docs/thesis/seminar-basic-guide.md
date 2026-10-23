@@ -1,5 +1,7 @@
 # Danışman Görüşmesi — Basit Anlatım Rehberi
 
+> **⚠️ Sürüm notu (2026-10-06):** Mayıs 2026 seminer materyali; kayıt olarak değiştirilmeden korunuyor. "Leakage yok", "literatürde karşılığı yok / BIST'te çalışma yok denecek kadar az" ifadeleri ve TATS'ın katkı gibi sunulması Ekim 2026 literatür doğrulamasıyla geçerliliğini yitirdi. Güncel durum: [seminar-overview.md](seminar-overview.md) başındaki sürüm notu ve [vision-and-scope.md](vision-and-scope.md) v0.2.
+
 > Bu doküman seminer-overview.md'nin sade özetidir. Görüşme sırasında **sıra ile** anlatılacak şekilde düzenlendi. Her bölüm kısa, sözel anlatıma uygun.
 
 ---

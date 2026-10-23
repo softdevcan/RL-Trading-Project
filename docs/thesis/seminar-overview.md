@@ -8,6 +8,13 @@
 
 > Detaylı kaynaklar: `docs/thesis/vision-and-scope.md` (vizyon, literatür, kapsam, milestone'lar), `docs/development/roadmap.md` (faz geçmişi), `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`, `docs/guides/ACADEMIC_GUIDE.md`.
 
+> **⚠️ Sürüm notu (2026-10-06):** Bu belge Mayıs 2026 seminerinin anlık görüntüsüdür ve kayıt olarak değiştirilmeden korunmuştur. Ekim 2026 literatür doğrulamasından sonra aşağıdaki ifadeler **geçerliliğini yitirdi**; güncel hâlleri [vision-and-scope.md](vision-and-scope.md) v0.2'de:
+> - "Feature engineering ... **leakage yok**" (§3) → geri çekildi; makro `bfill`, TÜFE/ÜFE açıklanma gecikmesi, statik temel oranlar ve seri bütününe ICEEMDAN sızıntı kaynağı ([roadmap.md → Bilinen Metodolojik Açıklar](../development/roadmap.md#bilinen-metodolojik-açıklar-planlanmadı)).
+> - "Özgün katkı ... **literatürde doğrudan karşılığı yok**" (§5) ve "BIST üzerinde multi-agent DRL çalışması **yok denecek kadar az**" (S1) → daraltıldı; BIST'te DRL çalışmaları var (Candar 2022; Beyhan vd. 2026), MARL erişilebilen literatürde bulunamadı; güven ağırlıklı iletişimin bileşenleri ayrı ayrı mevcut (vision-and-scope §2.5).
+> - TATS (§3, §5 Makale 2) → Kazemdehbashi (2026) tarafından yayımlanmış bir yöntem; atıf zorunlu, katkı olarak sunulamaz. Makale 2 yeniden konumlandırıldı (vision-and-scope §6.2).
+> - İstatistiksel testler "t-test, Wilcoxon, Diebold-Mariano" (S7, Gantt 4a) → soruya göre test seti (Ledoit-Wolf, HAC'li DM, MCS, DSR, PBO, FDR) ve ≥10 tohum (vision-and-scope §4.1).
+> - Klasik baseline'lar "danışman onaylarsa eklenebilir" (S7) → literatür 1/N, min-varyans ve HRP'yi zorunlu kılıyor.
+
 ---
 
 ## 1. Tek Cümlede Proje
