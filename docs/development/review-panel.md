@@ -66,3 +66,4 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | Tarih | Paket | Hakem (model) | Token | Araç çağrısı | Süre | Not |
 |---|---|---|---|---|---|---|
 | 2026-11-06 | B9 | hakem-2 (opus) | ~301 bin | 66 | ~23 dk | Panel öncesi, paket yok, planlar bütün okundu |
+| 2026-11-06 | B7 | hakem-2 (opus) | ~144 bin | 25 | ~12 dk | İnceleme paketiyle; küçük paket, B9 ile kıyas tam değil. 1 BÜYÜK bulgu (türbülans 0 başı) |

@@ -99,9 +99,11 @@ def main():
     import data.integrity as integ
     from data.technical_indicators import add_indicators_to_multi_symbol_df as add_ind
 
-    raw = ohlcv()
+    # >= 300 gun: turbulence (252 gunluk pencere) da sinansin (hakem-2 B7 #2). MACD
+    # ewm(adjust=False) NaN isinmasi uretmez; isinma RSI/CCI'da (cci 20).
+    raw = ohlcv(n_days=330)
     d = dates_of(raw)
-    cut_ts = (3, 10, 18, 25, 60, 120)  # isinma ici (cci 20, macd 26) ve sonrasi
+    cut_ts = (3, 10, 18, 25, 60, 260, 300)
 
     def cut_invariant(warmup, t):
         full = add_ind(raw, warmup=warmup)
@@ -116,6 +118,8 @@ def main():
     check("SIZINTI: warmup='bfill' isinma icindeki t'de kaliyor (olcut bos degil)",
           not all(res_bf[:3]), str(res_bf))
     nanp = add_ind(raw, warmup="nan")
+    check("olcut bos degil: turbulence fikstürde degisiyor (252 sonrasi), ADX tumuyle NaN (K18)",
+          nanp["turbulence"].nunique() > 1 and bool(nanp["adx"].isna().all()))
     w0 = nanp.xs("W0.IS", level="symbol")
     check("warmup='nan': cci'nin ilk 19 satiri NaN, sonra degil",
           bool(w0["cci"].iloc[:19].isna().all()) and not w0["cci"].iloc[19:].isna().any())
@@ -148,6 +152,17 @@ def main():
           bool((w1_leg["close"].iloc[:3] == raw.xs("W1.IS", level="symbol")["close"].iloc[3]).all()))
     check("leading='drop': bas NaN satirlar atiliyor, gerisi ayni",
           len(w1_new) == len(w1_leg) - 3 and w1_new.equals(w1_leg.iloc[3:]))
+    ohlc = ["open", "high", "low", "close", "volume"]
+
+    def clean_cut(leading, t):
+        full = f.clean_data(holey, leading=leading)
+        cut = f.clean_data(holey[holey.index.get_level_values("date") <= d[t]], leading=leading)
+        return frames_equal(full[full.index.get_level_values("date") <= d[t]], cut, ohlc)
+
+    check("B0 (OHLCV): clean_data(leading='drop') t'de kesme degismez (t = 1, 5, 40, 200)",
+          all(clean_cut("drop", t) for t in (1, 5, 40, 200)))
+    check("  eski 'bfill' bas satirda kesmeye bagli (t=1: bas satira gelecek kapanis)",
+          not clean_cut("bfill", 1))
 
     print("\nG — RL kapisi isinma blogunu atiyor")
     late_raw = ohlcv(late=(2, 40))
@@ -176,6 +191,20 @@ def main():
     late_start = str(dates_of(panel)[80].date())  # blok bittikten sonra baslayan pencere
     _, rep_after = integ.prepare_rl_panel(panel, start=late_start, drop_indicator_warmup=True)
     check("blok pencereden once bitiyorsa hicbir sey atilmiyor", rep_after["indicator_warmup_dropped"] == {})
+    # hakem-2 B7 #1: panel pencereden 252 seanstan az once basliyor -> turbulence'in
+    # nedensel 0 basi pencerede. Eski dedektor bunu blok sanip her sembolden ~1 yil atiyordu.
+    long_raw = ohlcv(n_days=330, late=(2, 40))
+    long_bf = add_ind(long_raw, warmup="bfill")
+    lstart = str(dates_of(long_bf)[30].date())
+    _, rep_long = integ.prepare_rl_panel(long_bf, start=lstart, drop_indicator_warmup=True)
+    dl = rep_long["indicator_warmup_dropped"]
+    check("turbulence'in nedensel 0 basi blok sayilmiyor: yalnizca gec listelenen W2 (~20 satir)",
+          set(dl) == {"W2.IS"} and dl["W2.IS"] <= 25, str(dl))
+    long_nan = add_ind(long_raw, warmup="nan")
+    nan_gate, rep_nan = integ.prepare_rl_panel(long_nan, start=lstart, drop_indicator_warmup=True)
+    check("'nan' modunda uretilmis panel: kapi NaN isinma satirlarini atiyor (ADX haric), NaN kalmiyor",
+          set(rep_nan["indicator_warmup_dropped"]) == {"W2.IS"}
+          and not nan_gate[["rsi", "cci"]].isna().any().any(), str(rep_nan["indicator_warmup_dropped"]))
 
     print("\nP — protokol indicator_bfill olculuyor")
     from env.trading_env import TradingEnv
@@ -201,6 +230,15 @@ def main():
         integ.indicator_warmup_blocks = orig
     check("mutasyon: dedektoru kor kapi olcutu kiriyor (protokol True)",
           protocol_for(mutant)["indicator_bfill"] is True)
+    try:
+        integ.indicator_warmup_blocks = lambda *a, **k: {}  # MUTANT: protokol tarafi kor
+        blind = protocol_for(kept)["indicator_bfill"]
+    finally:
+        integ.indicator_warmup_blocks = orig
+    check("mutasyon (protokol tarafi): kor dedektorle bloklu panel 'temiz' cikiyor -> "
+          "'atmadi -> True' kontrolu bunu yakalar", blind is not True)
+    check("'nan' modu paneli kapisiz: protokol NaN basi da kirli sayiyor",
+          protocol_for(long_nan)["indicator_bfill"] is True)
 
     print("\nR — gercek panel")
     try:
@@ -218,8 +256,24 @@ def main():
               set(rrep["indicator_warmup_dropped"]) <= {"ODAS.IS", "PGSUS.IS"}
               and len(rrep["indicator_warmup_dropped"]) > 0)
         check("gercek panel: kapi sonrasi RL penceresinde bfill blogu yok",
-              integ.indicator_warmup_blocks(rp, min_len=2) == {},
-              str(integ.indicator_warmup_blocks(rp, min_len=2)))
+              integ.indicator_warmup_blocks(rp) == {}, str(integ.indicator_warmup_blocks(rp)))
+        raw_real = DataFetcher().load_data("raw_stock_data.csv")
+        check("gercek ham panel: NaN kapanis yok (clean_data bfill'i bugun hicbir satiri etkilemiyor)",
+              int(raw_real["close"].isna().sum()) == 0)
+        # Bagimsiz referans (hakem-2 B7 #3: kapi ve protokol ayni dedektoru kullaniyor):
+        # sembol basina 'nan' moduyla yeniden hesap; NaN isinma satirlari atilanlarin icinde
+        from data.technical_indicators import TechnicalIndicators
+        rk, _ = integ.prepare_rl_panel(real, start=get_settings().RL_DATA_START)
+        ti, ref_ok = TechnicalIndicators(), {}
+        for sym in rrep["indicator_warmup_dropped"]:
+            ref = ti.add_all_indicators(real.xs(sym, level="symbol")[ohlc], warmup="nan")
+            kept_d = set(rk.xs(sym, level="symbol").index)
+            gone = kept_d - set(rp.xs(sym, level="symbol").index)
+            nan_d = set(ref.index[ref[["rsi", "cci"]].isna().any(axis=1)]) & kept_d
+            ref_ok[sym] = (len(nan_d), len(gone), nan_d <= gone and len(gone - nan_d) <= 1)
+        check("bagimsiz 'nan' referansi: NaN isinma satirlari atilanlarin icinde, fark <= 1",
+              all(v[2] for v in ref_ok.values()), str(ref_ok))
+        print(f"    referans (NaN satir, atilan, kapsiyor mu): {ref_ok}")
 
     print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
     return 1 if failed else 0

@@ -168,10 +168,16 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
     cols = base.df.columns
     adx_const = ('adx' not in cols) or bool(base.df['adx'].nunique(dropna=True) <= 1)
     if indicator_bfill is None and present:
-        from data.integrity import indicator_warmup_blocks
+        from data.integrity import BFILL_WARMUP_COLS, indicator_warmup_blocks
         frames = [base.df] + ([getattr(train_env, 'unwrapped', train_env).df]
                               if train_env is not None else [])
-        indicator_bfill = any(bool(indicator_warmup_blocks(f, min_len=2)) for f in frames)
+
+        def contaminated(f):
+            # bfill imzali bas blok YA DA ('nan' modu) isinma sutununda NaN satir
+            live = [c for c in BFILL_WARMUP_COLS if c in f.columns and f[c].notna().any()]
+            return bool(indicator_warmup_blocks(f)) or bool(live and f[live].isna().any().any())
+
+        indicator_bfill = any(contaminated(f) for f in frames)
     return {
         'price_stats_source': price_stats_source(base, train_env),
         'indicator_bfill': indicator_bfill if present else None,

@@ -172,7 +172,7 @@ python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim 
                                            #          yapilandirma), olcek kokeni, destek, AST
                                            #          bekcisi, sarmalayicili betikler (103)
 python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i — B0 kesme
-                                           #          degismezligi, RL kapisi, olculen protokol (19)
+                                           #          degismezligi, RL kapisi, olculen protokol (28)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -251,7 +251,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)
 - `fetch_incremental()`: Sadece eksik günleri çeker, mevcut CSV'ye append eder
 - `get_source_status()`: Son tarih ve eksik gün sayısını raporlar
-- `clean_data()`: ffill → bfill → negatif fiyat temizleme, sembol bazlı
+- `clean_data(leading='bfill')`: ffill → bas NaN satirlar ('bfill' varsayilan: gelecek degerle
+  doldur | 'drop': at; B7) → negatif fiyat temizleme, sembol bazli. Ham panelde bas NaN yok
 
 ### macro_fetcher.py özellikleri
 - EVDS (Faz 9 B2, 2026-11-06'da EVDS kataloğundan doğrulandı):

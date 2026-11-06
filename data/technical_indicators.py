@@ -152,8 +152,11 @@ class TechnicalIndicators:
             warmup: Faz 9 / B7 (Faz 10 Y15) — isinma boslugu.
                 'bfill' (varsayilan, eski davranis): ffill -> bfill -> 0. Ilk gecerli
                     (GELECEKTEKI) deger sembolun ilk satirlarina geriye yazilir.
-                'nan': yalnizca ffill (nedensel); isinma satirlari NaN kalir. Kesme
+                'nan': yalnizca ffill (nedensel); RSI/CCI isinma satirlari NaN kalir. Kesme
                     degismezligi (B0) bu modda gecer; RL veri kapisi bu satirlari atar.
+                    Not: MACD ewm(adjust=False) ilk satirdan deger uretir (NaN isinmasi yok);
+                    sembol duzeyi turbulence 0 ile baslar (nedensel yer tutucu); ADX bu
+                    modda TUMUYLE NaN cikar — "ADX = 0"in koku (K18).
 
         Returns:
             DataFrame with technical indicators

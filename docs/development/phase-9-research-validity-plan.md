@@ -664,15 +664,28 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 **Değişiklik** (hepsi bayrakla; varsayılanlar eski davranış):
 - `add_indicators_to_multi_symbol_df(warmup='nan')`: yalnızca ffill uygulanır (nedensel); ısınma satırları NaN kalır.
 - `clean_data(leading='drop')`: baştaki NaN satırlar atılır, gelecek değer geriye yazılmaz.
-- `prepare_rl_panel(drop_indicator_warmup=True)`: bfill imzası taşıyan baş blok pencere içinde atılır. İmza: sembolün **tam** geçmişinde ilk değerin birebir tekrarı, en az 2 satır. Atılan hücre eksik sayılır (`own_last`: işlem yok). Rota ve HPO bu seçenekle çağırıyor.
-- Protokoldeki `indicator_bfill` artık **ölçülüyor**: eğitim ya da değerlendirme verisinde bfill bloğu kalmış mı. Rota ve HPO beyan göndermiyor.
+- `prepare_rl_panel(drop_indicator_warmup=True)`: bfill imzası taşıyan baş blok pencere içinde atılır.
+  - İmza: sembolün **tam** geçmişinde ilk değerin birebir tekrarı, en az 2 satır (`WARMUP_MIN_LEN`; kapı, protokol ve rapor aynı eşiği kullanıyor).
+  - Yalnız bfill'lenen sütunlara bakılır (`BFILL_WARMUP_COLS`: macd, rsi, cci). Türbülansın 252 günlük 0 başı nedensel bir yer tutucudur ve sayılmaz; ADX sabittir (K18).
+  - `nan` moduyla üretilmiş panelde NaN ısınma satırları da atılır.
+  - Sembol başına 30 satırdan fazla atım uyarı verir. Atılan hücre eksik sayılır (`own_last`: işlem yok).
+  - Rota ve HPO bu seçenekle çağırıyor.
+- Protokoldeki `indicator_bfill` artık **ölçülüyor**: eğitim ya da değerlendirme verisinde bfill bloğu ya da NaN ısınma satırı kalmış mı. Rota ve HPO beyan göndermiyor.
 
-**Kabul** (`python tests/test_indicator_warmup.py`, **19/19**):
-- **B0:** `warmup='nan'` ile göstergeler t ∈ {3, 10, 18, 25, 60, 120} için t'de kesilen seride t'ye kadar bit-eş (NaN = NaN). Eski `bfill` ısınma içindeki t'de kalıyor; sızıntı sayısal olarak gösteriliyor.
+**Kabul** (`python tests/test_indicator_warmup.py`, **28/28**):
+- **B0, göstergeler:** `warmup='nan'` ile t ∈ {3, 10, 18, 25, 60, 260, 300} için t'de kesilen seride t'ye kadar bit-eş (NaN = NaN). Fikstür 330 gün, böylece türbülans da sınanıyor. Eski `bfill` ısınma içindeki t'de kalıyor; sızıntı sayısal olarak gösteriliyor.
+- **B0, OHLCV:** `clean_data(leading='drop')` t ∈ {1, 5, 40, 200} için kesme değişmez. Eski `bfill` t=1'de kalıyor.
 - **Varsayılan yol:** `add_indicators` ve `clean_data` varsayılanları, main @ 90d50f3'ten `git show` ile yüklenen modülle bit-eş.
-- **Kapı:** atılan satırlar `nan` modunun ısınma satırlarını kapsıyor. Fark en fazla 1 satır: bloğun içinde ilk gerçek değer de var, yani fazladan atılan gerçek bir satır; sızıntı yaratmaz. Blok pencereden önce bitiyorsa hiçbir satır atılmıyor.
-- **Protokol:** kapı bloğu atınca `indicator_bfill=False`, atmayınca `True`. Mutasyon: dedektörü kör bir kapı ölçütü kırıyor.
-- **Gerçek panel** (RL penceresi 2013-06): kapı ODAS'ta **10**, PGSUS'ta **17** satır atıyor; §9.1'deki ısınma bloklarıyla aynı. Kapıdan sonra pencerede bfill bloğu kalmıyor. Ham panelde baştaki NaN satır yok; `clean_data`'nın bfill'i bugünkü veride hiçbir satırı etkilemiyor (ölçüldü).
+- **Kapı:** atılan satırlar `nan` modunun ısınma satırlarını kapsıyor. Fark en fazla 1 satır: bloğun içinde ilk gerçek değer de var, yani fazladan atılan gerçek bir satır; sızıntı yaratmaz.
+  - Blok pencereden önce bitiyorsa hiçbir satır atılmıyor.
+  - Panel pencereden 252 seanstan az önce başlıyorsa, yani türbülansın 0 başı pencerenin içindeyse, yalnız geç listelenen sembol etkileniyor.
+  - `nan` moduyla üretilmiş panelde NaN satırlar atılıyor.
+- **Protokol:** kapı bloğu atınca `indicator_bfill=False`, atmayınca `True`; kapısız `nan` panelde de `True`. İki mutasyon da yakalanıyor: dedektörü kör bir kapı ve protokol tarafında kör bir dedektör.
+- **Gerçek panel** (RL penceresi 2013-06):
+  - Kapı ODAS'ta **pencere içi ilk 10**, PGSUS'ta **ilk 17 satırı** atıyor; §9.1'deki ısınma bloklarıyla aynı. Kapıdan sonra pencerede bfill bloğu kalmıyor.
+  - Bağımsız `nan` referansı (sembol başına yeniden hesap) NaN ısınma satırlarının atılanların içinde olduğunu gösteriyor: ODAS 9 ⊆ 10, PGSUS 16 ⊆ 17. Hakem-2 de aynı sayıyı buldu.
+  - Ham panelde NaN kapanış yok; test R bunu bekçi olarak denetliyor. Yani `clean_data`'nın bfill'i bugünkü veride hiçbir satırı etkilemiyor.
+  - PGSUS'un ham panelde IPO günü (2013-04-26) tek satır, sonra 2013-07-23'e kadar satır yok. Isınma bu boşlukta 3 aya yayılıyor; EMA'lar sıçramayı tohum olarak taşıyor. Bu nedensel, sızıntı değil.
 
 **K18 için bulgu:** `warmup='nan'` modunda **ADX bütün satırlarda NaN**. "ADX ≡ 0"ın kökü hesabın NaN üretmesi; eski yol bunu `fillna(0)` ile sabit 0'a çeviriyordu. Testte kayıt olarak sabitlendi.
 
@@ -683,8 +696,21 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 
 **Etkileri:**
 - Rota kayıtlarında `indicator_bfill=False`. Gerçek panelde açık kalan maddeler `adx_constant` (K18) ve `price_in_support` (K25).
-- Bu daldan sonra eğitilen modellerin eğitim verisinde ODAS/PGSUS'un ilk 10/17 seansı yok.
+- Bu daldan sonra eğitilen modellerin eğitim verisinde ODAS ve PGSUS'un pencere içi ilk 10 ve 17 satırı yok.
 - HPO kayıtları `indicators_present=False` ile açık kalıyor (Y21).
+
+### 9.8 hakem-2 incelemesi (B7, 2026-11-06) — karar: Büyük revizyon
+
+İnceleme paketiyle yapılan ilk inceleme: **~144 bin token, 25 araç çağrısı, ~12 dk** (B9'da paket yokken 301 bin / 66 / 23 dk; paket küçük olduğu için kıyas tam değil; `review-panel.md`). Sızıntı bulgusu yok.
+
+| # | Cid. | İtiraz | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK | Dedektör türbülansın 252 günlük nedensel 0 başını bfill bloğu sanıyor. Panel pencereden 252 seanstan az önce başlıyorsa kapı her sembolden ~1 yıl atıyor. Hakemin ölçümü: 2018 başlangıçlı gerçek OHLCV'de 7.279 / 64.958 satır. Bugünkü CSV (2000 başlangıçlı) etkilenmiyor | **Kabul, düzeltildi.** Dedektör yalnız bfill'lenen sütunlara bakıyor (`BFILL_WARMUP_COLS`). 330 günlük senaryoda yalnız geç listelenen sembol etkileniyor. 30 satırı aşan atım uyarı veriyor |
+| 2 | KÜÇÜK | B0'da türbülans ve ADX boşuna geçiyor; OHLCV için t-kesme testi yok; "bugün etkisiz" ölçümünün bekçisi yok. CSV üreten yollar (`trading.py:531, 828, 838, 1174`) hâlâ varsayılan `bfill` | **Kısmen.** Fikstür 330 gün; türbülansın değiştiği ve ADX'in NaN olduğu kontrol ediliyor. `clean_data` için t-kesme testi eklendi; ham panelde NaN kapanış yokluğu test R'de bekçi. **Açık:** CSV üreten yolların `nan`/`drop` moduna geçmesi K18'e bağlı (ADX NaN) |
+| 3 | KÜÇÜK | Protokol kapıyla aynı dedektörü kullanıyor (ortak mod); NaN baş `{}` dönüyor; doğrulama ortamı ölçülmüyor | **Kabul, düzeltildi.** Test R'de bağımsız `nan` referansı var (ODAS 9 ⊆ 10, PGSUS 16 ⊆ 17). Protokol tarafı mutasyonu eklendi. Protokol ve kapı NaN başı da sayıyor. Rotada doğrulama ortamı yok; bu R1'de gelecek |
+| 4 | KÜÇÜK | Rapor `min_len=5`, kapı ve protokol 2 kullanıyor | **Kabul, düzeltildi.** Tek sabit: `WARMUP_MIN_LEN = 2` |
+| 5 | KÜÇÜK | PGSUS'un IPO günü tek satır, ardından 3 ay boşluk; "ilk n seans" ifadesi yanlış | **Kabul.** İfade "pencere içi ilk n satır" oldu, boşluk §9.7'ye yazıldı. **Açık:** tek satırlık IPO günü ve boşluk eksik hücre kaydında ayrıca işaretlenmeli (V) |
+| 6 | KÜÇÜK | Belge izi: `integrity.py` docstring'i, `nan` modu docstring'i, CLAUDE.md'de `clean_data` tarifi, "ölçüldü" ibaresinin komutu | **Kabul, düzeltildi** |
 
 ---
 
@@ -716,4 +742,4 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - Hiperparametre kökeni kayda geçiyor; rapor D5'e kadar duruyor.
   - Ölçüm JSON'ları depoda arşivlendi.
   - Açık: GPU belirlenimciliği (#5), HPO → rota seçim soyu (#14); destek içi üçüncü kol için karar K25.
-- **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7).
+- **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7). hakem-2 (§9.8): "Büyük revizyon"; dedektör türbülansın nedensel 0 başını blok sanıyordu, düzeltildi. Paketli inceleme ~144 bin token.
