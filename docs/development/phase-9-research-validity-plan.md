@@ -1,6 +1,6 @@
 # Faz 9 — Araştırma Geçerliliği ve Tez Deney Altyapısı (Plan)
 
-**Durum:** Plan — **onay bekliyor, kod değişikliği yapılmadı** (2026-10-07)
+**Durum:** **Onaylandı (2026-11-06)**, Faz 10 planındaki eklemelerle (B7–B10, F4, P, V, R1). İlk kapı (V + A + C) uygulandı → [§9 Uygulama durumu](#9-uygulama-durumu). Plan ilk kez 2026-10-07'de yazıldı.
 **Dayanak:** [vision-and-scope.md v0.2](../thesis/vision-and-scope.md), [literature-review-verification.md](../thesis/literature-review-verification.md), [roadmap.md → Bilinen Metodolojik Açıklar](roadmap.md#bilinen-metodolojik-açıklar-planlanmadı), indirilen tam metinler ([../reference/papers/README.md](../reference/papers/README.md))
 **Kapsam:** Literatür doğrulamasında bulunan açıkların kapatılması, tez deneylerinin istatistiksel altyapısı ve MARL aşamasının (Milestone 2–3) literatüre dayalı tasarım kararları.
 
@@ -284,8 +284,8 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 
 | # | Karar | Seçenekler | Öneri |
 |---|---|---|---|
-| 1 | **Tahmin golden'ı** — B1 (bfill) varsayılan hatta etkin; düzeltme golden'ı değiştirir | (a) B1 bayrakla, varsayılan eski; (b) varsayılanı çevir + golden'ı yenile | (b): sızıntılı varsayılanı korumanın akademik değeri yok; golden yenilemesi Milestone 0' ile birlikte |
-| 2 | EVDS erişimi (B2) | API anahtarı mevcut mu / yeniden alınacak mı | B2 başlamadan teyit |
+| 1 | **Tahmin golden'ı** — B1 (bfill) varsayılan hatta etkin; düzeltme golden'ı değiştirir | (a) B1 bayrakla, varsayılan eski; (b) varsayılanı çevir + golden'ı yenile | **Karar (2026-11-06): (b)** — varsayılan çevrilir, golden Milestone 0' ile birlikte bir kez yenilenir (Faz 10 K1; B1 ve B10 birlikte) |
+| 2 | EVDS erişimi (B2) | API anahtarı mevcut mu / yeniden alınacak mı | Anahtar koddan kaldırıldı ve `.env`'den okunuyor (PR #3; Faz 10 K23). Üç serinin neden yedeğe düştüğü B2'de teşhis edilir. **A8 bu teşhise bağlı** (§9) |
 | 3 | Tarihsel BIST-30 bileşenleri (E1) | Borsa İstanbul'dan elle temin / sınırlılık beyanı | Önce temin denenir; 2 hafta içinde bulunamazsa beyan |
 | 4 | Ödül terimi (G1) | Yeni deneylerde `differential` / `ema_level` kalır, adı düzeltilir | Milestone 0' ön elemesinde ikisi denenir, seçim deneme kaydına girer |
 | 5 | Makale 2 hedef tarihi (Aralık 2026) | Korunur / ertelenir | A + B + C ≈ 3–4 hafta + B5 hesaplama süresi; tarih B5 maliyet ölçümünden sonra yeniden değerlendirilir |
@@ -314,6 +314,102 @@ arXiv API (2026-10-07) ya da Crossref ile doğrulandı. **İşlendi:** aşağıd
 
 ---
 
+## 9. Uygulama durumu
+
+### 9.1 İlk kapı: V + A + C (2026-11-06, dal `feat/phase9-gate1-v-a-c`)
+
+Faz 10 §8'e göre ilk kapı **V (veri bütünlüğü), A ve C**'dir. Gözlem sağlığı (Faz 10 K18: ADX ≡ 0, türbülans doygunluğu) aynı kapıda anılıyor, ama bu turda **yapılmadı**.
+
+**Bu kapı RL'de tez sayısı üretmez.** hakem-2 incelemesinin sonucu (§9.2) şu: istatistik çekirdeği formül düzeyinde doğru, ama bu kapıdan sonra üretilen RL sonuçları da üç açık protokol maddesi taşıyor:
+- **Y13 / B9:** test ölçeği test penceresinden kuruluyor.
+- **Y15 / B7:** gösterge ısınma boşluğu `bfill` ile dolduruluyor.
+- **K18:** ADX ≡ 0.
+
+Bu yüzden bu kapıdan sonra üretilen RL sonuçları da "ön sonuç"tur. Deneme kaydı bu kayıtları `protocol_open` olarak işaretliyor ve kanıt olarak dışlıyor.
+
+Aşağıdaki tüm sayılar şu komutların çıktısıdır (2026-11-06, panel son tarihi 2026-07-27):
+
+```bash
+python tests/test_eval_stats.py           # A — 50 kontrol (~45 sn)
+python tests/test_data_integrity.py       # V — 27 kontrol
+python tests/test_env_missing_mode.py     # V — 17 kontrol
+python tests/test_rl_reproducibility.py   # C — 39 kontrol
+python tests/test_prediction_regression.py  # golden: "[REGRESYON] GECTI (OK) - davranis korunmus." (2026-11-06)
+```
+
+| İş | Durum | Konum | Kabul ölçütü → ölçülen |
+|---|---|---|---|
+| A1 PSR + DSR | **Tamam** | `evaluation/sharpe.py` | s.10 örneği: SR₀ = 0,1132; DSR = 0,9004 (N=100), 0,9505 (N=46), 0,9505 (normal, N=88). Üçü de ±1e-4 içinde. N=1'de DSR tanımsız döner (eski kod PSR'yi DSR diye veriyordu) |
+| A2 Diebold-Mariano | **Kısmen** | `evaluation/forecast_tests.py` | H₀, h=4, MA(3) hata, T=250, 2.000 sim: yeni **%5,95** (ölçüt %5 ± 1'in sınırında), eski formül %25,5. **AR(1) kayıp farkında ölçüt karşılanmıyor:** φ=0,5, T=500, 1.000 sim, `lag='auto'` ile %7,6 (MC SE ≈ %0,7); eski formül %13,5. Varsayılan `lag='h-1'`, h=1'de iid varyans demektir; otokorelasyonlu d_t'de eskisi kadar fazla reddeder. Bartlett+HLN birleşimi literatürde türetilmiş değil, ad hoc (hakem-2 #5e). Açık iş: uzun dönem varyans seçimini simülasyonla belirlemek. Sarmalayıcı artık `h` alıyor (haftalık hedef h=5) |
+| A3 Ledoit-Wolf | **Tamam** (güç sınırlı) | `evaluation/sharpe_tests.py` | GARCH(1,1), eşit Sharpe. ρ=0,5, T=1.000: HAC **%5,75** (400 sim), bootstrap **%4,33** (600 sim, M=299, b=5). Gerçek kullanım koşulu ρ=0,9, T=500, 300 sim: HAC %5,00; bootstrap b=2 / 5 / 10 için %3,67 / %3,67 / %3,33 (hafif temkinli). b=5 bir **tasarım varsayımı**. **Güç düşük** (hakem-2 #4, hakemin ölçümü, T=495): ρ=0,5'te yıllık ΔSR 0,5 / 1,0 / 2,0 için %15 / %35 / %76. Tek test penceresinde "fark yok" sonucu çıkarılamaz → R1 + M8 MDE |
+| A4 MCS | **Tamam** | `evaluation/model_sets.py` (`arch`) | Açıkça kötü model kümeden düşüyor, eşdeğer üç model kalıyor |
+| A5 rliable | **Tamam** | `evaluation/seed_stats.py` | Kütüphane çıktısıyla birebir. **Not:** rliable 1.2.0 `random_state`'i kullanmıyor (yeniden örnekleme küresel `np.random.choice` ile). Sarmalayıcı küresel durumu geçici olarak tohumluyor ve geri yüklüyor |
+| A6 PBO/CSCV | **Tamam** | `evaluation/overfitting.py` | 40 strateji, T=1.600, S=12. Saf gürültü: PBO 0,475. Orta sinyal (yıllık SR ≈ 1): 0,235. Güçlü sinyal (yıllık SR ≈ 4,8): 0,000 |
+| A7 BH-FDR | **Tamam** | `evaluation/multiple_testing.py` (`statsmodels`) | El hesabıyla aynı |
+| A8 Risksiz faiz | **Kısmen** | `evaluation/risk_free.py` | Tek kaynak modülü var. Bugünkü makro veride (`policy_rate: fallback_constant_50.0`) **açık hata** veriyor, sabite düşmüyor. Eski sabitler (0,15 / 0,02 / 0) **bağlanmadı**: biri eğitilmiş RL modellerinin ödülünü, diğerleri pano sayılarını değiştirirdi. Bağlama B2 (EVDS teşhisi) ve Milestone 0' ile yapılacak |
+| A9 Eski çağrılar | **Tamam** | `prediction/evaluator.py`, `app/services/model_analysis.py`, `evaluation/paired_tests.py` | `diebold_mariano_test` ve `compute_deflated_sharpe_ratio` yeni pakete yönlendi. `ttest_ind` yerine eşleştirilmiş t-testi geldi; HAC, durağan bootstrap ve LW seçenekleri de var |
+| C1 RL tohumu | **Tamam** | `app/api/routes/trading.py`, `evaluation/reproducibility.py` | Aynı tohumla iki CPU koşumu PPO ve A2C'de ödül eğrisi ve ağırlıklar açısından bit-eş. RTX 4060'ta küçük MLP ile iki GPU koşumu da bit-eş çıktı; bu tek ölçümdür, genel bir garanti değildir. Tohum meta dosyasına, manifeste ve deneme kaydına yazılıyor; istekte yoksa üretiliyor |
+| C2 Deneme kaydı | **Kısmen** | `evaluation/trial_registry.py` | `results_dir()/trial_registry.jsonl`, getiriler `trial_returns/*.parquet`. Eğitim rotası `rl_train` (test bölümü), HPO `rl_hpo` (doğrulama bölümü) olarak yazıyor. Budanan ve başarısız denemeler de `status` ile kaydediliyor ve N'ye sayılıyor. N varsayılan olarak deneme başına (yapılandırma × tohum). V yalnızca getirisi olanlardan geliyor. Farklı kind / split / pencere karıştırılırsa hata. Her kayıt `protocol` ve `protocol_open` taşıyor; açık protokol varsayılan olarak dışlanıyor. Veri hash'i yapılandırma özetinin dışında. **Açık:** (1) rota ve HPO tek bir bölme tanımı paylaşmıyor ve rota her koşumda testi okuyor; seçim/sınama ayrımı R1'de (hakem-2 #3). (2) Tohum kuralı (`by='trial'` / `'config'`) M8'de sabitlenecek. (3) Kayıttaki SR'ler risksiz faiz düşülmeden; A8'e bağlı |
+| C3 Veri anlık görüntüsü | **Tamam** | `evaluation/reproducibility.py` | Kanonik CSV baytlarının SHA-256'sı + `data/snapshots/*.parquet`. Manifest ve meta özet kaydını taşıyor; `verify_manifest_snapshots` veri değişince uyarıyor |
+| C4 Ortam kaydı | **Tamam** | `prediction/manifest.py` | Her manifestte paket sürümleri, GPU ve torch belirlenimcilik bayrakları |
+| V Veri bütünlüğü (Faz 10 K17) | **Kısmen** | `data/integrity.py`, `env/trading_env.py` | Fiyat, hayalet gün, bayat hücre ve pencere tamam. Göstergelerin `bfill` ısınması (B7) ve ADX (K18) yalnızca **raporlanıyor**, düzeltilmedi. Ayrıntı aşağıda |
+
+**V — ölçülen panel durumu** (`stock_data_with_indicators.csv`, eğitimin okuduğu dosya):
+
+| | Tam panel 2000-05-10..2026-07-27 | RL penceresi 2013-06-01.. |
+|---|---|---|
+| Fiyat artefaktı satırı | 235 (ohlc 170, seviye sıçraması 55, aşırı getiri 9, YTL geçişi 1) | **0** |
+| Hayalet gün (≥ %90 satır hacim 0 ve O=H=L=C) | 251 | 72 → atılıyor |
+| Bayat hücre (tek sembol hacim 0 ve O=H=L=C) | 781 | 39 → atılıyor |
+| Eksik hücre oranı | %14,19 | %0,076 |
+| Sabit sütun | `adx` | `adx` (K18, açık) |
+| Gösterge ısınma bloğu (`bfill`) | — | ODAS CCI 10 seans, PGSUS CCI 17 seans (B7, açık) |
+| \|r\| > %20 hücre (artefakt değil) | — | 13 (ör. 2023-02-15 deprem sonrası açılış); sınıflandırılmadı |
+
+**Hayalet gün tanımı inceleme sonrası değişti.** İlk sürüm "= önceki kapanış" şartı da arıyordu. Bu yüzden 2013-10-15 (Kurban Bayramı) kaçmıştı: o gün 30 sembolün hepsinde hacim 0, ama yfinance 19 sembolde düzeltilmiş fiyatı farklı yazmış. Gün panelde kısmi bir gün olarak kalıyor ve geniş tablo sırasını bozuyordu (hakem-2 #11'in kökü). İlk sürümün sayıları 222 / 69 / 1.035 / 60 idi ve geçersizdir.
+
+Hakem-2'nin plan incelemesinde ölçtüğü 88 hayalet gün ile buradaki 251 arasındaki farkın nedeni **doğrulanmadı**: hakemin komutu ve eşiği kayıtlı değil. Raporda bu modülün tanımı kullanılır.
+
+Tarayıcı, **sürekli yüksek ama sıçramayan** seviyeleri yakalamıyor (TUPRS'un 2000–2003 arası > 10.000 TL satırları). Bu satırlar pencerenin dışında kalıyor.
+
+**Davranış değişiklikleri** (Faz 10 §5 tablosuna göre):
+- Eğitim rotası ve HPO artık 2013-06'dan başlayan pencere ve `missing_data_mode='own_last'` ile çalışıyor.
+- `TradingEnv`'in varsayılanı `legacy`. Eski davranış, eksik hücrede komşu sembol kopyası dahil bit-eş korunuyor; bu `test_env_missing_mode.py` ve env bekçi testleriyle sabitlendi.
+- Bu kapıdan önce üretilmiş RL sonuçları (`results/*.json`) 2000–2018 penceresi, komşu sembol kopyası ve tohumsuz eğitimle üretildi. Bu kapıdan **sonra** üretilenler de Y13/Y15/K18 açık maddelerini taşıyor. İkisi de tezde ancak sınırlılık ya da ön sonuç olarak anılabilir.
+- Tahmin golden'ı etkilenmedi: `python tests/test_prediction_regression.py` → "[REGRESYON] GECTI (OK) - davranis korunmus." (2026-11-06). Değişen fonksiyonları (DM, DSR) hiçbir tahmin akışı çağırmıyor (grep: yalnızca `build_prediction_chart_data`, `build_accuracy_trend_data` ve `compute_rolling_metrics` kullanılıyor).
+
+### 9.2 hakem-2 incelemesi (kod, 2026-11-06) — karar: Büyük revizyon
+
+Bu incelemede formül düzeyinde sorun bulunmadı (DSR elle yeniden hesaplandı; LW gradyanı, QS, Andrews ve HLN kontrol edildi). İtirazlar sonuçların hangi koşulda üretildiğine ve kayıt protokolüne yönelik.
+
+| # | Cid. | İtiraz | Yanıt |
+|---|---|---|---|
+| 1 | RED | Bu kapıdan sonraki RL test metrikleri de test-penceresi ölçeğiyle (Y13) üretiliyor; kayıt bunu işaretlemiyor | **Kabul.** Kayıtlara `protocol` / `protocol_open` eklendi; açık protokol varsayılan olarak dışlanıyor. §9.1'e "RL'de tez sayısı yok" notu girdi. Asıl düzeltme B9 |
+| 2 | BÜYÜK | DSR N/V türetmesi yanlı: budananlar yok, tohum ortalaması V'yi küçültüyor, split'ler karışıyor, veri hash'i config'te | **Kabul.** Budanan ve başarısız denemeler N'ye giriyor; varsayılan `by='trial'`; kind / split / pencere karışımı hata veriyor; hash config dışına alındı. Tohum kuralı M8'e, risksiz faiz A8'e bağlı. Durum "Kısmen" |
+| 3 | BÜYÜK | Tek bölme tanımı yok; rota testi her koşumda okuyor; DSR hangi örneklemde uygulanacak belirsiz | **Kabul, R1'e** (Faz 10 K20): bölme tek kaynaktan; seçim doğrulamada; test yapılandırma başına bir kez |
+| 4 | BÜYÜK | Tek 495 seanslık pencerede güç düşük | **Kabul, R1 + M8.** Birleştirilmiş örneklem dışı seri, MDE ön kayıtta; p yerine güven aralığı |
+| 5 | BÜYÜK | A2 ölçütü karşılanmadı ama "Tamam" yazıyor; h=1 sabit; HLN+Bartlett ad hoc | **Kabul.** Durum "Kısmen"; test ölçüt yerine "ilerleme kontrolü" diye adlandırıldı; sarmalayıcıya `h` eklendi |
+| 6 | BÜYÜK | Tek pencerede tohum güven aralığı piyasa belirsizliğini ölçmez | **Kabul.** `seed_stats` docstring'i; tezde ayrı raporlama (M8) |
+| 7 | BÜYÜK | Ortamda nakde faiz yok, ama A8 politika faizini risksiz faiz alıyor | **Kabul, açık iş:** nakit faiz tahakkuku ya da açık varsayım beyanı; risksiz faiz serisi seçiminin kaynakla gerekçelendirilmesi (G2 / A8 ile birlikte) |
+| 8 | KÜÇÜK | Blok boyu duyarlılığı ve gerçek koşul testte yok; doğrulanmamış "LW HAC liberal" ifadesi | **Kabul.** ρ=0,9, T=500, b ∈ {2, 5, 10} teste eklendi; ifade kaldırıldı; arşiv yolu notu eklendi |
+| 9 | KÜÇÜK | Pencere içinde gösterge `bfill` ileriye bakışı (ODAS CCI) | **Kabul.** `indicator_warmup_blocks` raporlıyor; düzeltme B7 |
+| 10 | KÜÇÜK | \|r\| eşiği gevşek; uç hareketler açıklanmamış | **Kısmen.** `large_moves` 13 hücreyi listeliyor; eşik artefakt için %50'de kalıyor; sınıflandırma (sermaye artırımı vb.) açık |
+| 11 | KÜÇÜK | Temizlenmiş panelde `unstack` tarih sırası bozuk | **Kabul.** Kök neden kaçan hayalet gündü (yukarıda); ayrıca `remove_unused_levels`; teste eklendi |
+| 12 | KÜÇÜK | Aynı kapanışta karar ve yürütme | **Kabul, K12** (Faz 10; yeni ortamda t+1 açılış) |
+| 13 | KÜÇÜK | Küresel RNG tohumlaması iş parçacığı güvenli değil | **Kabul.** Kilit eklendi; sınırı docstring'de |
+| 14 | KÜÇÜK | PBO sinyal testi önemsiz derecede güçlü | **Kabul.** Orta sinyal (yıllık SR ≈ 1) senaryosu eklendi: 0,235 |
+| 15 | KÜÇÜK | Golden iddiasının kanıtı yok | **Kabul.** Komut ve çıktı §9.1'de |
+
+**Sıradaki:** B (+B7–B10, B9 bu kapının açık protokolünü kapatır; B1 ile K1 golden yenilemesi), K18 gözlem sağlığı, R1 (tek bölme, walk-forward), E, F, G (+ #7 nakit faizi), D; ardından P ve Milestone 0'.
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
+- **2026-11-06:** Plan kullanıcı tarafından onaylandı (Faz 10 eklemeleriyle). §7 Karar 1 ve 2 işlendi. İlk kapı V + A + C uygulandı (§9.1).
+- **2026-11-06 (kod incelemesi):** hakem-2 "Büyük revizyon" verdi; 15 itiraz §9.2'de (14 kabul, 1 kısmen).
+  - Kayda protokol işareti eklendi.
+  - N/V türetmesi düzeltildi.
+  - Hayalet gün tanımı düzeltildi; ilk sayılar geçersiz.
+  - A2, C2 ve V "Kısmen"e indi.

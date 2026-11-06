@@ -157,6 +157,18 @@ else:
     check("RL penceresi 2013-06'dan once baslamiyor", h["start"] >= RL_DATA_START)
     check("sabit sutunlar = {'adx'} (BILINEN acik, K18 — duzeltilince guncelle)",
           h["constant_columns"] == ["adx"], str(h["constant_columns"]))
+    print(f"    gosterge isinma bloklari (bfill, Y15/B7 acik): {h['indicator_warmup_blocks']}")
+    print(f"    |r| > %20 hucre (artefakt degil, siniflandirma icin): {h['n_large_moves']}")
+    check("ODAS CCI isinma blogu raporlaniyor (hakem-2 #9, BILINEN acik B7)",
+          h["indicator_warmup_blocks"].get("ODAS.IS", {}).get("cci", 0) >= 5,
+          str(h["indicator_warmup_blocks"].get("ODAS.IS")))
+    check("2013-10-15 (Kurban Bayrami, tum hacimler 0) hayalet gun olarak atildi",
+          "2013-10-15" in rep["ghost_days"])
+    check("genis tablo tarih sirasi monoton (hakem-2 #11)",
+          rl["close"].unstack("symbol").index.is_monotonic_increasing)
+    check("sembol sirasi korunuyor (env durum vektoru sirasi)",
+          list(dict.fromkeys(rl.index.get_level_values("symbol")))
+          == [s for s in dict.fromkeys(panel.index.get_level_values("symbol"))])
 
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

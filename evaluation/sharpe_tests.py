@@ -3,7 +3,12 @@
 Kaynak: Ledoit, O. & Wolf, M. (2008). Robust performance hypothesis testing
 with the Sharpe ratio. Journal of Empirical Finance 15(5), 850-859.
 (arsiv: docs/reference/papers/G_evaluation/2008_LedoitWolf_SharpeTest_WP.pdf,
-§3.1 HAC, §3.2 bootstrap)
+§3.1 HAC, §3.2 bootstrap — PDF'ler git disi; arsiv her calisma kopyasinda yok,
+uygulama Faz 9 planindaki tam metin okumasina dayaniyor)
+
+Boyut olcumleri (H0, GARCH, esit Sharpe): tests/test_eval_stats.py ciktisi;
+Faz 9 §9 A3 satiri. Blok boyu duyarliligi T=500, rho=0,9, b in {2, 5, 10}
+icin ayni testte olculur.
 
 Gosterim (makaleyle ayni): u = (mu_i, mu_n, gamma_i, gamma_n), gamma = E[r^2].
   Delta = f(u) = mu_i / sqrt(gamma_i - mu_i^2) - mu_n / sqrt(gamma_n - mu_n^2)

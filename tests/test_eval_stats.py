@@ -139,8 +139,11 @@ for _ in range(S2):
     rej_auto += diebold_mariano(e1, e2, lag="auto")["p_value"] < 0.05
     rej_old2 += legacy_dm_p(e1, e2) < 0.05
 print(f"    olcum: AR(1) phi=0.5 hata, T=500, {S2} sim -> lag='auto' {rej_auto/S2:.4f}, eski {rej_old2/S2:.4f}")
-check("AR(1) kayip farkinda lag='auto' eskiden daha az fazla reddediyor",
-      rej_auto / S2 < rej_old2 / S2 and rej_auto / S2 <= 0.09, f"{rej_auto/S2:.4f}")
+print("    NOT: planin '%5 +- 1 (AR(1))' olcutu KARSILANMIYOR (%7,6, MC SE ~%0,7) — Faz 9 §9 A2 'Kismen'.")
+check("AR(1) kayip farkinda lag='auto' eskiden daha az fazla reddediyor (ilerleme kontrolu, olcut degil)",
+      rej_auto / S2 < rej_old2 / S2, f"{rej_auto/S2:.4f}")
+check("evaluator sarmalayicisi ufku tasiyor (h=5)",
+      "h=5" in PE.diebold_mariano_test(np.zeros(300), -ma_err(300, 5), -ma_err(300, 5), h=5)["method"])
 
 e1 = rng.standard_normal(300)
 e2 = 1.5 * rng.standard_normal(300)
@@ -182,10 +185,23 @@ rej_bs = sum(sharpe_diff_bootstrap(*garch_pair(1000).T, n_boot=299, seed=i)["p_v
              for i in range(S4)) / S4
 print(f"    olcum: GARCH(1,1), rho=0.5, esit Sharpe, T=1000 -> HAC {rej_hac:.4f} ({S3} sim), "
       f"bootstrap {rej_bs:.4f} ({S4} sim, M=299, b=5)")
-check("HAC boyutu ~%5 (aralik %3-%9; LW 2008 HAC'in hafif liberal oldugunu raporluyor)",
-      0.03 <= rej_hac <= 0.09, f"{rej_hac:.4f}")
+check("HAC boyutu ~%5 (aralik %3,5-%7,5; 400 sim SE ~%1,1)",
+      0.035 <= rej_hac <= 0.075, f"{rej_hac:.4f}")
 check("bootstrap boyutu ~%5 (aralik %2,5-%7,5; 600 sim SE ~%0,9)",
       0.025 <= rej_bs <= 0.075, f"{rej_bs:.4f}")
+
+# Gercek kullanim kosulu (hakem-2 #8): tek test penceresi T~500, stratejiler
+# arasi yuksek korelasyon (rho=0,9), blok boyu duyarliligi.
+S5 = 300
+sims = [garch_pair(500, rho=0.9) for _ in range(S5)]
+for b in (2, 5, 10):
+    rb = sum(sharpe_diff_bootstrap(s[:, 0], s[:, 1], block_size=b, n_boot=299, seed=i)["p_value"] < 0.05
+             for i, s in enumerate(sims)) / S5
+    print(f"    olcum: T=500, rho=0.9, b={b} -> bootstrap boyutu {rb:.4f} ({S5} sim)")
+    check(f"bootstrap boyutu b={b}, rho=0,9, T=500 (aralik %2-%9)", 0.02 <= rb <= 0.09, f"{rb:.4f}")
+rh9 = sum(sharpe_diff_hac(s[:, 0], s[:, 1])["p_value"] < 0.05 for s in sims) / S5
+print(f"    olcum: T=500, rho=0.9 -> HAC boyutu {rh9:.4f} ({S5} sim)")
+check("HAC boyutu rho=0,9, T=500 (aralik %2-%9)", 0.02 <= rh9 <= 0.09, f"{rh9:.4f}")
 
 x = garch_pair(1500, mu=(0.0015, 0.0))
 p_h = sharpe_diff_hac(x[:, 0], x[:, 1])["p_value"]
@@ -255,9 +271,14 @@ pbo_noise = probability_of_backtest_overfitting(noise, n_blocks=12)["pbo"]
 sig = noise.copy()
 sig[:, 0] += 0.003                       # tek gercek sinyal
 pbo_sig = probability_of_backtest_overfitting(sig, n_blocks=12)["pbo"]
-print(f"    olcum: saf gurultu PBO {pbo_noise:.3f}, sinyalli {pbo_sig:.3f}")
+mod = noise.copy()
+mod[:, 0] += 0.01 / np.sqrt(252)        # orta sinyal: yillik SR ~1 (hakem-2 #14)
+pbo_mod = probability_of_backtest_overfitting(mod, n_blocks=12)["pbo"]
+print(f"    olcum: saf gurultu PBO {pbo_noise:.3f}, orta sinyal (yillik SR~1) {pbo_mod:.3f}, "
+      f"guclu sinyal (yillik SR~4,8) {pbo_sig:.3f}")
 check("saf gurultude PBO ~0,5 (0,35-0,65)", 0.35 <= pbo_noise <= 0.65, f"{pbo_noise:.3f}")
-check("gercek sinyalde PBO belirgin dusuk (< 0,1)", pbo_sig < 0.1, f"{pbo_sig:.3f}")
+check("guclu sinyalde PBO belirgin dusuk (< 0,1)", pbo_sig < 0.1, f"{pbo_sig:.3f}")
+check("orta sinyalde PBO gurultuden dusuk", pbo_mod < pbo_noise, f"{pbo_mod:.3f}")
 
 
 # ---------------------------------------------------------------------------

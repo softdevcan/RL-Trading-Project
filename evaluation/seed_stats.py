@@ -7,6 +7,11 @@ Precipice. NeurIPS 2021. (arsiv: G_evaluation/2021_Agarwal_StatisticalPrecipice.
 Skor matrisi: (n_kosum, n_gorev). Bu projede tipik olarak kosum = tohum,
 gorev = walk-forward kati (tek kat varsa n_gorev = 1).
 
+CIKARIM BIRIMI (hakem-2 #6): tek pencerede tohum araliklari yalnizca EGITIM
+rastlantisalligini olcer, piyasa orneklem belirsizligini olcmez. Anlamlilik
+kaniti olarak sunulmaz; zaman serisi testleriyle (sharpe_tests, sharpe.DSR)
+AYRI raporlanir. Gorevler walk-forward katlari olmali (R1).
+
 Ciktilar: IQM, medyan, ortalama, iyimserlik acigi (optimality gap) icin
 katmanli bootstrap guven araliklari; iki yontem arasi iyilesme olasiligi
 P(X > Y); performans profilleri.
@@ -14,12 +19,14 @@ P(X > Y); performans profilleri.
 
 from __future__ import annotations
 
+import threading
 from contextlib import contextmanager
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
 AGGREGATES = ('median', 'iqm', 'mean', 'optimality_gap')
+_GLOBAL_RNG_LOCK = threading.Lock()
 
 
 @contextmanager
@@ -32,12 +39,17 @@ def _seeded_global_rng(seed: Optional[int]):
     if seed is None:
         yield
         return
-    state = np.random.get_state()
-    np.random.seed(seed)
-    try:
-        yield
-    finally:
-        np.random.set_state(state)
+    # Kilit: ayni surecte baska bir is parcacigi (or. SB3 egitimi) kuresel
+    # durumu ayni anda kullanirsa tohumlama yarisir (hakem-2 #13). Kilit yalnizca
+    # bu modulun cagrilarini siralar; kuresel np.random kullanan ve kilidi
+    # bilmeyen kodla ayni anda calistirmayin.
+    with _GLOBAL_RNG_LOCK:
+        state = np.random.get_state()
+        np.random.seed(seed)
+        try:
+            yield
+        finally:
+            np.random.set_state(state)
 
 
 def _as_matrix(x) -> np.ndarray:

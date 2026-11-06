@@ -123,28 +123,63 @@ from evaluation.trial_registry import (  # noqa: E402
 with tempfile.TemporaryDirectory() as tmp:
     rng = np.random.default_rng(0)
     dates = pd.bdate_range("2024-01-01", periods=300)
+    clean = {"price_stats_source": "train_window", "indicator_bfill": False, "adx_constant": False}
     cfgs = [{"algorithm": "PPO", "lr": lr} for lr in (1e-4, 3e-4, 1e-3)]
-    for cfg in cfgs:
+    for i, cfg in enumerate(cfgs):
         for seed in (1, 2):
-            register_trial("rl_train", cfg, seed, metrics={"sharpe": 0.1},
+            register_trial("rl_hpo", cfg, seed, metrics={"sharpe": 0.1},
                            returns=rng.normal(0.0005, 0.01, 300), dates=dates,
-                           split="test", directory=tmp)
+                           split="val", directory=tmp, protocol=clean,
+                           data_sha256=f"veri{i}")          # veri tazelense de ayni config
+    register_trial("rl_hpo", {"algorithm": "PPO", "lr": 5e-3}, 1, split="val",
+                   status="pruned", directory=tmp, protocol=clean)
     register_trial("spike", cfgs[0], 9, returns=rng.normal(0, 0.01, 300), dates=dates,
-                   tags=["spike"], directory=tmp)
+                   tags=["spike"], directory=tmp, protocol=clean)
+    register_trial("rl_train", cfgs[0], 3, returns=rng.normal(0, 0.01, 300), dates=dates,
+                   split="test", directory=tmp,
+                   protocol={"price_stats_source": "test_window", "indicator_bfill": True,
+                             "adx_constant": True})
     trials = load_trials(directory=tmp)
-    check("6 deneme okundu (spike varsayilan olarak dislandi)", len(trials) == 6, str(len(trials)))
-    check("ayni yapilandirmanin tohumlari ayni config_hash",
-          len({t["config_hash"] for t in trials}) == 3)
+    check("7 deneme okundu (spike ve acik-protokol varsayilan olarak dislandi)",
+          len(trials) == 7, str(len(trials)))
+    open_ = [t for t in load_trials(directory=tmp, exclude_tags=("spike",)) if t["kind"] == "rl_train"]
+    check("acik-protokol kaydi etiketli ve maddeleri listeli",
+          len(open_) == 1 and "protocol_open" in open_[0]["tags"]
+          and set(open_[0]["protocol_open"]) == {"price_stats_source", "indicator_bfill", "adx_constant"})
+    check("ayni yapilandirmanin tohumlari ayni config_hash (veri hash'i config disinda)",
+          len({t["config_hash"] for t in trials if t["status"] == "completed"}) == 3)
     check("tohum kayitta", sorted({t["seed"] for t in trials}) == [1, 2])
-    st = sharpe_trial_stats(trials, by="config")
-    check("DSR icin N = farkli yapilandirma sayisi (3)", st["n_trials"] == 3)
+    st = sharpe_trial_stats(trials)
+    check("varsayilan by='trial': N = 6 tamamlanan + 1 budanan = 7", st["n_trials"] == 7, str(st["n_trials"]))
+    check("V yalnizca getirisi olanlardan (6)", st["n_with_returns"] == 6)
     check("V > 0 ve sonlu", st["var_trials"] is not None and 0 < st["var_trials"] < 1)
-    st_t = sharpe_trial_stats(trials, by="trial")
-    check("by='trial' -> N = 6", st_t["n_trials"] == 6)
+    st_c = sharpe_trial_stats(trials, by="config")
+    check("by='config': N = 4 yapilandirma (budanan dahil)", st_c["n_trials"] == 4)
+    check("by='config' tohum ortalamasi V'yi kucultur (hakem-2 #2b, belgelendi)",
+          st_c["var_trials"] < st["var_trials"])
+    mixed = trials + open_
+    try:
+        sharpe_trial_stats(mixed)
+        check("farkli kind/split karistirilamaz", False)
+    except ValueError:
+        check("farkli kind/split karistirilamaz", True)
+    register_trial("rl_hpo", cfgs[0], 7, returns=rng.normal(0, 0.01, 200),
+                   dates=pd.bdate_range("2025-01-01", periods=200), split="val",
+                   directory=tmp, protocol=clean)
+    try:
+        sharpe_trial_stats(load_trials(directory=tmp))
+        check("farkli degerlendirme pencereleri karistirilamaz", False)
+    except ValueError:
+        check("farkli degerlendirme pencereleri karistirilamaz", True)
     M = returns_matrix(trials)
-    check("PBO matrisi tarih x deneme, hizali", M.shape == (300, 6) and M.index.equals(dates))
+    check("PBO matrisi tarih x deneme, hizali (budanan haric)", M.shape == (300, 6) and M.index.equals(dates))
     d = deflated_sharpe_ratio(n_trials=st["n_trials"], var_trials=st["var_trials"], returns=M.iloc[:, 0])
     check("kayittan DSR hesaplanabiliyor", 0.0 <= d["dsr"] <= 1.0)
+    try:
+        register_trial("rl_hpo", {}, 1, status="bilinmeyen", directory=tmp)
+        check("gecersiz status reddediliyor", False)
+    except ValueError:
+        check("gecersiz status reddediliyor", True)
     check("config_hash anahtar sirasina duyarsiz", config_hash({"a": 1, "b": 2}) == config_hash({"b": 2, "a": 1}))
     try:
         register_trial("rl_train", {}, 1, returns=[0.1, 0.2], dates=dates[:3], directory=tmp)

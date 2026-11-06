@@ -447,6 +447,34 @@ class BaseHyperparameterOptimizer:
 
         return metrics
 
+    def _register_trial(self, trial, hyperparams, stock_symbols, windows, total_timesteps,
+                        status, metrics=None, returns=None, dates=None):
+        """Faz 9 / C2 — Optuna denemesini deneme kaydina yaz (kayit hatasi denemeyi bozmaz)."""
+        try:
+            from evaluation.trial_registry import register_trial
+            train_start, train_end, val_start, val_end = windows
+            return register_trial(
+                kind='rl_hpo',
+                config={'algorithm': self.algorithm_name, 'phase': self.phase,
+                        'reward_type': self.reward_type, 'hyperparameters': hyperparams,
+                        'symbols': list(stock_symbols), 'train': [train_start, train_end],
+                        'val': [val_start, val_end], 'total_timesteps': total_timesteps,
+                        'missing_data_mode': 'own_last'},
+                seed=self.seed,
+                status=status,
+                metrics=metrics or {},
+                returns=returns, dates=dates, split='val',
+                # HPO ortami tek panelden kuruluyor ve price_stats'i kendi
+                # penceresinden aliyor (Y13 ile ayni sorun); gostergeler bfill'li.
+                protocol={'price_stats_source': 'own_window', 'indicator_bfill': True,
+                          'adx_constant': None},
+                extra={'study': getattr(trial.study, 'study_name', None),
+                       'optuna_trial': trial.number},
+            )
+        except Exception as exc:
+            logger.warning(f"Deneme kaydina yazilamadi ({exc})")
+            return None
+
     def objective(
         self,
         trial: optuna.Trial,
@@ -540,41 +568,37 @@ class BaseHyperparameterOptimizer:
             # Faz 9 / C2: her Optuna denemesi deneme kaydina girer (DSR'nin N'si
             # yalnizca kazanani degil TUM denemeleri sayar). Getiri serisi son
             # dogrulama bolumunden.
-            try:
-                from evaluation.trial_registry import register_trial
-                base_env = getattr(val_env, 'unwrapped', val_env)
-                pv = np.asarray(getattr(base_env, 'portfolio_values', []), dtype=float)
-                rets = pv[1:] / pv[:-1] - 1.0 if len(pv) > 1 else None
-                dates = None
-                if rets is not None:
-                    s0 = base_env.frame_bound[0]
-                    dates = base_env._dates_list[s0 + 1: s0 + 1 + len(rets)]
-                tid = register_trial(
-                    kind='rl_hpo',
-                    config={'algorithm': self.algorithm_name, 'phase': self.phase,
-                            'reward_type': self.reward_type, 'hyperparameters': hyperparams,
-                            'symbols': list(stock_symbols), 'train': [train_start, train_end],
-                            'val': [val_start, val_end], 'total_timesteps': total_timesteps,
-                            'missing_data_mode': 'own_last'},
-                    seed=self.seed,
-                    metrics={k: float(v) for k, v in metrics.items()},
-                    returns=rets, dates=dates, split='val',
-                    extra={'study': getattr(trial.study, 'study_name', None),
-                           'optuna_trial': trial.number},
-                )
+            base_env = getattr(val_env, 'unwrapped', val_env)
+            pv = np.asarray(getattr(base_env, 'portfolio_values', []), dtype=float)
+            rets = pv[1:] / pv[:-1] - 1.0 if len(pv) > 1 else None
+            dates = None
+            if rets is not None:
+                s0 = base_env.frame_bound[0]
+                dates = base_env._dates_list[s0 + 1: s0 + 1 + len(rets)]
+            tid = self._register_trial(trial, hyperparams, stock_symbols,
+                                       (train_start, train_end, val_start, val_end),
+                                       total_timesteps, 'completed',
+                                       metrics={k: float(v) for k, v in metrics.items()},
+                                       returns=rets, dates=dates)
+            if tid:
                 trial.set_user_attr("trial_registry_id", tid)
-            except Exception as exc:
-                logger.warning(f"Deneme kaydina yazilamadi ({exc})")
 
             # Return objective (maximize Sharpe ratio)
             return metrics['mean_sharpe_ratio']
 
         except optuna.TrialPruned:
             logger.info(f"Trial {trial.number} was pruned")
+            # Budanan deneme de bir denemedir: N'ye sayilir (hakem-2 #2a)
+            self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
+                                 (train_start, train_end, val_start, val_end),
+                                 total_timesteps, 'pruned')
             raise
 
         except Exception as e:
             logger.error(f"Trial {trial.number} failed with error: {e}")
+            self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
+                                 (train_start, train_end, val_start, val_end),
+                                 total_timesteps, 'failed', metrics={'error': str(e)[:200]})
             raise
 
         finally:

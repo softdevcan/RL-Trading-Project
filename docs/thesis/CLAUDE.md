@@ -18,12 +18,22 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
   TUFE/UFE aciklanma gecikmesi yok, statik temel oranlar (opt-in), seri butunune
   ICEEMDAN + hedef filtrelenmis fiyattan (opt-in). Protokol aciklari: RL egitiminde
   tohum yok, DM/t-testi bagli degil, risksiz faiz 3 yerde 3 deger, 1/N/min-var/HRP yok.
-  Liste: `docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar" — **planlanmadi**;
-  kullanici planlamadan bunlari kodda "duzeltmeye" girisme.
-- **Faz 9 plani (onay bekliyor):** `docs/development/phase-9-research-validity-plan.md`.
-  Onaylanmadan kod degisikligi yok. Ek bulgular: `compute_deflated_sharpe_ratio`
-  yanlis (makale ornegi 0,9004 → repo 0,4031); oduldeki "Differential Sharpe" turev
-  degil; G2'nin log-guven onseli DebUnc dikkat olceklemesiyle esdeger.
+  Liste: `docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar"; kapatilma plani
+  Faz 9 + Faz 10'da (asagida). Plandaki paket sirasinin disinda "duzeltmeye" girisme.
+- **Faz 9 ve Faz 10 planlari ONAYLANDI (2026-11-06):**
+  `docs/development/phase-9-research-validity-plan.md`, `docs/development/phase-10-marl-plan.md`
+  (§8 hakem-2 eklemeleriyle). Kararlar K1 (varsayilani cevir, golden Milestone 0' ile),
+  K17 (RL penceresi 2013-06), K23 (anahtar koddan kaldirildi, yenilenmeyecek).
+  **Ilk kapi (V + A + C) yapildi**; durum Faz 9 planinda "Uygulama durumu" bolumunde.
+  Tezde istatistik icin `evaluation/` paketi kullanilir. DSR eski haliyle yanlisti (makale
+  ornegi 0,9004 → repo 0,4031); duzeltildi, ama tez-final.pdf'te eski fonksiyonla
+  raporlanmis bir DSR/DM/t-testi varsa yeniden hesaplanmali. Diger bulgular gecerli:
+  oduldeki "Differential Sharpe" turev degil (G); G2'nin log-guven onseli DebUnc dikkat
+  olceklemesiyle esdeger.
+- **RL sonuclari henuz tez sayisi degil.** Bu kapidan ONCE uretilenler 2000–2018 penceresi,
+  komsu sembol kopyasi ve tohumsuz egitimle; SONRA uretilenler de test olcegi test penceresinden
+  (Y13/B9), gosterge bfill (Y15/B7) ve ADX = 0 (K18) ile uretildi. Ikisi de yalnizca "on sonuc /
+  sinirlilik" olarak anilabilir (Faz 9 §9.2 #1). Deneme kaydinda `protocol_open` etiketlidirler.
   Tam metinler `docs/reference/papers/` (PDF'ler git disi, icindekiler README.md).
 - **TATS ozgun degil:** Kazemdehbashi (2026, arXiv 2601.12706). Akademik metinde atif
   zorunlu, katki olarak sunulmaz.

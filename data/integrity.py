@@ -16,7 +16,7 @@ DURUR (sessizce temizlenmez).
 
 Kavramlar:
   hayalet gun : aktif sembollerin >= `ghost_threshold`'u "duz" (volume == 0 ve
-                O = H = L = C = onceki kapanis) olan gun -> panelden atilir.
+                O = H = L = C) olan gun -> panelden atilir.
   bayat hucre : hayalet olmayan bir gunde tek sembolun duz satiri (islem
                 gormemis) -> satir atilir, hucre EKSIK sayilir. Env'in
                 `missing_data_mode='own_last'` modu bu hucrede islem yapmaz ve
@@ -103,12 +103,16 @@ def scan_price_artifacts(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _flat_rows(x: pd.DataFrame) -> pd.Series:
-    """volume == 0 ve O = H = L = C = onceki kapanis."""
-    prev = x.groupby('symbol', sort=False)['close'].shift(1)
+    """volume == 0 ve O = H = L = C (islem gormemis satir).
+
+    "= onceki kapanis" sarti KASITLI olarak yok: yfinance kapali gunlerde
+    duzeltilmis fiyati onceki kapanistan biraz farkli yazabiliyor. Ilk tanim bu
+    sarti iceriyordu ve 2013-10-15'i (Kurban Bayrami, 30 sembolun hepsinde
+    volume = 0) kacirdi — hakem-2 incelemesi, 2026-11-06.
+    """
     c = x['close']
     same = lambda a: np.isclose(a, c, rtol=1e-9, atol=0.0)  # noqa: E731
-    return ((x['volume'] == 0) & same(x['open']) & same(x['high']) & same(x['low'])
-            & np.isclose(prev, c, rtol=1e-9, atol=0.0))
+    return (x['volume'] == 0) & same(x['open']) & same(x['high']) & same(x['low'])
 
 
 def find_ghost_days(df: pd.DataFrame, threshold: float = 0.9) -> pd.DatetimeIndex:
@@ -135,6 +139,47 @@ def activity_mask(df: pd.DataFrame) -> pd.DataFrame:
     return m.reindex(columns=order, fill_value=False)
 
 
+INDICATOR_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence')
+LARGE_MOVE = 0.20   # rapor esigi (artefakt DEGIL): BIST fiyat limitini asan kapanis hareketi
+
+
+def indicator_warmup_blocks(df: pd.DataFrame, min_len: int = 5) -> dict:
+    """Sembol basinda ayni degerin tekrarlandigi gosterge bloklari.
+
+    `technical_indicators.py` isinma boslugunu bfill ile dolduruyor (Faz 10
+    Y15 / B7, bu kapida duzeltilmedi): ilk gecerli (GELECEKTEKI) deger geriye
+    yayiliyor. Ornek: ODAS CCI 2013-05-21..2013-06-17 sabit (hakem-2). Tum
+    panelde sabit sutunlar (ADX) burada sayilmaz — `constant_columns`'ta.
+    Donus: {sembol: {sutun: blok_uzunlugu}}.
+    """
+    x = _long(df)
+    cols = [c for c in INDICATOR_COLS if c in x.columns and x[c].nunique(dropna=True) > 1]
+    out = {}
+    for sym, g in x.groupby('symbol', sort=False):
+        for c in cols:
+            v = g[c].to_numpy()
+            if len(v) == 0:
+                continue
+            n = int(np.argmax(v != v[0])) if np.any(v != v[0]) else len(v)
+            if n >= min_len:
+                out.setdefault(sym, {})[c] = n
+    return out
+
+
+def large_moves(df: pd.DataFrame, threshold: float = LARGE_MOVE) -> pd.DataFrame:
+    """|kapanis getirisi| > threshold olan hucreler + oncesindeki takvim boslugu.
+
+    Artefakt sayilmaz (2023-02-15 deprem sonrasi yeniden acilis gibi gercek
+    hareketler var); siniflandirma icin listelenir (hakem-2 #10).
+    """
+    x = _long(df)
+    g = x.groupby('symbol', sort=False)
+    r = g['close'].pct_change()
+    gap = g['date'].diff().dt.days
+    m = r.abs() > threshold
+    return x.loc[m, ['symbol', 'date', 'close']].assign(ret=r[m], gap_days=gap[m]).reset_index(drop=True)
+
+
 def health_report(df: pd.DataFrame, ghost_threshold: float = 0.9) -> dict:
     """Paneli degistirmeden saglik ozeti (B0 veri sagligi testi bunu kullanir)."""
     x = _long(df)
@@ -157,6 +202,8 @@ def health_report(df: pd.DataFrame, ghost_threshold: float = 0.9) -> dict:
         'n_stale_cells': int(len(stale)),
         'missing_cell_frac': float(1.0 - len(x) / max(n_dates * n_sym, 1)),
         'constant_columns': constant,
+        'indicator_warmup_blocks': indicator_warmup_blocks(df),
+        'n_large_moves': int(len(large_moves(df))),
     }
 
 
@@ -219,6 +266,11 @@ def prepare_rl_panel(
             own = pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates])
             clean = clean[~own.isin(key)]
 
+    # Kullanilmayan dizin seviyelerini at: atilan tarihler seviyede kalirsa
+    # unstack/kesitsel hesaplar sirasiz tarih uretebiliyor (hakem-2 #11).
+    clean = clean.copy()
+    clean.index = clean.index.remove_unused_levels()
+
     act = activity_mask(clean)
     first_active = {s: str(act.index[act[s].to_numpy()].min().date())
                     for s in act.columns if act[s].any()}
@@ -236,6 +288,9 @@ def prepare_rl_panel(
         'n_dates': int(act.shape[0]),
         'missing_cell_frac': float(1.0 - act.to_numpy().mean()) if act.size else None,
         'first_active': first_active,
+        # Bilinen acik veri sorunlari — rapor, durdurmaz (B7 / K18 kapilari)
+        'indicator_warmup_blocks': indicator_warmup_blocks(clean),
+        'n_large_moves': int(len(large_moves(clean))),
     }
     logger.info(
         f"RL paneli: {report['window_start']}.. | {report['rows_in_window']:,} -> "

@@ -271,8 +271,12 @@ class PredictionEvaluator:
         pred_2: np.ndarray,
         model_1_name: str = 'Model A',
         model_2_name: str = 'Model B',
+        h: int = 1,
     ) -> Dict[str, Any]:
         """Diebold-Mariano testi: iki modelin tahmin hatasi istatistiksel olarak farkli mi?
+
+        h: tahmin ufku. Haftalik hedef `shift(-5)` ile uretildigi icin
+        (feature_engineer.py) ortusen hedeflerde h=5 verilmeli (hakem-2 #5d).
 
         H0: iki modelin tahmin performansi esit (kare kayip)
         H1: tahmin performanslari farkli
@@ -298,7 +302,7 @@ class PredictionEvaluator:
                 'error': 'Yetersiz veri',
             }
 
-        res = diebold_mariano(e1, e2, h=1, loss='squared', lag='auto')
+        res = diebold_mariano(e1, e2, h=h, loss='squared', lag='auto')
         p_value = res['p_value']
         better = model_1_name if res['mean_loss_diff'] < 0 else model_2_name
 
@@ -311,7 +315,7 @@ class PredictionEvaluator:
             'model_2_name': model_2_name,
             'model_1_mse': round(float(np.nanmean(e1 ** 2)), 6),
             'model_2_mse': round(float(np.nanmean(e2 ** 2)), 6),
-            'method': f"DM-HLN, Newey-West ({res['lags']} lags), {res['distribution']}",
+            'method': f"DM-HLN, Newey-West ({res['lags']} lags), {res['distribution']}, h={h}",
         }
 
     @staticmethod

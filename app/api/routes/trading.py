@@ -1076,6 +1076,23 @@ def _audit_shared_model_delete(user, model_name: str) -> None:
         logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
+def _rl_protocol(panel: pd.DataFrame) -> Dict[str, Any]:
+    """RL degerlendirmesinin bilinen acik protokol maddeleri (deneme kaydi icin).
+
+    Bu kapida (Faz 9 ilk kapi) uc madde ACIK — kayit 'protocol_open' etiketi alir:
+      price_stats_source: test ortami fiyati test penceresinin kendi
+          istatistigiyle olcekliyor (Faz 10 Y13; B9 ile 'train_window' olacak)
+      indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7)
+      adx_constant: ADX panelde sabit (K18)
+    """
+    adx_const = bool('adx' in panel.columns and panel['adx'].nunique(dropna=True) <= 1)
+    return {
+        'price_stats_source': 'test_window',
+        'indicator_bfill': True,
+        'adx_constant': adx_const,
+    }
+
+
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
     """
     Background task for model training
@@ -1439,6 +1456,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'data_integrity': integrity_report,
                    'train_range': _range(train_df), 'val_range': _range(val_df),
                    'test_range': _range(test_df), 'missing_data_mode': 'own_last',
+                   'protocol': _rl_protocol(df),
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
         rl_manifest.set_seed(seed)
@@ -1556,10 +1574,13 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     'max_shares_per_trade': request.max_shares_per_trade,
                     'reward_type': reward_type, 'missing_data_mode': 'own_last',
                     'rl_data_start': _settings.RL_DATA_START,
-                    'data_sha256': data_snapshot['sha256'],
                     'symbols': list(temp_env.symbols),
                 },
                 seed=seed,
+                data_sha256=data_snapshot['sha256'],
+                # Bilinen acik protokol maddeleri (hakem-2 #1): bu kayit kanit
+                # olarak kullanilmaz ('protocol_open'), ama N sayimi icin durur.
+                protocol=_rl_protocol(df),
                 metrics={k: metrics.get(k) for k in ('cumulative_return', 'sharpe_ratio',
                                                      'max_drawdown', 'total_trades')},
                 returns=test_returns, dates=test_dates, split='test',

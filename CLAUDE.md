@@ -46,6 +46,15 @@ data/                 # Data processing modules
   macro_fetcher.py    # Makro veri - TCMB EVDS (faiz, enflasyon) + yfinance (döviz, BIST100)
   fundamental_fetcher.py  # Fundamental - yfinance (ROE, ROA, P/E, P/B, ...)
   gold_fetcher.py     # Altın/döviz - borsapy veya yfinance
+  integrity.py        # Faz 10/V: artefakt tarayici, hayalet gun, RL penceresi (prepare_rl_panel)
+evaluation/           # Faz 9/A+C: tahmin ve RL'e ortak istatistik + tekrar uretilebilirlik
+  sharpe.py           # A1 PSR / DSR (Bailey & LdP 2014; makale ornegi 0,9004)
+  forecast_tests.py   # A2 Diebold-Mariano (HAC + HLN, t dagilimi)
+  sharpe_tests.py     # A3 Ledoit-Wolf Sharpe farki (prewhitened QS HAC + blok bootstrap)
+  model_sets.py       # A4 MCS (arch) · seed_stats.py A5 rliable · overfitting.py A6 PBO/CSCV
+  multiple_testing.py # A7 BH-FDR · risk_free.py A8 · paired_tests.py A9
+  trial_registry.py   # C2 deneme kaydi (DSR'nin N/V'si, PBO matrisi)
+  reproducibility.py  # C1 tohum, C3 veri anlik goruntusu (SHA-256), C4 ortam kaydi
 prediction/           # Gelişmiş tahmin sistemi (Faz 2+3)
   feature_engineer.py # 10 özellik grubu (getiri, vol, momentum, makro, fundamental, rejim) + ICEEMDAN + VIX/US10Y/DXY
   feature_selector.py # MI + permutation importance ile otomatik seçim (3 aşamalı)
@@ -145,6 +154,14 @@ python tests/test_delete_artifacts.py      # Faz 8/I: model + optimizasyon kaydi
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
                                            #          etkinlik kaydi, Dash callback
                                            #          smoke (84 kontrol)
+python tests/test_eval_stats.py            # Faz 9/A: DSR makale ornegi, DM/LW boyut
+                                           #          simulasyonu, MCS, rliable, PBO,
+                                           #          BH, risksiz faiz (50 kontrol, ~45 sn)
+python tests/test_data_integrity.py        # Faz 10/V: artefakt, hayalet gun, RL
+                                           #          penceresi, gercek panel saglik (27)
+python tests/test_env_missing_mode.py      # Faz 10/V: env eksik hucre modu (17)
+python tests/test_rl_reproducibility.py    # Faz 9/C: tohum, deneme kaydi, veri
+                                           #          anlik goruntusu, manifest (39)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -235,7 +252,9 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - **Phase 3 (RL)**: ATR tabanlı dinamik pozisyon boyutlandırma + Kelly Criterion (opt-in, `use_atr_sizing`, `use_kelly`)
 
 ### ensemble.py özellikleri (Faz 3)
-- 3-way chronological split (60/20/20): base train / OOF meta-train / final test — data leakage yok
+- 3-way chronological split (60/20/20): base train / OOF meta-train / final test.
+  **"Leakage yok" DEGIL:** dagitim oncesi %80 yeniden uyumda meta-ogrenici orneklem ICI
+  tahminlerle yeniden uyduruluyor (ensemble.py:345–384; Faz 10 §8 #7 → K19)
 - Meta-learner: Ridge (default) veya XGBoost (`meta_learner_type='xgboost'`)
 - TATS düzeltici: `use_tats=True` ile trend-adjusted output
 - Direction head: BiLSTM/TFT'nin `_predict_direction_raw()` çıktısı confidence hesabında kullanılır
@@ -377,14 +396,47 @@ borsapy/yf     → gold_fetcher.py       ─┘
   (kurulumda tek seferlik `GECERSIZ FIYAT` raporu basilir).
 - Eksik `(sembol, tarih)` cifti yapisaldir (sembol borsaya sonradan girmis olabilir);
   uyari **sembol basina bir kez** verilir, toplam kapsam kurulumda ozetlenir.
-- Panelde ayrica **38 tamamen hayalet gun** var (piyasa kapali; OHLC = onceki kapanis,
-  volume = 0). Henuz filtrelenmiyor — bkz. asagidaki "bilinen acik".
+- **RL veri kapisi (Faz 10 / V, K17): `data/integrity.py::prepare_rl_panel`.** Egitim
+  rotasi ve HPO paneli buradan gecirir:
+  - pencere `RL_DATA_START = 2013-06-01` (`app/core/config.py`): panelde en gec baslayan
+    sembol ODAS (2013-05-21); 2000-2005 artefaktlari pencere disinda kalir
+  - pencere ICINDE fiyat artefakti varsa `DataIntegrityError` — sessizce temizlenmez
+  - hayalet gun (aktif satirlarin >= %90'i duz: volume=0 ve O=H=L=C) atilir; tek sembolun
+    duz satiri (bayat hucre) atilir, hucre EKSIK sayilir. "= onceki kapanis" sarti ARANMAZ:
+    yfinance kapali gunde duzeltilmis fiyati farkli yazabiliyor (2013-10-15 boyle kaciyordu)
+  - olcum (2026-11-06): tam panelde 251 hayalet gun, 235 artefakt satiri; pencerede
+    0 artefakt, 72 hayalet gun + 39 bayat hucre atiliyor, eksik hucre %0,076
+  - gosterge isinma `bfill`'i (ODAS/PGSUS CCI) ve ADX yalnizca RAPORLANIR (B7, K18 acik)
+- **Tarayici surekli yuksek ama sicramayan seviyeyi YAKALAMAZ** (TUPRS 2000-2003 > 10.000 TL
+  satirlari "level_jump" degil). Bu satirlar pencere disinda; pencereyi geri cekme.
+- **`TradingEnv(missing_data_mode=...)`**: `'legacy'` (varsayilan, egitilmis modeller) eksik
+  hucrede ONCEKI SEMBOLUN blogunu kopyalar ve fiyati 0 sayar — bilinen hata, bit-es dondurulmus.
+  `'own_last'` sembolu kendi son gozlemiyle tasir, degerlemeyi kendi son kapanisiyla yapar,
+  o hucrede islem yapmaz. Yeni egitim ve HPO `own_last` kullanir.
+  Test: `python tests/test_data_integrity.py` (27), `python tests/test_env_missing_mode.py` (17)
+- **ADX tum panelde 0** (sabit sutun) — Faz 10 K18, bu kapida duzeltilmedi;
+  `test_data_integrity.py` bunu bilinen acik olarak sabitler.
 
 ### Akademik gecerlilik ve literatur (ONEMLI) → `docs/thesis/CLAUDE.md`
 Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir). Kodda da gecerli olan cekirdek:
 - **"Leakage yok" DEME** — dogrulanmis sizinti kaynaklari var (`docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar").
-- **Faz 9 plani onay bekliyor** (`docs/development/phase-9-research-validity-plan.md`) — onaysiz kod degisikligi yok;
-  listedeki aciklari kullanici planlamadan kodda "duzeltmeye" girisme.
+- **Faz 9 ve Faz 10 planlari ONAYLANDI (2026-11-06)** —
+  `docs/development/phase-9-research-validity-plan.md`, `docs/development/phase-10-marl-plan.md`
+  (§8 hakem-2 eklemeleriyle). Kararlar: K1 varsayilani cevir + golden'i Milestone 0' ile bir kez
+  yenile; K17 RL penceresi 2013-06; K23 anahtar koddan kaldirildi (PR #3), yenilenmeyecek.
+  Is planin paket SIRASIYLA yapilir; planda olmayan bir duzeltmeye girisme, plana ekletip yap.
+  - **Ilk kapi (V + A + C) yapildi** — durum ve olcumler: Faz 9 planinda "Uygulama durumu".
+  - **Degerlendirme icin `evaluation/` paketini kullan**, `prediction/evaluator.py`'deki eski
+    DSR/DM degil (onlar yonlendirildi). DSR icin N ve V deneme kaydindan
+    (`evaluation/trial_registry.py`, `results_dir()/trial_registry.jsonl`) gelir — N=1'de DSR yok.
+  - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
+    ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
+    Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
+  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B9 / B7 / K18 kapanana kadar).
+  - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den; EVDS (B2/K2) duzelene kadar acik hata
+    verir — sabite dusurme. Eski 0,15 / 0,02 / 0 sabitleri bu kapida BILEREK baglanmadi.
+  - **RL tohumu**: `TrainingRequest.seed` (yoksa uretilir); meta + manifest + deneme kaydina yazilir.
+    Test: `python tests/test_eval_stats.py` (50), `python tests/test_rl_reproducibility.py` (39)
 - Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: `hakem-2` alt ajani.
 - Hook'lar (`.claude/settings.json` → `.claude/hooks/guard.py`): uretilen literatur dosyalarini
   elle duzenleme engellenir; tez metnine yeni "sizinti yok" iddiasi onay ister;
