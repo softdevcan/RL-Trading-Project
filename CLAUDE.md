@@ -386,6 +386,9 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
 - **Faz 9 plani onay bekliyor** (`docs/development/phase-9-research-validity-plan.md`) — onaysiz kod degisikligi yok;
   listedeki aciklari kullanici planlamadan kodda "duzeltmeye" girisme.
 - Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: `hakem-2` alt ajani.
+- Hook'lar (`.claude/settings.json` → `.claude/hooks/guard.py`): uretilen literatur dosyalarini
+  elle duzenleme engellenir; tez metnine yeni "sizinti yok" iddiasi onay ister;
+  `env/trading_env.py` degisince env bekci testleri otomatik kosar.
 
 ### Egitim suresi tahmini (ETA)
 - Servis: `app/services/training_eta.py` — `estimate()` (on tahmin), `live_eta()` (canli), `record_run()`
