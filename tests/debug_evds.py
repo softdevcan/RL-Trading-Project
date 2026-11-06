@@ -3,7 +3,10 @@ import requests
 import pandas as pd
 import json
 
-API_KEY = "tV4qq6RzPr"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_KEY = os.environ.get("EVDS_API_KEY", "")  # .env'den okunur; anahtari koda yazma
 SERIES_CODES = {
     'policy_rate': 'TP.YSSK.A01',
     'bist100_index': 'TP.HISSE.XUTUM',

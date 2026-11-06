@@ -68,7 +68,7 @@ def test_phase2_integration():
     # Use real fetcher
     try:
         # Use a valid API key (or the one in the file)
-        API_KEY = "tV4qq6RzPr"
+        API_KEY = None  # MacroDataFetcher .env'deki EVDS_API_KEY'i okur
         macro_fetcher = MacroDataFetcher(api_key=API_KEY, start_date="2023-01-01", end_date="2023-01-10")
         macro_df = macro_fetcher.fetch_macro_data(save=False)
         print("Macro data fetched successfully.")

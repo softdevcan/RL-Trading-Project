@@ -3,7 +3,10 @@ import yfinance as yf
 import requests
 import pandas as pd
 
-API_KEY = "tV4qq6RzPr"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_KEY = os.environ.get("EVDS_API_KEY", "")  # .env'den okunur; anahtari koda yazma
 
 def test_yfinance():
     print("\nTesting yfinance...")

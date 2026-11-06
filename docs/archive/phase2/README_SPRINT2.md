@@ -199,7 +199,7 @@ venv\Scripts\python.exe <script.py>
 ### TCMB API Key Error
 ```python
 # Set environment variable or use default
-TCMB_API_KEY = 'tV4qq6RzPr'
+TCMB_API_KEY = os.getenv('EVDS_API_KEY')  # .env'den; anahtari koda yazma
 ```
 
 ### VecEnv Type Errors

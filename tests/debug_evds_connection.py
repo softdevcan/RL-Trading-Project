@@ -2,7 +2,10 @@
 import requests
 import json
 
-API_KEY = "tV4qq6RzPr"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_KEY = os.environ.get("EVDS_API_KEY", "")  # .env'den okunur; anahtari koda yazma
 TEST_SERIES = "TP.DK.USD.A.YTL" # USD/TRY is usually open
 
 def test_connection_variations():
@@ -36,8 +39,8 @@ def test_connection_variations():
     except Exception as e: print(e)
 
     # 3. Check if key is empty or placeholder
-    if API_KEY == "tV4qq6RzPr":
-        print("\nNOTE: Using the API key found in the code. Is this a real key or a placeholder?")
+    if not API_KEY:
+        print("\nNOTE: EVDS_API_KEY .env dosyasinda tanimli degil.")
 
 if __name__ == "__main__":
     test_connection_variations()
