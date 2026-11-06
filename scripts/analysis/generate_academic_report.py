@@ -4,6 +4,13 @@ Compares all trained models with benchmarks and generates publication-ready visu
 """
 
 import json
+import os
+import sys
+
+# Belgelenen komut `python scripts/analysis/generate_academic_report.py`: depo
+# koku yolda degildi ve betik `app` importunda kiriliyordu.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -124,8 +131,35 @@ def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
         metrics
     )
 
-def main():
+# Faz 9 / B9 (hakem-2 B9 #10): bu rapor D5'te yeniden yazilana kadar GECERLI
+# tez/makale ciktisi uretmez. Varsayilan olarak DURUR; ciktisini
+# /analysis/best-models tukettigi icin sessizce calismasi yaniltici olurdu.
+REPORT_INVALID_REASONS = (
+    "Test bolmesi ham panelden (temizlenmemis, RL penceresi disi) alinir; rota "
+    "modellerinin egitim penceresiyle kesisir (hakem-2 olcumu: 18 gun; Faz 9 §9.6).",
+    "Ortam 'legacy' eksik hucre modunda kurulur; rota modelleri 'own_last' ile egitildi.",
+    "Modelin meta 'test_range'i kullanilmaz.",
+    "Risksiz faiz sabit 0,02 (evaluation/risk_free.py'ye bagli degil; D).",
+    "SELL islemlerinde trade['total'] KeyError (onceden var).",
+    "Meta'sinda price_stats olmayan eski modeller atlanir (B9/K13).",
+)
+
+
+def main(argv=None):
     """Main analysis workflow"""
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser(description="Akademik rapor (D5'e kadar gecersiz)")
+    ap.add_argument("--allow-invalid", action="store_true",
+                    help="Bilinen gecersizlik nedenlerine ragmen calistir (cikti tez sayisi DEGIL)")
+    args = ap.parse_args(argv)
+    if not args.allow_invalid:
+        print("Rapor durduruldu: D5'te yeniden yazilana kadar gecerli cikti uretmiyor.")
+        for reason in REPORT_INVALID_REASONS:
+            print(f"  - {reason}")
+        print("Yine de calistirmak icin: --allow-invalid (cikti tez sayisi degildir).")
+        sys.exit(2)
+
     print("=" * 80)
     print("🎓 ACADEMIC RESEARCH ANALYSIS - RL TRADING MODELS")
     print("=" * 80)
@@ -139,6 +173,7 @@ def main():
     if test_df is None:
         return
     price_stats_sources = {}
+    skipped_models = {}  # ayri dosyaya yazilir (detailed_results'a degil)
 
     print(f"✅ Test data loaded: {len(test_df)} samples")
 
@@ -200,6 +235,7 @@ def main():
             if price_stats is None:
                 print(f"⏭️  {model_name}: meta dosyasinda egitim olcegi (price_stats) yok — "
                       f"atlandi (B9/K13: olcek uydurulmaz; Y17)")
+                skipped_models[model_name] = 'no_price_stats_in_meta'
                 continue
             portfolio_values, returns, trades, base_metrics = evaluate_model_on_test_set(
                 model_path, test_df, price_stats=price_stats
@@ -257,6 +293,13 @@ def main():
         json.dump(results_json, f, indent=2)
 
     print(f"\n💾 Detailed results saved to: {json_path}")
+    # Atlanan modeller ayri dosyada: detailed_results.json'un her ust duzey
+    # anahtari /analysis/best-models icin bir modeldir (hakem-2 B9 #10).
+    skipped_path = analyzer.results_dir / "data" / "report_skipped_models.json"
+    with open(skipped_path, 'w', encoding='utf-8') as f:
+        json.dump({"skipped": skipped_models, "invalid_reasons": list(REPORT_INVALID_REASONS)},
+                  f, indent=2, ensure_ascii=False)
+    print(f"⏭️  Atlanan modeller: {len(skipped_models)} -> {skipped_path}")
 
     # Print best model summary
     print("\n" + "=" * 80)

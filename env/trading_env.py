@@ -194,6 +194,10 @@ class TradingEnv(gym.Env):
         # price_stats_source: 'own_window' (bu df'ten, eski davranis) |
         #                     'supplied' (disaridan verildi; B9)
         self.price_stats: Dict[str, Dict[str, float]] = {}
+        # Olcegi yedege dusen semboller {sembol: neden} (hakem-2 B9 #12). Yalnizca
+        # KAYIT — degerler degismez (davranis dondurma). Bu ortamin olcegini alan
+        # degerlendirme kaydi bu sembollerde 'train_window_fallback' (acik) olur.
+        self.price_stats_fallbacks: Dict[str, str] = {}
         if price_stats is None:
             self.price_stats_source = 'own_window'
             self._compute_price_stats()
@@ -244,8 +248,13 @@ class TradingEnv(gym.Env):
                     'mean': mean,
                     'std': std if std > 1e-8 else 1.0
                 }
+                if not np.isfinite(mean):
+                    self.price_stats_fallbacks[symbol] = 'nonfinite_mean'
+                elif not std > 1e-8:
+                    self.price_stats_fallbacks[symbol] = 'std_floor_1.0'
             except Exception:
                 self.price_stats[symbol] = {'mean': 50.0, 'std': 50.0}
+                self.price_stats_fallbacks[symbol] = 'default_50_50'
 
     def get_price_stats(self) -> Dict[str, Dict[str, float]]:
         """Return price normalization stats (save these for inference).

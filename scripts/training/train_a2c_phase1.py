@@ -74,11 +74,12 @@ def prepare_data():
     return train_df, val_df, test_df
 
 
-def create_env(df: pd.DataFrame, price_stats=None):
+def create_env(df: pd.DataFrame, *, price_stats):
     """Ortam olustur.
 
-    price_stats: Faz 9 / B9 — degerlendirme ortami icin EGITIM ortaminin
-        olcegi; None = bu df'ten (egitim ortami icin dogru tanim).
+    price_stats: Faz 9 / B9 — ZORUNLU anahtar (hakem-2 B9 #6). Degerlendirme
+        ortami icin EGITIM ortaminin olcegi; egitim ortami icin acikca None
+        (olcek bu df'ten — egitimde dogru tanim).
     """
     env = make_env(
         df=df,
@@ -114,7 +115,7 @@ def train_a2c(
     logger.info("="*60)
 
     # Environment oluştur
-    env = create_env(train_df)
+    env = create_env(train_df, price_stats=None)  # egitim: kendi penceresi
 
     # A2C model with trading-optimized hyperparameters
     # Based on quant research: A2C needs LOWER entropy than PPO

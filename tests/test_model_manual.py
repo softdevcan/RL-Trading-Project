@@ -20,14 +20,14 @@ print(f"\nTest set: {len(test_df)} rows")
 
 model_path = "models/sac_phase1_20251112_233832.zip"
 
-# Faz 9 / B9 (Faz 10 Y13): test ortami EGITIM penceresinin fiyat olcegiyle —
-# once modelin meta dosyasi; eski modelde yoksa bu betigin egitim bolumu
-# (yaklasik: modelin gercek egitim penceresi kurulamiyor, Y17).
+# Faz 9 / B9 (Faz 10 Y13): test ortami modelin EGITIM olcegiyle (meta dosyasi).
+# Meta'sinda olcek olmayan eski model icin olcek UYDURULMAZ (K13; Y17: egitim
+# penceresi kurulamiyor) — akademik raporla ayni ilke (hakem-2 B9 #7).
 from app.services.daily_trading import read_model_meta
 price_stats = (read_model_meta(model_path) or {}).get('price_stats')
 if price_stats is None:
-    print("UYARI: meta dosyasinda price_stats yok; egitim bolumunun olcegi kullaniliyor (Y17)")
-    price_stats = make_env(df=train_df).get_price_stats()
+    raise SystemExit("Meta dosyasinda price_stats yok: egitim olcegi uydurulmaz (B9/K13, Y17). "
+                     "Bu modeli olcmek icin egitim rotasiyla yeniden egitin.")
 
 
 # Create test environment

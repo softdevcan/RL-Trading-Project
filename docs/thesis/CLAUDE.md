@@ -17,9 +17,11 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
   kodda dogrulanmis sizinti kaynaklari var. ACIK: statik temel oranlar (opt-in), seri
   butunune ICEEMDAN + hedef filtrelenmis fiyattan (opt-in), gosterge isinma bfill'i (Y15),
   CV'de ozellik secimi (Y16), TATS etiketleri (Y20), dagitimda meta-ogrenici yeniden
-  uyumu (K19). RL test olcegi (Y13) KAPANDI (2026-11-06, Faz 9 §9.5, B9): val/test ortami
-  egitim penceresinin olcegini kullaniyor; bedeli eski ortamda test fiyat ozelliklerinin
-  %74,7'sinin kirpilmasi. KAPANDI (2026-11-06, Faz 9 §9.3–9.4): makro ve
+  uyumu (K19). RL test olcegi (Y13) KAPANDI (2026-11-06, Faz 9 §9.5–9.6, B9) — yalniz bu
+  tarihten sonraki kosumlar icin: val/test ortami egitim penceresinin olcegini kullaniyor.
+  Sizintinin metrige etkisi TANIMLANAMADI ("eski sonuclar sisirilmemis" DENEMEZ); bedeli eski
+  ortamda test fiyat degerlerinin %98,9'unun egitim destegi disinda kalmasi (K25). KAPANDI
+  (2026-11-06, Faz 9 §9.3–9.4): makro ve
   capraz varlik `bfill`'i (B1) ve TUFE/UFE aciklanma gecikmesi (B3, olay zamanli —
   vintage DEGIL; BIS faizi ~5 hafta gecikmeli). Yalnizca bu tarihten SONRA uretilen
   makro dosyasi icin; onceki tum makro (sabit 50 / 0, bfill'li) sinirlilik. ACIK:
@@ -40,8 +42,8 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
 - **RL sonuclari henuz tez sayisi degil.** Bu kapidan ONCE uretilenler 2000–2018 penceresi,
   komsu sembol kopyasi ve tohumsuz egitimle; SONRA uretilenler de test olcegi test penceresinden
   (Y13/B9 — 2026-11-06'da kapandi, §9.5), gosterge bfill (Y15/B7) ve ADX = 0 (K18) ile uretildi.
-  B9 sonrasi eski ortamda test fiyat ozellikleri buyuk olcude doygun; HPO gostergesiz ortamda
-  ayar ariyor (Y21). Hepsi yalnizca "on sonuc / sinirlilik" olarak anilabilir (Faz 9 §9.2 #1).
+  B9 sonrasi eski ortamda test fiyat ozellikleri egitim destegi disinda (`price_in_support`
+  acik; K18 bunu degistirmiyor, karar K25); HPO gostergesiz ortamda ayar ariyor (Y21). Hepsi yalnizca "on sonuc / sinirlilik" olarak anilabilir (Faz 9 §9.2 #1).
   Deneme kaydinda `protocol_open` etiketlidirler.
   Tam metinler `docs/reference/papers/` (PDF'ler git disi, icindekiler README.md).
 - **TATS ozgun degil:** Kazemdehbashi (2026, arXiv 2601.12706). Akademik metinde atif

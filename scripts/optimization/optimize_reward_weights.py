@@ -113,12 +113,12 @@ def load_phase2_data():
     return train_df, val_df, test_df, fundamental_df, macro_df
 
 
-def create_env_with_weights(df, fundamental_df, macro_df, weights: dict, price_stats=None):
+def create_env_with_weights(df, fundamental_df, macro_df, weights: dict, *, price_stats):
     """
     Create trading environment with specific PSR weights
 
-    price_stats: Faz 9 / B9 — dogrulama ortami icin EGITIM ortaminin olcegi;
-        None = bu df'ten (egitim ortami icin dogru tanim).
+    price_stats: Faz 9 / B9 — ZORUNLU anahtar (hakem-2 B9 #6). Dogrulama ortami
+        icin EGITIM ortaminin olcegi; egitim ortami icin acikca None.
     """
     def _init():
         return make_env(
@@ -166,7 +166,8 @@ def objective(trial: optuna.Trial, train_df, val_df, fundamental_df, macro_df):
 
     try:
         # Create environment with these weights
-        env = create_env_with_weights(train_df, fundamental_df, macro_df, weights)
+        env = create_env_with_weights(train_df, fundamental_df, macro_df, weights,
+                                      price_stats=None)  # egitim: kendi penceresi
 
         # Quick training (10k steps for fast iteration)
         model = PPO(

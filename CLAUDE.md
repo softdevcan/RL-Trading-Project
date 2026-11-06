@@ -168,8 +168,9 @@ python tests/test_rl_reproducibility.py    # Faz 9/C: tohum, deneme kaydi, veri
                                            #          anlik goruntusu, manifest (39)
 python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim olcegi;
                                            #          env + rota + HPO uctan uca, mutasyon,
-                                           #          main ile bit-es varsayilan, AST bekcisi,
-                                           #          sarmalayicili betikler (65)
+                                           #          main ile bit-es varsayilan (git show, 11
+                                           #          yapilandirma), olcek kokeni, destek, AST
+                                           #          bekcisi, sarmalayicili betikler (103)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -447,16 +448,27 @@ borsapy/yf     → gold_fetcher.py       ─┘
   `price_stats=<egitim env>.get_price_stats()` (ya da modelin meta `price_stats`'i) VER;
   vermezsen t gozlemi t sonrasi fiyatlara baglanir. Eksik sembol / bozuk deger `ValueError`
   (sessiz yedek yok). Meta'sinda olcek olmayan eski model icin olcek UYDURMA (K13).
-  - Protokol etiketi beyan degil olcum: `evaluation.trial_registry.rl_eval_protocol` (rota + HPO
-    ortak). Sabit `'train_window'` YAZMA — olcek gecirilmezse kayit kendiliginden acik kalmali.
-  - Bedeli: eski ortamda TL fiyatlari egitim olceginin cok ustunde -> test fiyat ozelliklerinin
-    %74,7'si +-10'da kirpiliyor (Faz 9 §9.5). Rota her kosumda `observation_health` yazar; K18
-    olcekten bagimsiz ozellik seti.
-  - AST bekcisi held-out adli df (`test_df`, `val_df`, `data['test']`...) ile kurulan
-    `make_env`/`TradingEnv` cagrisinda `price_stats` arar; bilerek eski olcekle olcum yapan
-    satira `# B9-legacy` yaz. Test: `python tests/test_price_stats_window.py`
+  - Protokol beyan degil olcum: `evaluation.trial_registry.rl_eval_protocol(eval_env, TRAIN_ENV)`
+    (rota + HPO ortak). Olcek SOZLUGUNU degil egitim ORTAMINI ver: etiket olcegin kokenini
+    olcer (egitim env'i kendi penceresinden mi, pencere degerlendirmeden once mi bitiyor,
+    degerler esit mi). Sabit `'train_window'` YAZMA.
+  - Bedeli: eski ortamda TL fiyatlari egitim olceginin cok ustunde -> test fiyat degerlerinin
+    %74,7'si +-10'da kirpik, %98,9'u egitim destegi disinda (Faz 9 §9.5). `price_in_support`
+    protokol maddesi bunu makine tarafindan uygular: B7/K18 kapansa da eski ortam kaydi ACIK
+    kalir (K18 eski ortamin olcegini degistirmiyor; destek ici olcek karari K25).
+    Olcum `evaluation/observation_health.py`; rota manifest/kayit/`_metrics.json`'a yazar.
+  - Sarmalayicilarda (`create_env`, `create_env_with_weights`, HPO `create_env`) `price_stats`
+    ZORUNLU anahtar; egitim cagrisi `price_stats=None`'i acikca yazar.
+  - AST bekcisi held-out adli df (`test_df`, `splits.test`, `data['test']`, `df.loc[test_mask]`)
+    ile kurulan env cagrisinda (`make_env`, `TradingEnv`, adinda "env" gecen sarmalayicilar)
+    `price_stats` arar ve `None` sabitini reddeder; bilerek eski olcekle olcum yapan satira
+    `# B9-legacy` yaz. Test: `python tests/test_price_stats_window.py`
   - **HPO ham OHLCV okuyor** (`raw_stock_data.csv`, gosterge yok -> 5/10 ozellik sabit
-    varsayilan; Faz 9 §9.5 Y21). Kayit `indicators_present=False` ile acik; duzeltme R1.
+    varsayilan; varsayilan evren 5 sembol; Faz 9 §9.5 Y21). Kayit `indicators_present=False`
+    ile acik; HPO hiperparametresiyle kosan rota kaydi `hyperparams_clean` ile acik. Duzeltme R1.
+  - `scripts/analysis/generate_academic_report.py` D5'e kadar DURUR (cikis 2; `--allow-invalid`).
+  - Olcum betigi: `scripts/analysis/measure_price_scale.py`; JSON'lar
+    `docs/development/measurements/phase9-b9/` (panel SHA-256 + commit iceriyor).
   - Testte CPU'ya zorlamak icin `CUDA_VISIBLE_DEVICES=-1`: Windows'ta bos dize degiskeni SILER.
 - **ADX tum panelde 0** (sabit sutun) — Faz 10 K18, bu kapida duzeltilmedi;
   `test_data_integrity.py` bunu bilinen acik olarak sabitler.
@@ -476,8 +488,9 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
-  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B7 / K18 kapanana kadar). B9 kapandi
-    (§9.5), ama eski ortamda fiyat ozellikleri doygun ve HPO gostergesiz (Y21, R1).
+  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B7 / K18 kapanana kadar; eski ortamda
+    `price_in_support` acik kaldikca SONRA da). B9 kapandi (§9.5) ama metrige etkisi
+    tanimlanamadi; eski ortamda fiyat ozellikleri destek disi; HPO gostergesiz (Y21, R1).
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
     `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).

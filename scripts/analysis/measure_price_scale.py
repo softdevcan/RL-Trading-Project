@@ -117,10 +117,24 @@ def model_for(algo, env, seed):
     raise ValueError(f"desteklenmeyen algoritma: {algo}")
 
 
-def evaluate(model, env):
+def sharpe(r, rf=None):
+    """Yillik Sharpe, env'in get_metrics tanimiyla ayni (ddof=0, sqrt(252)).
+
+    rf verilirse FAZLA getiri Sharpe'i (hakem-2 B9 #11): kollarin sigmasi
+    farkli oldugu icin rf=0 Sharpe farki rf'den bagimsiz degildir.
+    """
+    r = np.asarray(r, dtype=float)
+    if rf is not None:
+        r = r - np.asarray(rf, dtype=float)
+    ok = np.isfinite(r)
+    return float(np.mean(r[ok]) / (np.std(r[ok]) + 1e-9) * np.sqrt(252)) if ok.sum() > 1 else None
+
+
+def evaluate(model, env, rf_by_date):
     obs, _ = env.reset()
     n = env.n_stocks
     clipped = total = p_clip = p_total = 0
+    seen = []
     done = False
     while True:
         clipped += int(np.sum(np.abs(obs) >= 10.0))
@@ -130,38 +144,71 @@ def evaluate(model, env):
         p_total += blk.size
         if done:
             break
+        seen.append(obs)
         action, _ = model.predict(obs, deterministic=True)
         obs, _, term, trunc, _ = env.step(action)
         done = term or trunc
     m = env.get_metrics()
+    pv = np.asarray(env.portfolio_values, dtype=float)
+    r = pv[1:] / pv[:-1] - 1.0
+    s0 = env.frame_bound[0]
+    dates = env._dates_list[s0 + 1: s0 + 1 + len(r)]
+    rf = rf_by_date.reindex(pd.DatetimeIndex(dates)).to_numpy()
     return {"cumulative_return": float(m["cumulative_return"]), "sharpe_ratio": float(m["sharpe_ratio"]),
+            "excess_sharpe": sharpe(r, rf),
             "max_drawdown": float(m["max_drawdown"]), "total_trades": int(m["total_trades"]),
-            "obs_clip_frac": clipped / total, "price_clip_frac": p_clip / p_total}
+            "obs_clip_frac": clipped / total, "price_clip_frac": p_clip / p_total,
+            "returns": [float(x) for x in r]}, seen
+
+
+def t_ci(x, level=0.95):
+    from scipy import stats
+    x = np.asarray(x, dtype=float)
+    if len(x) < 2:
+        return None
+    h = stats.t.ppf(0.5 + level / 2, len(x) - 1) * x.std(ddof=1) / np.sqrt(len(x))
+    return [float(x.mean() - h), float(x.mean() + h)]
 
 
 def effect(train_df, test_df, algos, seeds, steps, log):
-    from scipy import stats
     from stable_baselines3.common.vec_env import DummyVecEnv
 
     from env.trading_env import make_env
+    from evaluation.observation_health import observation_health
+    from evaluation.risk_free import risk_free_series
 
-    rows = []
+    test_dates = pd.DatetimeIndex(sorted(test_df.index.get_level_values("date").unique()))
+    rf_by_date = risk_free_series(test_dates)  # ilk seans NaN (onceki oran yok)
+
+    rows, health = [], {}
     for algo in algos:
         for seed in seeds:
             t0 = time.time()
             venv = DummyVecEnv([lambda: make_env(df=train_df, **KW)])
             model = model_for(algo, venv, seed)
             model.learn(total_timesteps=steps)
-            train_stats = venv.envs[0].get_price_stats()
-            own = evaluate(model, make_env(df=test_df, **KW))  # B9-legacy: olcum, eski davranis
-            b9 = evaluate(model, make_env(df=test_df, price_stats=train_stats, **KW))
+            train_env = venv.envs[0]
+            train_stats = train_env.get_price_stats()
+            env_own = make_env(df=test_df, **KW)  # B9-legacy: olcum, eski davranis
+            env_b9 = make_env(df=test_df, price_stats=train_stats, **KW)
+            own, seen_own = evaluate(model, env_own, rf_by_date)
+            b9, seen_b9 = evaluate(model, env_b9, rf_by_date)
+            if not health:  # piyasa bloklari politikadan bagimsiz: bir kez yeter
+                health = {"own_window": observation_health(train_env, env_own),
+                          "train_window": observation_health(train_env, env_b9)}
+            for arm, seen in (("own_window", seen_own), ("train_window", seen_b9)):
+                s = np.asarray(seen, dtype=np.float32)
+                (own if arm == "own_window" else b9)["position_clip_frac"] = float(
+                    np.mean(np.abs(s[:, 1:1 + env_b9.n_stocks]) >= 10.0))
             row = {"algo": algo, "seed": seed, "steps": steps, "own_window": own, "train_window": b9,
                    "seconds": round(time.time() - t0, 1)}
             rows.append(row)
-            log(json.dumps(row))
+            log(json.dumps({k: (v if k not in ("own_window", "train_window") else
+                                {kk: vv for kk, vv in v.items() if kk != "returns"})
+                            for k, v in row.items()}))
     summary = {}
-    keys = ("cumulative_return", "sharpe_ratio", "max_drawdown", "total_trades",
-            "price_clip_frac", "obs_clip_frac")
+    keys = ("cumulative_return", "sharpe_ratio", "excess_sharpe", "max_drawdown", "total_trades",
+            "price_clip_frac", "obs_clip_frac", "position_clip_frac")
     for algo in list(algos) + ["pooled"]:
         sel = rows if algo == "pooled" else [r for r in rows if r["algo"] == algo]
         if not sel:
@@ -175,15 +222,22 @@ def effect(train_df, test_df, algos, seeds, steps, log):
                    "diff_mean": float(dlt.mean()), "diffs": [float(x) for x in dlt]}
             if len(sel) > 1:
                 ent.update(own_sd=float(o.std(ddof=1)), train_sd=float(t.std(ddof=1)),
-                           diff_sd=float(dlt.std(ddof=1)))
-                if dlt.std(ddof=1) > 0:
-                    ent["paired_t_p"] = float(stats.ttest_1samp(dlt, 0.0).pvalue)
+                           diff_sd=float(dlt.std(ddof=1)), diff_ci95=t_ci(dlt))
             out[k] = ent
         summary[algo] = out
+    # Baglam: komisyonsuz esit agirlikli al-tut ve risksiz birikim (ayni seanslar)
     close = test_df["close"].unstack("symbol").sort_index()
-    ew = float((close.iloc[-1] / close.iloc[0]).mean() - 1.0)
-    return {"rows": rows, "summary": summary,
-            "context_equal_weight_buy_hold_return_no_cost": ew}
+    ew_value = (close / close.iloc[0]).mean(axis=1)
+    ew_r = (ew_value.iloc[1:].to_numpy() / ew_value.iloc[:-1].to_numpy()) - 1.0
+    rf_r = rf_by_date.reindex(close.index[1:]).to_numpy()
+    context = {
+        "equal_weight_buy_hold_return_no_cost": float(ew_value.iloc[-1] - 1.0),
+        "equal_weight_buy_hold_sharpe": sharpe(ew_r),
+        "equal_weight_buy_hold_excess_sharpe": sharpe(ew_r, rf_r),
+        "risk_free_accumulation": float(np.nanprod(1.0 + rf_r) - 1.0),
+        "risk_free_source": "evaluation.risk_free (funding_rate, TP.APIFON4; t-1 orani)",
+    }
+    return {"rows": rows, "summary": summary, "observation_health": health, "context": context}
 
 
 def main():
@@ -196,7 +250,17 @@ def main():
     args = ap.parse_args()
 
     panel, train_df, val_df, test_df = load_windows()
+    from evaluation.reproducibility import frame_sha256
+    try:
+        import subprocess
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
+                                text=True, timeout=10).stdout.strip() or None
+    except Exception:
+        commit = None
+    # Iz (hakem-2 B9 #13): panel tazelenince sayilarin kaynagi kanitlanabilsin
     result = {"created_at": datetime.now().isoformat(timespec="seconds"), "mode": args.mode,
+              "command": "python scripts/analysis/measure_price_scale.py " + " ".join(sys.argv[1:]),
+              "git_commit": commit, "panel_sha256": frame_sha256(panel),
               "panel": span(panel), "train": span(train_df), "val": span(val_df), "test": span(test_df),
               "n_symbols": int(train_df.index.get_level_values("symbol").nunique())}
     print(json.dumps({k: result[k] for k in ("panel", "train", "val", "test", "n_symbols")}))
@@ -206,13 +270,27 @@ def main():
         result["test_saturation"] = saturation(train_df, test_df)
         for w in ("val", "test"):
             print(w, json.dumps(result[f"{w}_saturation"]))
+        # Gozlem sagligi (env'in kendi gozlem fonksiyonuyla; politikadan bagimsiz):
+        # blok basina kirpma / sabit boyut ve egitim destegi disi oran
+        from env.trading_env import make_env
+        from evaluation.observation_health import observation_health
+        tr_env = make_env(df=train_df, **KW)
+        st = tr_env.get_price_stats()
+        result["health_train_scale"] = {
+            w: observation_health(tr_env, make_env(df=f, price_stats=st, **KW))
+            for w, f in (("val", val_df), ("test", test_df))}
+        result["health_own_scale"] = {
+            w: observation_health(tr_env, make_env(df=f, **KW))  # B9-legacy: olcum, eski davranis
+            for w, f in (("val", val_df), ("test", test_df))}
+        for w in ("val", "test"):
+            print(w, "destek disi (egitim olcegi):",
+                  json.dumps(result["health_train_scale"][w]["eval_out_of_train_support"]))
     else:
         result["effect"] = effect(train_df, test_df, args.algos.split(","),
                                   [int(s) for s in args.seeds.split(",")], args.steps,
                                   lambda line: print(line, flush=True))
         print(json.dumps(result["effect"]["summary"], indent=1))
-        print("baglam (komisyonsuz esit agirlikli al-tut):",
-              result["effect"]["context_equal_weight_buy_hold_return_no_cost"])
+        print("baglam:", json.dumps(result["effect"]["context"]))
 
     out = args.out
     if out is None:

@@ -51,15 +51,14 @@ def debug_model_actions(model_name: str):
 
     print(f"✅ Model loaded: {type(model).__name__}")
 
-    # Create environment. Faz 9 / B9 (Faz 10 Y13): test ortami EGITIM
-    # penceresinin fiyat olcegiyle — once modelin meta dosyasi, yoksa
-    # pickle'daki egitim bolumu. Ikisi de yoksa eski davranis (uyarili).
+    # Create environment. Faz 9 / B9 (Faz 10 Y13): test ortami modelin EGITIM
+    # olcegiyle (meta dosyasi). Meta'sinda olcek olmayan eski model icin olcek
+    # UYDURULMAZ (K13; hakem-2 B9 #7) — akademik raporla ayni ilke.
     from app.services.daily_trading import read_model_meta
     price_stats = (read_model_meta(model_path) or {}).get('price_stats')
-    if price_stats is None and data.get('train') is not None:
-        price_stats = make_env(data['train']).get_price_stats()
     if price_stats is None:
-        print("⚠️  Egitim olcegi yok: test penceresinin kendi istatistigi kullaniliyor (Y13)")
+        print("❌ Meta dosyasinda price_stats yok: egitim olcegi uydurulmaz (B9/K13, Y17)")
+        return
     env = make_env(test_df, initial_balance=1_000_000, max_shares_per_trade=100,
                    price_stats=price_stats)
 

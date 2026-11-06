@@ -1085,20 +1085,30 @@ def _audit_shared_model_delete(user, model_name: str) -> None:
         logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
-def _rl_protocol(eval_env, train_price_stats: Optional[Dict[str, Dict[str, float]]]) -> Dict[str, Any]:
-    """RL test degerlendirmesinin protokol maddeleri (deneme kaydi + manifest).
+def _rl_protocol(eval_env, train_env, health: Optional[Dict[str, Any]],
+                 hyperparams_source: Dict[str, Any]) -> Dict[str, Any]:
+    """RL test degerlendirmesinin protokol maddeleri (deneme kaydi + manifest + metrik).
 
     Acik bir madde varsa kayit 'protocol_open' etiketi alir. Hesap HPO ile
     ortak (`evaluation.trial_registry.rl_eval_protocol`):
-      price_stats_source: test ortaminin GERCEKTEN kullandigi olcek egitim
-          olcegiyle birebir ayniysa 'train_window' (B9, temiz); kendi
-          penceresinden hesapladiysa 'own_window' (Y13, acik)
+      price_stats_source: test olceginin KOKENI — egitim ortaminin kendi
+          penceresi, o pencere testten once bitiyor, degerler birebir ayni
+          ise 'train_window' (B9, temiz)
+      price_in_support: test fiyat ozellikleri egitim destegi icinde mi
+          (B9'un eski ortamdaki bedeli; olculur, evaluation.observation_health)
       indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7) — acik
-      adx_constant: ADX sabit (K18) — test ortaminin verisinden olculur
-      indicators_present: gosterge sutunlari veride mi — olculur
+      adx_constant / indicators_present: test ortaminin verisinden olculur
+      hyperparams_clean: hiperparametreler acik ya da bulunamayan bir HPO
+          kaydindan mi geliyor (hakem-2 B9 #8)
+    Bilgi alanlari (temizligi etkilemez): hyperparams_source,
+    hyperparams_open_items.
     """
     from evaluation.trial_registry import rl_eval_protocol
-    return rl_eval_protocol(eval_env, train_price_stats, indicator_bfill=True)
+    protocol = rl_eval_protocol(eval_env, train_env, indicator_bfill=True, health=health,
+                                hyperparams_clean=hyperparams_source.get('clean'))
+    protocol['hyperparams_source'] = hyperparams_source.get('source')
+    protocol['hyperparams_open_items'] = hyperparams_source.get('open_items', [])
+    return protocol
 
 
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
@@ -1285,6 +1295,10 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
 
         # Load hyperparameters if study is specified
         hyperparams = {}
+        # Hiperparametre kokeni deneme kaydina girer (hakem-2 B9 #8): HPO
+        # hiperparametreleri baska bir gozlem fonksiyonunda secildi (Y21); o
+        # calismanin kayitlari aciksa bu kosumun kaydi da acik kalir.
+        hyperparams_source: Dict[str, Any] = {'source': 'default', 'clean': True, 'open_items': []}
         if request.hyperparameter_study:
             study_path = os.path.join(ws.hyperopt_dir(), request.hyperparameter_study)
             if os.path.exists(study_path):
@@ -1293,8 +1307,15 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     hyperparams = study_data.get("best_params", {})
                     logger.info(f"Loaded hyperparameters from {request.hyperparameter_study}")
                     logger.info(f"Best params: {hyperparams}")
+                from evaluation.trial_registry import hpo_study_protocol
+                study_name = study_data.get('study_name')
+                clean, open_items = hpo_study_protocol(study_name)
+                hyperparams_source = {'source': f"hpo:{study_name or request.hyperparameter_study}",
+                                      'clean': clean, 'open_items': open_items}
             else:
                 logger.warning(f"Hyperparameter study file not found: {study_path}")
+                hyperparams_source = {'source': 'default (istenen calisma bulunamadi)',
+                                      'clean': True, 'open_items': []}
 
         # Algorithm-specific hyperparameters optimized for trading
         # Each algorithm has its own optimal learning rate
@@ -1494,6 +1515,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "missing_data_mode": "own_last",
             "data_snapshot": data_snapshot,
             "price_stats": temp_env.get_price_stats(),
+            # olcegi yedege dusen semboller (std tabani / 50-50; hakem-2 B9 #12)
+            "price_stats_fallbacks": dict(temp_env.price_stats_fallbacks),
+            "hyperparams_source": hyperparams_source.get('source'),
             "run_id": rl_manifest.run_id,
         })
 
@@ -1524,9 +1548,6 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
         from env.trading_env import TradingEnv
         actual_env: TradingEnv = make_test_env()
-        # Protokol test ortaminin GERCEKTEN kullandigi olcekten olculur
-        rl_protocol = _rl_protocol(actual_env, train_price_stats)
-        rl_manifest.extra['protocol'] = rl_protocol
 
         obs, _ = actual_env.reset()
         done = False
@@ -1543,26 +1564,26 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
 
         logger.info(f"Test evaluation: {test_step} steps completed")
 
-        # B9'un bedeli her kosumda OLCULUR ve kayda girer (Faz 9 §9.5; K18
-        # gozlem sagligi olcutunun ilk parcasi): modelin gordugu test
-        # gozlemlerinde +-10 sinirinda kirpilan deger orani — tum vektor ve
-        # yalnizca fiyat ozellikleri (sembol basina ilk 4: O/H/L/C z-skoru).
-        seen = np.asarray(seen_obs, dtype=np.float32)
-        n_s, fps = actual_env.n_stocks, actual_env.features_per_stock
-        px = seen[:, 1 + n_s: 1 + n_s + n_s * fps].reshape(len(seen), n_s, fps)[:, :, :4]
-        observation_health = {
-            'test_obs_clip_frac': float(np.mean(np.abs(seen) >= 10.0)),
-            'test_price_clip_frac': float(np.mean(np.abs(px) >= 10.0)),
-            'n_obs': int(len(seen)),
-        }
+        # B9'un bedeli her kosumda OLCULUR ve protokole girer (hakem-2 B9 #1,
+        # #9; K18 gozlem sagligi olcutunun ilk parcasi). Piyasa bloklari
+        # politikadan bagimsiz, egitim ve test penceresinde ayri olculur
+        # (kirpilan, sabit boyut, egitim destegi disi oran); pozisyon blogu
+        # modelin gordugu test gozlemlerinden.
+        from evaluation.observation_health import observation_health as _obs_health
+        from evaluation.trial_registry import open_protocol_items
+        observation_health = _obs_health(temp_env, actual_env, seen_obs=seen_obs)
+        # Protokol test ortaminin GERCEKTEN kullandigi olcegin kokeninden olculur
+        rl_protocol = _rl_protocol(actual_env, temp_env, observation_health, hyperparams_source)
+        rl_manifest.extra['protocol'] = rl_protocol
         rl_manifest.extra['observation_health'] = observation_health
-        if observation_health['test_price_clip_frac'] >= 0.10:
+        if rl_protocol.get('price_in_support') is False:
+            oos = observation_health['eval_out_of_train_support']['price']
+            clip = observation_health['eval']['price']['clip_frac']
             training_state.setdefault("warnings", []).append(
-                f"Test penceresinde fiyat ozelliklerinin "
-                f"%{observation_health['test_price_clip_frac'] * 100:.0f}'i +-10 sinirinda "
-                f"kirpildi: test fiyatlari egitim penceresinin olceginin cok ustunde "
-                f"(B9 bedeli; olcekten bagimsiz ozellikler K18'de). Test metrikleri bu "
-                f"doygun gozlemle uretildi.")
+                f"Test fiyat ozelliklerinin %{oos * 100:.0f}'i egitim penceresinin "
+                f"destegi disinda (%{clip * 100:.0f}'i +-10'da kirpik): model egitimde "
+                f"gormedigi girdilerle karar verdi. Bu kosumun test metrikleri tez "
+                f"sayisi degildir (deneme kaydinda acik: price_in_support; Faz 9 §9.5).")
 
         metrics = actual_env.get_metrics()
 
@@ -1668,7 +1689,12 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "training_time_minutes": total_training_time / 60,
             "training_time_hours": total_training_time / 3600,
             "trades": trades_data,
-            "portfolio_history": portfolio_history
+            "portfolio_history": portfolio_history,
+            # Metrik dosyasi da protokolu ve gozlem sagligini tasir (hakem-2 B9
+            # #9): pano ya da rapor bu sayilari acik protokolden habersiz okumasin.
+            "protocol": rl_protocol,
+            "protocol_open": open_protocol_items(rl_protocol),
+            "observation_health": observation_health,
         }
 
         with open(metrics_file, 'w') as f:
