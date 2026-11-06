@@ -22,6 +22,7 @@ Calistirma:
     python tests/test_eval_stats.py
 """
 
+import json
 import logging
 import os
 import sys
@@ -295,16 +296,28 @@ check("hepsi reddediliyor (alpha=0,05)", all(v["reject"] for v in bh.values()))
 print("\nA8 — Tek kaynak risksiz faiz")
 from evaluation.risk_free import RiskFreeUnavailable, per_period_rate, risk_free_series  # noqa: E402
 
-real_csv = os.path.join("data", "macro", "macro_data.csv")
-if os.path.exists(real_csv):
+with tempfile.TemporaryDirectory() as tmp:
+    # Yedek degerle yazilmis makro dosyasi (B2 oncesi gercek durum) -> acik hata
+    p = os.path.join(tmp, "macro_data.csv")
+    pd.DataFrame({"policy_rate": [50.0] * 3},
+                 index=pd.bdate_range("2020-01-01", periods=3)).to_csv(p)
+    json.dump({"data_quality": {"policy_rate": "fallback_constant_50.0"}},
+              open(os.path.join(tmp, "macro_data_quality.json"), "w"))
     try:
-        risk_free_series(pd.bdate_range("2020-01-01", periods=5))
-        check("bugunku makro veri (yedek degerli) -> acik hata", False, "hata yukselmedi")
-    except RiskFreeUnavailable as exc:
-        check("bugunku makro veri (yedek degerli) -> acik hata", True)
-        print(f"    mesaj: {str(exc)[:110]}...")
+        risk_free_series(pd.bdate_range("2020-01-02", periods=2), csv_path=p, column="policy_rate")
+        check("yedek degerli seri -> acik hata (sabite dusulmez)", False, "hata yukselmedi")
+    except RiskFreeUnavailable:
+        check("yedek degerli seri -> acik hata (sabite dusulmez)", True)
+
+real_rf = os.path.join("data", "macro", "risk_free.csv")
+if os.path.exists(real_rf):
+    rs = risk_free_series(pd.bdate_range("2013-06-03", "2026-07-27"))
+    ann = (1 + rs.dropna()) ** 365 - 1     # kaba yilliklandirma, yalnizca makul aralik kontrolu
+    print(f"    gercek seri (TP.APIFON4): {rs.notna().sum()} seans, donem basi ort. {rs.mean():.2e}")
+    check("gercek risksiz faiz serisi RL penceresini kapsiyor ve sonlu",
+          rs.iloc[1:].notna().all() and np.isfinite(rs.iloc[1:]).all())
 else:
-    print("    (makro CSV yok — gercek veri kontrolu atlandi)")
+    print("    (data/macro/risk_free.csv yok — gercek seri kontrolu atlandi)")
 
 rate = pd.Series([50.0, 50.0, 40.0], index=pd.to_datetime(["2024-01-01", "2024-01-05", "2024-01-08"]))
 sess = pd.to_datetime(["2024-01-04", "2024-01-05", "2024-01-08", "2024-01-09"])

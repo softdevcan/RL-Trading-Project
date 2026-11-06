@@ -285,7 +285,7 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 | # | Karar | Seçenekler | Öneri |
 |---|---|---|---|
 | 1 | **Tahmin golden'ı** — B1 (bfill) varsayılan hatta etkin; düzeltme golden'ı değiştirir | (a) B1 bayrakla, varsayılan eski; (b) varsayılanı çevir + golden'ı yenile | **Karar (2026-11-06): (b)** — varsayılan çevrilir, golden Milestone 0' ile birlikte bir kez yenilenir (Faz 10 K1; B1 ve B10 birlikte) |
-| 2 | EVDS erişimi (B2) | API anahtarı mevcut mu / yeniden alınacak mı | Anahtar koddan kaldırıldı ve `.env`'den okunuyor (PR #3; Faz 10 K23). Üç serinin neden yedeğe düştüğü B2'de teşhis edilir. **A8 bu teşhise bağlı** (§9) |
+| 2 | EVDS erişimi (B2) | API anahtarı mevcut mu / yeniden alınacak mı | **Kapandı (2026-11-06):** anahtar geçerli; sorun yanlış seri kodları ve ayrıştırma hatalarıydı (§9.3) |
 | 3 | Tarihsel BIST-30 bileşenleri (E1) | Borsa İstanbul'dan elle temin / sınırlılık beyanı | Önce temin denenir; 2 hafta içinde bulunamazsa beyan |
 | 4 | Ödül terimi (G1) | Yeni deneylerde `differential` / `ema_level` kalır, adı düzeltilir | Milestone 0' ön elemesinde ikisi denenir, seçim deneme kaydına girer |
 | 5 | Makale 2 hedef tarihi (Aralık 2026) | Korunur / ertelenir | A + B + C ≈ 3–4 hafta + B5 hesaplama süresi; tarih B5 maliyet ölçümünden sonra yeniden değerlendirilir |
@@ -346,7 +346,7 @@ python tests/test_prediction_regression.py  # golden: "[REGRESYON] GECTI (OK) - 
 | A5 rliable | **Tamam** | `evaluation/seed_stats.py` | Kütüphane çıktısıyla birebir. **Not:** rliable 1.2.0 `random_state`'i kullanmıyor (yeniden örnekleme küresel `np.random.choice` ile). Sarmalayıcı küresel durumu geçici olarak tohumluyor ve geri yüklüyor |
 | A6 PBO/CSCV | **Tamam** | `evaluation/overfitting.py` | 40 strateji, T=1.600, S=12. Saf gürültü: PBO 0,475. Orta sinyal (yıllık SR ≈ 1): 0,235. Güçlü sinyal (yıllık SR ≈ 4,8): 0,000 |
 | A7 BH-FDR | **Tamam** | `evaluation/multiple_testing.py` (`statsmodels`) | El hesabıyla aynı |
-| A8 Risksiz faiz | **Kısmen** | `evaluation/risk_free.py` | Tek kaynak modülü var. Bugünkü makro veride (`policy_rate: fallback_constant_50.0`) **açık hata** veriyor, sabite düşmüyor. Eski sabitler (0,15 / 0,02 / 0) **bağlanmadı**: biri eğitilmiş RL modellerinin ödülünü, diğerleri pano sayılarını değiştirirdi. Bağlama B2 (EVDS teşhisi) ve Milestone 0' ile yapılacak |
+| A8 Risksiz faiz | **Kısmen** | `evaluation/risk_free.py` | İlk kapıda tek kaynak modülü yazıldı ve yedek değerli seride açık hata verdi. **§9.3'te (B2) gerçek seriye bağlandı:** `risk_free.csv`, `funding_rate`. Eski sabitler (0,15 / 0,02 / 0) **bağlanmadı**: biri eğitilmiş RL modellerinin ödülünü, diğerleri pano sayılarını değiştirirdi. Bağlama D paketinde yapılacak |
 | A9 Eski çağrılar | **Tamam** | `prediction/evaluator.py`, `app/services/model_analysis.py`, `evaluation/paired_tests.py` | `diebold_mariano_test` ve `compute_deflated_sharpe_ratio` yeni pakete yönlendi. `ttest_ind` yerine eşleştirilmiş t-testi geldi; HAC, durağan bootstrap ve LW seçenekleri de var |
 | C1 RL tohumu | **Tamam** | `app/api/routes/trading.py`, `evaluation/reproducibility.py` | Aynı tohumla iki CPU koşumu PPO ve A2C'de ödül eğrisi ve ağırlıklar açısından bit-eş. RTX 4060'ta küçük MLP ile iki GPU koşumu da bit-eş çıktı; bu tek ölçümdür, genel bir garanti değildir. Tohum meta dosyasına, manifeste ve deneme kaydına yazılıyor; istekte yoksa üretiliyor |
 | C2 Deneme kaydı | **Kısmen** | `evaluation/trial_registry.py` | `results_dir()/trial_registry.jsonl`, getiriler `trial_returns/*.parquet`. Eğitim rotası `rl_train` (test bölümü), HPO `rl_hpo` (doğrulama bölümü) olarak yazıyor. Budanan ve başarısız denemeler de `status` ile kaydediliyor ve N'ye sayılıyor. N varsayılan olarak deneme başına (yapılandırma × tohum). V yalnızca getirisi olanlardan geliyor. Farklı kind / split / pencere karıştırılırsa hata. Her kayıt `protocol` ve `protocol_open` taşıyor; açık protokol varsayılan olarak dışlanıyor. Veri hash'i yapılandırma özetinin dışında. **Açık:** (1) rota ve HPO tek bir bölme tanımı paylaşmıyor ve rota her koşumda testi okuyor; seçim/sınama ayrımı R1'de (hakem-2 #3). (2) Tohum kuralı (`by='trial'` / `'config'`) M8'de sabitlenecek. (3) Kayıttaki SR'ler risksiz faiz düşülmeden; A8'e bağlı |
@@ -400,7 +400,58 @@ Bu incelemede formül düzeyinde sorun bulunmadı (DSR elle yeniden hesaplandı;
 | 14 | KÜÇÜK | PBO sinyal testi önemsiz derecede güçlü | **Kabul.** Orta sinyal (yıllık SR ≈ 1) senaryosu eklendi: 0,235 |
 | 15 | KÜÇÜK | Golden iddiasının kanıtı yok | **Kabul.** Komut ve çıktı §9.1'de |
 
-**Sıradaki:** B (+B7–B10, B9 bu kapının açık protokolünü kapatır; B1 ile K1 golden yenilemesi), K18 gözlem sağlığı, R1 (tek bölme, walk-forward), E, F, G (+ #7 nakit faizi), D; ardından P ve Milestone 0'.
+### 9.3 B2 + B3 + B1 + A8 — makro veri ve risksiz faiz (2026-11-06, dal `feat/phase9-b2-evds`)
+
+**Teşhis (B2).** Kullanıcı EVDS'de politika faizini 37 olarak görüyordu; repodaki 50 hiç EVDS'den gelmemişti. Anahtar geçerliydi: TÜFE endeksi aynı anahtarla geldi. Sorun dört ayrı hataydı:
+
+| Seri | Hata | Sonuç (son çekim 2026-07-28) | Düzeltme |
+|---|---|---|---|
+| Politika faizi | Kod `TP.YSSK.A01` EVDS'de yok; API bağlantı hatası döndürüyor | `macro_fetcher` her çekimde sabit **50,0**'a düşüyordu (`fallback_constant_50.0`) | `TP.BISPOLFAIZ.TUR` (BIS, aylık; `get_series('bie_bispolfaiz')`). Son değer 37,0 (2026-09) |
+| TÜFE | (a) EVDS sütunu `TP_FG_J0` (alt çizgili) döner, kod `TP.FG.J0` arıyordu; (b) aylık `Tarih` 'YYYY-M', kod `%d-%m-%Y` bekliyordu; (c) `TP.FG.J0` (2003=100) 2026-01'de **bitiyor** | `fallback_zero` | `TP.TUKFIY2025.GENEL` (2025=100, 2005'ten); ayrıştırma `_evds_series` / `_parse_evds_dates` |
+| ÜFE | Kod `TP.FG.G0` EVDS'de yok | `fallback_zero` | `TP.TUFE1YI.T1` (Yurt İçi ÜFE) |
+| Günlük seriler | EVDS tek istekte ≤ 1000 satır veriyor ve fazlasını aralığın **başından** kesiyor (2013-01..2016-12 isteği 2013-03-04'ten başladı) | — | 730 günlük parçalar; 1000 satır dönen parça ikiye bölünüyor |
+
+Seri kodları EVDS kataloğundan (`get_sub_categories`, `get_series`) bulundu ve değerleri gözle kontrol edildi:
+- politika faizi 2018 sonu 24, 2022 sonu 9, 2024 sonu 50, bugün 37;
+- Kasım 2022 TÜFE yıllık %84,39;
+- ÜFE %136,02.
+
+Bunların resmi kaynaklarla tek tek karşılaştırılması yapılmadı.
+
+**B3 — açıklanma gecikmesi.** Aylık bir değer, açıklanmadan önceki günlere yazılmıyor. Eski kod ay *m*'nin TÜFE'sini ayın 1'ine yerleştirip ileri dolduruyordu; yani değer açıklanmasından yaklaşık 5 hafta önce görünüyordu.
+
+| Seri | Ay *m* değeri ne zaman görünür | Dayanak |
+|---|---|---|
+| TÜFE / ÜFE yıllık % | ay *m+1*'in **6'sından** itibaren | **Tasarım varsayımı.** TÜİK genelde ayın 3'ünde açıklıyor; hafta sonu kaymasına pay bırakıldı. Resmî yayın takvimi kullanılmadı |
+| Politika faizi (BIS aylık) | ay *m+1*'in **1'inden** itibaren | **Tasarım varsayımı.** Aylık seri ay içindeki karar tarihini taşımıyor, bu yüzden ay içindeki değişiklik bir ay gecikmeli görünüyor |
+
+**B1 — `bfill` kaldırıldı.** Hem `fetch_macro_data`'dan hem `fetch_incremental`'dan çıktı.
+- Zorunlu sütunların hepsi dolmadan önceki baş satırlar **atılıyor**: gerçek çekimde 5 satır, ilk satır 2018-01-06.
+- Yıllık enflasyon için endeks 13 ay erken çekiliyor; ilk yıl boş kalmıyor ve uydurulmuyor.
+
+**A8.** `data/macro/risk_free.csv` (`fetch_risk_free`) ayrı bir dosya:
+- `funding_rate`: TP.APIFON4, TCMB Ağırlıklı Ortalama Fonlama Maliyeti; iş günü, 2011-01-03..2026-11-06, 3.983 satır, 7 günden uzun boşluk yok.
+- `policy_rate`: B3 kuralıyla günlüğe yayılmış aylık seri.
+
+`evaluation.risk_free` varsayılan olarak `funding_rate`'i kullanıyor. Seçim bir **tasarım varsayımıdır**: seri günlük ve RL penceresini kapsıyor. Bunun kaynakla gerekçelendirilmesi ve nakit faiz tahakkuku açık iş olarak duruyor (§9.2 #7). Veri sayfasındaki makro güncellemesi bu dosyayı da yeniliyor; yedek değer kullanılırsa panoda kırmızı uyarı çıkıyor.
+
+**Kabul** (`python tests/test_macro_pit.py`, ağ yok, 25/25). Sahte EVDS, gerçek API'nin ölçülen davranışlarını taklit ediyor: alt çizgili sütun, 'YYYY-M' tarih biçimi, baştan kesen 1000 satır sınırı. Kontroller:
+- **Kesme değişmezliği (B0 mantığı):** bitiş tarihi T₁=2023-06-30 ve T₂=2026-11-06 ile üretilen dosyaların ortak satırları bit-eş.
+- **B3:** hiçbir ayın TÜFE'si açıklanmadan önce görünmüyor.
+- **Hata yolu:** yedek değer yazılınca kalite bayrağı konuyor, `strict_data` hata veriyor.
+- **Yeniden çekim:** bayraklı dosya tam çekimle yenileniyor.
+- **Risksiz faiz:** t−1 oranından hesaplanıyor.
+
+Gerçek çekimde kalite bayrağı boş, NaN yok. THYAO için özellik üretimi gerçek makroyla çalıştı. Tahmin golden testi geçti; golden sentetik veri kullandığı için bu değişiklikten etkilenmez.
+
+**Etkileri ve açık kalanlar:**
+- **Bu tarihten önce üretilmiş her şey sabit faiz 50 ve sıfır enflasyonla üretildi:** tahmin modelleri, faz 2 RL modelleri, `macro_data.csv`'ye dayalı her sonuç. Makro özellikler bu sonuçlarda bilgi taşımıyor; hepsi sınırlılıktır.
+- **Faz 2 RL modelleri** gözlem vektöründe sabit `tanh(50/50)` görerek eğitildi. Yeni makro dosyasıyla canlı kararları **değişir** (dağılım dışı gözlem).
+- **Makro 2018'den başlıyor, RL penceresi 2013-06'dan.** Faz 2 ortamı 2013–2017 arasında makroyu 0 görüyor (önceden de böyleydi).
+- Resmî TÜİK yayın takvimi kullanılmadı; politika faizinin karar tarihli günlük serisi yok. İkisi de tasarım varsayımı.
+- Eski risksiz faiz sabitleri (0,15 / 0,02 / 0) bağlanmadı; bağlama D paketinde yapılacak.
+
+**Sıradaki:** B (+B7–B10, B9 bu kapının açık protokolünü kapatır; K1: golden Milestone 0' ile bir kez), K18 gözlem sağlığı, R1 (tek bölme, walk-forward), E, F, G (+ §9.2 #7 nakit faizi), D; ardından P ve Milestone 0'.
 
 ---
 
@@ -413,3 +464,4 @@ Bu incelemede formül düzeyinde sorun bulunmadı (DSR elle yeniden hesaplandı;
   - N/V türetmesi düzeltildi.
   - Hayalet gün tanımı düzeltildi; ilk sayılar geçersiz.
   - A2, C2 ve V "Kısmen"e indi.
+- **2026-11-06 (B2/B3/B1/A8):** EVDS teşhisi — dört hata (yanlış seri kodları, alt çizgili sütun, 'YYYY-M' tarih, 1000 satır sınırı). Makro artık nokta-zamanlı ve `bfill`'siz. Risksiz faiz TP.APIFON4'ten (§9.3).

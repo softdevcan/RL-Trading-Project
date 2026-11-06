@@ -142,6 +142,9 @@ python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
+python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
+                                           #          gecikmesi, bfill yok (kesme
+                                           #          degismezligi), risksiz faiz (25, ag yok)
 python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
                                            #        CSS siniflarimiz, devre disi
@@ -243,8 +246,23 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - `clean_data()`: ffill → bfill → negatif fiyat temizleme, sembol bazlı
 
 ### macro_fetcher.py özellikleri
-- EVDS: policy_rate, cpi_inflation, ppi_inflation
+- EVDS (Faz 9 B2, 2026-11-06'da EVDS kataloğundan doğrulandı):
+  `policy_rate` = TP.BISPOLFAIZ.TUR (aylık), TÜFE = TP.TUKFIY2025.GENEL, ÜFE = TP.TUFE1YI.T1
+  (ikisi de aylık, yıllık % değişim). **Eski kodlar (TP.YSSK.A01, TP.FG.G0) EVDS'de YOK**;
+  TP.FG.J0 (2003=100) 2026-01'de bitiyor. Bu yüzden Temmuz 2026'ya kadarki her çekim faizde
+  sabit 50'ye, TÜFE/ÜFE'de 0'a düşüyordu — 50 hiçbir zaman EVDS değeri değildi.
+- **EVDS tuzakları:** sütun adı alt çizgili döner (`TP_FG_J0`); aylık `Tarih` 'YYYY-M';
+  tek istekte en fazla 1000 satır, fazlası aralığın BAŞINDAN kesilir (`_evds_series` parçalar).
+- **Nokta-zamanlı (B3):** ay m TÜFE/ÜFE'si ay m+1'in 6'sından, ay m politika faizi ay m+1'in
+  1'inden itibaren geçerli (tasarım varsayımı). **`bfill` YOK (B1)**; baş boşluk atılır.
+  `.bfill()` geri getirme — `tests/test_macro_pit.py` kesme değişmezliğiyle yakalar.
+- Kalite bayraklı mevcut dosya artımlı değil TAM çekimle yenilenir.
+- **Risksiz faiz ayrı dosyada:** `data/macro/risk_free.csv` (`fetch_risk_free()`; TP.APIFON4
+  TCMB ağırlıklı ortalama fonlama maliyeti, iş günü, 2011'den). Veri sayfası makro güncellemesi
+  bunu da yeniler. Yedeği yok.
 - yfinance: usd_try, eur_try, bist100_index, **vix**, **us10y**, **dxy** (Faz 3.2'de eklendi)
+- **Makro 2018'den başlıyor** (varsayılan `start_date`); RL penceresi 2013-06. Faz 2 RL ortamı
+  2013–2017'de makro gözlemi 0 görür — bilinen açık.
 
 ### State space
 - **Phase 1 (RL)**: 56 features — balance(1) + shares_owned(5) + OHLCV(25) + technicals(25)
@@ -433,8 +451,9 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
   - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B9 / B7 / K18 kapanana kadar).
-  - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den; EVDS (B2/K2) duzelene kadar acik hata
-    verir — sabite dusurme. Eski 0,15 / 0,02 / 0 sabitleri bu kapida BILEREK baglanmadi.
+  - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
+    `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
+    Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).
   - **RL tohumu**: `TrainingRequest.seed` (yoksa uretilir); meta + manifest + deneme kaydina yazilir.
     Test: `python tests/test_eval_stats.py` (50), `python tests/test_rl_reproducibility.py` (39)
 - Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: `hakem-2` alt ajani.
