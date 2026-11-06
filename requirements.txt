@@ -98,6 +98,10 @@ catboost>=1.2.0
 borsapy==0.8.3
 shap==0.51.0
 EMD-signal==1.9.0
+# TimesFM-3 sifir-atis temel model (deney; ensemble'da varsayilan kapali).
+# Kod Apache-2.0, 3.0 AGIRLIKLARI ticari olmayan/uretim disi kullanimla sinirli.
+# Ilk kullanimda google/timesfm-3.0-pytorch (~1.3 GB) HF onbellegine iner.
+timesfm==3.0.2
 
 # Development & Testing (#61, #62)
 pytest>=8.0.0

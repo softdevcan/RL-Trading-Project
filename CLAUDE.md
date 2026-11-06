@@ -59,6 +59,7 @@ prediction/           # Gelişmiş tahmin sistemi (Faz 2+3)
     catboost_model.py
     lstm_model.py     # BiLSTM (PyTorch, CUDA) + direction head
     tft_model.py      # Temporal Fusion Transformer (PyTorch, CUDA) + direction head + Faz6 gruplanmış-VSN (opt-in)
+    timesfm_model.py  # TimesFM-3 sıfır-atış adaptörü (deney; ensemble'da enabled=False, ağırlıklar ticari değil)
     ensemble.py       # Stacking meta-learner (Ridge + XGBoost), 3-way split, OOF, TATS + warm-start plumbing
     torch_perf.py     # Faz 6 (3.1): DL eğitim ince ayarı — GPU-preload batch, AMP, thread pin, GPU semaphore
   hyperopt.py         # Optuna HPO + Faz 6 (3.2) sqlite resume (HPO_STORAGE)
@@ -129,6 +130,8 @@ python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
+python tests/test_timesfm_adapter.py       # TimesFM: baglam hizalamasi, sizinti, onbellek,
+                                           #          varsayilan kapali (34 kontrol, model indirmez)
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)

@@ -29,6 +29,20 @@ from scripts.benchmarking.benchmark_strategies import BuyAndHoldStrategy
 
 ---
 
+### `/experiments` - Deneyler
+- **timesfm_eval.py** - TimesFM-3 değerlendirmesi: ensemble'a katkısı (yön, IC, DM testi), oynaklık/dilim kalitesi (GARCH ve ampirik dilimlere karşı) ve işlem değeri (1/N, sinyal, oynaklık hedefi; 20 bps, nakit politika faizi). Faiz/enflasyonu EVDS'ten doğru serilerle kendisi çeker, paylaşılan makro CSV'ye yazmaz.
+
+**Kullanım:**
+```bash
+python scripts/experiments/timesfm_eval.py                    # 5 sembol, CPU
+python scripts/experiments/timesfm_eval.py --skip-dl          # BiLSTM/TFT'siz, hızlı
+python scripts/experiments/timesfm_eval.py --symbols all --device cuda --start 2010-01-01
+```
+
+**Çıktı:** `results/experiments/timesfm_eval_<zaman>.{json,md}` + `_predictions.csv`
+
+---
+
 ### `/analysis` - Analiz ve Raporlama
 - **generate_academic_report.py** - Akademik kalite raporlar oluşturur
 - **extract_comparison_table.py** - Model karşılaştırma tablosu

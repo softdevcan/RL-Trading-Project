@@ -56,6 +56,9 @@ BASE_MODEL_CONFIGS = {
     'catboost': {'enabled': True, 'weight': 1.0},
     'bilstm': {'enabled': True, 'weight': 1.0},
     'tft': {'enabled': True, 'weight': 1.0},
+    # Sifir-atis temel model; deney asamasinda — varsayilan KAPALI (golden'i
+    # ve mevcut ensemble'lari degistirmez). Agirliklar ticari kullanima kapali.
+    'timesfm': {'enabled': False, 'weight': 1.0},
 }
 
 
@@ -151,6 +154,7 @@ class StackingEnsemble:
         from prediction.models.catboost_model import CatBoostModel
         from prediction.models.lstm_model import BiLSTMModel
         from prediction.models.tft_model import TFTModel
+        from prediction.models.timesfm_model import TimesFMModel
 
         registry = {
             'xgboost': XGBoostModel,
@@ -158,6 +162,7 @@ class StackingEnsemble:
             'catboost': CatBoostModel,
             'bilstm': BiLSTMModel,
             'tft': TFTModel,
+            'timesfm': TimesFMModel,
         }
         return registry.get(model_type)
 
@@ -494,12 +499,10 @@ class StackingEnsemble:
 
         for model_type, model in self.base_models.items():
             try:
-                pred = model._predict_raw(full_X)
-                model_predictions[model_type] = float(pred[-1])
-
-                dir_raw = model._predict_direction_raw(full_X)
-                if dir_raw is not None and len(dir_raw) > 0:
-                    direction_probs[model_type] = float(dir_raw[-1])
+                point, prob = model._predict_last(full_X)
+                model_predictions[model_type] = point
+                if prob is not None:
+                    direction_probs[model_type] = prob
             except Exception as exc:
                 logger.warning(f"  [{model_type}] tahmin hatasi: {exc}")
                 continue

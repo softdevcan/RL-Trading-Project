@@ -124,6 +124,18 @@ class BasePredictionModel(ABC):
         """
         return None
 
+    def _predict_last(self, X: np.ndarray) -> Tuple[float, Optional[float]]:
+        """Son satirin (nokta tahmini, yon olasiligi) ciftini dondur.
+
+        predict_next tum gecmisi verir ama yalnizca son satiri kullanir.
+        Varsayilan tum diziyi hesaplar (mevcut davranis); satir basina pahali
+        modeller (TimesFM) yalnizca son satiri hesaplamak icin override eder.
+        """
+        pred = self._predict_raw(X)
+        dir_raw = self._predict_direction_raw(X)
+        prob = float(dir_raw[-1]) if dir_raw is not None and len(dir_raw) > 0 else None
+        return float(pred[-1]), prob
+
     def _supports_warm_start(self) -> bool:
         """Faz 6 (2.1): Bu model tipi warm-start destekliyor mu?
 
