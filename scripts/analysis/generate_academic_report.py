@@ -28,12 +28,38 @@ def load_data_for_testing():
     _, _, test_df = fetcher.split_data(df)
     return test_df
 
+
+def resolve_price_stats(model_path: str):
+    """Faz 9 / B9 (Faz 10 Y13): test ortaminin fiyat olcegi = modelin EGITIM olcegi.
+
+    Tek kaynak modelin meta dosyasi (`<model>.meta.json` -> price_stats;
+    egitim rotasi yaziyor). Meta'sinda olcek olmayan eski model icin olcek
+    UYDURULMAZ: egitim penceresi kurulamiyor (Y17) ve bu raporun kendi egitim
+    bolumu ham panelden (temizlenmemis, 2000-2005 negatif fiyat artefaktlari
+    dahil) geliyor. K13 ile ayni ilke: yaklasik doldurma yok. Eski davranis
+    (test penceresinin kendi olcegi, ileriye bakis) `price_stats=None` ile
+    yeniden uretilebilir.
+
+    Returns:
+        price_stats ya da None (model atlanir)
+    """
+    from app.services.daily_trading import read_model_meta
+
+    meta = read_model_meta(model_path) or {}
+    return meta.get('price_stats') or None
+
+
 def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
                                 initial_balance: float = 1_000_000,
                                 commission_rate: float = 0.001,
-                                max_shares_per_trade: int = 100):
+                                max_shares_per_trade: int = 100,
+                                price_stats: dict = None):
     """
     Evaluate a trained model on test set and collect detailed metrics
+
+    Args:
+        price_stats: egitim penceresinin fiyat olcegi (B9). None = eski
+            davranis (test penceresinin kendi istatistigi, ileriye bakis).
 
     Returns:
         Tuple of (portfolio_values, returns, trades, metrics)
@@ -58,7 +84,8 @@ def evaluate_model_on_test_set(model_path: str, test_df: pd.DataFrame,
         df=test_df,
         initial_balance=initial_balance,
         commission_rate=commission_rate,
-        max_shares_per_trade=max_shares_per_trade
+        max_shares_per_trade=max_shares_per_trade,
+        price_stats=price_stats,
     )
 
     # Run evaluation
@@ -111,6 +138,7 @@ def main():
     test_df = load_data_for_testing()
     if test_df is None:
         return
+    price_stats_sources = {}
 
     print(f"✅ Test data loaded: {len(test_df)} samples")
 
@@ -167,10 +195,16 @@ def main():
         model_path = str(model_file.with_suffix(''))
 
         try:
-            # Evaluate model
+            # Evaluate model (B9: modelin egitim penceresinin olcegiyle)
+            price_stats = resolve_price_stats(model_path)
+            if price_stats is None:
+                print(f"⏭️  {model_name}: meta dosyasinda egitim olcegi (price_stats) yok — "
+                      f"atlandi (B9/K13: olcek uydurulmaz; Y17)")
+                continue
             portfolio_values, returns, trades, base_metrics = evaluate_model_on_test_set(
-                model_path, test_df
+                model_path, test_df, price_stats=price_stats
             )
+            price_stats_sources[model_name] = 'model_meta'
 
             # Calculate advanced metrics
             advanced_metrics = analyzer.calculate_advanced_metrics(
@@ -213,6 +247,10 @@ def main():
             k: float(v) if isinstance(v, (np.floating, np.integer)) else v
             for k, v in metrics.items()
         }
+        # B9: test olceginin kaynagi model kaydinin icinde (ust duzey anahtar
+        # eklenmez — /analysis/best-models her ust duzey anahtari model sayar)
+        if model_name in price_stats_sources:
+            results_json[model_name]['price_stats_source'] = price_stats_sources[model_name]
 
     json_path = analyzer.results_dir / "data" / "detailed_results.json"
     with open(json_path, 'w') as f:

@@ -63,7 +63,8 @@ model_ppo = PPO(
 model_ppo.learn(total_timesteps=50000)
 
 # Evaluate
-test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100)
+test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100,
+                    price_stats=env.envs[0].get_price_stats())  # B9: egitim penceresinin olcegi
 obs, info = test_env.reset()
 done = False
 while not done:
@@ -107,7 +108,8 @@ model_a2c = A2C(
 model_a2c.learn(total_timesteps=50000)
 
 # Evaluate
-test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100)
+test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100,
+                    price_stats=env.envs[0].get_price_stats())  # B9: egitim penceresinin olcegi
 obs, info = test_env.reset()
 done = False
 while not done:
@@ -159,7 +161,8 @@ model_td3 = TD3(
 model_td3.learn(total_timesteps=50000)
 
 # Evaluate
-test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100)
+test_env = make_env(df=test_df, initial_balance=100000, commission_rate=0.001, max_shares_per_trade=100,
+                    price_stats=env.envs[0].get_price_stats())  # B9: egitim penceresinin olcegi
 obs, info = test_env.reset()
 done = False
 while not done:

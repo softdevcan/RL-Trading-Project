@@ -321,7 +321,7 @@ arXiv API (2026-10-07) ya da Crossref ile doğrulandı. **İşlendi:** aşağıd
 Faz 10 §8'e göre ilk kapı **V (veri bütünlüğü), A ve C**'dir. Gözlem sağlığı (Faz 10 K18: ADX ≡ 0, türbülans doygunluğu) aynı kapıda anılıyor, ama bu turda **yapılmadı**.
 
 **Bu kapı RL'de tez sayısı üretmez.** hakem-2 incelemesinin sonucu (§9.2) şu: istatistik çekirdeği formül düzeyinde doğru, ama bu kapıdan sonra üretilen RL sonuçları da üç açık protokol maddesi taşıyor:
-- **Y13 / B9:** test ölçeği test penceresinden kuruluyor.
+- **Y13 / B9:** test ölçeği test penceresinden kuruluyor. **Kapandı (§9.5)**; bedeli eski ortamda fiyat özelliklerinin doygunluğu (test %74,7).
 - **Y15 / B7:** gösterge ısınma boşluğu `bfill` ile dolduruluyor.
 - **K18:** ADX ≡ 0.
 
@@ -480,6 +480,77 @@ Tahmin golden testi geçti, ama **bu değişiklik için kanıt sayılmaz**: gold
 
 **Sıradaki:** B (+B7–B10, B9 bu kapının açık protokolünü kapatır; K1: golden Milestone 0' ile bir kez), K18 gözlem sağlığı, R1 (tek bölme, walk-forward), E, F, G (+ §9.2 #7 nakit faizi), D; ardından P ve Milestone 0'.
 
+### 9.5 B9 — val/test ortamının fiyat ölçeği (2026-11-06, dal `feat/phase9-b9-price-stats`)
+
+**Sorun (Faz 10 Y13, §8 #16).** Test ortamı fiyat z-skorunu test penceresinin kendi ortalama ve std'siyle kuruyordu. Bu yüzden t gözlemi t sonrası test fiyatlarına bağlıydı. HPO'nun doğrulama ortamı ve beş betik de aynı şeyi yapıyordu.
+
+**Değişiklik.**
+- `TradingEnv(price_stats=None)` opt-in parametre:
+  - `None` eski davranıştır: ölçek ortamın kendi df'inden hesaplanır. Bu tanım eğitim ortamı için doğrudur.
+  - Verilirse denetlenir ve kopyalanır. Ortamdaki her sembol için sonlu bir ortalama ve pozitif std gerekir; yoksa `ValueError` atılır. Sessizce kendi penceresine ya da 50/50'ye düşmez.
+  - Ortam ölçeğin nereden geldiğini `price_stats_source` (`own_window` / `supplied`) ile taşır.
+- **Eğitim rotası:** test ortamı `temp_env.get_price_stats()`'i alır; bu, meta dosyasına yazılan ölçeğin aynısıdır. **HPO:** doğrulama ortamı eğitim ortamının ölçeğini alır.
+- **Akademik rapor:** ölçek modelin meta dosyasından alınır. Meta'sında ölçek olmayan eski model **atlanır**, ölçek uydurulmaz (K13 ilkesi). Raporun kendi eğitim bölümü ham panelden geliyor (2000–2005 negatif fiyatları dahil), bu yüzden yedek olarak kullanılmadı.
+- **Diğer çağıranlar:** `train_a2c_phase1.py`, `optimize_reward_weights.py`, `ab_test_rewards.py`, `debug_model_actions.py`, `tests/test_all_algorithms.py`, `test_ppo.py`, `test_model_manual.py`, `test_env_pytest.py`.
+- **Protokol etiketi artık beyan değil, ölçüm.** `evaluation.trial_registry.rl_eval_protocol` rota ve HPO için ortaktır. Değerlendirme ortamının gerçekten kullandığı ölçeği eğitim ölçeğiyle karşılaştırır. Ölçeği geçirmeyi unutan bir çağıranın kaydı kendiliğinden `own_window` + `protocol_open` olur.
+- Protokole yeni madde: `indicators_present` (aşağıda Y21). ADX sütunu yoksa `adx_constant=True` sayılır. Eski hesap sütun yokken "sabit değil" diyordu.
+- **Rota her koşumda bedeli ölçüyor** (`observation_health`, manifest ve deneme kaydı). Ölçülen, modelin gördüğü test gözlemlerinde ±10'da kırpılan oran. Fiyat özelliklerinde bu oran ≥ %10 ise panoda uyarı çıkar. K18'deki gözlem sağlığı ölçütünün ilk parçası.
+
+**Kabul** (`python tests/test_price_stats_window.py`, ağ yok, CPU, **65/65**):
+- **Env:** test penceresinde t sonrası fiyatlar değiştirildi (günlük %2 sürükleme). t'ye kadar (dahil) **tüm gözlem vektörü bit-eş** kaldı; t sonrası gözlem değişti, yani ölçüt boş değil. Eski davranışta t=0 gözlemi bile değişiyor (max |fark| 1,34): ileriye bakış sayısal olarak gösterildi.
+- **Rota uçtan uca** (`_run_training_inner`, sentetik panel, sabit tohum): rotanın test ortamının gördüğü gözlem dizisi ve kayıttaki test getirileri t'ye kadar bit-eş. Deneme kaydı, manifest ve meta aynı eğitim ölçeğini taşıyor.
+- **HPO `objective`:** doğrulama ortamı eğitim ölçeğinde. Kayıtta `price_stats_source='train_window'`.
+- **Mutasyon öz-testleri:** üç bozuk sürüm de ölçütü kırıyor:
+  - parametreyi kabul edip kullanmayan env;
+  - ölçeği kopyalamayan env;
+  - ölçeği test ortamına geçirmeyen rota (B9 öncesi hâli). Bu sürümde kayıt kendiliğinden `own_window` + açık oluyor.
+- **Varsayılan yol değişmedi.** main @ 78edf06'daki env koduyla dört yörünge özeti üretildi: tam ve delikli panel × `legacy` ve `own_last`; her özet gözlem + ödül + portföy değerinin SHA-256'sı. Dört özet de dal koduyla bit-eş.
+- **AST bekçisi:** adı held-out olan df ile kurulan 24 `make_env` / `TradingEnv` çağrısının hepsi `price_stats` taşıyor. İstisna, `# B9-legacy` ile işaretli ölçüm satırları. Bekçi, örnek kaynaktaki ölçeksiz çağrıları yakalıyor. Yalnızca doğrudan çağrıları görür.
+- **Sarmalayıcıyla env kuran betikler** (bekçinin göremediği yol) davranışla sınanıyor: `train_a2c_phase1.evaluate_model`, `ab_test_rewards.train_and_evaluate`, `optimize_reward_weights.objective` ve rapor. Her birinde değerlendirme ortamı eğitim ölçeğinde kuruluyor; rapor, meta'sında ölçek olmayan modeli atlıyor.
+
+**Bedeli — doygunluk.** Komut: `python scripts/analysis/measure_price_scale.py --mode saturation` (2026-11-06; panel 2013-06-03..2026-07-27, 30 sembol). Bölmeler: eğitim 2013-06-03..2022-08-11 (2.303 gün), doğrulama 2022-08-12..2024-08-05 (494), test 2024-08-06..2026-07-27 (494).
+
+| Pencere | O/H/L/C z'nin \|z\| ≥ 10 oranı, eğitim ölçeğiyle (B9) | Kendi ölçeğiyle (eski) |
+|---|---|---|
+| Doğrulama | %53,1 (medyan z 10,5) | %0,0 |
+| Test | **%74,7** (medyan z 25,1; 19/30 sembolün tüm test kapanışları kırpık) | %0,0 |
+
+Neden: TL fiyatları eğitim penceresi ortalamasının onlarca std üstünde. Faz 10 K18 bunu öngörmüştü ("B9 eski ortamda doygunluk yaratır; beyan edilir"). Hakem-2'nin eski pencerede ölçtüğü %80,3 ile aynı mertebede.
+
+**Etkisi — test metrikleri.** Komut: `python scripts/analysis/measure_price_scale.py --mode effect --algos A2C,PPO --seeds 1,2,3 --steps 50000`. Rota varsayılanlarıyla, CPU'da, tohum başına bir model eğitildi. **Aynı model** test penceresinde iki ölçekle değerlendirildi; fark yalnızca ölçekten geliyor.
+
+| | Sharpe, eski ölçek | Sharpe, eğitim ölçeği | Eşleştirilmiş fark (tohum başına) | İşlem sayısı, eski → eğitim |
+|---|---|---|---|---|
+| A2C (n=3) | 0,661 ± 0,085 | 0,743 ± 0,338 | +0,14 / −0,35 / +0,46 (p=0,76) | 610 → 2.632 |
+| PPO (n=3) | 0,596 ± 0,049 | 0,752 ± 0,215 | −0,11 / +0,35 / +0,23 (p=0,38) | 5.564 → 905 |
+| Gözlem vektöründe kırpılan oran | %1–2 | %28–29 | | |
+
+- p tek örneklem t-testinden. n küçük olduğu için bu tablo yön için değil büyüklük içindir.
+- Bağlam: aynı pencerede komisyonsuz eşit ağırlıklı al-tut getirisi +%56,4.
+- **Okuma:**
+  - Bu ölçümde eski ölçeğin test metriklerini sistematik olarak şişirdiği **gösterilemedi**; fark tohuma göre iki yönlü.
+  - Sızıntının kanıtı bu tablo değil, kabul testindeki t=0 gözlem farkı.
+  - Politika davranışı ölçeğe çok duyarlı: işlem sayısı 4–6 kat değişiyor ve eğitim ölçeğinde tohumlar arası std 3–4 kat büyüyor.
+  - Eski ortamın B9 sonrası test metrikleri, fiyat özelliklerinin dörtte üçü doygunken üretilen metriklerdir. Bu yüzden K18'e kadar tez sayısı değildir.
+
+**Yeni bulgu Y21 — HPO göstergesiz bir ortamda ayar arıyor.**
+- `BaseHyperparameterOptimizer.create_env` `raw_stock_data.csv`'yi okuyor; bu dosyada yalnızca OHLCV var.
+- Env eksik gösterge sütunlarını sabit varsayılanla dolduruyor (macd 0, rsi 50, cci 0, adx 0, türbülans 0). Sembol başına 10 özelliğin 5'i sabit kalıyor.
+- Eğitim rotası ise `stock_data_with_indicators.csv` ile eğitiyor. Yani HPO hiperparametreleri **başka bir gözlem fonksiyonu** üzerinde seçiliyor ve göstergeli ortamda kullanılıyor.
+- Etkisi ölçülmedi. Protokoldeki `indicators_present` maddesi sayesinde HPO kayıtları B7 ve K18 kapansa da açık kalır. Düzeltme **R1**'e eklendi: rota ve HPO tek bölme tanımını ve tek paneli paylaşacak.
+
+**Gözlemler:**
+- **GPU.** Testin ilk koşumunda GPU görünürdü; rota kabul kontrolü bir kez kaldı. Aynı koşul 4 kez tekrarlandı, dördü de geçti. Aynı panel ve tohumla 10 GPU rota koşumu birbirine bit-eş çıktı. Nedeni doğrulanmadı; aralıklı GPU belirlenimsizliği olası. Test artık CPU'ya zorlanıyor (`CUDA_VISIBLE_DEVICES=-1`; Windows'ta boş dize değişkeni siliyor ve GPU görünür kalıyor). C1'deki "GPU bit-eşliği tek ölçüm, garanti değil" notu geçerli.
+- **`tests/test_env.py`** ilk import satırında kırılıyor: `tests/data/` dizini `data` paketini gölgeliyor. B9'dan bağımsız, önceden vardı.
+- **`generate_academic_report.py`** ham paneli temizlemeden ve RL penceresinin dışında bölüyor. Modelin meta'sındaki `test_range`'i kullanmıyor; SELL işleminde `trade['total']` KeyError veriyor. B9'da yalnızca ölçek düzeltildi; rapor üreticisi D5'te yeniden yazılacak.
+- **Canlı karar** (`/daily-decision`) hâlâ ölçek geçirmiyor (Y12). Bu K paketinin işi (K9, K13).
+- **Faz 2 ortamı** temel ve makro tablo verilmeden kurulursa 61 boyutlu uzay ilan edip 34 boyutlu gözlem üretiyor; SB3 eğitimin başında kırılıyor. Rota ve HPO faz 2'de iki tabloyu da yüklediği için varsayılan hatta görülmüyor. Betiklerin duman testinde bulundu; B9'dan bağımsız, önceden vardı.
+
+**Etkileri:**
+- Bu daldan sonra eğitilen modellerin test metrikleri farklı çıkar. Eski metrikler `TradingEnv(price_stats=None)` ile yeniden üretilebilir; env varsayılanı bit-eş.
+- Rota kayıtları artık `price_stats_source='train_window'` taşıyor. Açık maddeler: `indicator_bfill` (B7) ve panelde ADX sabit olduğu için `adx_constant` (K18). HPO kayıtlarında ek olarak `indicators_present` (Y21).
+- **RL test sayıları hâlâ ön sonuç.** Nedenleri: B7 ve K18 açık; eski ortamda fiyat özellikleri doygun; HPO göstergesiz.
+
 ---
 
 ## Versiyon geçmişi
@@ -497,3 +568,8 @@ Tahmin golden testi geçti, ama **bu değişiklik için kanıt sayılmaz**: gold
   - B1/B3 testlerinin içi boştu; mutasyonla doğrulanır hale getirildi.
   - Bitiş kesimi, 14 aylık erken çekim ve çapraz varlık `bfill`'i düzeltildi.
   - Açık: vintage kaydı, politika faizi ölçüm hatası, risksiz faiz gerekçesi, TÜİK takvimi, RL'de aynı gün FX, `pit_version`.
+- **2026-11-06 (B9):** val/test ortamı eğitim penceresinin fiyat ölçeğini kullanıyor (§9.5).
+  - Kapsam: rota, HPO, akademik rapor ve tüm held-out çağıranlar.
+  - Protokol etiketi artık ölçülüyor; ölçek kayda geçmezse kayıt kendiliğinden açık kalıyor.
+  - Bedeli ölçüldü: test fiyat özelliklerinin %74,7'si kırpılıyor. Test metriğine sistematik etkisi gösterilemedi (3+3 tohum).
+  - Yeni bulgu Y21: HPO göstergesiz bir ortamda ayar arıyor; düzeltme R1'de.

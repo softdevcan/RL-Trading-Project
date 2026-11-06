@@ -20,8 +20,11 @@ def mock_df():
 @pytest.fixture
 def env(mock_df):
     fetcher_mock = __import__('data.data_fetcher', fromlist=['DataFetcher']).DataFetcher
-    _, _, test_df = fetcher_mock().split_data(mock_df)
-    return make_env(df=test_df, initial_balance=1_000_000, commission_rate=0.001, max_shares_per_trade=100)
+    train_df, _, test_df = fetcher_mock().split_data(mock_df)
+    # Faz 9 / B9: test bolumu EGITIM bolumunun fiyat olcegiyle
+    train_stats = make_env(df=train_df).get_price_stats()
+    return make_env(df=test_df, initial_balance=1_000_000, commission_rate=0.001, max_shares_per_trade=100,
+                    price_stats=train_stats)
 
 
 # ─── Observation Space ────────────────────────────────────────────────────────

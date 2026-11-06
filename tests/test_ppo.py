@@ -74,12 +74,13 @@ print("\n" + "=" * 60)
 print("EVALUATING ON TEST SET...")
 print("=" * 60)
 
-# Evaluate on test set
+# Evaluate on test set (Faz 9 / B9: egitim penceresinin fiyat olcegiyle)
 test_env = make_env(
     df=test_df,
     initial_balance=100000,
     commission_rate=0.001,
-    max_shares_per_trade=100
+    max_shares_per_trade=100,
+    price_stats=env.envs[0].get_price_stats(),
 )
 
 obs, info = test_env.reset()

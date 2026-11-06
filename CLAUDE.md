@@ -166,6 +166,10 @@ python tests/test_data_integrity.py        # Faz 10/V: artefakt, hayalet gun, RL
 python tests/test_env_missing_mode.py      # Faz 10/V: env eksik hucre modu (17)
 python tests/test_rl_reproducibility.py    # Faz 9/C: tohum, deneme kaydi, veri
                                            #          anlik goruntusu, manifest (39)
+python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim olcegi;
+                                           #          env + rota + HPO uctan uca, mutasyon,
+                                           #          main ile bit-es varsayilan, AST bekcisi,
+                                           #          sarmalayicili betikler (65)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -437,6 +441,23 @@ borsapy/yf     → gold_fetcher.py       ─┘
   `'own_last'` sembolu kendi son gozlemiyle tasir, degerlemeyi kendi son kapanisiyla yapar,
   o hucrede islem yapmaz. Yeni egitim ve HPO `own_last` kullanir.
   Test: `python tests/test_data_integrity.py` (27), `python tests/test_env_missing_mode.py` (17)
+- **Val/test/degerlendirme ortami EGITIM olcegini alir (Faz 9 B9, Faz 10 Y13):**
+  `TradingEnv(price_stats=None)` fiyat z-skorunu ortamin KENDI df'inden kurar — yalnizca
+  egitim ortami icin dogru. Held-out pencerede kurulan her env'e
+  `price_stats=<egitim env>.get_price_stats()` (ya da modelin meta `price_stats`'i) VER;
+  vermezsen t gozlemi t sonrasi fiyatlara baglanir. Eksik sembol / bozuk deger `ValueError`
+  (sessiz yedek yok). Meta'sinda olcek olmayan eski model icin olcek UYDURMA (K13).
+  - Protokol etiketi beyan degil olcum: `evaluation.trial_registry.rl_eval_protocol` (rota + HPO
+    ortak). Sabit `'train_window'` YAZMA — olcek gecirilmezse kayit kendiliginden acik kalmali.
+  - Bedeli: eski ortamda TL fiyatlari egitim olceginin cok ustunde -> test fiyat ozelliklerinin
+    %74,7'si +-10'da kirpiliyor (Faz 9 §9.5). Rota her kosumda `observation_health` yazar; K18
+    olcekten bagimsiz ozellik seti.
+  - AST bekcisi held-out adli df (`test_df`, `val_df`, `data['test']`...) ile kurulan
+    `make_env`/`TradingEnv` cagrisinda `price_stats` arar; bilerek eski olcekle olcum yapan
+    satira `# B9-legacy` yaz. Test: `python tests/test_price_stats_window.py`
+  - **HPO ham OHLCV okuyor** (`raw_stock_data.csv`, gosterge yok -> 5/10 ozellik sabit
+    varsayilan; Faz 9 §9.5 Y21). Kayit `indicators_present=False` ile acik; duzeltme R1.
+  - Testte CPU'ya zorlamak icin `CUDA_VISIBLE_DEVICES=-1`: Windows'ta bos dize degiskeni SILER.
 - **ADX tum panelde 0** (sabit sutun) — Faz 10 K18, bu kapida duzeltilmedi;
   `test_data_integrity.py` bunu bilinen acik olarak sabitler.
 
@@ -455,7 +476,8 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
-  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B9 / B7 / K18 kapanana kadar).
+  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B7 / K18 kapanana kadar). B9 kapandi
+    (§9.5), ama eski ortamda fiyat ozellikleri doygun ve HPO gostergesiz (Y21, R1).
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
     `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).

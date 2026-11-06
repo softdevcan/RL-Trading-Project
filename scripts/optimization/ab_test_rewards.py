@@ -167,6 +167,8 @@ def train_and_evaluate(
 
     # Evaluate on test set
     logger.info("Evaluating on test set...")
+    # Faz 9 / B9 (Faz 10 Y13): test ortami EGITIM penceresinin fiyat olcegiyle
+    train_price_stats = train_env.envs[0].unwrapped.get_price_stats()
 
     def make_test_env():
         env_kwargs = {
@@ -182,7 +184,7 @@ def train_and_evaluate(
         if reward_weights:
             env_kwargs['reward_weights'] = reward_weights
 
-        return make_env(test_df, **env_kwargs)
+        return make_env(test_df, price_stats=train_price_stats, **env_kwargs)
 
     test_env = DummyVecEnv([make_test_env])
 

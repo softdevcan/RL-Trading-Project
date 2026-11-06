@@ -74,13 +74,18 @@ def prepare_data():
     return train_df, val_df, test_df
 
 
-def create_env(df: pd.DataFrame):
-    """Training environment oluştur"""
+def create_env(df: pd.DataFrame, price_stats=None):
+    """Ortam olustur.
+
+    price_stats: Faz 9 / B9 — degerlendirme ortami icin EGITIM ortaminin
+        olcegi; None = bu df'ten (egitim ortami icin dogru tanim).
+    """
     env = make_env(
         df=df,
         initial_balance=1_000_000,
         commission_rate=0.001,
-        max_shares_per_trade=100
+        max_shares_per_trade=100,
+        price_stats=price_stats,
     )
 
     # Vectorize (SB3 requirement)
@@ -155,7 +160,7 @@ def train_a2c(
     return model
 
 
-def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1):
+def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1, price_stats=None):
     """
     Modeli test datasında değerlendir
 
@@ -163,12 +168,17 @@ def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1):
         model: Trained A2C model
         test_df: Test data
         n_episodes: Number of test episodes
+        price_stats: Faz 9 / B9 — EGITIM ortaminin olcegi. None ise modelin
+            egitim ortamindan alinir (test penceresinin kendi istatistigi
+            ileriye bakis olurdu, Faz 10 Y13).
     """
     logger.info("\n" + "="*60)
     logger.info("EVALUATING MODEL")
     logger.info("="*60)
 
-    env = create_env(test_df)
+    if price_stats is None:
+        price_stats = model.get_env().envs[0].unwrapped.get_price_stats()
+    env = create_env(test_df, price_stats=price_stats)
 
     all_metrics = []
 

@@ -19,11 +19,16 @@ yine de yapilmistir).
 Protokol (hakem-2 #1, 2026-11-06): her kayit, getirilerinin hangi BILINEN
 ACIK protokolle uretildigini tasir (`protocol`). Acik bir madde varsa kayit
 'protocol_open' etiketi alir ve kanit olarak kullanilmaz (`load_trials`
-varsayilan olarak dislar). Bugun acik olanlar:
-  price_stats_source='test_window' — RL test ortami fiyati test penceresinin
-      kendi istatistigiyle olcekliyor (Faz 10 Y13 / B9)
-  indicator_bfill=True — gosterge isinma boslugu bfill ile dolu (Y15 / B7)
-  adx_constant=True    — ADX tum panelde 0 (K18)
+varsayilan olarak dislar). Maddeler:
+  price_stats_source — degerlendirme (val/test) ortaminin fiyat olcegi.
+      Temiz: 'train_window' (B9, 2026-11-06'dan beri rota ve HPO). Acik:
+      'own_window' (degerlendirme penceresinin kendi istatistigi, Faz 10 Y13;
+      B9 oncesi rota kayitlari ayni seyi 'test_window' diye yazdi).
+      `price_stats_source()` bunu ortamin GERCEKTEN kullandigi olcekten olcer.
+  indicator_bfill=True — gosterge isinma boslugu bfill ile dolu (Y15 / B7), acik
+  adx_constant=True    — ADX tum panelde 0 (K18), acik
+  indicators_present=False — gozlemin gosterge sutunlari panelde yok, env sabit
+      varsayilan goruyor (HPO ham OHLCV okuyor; Faz 9 §9.5 Y21), acik
 
 DSR'nin N'si (hakem-2 #2): Bailey & LdP'nin N'si YAPILAN TUM denemelerdir.
 Budanan (pruned) ve basarisiz denemeler de `status` ile kaydedilir ve N'ye
@@ -58,6 +63,7 @@ CLEAN_PROTOCOL = {
     'price_stats_source': 'train_window',
     'indicator_bfill': False,
     'adx_constant': False,
+    'indicators_present': True,
 }
 
 
@@ -65,6 +71,72 @@ def open_protocol_items(protocol: Optional[dict]) -> List[str]:
     """Protokolde temiz olmayan (ya da hic beyan edilmemis) maddeler."""
     protocol = protocol or {}
     return [k for k, clean in CLEAN_PROTOCOL.items() if protocol.get(k, None) != clean]
+
+
+def price_stats_source(eval_env, train_price_stats: Optional[dict]) -> Optional[str]:
+    """Degerlendirme ortaminin fiyat olcegi nereden geliyor — OLCULUR (B9).
+
+    'train_window'        : ortam olcegi disaridan almis VE her sembolu icin
+                            egitim olcegiyle birebir ayni (temiz)
+    'own_window'          : ortam olcegi kendi penceresinden hesaplamis (Y13)
+    'supplied_other'      : disaridan verilmis ama egitim olcegiyle uyusmuyor
+    'supplied_unverified' : disaridan verilmis, karsilastiracak egitim olcegi yok
+    None                  : ortam yok (deneme ortam kurulmadan bitti)
+
+    Etiket cagiranin beyanina degil ortamin durumuna dayanir: rota ya da HPO
+    olcegi gecirmeyi unutursa kayit kendiliginden 'protocol_open' olur.
+    Gymnasium sarmalayicilari (Monitor) `unwrapped` ile acilir.
+    """
+    if eval_env is None:
+        return None
+    base = getattr(eval_env, 'unwrapped', eval_env)
+    if getattr(base, 'price_stats_source', 'own_window') != 'supplied':
+        return 'own_window'
+    if train_price_stats is None:
+        return 'supplied_unverified'
+    used = base.get_price_stats()
+    for sym in base.symbols:
+        ref = train_price_stats.get(sym)
+        if ref is None or used.get(sym) != {'mean': float(ref['mean']), 'std': float(ref['std'])}:
+            return 'supplied_other'
+    return 'train_window'
+
+
+def indicators_present(source) -> bool:
+    """Gozlemin gosterge sutunlari (macd, rsi, cci, adx, turbulence) veride mi.
+
+    `source` bir panel (DataFrame) ya da TradingEnv olabilir. Eksik sutunu env
+    sabit varsayilanla doldurur (rsi=50, adx=0, ...) — o ozellik bilgi tasimaz.
+    """
+    from env.trading_env import OBS_INDICATOR_COLUMNS
+    if isinstance(source, pd.DataFrame):
+        frame = source
+    else:
+        frame = getattr(source, 'unwrapped', source).df
+    return all(c in frame.columns for c in OBS_INDICATOR_COLUMNS)
+
+
+def rl_eval_protocol(eval_env, train_price_stats: Optional[dict],
+                     indicator_bfill: Optional[bool] = True) -> dict:
+    """RL degerlendirme kaydinin protokolu; rota ve HPO ayni hesabi kullanir.
+
+    Uc madde degerlendirme ortamindan OLCULUR (price_stats_source,
+    adx_constant, indicators_present); `indicator_bfill` cagiranin beyanidir
+    (B7 bitene kadar True). Gosterge sutunlari yoksa bfill sorusu anlamsizdir
+    (None) ve ADX sabit varsayilan 0'dir (True).
+    """
+    if eval_env is None:
+        return {k: None for k in CLEAN_PROTOCOL}
+    base = getattr(eval_env, 'unwrapped', eval_env)
+    present = indicators_present(base)
+    cols = base.df.columns
+    adx_const = ('adx' not in cols) or bool(base.df['adx'].nunique(dropna=True) <= 1)
+    return {
+        'price_stats_source': price_stats_source(base, train_price_stats),
+        'indicator_bfill': indicator_bfill if present else None,
+        'adx_constant': adx_const,
+        'indicators_present': present,
+    }
 
 
 def _results_dir() -> str:

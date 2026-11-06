@@ -113,9 +113,12 @@ def load_phase2_data():
     return train_df, val_df, test_df, fundamental_df, macro_df
 
 
-def create_env_with_weights(df, fundamental_df, macro_df, weights: dict):
+def create_env_with_weights(df, fundamental_df, macro_df, weights: dict, price_stats=None):
     """
     Create trading environment with specific PSR weights
+
+    price_stats: Faz 9 / B9 — dogrulama ortami icin EGITIM ortaminin olcegi;
+        None = bu df'ten (egitim ortami icin dogru tanim).
     """
     def _init():
         return make_env(
@@ -125,7 +128,8 @@ def create_env_with_weights(df, fundamental_df, macro_df, weights: dict):
             reward_type='psr',
             reward_weights=weights,
             fundamental_df=fundamental_df,
-            macro_df=macro_df
+            macro_df=macro_df,
+            price_stats=price_stats,
         )
 
     return DummyVecEnv([_init])
@@ -180,8 +184,10 @@ def objective(trial: optuna.Trial, train_df, val_df, fundamental_df, macro_df):
         callback = QuickTrainingCallback(max_steps=10000)
         model.learn(total_timesteps=10000, callback=callback)
 
-        # Evaluate on validation set
-        eval_env = create_env_with_weights(val_df, fundamental_df, macro_df, weights)
+        # Evaluate on validation set (B9: egitim penceresinin fiyat olcegiyle)
+        train_price_stats = env.envs[0].unwrapped.get_price_stats()
+        eval_env = create_env_with_weights(val_df, fundamental_df, macro_df, weights,
+                                           price_stats=train_price_stats)
         obs = eval_env.reset()
         done = [False]
         portfolio_values = []

@@ -1085,21 +1085,20 @@ def _audit_shared_model_delete(user, model_name: str) -> None:
         logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
-def _rl_protocol(panel: pd.DataFrame) -> Dict[str, Any]:
-    """RL degerlendirmesinin bilinen acik protokol maddeleri (deneme kaydi icin).
+def _rl_protocol(eval_env, train_price_stats: Optional[Dict[str, Dict[str, float]]]) -> Dict[str, Any]:
+    """RL test degerlendirmesinin protokol maddeleri (deneme kaydi + manifest).
 
-    Bu kapida (Faz 9 ilk kapi) uc madde ACIK — kayit 'protocol_open' etiketi alir:
-      price_stats_source: test ortami fiyati test penceresinin kendi
-          istatistigiyle olcekliyor (Faz 10 Y13; B9 ile 'train_window' olacak)
-      indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7)
-      adx_constant: ADX panelde sabit (K18)
+    Acik bir madde varsa kayit 'protocol_open' etiketi alir. Hesap HPO ile
+    ortak (`evaluation.trial_registry.rl_eval_protocol`):
+      price_stats_source: test ortaminin GERCEKTEN kullandigi olcek egitim
+          olcegiyle birebir ayniysa 'train_window' (B9, temiz); kendi
+          penceresinden hesapladiysa 'own_window' (Y13, acik)
+      indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7) — acik
+      adx_constant: ADX sabit (K18) — test ortaminin verisinden olculur
+      indicators_present: gosterge sutunlari veride mi — olculur
     """
-    adx_const = bool('adx' in panel.columns and panel['adx'].nunique(dropna=True) <= 1)
-    return {
-        'price_stats_source': 'test_window',
-        'indicator_bfill': True,
-        'adx_constant': adx_const,
-    }
+    from evaluation.trial_registry import rl_eval_protocol
+    return rl_eval_protocol(eval_env, train_price_stats, indicator_bfill=True)
 
 
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
@@ -1465,7 +1464,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'data_integrity': integrity_report,
                    'train_range': _range(train_df), 'val_range': _range(val_df),
                    'test_range': _range(test_df), 'missing_data_mode': 'own_last',
-                   'protocol': _rl_protocol(df),
+                   # 'protocol' test ortami kurulunca eklenir (olcek oradan olculur)
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
         rl_manifest.set_seed(seed)
@@ -1498,7 +1497,16 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "run_id": rl_manifest.run_id,
         })
 
-        # Evaluate on test set
+        # Evaluate on test set.
+        # Faz 9 / B9 (Faz 10 Y13): test ortami fiyati EGITIM penceresinin
+        # olcegiyle (meta dosyasina yazilan ayni istatistik) z-skorlar. Eskiden
+        # test penceresinin kendi ortalama/std'si kullaniliyordu: t gozlemi t
+        # sonrasi test fiyatlarina bagliydi (ileriye bakis). Bedeli olculdu ve
+        # beyan edilir: TL fiyatlari egitim penceresinin cok ustunde oldugu icin
+        # test fiyat ozelliklerinin buyuk kismi +-10'da kirpilir (Faz 9 §9.5;
+        # K18 olcekten bagimsiz ozellik seti).
+        train_price_stats = temp_env.get_price_stats()
+
         def make_test_env():
             return make_env(
                 df=test_df,
@@ -1510,17 +1518,23 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 fundamental_df=fundamental_df,
                 macro_df=macro_df,
                 missing_data_mode='own_last',
+                price_stats=train_price_stats,
             )
 
         # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
         from env.trading_env import TradingEnv
         actual_env: TradingEnv = make_test_env()
+        # Protokol test ortaminin GERCEKTEN kullandigi olcekten olculur
+        rl_protocol = _rl_protocol(actual_env, train_price_stats)
+        rl_manifest.extra['protocol'] = rl_protocol
 
         obs, _ = actual_env.reset()
         done = False
         test_step = 0
+        seen_obs = []  # modelin karar verirken gordugu test gozlemleri
 
         while not done:
+            seen_obs.append(obs)
             action, _states = model.predict(obs, deterministic=True)  # (#24) reproducible eval
             obs, reward, done, truncated, _ = actual_env.step(action)
             test_step += 1
@@ -1528,6 +1542,27 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 break
 
         logger.info(f"Test evaluation: {test_step} steps completed")
+
+        # B9'un bedeli her kosumda OLCULUR ve kayda girer (Faz 9 §9.5; K18
+        # gozlem sagligi olcutunun ilk parcasi): modelin gordugu test
+        # gozlemlerinde +-10 sinirinda kirpilan deger orani — tum vektor ve
+        # yalnizca fiyat ozellikleri (sembol basina ilk 4: O/H/L/C z-skoru).
+        seen = np.asarray(seen_obs, dtype=np.float32)
+        n_s, fps = actual_env.n_stocks, actual_env.features_per_stock
+        px = seen[:, 1 + n_s: 1 + n_s + n_s * fps].reshape(len(seen), n_s, fps)[:, :, :4]
+        observation_health = {
+            'test_obs_clip_frac': float(np.mean(np.abs(seen) >= 10.0)),
+            'test_price_clip_frac': float(np.mean(np.abs(px) >= 10.0)),
+            'n_obs': int(len(seen)),
+        }
+        rl_manifest.extra['observation_health'] = observation_health
+        if observation_health['test_price_clip_frac'] >= 0.10:
+            training_state.setdefault("warnings", []).append(
+                f"Test penceresinde fiyat ozelliklerinin "
+                f"%{observation_health['test_price_clip_frac'] * 100:.0f}'i +-10 sinirinda "
+                f"kirpildi: test fiyatlari egitim penceresinin olceginin cok ustunde "
+                f"(B9 bedeli; olcekten bagimsiz ozellikler K18'de). Test metrikleri bu "
+                f"doygun gozlemle uretildi.")
 
         metrics = actual_env.get_metrics()
 
@@ -1587,13 +1622,15 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 },
                 seed=seed,
                 data_sha256=data_snapshot['sha256'],
-                # Bilinen acik protokol maddeleri (hakem-2 #1): bu kayit kanit
-                # olarak kullanilmaz ('protocol_open'), ama N sayimi icin durur.
-                protocol=_rl_protocol(df),
+                # Bilinen acik protokol maddeleri (hakem-2 #1): acik madde varsa
+                # kayit kanit olarak kullanilmaz ('protocol_open'), ama N
+                # sayimi icin durur.
+                protocol=rl_protocol,
                 metrics={k: metrics.get(k) for k in ('cumulative_return', 'sharpe_ratio',
                                                      'max_drawdown', 'total_trades')},
                 returns=test_returns, dates=test_dates, split='test',
-                extra={'model_name': model_name, 'run_id': rl_manifest.run_id},
+                extra={'model_name': model_name, 'run_id': rl_manifest.run_id,
+                       'observation_health': observation_health},
             )
         except Exception as exc:
             logger.warning(f"Deneme kaydina yazilamadi ({exc})")

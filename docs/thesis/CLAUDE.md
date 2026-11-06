@@ -16,8 +16,10 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
 - **"Leakage yok" DEME.** 1 gunluk `shift` fiyat turevli ozellikler icin yeterli ama
   kodda dogrulanmis sizinti kaynaklari var. ACIK: statik temel oranlar (opt-in), seri
   butunune ICEEMDAN + hedef filtrelenmis fiyattan (opt-in), gosterge isinma bfill'i (Y15),
-  CV'de ozellik secimi (Y16), TATS etiketleri (Y20), RL test olcegi (Y13), dagitimda
-  meta-ogrenici yeniden uyumu (K19). KAPANDI (2026-11-06, Faz 9 §9.3–9.4): makro ve
+  CV'de ozellik secimi (Y16), TATS etiketleri (Y20), dagitimda meta-ogrenici yeniden
+  uyumu (K19). RL test olcegi (Y13) KAPANDI (2026-11-06, Faz 9 §9.5, B9): val/test ortami
+  egitim penceresinin olcegini kullaniyor; bedeli eski ortamda test fiyat ozelliklerinin
+  %74,7'sinin kirpilmasi. KAPANDI (2026-11-06, Faz 9 §9.3–9.4): makro ve
   capraz varlik `bfill`'i (B1) ve TUFE/UFE aciklanma gecikmesi (B3, olay zamanli —
   vintage DEGIL; BIS faizi ~5 hafta gecikmeli). Yalnizca bu tarihten SONRA uretilen
   makro dosyasi icin; onceki tum makro (sabit 50 / 0, bfill'li) sinirlilik. ACIK:
@@ -37,8 +39,10 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
   olceklemesiyle esdeger.
 - **RL sonuclari henuz tez sayisi degil.** Bu kapidan ONCE uretilenler 2000–2018 penceresi,
   komsu sembol kopyasi ve tohumsuz egitimle; SONRA uretilenler de test olcegi test penceresinden
-  (Y13/B9), gosterge bfill (Y15/B7) ve ADX = 0 (K18) ile uretildi. Ikisi de yalnizca "on sonuc /
-  sinirlilik" olarak anilabilir (Faz 9 §9.2 #1). Deneme kaydinda `protocol_open` etiketlidirler.
+  (Y13/B9 — 2026-11-06'da kapandi, §9.5), gosterge bfill (Y15/B7) ve ADX = 0 (K18) ile uretildi.
+  B9 sonrasi eski ortamda test fiyat ozellikleri buyuk olcude doygun; HPO gostergesiz ortamda
+  ayar ariyor (Y21). Hepsi yalnizca "on sonuc / sinirlilik" olarak anilabilir (Faz 9 §9.2 #1).
+  Deneme kaydinda `protocol_open` etiketlidirler.
   Tam metinler `docs/reference/papers/` (PDF'ler git disi, icindekiler README.md).
 - **TATS ozgun degil:** Kazemdehbashi (2026, arXiv 2601.12706). Akademik metinde atif
   zorunlu, katki olarak sunulmaz.

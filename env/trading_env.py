@@ -20,6 +20,9 @@ _OBS_COLUMN_SPEC = (
     ('macd', 0.0), ('rsi', 50.0), ('cci', 0.0), ('adx', 0.0), ('turbulence', 0.0),
 )
 _OBS_COLUMNS = tuple(col for col, _ in _OBS_COLUMN_SPEC)
+# Varsayilani olan (yani df'te yoksa SABIT degerle dolan) gosterge sutunlari.
+# Deneme kaydi protokolu bunlarin veride olup olmadigini olcer (indicators_present).
+OBS_INDICATOR_COLUMNS = tuple(col for col, default in _OBS_COLUMN_SPEC if default is not None)
 _IX_HIGH = _OBS_COLUMNS.index('high')
 _IX_LOW = _OBS_COLUMNS.index('low')
 _IX_CLOSE = _OBS_COLUMNS.index('close')
@@ -66,6 +69,17 @@ class TradingEnv(gym.Env):
         #                sifir blok), degerleme kendi son kapanisiyla yapilir,
         #                o hucrede ISLEM YAPILMAZ. Yeni egitimler bunu kullanir.
         missing_data_mode: str = 'legacy',
+        # Faz 9 / B9 (Faz 10 Y13): fiyat z-skorunun olcegi.
+        #   None : eski davranis — istatistik bu ortamin KENDI df'inden. Egitim
+        #          ortami icin dogru tanim budur (egitim penceresi). Val/test
+        #          ortaminda ise o pencerenin GELECEK fiyatlarini da icerir:
+        #          t gozlemi t sonrasi fiyatlara bagli olur (ileriye bakis).
+        #   dict : {sembol: {'mean', 'std'}} — EGITIM ortaminin
+        #          get_price_stats() ciktisi. Aynen (kopyalanarak) kullanilir.
+        #          Ortamdaki her sembol icin sonlu mean ve pozitif std zorunlu;
+        #          eksik/bozuksa ValueError — kendi penceresine ya da 50/50'ye
+        #          sessizce dusmek ileriye bakisi geri getirirdi.
+        price_stats: Optional[Dict[str, Dict[str, float]]] = None,
     ):
         """
         Args:
@@ -175,10 +189,17 @@ class TradingEnv(gym.Env):
             dtype=np.float32
         )
 
-        # Price normalization stats — per symbol, computed from training data (#2)
+        # Price normalization stats — per symbol (#2)
         # price_stats[symbol] = {'mean': float, 'std': float}
+        # price_stats_source: 'own_window' (bu df'ten, eski davranis) |
+        #                     'supplied' (disaridan verildi; B9)
         self.price_stats: Dict[str, Dict[str, float]] = {}
-        self._compute_price_stats()
+        if price_stats is None:
+            self.price_stats_source = 'own_window'
+            self._compute_price_stats()
+        else:
+            self.price_stats_source = 'supplied'
+            self.price_stats = self._validated_price_stats(price_stats)
 
         # Trading variables
         self.current_step: int = 0
@@ -198,6 +219,7 @@ class TradingEnv(gym.Env):
         logger.info(f"  Trading days: {self.frame_bound[1] - self.frame_bound[0] + 1}")
         logger.info(f"  State dimension: {state_dim}")
         logger.info(f"  Action dimension: {self.n_stocks}")
+        logger.info(f"  Price stats: {self.price_stats_source}")
         if self.use_predictions:
             logger.info(f"  Prediction features: ✓ (+{self.n_stocks * self.prediction_features_per_stock} features)")
         if phase == 2:
@@ -208,7 +230,11 @@ class TradingEnv(gym.Env):
             logger.info(f"  Gold assets: {gold_assets if gold_assets else 'none in df'}")
 
     def _compute_price_stats(self):
-        """Compute per-symbol price mean/std from the full df for dynamic normalization (#2)."""
+        """Compute per-symbol price mean/std from the full df for dynamic normalization (#2).
+
+        Bu ortamin KENDI penceresidir. Val/test ortaminda kullanmak ileriye
+        bakistir (Y13); orada egitim ortaminin olcegini `price_stats=` ile verin.
+        """
         for symbol in self.symbols:
             try:
                 prices = self.df.xs(symbol, level='symbol')['close'].astype(float)
@@ -222,8 +248,41 @@ class TradingEnv(gym.Env):
                 self.price_stats[symbol] = {'mean': 50.0, 'std': 50.0}
 
     def get_price_stats(self) -> Dict[str, Dict[str, float]]:
-        """Return price normalization stats (save these for inference)."""
+        """Return price normalization stats (save these for inference).
+
+        Egitim ortaminin ciktisi val/test ortamina `price_stats=` olarak verilir
+        (B9) ve model meta dosyasina yazilir.
+        """
         return self.price_stats
+
+    def _validated_price_stats(self, supplied) -> Dict[str, Dict[str, float]]:
+        """Disaridan verilen olcegi denetle ve KOPYALA (B9).
+
+        Kopya: cagiranin sozlugu sonradan degisse de ortamin olcegi degismez.
+        Ortamda olup verilen olcekte olmayan sembol HATA: o sembolun egitim
+        penceresinde olcegi yok demektir; val/test ortami egitim ortaminin
+        sembol evrenine hizalanmalidir (egitim rotasi bunu yapiyor).
+        Fazla semboller yok sayilir (eski davranista da yalnizca ortamin
+        sembolleri tutuluyordu).
+        """
+        missing = [s for s in self.symbols if s not in supplied]
+        if missing:
+            raise ValueError(
+                f"price_stats {len(missing)} sembol icin yok: {', '.join(missing[:5])}"
+                f"{' ...' if len(missing) > 5 else ''}. Val/test ortami egitim "
+                f"ortaminin sembol evrenine hizalanmali.")
+        out: Dict[str, Dict[str, float]] = {}
+        for symbol in self.symbols:
+            entry = supplied[symbol]
+            try:
+                mean, std = float(entry['mean']), float(entry['std'])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"price_stats[{symbol!r}] {{'mean', 'std'}} tasimali: {entry!r}") from exc
+            if not (np.isfinite(mean) and np.isfinite(std) and std > 0):
+                raise ValueError(f"price_stats[{symbol!r}] gecersiz: mean={mean}, std={std}")
+            out[symbol] = {'mean': mean, 'std': std}
+        return out
 
     def _build_lookup_cache(self):
         """Sembol×tarih satır okumalarını önceden numpy dizisine çıkar.
