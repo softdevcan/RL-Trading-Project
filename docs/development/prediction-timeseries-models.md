@@ -164,6 +164,66 @@ Mevsimsellik için ayrı bir iş önerilmiyor: ölçülen etki büyüklüğü (%
 
 ---
 
+## 8. TimesFM-3 deneyi ve main'e taşınabilecek yan iyileştirme (2026-11-06)
+
+### 8.1 Deneyin durumu
+
+TimesFM-3 sıfır-atış adaptörü ve değerlendirme betiği **`experiment/timesfm` dalında**, main'e alınmadı: ölçülen performans beklentiyi karşılamadı. Daldaki içerik:
+
+- `prediction/models/timesfm_model.py` — adaptör (ensemble'da `enabled=False`)
+- `scripts/experiments/timesfm_eval.py` — ensemble katkısı (yön, IC, DM), oynaklık/dilim kalitesi (GARCH ve ampirik dilimlere karşı), işlem değeri (1/N, sinyal, oynaklık hedefi; 20 bps)
+- `tests/test_timesfm_adapter.py` — 34 kontrol, model indirmez
+- `requirements.txt` → `timesfm==3.0.2` (3.0 ağırlıkları ticari olmayan kullanımla sınırlı)
+
+Sayısal sonuçlar git dışında: `results/experiments/timesfm_eval_<zaman>.{json,md}`. Tezde negatif sonuç olarak raporlanacaksa rakamlar bu bölüme taşınmalı ve dal birleştirilmeden önce `timesfm` bağımlılığı ayrı bir `requirements-experiments.txt`'ye alınmalı.
+
+### 8.2 Yan iyileştirme: `predict_next` yalnızca son satırı hesaplasın
+
+**Sorun (main'de bugün var):** `StackingEnsemble.predict_next` her taban modele özellik matrisinin **tamamını** (`full_X`, tüm geçmiş) veriyor ve çıktının yalnızca son elemanını kullanıyor:
+
+```python
+pred = model._predict_raw(full_X)               # N satır hesaplanır
+model_predictions[model_type] = float(pred[-1]) # 1 satır kullanılır
+dir_raw = model._predict_direction_raw(full_X)  # BiLSTM/TFT: aynı pencereler + forward pass İKİNCİ kez
+```
+
+Ağaç modelleri için maliyet önemsiz. BiLSTM ve TFT ise `_predict_raw` ve `_predict_direction_raw` içinde `N − lookback + 1` pencere üretip ağı **iki ayrı kez** çalıştırıyor (`lstm_model.py`, `tft_model.py`). Kazanç ölçülmedi; günlük karar ekranında sembol başına tekrarlandığı için TFT'de belirgin olması beklenir.
+
+**Daldaki çözüm (TimesFM'den bağımsız, iki dosya):**
+
+`prediction/models/base.py` — varsayılanı bugünkü davranışla birebir aynı olan kanca:
+
+```python
+def _predict_last(self, X: np.ndarray) -> Tuple[float, Optional[float]]:
+    """Son satirin (nokta tahmini, yon olasiligi) ciftini dondur."""
+    pred = self._predict_raw(X)
+    dir_raw = self._predict_direction_raw(X)
+    prob = float(dir_raw[-1]) if dir_raw is not None and len(dir_raw) > 0 else None
+    return float(pred[-1]), prob
+```
+
+`prediction/models/ensemble.py::predict_next` — döngü kancayı çağırır:
+
+```python
+point, prob = model._predict_last(full_X)
+model_predictions[model_type] = point
+if prob is not None:
+    direction_probs[model_type] = prob
+```
+
+Yalnızca bu iki değişiklik **davranış değiştirmez** (golden aynı kalmalı). Kazanç, modeller kancayı override edince gelir.
+
+### 8.3 Main için yapılacaklar (planlanmadı)
+
+1. Kancayı al: `git checkout experiment/timesfm -- ` yapmak yerine iki dosyadaki yalnızca §8.2 parçalarını elle taşı (daldaki `ensemble.py` TimesFM kaydını da içeriyor).
+2. BiLSTM ve TFT'de `_predict_last` override: yalnızca son `lookback` penceresini normalize et, **tek** forward pass'te `_predict_sequences_with_direction` ile nokta + yön birlikte.
+   - Dikkat: `X.shape[0] < lookback` dalı bugün farklı davranıyor (tüm X tek sekans; yön `None`). Override bu dalı aynen korumalı.
+   - Dikkat: nokta tahmini bugün `_predict_sequences`, yön `_predict_sequences_with_direction` yolundan geliyor; ikisinin aynı nokta değerini verdiği doğrulanmadan birleştirme.
+3. Doğrulama: `python tests/test_prediction_regression.py` (golden değişmemeli) + son satır eşdeğerliği için küçük bir test (eski yol `pred[-1]` == yeni yol, `atol=1e-6`).
+4. Ölçüm: `predict_next` süresi, 5 sembol, önce/sonra.
+
+---
+
 ## İlgili dokümanlar
 
 - [prediction-system.md](prediction-system.md) — tahmin sistemi mimarisi (ensemble, feature engineering)
