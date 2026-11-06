@@ -143,12 +143,20 @@ class TechnicalIndicators:
         volatility = returns.rolling(window=window, min_periods=20).std()
         return (volatility * 100).fillna(0)
 
-    def add_all_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+    def add_all_indicators(self, df: pd.DataFrame, warmup: str = 'bfill') -> pd.DataFrame:
         """
         Tüm teknik indikatörleri DataFrame'e ekle
 
         Args:
             df: Input DataFrame (symbol level)
+            warmup: Faz 9 / B7 (Faz 10 Y15) — isinma boslugu.
+                'bfill' (varsayilan, eski davranis): ffill -> bfill -> 0. Ilk gecerli
+                    (GELECEKTEKI) deger sembolun ilk satirlarina geriye yazilir.
+                'nan': yalnizca ffill (nedensel); RSI/CCI isinma satirlari NaN kalir. Kesme
+                    degismezligi (B0) bu modda gecer; RL veri kapisi bu satirlari atar.
+                    Not: MACD ewm(adjust=False) ilk satirdan deger uretir (NaN isinmasi yok);
+                    sembol duzeyi turbulence 0 ile baslar (nedensel yer tutucu); ADX bu
+                    modda TUMUYLE NaN cikar — "ADX = 0"in koku (K18).
 
         Returns:
             DataFrame with technical indicators
@@ -167,9 +175,12 @@ class TechnicalIndicators:
 
         # NaN değerleri forward fill
         indicator_cols = ['macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence']
+        if warmup not in ('bfill', 'nan'):
+            raise ValueError(f"warmup 'bfill' ya da 'nan' olmali: {warmup}")
         df[indicator_cols] = df[indicator_cols].ffill()  # Forward fill
-        df[indicator_cols] = df[indicator_cols].bfill()  # Backward fill
-        df[indicator_cols] = df[indicator_cols].fillna(0)
+        if warmup == 'bfill':
+            df[indicator_cols] = df[indicator_cols].bfill()  # Backward fill (ileriye bakis, B7)
+            df[indicator_cols] = df[indicator_cols].fillna(0)
 
         return df
 
@@ -219,12 +230,13 @@ def _calculate_mahalanobis_turbulence(df: pd.DataFrame, window: int = 252) -> pd
     return turbulence_values.fillna(0)
 
 
-def add_indicators_to_multi_symbol_df(df: pd.DataFrame) -> pd.DataFrame:
+def add_indicators_to_multi_symbol_df(df: pd.DataFrame, warmup: str = 'bfill') -> pd.DataFrame:
     """
     Multi-symbol DataFrame'e teknik indikatörleri ekle
 
     Args:
         df: Multi-index DataFrame (symbol, date)
+        warmup: 'bfill' (varsayilan, eski) | 'nan' — bkz. TechnicalIndicators.add_all_indicators
 
     Returns:
         DataFrame with technical indicators for all symbols
@@ -239,7 +251,7 @@ def add_indicators_to_multi_symbol_df(df: pd.DataFrame) -> pd.DataFrame:
         symbol_df = df.xs(symbol, level='symbol').copy()
 
         # İndikatörleri ekle
-        symbol_df = calculator.add_all_indicators(symbol_df)
+        symbol_df = calculator.add_all_indicators(symbol_df, warmup=warmup)
 
         result_dfs.append((symbol, symbol_df))
 

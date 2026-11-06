@@ -315,7 +315,7 @@ class BaseHyperparameterOptimizer:
             if data_fetcher is None:
                 data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
             rows_before = len(df)
-            df = data_fetcher.clean_data(df)
+            df = data_fetcher.clean_data(df, leading='drop')  # B7: bas satira gelecek yazilmaz
             if len(df) != rows_before:
                 logger.info(
                     f"🧹 Temizlik: {rows_before - len(df):,} satir dusuruldu "
@@ -340,8 +340,10 @@ class BaseHyperparameterOptimizer:
                 f"HPO penceresi {start_date} istendi; RL veri penceresi {rl_start}'den "
                 f"once baslayamaz (Faz 10 K17) -> {eff_start.date()} kullaniliyor"
             )
+        # B7: gosterge isinma blogu atilir (HPO paneli bugun gostergesiz — Y21;
+        # R1 gostergeli paneli bagladiginda gecerli olur)
         df, self.last_integrity_report = prepare_rl_panel(
-            df, start=str(eff_start.date()), end=end_date)
+            df, start=str(eff_start.date()), end=end_date, drop_indicator_warmup=True)
 
         # 2. Load Phase 2 data (fundamental + macro) if needed
         fundamental_df = None
@@ -468,7 +470,7 @@ class BaseHyperparameterOptimizer:
             from evaluation.trial_registry import CLEAN_PROTOCOL, register_trial, rl_eval_protocol
             try:
                 # HPO denemesinin hiperparametreleri kendi yapilandirmasidir -> True
-                protocol = rl_eval_protocol(val_env, train_env, indicator_bfill=True,
+                protocol = rl_eval_protocol(val_env, train_env,
                                             health=health, hyperparams_clean=True)
             except Exception as exc:
                 logger.warning(f"Deneme protokolu olculemedi ({exc}); maddeler acik yaziliyor")

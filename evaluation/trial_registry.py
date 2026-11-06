@@ -28,7 +28,9 @@ varsayilan olarak dislar). Maddeler:
       'train_window_fallback'. `price_stats_source()` olcegin KOKENINI olcer
       (hakem-2 B9 #3): egitim ortaminin kendi penceresinden mi, o pencere
       degerlendirmeden once mi bitiyor, degerler birebir ayni mi.
-  indicator_bfill=True — gosterge isinma boslugu bfill ile dolu (Y15 / B7), acik
+  indicator_bfill=True — egitim ya da degerlendirme verisinde sembol basinda bfill
+      imzali gosterge blogu kaldi (Y15 / B7), acik. OLCULUR (rl_eval_protocol);
+      rota/HPO blogu veri kapisinda atiyor (prepare_rl_panel drop_indicator_warmup).
   adx_constant=True    — ADX tum panelde 0 (K18), acik
   indicators_present=False — gozlemin gosterge sutunlari panelde yok, env sabit
       varsayilan goruyor (HPO ham OHLCV okuyor; Faz 9 §9.5 Y21), acik
@@ -142,17 +144,18 @@ def indicators_present(source) -> bool:
     return all(c in frame.columns for c in OBS_INDICATOR_COLUMNS)
 
 
-def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = True,
+def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None,
                      health: Optional[dict] = None,
                      hyperparams_clean: Optional[bool] = True) -> dict:
     """RL degerlendirme kaydinin protokolu; rota ve HPO ayni hesabi kullanir.
 
     Ortamdan OLCULENLER: price_stats_source (koken), adx_constant,
-    indicators_present, price_in_support (`health` verilmezse burada olculur).
-    Cagiranin BEYANLARI: indicator_bfill (B7 bitene kadar True) ve
-    hyperparams_clean (rota HPO calismasinin kaydindan cozer; HPO denemesinin
-    kendisi icin True). Gosterge sutunlari yoksa bfill sorusu anlamsizdir
-    (None) ve ADX sabit varsayilan 0'dir (True).
+    indicators_present, price_in_support (`health` verilmezse burada olculur) ve
+    indicator_bfill (B7: egitim YA DA degerlendirme verisinde sembol basinda
+    bfill imzali gosterge blogu kaldi mi; `indicator_bfill` verilirse beyan onu
+    ezer). Cagiranin BEYANI: hyperparams_clean (rota HPO calismasinin kaydindan
+    cozer; HPO denemesinin kendisi icin True). Gosterge sutunlari yoksa bfill
+    sorusu anlamsizdir (None) ve ADX sabit varsayilan 0'dir (True).
     """
     if eval_env is None:
         return {k: None for k in CLEAN_PROTOCOL}
@@ -164,6 +167,17 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = True
     present = indicators_present(base)
     cols = base.df.columns
     adx_const = ('adx' not in cols) or bool(base.df['adx'].nunique(dropna=True) <= 1)
+    if indicator_bfill is None and present:
+        from data.integrity import BFILL_WARMUP_COLS, indicator_warmup_blocks
+        frames = [base.df] + ([getattr(train_env, 'unwrapped', train_env).df]
+                              if train_env is not None else [])
+
+        def contaminated(f):
+            # bfill imzali bas blok YA DA ('nan' modu) isinma sutununda NaN satir
+            live = [c for c in BFILL_WARMUP_COLS if c in f.columns and f[c].notna().any()]
+            return bool(indicator_warmup_blocks(f)) or bool(live and f[live].isna().any().any())
+
+        indicator_bfill = any(contaminated(f) for f in frames)
     return {
         'price_stats_source': price_stats_source(base, train_env),
         'indicator_bfill': indicator_bfill if present else None,

@@ -140,20 +140,28 @@ def activity_mask(df: pd.DataFrame) -> pd.DataFrame:
 
 
 INDICATOR_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence')
+# B7: bfill ile doldurulan isinma sutunlari. turbulence DISARIDA: Mahalanobis'in ilk
+# 252 tarihi nedensel bir 0 yer tutucudur, bfill degil (hakem-2 B7 #1 — sayilinca 2018
+# baslangicli panelde her sembolden ~1 yil atiliyordu). adx DISARIDA: sabit (K18).
+BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci')
+WARMUP_MIN_LEN = 2          # kapi, protokol ve rapor ayni esigi kullanir (hakem-2 B7 #4)
+WARMUP_WARN_ROWS = 30       # sembol basina bundan fazla atim beklenmez -> uyari
 LARGE_MOVE = 0.20   # rapor esigi (artefakt DEGIL): BIST fiyat limitini asan kapanis hareketi
 
 
-def indicator_warmup_blocks(df: pd.DataFrame, min_len: int = 5) -> dict:
-    """Sembol basinda ayni degerin tekrarlandigi gosterge bloklari.
+def indicator_warmup_blocks(df: pd.DataFrame, min_len: int = WARMUP_MIN_LEN,
+                            cols=BFILL_WARMUP_COLS) -> dict:
+    """Sembol basinda ilk degerin birebir tekrarlandigi gosterge bloklari (bfill imzasi).
 
-    `technical_indicators.py` isinma boslugunu bfill ile dolduruyor (Faz 10
-    Y15 / B7, bu kapida duzeltilmedi): ilk gecerli (GELECEKTEKI) deger geriye
-    yayiliyor. Ornek: ODAS CCI 2013-05-21..2013-06-17 sabit (hakem-2). Tum
-    panelde sabit sutunlar (ADX) burada sayilmaz — `constant_columns`'ta.
+    `technical_indicators.py` varsayilan ('bfill') modda isinma boslugunu bfill ile
+    dolduruyor (Faz 10 Y15): ilk gecerli (GELECEKTEKI) deger geriye yayiliyor. Ornek:
+    ODAS CCI 2013-05-21..2013-06-17 sabit. B7 (Faz 9 §9.7) RL kapisinda bu blogu atar
+    (`prepare_rl_panel(drop_indicator_warmup=True)`). Tum panelde sabit sutunlar (ADX)
+    ve turbulence'in nedensel 0 basi sayilmaz (BFILL_WARMUP_COLS).
     Donus: {sembol: {sutun: blok_uzunlugu}}.
     """
     x = _long(df)
-    cols = [c for c in INDICATOR_COLS if c in x.columns and x[c].nunique(dropna=True) > 1]
+    cols = [c for c in cols if c in x.columns and x[c].nunique(dropna=True) > 1]
     out = {}
     for sym, g in x.groupby('symbol', sort=False):
         for c in cols:
@@ -214,6 +222,7 @@ def prepare_rl_panel(
     ghost_threshold: float = 0.9,
     drop_stale_cells: bool = True,
     on_artifact: str = 'raise',
+    drop_indicator_warmup: bool = False,
 ) -> Tuple[pd.DataFrame, dict]:
     """RL egitimi/HPO icin paneli pencerele, tara ve temizle.
 
@@ -223,6 +232,13 @@ def prepare_rl_panel(
         start: pencere baslangici; None -> RL_DATA_START (K17).
         on_artifact: 'raise' (varsayilan; DataIntegrityError) | 'warn'.
             Artefakt satirlari hicbir modda sessizce silinmez.
+        drop_indicator_warmup: Faz 9 / B7 (Faz 10 Y15). Gosterge isinma boslugu
+            `technical_indicators` tarafindan bfill ile dolduruldugu icin sembolun
+            ilk satirlari ilk gecerli (GELECEKTEKI) degeri tasir. True ise bu blok
+            (sembolun TAM gecmisinde ilk degerin birebir tekrari, >= 2 satir) pencere
+            icinde atilir; hucre EKSIK sayilir (own_last: islem yok). Varsayilan False
+            (eski davranis); rota ve HPO True verir. Ayni degerin dogal tekrari da
+            blok sayilabilir: fazladan birkac gercek satir atilir, sizinti olmaz.
 
     Returns:
         (temiz panel, rapor). Rapor model meta dosyasina ve manifeste yazilir.
@@ -266,6 +282,38 @@ def prepare_rl_panel(
             own = pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates])
             clean = clean[~own.isin(key)]
 
+    warmup_dropped = {}
+    if drop_indicator_warmup:
+        # Blok sembolun TAM gecmisinde olculur (pencere oncesinde baslayabilir)
+        blocks = indicator_warmup_blocks(df)
+        idx = clean.index
+        cdates = pd.to_datetime(idx.get_level_values('date'))
+        if getattr(cdates, 'tz', None) is not None:
+            cdates = cdates.tz_localize(None)
+        drop = np.zeros(len(clean), dtype=bool)
+        full_dates = _long(df).groupby('symbol', sort=False)['date']
+        for sym, cols in blocks.items():
+            n = max(cols.values())
+            block_dates = full_dates.get_group(sym).iloc[:n]
+            m = (idx.get_level_values('symbol') == sym) & cdates.isin(block_dates)
+            if m.any():
+                warmup_dropped[sym] = int(m.sum())
+                drop |= m
+        # 'nan' modunda uretilmis panel: isinma satirlari NaN (bfill imzasi yok).
+        # Tumuyle NaN sutun (ADX, K18) haric, isinma sutununda NaN olan satir atilir.
+        live = [c for c in BFILL_WARMUP_COLS if c in clean.columns and clean[c].notna().any()]
+        if live:
+            nan_rows = clean[live].isna().any(axis=1).to_numpy() & ~drop
+            if nan_rows.any():
+                for sym, k in pd.Series(idx.get_level_values('symbol')[nan_rows]).value_counts().items():
+                    warmup_dropped[sym] = warmup_dropped.get(sym, 0) + int(k)
+                drop |= nan_rows
+        clean = clean[~drop]
+        big = {s: k for s, k in warmup_dropped.items() if k > WARMUP_WARN_ROWS}
+        if big:
+            logger.warning(f"Isinma atimi beklenenden buyuk (> {WARMUP_WARN_ROWS} satir): {big}. "
+                           f"Gosterge sutunlarini kontrol edin (bkz. BFILL_WARMUP_COLS).")
+
     # Kullanilmayan dizin seviyelerini at: atilan tarihler seviyede kalirsa
     # unstack/kesitsel hesaplar sirasiz tarih uretebiliyor (hakem-2 #11).
     clean = clean.copy()
@@ -288,7 +336,8 @@ def prepare_rl_panel(
         'n_dates': int(act.shape[0]),
         'missing_cell_frac': float(1.0 - act.to_numpy().mean()) if act.size else None,
         'first_active': first_active,
-        # Bilinen acik veri sorunlari — rapor, durdurmaz (B7 / K18 kapilari)
+        # B7: atilan isinma satirlari; atilmadiysa kalan bloklar RAPORLANIR
+        'indicator_warmup_dropped': warmup_dropped,
         'indicator_warmup_blocks': indicator_warmup_blocks(clean),
         'n_large_moves': int(len(large_moves(clean))),
     }

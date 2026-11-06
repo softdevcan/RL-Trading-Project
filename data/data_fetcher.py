@@ -316,14 +316,21 @@ class DataFetcher:
 
         return df
 
-    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def clean_data(self, df: pd.DataFrame, leading: str = 'bfill') -> pd.DataFrame:
         """
         Veri temizleme
 
         - NaN değerleri forward fill
         - Negatif fiyatları kaldır
         - Duplicate kayıtları kaldır
+
+        leading: Faz 9 / B7 — sembolun ilk gecerli satirindan ONCEKI NaN satirlar.
+            'bfill' (varsayilan, eski davranis): ilk gecerli (gelecekteki) degerle doldurulur.
+            'drop': fiyati NaN kalan bas satirlar atilir (ffill nedensel; sonrasi etkilenmez).
+            Olcum (2026-11-06): ham panelde bas NaN satir YOK; bugunku veride iki mod ayni.
         """
+        if leading not in ('bfill', 'drop'):
+            raise ValueError(f"leading 'bfill' ya da 'drop' olmali: {leading}")
         logger.info("Cleaning data...")
 
         # Duplicate index kaldır
@@ -338,8 +345,12 @@ class DataFetcher:
             # Forward fill NaN değerler (#12)
             symbol_df = symbol_df.ffill()
 
-            # Geriye kalan NaN'ları backward fill
-            symbol_df = symbol_df.bfill()
+            # Geriye kalan NaN'lar yalnizca BAS satirlarda olabilir (ffill sonrasi)
+            if leading == 'bfill':
+                symbol_df = symbol_df.bfill()  # gelecek degeri geriye yazar (B7)
+            else:
+                price_cols = [c for c in ('open', 'high', 'low', 'close') if c in symbol_df.columns]
+                symbol_df = symbol_df.dropna(subset=price_cols)
 
             # Hala NaN varsa 0 ile doldur (volume için)
             symbol_df = symbol_df.fillna(0)
