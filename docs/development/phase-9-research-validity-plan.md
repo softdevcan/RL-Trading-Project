@@ -523,7 +523,7 @@ Neden: TL fiyatları eğitim penceresi ortalamasının onlarca std üstünde. Fa
 |---|---|---|---|---|
 | A2C (n=3) | 0,661 ± 0,085 | 0,743 ± 0,338 | +0,14 / −0,35 / +0,46 (p=0,76) | 610 → 2.632 |
 | PPO (n=3) | 0,596 ± 0,049 | 0,752 ± 0,215 | −0,11 / +0,35 / +0,23 (p=0,38) | 5.564 → 905 |
-| Gözlem vektöründe kırpılan oran | %1–2 | %28–29 | | |
+| Gözlem vektöründe kırpılan oran (6 koşum) | %0–2,5 | %27,6–29,7 | | |
 
 - p tek örneklem t-testinden. n küçük olduğu için bu tablo yön için değil büyüklük içindir.
 - Bağlam: aynı pencerede komisyonsuz eşit ağırlıklı al-tut getirisi +%56,4.
