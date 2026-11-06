@@ -50,6 +50,15 @@ class TrainingRequest(BaseModel):
         default=None,
         description="Name of hyperparameter study file to use (e.g., 'best_params_ppo_ppo_optimization_753db76c.json')"
     )
+    # Faz 9 / C1: verilmezse egitim rotasi rastgele bir tohum URETIR ve onu
+    # model meta dosyasina, manifeste ve deneme kaydina yazar — tohumsuz kosum
+    # kalmaz.
+    seed: Optional[int] = Field(
+        default=None,
+        description="RL training seed (None = generate and record one)",
+        ge=0,
+        lt=2**32,
+    )
 
     class Config:
         json_schema_extra = {

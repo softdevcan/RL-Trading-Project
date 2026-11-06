@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # Determinizm (G.5): tum tahmin modeli random_state'inin tek kaynagi.
     PREDICTION_SEED: int = 42
 
+    # Faz 10 K17: RL egitim/HPO veri penceresinin baslangici. Panelde en gec
+    # baslayan sembol ODAS (2013-05-21); oncesindeki 2000-2005 fiyat
+    # artefaktlari ve 2009 sicramasi pencere disinda kalir. Bkz. data/integrity.py
+    RL_DATA_START: str = "2013-06-01"
+
     # Paralel veri cekme (1.1): yfinance rate-limit'e saygili ThreadPool.
     # 1 = eski seri yol (byte-eş). Uygulama env: DATA_FETCH_WORKERS.
     DATA_FETCH_WORKERS: int = 8

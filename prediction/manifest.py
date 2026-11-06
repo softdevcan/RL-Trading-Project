@@ -109,6 +109,28 @@ def _gpu_info() -> str:
         return 'unknown'
 
 
+def _environment() -> Dict[str, Any]:
+    """C4: paket surumleri, GPU, torch belirlenimcilik bayraklari."""
+    try:
+        from evaluation.reproducibility import environment_record
+        return environment_record()
+    except Exception as exc:
+        return {'error': str(exc)}
+
+
+def verify_manifest_snapshots(path: str) -> List[Dict[str, Any]]:
+    """C3: manifestteki her veri anlik goruntusunun hash'ini yeniden olc.
+
+    Uyusmazlik `evaluation.reproducibility.verify_snapshot` tarafindan
+    uyari olarak loglanir; sonuc listesi cagirana doner.
+    """
+    from evaluation.reproducibility import verify_snapshot
+
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+    return [verify_snapshot(e) for e in data.get('data_snapshots', [])]
+
+
 class TrainingManifest:
     """Bir batch eğitim koşumunun yapılandırılmış kaydı."""
 
@@ -130,6 +152,9 @@ class TrainingManifest:
 
         self.symbols: Dict[str, Dict[str, Any]] = {}
         self.data_quality: Dict[str, str] = {}
+        # Faz 9 / C1, C3: tohum ve veri anlik goruntusu (cagiran set eder)
+        self.seed: Optional[int] = None
+        self.data_snapshots: List[Dict[str, Any]] = []
         self._finalized = False
         # Yazma dizini kosum basinda bir kez cozulur: uzun batch sirasinda
         # calisma alani baglami degisse bile manifest tek yere yazilir.
@@ -140,6 +165,15 @@ class TrainingManifest:
         """Makro/veri kalite bayraklarını kaydet (G.2 ile entegre)."""
         if dq:
             self.data_quality.update(dq)
+
+    def set_seed(self, seed: Optional[int]):
+        """C1: kosumun tohumu (RL egitimi, HPO)."""
+        self.seed = None if seed is None else int(seed)
+
+    def add_data_snapshot(self, entry: Dict[str, Any]):
+        """C3: `evaluation.reproducibility.snapshot_frame` ciktisi."""
+        if entry:
+            self.data_snapshots.append(entry)
 
     def record_symbol(
         self,
@@ -194,6 +228,9 @@ class TrainingManifest:
             'wall_clock_seconds': round(time.perf_counter() - self._t0, 1),
             'git_commit': _git_commit(),
             'gpu': _gpu_info(),
+            'environment': _environment(),
+            **({'seed': self.seed} if self.seed is not None else {}),
+            **({'data_snapshots': self.data_snapshots} if self.data_snapshots else {}),
             'requested_symbols': self.requested_symbols,
             'summary': self._summary(),
             'data_quality': self.data_quality or {},

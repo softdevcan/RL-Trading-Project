@@ -1,9 +1,9 @@
 # Faz 10 — Çoklu-Ajan Yenileme Planı: Tahmin, RL ve Karar Katmanı
 
-**Durum:** Plan — **onay bekliyor, kod değişikliği yapılmadı** (2026-11-06). hakem-2 incelemesi: **Büyük revizyon**. İtirazlar ve her birinin plana etkisi §8'de. Doğrulanan olgu hataları gövdede düzeltildi (bkz. Versiyon geçmişi).
+**Durum:** **Onaylandı (2026-11-06)**, §8 hakem-2 eklemeleriyle. Kullanıcının açıkça verdiği kararlar K1, K17 ve K23 (§6). Diğer K maddelerinde plandaki öneri geçerli; ilgili paket başlamadan teyit edilir. İlk kapı (V + A + C) uygulandı → [Faz 9 §9](phase-9-research-validity-plan.md#9-uygulama-durumu). hakem-2 incelemesi (plan): **Büyük revizyon**; itirazlar ve plana etkileri §8'de.
 **Dayanak:** [vision-and-scope.md v0.3](../thesis/vision-and-scope.md) (§1.4, §2.5, §3, §4, §7) · [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) (Y1–Y10, A–G, M1–M8, §7) · [literature-table.md](../thesis/literature-table.md) (2026-10-07, 148 seçilmiş kayıt) · [roadmap.md → Bilinen Metodolojik Açıklar](roadmap.md#bilinen-metodolojik-açıklar-planlanmadı)
 **Kod durumu:** `chore/claude-academic-setup` @ 7817d79. Faz 9'un dayandığı b82fedb'den bu yana üretim kodu değişmedi: `git diff --stat b82fedb..HEAD -- '*.py' ':!scripts/literature'` yalnızca `.claude/hooks/guard.py` gösteriyor.
-**Faz 9 ile ilişki:** Faz 10, Faz 9'un yerine geçmez, üstüne kurulur. **Faz 9 onaylanmadan Faz 10'un hiçbir kod işi başlamaz.** Faz 9 paketlerine eklenen maddeler (B7–B9, F4 vb.) Faz 9 numaralandırmasını sürdürür.
+**Faz 9 ile ilişki:** Faz 10, Faz 9'un yerine geçmez, üstüne kurulur. Faz 9 ve Faz 10 2026-11-06'da birlikte onaylandı. Faz 9 paketlerine eklenen maddeler (B7–B9, F4 vb.) Faz 9 numaralandırmasını sürdürür.
 
 ---
 
@@ -28,7 +28,10 @@
    - M1 çerçeve spike'ı A–G ile paralel yürür; rapora girecek sayı üretmez.
    - P paketi Milestone 0''dan önce gelir.
    - A seçilirse E2 kritik yoldan çıkar.
-7. **Senden karar bekleyen 24 konu var (§6).** 5'i Faz 9 §7'den, 19'u yeni; 8'i hakem-2 incelemesinden çıktı. **K23 (herkese açık depoda EVDS anahtarı) diğer her şeyden önce gelir.**
+7. **Karar maddeleri (§6):** 24 madde; 5'i Faz 9 §7'den, 19'u yeni, 8'i hakem-2 incelemesinden. 2026-11-06'da işlendi:
+   - **K1:** varsayılan çevrilir, golden Milestone 0' ile bir kez yenilenir.
+   - **K17:** RL penceresi 2013-06'dan başlar.
+   - **K23:** anahtar koddan kaldırıldı (PR #3), yenilenmeyecek.
 
 ---
 
@@ -401,7 +404,7 @@ Faz 9 §7'deki açık kararlar (1–5) ve bu turda çıkanlar (6–16):
 
 | # | Karar | Önerim | Neyi etkiler |
 |---|---|---|---|
-| **K1** | **Tahmin golden'ı** (Faz 9 #1; B1, şimdi B10 da) | **Varsayılanı çevir, golden'ı Milestone 0' ile birlikte bir kez yenile.** B1 ve B10'un ikisi de varsayılan hatta etkin; ikisini ayrı ayrı yenilemenin akademik değeri yok. Golden yenilemesi GPU'lu makinede: `python tests/test_prediction_regression.py --update` (CLAUDE.md) | `tests/test_prediction_regression.py`; tüm tahmin çıktıları; mevcut tahmin modelleri yeniden eğitilmeli |
+| **K1** | **Tahmin golden'ı** (Faz 9 #1; B1, şimdi B10 da) | **KARAR (2026-11-06): kabul.** Varsayılanı çevir, golden'ı Milestone 0' ile birlikte bir kez yenile. B1 ve B10'un ikisi de varsayılan hatta etkin; ikisini ayrı ayrı yenilemenin akademik değeri yok. Golden yenilemesi GPU'lu makinede: `python tests/test_prediction_regression.py --update` (CLAUDE.md) | `tests/test_prediction_regression.py`; tüm tahmin çıktıları; mevcut tahmin modelleri yeniden eğitilmeli |
 | **K2** | **EVDS erişimi** (Faz 9 #2; B2) | Anahtar `.env`'de tanımlı, ama son çekimde üç seri yedeğe düştü (§1.2). **Senin işin:** EVDS hesabında anahtarın geçerli olduğunu teyit etmek. Teşhis (seri kodları / uç) B2'de yapılır | B2, B3, D3 (TÜFE-reel getiri) **ve A8**: risksiz faiz politika faizi serisinden gelecekse EVDS çalışmadan A8 tamamlanamaz |
 | **K3** | **Tarihsel BIST-30 bileşenleri** (Faz 9 #3; E1) | Faz 9'daki gibi: önce temin dene, 2 haftada bulunamazsa hayatta kalma yanlılığını sınırlılık olarak beyan et (Brown vd. 1992). K7'ye bağlı | E1, D5 evren maskesi, Makale 1–2 sınırlılık paragrafı |
 | **K4** | **Ödül terimi** (Faz 9 #4; G1) | Faz 9'daki gibi: Milestone 0' ön elemesinde `differential` ve `ema_level` ikisi de denensin, seçim deneme kaydına girsin | G paketi, MARL portföy terimi Rₜ |
@@ -418,12 +421,12 @@ Faz 9 §7'deki açık kararlar (1–5) ve bu turda çıkanlar (6–16):
 | **K15** | **SARL kontrol kolları** (yeni) | SARL-ağırlık ve SARL-eşmimari ikisi de nihai tasarımda olsun (§3.2.4) | Hesaplama bütçesi (+2 yapılandırma × tohum), H1'in yorumu |
 | **K16** | **Faz 9'un onayı** | Faz 10 Faz 9'a bağlı; önce Faz 9 (bu plandaki B7–B10 ve F4 eklemeleriyle) onaylanmalı | Tüm plan |
 
-**hakem-2 incelemesinden çıkan kararlar** (§8). K23 güvenlik maddesi; diğer her şeyden önce gelir.
+**hakem-2 incelemesinden çıkan kararlar** (§8). K23 güvenlik maddesiydi; 2026-11-06'da kapandı (aşağıda).
 
 | # | Karar | Önerim | Neyi etkiler |
 |---|---|---|---|
-| **K23** | **EVDS API anahtarı kaynak kodda ve herkese açık depoda** (§8 #17) | Anahtar `hyperparameter_optimization/base_optimizer.py:341`'de sabit yazılı (değer bu belgeye yazılmadı). Satır c87cc38'den (2025-12-15) beri git'te izleniyor ve `origin/main`'de duruyor; `gh repo view` deponun **PUBLIC** olduğunu gösteriyor. Öneri:<br>1. **Anahtarı EVDS'de hemen yenile** (senin işin, dışarıya açık).<br>2. Koddan çıkar ve `.env`'den oku (onay sonrası küçük bir kod işi).<br>Git geçmişini yeniden yazmak ancak yenilemeden sonra ve ayrı bir kararla yapılır; anahtar zaten açıkta olduğu için asıl çare yenilemek | Güvenlik; B2 teşhisi (yeni anahtarla) |
-| **K17** | **Veri bütünlüğü kapısı (yeni paket V) ve RL veri penceresi** (§8 #1) | V paketi A–G ile aynı kapıda, MARL'dan önce. İçeriği:<br>• artefakt tarayıcı: seviye sıçraması, \|r\| eşiği, 2005 YTL geçişi<br>• hayalet gün filtresi<br>• sembol aktiflik maskesi: softmax yalnızca aktif ajanlar üzerinde; komşu sembol kopyalanmaz<br>• B0'a bir veri sağlığı testi<br>**RL penceresi 2013-06'dan başlasın:** panelde en geç başlayan sembol ODAS (2013-05-21, Ek A komut 1), yani bu tarihten sonra 30 sembolün hepsi panelde. 2000–2005 artefaktları ve 2009 sıçraması pencere dışında kalır; tarayıcı yine de çalışır. Vision §4.1'deki "2018-2026"ya göre örneklem dışı gün sayısı artar (#8) | vision §4.1; tüm RL sonuçları; mevcut `results/*.json` sınırlılık olarak işaretlenir |
+| **K23** | **EVDS API anahtarı kaynak kodda ve herkese açık depoda** (§8 #17) | **KARAR (2026-11-06): anahtar koddan kaldırıldı, `.env`'den okunuyor (PR #3, 8a5cdb8); anahtar yenilenmeyecek** (kullanıcı kararı). Git geçmişi yeniden yazılmadı; eski değer c87cc38..8a5cdb8 arası commit'lerde ve herkese açık depoda görünür kalıyor. Bu, kabul edilmiş bir risk olarak kayıtlı | Güvenlik (kabul edilen risk); B2 teşhisi mevcut anahtarla yapılır |
+| **K17** | **Veri bütünlüğü kapısı (yeni paket V) ve RL veri penceresi** (§8 #1) | V paketi A–G ile aynı kapıda, MARL'dan önce. İçeriği:<br>• artefakt tarayıcı: seviye sıçraması, \|r\| eşiği, 2005 YTL geçişi<br>• hayalet gün filtresi<br>• sembol aktiflik maskesi: softmax yalnızca aktif ajanlar üzerinde; komşu sembol kopyalanmaz<br>• B0'a bir veri sağlığı testi<br>**KARAR (2026-11-06): kabul; uygulandı** (`data/integrity.py`, `RL_DATA_START`; Faz 9 §9). **RL penceresi 2013-06'dan başlasın:** panelde en geç başlayan sembol ODAS (2013-05-21, Ek A komut 1), yani bu tarihten sonra 30 sembolün hepsi panelde. 2000–2005 artefaktları ve 2009 sıçraması pencere dışında kalır; tarayıcı yine de çalışır. Vision §4.1'deki "2018-2026"ya göre örneklem dışı gün sayısı artar (#8) | vision §4.1; tüm RL sonuçları; mevcut `results/*.json` sınırlılık olarak işaretlenir |
 | **K18** | **Gözlem yeniden tasarımı ve ADX düzeltmesi** (§8 #2) | MARL ortamında ölçekten bağımsız özellik seti (log-getiri, kayan z, oran göstergeleri). Kabul ölçütüne "gözlem sağlığı" eklenir: kırpılan ve sabit özellik oranı eğitim ve testte ayrı ölçülür. Eski ortamda ADX düzeltmesi bayrakla gelir (davranış değişikliği; mevcut RL modelleri ADX ≡ 0 ile eğitildi). B9 eski ortamda doygunluk yaratıyor; bu beyan edilir | `data/technical_indicators.py`, eski RL modelleri, M2 `obs_spec`; state space boyutu değişmez |
 | **K19** | **Topluluğun dağıtım öncesi yeniden uyumu** (§8 #7) | P tablosu ve canlı karar için meta-öğrenici ve kalibrasyon **yalnızca örneklem dışı** tahminlerle uydurulur. Yani %80 yeniden uyum + örneklem içi meta yeniden uyumu ([ensemble.py:345–384](../../prediction/models/ensemble.py#L345)) kapatılır (bayrak) ya da çapraz uydurmayla yapılır. P1 kabul ölçütüne iki madde eklenir: "meta/kalibrasyon girdileri örneklem dışı" ve "t için son eğitim tarihi kayıtlı" | Tahmin golden'ı (K1 kapsamı), P1, F2, K3 |
 | **K20** | **RL walk-forward, çıkarım birimi ve güç** (§8 #8) | Yeni iş maddesi **R1:** RL katları, purge, doğrulamada erken durdurma / kontrol noktası kuralı. M8'de sabitlenecekler:<br>• çıkarım birimi: kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi<br>• A3 boyut/güç simülasyonuyla MDE<br>• M1 bütçesine göre kol budama kuralı<br>Hakemin kaba hesabıyla 1.000 günde yıllık Sharpe farkı MDE'si ≈ 0,4–0,6 (yalnızca büyüklük mertebesi). Vision §4.3'teki p<0,05 başarı ölçütü bu güçle yeniden değerlendirilmeli | vision §4.3; M8; hesaplama bütçesi |
@@ -528,3 +531,4 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
     - §0 madde 5 ve §2.3: itiraza karşılık ve özgünlük dili
   - Yeni karar maddeleri K17–K24; K23 (herkese açık depoda EVDS anahtarı) en öncelikli.
   - **Kod değişikliği yok.**
+- **2026-11-06 (onay):** Plan Faz 9 ile birlikte onaylandı. K1, K17 ve K23 kararları §6'ya işlendi. İlk kapı V + A + C uygulandı (Faz 9 §9). K18 (gözlem sağlığı) bu kapıda yapılmadı.

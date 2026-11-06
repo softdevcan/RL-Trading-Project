@@ -185,9 +185,16 @@ Paketleme.
 
 ---
 
-## Bilinen Metodolojik Açıklar (planlanmadı)
+<a id="bilinen-metodolojik-açıklar-planlanmadı"></a>
 
-2026-10-06 literatür doğrulaması sırasında kodda doğrulandı. **Bu bir iş listesi değil, bulgu kaydıdır**; düzeltmelerin kapsamı, sırası ve zamanı ayrı bir planlama turunda belirlenecek. Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
+## Bilinen Metodolojik Açıklar
+
+2026-10-06 literatür doğrulaması sırasında kodda doğrulandı. **Bu tablo bulgu kaydıdır.** Kapatılma planı Faz 9 + Faz 10'da ve **2026-11-06'da onaylandı**. Durumu güncel tutulan yer [Faz 9 §9 Uygulama durumu](phase-9-research-validity-plan.md#9-uygulama-durumu). 2026-11-06 itibarıyla:
+- **D1 ve D6 kapandı:** RL tohumu kaydediliyor; DSR düzeltildi.
+- **D2 kısmen kapandı:** DM-HLN, eşleştirilmiş test, Ledoit-Wolf, MCS ve FDR var; ECE bağlanmadı (F paketi).
+- **D3 kısmen kapandı:** tek kaynak modülü var, ama EVDS (B2) düzelene kadar açık hata veriyor.
+- **Diğerleri açık.**
+- **Bu kapıdan sonra üretilen RL sonuçları da** Y13/Y15/K18 nedeniyle ön sonuçtur (Faz 9 §9.2 #1). Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
 
 **Sızıntı (sonuç geçerliliği):**
 
@@ -211,7 +218,7 @@ Paketleme.
 | D7 | *2026-10-07:* Ödüldeki "Differential Sharpe" Moody-Saffell türevi değil, EMA Sharpe düzeyi (plan Y2) |
 | D8 | *2026-10-07:* Rejim metriği gerçekleşen getiriye koşullanıyor; güven tahmin edilen yönün olasılığı değil (plan Y3, Y4) |
 
-**Planlama (2026-10-07):** Bu açıkların kapatılma planı ve MARL tasarım kararları → [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) (**onay bekliyor**). Tam metinler: [../reference/papers/README.md](../reference/papers/README.md).
+**Planlama (2026-10-07):** Bu açıkların kapatılma planı ve MARL tasarım kararları → [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) ve [phase-10-marl-plan.md](phase-10-marl-plan.md) (**onaylandı 2026-11-06**; ilk kapı V + A + C uygulandı). Tam metinler: [../reference/papers/README.md](../reference/papers/README.md).
 
 Hedef protokol: [../thesis/vision-and-scope.md §4.1](../thesis/vision-and-scope.md). Bu açıklardan etkilenen veri/yapılandırmayla üretilmiş sonuçlar tez/makalede ya yeniden üretilmeli ya da sınırlılık olarak beyan edilmeli. tez-final.pdf sonuçlarının hangi makro/temel veri durumuyla üretildiği ayrıca kontrol edilmeli (henüz kontrol edilmedi).
 
@@ -237,5 +244,6 @@ Bu belge her milestone sonunda revize edilir. Milestone durumları burada günce
 
 ### Versiyon Geçmişi
 - **2026-04-21:** Faz 1-3 durum dökümü + tez milestone haritası eklendi. Önceki (Kasım 2025) taslak "Faz 2 TODO" versiyonu arşivlendi (git history'den erişilebilir).
-- **2026-10-07:** Faz 9 planı (onay bekliyor) ve seçilmiş kaynakça (literature-table.md) eklendi; D6–D8 bulguları kayda geçti.
+- **2026-11-06:** Faz 9 ve Faz 10 planları onaylandı; ilk kapı (V + A + C) uygulandı; D1 ve D6 kapandı, D2 ve D3 kısmen kapandı.
+- **2026-10-07:** Faz 9 planı (o tarihte onay bekliyordu) ve seçilmiş kaynakça (literature-table.md) eklendi; D6–D8 bulguları kayda geçti.
 - **2026-10-06:** Literatür doğrulaması işlendi: Milestone 1 literatür maddesi tamamlandı, Faz 2 "leakage yok" iddiası geri çekildi, TATS atfı eklendi, "Bilinen Metodolojik Açıklar" bölümü eklendi (planlanmadı; kod değişikliği yok).

@@ -1076,6 +1076,23 @@ def _audit_shared_model_delete(user, model_name: str) -> None:
         logger.warning(f"Ortak model silme denetim kaydina yazilamadi: {exc}")
 
 
+def _rl_protocol(panel: pd.DataFrame) -> Dict[str, Any]:
+    """RL degerlendirmesinin bilinen acik protokol maddeleri (deneme kaydi icin).
+
+    Bu kapida (Faz 9 ilk kapi) uc madde ACIK — kayit 'protocol_open' etiketi alir:
+      price_stats_source: test ortami fiyati test penceresinin kendi
+          istatistigiyle olcekliyor (Faz 10 Y13; B9 ile 'train_window' olacak)
+      indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7)
+      adx_constant: ADX panelde sabit (K18)
+    """
+    adx_const = bool('adx' in panel.columns and panel['adx'].nunique(dropna=True) <= 1)
+    return {
+        'price_stats_source': 'test_window',
+        'indicator_bfill': True,
+        'adx_constant': adx_const,
+    }
+
+
 async def run_training(request: TrainingRequest, user_id: Optional[str] = None):
     """
     Background task for model training
@@ -1137,6 +1154,19 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             df = fetcher.clean_data(df)
             df = add_indicators_to_multi_symbol_df(df)
             fetcher.save_data(df, 'stock_data_with_indicators.csv')
+
+        # Faz 10 / V + K17: RL penceresi 2013-06'dan baslar; pencerede fiyat
+        # artefakti varsa egitim DURUR (DataIntegrityError), hayalet gunler ve
+        # islem gormemis (bayat) hucreler atilir. Rapor meta dosyasina girer.
+        from data.integrity import prepare_rl_panel
+        from evaluation.reproducibility import resolve_seed, snapshot_frame
+
+        df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START)
+        # C3: egitimin gordugu panelin SHA-256'si + parquet anlik goruntusu
+        data_snapshot = snapshot_frame(df, 'rl_panel')
+        # C1: tohum her kosumda kayda girer (istekte yoksa uretilir)
+        seed = resolve_seed(request.seed)
+        training_state["seed"] = seed
 
         train_df, val_df, test_df = fetcher.split_data(df)
 
@@ -1218,7 +1248,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 phase=request.phase,
                 reward_type=reward_type,
                 fundamental_df=fundamental_df,
-                macro_df=macro_df
+                macro_df=macro_df,
+                # Faz 10 / V: eksik hucrede komsu sembol kopyalanmaz
+                missing_data_mode='own_last',
             )
 
         # Create one instance to get dimensions
@@ -1278,6 +1310,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 vf_coef=hyperparams.get('vf_coef', 0.5),
                 max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
                 tensorboard_log=ws.logs_dir(),
+                seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
         elif request.algorithm == "A2C":
@@ -1301,6 +1334,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 use_rms_prop=True,
                 rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
                 tensorboard_log=ws.logs_dir(),
+                seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
         elif request.algorithm == "TD3":
@@ -1332,6 +1366,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
                 target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
                 tensorboard_log=ws.logs_dir(),
+                seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
         elif request.algorithm == "SAC":
@@ -1357,6 +1392,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 target_update_interval=hyperparams.get('target_update_interval', 1),
                 use_sde=hyperparams.get('use_sde', False),
                 tensorboard_log=ws.logs_dir(),
+                seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
         else:
@@ -1367,6 +1403,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 env,
                 learning_rate=actual_learning_rate,
                 tensorboard_log=ws.logs_dir(),
+                seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
 
@@ -1405,6 +1442,28 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # "Unexpected observation shape" ile patliyordu. Sira onemli: durum
         # vektoru sembolleri env'deki sirayla diziyor.
         from app.services.daily_trading import write_model_meta
+
+        def _range(frame):
+            d = frame.index.get_level_values('date')
+            return [str(pd.Timestamp(d.min()).date()), str(pd.Timestamp(d.max()).date())] if len(d) else None
+
+        # Faz 9 / C: kosum manifesti (tohum, veri anlik goruntusu, ortam kaydi)
+        from prediction.manifest import TrainingManifest
+        rl_manifest = TrainingManifest(
+            run_kind='rl_train', symbols=list(temp_env.symbols), expected_models=set(),
+            extra={'model_name': model_name, 'algorithm': request.algorithm,
+                   'phase': request.phase, 'total_timesteps': request.total_timesteps,
+                   'data_integrity': integrity_report,
+                   'train_range': _range(train_df), 'val_range': _range(val_df),
+                   'test_range': _range(test_df), 'missing_data_mode': 'own_last',
+                   'protocol': _rl_protocol(df),
+                   'device': str(getattr(model, 'device', 'unknown'))},
+        )
+        rl_manifest.set_seed(seed)
+        rl_manifest.add_data_snapshot(data_snapshot)
+        if macro_df is not None:
+            rl_manifest.set_data_quality(macro_df.attrs.get('data_quality'))
+
         write_model_meta(model_path, {
             "model_name": model_name,
             "algorithm": request.algorithm,
@@ -1417,6 +1476,17 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "initial_balance": request.initial_balance,
             "max_shares_per_trade": request.max_shares_per_trade,
             "created_at": datetime.now().isoformat(timespec="seconds"),
+            # Faz 9 / C1, C3 + Faz 10 / V — yeniden uretilebilirlik alanlari.
+            # Eski modellerde bu alanlar yok (Faz 10 Y17).
+            "seed": seed,
+            "train_range": _range(train_df),
+            "val_range": _range(val_df),
+            "test_range": _range(test_df),
+            "rl_data_start": _settings.RL_DATA_START,
+            "missing_data_mode": "own_last",
+            "data_snapshot": data_snapshot,
+            "price_stats": temp_env.get_price_stats(),
+            "run_id": rl_manifest.run_id,
         })
 
         # Evaluate on test set
@@ -1429,7 +1499,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 phase=request.phase,
                 reward_type=reward_type,
                 fundamental_df=fundamental_df,
-                macro_df=macro_df
+                macro_df=macro_df,
+                missing_data_mode='own_last',
             )
 
         # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
@@ -1481,6 +1552,52 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # Save portfolio values history
         portfolio_history = [float(v) for v in actual_env.portfolio_values]
 
+        # Faz 9 / C2: deneme kaydi — test bolumunun gunluk getirileri (DSR'nin
+        # N/V'si ve PBO matrisi buradan okunur). Kayit basarisiz olursa egitim
+        # basarili sayilir ama durum uyarisi tasir: kayitsiz deneme N'yi
+        # eksik sayar.
+        trial_id = None
+        try:
+            from evaluation.trial_registry import register_trial
+            pv = np.asarray(portfolio_history, dtype=float)
+            test_returns = pv[1:] / pv[:-1] - 1.0
+            start = actual_env.frame_bound[0]
+            test_dates = actual_env._dates_list[start + 1: start + 1 + len(test_returns)]
+            trial_id = register_trial(
+                kind='rl_train',
+                config={
+                    'algorithm': request.algorithm, 'phase': request.phase,
+                    'total_timesteps': request.total_timesteps,
+                    'hyperparameters': hyperparams or {}, 'learning_rate': actual_learning_rate,
+                    'initial_balance': request.initial_balance,
+                    'commission_rate': request.commission_rate,
+                    'max_shares_per_trade': request.max_shares_per_trade,
+                    'reward_type': reward_type, 'missing_data_mode': 'own_last',
+                    'rl_data_start': _settings.RL_DATA_START,
+                    'symbols': list(temp_env.symbols),
+                },
+                seed=seed,
+                data_sha256=data_snapshot['sha256'],
+                # Bilinen acik protokol maddeleri (hakem-2 #1): bu kayit kanit
+                # olarak kullanilmaz ('protocol_open'), ama N sayimi icin durur.
+                protocol=_rl_protocol(df),
+                metrics={k: metrics.get(k) for k in ('cumulative_return', 'sharpe_ratio',
+                                                     'max_drawdown', 'total_trades')},
+                returns=test_returns, dates=test_dates, split='test',
+                extra={'model_name': model_name, 'run_id': rl_manifest.run_id},
+            )
+        except Exception as exc:
+            logger.warning(f"Deneme kaydina yazilamadi ({exc})")
+            training_state.setdefault("warnings", []).append(
+                f"Deneme kaydina yazilamadi: {exc}")
+        rl_manifest.extra['trial_id'] = trial_id
+        rl_manifest.extra['test_metrics'] = {k: metrics.get(k) for k in (
+            'cumulative_return', 'sharpe_ratio', 'max_drawdown', 'total_trades')}
+        try:
+            rl_manifest.finalize()
+        except Exception as exc:
+            logger.warning(f"RL manifesti yazilamadi ({exc})")
+
         # Calculate total training time
         total_training_time = time.time() - training_start_time
 
@@ -1497,6 +1614,10 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "hyperparameter_study": request.hyperparameter_study,  # Study file used (if any)
             "hyperparameters_used": hyperparams if hyperparams else {},  # All hyperparams used
             "trained_at": datetime.now().isoformat(),
+            "seed": seed,
+            "trial_id": trial_id,
+            "run_id": rl_manifest.run_id,
+            "test_range": _range(test_df),
             "training_time_seconds": total_training_time,
             "training_time_minutes": total_training_time / 60,
             "training_time_hours": total_training_time / 3600,
