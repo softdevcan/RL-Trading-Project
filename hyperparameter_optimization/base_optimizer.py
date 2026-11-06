@@ -237,6 +237,8 @@ class BaseHyperparameterOptimizer:
         phase: int = 2,
         reward_type: str = 'psr',
         use_cached_data: bool = True,
+        *,
+        price_stats: Optional[Dict[str, Dict[str, float]]],
     ) -> gym.Env:
         """
         Trading environment oluşturur.
@@ -249,6 +251,10 @@ class BaseHyperparameterOptimizer:
             reward_type: 'simple' (baseline) or 'psr' (risk-aware)
             use_cached_data: True ise data/bist/raw_stock_data.csv'den okur (CSV
                 ezilmez, yfinance çağrısı yok). Dosya yoksa fallback yfinance.
+            price_stats: Faz 9 / B9 — ZORUNLU anahtar (hakem-2 B9 #6: varsayilani
+                sizintili yol olmasin). Dogrulama ortami icin EGITIM ortaminin
+                `get_price_stats()` ciktisi; egitim ortami icin acikca None
+                (olcek bu pencereden — egitim ortaminda dogru tanim).
 
         Returns:
             Trading environment
@@ -374,6 +380,7 @@ class BaseHyperparameterOptimizer:
             fundamental_df=fundamental_df,
             macro_df=macro_df,
             missing_data_mode='own_last',  # Faz 10 / V
+            price_stats=price_stats,       # Faz 9 / B9
         )
 
         # 4. Monitor for statistics
@@ -448,10 +455,24 @@ class BaseHyperparameterOptimizer:
         return metrics
 
     def _register_trial(self, trial, hyperparams, stock_symbols, windows, total_timesteps,
-                        status, metrics=None, returns=None, dates=None):
-        """Faz 9 / C2 — Optuna denemesini deneme kaydina yaz (kayit hatasi denemeyi bozmaz)."""
+                        status, metrics=None, returns=None, dates=None,
+                        val_env=None, train_env=None, health=None):
+        """Faz 9 / C2 — Optuna denemesini deneme kaydina yaz (kayit hatasi denemeyi bozmaz).
+
+        Protokol rotayla ayni hesaptan, dogrulama ortaminin kendisinden ve
+        olcegin alindigi EGITIM ortamindan olculur (`rl_eval_protocol`). Ortam
+        kurulmadan biten ya da protokolu olculemeyen denemede maddeler None
+        (beyan edilmemis = acik) — kayit yine yazilir, N'ye sayilir.
+        """
         try:
-            from evaluation.trial_registry import register_trial
+            from evaluation.trial_registry import CLEAN_PROTOCOL, register_trial, rl_eval_protocol
+            try:
+                # HPO denemesinin hiperparametreleri kendi yapilandirmasidir -> True
+                protocol = rl_eval_protocol(val_env, train_env, indicator_bfill=True,
+                                            health=health, hyperparams_clean=True)
+            except Exception as exc:
+                logger.warning(f"Deneme protokolu olculemedi ({exc}); maddeler acik yaziliyor")
+                protocol = {k: None for k in CLEAN_PROTOCOL}
             train_start, train_end, val_start, val_end = windows
             return register_trial(
                 kind='rl_hpo',
@@ -464,12 +485,13 @@ class BaseHyperparameterOptimizer:
                 status=status,
                 metrics=metrics or {},
                 returns=returns, dates=dates, split='val',
-                # HPO ortami tek panelden kuruluyor ve price_stats'i kendi
-                # penceresinden aliyor (Y13 ile ayni sorun); gostergeler bfill'li.
-                protocol={'price_stats_source': 'own_window', 'indicator_bfill': True,
-                          'adx_constant': None},
+                # B9: dogrulama ortami egitim olcegini aliyor -> 'train_window'.
+                # HPO ham OHLCV okudugu icin indicators_present=False: kayit
+                # yine 'protocol_open' (Faz 9 §9.5 Y21, R1).
+                protocol=protocol,
                 extra={'study': getattr(trial.study, 'study_name', None),
-                       'optuna_trial': trial.number},
+                       'optuna_trial': trial.number,
+                       'observation_health': health},
             )
         except Exception as exc:
             logger.warning(f"Deneme kaydina yazilamadi ({exc})")
@@ -518,10 +540,17 @@ class BaseHyperparameterOptimizer:
             # Create environments with Phase and Reward Type
             train_env = self.create_env(stock_symbols, train_start, train_end,
                                        phase=self.phase, reward_type=self.reward_type,
-                                       use_cached_data=use_cached_data)
+                                       use_cached_data=use_cached_data,
+                                       price_stats=None)  # egitim: kendi penceresi
+            # Faz 9 / B9 (Faz 10 Y13): dogrulama ortami fiyati EGITIM
+            # penceresinin olcegiyle z-skorlar; kendi penceresinin ortalama/
+            # std'si dogrulamanin gelecegini tasirdi. Monitor sarmalayicisi
+            # oldugu icin `unwrapped`.
+            train_price_stats = train_env.unwrapped.get_price_stats()
             val_env = self.create_env(stock_symbols, val_start, val_end,
                                      phase=self.phase, reward_type=self.reward_type,
-                                     use_cached_data=use_cached_data)
+                                     use_cached_data=use_cached_data,
+                                     price_stats=train_price_stats)
 
             # Create model
             model = self.create_model(trial, train_env, hyperparams)
@@ -575,11 +604,15 @@ class BaseHyperparameterOptimizer:
             if rets is not None:
                 s0 = base_env.frame_bound[0]
                 dates = base_env._dates_list[s0 + 1: s0 + 1 + len(rets)]
+            # B9 bedeli (hakem-2 B9 #1, #8): dogrulama gozlemi egitim desteginde mi
+            from evaluation.observation_health import observation_health
+            health = observation_health(train_env, val_env)
             tid = self._register_trial(trial, hyperparams, stock_symbols,
                                        (train_start, train_end, val_start, val_end),
                                        total_timesteps, 'completed',
                                        metrics={k: float(v) for k, v in metrics.items()},
-                                       returns=rets, dates=dates)
+                                       returns=rets, dates=dates,
+                                       val_env=val_env, train_env=train_env, health=health)
             if tid:
                 trial.set_user_attr("trial_registry_id", tid)
 
@@ -591,14 +624,18 @@ class BaseHyperparameterOptimizer:
             # Budanan deneme de bir denemedir: N'ye sayilir (hakem-2 #2a)
             self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
                                  (train_start, train_end, val_start, val_end),
-                                 total_timesteps, 'pruned')
+                                 total_timesteps, 'pruned',
+                                 val_env=locals().get('val_env'),
+                                 train_env=locals().get('train_env'))
             raise
 
         except Exception as e:
             logger.error(f"Trial {trial.number} failed with error: {e}")
             self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
                                  (train_start, train_end, val_start, val_end),
-                                 total_timesteps, 'failed', metrics={'error': str(e)[:200]})
+                                 total_timesteps, 'failed', metrics={'error': str(e)[:200]},
+                                 val_env=locals().get('val_env'),
+                                 train_env=locals().get('train_env'))
             raise
 
         finally:

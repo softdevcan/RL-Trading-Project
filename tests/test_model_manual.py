@@ -18,19 +18,31 @@ train_df, val_df, test_df = fetcher.split_data(df)
 
 print(f"\nTest set: {len(test_df)} rows")
 
+model_path = "models/sac_phase1_20251112_233832.zip"
+
+# Faz 9 / B9 (Faz 10 Y13): test ortami modelin EGITIM olcegiyle (meta dosyasi).
+# Meta'sinda olcek olmayan eski model icin olcek UYDURULMAZ (K13; Y17: egitim
+# penceresi kurulamiyor) — akademik raporla ayni ilke (hakem-2 B9 #7).
+from app.services.daily_trading import read_model_meta
+price_stats = (read_model_meta(model_path) or {}).get('price_stats')
+if price_stats is None:
+    raise SystemExit("Meta dosyasinda price_stats yok: egitim olcegi uydurulmaz (B9/K13, Y17). "
+                     "Bu modeli olcmek icin egitim rotasiyla yeniden egitin.")
+
+
 # Create test environment
 def make_test_env():
     return make_env(
         df=test_df,
         initial_balance=1000000,
         commission_rate=0.001,
-        max_shares_per_trade=100
+        max_shares_per_trade=100,
+        price_stats=price_stats,
     )
 
 test_env = DummyVecEnv([make_test_env])
 
 # Load model
-model_path = "models/sac_phase1_20251112_233832.zip"
 print(f"\nLoading model: {model_path}")
 model = SAC.load(model_path)
 

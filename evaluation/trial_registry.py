@@ -19,11 +19,26 @@ yine de yapilmistir).
 Protokol (hakem-2 #1, 2026-11-06): her kayit, getirilerinin hangi BILINEN
 ACIK protokolle uretildigini tasir (`protocol`). Acik bir madde varsa kayit
 'protocol_open' etiketi alir ve kanit olarak kullanilmaz (`load_trials`
-varsayilan olarak dislar). Bugun acik olanlar:
-  price_stats_source='test_window' — RL test ortami fiyati test penceresinin
-      kendi istatistigiyle olcekliyor (Faz 10 Y13 / B9)
-  indicator_bfill=True — gosterge isinma boslugu bfill ile dolu (Y15 / B7)
-  adx_constant=True    — ADX tum panelde 0 (K18)
+varsayilan olarak dislar). Maddeler:
+  price_stats_source — degerlendirme (val/test) ortaminin fiyat olcegi.
+      Temiz: 'train_window' (B9, 2026-11-06'dan beri rota ve HPO). Acik:
+      'own_window' (degerlendirme penceresinin kendi istatistigi, Faz 10 Y13;
+      B9 oncesi rota kayitlari ayni seyi 'test_window' diye yazdi),
+      'overlapping_window', 'supplied_other', 'supplied_unverified',
+      'train_window_fallback'. `price_stats_source()` olcegin KOKENINI olcer
+      (hakem-2 B9 #3): egitim ortaminin kendi penceresinden mi, o pencere
+      degerlendirmeden once mi bitiyor, degerler birebir ayni mi.
+  indicator_bfill=True — gosterge isinma boslugu bfill ile dolu (Y15 / B7), acik
+  adx_constant=True    — ADX tum panelde 0 (K18), acik
+  indicators_present=False — gozlemin gosterge sutunlari panelde yok, env sabit
+      varsayilan goruyor (HPO ham OHLCV okuyor; Faz 9 §9.5 Y21), acik
+  price_in_support=False — degerlendirme fiyat ozelliklerinin > %1'i egitim
+      penceresinin [min, max] destegi disinda (B9'un eski ortamdaki bedeli;
+      hakem-2 B9 #1). B7/K18 kapansa da eski ortam kayitlarini acik tutar.
+      Olcum: evaluation.observation_health.
+  hyperparams_clean=False/None — hiperparametreler, kayitlari acik ya da
+      bulunamayan bir HPO calismasindan (hakem-2 B9 #8). Varsayilan
+      hiperparametre ve HPO'nun kendi denemesi icin True.
 
 DSR'nin N'si (hakem-2 #2): Bailey & LdP'nin N'si YAPILAN TUM denemelerdir.
 Budanan (pruned) ve basarisiz denemeler de `status` ile kaydedilir ve N'ye
@@ -58,6 +73,9 @@ CLEAN_PROTOCOL = {
     'price_stats_source': 'train_window',
     'indicator_bfill': False,
     'adx_constant': False,
+    'indicators_present': True,
+    'price_in_support': True,
+    'hyperparams_clean': True,
 }
 
 
@@ -65,6 +83,113 @@ def open_protocol_items(protocol: Optional[dict]) -> List[str]:
     """Protokolde temiz olmayan (ya da hic beyan edilmemis) maddeler."""
     protocol = protocol or {}
     return [k for k, clean in CLEAN_PROTOCOL.items() if protocol.get(k, None) != clean]
+
+
+def price_stats_source(eval_env, train_env) -> Optional[str]:
+    """Degerlendirme ortaminin fiyat olcegi nereden geliyor — KOKENI olculur (B9).
+
+    `train_env` olcegin alindigi EGITIM ortamidir (sozluk degil; hakem-2 B9 #3:
+    sozlukle yalnizca tutarlilik olculebiliyordu — test penceresinin kendi
+    olcegi "egitim olcegi" diye verilince etiket temiz cikiyordu).
+
+    'train_window'          : egitim ortami olcegi KENDI penceresinden hesaplamis,
+                              o pencere degerlendirme penceresinden ONCE bitiyor
+                              ve degerlendirme olcegi her sembolde birebir ayni (temiz)
+    'own_window'            : degerlendirme ortami olcegi kendi penceresinden (Y13)
+    'overlapping_window'    : egitim penceresi degerlendirme baslamadan bitmiyor
+    'supplied_other'        : verilen olcek egitim ortaminin olcegiyle uyusmuyor
+    'supplied_unverified'   : egitim ortami yok ya da olcegini kendisi hesaplamamis
+    'train_window_fallback' : egitim olcegi bir sembolde yedege dusmus (std tabani /
+                              50-50; TradingEnv.price_stats_fallbacks)
+    None                    : degerlendirme ortami yok (deneme ortam kurulmadan bitti)
+
+    Gymnasium sarmalayicilari (Monitor) `unwrapped` ile acilir.
+    """
+    if eval_env is None:
+        return None
+    ev = getattr(eval_env, 'unwrapped', eval_env)
+    if getattr(ev, 'price_stats_source', 'own_window') != 'supplied':
+        return 'own_window'
+    if train_env is None:
+        return 'supplied_unverified'
+    tr = getattr(train_env, 'unwrapped', train_env)
+    if getattr(tr, 'price_stats_source', None) != 'own_window':
+        return 'supplied_unverified'
+    if not (len(tr.dates) and len(ev.dates) and tr.dates[-1] < ev.dates[0]):
+        return 'overlapping_window'
+    ref, used = tr.get_price_stats(), ev.get_price_stats()
+    for sym in ev.symbols:
+        if sym not in ref or used.get(sym) != {'mean': float(ref[sym]['mean']),
+                                               'std': float(ref[sym]['std'])}:
+            return 'supplied_other'
+    fallbacks = getattr(tr, 'price_stats_fallbacks', {}) or {}
+    if any(sym in fallbacks for sym in ev.symbols):
+        return 'train_window_fallback'
+    return 'train_window'
+
+
+def indicators_present(source) -> bool:
+    """Gozlemin gosterge sutunlari (macd, rsi, cci, adx, turbulence) veride mi.
+
+    `source` bir panel (DataFrame) ya da TradingEnv olabilir. Eksik sutunu env
+    sabit varsayilanla doldurur (rsi=50, adx=0, ...) — o ozellik bilgi tasimaz.
+    """
+    from env.trading_env import OBS_INDICATOR_COLUMNS
+    if isinstance(source, pd.DataFrame):
+        frame = source
+    else:
+        frame = getattr(source, 'unwrapped', source).df
+    return all(c in frame.columns for c in OBS_INDICATOR_COLUMNS)
+
+
+def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = True,
+                     health: Optional[dict] = None,
+                     hyperparams_clean: Optional[bool] = True) -> dict:
+    """RL degerlendirme kaydinin protokolu; rota ve HPO ayni hesabi kullanir.
+
+    Ortamdan OLCULENLER: price_stats_source (koken), adx_constant,
+    indicators_present, price_in_support (`health` verilmezse burada olculur).
+    Cagiranin BEYANLARI: indicator_bfill (B7 bitene kadar True) ve
+    hyperparams_clean (rota HPO calismasinin kaydindan cozer; HPO denemesinin
+    kendisi icin True). Gosterge sutunlari yoksa bfill sorusu anlamsizdir
+    (None) ve ADX sabit varsayilan 0'dir (True).
+    """
+    if eval_env is None:
+        return {k: None for k in CLEAN_PROTOCOL}
+    from evaluation.observation_health import observation_health, price_in_support
+
+    base = getattr(eval_env, 'unwrapped', eval_env)
+    if health is None and train_env is not None:
+        health = observation_health(train_env, base)
+    present = indicators_present(base)
+    cols = base.df.columns
+    adx_const = ('adx' not in cols) or bool(base.df['adx'].nunique(dropna=True) <= 1)
+    return {
+        'price_stats_source': price_stats_source(base, train_env),
+        'indicator_bfill': indicator_bfill if present else None,
+        'adx_constant': adx_const,
+        'indicators_present': present,
+        'price_in_support': price_in_support(health),
+        'hyperparams_clean': hyperparams_clean,
+    }
+
+
+def hpo_study_protocol(study_name: Optional[str], directory: Optional[str] = None):
+    """Bir HPO calismasinin deneme kaydindaki protokolu (hakem-2 B9 #8).
+
+    Returns:
+        (temiz_mi, acik_maddeler): kayitlari bulunamazsa (None, [neden]).
+        Rota bu bilgiyi kendi kaydina yazar: hiperparametreleri acik bir
+        HPO'dan gelen rota kaydi da acik kalir.
+    """
+    if not study_name:
+        return None, ['study_name_missing']
+    recs = [t for t in load_trials(kind='rl_hpo', exclude_tags=(), directory=directory)
+            if (t.get('extra') or {}).get('study') == study_name]
+    if not recs:
+        return None, ['hpo_trials_not_in_registry']
+    items = sorted({k for t in recs for k in t.get('protocol_open', [])})
+    return (not items), items
 
 
 def _results_dir() -> str:

@@ -123,7 +123,8 @@ from evaluation.trial_registry import (  # noqa: E402
 with tempfile.TemporaryDirectory() as tmp:
     rng = np.random.default_rng(0)
     dates = pd.bdate_range("2024-01-01", periods=300)
-    clean = {"price_stats_source": "train_window", "indicator_bfill": False, "adx_constant": False}
+    clean = {"price_stats_source": "train_window", "indicator_bfill": False, "adx_constant": False,
+             "indicators_present": True, "price_in_support": True, "hyperparams_clean": True}
     cfgs = [{"algorithm": "PPO", "lr": lr} for lr in (1e-4, 3e-4, 1e-3)]
     for i, cfg in enumerate(cfgs):
         for seed in (1, 2):
@@ -138,7 +139,8 @@ with tempfile.TemporaryDirectory() as tmp:
     register_trial("rl_train", cfgs[0], 3, returns=rng.normal(0, 0.01, 300), dates=dates,
                    split="test", directory=tmp,
                    protocol={"price_stats_source": "test_window", "indicator_bfill": True,
-                             "adx_constant": True})
+                             "adx_constant": True, "indicators_present": True,
+                             "price_in_support": True, "hyperparams_clean": True})
     trials = load_trials(directory=tmp)
     check("7 deneme okundu (spike ve acik-protokol varsayilan olarak dislandi)",
           len(trials) == 7, str(len(trials)))

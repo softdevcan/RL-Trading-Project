@@ -195,7 +195,7 @@ Paketleme.
 - **D3 kısmen kapandı:** tek kaynak modülü TP.APIFON4 serisine bağlandı. Eski sabitler bağlanmadı.
 - **S2 ve S3 kapandı (§9.3):** makroda `bfill` kalktı, TÜFE/ÜFE açıklanma tarihine hizalandı. Bu yalnızca 2026-11-06'dan sonra üretilen makro dosyası için geçerli. Ayrıca bulundu: politika faizi, TÜFE ve ÜFE hiçbir zaman EVDS'den gelmemişti (sabit 50 / 0).
 - **Diğerleri açık.**
-- **Bu kapıdan sonra üretilen RL sonuçları da** Y13/Y15/K18 nedeniyle ön sonuçtur (Faz 9 §9.2 #1). Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
+- **Bu kapıdan sonra üretilen RL sonuçları da** Y15/K18 nedeniyle ön sonuçtur (Faz 9 §9.2 #1). Y13 (test ölçeği) B9 ile kapandı, yalnız bu tarihten sonraki koşumlar için ([Faz 9 §9.5](phase-9-research-validity-plan.md#95-b9--valtest-ortamının-fiyat-ölçeği-2026-11-06-dal-featphase9-b9-price-stats)); sızıntının metriğe etkisi tanımlanamadı. Bedeli: eski ortamda test fiyat değerlerinin %98,9'u eğitim desteği dışında (Faz 10 K25). Yeni açık Y21: HPO göstergesiz ortamda ayar arıyor (R1). Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
 
 **Sızıntı (sonuç geçerliliği):**
 

@@ -1,0 +1,229 @@
+{
+ "created_at": "2026-11-06T22:19:38",
+ "mode": "saturation",
+ "command": "python scripts/analysis/measure_price_scale.py --mode saturation --out C:/Users/can/AppData/Local/Temp/claude/3a6fdc28095f59b5/f2dccb50-13c6-481e-a9de-7fc3b1f44951/scratchpad/clean_saturation.json",
+ "git_commit": "96f2d8b9b07c62bad893ef10d114ea6201c6e03c",
+ "git_dirty": false,
+ "panel_sha256": "73dee83666e7c0802daa1de502005f2be19150402afe6446f88f17b02a0d70d1",
+ "panel": [
+  "2013-06-03",
+  "2026-07-27",
+  3291
+ ],
+ "train": [
+  "2013-06-03",
+  "2022-08-11",
+  2303
+ ],
+ "val": [
+  "2022-08-12",
+  "2024-08-05",
+  494
+ ],
+ "test": [
+  "2024-08-06",
+  "2026-07-27",
+  494
+ ],
+ "n_symbols": 30,
+ "val_saturation": {
+  "n_values": 59280,
+  "train_window_scale": {
+   "clip_frac": 0.5310053981106613,
+   "median_z": 10.538851404449517,
+   "p05": 3.178552106789584,
+   "p95": 35.486786499928115
+  },
+  "own_window_scale": {
+   "clip_frac": 0.0,
+   "median_z": 0.00615766771635591,
+   "p05": -1.4899866051820168,
+   "p95": 1.7990816525053215
+  },
+  "close_clip_by_symbol": {
+   "min": 0.0,
+   "median": 0.5789473684210527,
+   "max": 0.9089068825910931,
+   "n_fully_clipped": 0,
+   "n_symbols": 30
+  }
+ },
+ "test_saturation": {
+  "n_values": 59280,
+  "train_window_scale": {
+   "clip_frac": 0.7469973009446693,
+   "median_z": 25.103280170839767,
+   "p05": 5.68277815869279,
+   "p95": 68.9231277124868
+  },
+  "own_window_scale": {
+   "clip_frac": 0.0,
+   "median_z": -0.1491620935924734,
+   "p05": -1.3718159002471653,
+   "p95": 1.8317541635005492
+  },
+  "close_clip_by_symbol": {
+   "min": 0.010121457489878543,
+   "median": 1.0,
+   "max": 1.0,
+   "n_fully_clipped": 19,
+   "n_symbols": 30
+  }
+ },
+ "health_train_scale": {
+  "val": {
+   "train": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.18666666666666668
+    }
+   },
+   "eval": {
+    "price": {
+     "clip_frac": 0.5310053981106613,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.2
+    }
+   },
+   "n_train_days": 2303,
+   "n_eval_days": 494,
+   "eval_out_of_train_support": {
+    "price": 0.9286268556005398,
+    "volume": 0.009649122807017544,
+    "indicators": 0.045937921727395414
+   },
+   "support_eps": 0.01
+  },
+  "test": {
+   "train": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.18666666666666668
+    }
+   },
+   "eval": {
+    "price": {
+     "clip_frac": 0.7469973009446693,
+     "constant_dims_frac": 0.6333333333333333
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.2
+    }
+   },
+   "n_train_days": 2303,
+   "n_eval_days": 494,
+   "eval_out_of_train_support": {
+    "price": 0.9888157894736842,
+    "volume": 0.008704453441295546,
+    "indicators": 0.057624831309041835
+   },
+   "support_eps": 0.01
+  }
+ },
+ "health_own_scale": {
+  "val": {
+   "train": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.18666666666666668
+    }
+   },
+   "eval": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.2
+    }
+   },
+   "n_train_days": 2303,
+   "n_eval_days": 494,
+   "eval_out_of_train_support": {
+    "price": 0.11089743589743589,
+    "volume": 0.009649122807017544,
+    "indicators": 0.045937921727395414
+   },
+   "support_eps": 0.01
+  },
+  "test": {
+   "train": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.18666666666666668
+    }
+   },
+   "eval": {
+    "price": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "volume": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.0
+    },
+    "indicators": {
+     "clip_frac": 0.0,
+     "constant_dims_frac": 0.2
+    }
+   },
+   "n_train_days": 2303,
+   "n_eval_days": 494,
+   "eval_out_of_train_support": {
+    "price": 0.10828272604588395,
+    "volume": 0.008704453441295546,
+    "indicators": 0.057624831309041835
+   },
+   "support_eps": 0.01
+  }
+ }
+}

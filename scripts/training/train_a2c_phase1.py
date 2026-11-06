@@ -74,13 +74,19 @@ def prepare_data():
     return train_df, val_df, test_df
 
 
-def create_env(df: pd.DataFrame):
-    """Training environment oluştur"""
+def create_env(df: pd.DataFrame, *, price_stats):
+    """Ortam olustur.
+
+    price_stats: Faz 9 / B9 — ZORUNLU anahtar (hakem-2 B9 #6). Degerlendirme
+        ortami icin EGITIM ortaminin olcegi; egitim ortami icin acikca None
+        (olcek bu df'ten — egitimde dogru tanim).
+    """
     env = make_env(
         df=df,
         initial_balance=1_000_000,
         commission_rate=0.001,
-        max_shares_per_trade=100
+        max_shares_per_trade=100,
+        price_stats=price_stats,
     )
 
     # Vectorize (SB3 requirement)
@@ -109,7 +115,7 @@ def train_a2c(
     logger.info("="*60)
 
     # Environment oluştur
-    env = create_env(train_df)
+    env = create_env(train_df, price_stats=None)  # egitim: kendi penceresi
 
     # A2C model with trading-optimized hyperparameters
     # Based on quant research: A2C needs LOWER entropy than PPO
@@ -155,7 +161,7 @@ def train_a2c(
     return model
 
 
-def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1):
+def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1, price_stats=None):
     """
     Modeli test datasında değerlendir
 
@@ -163,12 +169,17 @@ def evaluate_model(model, test_df: pd.DataFrame, n_episodes=1):
         model: Trained A2C model
         test_df: Test data
         n_episodes: Number of test episodes
+        price_stats: Faz 9 / B9 — EGITIM ortaminin olcegi. None ise modelin
+            egitim ortamindan alinir (test penceresinin kendi istatistigi
+            ileriye bakis olurdu, Faz 10 Y13).
     """
     logger.info("\n" + "="*60)
     logger.info("EVALUATING MODEL")
     logger.info("="*60)
 
-    env = create_env(test_df)
+    if price_stats is None:
+        price_stats = model.get_env().envs[0].unwrapped.get_price_stats()
+    env = create_env(test_df, price_stats=price_stats)
 
     all_metrics = []
 
