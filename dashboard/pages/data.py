@@ -851,7 +851,8 @@ def _render_update_result(result: dict) -> Any:
     lines = []
     for src_key, res in results.items():
         src_label = next(
-            (s["label"] for s in ALL_SOURCES if s["value"] == src_key), src_key
+            (s["label"] for s in ALL_SOURCES if s["value"] == src_key),
+            {"risk_free": "Risksiz faiz (EVDS)"}.get(src_key, src_key),
         )
         if "error" in res:
             lines.append(html.Li(
@@ -869,6 +870,15 @@ def _render_update_result(result: dict) -> Any:
                 msg = f": +{new_rows:,} yeni satır{period}  ·  toplam {total:,} satır"
             else:
                 msg = ": tamamlandı"
+            # Faz 9 B2: EVDS cekilemeyip yedek deger yazildiysa sessiz kalma
+            dq = res.get("data_quality") or {}
+            if dq:
+                lines.append(html.Li(
+                    [html.Strong(src_label), msg,
+                     f" — UYARI: yedek değer kullanıldı ({', '.join(f'{k}: {v}' for k, v in dq.items())})"],
+                    style={"color": RED},
+                ))
+                continue
             lines.append(html.Li([html.Strong(src_label), msg]))
 
     return dbc.Alert(

@@ -3,12 +3,25 @@ Makroekonomik Veri Çekme Modülü (Faz 2)
 TCMB EVDS API ve yfinance kullanarak makroekonomik göstergeleri çeker
 
 Göstergeler:
-1. TCMB Politika Faizi (%) - EVDS (Fallback: 50.0)
+1. TCMB Politika Faizi (%) - EVDS TP.BISPOLFAIZ.TUR (aylık; Fallback: 50.0 + kalite bayrağı)
 2. TÜFE Enflasyon (YoY %) - EVDS (Endeksten hesaplanır)
 3. ÜFE Enflasyon (YoY %) - EVDS (Endeksten hesaplanır)
 4. USD/TRY Döviz Kuru - yfinance
 5. EUR/TRY Döviz Kuru - yfinance
 6. BIST-100 Endeks - yfinance
+
+Faz 9 / B1–B3 (2026-11-06) — nokta-zamanlı (point-in-time) hizalama:
+  * B2: eski politika faizi kodu `TP.YSSK.A01` EVDS'de yok (API hata veriyor);
+    her çekim sabit 50'ye düşüyordu. TÜFE/ÜFE ise iki ayrıştırma hatasıyla
+    düşüyordu: EVDS sütunları alt çizgili döner (`TP_FG_J0`) ve aylık seride
+    `Tarih` 'YYYY-M' biçimindedir. `_evds_series` ikisini de çözer.
+  * B3: aylık bir değer, açıklanmadan ÖNCEKİ günlere yazılmaz:
+      TÜFE/ÜFE  ay m -> ay m+1'in CPI_RELEASE_DAY'inden (6) itibaren geçerli
+      politika  ay m -> ay m+1'in 1'inden itibaren geçerli (BIS aylık seri)
+    İkisi de TASARIM VARSAYIMI: TÜİK TÜFE'yi genelde ayın 3'ünde açıklar,
+    hafta sonu kaymasına pay bırakılmıştır; resmi takvim kullanılmadı.
+  * B1: `bfill` YOK. Serinin ilk değeri geçmişe yayılmaz; zorunlu sütunların
+    hepsi dolmadan önceki baş satırlar atılır (`attrs['leading_rows_dropped']`).
 """
 
 import pandas as pd
@@ -39,12 +52,23 @@ logger = logging.getLogger(__name__)
 class MacroDataFetcher:
     """TCMB EVDS API ve yfinance ile makroekonomik veri çekici"""
 
-    # EVDS Seri Kodları
+    # EVDS Seri Kodları (2026-11-06'da EVDS katalogundan dogrulandi —
+    # get_series('bie_bispolfaiz' / 'bie_apifon'); eski 'TP.YSSK.A01' yok)
     EVDS_CODES = {
-        'policy_rate': 'TP.YSSK.A01',          # Gecelik Faiz (günlük)
-        'cpi_index': 'TP.FG.J0',               # TÜFE Endeks (2003=100) - Aylık
-        'ppi_index': 'TP.FG.G0',               # ÜFE Endeks (2003=100) - Aylık
+        'policy_rate': 'TP.BISPOLFAIZ.TUR',    # Türkiye Politika Faizi (BIS) - Aylık
+        # TÜFE: eski 'TP.FG.J0' (2003=100) 2026-01'de BITIYOR (TÜİK 2025=100 bazina
+        # gecti) — son cekimde Ocak 2026'dan beri ayni deger tasiniyordu.
+        'cpi_index': 'TP.TUKFIY2025.GENEL',    # TÜFE Genel (2025=100), 2005'ten - Aylık
+        # ÜFE: eski 'TP.FG.G0' EVDS'de yok (API hata veriyor).
+        'ppi_index': 'TP.TUFE1YI.T1',          # Yurt İçi ÜFE Genel - Aylık
+        'funding_rate': 'TP.APIFON4',          # TCMB Ağırlıklı Ort. Fonlama Maliyeti - İş günü
     }
+    INCREMENTAL_LOOKBACK_DAYS = 120   # artimli cekimde EVDS icin geriye bakis (BIS gecikmesi ~5 hafta)
+    EVDS_MAX_ROWS = 1000      # EVDS tek istekte en fazla bu kadar satir dondurur (aralik SONUNDAN)
+    EVDS_CHUNK_DAYS = 730
+    CPI_RELEASE_DAY = 6       # B3: ay m TÜFE/ÜFE'si ay m+1'in bu gününden itibaren bilinir
+    POLICY_AVAILABLE_DAY = 1  # B3: ay m politika faizi (ay sonu) ay m+1'in bu gününden itibaren
+    RISK_FREE_FILE = 'risk_free.csv'
 
     # yfinance Sembolleri
     YF_SYMBOLS = {
@@ -127,6 +151,123 @@ class MacroDataFetcher:
             logger.error(f"Date conversion error: {e}")
             return date_str
 
+    # ------------------------------------------------------------------ #
+    # Faz 9 / B2–B3: EVDS ayristirma ve nokta-zamanli hizalama
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _parse_evds_dates(raw: pd.Series) -> pd.DatetimeIndex:
+        """EVDS 'Tarih' sutunu: gunluk 'DD-MM-YYYY', aylik 'YYYY-M' / 'YYYY-MM'."""
+        s = raw.astype(str).str.strip()
+        daily = pd.to_datetime(s, format="%d-%m-%Y", errors='coerce')
+        monthly = pd.to_datetime(s, format="%Y-%m", errors='coerce')
+        out = daily.fillna(monthly)
+        if out.isna().any():
+            bad = s[out.isna()].head(3).tolist()
+            raise ValueError(f"EVDS tarih bicimi taninmadi: {bad}")
+        return pd.DatetimeIndex(out)
+
+    def _evds_series(self, code: str, start_evds: Optional[str] = None,
+                     end_evds: Optional[str] = None) -> pd.Series:
+        """Tek EVDS serisini tarih indeksli float Series olarak dondur.
+
+        EVDS sutun adini nokta yerine alt cizgiyle dondurur ('TP.FG.J0' ->
+        'TP_FG_J0'); eski kod noktali adi aradigi icin seriyi hic bulamiyordu.
+        Bos ya da tamamen NaN cevapta hata yukseltir (sessiz bos seri yok).
+        """
+        if not self.evds:
+            raise RuntimeError("evds paketi yok")
+        start = datetime.strptime(start_evds or self.start_date_evds, "%d-%m-%Y")
+        end = datetime.strptime(end_evds or self.end_date_evds or datetime.now().strftime("%d-%m-%Y"),
+                                "%d-%m-%Y")
+        # EVDS tek istekte en fazla ~1000 satir veriyor ve fazlasini aralik
+        # BASINDAN kesiyor (olculdu: 2013-01..2016-12 istegi 2013-03-04'ten basladi).
+        # Aralik parcalara bolunur; tam 1000 satir donen parca ikiye yarilir.
+        parts = []
+        windows = []
+        cur = start
+        while cur <= end:
+            nxt = min(cur + timedelta(days=self.EVDS_CHUNK_DAYS - 1), end)
+            windows.append((cur, nxt))
+            cur = nxt + timedelta(days=1)
+        while windows:
+            a, b = windows.pop(0)
+            df = self.evds.get_data([code], startdate=a.strftime("%d-%m-%Y"),
+                                    enddate=b.strftime("%d-%m-%Y"))
+            if df is None or df.empty:
+                continue
+            if len(df) >= self.EVDS_MAX_ROWS and (b - a).days > 1:
+                mid = a + (b - a) / 2
+                windows[:0] = [(a, mid), (mid + timedelta(days=1), b)]
+                continue
+            col = next((c for c in (code, code.replace('.', '_')) if c in df.columns), None)
+            if col is None:
+                raise ValueError(f"EVDS cevabinda {code} sutunu yok: {list(df.columns)}")
+            parts.append(pd.Series(pd.to_numeric(df[col], errors='coerce').to_numpy(),
+                                   index=self._parse_evds_dates(df['Tarih']), name=code))
+        if not parts:
+            raise ValueError(f"EVDS bos cevap: {code}")
+        s = pd.concat(parts)
+        s = s[~s.index.duplicated(keep='last')].dropna().sort_index()
+        if s.empty:
+            raise ValueError(f"EVDS serisi tamamen bos: {code}")
+        return s
+
+    @staticmethod
+    def _monthly_point_in_time(monthly: pd.Series, available_day: int) -> pd.Series:
+        """Ay m degerini ay m+1'in `available_day`'inden itibaren GUNLUK seriye yay.
+
+        Donen seri yalnizca degisim noktalarini tasir; cagiran gunluk
+        indekse ffill ile hizalar. Ay m'nin kendi gunlerine ve m+1'in
+        `available_day`'inden onceki gunlere ay m degeri YAZILMAZ (B3).
+        """
+        m = monthly.dropna().copy()
+        periods = pd.DatetimeIndex(m.index).to_period('M')
+        effective = (periods + 1).to_timestamp() + pd.Timedelta(days=available_day - 1)
+        return pd.Series(m.to_numpy(), index=effective, name=monthly.name).sort_index()
+
+    def _evds_start_minus(self, months: int) -> str:
+        """YoY hesabi icin baslangictan `months` ay once (EVDS bicimi)."""
+        start = datetime.strptime(self.start_date_evds, "%d-%m-%Y")
+        return (pd.Timestamp(start) - pd.DateOffset(months=months)).strftime("%d-%m-%Y")
+
+    def fetch_risk_free(self, start_date: str = "2011-01-01", save: bool = True) -> pd.DataFrame:
+        """A8 — tek kaynak risksiz faiz dosyasi (data/macro/risk_free.csv).
+
+        funding_rate: TCMB Agirlikli Ortalama Fonlama Maliyeti (TP.APIFON4), yillik %,
+            is gunu — `evaluation.risk_free`'nin varsayilan serisi.
+        policy_rate:  TP.BISPOLFAIZ.TUR, aylik, B3 kuraliyla gunluge hizali.
+        Yedek deger YOK: cekilemezse hata (risksiz faiz uydurulmaz).
+        """
+        start_evds = self._convert_date_format(start_date, to_evds=True)
+        funding = self._evds_series(self.EVDS_CODES['funding_rate'], start_evds=start_evds)
+        start_pol = (pd.Timestamp(datetime.strptime(start_evds, "%d-%m-%Y"))
+                     - pd.DateOffset(months=1)).strftime("%d-%m-%Y")   # ilk ay da dolu
+        policy = self._monthly_point_in_time(
+            self._evds_series(self.EVDS_CODES['policy_rate'], start_evds=start_pol),
+            self.POLICY_AVAILABLE_DAY)
+        idx = funding.index.union(policy.index)
+        out = pd.DataFrame({
+            'funding_rate': funding.reindex(idx),          # yalnizca gozlenen gunler
+            'policy_rate': policy.reindex(idx).ffill(),    # adim fonksiyonu
+        }).sort_index()
+        out = out[out['funding_rate'].notna()]
+        out.index.name = 'date'
+        out.attrs['source'] = {
+            'funding_rate': self.EVDS_CODES['funding_rate'],
+            'policy_rate': self.EVDS_CODES['policy_rate'],
+            'policy_available_day': self.POLICY_AVAILABLE_DAY,
+        }
+        if save:
+            path = os.path.join(self.data_dir, self.RISK_FREE_FILE)
+            out.to_csv(path)
+            with open(os.path.splitext(path)[0] + '_source.json', 'w', encoding='utf-8') as f:
+                json.dump({'fetched_at': datetime.now().isoformat(), **out.attrs['source'],
+                           'rows': int(len(out)), 'start': str(out.index.min().date()),
+                           'end': str(out.index.max().date())}, f, indent=2)
+            logger.info(f"Risksiz faiz kaydedildi: {path} ({len(out)} satir)")
+        return out
+
     def fetch_macro_data(self, save=True) -> pd.DataFrame:
         """Tüm makro verileri çek ve birleştir"""
         data_dict = {}
@@ -178,56 +319,31 @@ class MacroDataFetcher:
         if self.evds:
             logger.info("Fetching economic data from EVDS...")
             
-            # 2a. Enflasyon (CPI/PPI)
-            try:
-                # Endeksleri çek
-                series = [self.EVDS_CODES['cpi_index'], self.EVDS_CODES['ppi_index']]
-                # Ensure end_date_evds is not None
-                end_date = self.end_date_evds or datetime.now().strftime("%d-%m-%Y")
-                df_evds = self.evds.get_data(series, startdate=self.start_date_evds, enddate=end_date)
-                
-                if df_evds is not None and not df_evds.empty:
-                    # Tarih indeksini ayarla
-                    df_evds['Tarih'] = pd.to_datetime(df_evds['Tarih'], format="%d-%m-%Y")
-                    df_evds.set_index('Tarih', inplace=True)
-                    
-                    # CPI Inflation Calculation (YoY)
-                    cpi_col = self.EVDS_CODES['cpi_index']
-                    if cpi_col in df_evds.columns:
-                        # Yıllık değişim hesapla (12 ay öncesine göre)
-                        cpi_inflation = df_evds[cpi_col].pct_change(12) * 100
-                        # Günlük frekansa genişlet (ffill)
-                        cpi_daily = cpi_inflation.resample('D').ffill()
-                        data_dict['cpi_inflation'] = cpi_daily
-                        logger.info(f"  ✓ cpi_inflation: Calculated from index")
-
-                    # PPI Inflation Calculation (YoY)
-                    ppi_col = self.EVDS_CODES['ppi_index']
-                    if ppi_col in df_evds.columns:
-                        ppi_inflation = df_evds[ppi_col].pct_change(12) * 100
-                        ppi_daily = ppi_inflation.resample('D').ffill()
-                        data_dict['ppi_inflation'] = ppi_daily
-                        logger.info(f"  ✓ ppi_inflation: Calculated from index")
-                        
-            except Exception as e:
-                logger.error(f"Error fetching inflation data: {e}")
+            # 2a. Enflasyon (CPI/PPI) — yillik % degisim, ACIKLANMA tarihine hizali (B3).
+            # YoY'nin ilk 12 ayi bos kalmasin diye endeks 13 ay erken cekilir;
+            # bos kalan bas, eskiden bfill ile GELECEKTEKI degerle dolduruluyordu (B1).
+            for key, out_col in (('cpi_index', 'cpi_inflation'), ('ppi_index', 'ppi_inflation')):
+                try:
+                    # 14 ay: baslangic ayinda gecerli olan deger ay m-1'in YoY'u,
+                    # o da ay m-13 endeksini ister (hakem-2 B2 #7; 13 ile ilk 5 gun bostu)
+                    idx_series = self._evds_series(self.EVDS_CODES[key],
+                                                   start_evds=self._evds_start_minus(14))
+                    yoy = (idx_series.pct_change(12) * 100).dropna()
+                    data_dict[out_col] = self._monthly_point_in_time(yoy, self.CPI_RELEASE_DAY)
+                    logger.info(f"  ✓ {out_col}: {self.EVDS_CODES[key]} YoY, "
+                                f"ay m -> ay m+1'in {self.CPI_RELEASE_DAY}. gunu")
+                except Exception as e:
+                    logger.error(f"Error fetching {out_col} from EVDS: {e}")
 
             # 2b. Politika Faizi (Fallback mekanizmalı)
             try:
-                # Önce API'yi dene
-                pr_col = self.EVDS_CODES['policy_rate']
-                # Ensure end_date_evds is not None
-                end_date = self.end_date_evds or datetime.now().strftime("%d-%m-%Y")
-                df_pr = self.evds.get_data([pr_col], startdate=self.start_date_evds, enddate=end_date)
-                
-                if df_pr is not None and not df_pr.empty and pr_col in df_pr.columns:
-                    df_pr['Tarih'] = pd.to_datetime(df_pr['Tarih'], format="%d-%m-%Y")
-                    df_pr.set_index('Tarih', inplace=True)
-                    data_dict['policy_rate'] = df_pr[pr_col]
-                    logger.info(f"  ✓ policy_rate: Fetched from EVDS")
-                else:
-                    raise ValueError("Empty response for Policy Rate")
-                    
+                # Aylik BIS serisi; ay m (ay sonu) degeri ay m+1'in 1'inden itibaren (B3).
+                # 1 ay erken cekilir ki baslangic ayi da dolu olsun.
+                pr = self._evds_series(self.EVDS_CODES['policy_rate'],
+                                       start_evds=self._evds_start_minus(1))
+                data_dict['policy_rate'] = self._monthly_point_in_time(pr, self.POLICY_AVAILABLE_DAY)
+                logger.info(f"  ✓ policy_rate: {self.EVDS_CODES['policy_rate']} "
+                            f"(son deger {pr.iloc[-1]}, {pr.index[-1].strftime('%Y-%m')})")
             except Exception as e:
                 # Faz 6 (G.2): strict_data ise yanlis veriyle egitmektense patla
                 if self.strict_data:
@@ -271,9 +387,21 @@ class MacroDataFetcher:
             # feature_engineer gold/silver oranini hesaplar.
             pass
 
-        # Eksik verileri doldur (Forward fill sonra Backward fill)
-        macro_df = macro_df.ffill().bfill()
-        
+        # B1: yalnizca ILERI doldurma. Eskiden `.ffill().bfill()` idi; bfill her
+        # serinin ilk gozlemini (gelecekteki degeri) baslangica kadar geriye
+        # yayiyordu (Faz 9 S2 — varsayilan hatta etkin sizinti).
+        macro_df = macro_df.sort_index().ffill()
+        # YoY/politika icin erken cekilen aylar pencere disinda kalir
+        start_ts = pd.Timestamp(self.start_date_yf) if self.start_date_yf else None
+        if start_ts is not None:
+            macro_df = macro_df[macro_df.index >= start_ts]
+        # Bitis tarihinden SONRAYA satir yazilmaz (aylik degisim noktalari ileri
+        # tarihli olabilir; hakem-2 B2 #4)
+        end_ts = pd.Timestamp(self.end_date_yf) if self.end_date_yf else None
+        if end_ts is not None:
+            macro_df = macro_df[macro_df.index <= end_ts]
+        macro_df = self._drop_leading_gaps(macro_df)
+
         # Son kontroller
         required_cols = ['policy_rate', 'cpi_inflation', 'ppi_inflation', 'usd_try', 'eur_try', 'bist100_index']
         missing_required = [c for c in required_cols if c not in macro_df.columns]
@@ -304,6 +432,31 @@ class MacroDataFetcher:
             self.save_data(macro_df, 'macro_data.csv')
 
         return macro_df
+
+    REQUIRED_COLS = ('policy_rate', 'cpi_inflation', 'ppi_inflation',
+                     'usd_try', 'eur_try', 'bist100_index')
+
+    @classmethod
+    def _drop_leading_gaps(cls, macro_df: pd.DataFrame) -> pd.DataFrame:
+        """B1: mevcut zorunlu sutunlarin HEPSI dolmadan onceki bas satirlari at.
+
+        Doldurma (bfill) yerine atma: baslangictan once bilinmeyen bir deger
+        uydurulmaz. Atilan satir sayisi `attrs['leading_rows_dropped']`'ta.
+        Zorunlu olmayan sutunlarin (vix, oil...) bas NaN'lari DOKUNULMADAN kalir;
+        tuketiciler (feature_engineer dropna, env) bunu zaten ele aliyor.
+        """
+        present = [c for c in cls.REQUIRED_COLS if c in macro_df.columns]
+        if not present or macro_df.empty:
+            macro_df.attrs['leading_rows_dropped'] = 0
+            return macro_df
+        ok = macro_df[present].notna().all(axis=1)
+        if not ok.any():
+            macro_df.attrs['leading_rows_dropped'] = len(macro_df)
+            return macro_df.iloc[0:0]
+        first = ok.idxmax()
+        out = macro_df[macro_df.index >= first]
+        out.attrs['leading_rows_dropped'] = int(len(macro_df) - len(out))
+        return out
 
     @staticmethod
     def _quality_sidecar_path(filepath: str) -> str:
@@ -415,6 +568,14 @@ class MacroDataFetcher:
             except Exception as exc:
                 logger.warning(f"Mevcut makro yuklenemedi, tam cekme yapilacak: {exc}")
 
+        # Mevcut dosya yedek degerle (sabit 50 / sifir) ya da kalite bayragi
+        # bilinmeyen eski bir surumle yazildiysa artimli ekleme sahte gecmisi
+        # korurdu: tam cekim yapilir (Faz 9 B2).
+        if existing is not None and (existing.attrs.get('data_quality') or {}):
+            logger.warning(f"Mevcut makro dosya kalite bayragi tasiyor "
+                           f"{existing.attrs.get('data_quality')} — tam cekim yapiliyor")
+            existing = None
+
         if existing is None or existing.empty:
             logger.info("Mevcut macro_data.csv yok, tam cekme yapiliyor...")
             df = self.fetch_macro_data(save=True)
@@ -435,9 +596,15 @@ class MacroDataFetcher:
                     'last_date': str(last_date)}
 
         logger.info(f"Eksik macro verisi cekiliyor: {fetch_from} -> {today_str}")
+        # hakem-2 B2 #1: BIS aylik politika faizi ~5 hafta gecikmeli yayinlaniyor;
+        # birkac gunluk pencere EVDS'ten BOS doner ve sabit-50 yedegine duserdi.
+        # Delta, geriye INCREMENTAL_LOOKBACK_DAYS gun uzatilip cekilir, sonra
+        # fetch_from'a kirpilir; yedek deger iceren delta dosyaya HIC yazilmaz.
+        lookback_start = (datetime.combine(last_date, datetime.min.time())
+                          - timedelta(days=self.INCREMENTAL_LOOKBACK_DAYS)).strftime('%Y-%m-%d')
         delta_fetcher = MacroDataFetcher(
             api_key=self.api_key,
-            start_date=fetch_from,
+            start_date=lookback_start,
             end_date=today_str,
         )
         try:
@@ -446,12 +613,23 @@ class MacroDataFetcher:
             logger.error(f"Delta makro cekimi basarisiz: {exc}")
             return {'mode': 'error', 'new_rows': 0, 'total_rows': len(existing),
                     'last_date': str(last_date), 'error': str(exc)}
+        if new_data.attrs.get('data_quality'):
+            msg = (f"Delta cekim yedek deger kullandi {new_data.attrs['data_quality']}; "
+                   f"dosyaya yazilmadi (sahte deger gecmise karismasin)")
+            logger.error(msg)
+            return {'mode': 'error', 'new_rows': 0, 'total_rows': len(existing),
+                    'last_date': str(last_date), 'error': msg,
+                    'data_quality': new_data.attrs['data_quality']}
+        new_data = new_data[new_data.index >= pd.Timestamp(fetch_from)]
 
         # Birlestir: yeni satirlar onceligi alir
         combined = pd.concat([existing, new_data])
         combined = combined[~combined.index.duplicated(keep='last')].sort_index()
-        # Ileri/geri doldurma — yfinance hafta sonu, EVDS aylik
-        combined = combined.ffill().bfill()
+        # Yalnizca ileri doldurma (B1) — yfinance hafta sonu, EVDS aylik.
+        # bfill kaldirildi: yeni cekimin ilk degeri eski satirlara yazilmasin.
+        combined = combined.ffill()
+        combined.attrs['data_quality'] = {**(existing.attrs.get('data_quality') or {}),
+                                          **(new_data.attrs.get('data_quality') or {})}
 
         self.save_data(combined, filename)
         new_rows = len(combined) - len(existing)

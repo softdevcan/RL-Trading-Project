@@ -192,7 +192,8 @@ Paketleme.
 2026-10-06 literatür doğrulaması sırasında kodda doğrulandı. **Bu tablo bulgu kaydıdır.** Kapatılma planı Faz 9 + Faz 10'da ve **2026-11-06'da onaylandı**. Durumu güncel tutulan yer [Faz 9 §9 Uygulama durumu](phase-9-research-validity-plan.md#9-uygulama-durumu). 2026-11-06 itibarıyla:
 - **D1 ve D6 kapandı:** RL tohumu kaydediliyor; DSR düzeltildi.
 - **D2 kısmen kapandı:** DM-HLN, eşleştirilmiş test, Ledoit-Wolf, MCS ve FDR var; ECE bağlanmadı (F paketi).
-- **D3 kısmen kapandı:** tek kaynak modülü var, ama EVDS (B2) düzelene kadar açık hata veriyor.
+- **D3 kısmen kapandı:** tek kaynak modülü TP.APIFON4 serisine bağlandı. Eski sabitler bağlanmadı.
+- **S2 ve S3 kapandı (§9.3):** makroda `bfill` kalktı, TÜFE/ÜFE açıklanma tarihine hizalandı. Bu yalnızca 2026-11-06'dan sonra üretilen makro dosyası için geçerli. Ayrıca bulundu: politika faizi, TÜFE ve ÜFE hiçbir zaman EVDS'den gelmemişti (sabit 50 / 0).
 - **Diğerleri açık.**
 - **Bu kapıdan sonra üretilen RL sonuçları da** Y13/Y15/K18 nedeniyle ön sonuçtur (Faz 9 §9.2 #1). Kanıtlar (dosya:satır) ve literatür dayanakları: [../thesis/literature-review-verification.md §6](../thesis/literature-review-verification.md).
 

@@ -868,9 +868,18 @@ async def update_data(request: DataUpdateRequest, user: RequireWriter):
                 results['macro'] = {
                     'mode': 'full',
                     'rows': len(df) if df is not None else 0,
+                    # Faz 9 B2: yedek deger kullanildiysa panoda gorunsun
+                    'data_quality': (df.attrs.get('data_quality') if df is not None else None) or {},
                 }
             except Exception as exc:
                 results['macro'] = {'error': str(exc)}
+            # Faz 9 A8: tek kaynak risksiz faiz (data/macro/risk_free.csv). Yedegi
+            # yok — cekilemezse hata raporlanir, makro sonucu etkilenmez.
+            try:
+                rf = macro_fetcher.fetch_risk_free(save=True)
+                results['risk_free'] = {'rows': len(rf), 'last_date': str(rf.index.max().date())}
+            except Exception as exc:
+                results['risk_free'] = {'error': str(exc)}
 
         if 'fundamental' in request.sources:
             from data.fundamental_fetcher import FundamentalDataFetcher

@@ -7,11 +7,17 @@ Bu modul tum yeni degerlendirme kodunun okudugu TEK kaynaktir. Seri
 yoksa ya da yedek degerle doldurulmussa sessizce sabite DUSMEZ:
 `RiskFreeUnavailable` yukseltir.
 
-Kaynak serisi: TCMB politika faizi (EVDS, `data/macro/macro_data.csv`
-`policy_rate`, yillik %). Su an kullanilamiyor: son cekimin kalite bayragi
-`fallback_constant_50.0` (bkz. Faz 10 K2 / Faz 9 B2). B2 kapanana kadar bu
-modulu cagiran her akis acik hata verir — bu bilincli: yanlis faizle
-hesaplanmis Sharpe raporlanmamali.
+Kaynak serisi (Faz 9 B2 sonrasi, 2026-11-06): `data/macro/risk_free.csv`,
+`MacroDataFetcher.fetch_risk_free()` ile EVDS'ten uretilir.
+  funding_rate (VARSAYILAN): TCMB Agirlikli Ortalama Fonlama Maliyeti,
+      TP.APIFON4, yillik %, is gunu, 2011-01-03'ten. Gunluk ve RL penceresini
+      (2013-06..) kapsadigi icin secildi; politika faizinin aylik BIS serisi
+      ay icindeki karar tarihini tasimiyor.
+  policy_rate: TP.BISPOLFAIZ.TUR, aylik, ay m degeri ay m+1'in 1'inden itibaren.
+Secim bir TASARIM VARSAYIMIDIR (kaynakla gerekcelendirme acik is — Faz 9 §9.2
+#7: ortamda nakde faiz islemiyor; ajan nakit tutunca fazla getiri Sharpe'i onu
+cezalandirir). Eski `macro_data.csv` `policy_rate` yolu da desteklenir; kalite
+bayragi varsa ya da seri sabitse acik hata verir.
 
 Gunluk donusum (tasarim varsayimi, belgelenir): t seansinin risksiz getirisi,
 t-1'de bilinen yillik oranin iki seans arasindaki TAKVIM gunu kadar bilesik
@@ -19,10 +25,10 @@ uygulanmasidir:  rf_t = (1 + R_{t-1}/100) ** (gun_t / 365) - 1.
 TL para piyasasi ACT/365 kuralini izler; hafta sonu ve tatil getirisi bir
 sonraki seansa yazilir.
 
-ESKI CAGIRANLAR BU TURDA BAGLANMADI: reward_functions'in 0,15'i egitilmis RL
-modellerinin oduludur (davranis dondurma); model_analysis ve evaluator
-panoda gorunen sayilari degistirir. Baglama B2 (EVDS) sonrasi, Milestone 0'
-ile birlikte yapilir.
+ESKI CAGIRANLAR BAGLANMADI: reward_functions'in 0,15'i egitilmis RL
+modellerinin oduludur (davranis dondurma, Faz 10 §3.2.1); model_analysis ve
+evaluator panoda gorunen sayilari degistirir ve sonuc dosyalarinda tarih
+yok. Baglama D paketi (raporlama) / Milestone 0' ile yapilir.
 """
 
 from __future__ import annotations
@@ -35,6 +41,8 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_MACRO_CSV = os.path.join('data', 'macro', 'macro_data.csv')
+DEFAULT_RF_CSV = os.path.join('data', 'macro', 'risk_free.csv')
+DEFAULT_COLUMN = 'funding_rate'
 
 
 class RiskFreeUnavailable(RuntimeError):
@@ -52,10 +60,11 @@ def _quality_flags(csv_path: str) -> dict:
         return {'_unreadable': side}
 
 
-def load_annual_rate(csv_path: str = DEFAULT_MACRO_CSV, column: str = 'policy_rate') -> pd.Series:
+def load_annual_rate(csv_path: str = DEFAULT_RF_CSV, column: str = DEFAULT_COLUMN) -> pd.Series:
     """Yillik % oran serisi; kalite bayragi ya da sabit seri varsa hata."""
     if not os.path.exists(csv_path):
-        raise RiskFreeUnavailable(f"{csv_path} yok — makro veri cekilmemis")
+        raise RiskFreeUnavailable(
+            f"{csv_path} yok — `MacroDataFetcher().fetch_risk_free()` ile EVDS'ten uretin")
     flags = _quality_flags(csv_path)
     if column in flags:
         raise RiskFreeUnavailable(
@@ -89,9 +98,10 @@ def per_period_rate(session_dates, annual_pct: pd.Series) -> pd.Series:
     return pd.Series(rf.to_numpy(), index=dates, name='rf')
 
 
-def risk_free_series(session_dates, csv_path: Optional[str] = None, column: str = 'policy_rate') -> pd.Series:
+def risk_free_series(session_dates, csv_path: Optional[str] = None,
+                     column: str = DEFAULT_COLUMN) -> pd.Series:
     """Tek giris noktasi: seans tarihleri -> donem basi risksiz getiri."""
-    rate = load_annual_rate(csv_path or DEFAULT_MACRO_CSV, column)
+    rate = load_annual_rate(csv_path or DEFAULT_RF_CSV, column)
     out = per_period_rate(session_dates, rate)
     first = pd.Timestamp(pd.to_datetime(session_dates).min())
     if rate.index.min() > first:

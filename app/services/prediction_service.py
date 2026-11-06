@@ -201,7 +201,10 @@ def _fetch_cross_asset_data(start_date: str = '2018-01-01') -> Optional[pd.DataF
                 cross_data[name] = hist['Close']
 
         if cross_data:
-            return pd.DataFrame(cross_data).ffill().bfill()
+            # Faz 9 B1 (hakem-2 B2 #11): yalnizca ileri doldurma — bfill her
+            # serinin ilk gozlemini gecmise yayiyordu. Bas NaN'lar ozellik
+            # muhendisligindeki dropna ile atilir.
+            return pd.DataFrame(cross_data).ffill()
         return None
     except Exception as exc:
         logger.warning(f"Capraz varlik verisi yuklenemedi: {exc}")
