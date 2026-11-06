@@ -39,6 +39,8 @@ Proje mimarisi ve roadmap:
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
 - [**phase-9-research-validity-plan.md**](development/phase-9-research-validity-plan.md) — Faz 9 planı (2026-10-07; **onaylandı 2026-11-06**, ilk kapı V + A + C uygulandı → §9): sızıntı ve değerlendirme açıklarının kapatılması (A–G), Makale 2 deney tasarımı, MARL tasarım kararları (M1–M8); tam metinle doğrulanan 10 yeni bulgu (DSR formül hatası, G2 ≡ DebUnc eşdeğerliği dahil)
 - [**phase-10-marl-plan.md**](development/phase-10-marl-plan.md) — Faz 10 planı (**onaylandı 2026-11-06**): çoklu-ajan yenileme (hisse başına ajan, CTDE), tahmin → RL sinyal tablosu (P), karar katmanı (K), veri bütünlüğü kapısı (V); hakem-2 itirazları §8, kararlar §6 (K1, K17, K23 işlendi)
+- [**review-panel.md**](development/review-panel.md) — Hakem paneli (2026-11-06): `hakem-finans` + `hakem-rl` (sonnet, dar kapsam) ve son kapı `hakem-2` (opus); paket → panel eşlemesi, inceleme paketi şablonu, token maliyet kaydı (B9: tek hakem-2 ~301 bin token)
+- [**measurements/**](development/measurements/) — Plan §9'daki sayıların kaynağı olan ölçüm JSON'ları (komut, commit, panel SHA-256); ilk: `phase9-b9/`
 - [**prediction-timeseries-models.md**](development/prediction-timeseries-models.md) — Ensemble'a ARIMA/SARIMAX eklemenin değerlendirmesi: getiri vs. volatilite yapısı ve mevsimsellik ölçümü (30 sembol, 76.058 gözlem); GARCH ve yön meta-learner'ı önerileri (salt analiz, 2026-08-30); §8 TimesFM-3 deneyi (`experiment/timesfm` dalı) ve `predict_next` son-satır iyileştirmesi (2026-11-06)
 
 ---

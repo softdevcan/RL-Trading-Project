@@ -496,7 +496,11 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).
   - **RL tohumu**: `TrainingRequest.seed` (yoksa uretilir); meta + manifest + deneme kaydina yazilir.
     Test: `python tests/test_eval_stats.py` (50), `python tests/test_rl_reproducibility.py` (39)
-- Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: `hakem-2` alt ajani.
+- Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: **hakem paneli** —
+  `hakem-finans` + `hakem-rl` (sonnet, dar kapsam, yalnizca alanina giren pakette) ve son
+  kapi `hakem-2` (opus). Once ~5 bin token'lik inceleme paketi yaz, uzun olcumleri SEN yap
+  ve JSON'u arsivle; duzeltme sonrasi ayni hakemi SendMessage ile surdur. Akis, paket
+  sablonu ve maliyet kaydi: `docs/development/review-panel.md` (B9: tek hakem-2 ~301 bin token).
 - Hook'lar (`.claude/settings.json` → `.claude/hooks/guard.py`): uretilen literatur dosyalarini
   elle duzenleme engellenir; tez metnine yeni "sizinti yok" iddiasi onay ister;
   `env/trading_env.py` degisince env bekci testleri otomatik kosar.
