@@ -1,7 +1,10 @@
 
 import requests
 
-API_KEY = "tV4qq6RzPr"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_KEY = os.environ.get("EVDS_API_KEY", "")  # .env'den okunur; anahtari koda yazma
 SERIES_CODE = "TP.DK.USD.A.YTL"  # USD/TRY - genellikle erişilebilir
 
 def test_all_formats():

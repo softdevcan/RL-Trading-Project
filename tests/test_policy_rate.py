@@ -2,7 +2,10 @@
 import requests
 import json
 
-API_KEY = "tV4qq6RzPr"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_KEY = os.environ.get("EVDS_API_KEY", "")  # .env'den okunur; anahtari koda yazma
 # TP.KTF10: TCMB Weighted Average Funding Cost (often close to policy rate)
 # TP.YSSK.A01: Overnight Borrowing (The one that failed)
 CODES = ['TP.KTF10', 'TP.YSSK.A01']

@@ -338,7 +338,7 @@ class BaseHyperparameterOptimizer:
 
             # Load macro data
             try:
-                macro_fetcher = MacroDataFetcher(api_key="tV4qq6RzPr")
+                macro_fetcher = MacroDataFetcher()  # anahtar .env'deki EVDS_API_KEY'den
                 macro_df = macro_fetcher.load_data('macro_data.csv')
                 logger.info(f"✅ Loaded macro data: {len(macro_df)} rows")
             except FileNotFoundError:

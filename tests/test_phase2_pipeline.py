@@ -89,8 +89,8 @@ def test_phase2_pipeline():
     print("STEP 3: Fetching Macro Data...")
     print("-"*80)
 
-    # TCMB API key (gerçek key'iniz)
-    TCMB_API_KEY = "tV4qq6RzPr"
+    # TCMB API key: .env'deki EVDS_API_KEY (koda yazilmaz)
+    TCMB_API_KEY = None  # MacroDataFetcher .env'den okur
 
     macro_fetcher = MacroDataFetcher(
         api_key=TCMB_API_KEY,

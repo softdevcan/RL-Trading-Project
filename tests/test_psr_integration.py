@@ -63,7 +63,7 @@ def load_test_data():
 
     # Macro data
     import os
-    TCMB_API_KEY = os.getenv('TCMB_API_KEY', 'tV4qq6RzPr')
+    TCMB_API_KEY = os.getenv('TCMB_API_KEY')  # None ise MacroDataFetcher .env'deki EVDS_API_KEY'i okur
     macro_fetcher = MacroDataFetcher(api_key=TCMB_API_KEY)
     try:
         macro_df = macro_fetcher.load_data('macro_data.csv')
