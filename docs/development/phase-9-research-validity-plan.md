@@ -411,12 +411,11 @@ Bu incelemede formül düzeyinde sorun bulunmadı (DSR elle yeniden hesaplandı;
 | ÜFE | Kod `TP.FG.G0` EVDS'de yok | `fallback_zero` | `TP.TUFE1YI.T1` (Yurt İçi ÜFE) |
 | Günlük seriler | EVDS tek istekte ≤ 1000 satır veriyor ve fazlasını aralığın **başından** kesiyor (2013-01..2016-12 isteği 2013-03-04'ten başladı) | — | 730 günlük parçalar; 1000 satır dönen parça ikiye bölünüyor |
 
-Seri kodları EVDS kataloğundan (`get_sub_categories`, `get_series`) bulundu ve değerleri gözle kontrol edildi:
-- politika faizi 2018 sonu 24, 2022 sonu 9, 2024 sonu 50, bugün 37;
-- Kasım 2022 TÜFE yıllık %84,39;
-- ÜFE %136,02.
+Seri kodları EVDS kataloğundan (`get_sub_categories`, `get_series`) bulundu. Değerler gözle kontrol edildi; aşağıdakiler `fetch_macro_data()` çıktısının yıl sonu ve ay değerleri (2026-11-06):
+- politika faizi Aralık 2018 = 24, Aralık 2022 = 9, Kasım 2024 = 50, **Aralık 2024 = 47,5**, Eylül 2026 = 37;
+- Kasım 2022 TÜFE yıllık %84,39 ve ÜFE yıllık %136,02.
 
-Bunların resmi kaynaklarla tek tek karşılaştırılması yapılmadı.
+Resmî kaynaklarla tek tek karşılaştırma yapılmadı. Hakem-2 ise TÜFE için iki seriyi ölçtü: `TP.TUKFIY2025.GENEL / TP.FG.J0` oranı sabit (std/ortalama 3,6e-6). Yıllık değişim farkı 2010 sonrası 0,000 puan, Kasım 2022'de ikisi de 84,39. 2026-02 sonrası eski seri bittiği için karşılaştırılamıyor.
 
 **B3 — açıklanma gecikmesi.** Aylık bir değer, açıklanmadan önceki günlere yazılmıyor. Eski kod ay *m*'nin TÜFE'sini ayın 1'ine yerleştirip ileri dolduruyordu; yani değer açıklanmasından yaklaşık 5 hafta önce görünüyordu.
 
@@ -426,8 +425,9 @@ Bunların resmi kaynaklarla tek tek karşılaştırılması yapılmadı.
 | Politika faizi (BIS aylık) | ay *m+1*'in **1'inden** itibaren | **Tasarım varsayımı.** Aylık seri ay içindeki karar tarihini taşımıyor, bu yüzden ay içindeki değişiklik bir ay gecikmeli görünüyor |
 
 **B1 — `bfill` kaldırıldı.** Hem `fetch_macro_data`'dan hem `fetch_incremental`'dan çıktı.
-- Zorunlu sütunların hepsi dolmadan önceki baş satırlar **atılıyor**: gerçek çekimde 5 satır, ilk satır 2018-01-06.
-- Yıllık enflasyon için endeks 13 ay erken çekiliyor; ilk yıl boş kalmıyor ve uydurulmuyor.
+- Zorunlu sütunların hepsi dolmadan önceki baş satırlar **atılıyor**. İnceleme sonrası gerçek çekimde 1 satır atıldı; ilk satır 2018-01-02.
+- Yıllık enflasyon için endeks **14 ay** erken çekiliyor. İlk sürümde bu 13 aydı ve bir aylık kayma yüzünden ilk 5 gün boş kalıyordu (hakem-2 B2 #7).
+- Dosya bitiş tarihinden sonrasını içermiyor (hakem-2 B2 #4).
 
 **A8.** `data/macro/risk_free.csv` (`fetch_risk_free`) ayrı bir dosya:
 - `funding_rate`: TP.APIFON4, TCMB Ağırlıklı Ortalama Fonlama Maliyeti; iş günü, 2011-01-03..2026-11-06, 3.983 satır, 7 günden uzun boşluk yok.
@@ -435,14 +435,22 @@ Bunların resmi kaynaklarla tek tek karşılaştırılması yapılmadı.
 
 `evaluation.risk_free` varsayılan olarak `funding_rate`'i kullanıyor. Seçim bir **tasarım varsayımıdır**: seri günlük ve RL penceresini kapsıyor. Bunun kaynakla gerekçelendirilmesi ve nakit faiz tahakkuku açık iş olarak duruyor (§9.2 #7). Veri sayfasındaki makro güncellemesi bu dosyayı da yeniliyor; yedek değer kullanılırsa panoda kırmızı uyarı çıkıyor.
 
-**Kabul** (`python tests/test_macro_pit.py`, ağ yok, 25/25). Sahte EVDS, gerçek API'nin ölçülen davranışlarını taklit ediyor: alt çizgili sütun, 'YYYY-M' tarih biçimi, baştan kesen 1000 satır sınırı. Kontroller:
-- **Kesme değişmezliği (B0 mantığı):** bitiş tarihi T₁=2023-06-30 ve T₂=2026-11-06 ile üretilen dosyaların ortak satırları bit-eş.
-- **B3:** hiçbir ayın TÜFE'si açıklanmadan önce görünmüyor.
-- **Hata yolu:** yedek değer yazılınca kalite bayrağı konuyor, `strict_data` hata veriyor.
-- **Yeniden çekim:** bayraklı dosya tam çekimle yenileniyor.
+**Kabul** (`python tests/test_macro_pit.py`, ağ yok, **33/33**). Sahte EVDS, gerçek API'nin ölçülen davranışlarını taklit ediyor:
+- alt çizgili sütun ve 'YYYY-M' tarih biçimi;
+- baştan kesen 1000 satır sınırı;
+- **BIS yayın gecikmesi** (son 65 gün yok).
+
+Sahte TÜFE/ÜFE'nin aylık değişimi her ay farklı. Kontroller:
+- **B3:** hiçbir ayın TÜFE'si açıklanmadan önce görünmüyor. Bir **öz-test**, "ay *m* değeri ay *m*'nin 1'inde" mutasyonunun bu kontrolü kırdığını gösteriyor (hakem-2 B2 #2).
+- **B1 — doğrudan kontrol:** ilk satırın TÜFE'si başlangıçtan *önce* bilinen değer; *sonra* gelecek değer değil. İlk sürümdeki kesme değişmezliği testi `bfill`'i **yakalamıyordu**, çünkü baştaki `bfill` bitiş tarihinden bağımsız (hakem-2 B2 #3). Kesme değişmezliği kontrolü yerinde duruyor, ama B1'in kanıtı o değil.
+- **Bitiş tarihi:** dosya bitiş tarihini aşmıyor.
+- **Artımlı çekim:** BIS gecikmesi altında yedeğe düşmüyor, gün kaybetmiyor. Yedek değerli delta dosyaya yazılmıyor (hakem-2 B2 #1).
+- **Hata yolu:** kalite bayrağı ve `strict_data`. Bayraklı dosya tam çekimle yenileniyor.
 - **Risksiz faiz:** t−1 oranından hesaplanıyor.
 
-Gerçek çekimde kalite bayrağı boş, NaN yok. THYAO için özellik üretimi gerçek makroyla çalıştı. Tahmin golden testi geçti; golden sentetik veri kullandığı için bu değişiklikten etkilenmez.
+Gerçek çekimde kalite bayrağı boş, NaN yok. THYAO için özellik üretimi gerçek makroyla çalıştı.
+
+Tahmin golden testi geçti, ama **bu değişiklik için kanıt sayılmaz**: golden sentetik makro kullanıyor. K1'deki "B1 golden'ı değiştirir" öngörüsü gerçek veri hattı için geçerli; sentetik golden için değil (hakem-2 B2 #13). Golden yenilemesi yine Milestone 0' ile yapılacak.
 
 **Etkileri ve açık kalanlar:**
 - **Bu tarihten önce üretilmiş her şey sabit faiz 50 ve sıfır enflasyonla üretildi:** tahmin modelleri, faz 2 RL modelleri, `macro_data.csv`'ye dayalı her sonuç. Makro özellikler bu sonuçlarda bilgi taşımıyor; hepsi sınırlılıktır.
@@ -450,6 +458,25 @@ Gerçek çekimde kalite bayrağı boş, NaN yok. THYAO için özellik üretimi g
 - **Makro 2018'den başlıyor, RL penceresi 2013-06'dan.** Faz 2 ortamı 2013–2017 arasında makroyu 0 görüyor (önceden de böyleydi).
 - Resmî TÜİK yayın takvimi kullanılmadı; politika faizinin karar tarihli günlük serisi yok. İkisi de tasarım varsayımı.
 - Eski risksiz faiz sabitleri (0,15 / 0,02 / 0) bağlanmadı; bağlama D paketinde yapılacak.
+
+### 9.4 hakem-2 incelemesi (B2/B3/B1/A8, 2026-11-06) — karar: Büyük revizyon
+
+| # | Cid. | İtiraz | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK (birleştirmeyi engeller) | Artımlı çekim gerçek EVDS'de politika faizini yine 50'ye düşürüyor (BIS ~5 hafta gecikmeli; kısa pencere boş dönüyor) ve gün kaybediyor | **Kabul, düzeltildi.** EVDS 120 gün geriye bakıyor; yedek değerli delta yazılmıyor; gecikmeli sahte EVDS testi eklendi |
+| 2 | BÜYÜK | B3 testi içi boş (geometrik sahte TÜFE → YoY sabit) | **Kabul, düzeltildi.** Değişken sahte seri + mutasyon öz-testi |
+| 3 | BÜYÜK | Kesme değişmezliği `bfill`'i yakalamıyor; CLAUDE.md iddiası yanlış | **Kabul, düzeltildi.** Doğrudan ilk değer kontrolü eklendi; belgeler düzeltildi |
+| 4 | BÜYÜK | Olay zamanlı ama vintage değil: BIS değeri geriye yazılıyor, eğitimde ay *m−1*, canlıda *m−2* görünüyor; bitiş sonrasına satır | **Kısmen.** Bitiş kesimi eklendi. **Açık:** vintage / son gözlenen ay kaydı; canlıda eksik ay uyarısı |
+| 5 | BÜYÜK | Aylık ay sonu politika faizi ölçüm hatası taşıyor; 2018'in 1. yarısında 1 haftalık repo fiili fonlamayı temsil etmiyor (8 ↔ 12,75–16,5); 471 günde fark > 3 puan | **Kabul, açık iş:** duruş özelliği için günlük TP.APIFON4 (t−1) seçeneği + duyarlılık analizi; o zamana kadar sınırlılık |
+| 6 | BÜYÜK | TP.APIFON4 risksiz faiz olarak gerekçesiz (TCMB fonlama maliyeti, yatırılabilir getiri değil) | **Kabul, açık iş:** TLREF (`TP.BISTTLREF.ORAN`, 2018-12'den) ile duyarlılık; kaynakla gerekçe (`/kaynak-dogrula`); nakit faiz (§9.2 #7) |
+| 7 | KÜÇÜK | YoY erken çekimde bir aylık kayma (13 → 14) | **Kabul, düzeltildi** |
+| 8 | KÜÇÜK | 2025=100 serisinin varsayımı ölçülmemiş | **Kabul.** Hakemin ölçümü §9.3'e yazıldı; 2026-02 sonrası TÜİK bülteniyle karşılaştırma açık |
+| 9 | KÜÇÜK | `CPI_RELEASE_DAY=6` ölçülmemiş | **Kabul, açık iş:** 2018–2026 TÜİK yayın tarihleri |
+| 10 | KÜÇÜK | "2024 sonu 50" yanlış; risk_free'de `policy_rate`'in ilk 21 satırı NaN | **Kabul, düzeltildi** (Aralık 2024 = 47,5; politika bir ay erken çekiliyor) |
+| 11 | KÜÇÜK | Çapraz varlık verisinde `ffill().bfill()` duruyor; "KAPANDI" kapsamı aşıyor | **Kabul, düzeltildi** (`prediction_service._fetch_cross_asset`); ifade daraltıldı |
+| 12 | KÜÇÜK | RL ortamında makro `<= current_date`: aynı günün TRY=X kapanışı (BIST kapanışından sonra olabilir; doğrulanmadı) | **Kabul, açık iş** (env değişikliği → davranış dondurma kararı) |
+| 13 | KÜÇÜK | Golden'ın geçmesi kanıt değil; K1 gerekçesiyle çelişki | **Kabul.** §9.3'te açıklandı |
+| 14 | KÜÇÜK | Eski dosya yalnızca kalite bayrağından tanınıyor; `pit_version` yok | **Kabul, açık iş** |
 
 **Sıradaki:** B (+B7–B10, B9 bu kapının açık protokolünü kapatır; K1: golden Milestone 0' ile bir kez), K18 gözlem sağlığı, R1 (tek bölme, walk-forward), E, F, G (+ §9.2 #7 nakit faizi), D; ardından P ve Milestone 0'.
 
@@ -465,3 +492,8 @@ Gerçek çekimde kalite bayrağı boş, NaN yok. THYAO için özellik üretimi g
   - Hayalet gün tanımı düzeltildi; ilk sayılar geçersiz.
   - A2, C2 ve V "Kısmen"e indi.
 - **2026-11-06 (B2/B3/B1/A8):** EVDS teşhisi — dört hata (yanlış seri kodları, alt çizgili sütun, 'YYYY-M' tarih, 1000 satır sınırı). Makro artık nokta-zamanlı ve `bfill`'siz. Risksiz faiz TP.APIFON4'ten (§9.3).
+- **2026-11-06 (hakem-2 B2):** "Büyük revizyon"; 14 itiraz §9.4'te.
+  - Artımlı çekimdeki sabit 50 geri dönüşü (birleştirmeyi engelliyordu) düzeltildi.
+  - B1/B3 testlerinin içi boştu; mutasyonla doğrulanır hale getirildi.
+  - Bitiş kesimi, 14 aylık erken çekim ve çapraz varlık `bfill`'i düzeltildi.
+  - Açık: vintage kaydı, politika faizi ölçüm hatası, risksiz faiz gerekçesi, TÜİK takvimi, RL'de aynı gün FX, `pit_version`.

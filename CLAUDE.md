@@ -144,7 +144,8 @@ python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontro
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
                                            #          gecikmesi, bfill yok (kesme
-                                           #          degismezligi), risksiz faiz (25, ag yok)
+                                           #          degismezligi), artimli + BIS gecikmesi,
+                                           #          mutasyon oz-testi, risksiz faiz (33, ag yok)
 python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
                                            #        CSS siniflarimiz, devre disi
@@ -254,9 +255,13 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - **EVDS tuzakları:** sütun adı alt çizgili döner (`TP_FG_J0`); aylık `Tarih` 'YYYY-M';
   tek istekte en fazla 1000 satır, fazlası aralığın BAŞINDAN kesilir (`_evds_series` parçalar).
 - **Nokta-zamanlı (B3):** ay m TÜFE/ÜFE'si ay m+1'in 6'sından, ay m politika faizi ay m+1'in
-  1'inden itibaren geçerli (tasarım varsayımı). **`bfill` YOK (B1)**; baş boşluk atılır.
-  `.bfill()` geri getirme — `tests/test_macro_pit.py` kesme değişmezliğiyle yakalar.
-- Kalite bayraklı mevcut dosya artımlı değil TAM çekimle yenilenir.
+  1'inden itibaren geçerli (tasarım varsayımı). **`bfill` YOK (B1)**; baş boşluk atılır,
+  bitiş tarihinden sonrası yazılmaz. `.bfill()` geri getirme — `tests/test_macro_pit.py`
+  ilk satırın değerini DOĞRUDAN denetler (kesme değişmezliği bfill'i YAKALAMAZ).
+- Olay zamanlı, **vintage değil**: BIS aylık faizi ~5 hafta gecikmeli; geçmişte ay m−1, canlıda
+  m−2 görünür (açık iş, Faz 9 §9.4 #4).
+- Artımlı çekim EVDS'i 120 gün geriye bakarak çeker; yedek değerli delta dosyaya YAZILMAZ.
+  Kalite bayraklı mevcut dosya artımlı değil TAM çekimle yenilenir.
 - **Risksiz faiz ayrı dosyada:** `data/macro/risk_free.csv` (`fetch_risk_free()`; TP.APIFON4
   TCMB ağırlıklı ortalama fonlama maliyeti, iş günü, 2011'den). Veri sayfası makro güncellemesi
   bunu da yeniler. Yedeği yok.

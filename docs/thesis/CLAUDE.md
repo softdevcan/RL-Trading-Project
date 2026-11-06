@@ -17,10 +17,12 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
   kodda dogrulanmis sizinti kaynaklari var. ACIK: statik temel oranlar (opt-in), seri
   butunune ICEEMDAN + hedef filtrelenmis fiyattan (opt-in), gosterge isinma bfill'i (Y15),
   CV'de ozellik secimi (Y16), TATS etiketleri (Y20), RL test olcegi (Y13), dagitimda
-  meta-ogrenici yeniden uyumu (K19). KAPANDI (2026-11-06, Faz 9 §9.3): makro `bfill`
-  (B1) ve TUFE/UFE aciklanma gecikmesi (B3) — yalnizca bu tarihten SONRA uretilen makro
-  dosyasi icin; onceki tum makro (sabit 50 / 0, bfill'li) sinirlilik. Protokol: 1/N /
-  min-var / HRP hala yok (D).
+  meta-ogrenici yeniden uyumu (K19). KAPANDI (2026-11-06, Faz 9 §9.3–9.4): makro ve
+  capraz varlik `bfill`'i (B1) ve TUFE/UFE aciklanma gecikmesi (B3, olay zamanli —
+  vintage DEGIL; BIS faizi ~5 hafta gecikmeli). Yalnizca bu tarihten SONRA uretilen
+  makro dosyasi icin; onceki tum makro (sabit 50 / 0, bfill'li) sinirlilik. ACIK:
+  aylik politika faizi olcum hatasi (§9.4 #5), risksiz faiz secimi (#6), RL ortaminda
+  ayni gun FX (#12). Protokol: 1/N / min-var / HRP hala yok (D).
   Liste: `docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar"; kapatilma plani
   Faz 9 + Faz 10'da (asagida). Plandaki paket sirasinin disinda "duzeltmeye" girisme.
 - **Faz 9 ve Faz 10 planlari ONAYLANDI (2026-11-06):**

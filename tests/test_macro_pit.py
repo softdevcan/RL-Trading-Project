@@ -54,9 +54,12 @@ def check(name, condition, detail=""):
 # Sahte kaynaklar
 # --------------------------------------------------------------------------
 MONTHS = pd.period_range("2010-01", "2026-10", freq="M")
+_n = np.arange(len(MONTHS))
+# Aylik degisim HER AY farkli (hakem-2 B2 #2: geometrik seride YoY sabitti ve
+# B3 testi ileriye bakisi yakalayamiyordu)
 TRUTH = {
-    "TP.TUKFIY2025.GENEL": pd.Series(100 * 1.02 ** np.arange(len(MONTHS)), index=MONTHS),
-    "TP.TUFE1YI.T1": pd.Series(100 * 1.015 ** np.arange(len(MONTHS)), index=MONTHS),
+    "TP.TUKFIY2025.GENEL": pd.Series(100 * np.cumprod(1.02 + 0.015 * np.sin(_n * 1.3)), index=MONTHS),
+    "TP.TUFE1YI.T1": pd.Series(100 * np.cumprod(1.015 + 0.02 * np.cos(_n * 0.7)), index=MONTHS),
     "TP.BISPOLFAIZ.TUR": pd.Series(np.where(np.arange(len(MONTHS)) < 150, 10.0, 40.0)
                                    + (np.arange(len(MONTHS)) % 7), index=MONTHS),
 }
@@ -65,9 +68,12 @@ FUNDING = pd.Series(10 + np.sin(np.arange(len(DAYS)) / 50.0), index=DAYS)
 
 
 class FakeEVDS:
-    def __init__(self, fail=()):
+    def __init__(self, fail=(), today=None):
         self.fail = set(fail)
         self.calls = 0
+        # BIS aylik politika serisi ~5 hafta gecikmeli: "bugun"den 65 gunden
+        # yeni aylar henuz yayinlanmamis (hakem-2 B2 #1 olcumu: 2026-11-06'da son ay 2026-09)
+        self.today = pd.Timestamp(today) if today else None
 
     def get_data(self, series, startdate, enddate):
         self.calls += 1
@@ -82,7 +88,10 @@ class FakeEVDS:
         else:
             t = TRUTH[code]
             ts = t.index.to_timestamp()
-            s = t[(ts >= a.replace(day=1)) & (ts <= b)]
+            keep = (ts >= a.replace(day=1)) & (ts <= b)
+            if code == "TP.BISPOLFAIZ.TUR" and self.today is not None:
+                keep &= ts <= self.today - pd.Timedelta(days=65)
+            s = t[keep]
             tarih = [f"{p.year}-{p.month}" for p in s.index]           # 'YYYY-M'
         df = pd.DataFrame({"Tarih": tarih, code.replace(".", "_"): s.to_numpy()})
         return df.tail(MacroDataFetcher.EVDS_MAX_ROWS).reset_index(drop=True)   # BASTAN kes
@@ -99,9 +108,13 @@ class FakeTicker:
 
 
 mf.yf.Ticker = FakeTicker   # ag yok
+# fetch_incremental delta icin yeni bir MacroDataFetcher kurar -> evdsAPI da sahte
+FAKE_CFG = {"today": None, "fail": set()}
+mf.evdsAPI = lambda key: FakeEVDS(fail=FAKE_CFG["fail"], today=FAKE_CFG["today"])
+mf.EVDS_AVAILABLE = True
 
 
-def make(tmp, start="2018-01-01", end=None, fail=(), strict=False):
+def make(tmp, start="2018-01-01", end=None, fail=(), strict=False, today=None):
     f = MacroDataFetcher.__new__(MacroDataFetcher)
     f.strict_data = strict
     f.api_key = "x"
@@ -110,7 +123,7 @@ def make(tmp, start="2018-01-01", end=None, fail=(), strict=False):
     f.start_date_yf = f._convert_date_format(start, to_evds=False)
     f.end_date_yf = f._convert_date_format(end, to_evds=False) if end else "2026-11-06"
     f.data_dir = tmp
-    f.evds = FakeEVDS(fail=fail)
+    f.evds = FakeEVDS(fail=fail, today=today)
     f.data_quality = {}
     return f
 
@@ -178,9 +191,39 @@ with tempfile.TemporaryDirectory() as tmp:
     b = cut.loc[common, list(MacroDataFetcher.REQUIRED_COLS)]
     check("T1 = 2023-06-30 ile T2 = 2026-11-06: ortak satirlar bit-es",
           a.equals(b), str((a - b).abs().max()))
+    check("bitis tarihinden sonraya satir yazilmiyor (hakem-2 B2 #4)",
+          cut.index.max() <= pd.Timestamp("2023-06-30"), str(cut.index.max()))
     first = full.index.min()
     check("bas bosluk atildi: ilk satirda zorunlu sutunlarin hepsi dolu",
           full.loc[first, list(MacroDataFetcher.REQUIRED_COLS)].notna().all())
+    check("14 ay erken cekim: baslangic gunu atilmiyor (2018-01-01 dolu)",
+          first == pd.Timestamp("2018-01-01"), str(first))
+
+    # Dogrudan bfill kontrolu (hakem-2 B2 #3 — kesme degismezligi bfill'i
+    # yakalamaz): ilk satirdaki deger, baslangictan ONCE bilinen son gozlem
+    # olmali; baslangictan sonra gelen ilk gozlem degil.
+    yoy_true = TRUTH["TP.TUKFIY2025.GENEL"].pct_change(12) * 100
+    known_at_start = yoy_true[pd.Period("2017-11", "M")]    # 2017-12-06'dan beri gecerli
+    first_after = yoy_true[pd.Period("2017-12", "M")]       # 2018-01-06'da gelecek
+    check("ilk satirin TUFE'si baslangictan once bilinen deger (gelecekteki degil)",
+          np.isclose(full.iloc[0]["cpi_inflation"], known_at_start)
+          and not np.isclose(full.iloc[0]["cpi_inflation"], first_after))
+
+    # Oz-test: kasitli mutasyonlar yukaridaki kontrolleri KIRMALI
+    orig_pit = MacroDataFetcher.__dict__["_monthly_point_in_time"]     # staticmethod nesnesi
+    p = pd.Period("2022-03", "M")
+    mid = p.to_timestamp() + pd.Timedelta(days=14)                     # ay m'nin 15'i
+    honest = np.isclose(full.loc[:mid, "cpi_inflation"].iloc[-1], yoy_true[p])
+    try:
+        MacroDataFetcher._monthly_point_in_time = staticmethod(        # ay m'yi ay m'nin 1'ine koy
+            lambda m, day: pd.Series(m.dropna().to_numpy(),
+                                     index=pd.DatetimeIndex(m.dropna().index), name=m.name))
+        leak = make(tmp).fetch_macro_data(save=False)
+        leaked = np.isclose(leak.loc[:mid, "cpi_inflation"].iloc[-1], yoy_true[p])
+    finally:
+        MacroDataFetcher._monthly_point_in_time = orig_pit
+    check("oz-test: 'ay m degeri ay m'nin 1'inde' mutasyonu ayin 15'inde ay m'yi gosterir, "
+          "dogru hat gostermez", leaked and not honest, f"leaked={leaked} honest={honest}")
     check("ilk satir baslangictan once degil", first >= pd.Timestamp("2018-01-01"))
     check("atilan bas satir sayisi kayitli", full.attrs.get("leading_rows_dropped", -1) >= 0)
     code_lines = [ln.split("#", 1)[0] for ln in open(mf.__file__, encoding="utf-8")]
@@ -206,6 +249,30 @@ with tempfile.TemporaryDirectory() as tmp:
     check("bayrakli mevcut dosya TAM cekimle yenileniyor", res["mode"] == "full", str(res))
     q = json.load(open(os.path.join(tmp, "macro_data_quality.json"), encoding="utf-8"))
     check("yenilenen dosyada kalite bayragi temiz", q["data_quality"] == {}, str(q))
+
+with tempfile.TemporaryDirectory() as tmp:
+    # hakem-2 B2 #1: BIS gecikmesiyle kisa artimli pencere sabit 50'ye dusuyordu
+    make(tmp, end="2026-10-31", today="2026-10-31").fetch_macro_data(save=True)
+    inc = make(tmp, end="2026-11-06", today="2026-11-06")
+    FAKE_CFG.update(today="2026-11-06", fail=set())
+    res = inc.fetch_incremental()
+    after = pd.read_csv(os.path.join(tmp, "macro_data.csv"), index_col=0, parse_dates=True)
+    q = json.load(open(os.path.join(tmp, "macro_data_quality.json"), encoding="utf-8"))
+    check("BIS gecikmesi altinda artimli cekim yedek kullanmiyor",
+          res["mode"] == "incremental" and q["data_quality"] == {}, str(res))
+    check("artimli cekimde politika faizi 50'ye dusmedi", not (after["policy_rate"] == 50.0).any())
+    check("artimli cekim gun kaybetmiyor (11-02..11-06 is gunleri var)",
+          all(pd.Timestamp(d) in after.index for d in pd.bdate_range("2026-11-02", "2026-11-06")))
+    # mevcut dosyayi bir gun geri al ki artimli cekim yapilsin, sonra EVDS'i dusur
+    trimmed = after[after.index < pd.Timestamp("2026-11-06")]
+    trimmed.to_csv(os.path.join(tmp, "macro_data.csv"))
+    after = trimmed
+    FAKE_CFG.update(fail={"TP.BISPOLFAIZ.TUR"})
+    res_bad = make(tmp).fetch_incremental()
+    FAKE_CFG.update(today=None, fail=set())
+    after2 = pd.read_csv(os.path.join(tmp, "macro_data.csv"), index_col=0, parse_dates=True)
+    check("yedek degerli delta dosyaya yazilmiyor", res_bad["mode"] == "error"
+          and after2.index.max() == after.index.max(), str(res_bad.get("mode")))
 
 
 # --------------------------------------------------------------------------

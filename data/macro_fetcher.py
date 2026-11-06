@@ -63,6 +63,7 @@ class MacroDataFetcher:
         'ppi_index': 'TP.TUFE1YI.T1',          # Yurt İçi ÜFE Genel - Aylık
         'funding_rate': 'TP.APIFON4',          # TCMB Ağırlıklı Ort. Fonlama Maliyeti - İş günü
     }
+    INCREMENTAL_LOOKBACK_DAYS = 120   # artimli cekimde EVDS icin geriye bakis (BIS gecikmesi ~5 hafta)
     EVDS_MAX_ROWS = 1000      # EVDS tek istekte en fazla bu kadar satir dondurur (aralik SONUNDAN)
     EVDS_CHUNK_DAYS = 730
     CPI_RELEASE_DAY = 6       # B3: ay m TÜFE/ÜFE'si ay m+1'in bu gününden itibaren bilinir
@@ -240,8 +241,10 @@ class MacroDataFetcher:
         """
         start_evds = self._convert_date_format(start_date, to_evds=True)
         funding = self._evds_series(self.EVDS_CODES['funding_rate'], start_evds=start_evds)
+        start_pol = (pd.Timestamp(datetime.strptime(start_evds, "%d-%m-%Y"))
+                     - pd.DateOffset(months=1)).strftime("%d-%m-%Y")   # ilk ay da dolu
         policy = self._monthly_point_in_time(
-            self._evds_series(self.EVDS_CODES['policy_rate'], start_evds=start_evds),
+            self._evds_series(self.EVDS_CODES['policy_rate'], start_evds=start_pol),
             self.POLICY_AVAILABLE_DAY)
         idx = funding.index.union(policy.index)
         out = pd.DataFrame({
@@ -321,8 +324,10 @@ class MacroDataFetcher:
             # bos kalan bas, eskiden bfill ile GELECEKTEKI degerle dolduruluyordu (B1).
             for key, out_col in (('cpi_index', 'cpi_inflation'), ('ppi_index', 'ppi_inflation')):
                 try:
+                    # 14 ay: baslangic ayinda gecerli olan deger ay m-1'in YoY'u,
+                    # o da ay m-13 endeksini ister (hakem-2 B2 #7; 13 ile ilk 5 gun bostu)
                     idx_series = self._evds_series(self.EVDS_CODES[key],
-                                                   start_evds=self._evds_start_minus(13))
+                                                   start_evds=self._evds_start_minus(14))
                     yoy = (idx_series.pct_change(12) * 100).dropna()
                     data_dict[out_col] = self._monthly_point_in_time(yoy, self.CPI_RELEASE_DAY)
                     logger.info(f"  ✓ {out_col}: {self.EVDS_CODES[key]} YoY, "
@@ -390,6 +395,11 @@ class MacroDataFetcher:
         start_ts = pd.Timestamp(self.start_date_yf) if self.start_date_yf else None
         if start_ts is not None:
             macro_df = macro_df[macro_df.index >= start_ts]
+        # Bitis tarihinden SONRAYA satir yazilmaz (aylik degisim noktalari ileri
+        # tarihli olabilir; hakem-2 B2 #4)
+        end_ts = pd.Timestamp(self.end_date_yf) if self.end_date_yf else None
+        if end_ts is not None:
+            macro_df = macro_df[macro_df.index <= end_ts]
         macro_df = self._drop_leading_gaps(macro_df)
 
         # Son kontroller
@@ -586,9 +596,15 @@ class MacroDataFetcher:
                     'last_date': str(last_date)}
 
         logger.info(f"Eksik macro verisi cekiliyor: {fetch_from} -> {today_str}")
+        # hakem-2 B2 #1: BIS aylik politika faizi ~5 hafta gecikmeli yayinlaniyor;
+        # birkac gunluk pencere EVDS'ten BOS doner ve sabit-50 yedegine duserdi.
+        # Delta, geriye INCREMENTAL_LOOKBACK_DAYS gun uzatilip cekilir, sonra
+        # fetch_from'a kirpilir; yedek deger iceren delta dosyaya HIC yazilmaz.
+        lookback_start = (datetime.combine(last_date, datetime.min.time())
+                          - timedelta(days=self.INCREMENTAL_LOOKBACK_DAYS)).strftime('%Y-%m-%d')
         delta_fetcher = MacroDataFetcher(
             api_key=self.api_key,
-            start_date=fetch_from,
+            start_date=lookback_start,
             end_date=today_str,
         )
         try:
@@ -597,6 +613,14 @@ class MacroDataFetcher:
             logger.error(f"Delta makro cekimi basarisiz: {exc}")
             return {'mode': 'error', 'new_rows': 0, 'total_rows': len(existing),
                     'last_date': str(last_date), 'error': str(exc)}
+        if new_data.attrs.get('data_quality'):
+            msg = (f"Delta cekim yedek deger kullandi {new_data.attrs['data_quality']}; "
+                   f"dosyaya yazilmadi (sahte deger gecmise karismasin)")
+            logger.error(msg)
+            return {'mode': 'error', 'new_rows': 0, 'total_rows': len(existing),
+                    'last_date': str(last_date), 'error': msg,
+                    'data_quality': new_data.attrs['data_quality']}
+        new_data = new_data[new_data.index >= pd.Timestamp(fetch_from)]
 
         # Birlestir: yeni satirlar onceligi alir
         combined = pd.concat([existing, new_data])
