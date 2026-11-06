@@ -1096,7 +1096,8 @@ def _rl_protocol(eval_env, train_env, health: Optional[Dict[str, Any]],
           ise 'train_window' (B9, temiz)
       price_in_support: test fiyat ozellikleri egitim destegi icinde mi
           (B9'un eski ortamdaki bedeli; olculur, evaluation.observation_health)
-      indicator_bfill: gosterge isinmasi bfill ile dolu (Y15; B7) — acik
+      indicator_bfill: egitim ya da test verisinde bfill imzali gosterge isinma
+          blogu kaldi mi (Y15; B7) — olculur; rota bloklari veri kapisinda atar
       adx_constant / indicators_present: test ortaminin verisinden olculur
       hyperparams_clean: hiperparametreler acik ya da bulunamayan bir HPO
           kaydindan mi geliyor (hakem-2 B9 #8)
@@ -1104,7 +1105,8 @@ def _rl_protocol(eval_env, train_env, health: Optional[Dict[str, Any]],
     hyperparams_open_items.
     """
     from evaluation.trial_registry import rl_eval_protocol
-    protocol = rl_eval_protocol(eval_env, train_env, indicator_bfill=True, health=health,
+    # indicator_bfill artik OLCULUYOR (B7): egitim/test verisinde bfill blogu kaldi mi
+    protocol = rl_eval_protocol(eval_env, train_env, health=health,
                                 hyperparams_clean=hyperparams_source.get('clean'))
     protocol['hyperparams_source'] = hyperparams_source.get('source')
     protocol['hyperparams_open_items'] = hyperparams_source.get('open_items', [])
@@ -1179,7 +1181,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         from data.integrity import prepare_rl_panel
         from evaluation.reproducibility import resolve_seed, snapshot_frame
 
-        df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START)
+        # B7: gosterge isinma blogu (bfill ile doldurulmus bas satirlar) atilir
+        df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START,
+                                                drop_indicator_warmup=True)
         # C3: egitimin gordugu panelin SHA-256'si + parquet anlik goruntusu
         data_snapshot = snapshot_frame(df, 'rl_panel')
         # C1: tohum her kosumda kayda girer (istekte yoksa uretilir)

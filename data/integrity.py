@@ -214,6 +214,7 @@ def prepare_rl_panel(
     ghost_threshold: float = 0.9,
     drop_stale_cells: bool = True,
     on_artifact: str = 'raise',
+    drop_indicator_warmup: bool = False,
 ) -> Tuple[pd.DataFrame, dict]:
     """RL egitimi/HPO icin paneli pencerele, tara ve temizle.
 
@@ -223,6 +224,13 @@ def prepare_rl_panel(
         start: pencere baslangici; None -> RL_DATA_START (K17).
         on_artifact: 'raise' (varsayilan; DataIntegrityError) | 'warn'.
             Artefakt satirlari hicbir modda sessizce silinmez.
+        drop_indicator_warmup: Faz 9 / B7 (Faz 10 Y15). Gosterge isinma boslugu
+            `technical_indicators` tarafindan bfill ile dolduruldugu icin sembolun
+            ilk satirlari ilk gecerli (GELECEKTEKI) degeri tasir. True ise bu blok
+            (sembolun TAM gecmisinde ilk degerin birebir tekrari, >= 2 satir) pencere
+            icinde atilir; hucre EKSIK sayilir (own_last: islem yok). Varsayilan False
+            (eski davranis); rota ve HPO True verir. Ayni degerin dogal tekrari da
+            blok sayilabilir: fazladan birkac gercek satir atilir, sizinti olmaz.
 
     Returns:
         (temiz panel, rapor). Rapor model meta dosyasina ve manifeste yazilir.
@@ -266,6 +274,25 @@ def prepare_rl_panel(
             own = pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates])
             clean = clean[~own.isin(key)]
 
+    warmup_dropped = {}
+    if drop_indicator_warmup:
+        # Blok sembolun TAM gecmisinde olculur (pencere oncesinde baslayabilir)
+        blocks = indicator_warmup_blocks(df, min_len=2)
+        idx = clean.index
+        cdates = pd.to_datetime(idx.get_level_values('date'))
+        if getattr(cdates, 'tz', None) is not None:
+            cdates = cdates.tz_localize(None)
+        drop = np.zeros(len(clean), dtype=bool)
+        full_dates = _long(df).groupby('symbol', sort=False)['date']
+        for sym, cols in blocks.items():
+            n = max(cols.values())
+            block_dates = full_dates.get_group(sym).iloc[:n]
+            m = (idx.get_level_values('symbol') == sym) & cdates.isin(block_dates)
+            if m.any():
+                warmup_dropped[sym] = int(m.sum())
+                drop |= m
+        clean = clean[~drop]
+
     # Kullanilmayan dizin seviyelerini at: atilan tarihler seviyede kalirsa
     # unstack/kesitsel hesaplar sirasiz tarih uretebiliyor (hakem-2 #11).
     clean = clean.copy()
@@ -288,7 +315,8 @@ def prepare_rl_panel(
         'n_dates': int(act.shape[0]),
         'missing_cell_frac': float(1.0 - act.to_numpy().mean()) if act.size else None,
         'first_active': first_active,
-        # Bilinen acik veri sorunlari — rapor, durdurmaz (B7 / K18 kapilari)
+        # B7: atilan isinma satirlari; atilmadiysa kalan bloklar RAPORLANIR
+        'indicator_warmup_dropped': warmup_dropped,
         'indicator_warmup_blocks': indicator_warmup_blocks(clean),
         'n_large_moves': int(len(large_moves(clean))),
     }

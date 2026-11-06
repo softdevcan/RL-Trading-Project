@@ -171,6 +171,8 @@ python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim 
                                            #          main ile bit-es varsayilan (git show, 11
                                            #          yapilandirma), olcek kokeni, destek, AST
                                            #          bekcisi, sarmalayicili betikler (103)
+python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i — B0 kesme
+                                           #          degismezligi, RL kapisi, olculen protokol (19)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -434,7 +436,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
     yfinance kapali gunde duzeltilmis fiyati farkli yazabiliyor (2013-10-15 boyle kaciyordu)
   - olcum (2026-11-06): tam panelde 251 hayalet gun, 235 artefakt satiri; pencerede
     0 artefakt, 72 hayalet gun + 39 bayat hucre atiliyor, eksik hucre %0,076
-  - gosterge isinma `bfill`'i (ODAS/PGSUS CCI) ve ADX yalnizca RAPORLANIR (B7, K18 acik)
+  - gosterge isinma `bfill`'i: `prepare_rl_panel(drop_indicator_warmup=True)` bfill imzali bas
+    blogu atar (rota + HPO; gercek panelde ODAS 10, PGSUS 17 satir; B7, Faz 9 §9.7). Gostergeyi
+    `add_indicators_to_multi_symbol_df(warmup='nan')` ile uretmek ADX'i TUMUYLE NaN yapar (K18
+    koku) — tahmin hatti / CSV yeniden uretimi K18'e kadar 'bfill'de kalir. ADX K18'de acik
 - **Tarayici surekli yuksek ama sicramayan seviyeyi YAKALAMAZ** (TUPRS 2000-2003 > 10.000 TL
   satirlari "level_jump" degil). Bu satirlar pencere disinda; pencereyi geri cekme.
 - **`TradingEnv(missing_data_mode=...)`**: `'legacy'` (varsayilan, egitilmis modeller) eksik

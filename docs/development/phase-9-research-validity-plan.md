@@ -322,7 +322,7 @@ Faz 10 §8'e göre ilk kapı **V (veri bütünlüğü), A ve C**'dir. Gözlem sa
 
 **Bu kapı RL'de tez sayısı üretmez.** hakem-2 incelemesinin sonucu (§9.2) şu: istatistik çekirdeği formül düzeyinde doğru, ama bu kapıdan sonra üretilen RL sonuçları da üç açık protokol maddesi taşıyor:
 - **Y13 / B9:** test ölçeği test penceresinden kuruluyor. **Kapandı (§9.5), yalnız bu daldan sonraki koşumlar için.** Metriğe etkisi tanımlanamadı. Bedeli: eski ortamda test fiyat değerlerinin %98,9'u eğitim desteği dışında; deneme kaydı bunu `price_in_support` ile açık tutuyor.
-- **Y15 / B7:** gösterge ısınma boşluğu `bfill` ile dolduruluyor.
+- **Y15 / B7:** gösterge ısınma boşluğu `bfill` ile dolduruluyor. **RL'de kapandı (§9.7)**: kapı bfill bloğunu atıyor ve protokol bunu ölçüyor. Tahmin hattı ve CSV'nin yeniden üretimi K18'e bağlı.
 - **K18:** ADX ≡ 0.
 
 Bu yüzden bu kapıdan sonra üretilen RL sonuçları da "ön sonuç"tur. Deneme kaydı bu kayıtları `protocol_open` olarak işaretliyor ve kanıt olarak dışlıyor.
@@ -655,6 +655,39 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 
 ---
 
+### 9.7 B7 — gösterge ısınma boşluğu (2026-11-06, dal `feat/phase9-b7-indicator-warmup`)
+
+**Sorun (Faz 10 Y15).**
+- `technical_indicators.add_all_indicators` ısınma boşluğunu ffill → **bfill** → 0 ile dolduruyordu: sembolün ilk satırlarına göstergenin ilk geçerli (gelecekteki) değeri yazılıyordu.
+- `DataFetcher.clean_data` da sembolün ilk geçerli satırından önceki NaN satırları bfill'liyordu.
+
+**Değişiklik** (hepsi bayrakla; varsayılanlar eski davranış):
+- `add_indicators_to_multi_symbol_df(warmup='nan')`: yalnızca ffill uygulanır (nedensel); ısınma satırları NaN kalır.
+- `clean_data(leading='drop')`: baştaki NaN satırlar atılır, gelecek değer geriye yazılmaz.
+- `prepare_rl_panel(drop_indicator_warmup=True)`: bfill imzası taşıyan baş blok pencere içinde atılır. İmza: sembolün **tam** geçmişinde ilk değerin birebir tekrarı, en az 2 satır. Atılan hücre eksik sayılır (`own_last`: işlem yok). Rota ve HPO bu seçenekle çağırıyor.
+- Protokoldeki `indicator_bfill` artık **ölçülüyor**: eğitim ya da değerlendirme verisinde bfill bloğu kalmış mı. Rota ve HPO beyan göndermiyor.
+
+**Kabul** (`python tests/test_indicator_warmup.py`, **19/19**):
+- **B0:** `warmup='nan'` ile göstergeler t ∈ {3, 10, 18, 25, 60, 120} için t'de kesilen seride t'ye kadar bit-eş (NaN = NaN). Eski `bfill` ısınma içindeki t'de kalıyor; sızıntı sayısal olarak gösteriliyor.
+- **Varsayılan yol:** `add_indicators` ve `clean_data` varsayılanları, main @ 90d50f3'ten `git show` ile yüklenen modülle bit-eş.
+- **Kapı:** atılan satırlar `nan` modunun ısınma satırlarını kapsıyor. Fark en fazla 1 satır: bloğun içinde ilk gerçek değer de var, yani fazladan atılan gerçek bir satır; sızıntı yaratmaz. Blok pencereden önce bitiyorsa hiçbir satır atılmıyor.
+- **Protokol:** kapı bloğu atınca `indicator_bfill=False`, atmayınca `True`. Mutasyon: dedektörü kör bir kapı ölçütü kırıyor.
+- **Gerçek panel** (RL penceresi 2013-06): kapı ODAS'ta **10**, PGSUS'ta **17** satır atıyor; §9.1'deki ısınma bloklarıyla aynı. Kapıdan sonra pencerede bfill bloğu kalmıyor. Ham panelde baştaki NaN satır yok; `clean_data`'nın bfill'i bugünkü veride hiçbir satırı etkilemiyor (ölçüldü).
+
+**K18 için bulgu:** `warmup='nan'` modunda **ADX bütün satırlarda NaN**. "ADX ≡ 0"ın kökü hesabın NaN üretmesi; eski yol bunu `fillna(0)` ile sabit 0'a çeviriyordu. Testte kayıt olarak sabitlendi.
+
+**Açık kalanlar:**
+- Tahmin hattı (`prediction_service.py:89`) ve canlı karar (`daily_trading.py:419`) hâlâ varsayılan `bfill` kullanıyor. `nan` moduna geçiş K18'e bağlı: ADX tümüyle NaN olduğu için özellik satırları düşebilir.
+- Canlı kararda yalnız son satır kullanıldığı için ısınma bfill'i karara ulaşmıyor; 30 seanslık pencere CCI'nin 20 seanslık penceresinden uzun. Bu kod okumasından çıkan bir çıkarım, ölçülmedi.
+- Önceden hesaplanmış `stock_data_with_indicators.csv` hâlâ bfill'li; RL kapısı blokları atıyor. CSV'yi `nan` moduyla yeniden üretmek de K18'e bağlı (aynı ADX nedeni).
+
+**Etkileri:**
+- Rota kayıtlarında `indicator_bfill=False`. Gerçek panelde açık kalan maddeler `adx_constant` (K18) ve `price_in_support` (K25).
+- Bu daldan sonra eğitilen modellerin eğitim verisinde ODAS/PGSUS'un ilk 10/17 seansı yok.
+- HPO kayıtları `indicators_present=False` ile açık kalıyor (Y21).
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -683,3 +716,4 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - Hiperparametre kökeni kayda geçiyor; rapor D5'e kadar duruyor.
   - Ölçüm JSON'ları depoda arşivlendi.
   - Açık: GPU belirlenimciliği (#5), HPO → rota seçim soyu (#14); destek içi üçüncü kol için karar K25.
+- **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7).
