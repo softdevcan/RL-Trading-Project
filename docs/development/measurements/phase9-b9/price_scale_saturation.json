@@ -1,8 +1,9 @@
 {
- "created_at": "2026-11-06T22:05:29",
+ "created_at": "2026-11-06T22:19:38",
  "mode": "saturation",
- "command": "python scripts/analysis/measure_price_scale.py --mode saturation --out docs/development/measurements/phase9-b9/price_scale_saturation.json",
- "git_commit": "c4ab0a307557487d57afbf2ef8706198e7dc223d",
+ "command": "python scripts/analysis/measure_price_scale.py --mode saturation --out C:/Users/can/AppData/Local/Temp/claude/3a6fdc28095f59b5/f2dccb50-13c6-481e-a9de-7fc3b1f44951/scratchpad/clean_saturation.json",
+ "git_commit": "96f2d8b9b07c62bad893ef10d114ea6201c6e03c",
+ "git_dirty": false,
  "panel_sha256": "73dee83666e7c0802daa1de502005f2be19150402afe6446f88f17b02a0d70d1",
  "panel": [
   "2013-06-03",

@@ -542,7 +542,7 @@ Tahmin golden testi geçti, ama **bu değişiklik için kanıt sayılmaz**: gold
   - Bekçi örnek kaynakta ölçeksiz, `None`'lı, sarmalayıcılı, nitelikli ve maskeli çağrıları yakalıyor.
 - **Sarmalayıcıyla env kuran betikler** davranışla sınanıyor (`train_a2c_phase1`, `ab_test_rewards`, `optimize_reward_weights`, rapor). Zorunlu anahtar eksikse `TypeError` alınıyor.
 
-**Bedeli — doygunluk ve destek dışılık.** Komut: `python scripts/analysis/measure_price_scale.py --mode saturation`. Çıktı: [measurements/phase9-b9/price_scale_saturation.json](measurements/phase9-b9/price_scale_saturation.json) (panel SHA-256 `73dee836…`, commit c4ab0a3). Panel 2013-06-03..2026-07-27, 30 sembol. Bölmeler: eğitim 2013-06-03..2022-08-11 (2.303 gün), doğrulama 2022-08-12..2024-08-05 (494), test 2024-08-06..2026-07-27 (494).
+**Bedeli — doygunluk ve destek dışılık.** Komut: `python scripts/analysis/measure_price_scale.py --mode saturation`. Çıktı: [measurements/phase9-b9/price_scale_saturation.json](measurements/phase9-b9/price_scale_saturation.json) (panel SHA-256 `73dee836…`; commit 96f2d8b, temiz ağaçta — `git_dirty=false`; iki ölçüm de önceki koşumla bit-eş). Panel 2013-06-03..2026-07-27, 30 sembol. Bölmeler: eğitim 2013-06-03..2022-08-11 (2.303 gün), doğrulama 2022-08-12..2024-08-05 (494), test 2024-08-06..2026-07-27 (494).
 
 | Test penceresi | Eğitim ölçeğiyle (B9) | Kendi ölçeğiyle (eski) |
 |---|---|---|
