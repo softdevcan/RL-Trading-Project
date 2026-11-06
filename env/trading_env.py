@@ -58,6 +58,14 @@ class TradingEnv(gym.Env):
         # Faz 3.3.2: Kelly fraksiyonel boyutlandirma
         use_kelly: bool = False,
         kelly_fraction: float = 0.25,       # Quarter-Kelly (muhafazakar)
+        # Faz 10 / V: eksik (sembol, tarih) hucresinin ele alinisi.
+        #   'legacy'   : eski davranis — gozlemde ONCEKI SEMBOLUN ozellik blogu
+        #                kopyalanir, degerlemede fiyat 0 sayilir. Egitilmis
+        #                modellerin gordugu davranis (davranis dondurma).
+        #   'own_last' : sembol KENDI son gozlemiyle tasinir (hic gozlemi yoksa
+        #                sifir blok), degerleme kendi son kapanisiyla yapilir,
+        #                o hucrede ISLEM YAPILMAZ. Yeni egitimler bunu kullanir.
+        missing_data_mode: str = 'legacy',
     ):
         """
         Args:
@@ -91,6 +99,10 @@ class TradingEnv(gym.Env):
         self.atr_period = atr_period
         self.use_kelly = use_kelly
         self.kelly_fraction = kelly_fraction
+
+        if missing_data_mode not in ('legacy', 'own_last'):
+            raise ValueError(f"missing_data_mode 'legacy' ya da 'own_last' olmali: {missing_data_mode}")
+        self.missing_data_mode = missing_data_mode
 
         # Faz 2 data
         self.fundamental_df = fundamental_df
@@ -335,6 +347,44 @@ class TradingEnv(gym.Env):
             row.get('adx', 0), row.get('turbulence', 0),
         )
 
+    def _has_row(self, symbol: str, current_date) -> bool:
+        """O gun icin sembolun satiri var mi (own_last modunda islem kapisi)."""
+        cache = self._lookup_cache
+        if cache is not None:
+            return current_date in cache['positions'].get(symbol, {})
+        try:
+            self.df.loc[(symbol, current_date)]
+            return True
+        except KeyError:
+            return False
+
+    def _last_obs_row(self, symbol: str, current_date):
+        """Sembolun current_date'e kadar (dahil) SON satiri; yoksa None.
+
+        Yalnizca `missing_data_mode='own_last'` kullanir. Gecmise bakar,
+        gelecege bakmaz: searchsorted side='right' - 1.
+        """
+        cache = self._lookup_cache
+        if cache is not None:
+            dates = cache['dates'].get(symbol)
+            if dates is None or len(dates) == 0:
+                return None
+            i = int(np.searchsorted(dates, np.datetime64(current_date), side='right')) - 1
+            return cache['values'][symbol][i] if i >= 0 else None
+        try:
+            sub = self.df.xs(symbol, level='symbol')
+        except KeyError:
+            return None
+        sub = sub[sub.index <= current_date]
+        if sub.empty:
+            return None
+        row = sub.iloc[-1]
+        return (
+            row['open'], row['high'], row['low'], row['close'], row['volume'],
+            row.get('macd', 0), row.get('rsi', 50), row.get('cci', 0),
+            row.get('adx', 0), row.get('turbulence', 0),
+        )
+
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict]:
         """Environment'ı başlangıç durumuna döndür"""
         super().reset(seed=seed)
@@ -517,6 +567,13 @@ class TradingEnv(gym.Env):
             tuple: (success: bool, commission_cost: float)
         """
         symbol = self.symbols[stock_idx]
+
+        # Faz 10 / V: own_last modunda eksik hucrede (sembol o gun islem gormedi
+        # ya da henuz listelenmedi) islem yapilmaz; fiyat yalnizca degerleme icin
+        # tasinir.
+        if self.missing_data_mode == 'own_last' and not self._has_row(symbol, self._get_current_date()):
+            return False, 0.0
+
         current_price = self._get_current_price(symbol)
 
         # Fiyat gecersizse islem YAPILMAZ. Bu bir performans korumasi degil,
@@ -609,8 +666,17 @@ class TradingEnv(gym.Env):
         for symbol in self.symbols:
             # Hissenin o günkü verisini al
             try:
+                if self.missing_data_mode == 'own_last':
+                    try:
+                        row = self._obs_row(symbol, current_date)
+                    except KeyError:
+                        row = self._last_obs_row(symbol, current_date)
+                        if row is None:
+                            raise
+                else:
+                    row = self._obs_row(symbol, current_date)
                 (open_price, high_price, low_price, close_price, volume,
-                 macd, rsi, cci, adx, turbulence) = self._obs_row(symbol, current_date)
+                 macd, rsi, cci, adx, turbulence) = row
 
                 # Improved normalization for better neural network learning
                 # Use log-scale for volume to handle large variance
@@ -663,7 +729,15 @@ class TradingEnv(gym.Env):
                 features.extend(stock_features)
 
             except KeyError:
+                if self.missing_data_mode == 'own_last':
+                    # Sembolun bu tarihe kadar HIC gozlemi yok (henuz listelenmemis):
+                    # notr sifir blok. Komsu sembol KOPYALANMAZ (Faz 10 / V).
+                    features.extend([0.0] * self.features_per_stock)
+                    continue
                 # Missing data: forward-fill from last known step, then warn (#4).
+                # NOT (Faz 10 / V): bu "legacy" yol aslinda sembolun kendi gecmisini
+                # degil ONCEKI SEMBOLUN ozellik blogunu kopyaliyor; egitilmis
+                # modellerle uyum icin degistirilmedi. Yeni egitim own_last kullanir.
                 # Sembol basina tek uyari — kurulumda zaten toplam kapsam ozeti
                 # loglaniyor, adim basina tekrar etmek HPO ciktisini boguyordu.
                 if self._should_warn('missing_obs', symbol):
@@ -895,6 +969,16 @@ class TradingEnv(gym.Env):
             self._price_memo[symbol] = price
             return price
         except KeyError:
+            if self.missing_data_mode == 'own_last':
+                # Degerleme sembolun KENDI son kapanisiyla (0 saymak eldeki
+                # pozisyonu yok sayip portfoyu ve oduldeki getiriyi sahte
+                # dusururdu). Islem kapisi _execute_trade'de: bu hucrede
+                # alim-satim YAPILMAZ.
+                last = self._last_obs_row(symbol, current_date)
+                if last is not None:
+                    price = float(last[_IX_CLOSE])
+                    self._price_memo[symbol] = price
+                    return price
             if self._should_warn('missing_price', symbol):
                 logger.warning(f"Price not found for {symbol} (ilk: {current_date}) — "
                                f"bu sembol icin tekrar uyarilmayacak.")

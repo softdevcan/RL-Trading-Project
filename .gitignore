@@ -60,6 +60,9 @@ data/**/*.csv
 # Faz 6 (G.2): cekilen verinin kalite bayragi yan dosyasi — CSV ile birlikte
 # uretilir, CSV gibi versiyonlanmaz.
 data/**/*_quality.json
+# Faz 9 (C3): egitimin gordugu panelin parquet anlik goruntuleri (veri, kod degil;
+# ozetleri — SHA-256 — model meta ve manifestte tutulur)
+data/snapshots/
 # Stray CSVs at repo root, but never under prediction/ (that's source, not data).
 /*.csv
 

@@ -208,16 +208,56 @@ class ModelAnalyzer:
         Perform statistical significance tests between two models
 
         Args:
-            returns_1: Returns from model 1
+            returns_1: Returns from model 1 (AYNI gunler, ayni sira)
             returns_2: Returns from model 2
-            test_type: "t-test" or "wilcoxon"
+            test_type: "t-test" (eslestirilmis), "hac" (ortalama farki,
+                Newey-West), "bootstrap" (ortalama farki, duragan bootstrap),
+                "sharpe" (Ledoit-Wolf Sharpe farki, HAC) veya "wilcoxon"
+
+        Faz 9 A9: eskiden `ttest_ind` (BAGIMSIZ orneklem) kullaniliyordu; ayni
+        piyasa gunlerindeki iki getiri serisi bagimsiz degildir. Yeni testler
+        `evaluation.paired_tests` / `evaluation.sharpe_tests`'ten gelir ve
+        seriler esit uzunlukta (tarihe gore hizali) olmalidir.
 
         Returns:
             Dictionary with test results
         """
-        if test_type == "t-test":
-            statistic, p_value = stats.ttest_ind(returns_1, returns_2)
-            test_name = "Independent t-test"
+        from evaluation import paired_tests, sharpe_tests
+
+        r1 = np.asarray(returns_1, dtype=float)
+        r2 = np.asarray(returns_2, dtype=float)
+        if test_type in ("t-test", "hac", "bootstrap", "sharpe") and r1.shape != r2.shape:
+            # Eski cagiran farkli uzunlukta seri verebiliyordu (farkli test
+            # pencereleri). Eslestirme olmadan test yapmak yerine son ortak
+            # gozlemlere hizalanir ve bu acikca raporlanir.
+            n = min(len(r1), len(r2))
+            r1, r2 = r1[-n:], r2[-n:]
+            aligned_note = f"seriler farkli uzunlukta; son {n} gozleme hizalandi"
+        else:
+            aligned_note = None
+
+        if test_type in ("t-test", "hac", "bootstrap", "sharpe"):
+            if test_type == "t-test":
+                res = paired_tests.paired_t(r1, r2)
+            elif test_type == "hac":
+                res = paired_tests.mean_diff_hac(r1, r2)
+            elif test_type == "bootstrap":
+                res = paired_tests.mean_diff_bootstrap(r1, r2)
+            else:
+                res = sharpe_tests.sharpe_diff_hac(r1, r2)
+                res = {**res, 'test': 'Ledoit-Wolf Sharpe difference (HAC)'}
+            p_value = res['p_value']
+            out = {
+                "test": res['test'],
+                "statistic": float(res.get('statistic', res.get('stat'))),
+                "p_value": float(p_value),
+                "significant_at_0.05": p_value < 0.05,
+                "significant_at_0.01": p_value < 0.01,
+                "n": res['n'],
+            }
+            if aligned_note:
+                out["note"] = aligned_note
+            return out
         elif test_type == "wilcoxon":
             statistic, p_value = stats.wilcoxon(returns_1, returns_2)
             test_name = "Wilcoxon signed-rank test"

@@ -274,21 +274,22 @@ class PredictionEvaluator:
     ) -> Dict[str, Any]:
         """Diebold-Mariano testi: iki modelin tahmin hatasi istatistiksel olarak farkli mi?
 
-        H0: iki modelin tahmin performansi esit
+        H0: iki modelin tahmin performansi esit (kare kayip)
         H1: tahmin performanslari farkli
 
-        p < 0.05 ise fark istatistiksel olarak anlamli.
+        Faz 9 A9: hesap `evaluation.forecast_tests.diebold_mariano`'ya yonlendi
+        (uzun donem varyans + Harvey-Leybourne-Newbold + t dagilimi). Eski
+        surum d_t'yi iid sayip normal dagilimla kiyasliyordu; otokorelasyonlu
+        kayip farkinda boyutu belirgin asiyordu (tests/test_eval_stats.py).
+        `h`/`lag` secimi icin dogrudan yeni fonksiyonu kullanin.
         """
-        y_true = np.asarray(y_true)
-        pred_1 = np.asarray(pred_1)
-        pred_2 = np.asarray(pred_2)
+        from evaluation.forecast_tests import diebold_mariano
 
-        e1 = (y_true - pred_1) ** 2
-        e2 = (y_true - pred_2) ** 2
-        d = e1 - e2
+        y_true = np.asarray(y_true, dtype=float)
+        e1 = y_true - np.asarray(pred_1, dtype=float)
+        e2 = y_true - np.asarray(pred_2, dtype=float)
 
-        n = len(d)
-        if n < 10:
+        if np.sum(np.isfinite(e1) & np.isfinite(e2)) < 10:
             return {
                 'dm_statistic': None,
                 'p_value': None,
@@ -297,31 +298,20 @@ class PredictionEvaluator:
                 'error': 'Yetersiz veri',
             }
 
-        d_mean = np.mean(d)
-        d_var = np.var(d, ddof=1)
-
-        if d_var == 0:
-            return {
-                'dm_statistic': 0.0,
-                'p_value': 1.0,
-                'significant': False,
-                'better_model': None,
-            }
-
-        dm_stat = d_mean / np.sqrt(d_var / n)
-        p_value = 2 * (1 - stats.norm.cdf(abs(dm_stat)))
-
-        better = model_1_name if d_mean < 0 else model_2_name
+        res = diebold_mariano(e1, e2, h=1, loss='squared', lag='auto')
+        p_value = res['p_value']
+        better = model_1_name if res['mean_loss_diff'] < 0 else model_2_name
 
         return {
-            'dm_statistic': round(float(dm_stat), 4),
+            'dm_statistic': round(float(res['dm_stat']), 4),
             'p_value': round(float(p_value), 6),
             'significant': p_value < 0.05,
             'better_model': better if p_value < 0.05 else None,
             'model_1_name': model_1_name,
             'model_2_name': model_2_name,
-            'model_1_mse': round(float(np.mean(e1)), 6),
-            'model_2_mse': round(float(np.mean(e2)), 6),
+            'model_1_mse': round(float(np.nanmean(e1 ** 2)), 6),
+            'model_2_mse': round(float(np.nanmean(e2 ** 2)), 6),
+            'method': f"DM-HLN, Newey-West ({res['lags']} lags), {res['distribution']}",
         }
 
     @staticmethod
@@ -496,48 +486,55 @@ class PredictionEvaluator:
         returns: np.ndarray,
         n_trials: int = 1,
         periods_per_year: int = 252,
-    ) -> Dict[str, float]:
-        """Deflated Sharpe Ratio (DSR): coklu test ile sisman kuyruk etkisini duzeltir.
+        var_trials: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Deflated Sharpe Ratio (Bailey & Lopez de Prado 2014).
 
-        Bailey & Lopez de Prado (2014) formulu.
-        DSR > 0.95 ise strateji anlamli kabul edilir.
+        Faz 9 A9: hesap `evaluation.sharpe.deflated_sharpe_ratio`'ya yonlendi.
+        Eski surum uc yerden yanlisti (Faz 9 Y1: sqrt(V) yok, yilliklandirilmis
+        SR sigma formulune giriyordu, fazla basiklik) ve makale ornegine 0,9004
+        yerine 0,4031 veriyordu.
 
         Args:
-            returns: Strateji getirileri
-            n_trials: Test edilen strateji sayisi (daha fazla = daha siki duzeltme)
+            returns: donem getirileri
+            n_trials: N — denenen yapilandirma sayisi (deneme kaydindan, C2)
+            var_trials: V — denemelerin DONEM BASI Sharpe varyansi. N > 1 iken
+                zorunlu; verilmezse DSR hesaplanmaz (None) — eski kodun yaptigi
+                gibi uydurulmaz.
+
+        Donen 'sr' YILLIKLANDIRILMIS (raporlama), 'sr_per_period' donem basidir.
+        N = 1 iken 'dsr' None doner: tek denemede secim duzeltmesi yoktur;
+        'psr' (SR* = 0'a karsi) ayrica verilir.
         """
-        from scipy.stats import norm as sp_norm
+        from evaluation.sharpe import (
+            annualize_sharpe, deflated_sharpe_ratio, probabilistic_sharpe_ratio,
+            return_moments,
+        )
 
         r = np.asarray(returns, dtype=float)
         r = r[np.isfinite(r)]
-        n = len(r)
-        if n < 10:
-            return {'dsr': 0.0, 'psr': 0.0, 'sr': 0.0}
+        if len(r) < 10 or np.std(r) == 0:
+            return {'dsr': None, 'psr': None, 'sr': 0.0, 'error': 'Yetersiz veri'}
 
-        sr = float(np.mean(r) / (np.std(r, ddof=1) + 1e-9) * np.sqrt(periods_per_year))
-
-        skew = float(pd.Series(r).skew())
-        kurt = float(pd.Series(r).kurtosis())  # excess kurtosis
-
-        # SR* benchmark (en iyi beklenen SR n_trials denemeden)
-        gamma = 0.5772156649  # Euler-Mascheroni sabiti
-        sr_star = (1 - gamma) * sp_norm.ppf(1 - 1 / n_trials) + gamma * sp_norm.ppf(
-            1 - 1 / (n_trials * np.e)
-        ) if n_trials > 1 else 0.0
-
-        # PSR: SR'nin benchmark'i gecme olasiligi
-        sigma_sr = np.sqrt((1 - skew * sr + (kurt / 4) * sr ** 2) / (n - 1))
-        if sigma_sr < 1e-9:
-            psr = 0.0
-        else:
-            psr = float(sp_norm.cdf((sr - sr_star) / sigma_sr))
-
-        return {
-            'sr': round(sr, 4),
-            'sr_benchmark': round(sr_star, 4),
-            'psr': round(psr, 4),
-            'dsr': round(psr, 4),  # DSR ~ PSR bu formülasyonda
+        m = return_moments(r)
+        psr0 = probabilistic_sharpe_ratio(m.sr, 0.0, m.n_obs, m.skew, m.kurt)
+        out: Dict[str, Any] = {
+            'sr': round(annualize_sharpe(m.sr, periods_per_year), 4),
+            'sr_per_period': round(m.sr, 6),
+            'psr': round(psr0, 4),
+            'n_trials': int(n_trials),
         }
+        if n_trials > 1 and var_trials is None:
+            out.update({'dsr': None, 'sr_benchmark': None,
+                        'note': 'var_trials yok — DSR icin deneme kaydindan V gerekli'})
+            return out
+        if n_trials <= 1:
+            out.update({'dsr': None, 'sr_benchmark': 0.0,
+                        'note': 'tek deneme — secim yanliligi duzeltmesi yok; psr raporlanir'})
+            return out
+        d = deflated_sharpe_ratio(n_trials=n_trials, var_trials=var_trials, moments=m)
+        out.update({'dsr': round(d['dsr'], 4), 'sr_benchmark': round(d['sr_benchmark'], 6)})
+        return out
 
     @staticmethod
     def compute_turnover(
