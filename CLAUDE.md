@@ -159,65 +159,10 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
   `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
 - Detay: `docs/development/phase7-auth.md`, `docs/development/phase-6-backend-performance.md`
 
-### Tema (Faz 8)
-- **Renk degeri yalnizca `static/tokens.css`'te.** Sayfa/bilesen kodunda hex yasak;
-  `tests/test_theme_contrast.py` kacaklari yakalar (`dashboard/pages/account.py` muaf —
-  iki temanin onizlemesini ayni anda gostermek zorunda).
-- Uc durum: `light` / `dark` / `system`. `system` = DOM'da damga YOK, karari
-  `@media (prefers-color-scheme)` verir. Bu yuzden koyu blok tokens.css'te **iki kez**
-  yazilir; ikisi ayrisirsa test kalir.
-- **Tokenlar `--rlt-` onekli.** Dash DataTable kendi bundle'inda `--muted`,
-  `--border`, `--accent` tanimliyor ve oneksiz adlari tablo icinde golgeliyor
-  (tablo basligi 1.35:1 cikiyordu). Yeni token eklerken oneki koru.
-- **Yeni bir `dcc.*` bileseni eklerken sinif ailesini custom.css'e bagla.**
-  Dash surumleri DOM'u degistiriyor (`dcc.Dropdown` artik `button.dash-dropdown`,
-  react-select degil); baglanmayan aile Dash'in kendi renginde kalir.
-  `test_theme_contrast.py` bunu denetliyor.
-- Tercih **hesaba** bagli (`users.theme`), cerez yalnizca okuma onbellegi.
-  `rlt_theme` = tercih, `rlt_theme_r` = istemcinin cozdugu sonuc (Plotly icin sart).
-- **DOM sabiti Plotly'ye verilmez**: `TEXT`, `BLUE` vb. artik `var(--token)` dizesi.
-  Grafiklerde `plot_palette()` / `plot_rgba()` / `apply_theme_template()` kullan.
-- Detay: `docs/development/phase-8-ui-theming.md`
-
-### Ust cubuk ve bildirimler (Faz 8/G)
-- Bilesen: `dashboard/components/topbar.py`. Kenar cubugu tam boy kalir, ust
-  cubuk YALNIZCA icerik alanini kaplar (`theme.py::TOPBAR_STYLE`,
-  `left: SIDEBAR_WIDTH`); `CONTENT_STYLE` ust boslugu `calc(54px + 24px)`.
-- **Gorunum anahtari ust cubukta**, kenar cubugunda degil ve TEK KOPYA.
-  `theme-toggle.js` `getElementById` kullaniyor; iki kopya olursa birine
-  tiklaninca digerinin etiketi guncellenmez. Test DOM'da tam bir tane
-  oldugunu denetliyor.
-- **Kenar cubugu menusune madde eklerken `topbar.ROUTE_INDEX`'i unutma** —
-  aksi halde ust cubuktaki kirinti o sayfada sessizce bosalir
-  (`tests/test_topbar.py` yapisal bekci). `NEXT_STEP` haritasi da yalnizca
-  var olan rotalara isaret etmeli.
-- Arama role duyarli: `viewer`/`user` icin Yonetim grubu onerilmez.
-- **Bildirimler OLAY GUNLUGU DEGIL, DURUM OZETI**: `GET /api/account/notifications`
-  bellekteki calisma durumlarindan uretir (`trading._training_states`,
-  `prediction_service._training_state`) — kalici tablo, "okundu" isareti yok.
-  Is bitince satir kendiliginden kaybolur.
-- Veri tazeligi bilincli olarak KAPSAM DISI: `/trading/data/status` paneli
-  CSV'den okuyor, 60 sn'de bir yoklanamaz.
-- "Bitti" satirlari 12 saatlik pencereyle sinirli (`NOTIFY_RECENT_SECONDS`);
-  zaman damgasi olmayan `completed` HIC gosterilmez. Bunun icin
-  `trading.py` kosum bitisini `finished_ts`'e yazar.
-- **Bilinen ve KABUL EDILMIS davranis:** zil 60 sn'de bir yokladigi icin acik
-  bir sekme sessiz yenilemeyi tetikler ve oturumu canli tutar. Ust sinir
-  refresh token'in azami omru (`REFRESH_TOKEN_EXPIRE_DAYS`). Degistirmek
-  gerekirse: cadansi dusur ya da zili yalnizca acilinca yoklat (rozet sayaci
-  gider).
-
-### Dar ekran (Faz 8/H)
-- <=820px'de kenar cubugu 64px **ikon rayina** iner; masaustu degismez.
-  Olculdu: 1280/1024/820/640'ta tasma veya yatay kaydirma YOK — sorun bozulma
-  degil darlikti (640px'de menu ekranin %34'u).
-- Menu etiketleri `nav-label` span'inde ki CSS yalnizca yaziyi gizleyebilsin;
-  ipucu icin her madde `title` tasiyan bir Div'e sarili (**dbc.NavLink `title`
-  kabul etmiyor** — verilince tum Dash agaci render edilemez, `/dash/` 500).
-- **Medya sorgusu inline stili `!important` olmadan ezemez.** Konum/genislik
-  `theme.py`'den inline geldigi icin ray kurallari `!important` kullanir;
-  menu bosluklari bu yuzden inline'dan `#sidebar .nav-link` kuralina tasindi.
-- Telefon boyu (<=480px) HEDEF DEGIL ve oyle iddia edilmiyor.
+### Pano / tema / UI kurallari → `dashboard/CLAUDE.md`
+Tema tokenlari, ust cubuk, dar ekran, dbc/Dash prop tuzaklari orada (dashboard/ altinda calisinca otomatik yuklenir).
+**Ozet:** hex renk yalnizca `static/tokens.css`'te; `dbc.NavLink`'e `title` verme; UI degisikliginden sonra
+`python tests/test_theme_contrast.py` ve `python tests/test_dash_props.py` calistir.
 
 ### Yapit silme (Faz 8/I)
 - Model: `DELETE /api/trading/models/{name}` (RequireWriter). Panoda: Modeller
@@ -312,16 +257,6 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Break existing state space structure when modifying `env/trading_env.py`
 - Add hardcoded `macro_features=6` — global macro (VIX/US10Y/DXY) sadece prediction pipeline'a gider, RL state space'e eklenmez (trained model uyumluluğu)
 - `use_atr_sizing` ve `use_kelly` varsayılan olarak False — mevcut eğitimli modeller bozulmaz
-- Sayfa/bileşen koduna hex renk yazma — `static/tokens.css`'e token ekle, kontrastı ölç
-- Yeni bir `dbc` bileşeni eklerken **hesaplanmış stile bak**: dbc kendi renk
-  varyant sınıfını basıyor (`DropdownMenu` → `btn-primary`, `Badge` → `bg-secondary`)
-  ve aynı özgüllükteki kendi kuralımızı kaskadda yenebiliyor. Test seçicinin
-  *var olduğunu* doğruluyor, *kazandığını* değil
-- **`className` her `dbc` bileşeninde yok.** Dash tanımadığı kwarg'ı yok saymaz,
-  `TypeError` fırlatır — hata da çalışma anında, callback gövdesinde patlar.
-  `dbc.Spinner` → `spinner_class_name`, `dbc.NavLink` → `title` kabul etmiyor.
-  `tests/test_dash_props.py` tüm çağrıları gerçek prop listesiyle karşılaştırır
-- Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 - `users` tablosuna sütun eklerken `app/auth/db.py::_ADDITIVE_COLUMNS`'a da ekle —
   alembic yok, `create_all()` var olan tabloyu değiştirmez
 
@@ -445,34 +380,12 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Panelde ayrica **38 tamamen hayalet gun** var (piyasa kapali; OHLC = onceki kapanis,
   volume = 0). Henuz filtrelenmiyor — bkz. asagidaki "bilinen acik".
 
-### Akademik gecerlilik ve literatur (ONEMLI — 2026-10-06)
-- **Kanonik tez belgesi `docs/thesis/vision-and-scope.md` (v0.3).** Literatur iddialari
-  ve bosluk ifadeleri (G1–G5) oradan alinir.
-- **Kaynak tabani `docs/thesis/literature-table.md`** (148 secilmis kayit). Tablo ve
-  vision §9 `python scripts/literature/build.py` ile URETILIR — ikisini de elle
-  duzenleme; kaynak eklemek icin `scripts/literature/build.py` docstring'indeki adimlar
-  (seed.tsv → resolve → s2_batch → meta.py ROLE → coverage.py → build). Secim kurali:
-  SCIE/SSCI dergi ya da CORE A*/A konferans + atif esigi; zorunlu atif (Z) ve yontem
-  kaynagi (Y) kademeden bagimsiz tutulur. Tam metni okunmamis 2026 kaynaklarindan
-  (Hung & Huang, Yuan vd., CAROC, Xiong vd.) ozette olmayan iddia tasima. Seminer belgeleri
-  (`docs/thesis/seminar-*.md`) Mayis 2026 anlik goruntusudur; oradan iddia tasima.
-- **"Leakage yok" DEME.** 1 gunluk `shift` fiyat turevli ozellikler icin yeterli ama
-  kodda dogrulanmis sizinti kaynaklari var: makro `bfill` (varsayilan hatta etkin),
-  TUFE/UFE aciklanma gecikmesi yok, statik temel oranlar (opt-in), seri butunune
-  ICEEMDAN + hedef filtrelenmis fiyattan (opt-in). Protokol aciklari: RL egitiminde
-  tohum yok, DM/t-testi bagli degil, risksiz faiz 3 yerde 3 deger, 1/N/min-var/HRP yok.
-  Liste: `docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar" — **planlanmadi**;
-  kullanici planlamadan bunlari kodda "duzeltmeye" girisme.
-- **Faz 9 plani (onay bekliyor):** `docs/development/phase-9-research-validity-plan.md`.
-  Onaylanmadan kod degisikligi yok. Ek bulgular: `compute_deflated_sharpe_ratio`
-  yanlis (makale ornegi 0,9004 → repo 0,4031); oduldeki "Differential Sharpe" turev
-  degil; G2'nin log-guven onseli DebUnc dikkat olceklemesiyle esdeger.
-  Tam metinler `docs/reference/papers/` (PDF'ler git disi, icindekiler README.md).
-- **TATS ozgun degil:** Kazemdehbashi (2026, arXiv 2601.12706). Akademik metinde atif
-  zorunlu, katki olarak sunulmaz.
-- **Kaynak eklerken dogrula.** Onceki bir YZ taramasi 4 var olmayan kaynak uretmisti.
-  Her kunye Crossref/arXiv/yayinci sayfasiyla kontrol edilir; dogrulama kaydi:
-  `docs/thesis/literature-review-verification.md`.
+### Akademik gecerlilik ve literatur (ONEMLI) → `docs/thesis/CLAUDE.md`
+Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir). Kodda da gecerli olan cekirdek:
+- **"Leakage yok" DEME** — dogrulanmis sizinti kaynaklari var (`docs/development/roadmap.md` → "Bilinen Metodolojik Aciklar").
+- **Faz 9 plani onay bekliyor** (`docs/development/phase-9-research-validity-plan.md`) — onaysiz kod degisikligi yok;
+  listedeki aciklari kullanici planlamadan kodda "duzeltmeye" girisme.
+- Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: `hakem-2` alt ajani.
 
 ### Egitim suresi tahmini (ETA)
 - Servis: `app/services/training_eta.py` — `estimate()` (on tahmin), `live_eta()` (canli), `record_run()`
@@ -503,29 +416,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - Güvenilirlik: sessiz model/fold düşmesi görünür, fallback işareti + strict mod (cache yolu dahil: `data/macro/macro_data_quality.json`), eğitim manifesti, checkpoint/resume, merkezi seed
   - Kapanış koşumu (T7, 5 sembol): 533.9s → **157.6s (−%70.5)** perf knob'ları açıkken; resume 1.0s; 5/5 sembol `ok` (5 model)
   - **DL perf knob'ları default OFF (opt-in)**: tam pipeline'da RNG sırasını kaydırıp golden'ı değiştirdikleri için (davranış dondurma). Sıfırdan retrain'de açılır, golden o donanımda yenilenir.
-- Faz 8 (UI/UX): Tamamlandı — kapsam tur tur genişledi, tamamı
-  `docs/development/phase-8-ui-theming.md`'de
-  - A–E: aydınlık/koyu/sistem teması (hesaba kayıtlı, 3 durumlu), tek kaynak token
-    katmanı (`static/tokens.css`), DARKLY→BOOTSTRAP, Plotly için ayrı hex palet,
-    6 yeni/yenilenmiş bileşen, WCAG AA kontrast testi (mevcut koyu temadaki 4 AA
-    hatası da düzeldi)
-  - F: profil sayfası — kenar çubuğunda görünür giriş noktası, ad soyad düzenleme,
-    son giriş/çalışma alanı özeti, kendi oturumlarını görme ve kapatma, kendi
-    denetim kaydı (`/api/account/*`); kasıtlı oturum iptalinin grace penceresiyle
-    atlatılabilmesi kapatıldı
-  - G: üst çubuk — kırıntı, belgelenen akışı izleyen bağlamsal eylem, role duyarlı
-    sayfa araması, taşınan görünüm anahtarı ve bellekteki çalışma durumlarından
-    beslenen bildirim zili
-  - Görsel doğrulama: 9 sayfa × 2 tema (headless Chrome/CDP). Üç kusur çıktı:
-    zil `btn-primary` varyantını alıyordu, **devre dışı dolgulu düğmeler uygulama
-    genelinde** Bootstrap'in ham paletine düşüyordu, boş portföy grafiği
-    mesajsız/eksenli kalıyordu
-  - H: ≤820px'de ikon rayı (ölçüm "düzen bozuluyor" varsayımını çürüttü — sorun
-    darlıktı); iki turdur kullanılmayan `FilterBar` silindi
-  - I: eğitilmiş model ve optimizasyon kaydı silme. Yol üstünde iki gedik:
-    `/hyperopt/start` hiç RBAC taşımıyordu (viewer optimizasyon başlatabiliyordu),
-    ortak model için Faz 7'nin "kimse silemez" kuralı hiçbir çıkış yolu
-    bırakmıyordu → yönetici katmanı eklendi
+- Faz 8 (UI/UX): Tamamlandi — tema, profil, ust cubuk, dar ekran, yapit silme;
+  ayrinti `docs/development/phase-8-ui-theming.md` ve `dashboard/CLAUDE.md`
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu
