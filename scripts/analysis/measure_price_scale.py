@@ -255,12 +255,16 @@ def main():
         import subprocess
         commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
                                 text=True, timeout=10).stdout.strip() or None
+        # Commit'lenmemis kod degisikligi varsa commit olcumu TANIMLAMAZ
+        dirty = bool(subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                                    cwd=ROOT, capture_output=True, text=True,
+                                    timeout=10).stdout.strip())
     except Exception:
-        commit = None
+        commit, dirty = None, None
     # Iz (hakem-2 B9 #13): panel tazelenince sayilarin kaynagi kanitlanabilsin
     result = {"created_at": datetime.now().isoformat(timespec="seconds"), "mode": args.mode,
               "command": "python scripts/analysis/measure_price_scale.py " + " ".join(sys.argv[1:]),
-              "git_commit": commit, "panel_sha256": frame_sha256(panel),
+              "git_commit": commit, "git_dirty": dirty, "panel_sha256": frame_sha256(panel),
               "panel": span(panel), "train": span(train_df), "val": span(val_df), "test": span(test_df),
               "n_symbols": int(train_df.index.get_level_values("symbol").nunique())}
     print(json.dumps({k: result[k] for k in ("panel", "train", "val", "test", "n_symbols")}))
