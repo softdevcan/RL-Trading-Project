@@ -69,3 +69,4 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | 2026-11-06 | B7 | hakem-2 (opus) | ~144 bin | 25 | ~12 dk | İnceleme paketiyle; küçük paket, B9 ile kıyas tam değil. 1 BÜYÜK bulgu (türbülans 0 başı) |
 | 2026-11-09 | K18 + K25 | hakem-rl (sonnet), ilk okuma | ~50 bin | 7 | ~1,5 dk | Panelin ilk kullanımı. Python koşmadı, JSON + aralıklı kod. 3 BÜYÜK bulgu (doygunluk kapı dışı, eğitim bağlamı, B7 düzeltmesinin yanlış negatifi) |
 | 2026-11-09 | K18 + K25 | hakem-rl (sonnet), ikinci okuma (SendMessage) | ~57 bin | 3 | ~0,5 dk | Yalnız değişen satırlar; Küçük revizyon, 1 yeni KÜÇÜK bulgu (bağlamda bayat hücre) |
+| 2026-11-09 | K18 + K25 | hakem-2 (opus), son kapı | ~143 bin | 39 | ~8,6 dk | Paket + uzman tablosu. Büyük revizyon (RED yok): 2 BÜYÜK (sembol havuzlama, MACD varsayılanı karar dışı), 6 KÜÇÜK. Kendi ölçümü: sembol başına destek (persym.py), VAKBN yeniden üretimi. Uzman bulgularını doğruladı, 4 yenisini buldu |
