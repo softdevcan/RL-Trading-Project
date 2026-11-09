@@ -10,14 +10,14 @@ bagimsiz) ve deneme kaydi protokolu (`rl_eval_protocol`) olculur.
 Yapilandirmalar:
   pre_k18             CSV oldugu gibi (ADX legacy = 0), fiyat olcegi B9 (egitim penceresi)
   k18_b9              ADX 'wilder', fiyat olcegi B9           -> K18 sonrasi rota varsayilani
-  k18_causal_252      ADX 'wilder', price_norm='causal', W=252 -> K25 (b) kolu
+  k18_causal_252      ADX 'wilder', price_norm='causal', W=252, MACD eski -> K25 (b) kolu
   k18_causal_63       ayni, W=63 (pencere duyarliligi)
   k18_causal_expanding ayni, genisleyen pencere (neden kayan secildi)
-  k18_causal_252_price_only  W=252, MACD eski tanimda (price_norm_macd=False; ara kol)
+  k18_causal_252_macd   W=252, MACD de nedensel olcekle (price_norm_macd=True; opt-in, K26)
   k18_causal_252_no_train_ctx W=252, egitim ortami BAGLAMSIZ (hakem-rl K18 #2 asimetrisi)
 
 Nedensel kollarda egitim ortami rotadaki gibi pencere oncesi son 252 seansi
-(`data.integrity.rl_context_before`) baglam alir; test ortami egitim + dogrulamayi.
+(`data.integrity.rl_context_before`) baglam alir; test ortami baglam + egitim + dogrulamayi.
 
 Ayrica: gercek panelde ADX dagilimi ve veri kapisinin ADX isinmasi yuzunden
 fazladan attigi satirlar.
@@ -56,7 +56,7 @@ CONFIGS = {
     "k18_causal_252": dict(adx="wilder", price_norm="causal", window=252),
     "k18_causal_63": dict(adx="wilder", price_norm="causal", window=63),
     "k18_causal_expanding": dict(adx="wilder", price_norm="causal", window=None),
-    "k18_causal_252_price_only": dict(adx="wilder", price_norm="causal", window=252, macd=False),
+    "k18_causal_252_macd": dict(adx="wilder", price_norm="causal", window=252, macd=True),
     "k18_causal_252_no_train_ctx": dict(adx="wilder", price_norm="causal", window=252,
                                         train_ctx=False),
 }
@@ -102,6 +102,7 @@ def summarize(health):
         f: round(v, 4) for f, v in (health.get("eval_out_of_train_support_features") or {}).items()}
     out["price_norm_warmup"] = health.get("price_norm_warmup")
     from evaluation.observation_health import obs_health_failures, support_failures
+    out["eval_out_of_train_support_dims"] = health.get("eval_out_of_train_support_dims")
     out["obs_health_failures"] = obs_health_failures(health)
     out["support_failures"] = support_failures(health)
     return out
@@ -157,7 +158,7 @@ def main():
         norm = {}
         if cfg["price_norm"] == "causal":
             norm = dict(price_norm="causal", price_norm_window=cfg["window"],
-                        price_norm_macd=cfg.get("macd", True))
+                        price_norm_macd=cfg.get("macd", False))
         tr_extra = dict(norm)
         if norm and cfg.get("train_ctx", True):
             tr_extra["price_context"] = train_ctx
@@ -170,16 +171,20 @@ def main():
                  "gate_rows_after": report.get("rows_after"),
                  "train_context": report.get("train_context") if tr_extra.get("price_context") is not None else None,
                  "splits": {}}
-        for split, frame, ctx in (("val", val_df, train_df),
-                                  ("test", test_df, pd.concat([train_df, val_df]))):
+        for split, frame, ctx in (("val", val_df, pd.concat([train_ctx, train_df])),
+                                  ("test", test_df, pd.concat([train_ctx, train_df, val_df]))):
             extra = dict(norm)
             if norm:
                 extra["price_context"] = ctx
             ev_env = make_env(df=frame, price_stats=st, **extra, **KW)
             health = observation_health(tr_env, ev_env)
             protocol = rl_eval_protocol(ev_env, tr_env, health=health, hyperparams_clean=True)
+            from data.integrity import indicator_warmup_blocks
             entry["splits"][split] = {
                 "protocol": protocol, "open_items": open_protocol_items(protocol),
+                # hakem-2 K18 #5: K18 ONCESI protokol kurali (degerlendirme penceresinin basi
+                # seri basi sayilir) bu pencerede hangi "bloklari" goruyordu
+                "b7_old_rule_eval_blocks": indicator_warmup_blocks(frame),
                 "health": summarize(health),
                 "price_norm_context_rows_min": (min(ev_env.price_norm_context_rows.values())
                                                 if norm else None),

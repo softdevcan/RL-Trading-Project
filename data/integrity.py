@@ -226,35 +226,42 @@ _CLOSE_SAFE_ARTIFACTS = frozenset({'ohlc_inconsistent'})
 
 
 def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions: int = 252,
-                      ghost_threshold: float = 0.9) -> Tuple[pd.DataFrame, dict]:
-    """RL penceresinden ONCEKI son `n_sessions` panel tarihi (K25 b, hakem-rl K18 #2).
+                      ghost_threshold: float = 0.9, lookback_factor: int = 2
+                      ) -> Tuple[pd.DataFrame, dict]:
+    """RL penceresinden ONCEKI baglam: sembol basina son `n_sessions` GECERLI satir (K25 b).
 
     Nedensel fiyat olceginin EGITIM ortamina baglami: kayan pencere egitimin ilk
-    gunlerinde de dolu olsun, test ortamiyla ayni tanimi gorsun. Yalniz 'close'
-    kullanilir ve gozleme girmez. Hayalet gunler atilir. Kapanisi etkileyen artefakt
-    (negatif fiyat, sicrama, asiri getiri, sadelestirme) varsa DataIntegrityError;
-    'ohlc_inconsistent' satirlari kalir ama SAYILIR (rapor meta'ya yazilir).
+    gunlerinde de dolu olsun, test ortamiyla ayni tanimi gorsun (hakem-rl K18 #2).
+    Yalniz 'close' kullanilir ve gozleme girmez.
+
+    Sira (hakem-2 K18 #8): pencereden onceki son `lookback_factor * n_sessions` panel
+    tarihi -> hayalet gun ve bayat hucre atimi -> sembol basina son n_sessions satir.
+    Boylece atim baglami kisaltmaz. Bu kadar satiri olmayan sembol:
+      * ilk satiri bakis araliginin icindeyse SERI BASI (yeni listelenmis; isinma kacinilmaz)
+        -> `attrs['series_start_symbols']`
+      * degilse kisa baglam (uzun islem durmasi) -> rapor `short_context_symbols`
+    Artefakt taramasi baglam + pencerenin ILK tarihi uzerinde (sinir gecisi de taranir);
+    kapanisi etkileyen artefakt DataIntegrityError, 'ohlc_inconsistent' kalir ama sayilir.
     """
     start = start or RL_DATA_START
+    t0 = pd.Timestamp(start)
     dates = pd.to_datetime(df.index.get_level_values('date'))
     if getattr(dates, 'tz', None) is not None:
         dates = dates.tz_localize(None)
-    before = dates < pd.Timestamp(start)
-    uniq = np.unique(dates[before])
-    keep = uniq[-n_sessions:] if len(uniq) else uniq
-    sub = df[before & np.isin(dates, keep)]
-    report = {'n_sessions_requested': int(n_sessions), 'n_dates': int(len(keep)),
-              'start': str(pd.Timestamp(keep[0]).date()) if len(keep) else None,
-              'end': str(pd.Timestamp(keep[-1]).date()) if len(keep) else None,
-              'n_ghost_days': 0, 'n_close_safe_artifacts': 0}
+    uniq = np.unique(dates[dates < t0])
+    look = uniq[-lookback_factor * n_sessions:] if len(uniq) else uniq
+    report = {'n_sessions_requested': int(n_sessions), 'lookback_dates': int(len(look)),
+              'n_ghost_days': 0, 'n_stale_cells_dropped': 0, 'n_close_safe_artifacts': 0,
+              'series_start_symbols': [], 'short_context_symbols': [], 'start': None, 'end': None}
+    sub = df[np.isin(dates, look)]
     if sub.empty:
+        sub.attrs['series_start_symbols'] = []
         return sub, report
     ghosts = find_ghost_days(sub, ghost_threshold)
     sdates = pd.to_datetime(sub.index.get_level_values('date'))
     if getattr(sdates, 'tz', None) is not None:
         sdates = sdates.tz_localize(None)
     sub = sub[~sdates.isin(ghosts)]
-    # Bayat hucre (tek sembolun duz satiri): prepare_rl_panel ile ayni ayiklama (hakem-rl K18 #6)
     stale = find_stale_cells(sub)
     if len(stale):
         key = pd.MultiIndex.from_frame(stale[['symbol', 'date']])
@@ -263,16 +270,35 @@ def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions:
         if getattr(cdates, 'tz', None) is not None:
             cdates = cdates.tz_localize(None)
         sub = sub[~pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates]).isin(key)]
-    art = scan_price_artifacts(sub)
+    # sembol basina son n_sessions satir (+1: taramada ilk satirin onculu de olsun)
+    parts, scan_parts = [], []
+    first_ever = _long(df).groupby('symbol', sort=False)['date'].min()
+    for sym, g in sub.groupby(level='symbol', sort=False):
+        g = g.sort_index(level='date')
+        parts.append(g.iloc[-n_sessions:])
+        scan_parts.append(g.iloc[-(n_sessions + 1):])
+        if len(g) < n_sessions:
+            fe = pd.Timestamp(first_ever.get(sym))
+            fe = fe.tz_localize(None) if fe.tzinfo is not None else fe
+            key_ = 'series_start_symbols' if fe >= pd.Timestamp(look[0]) else 'short_context_symbols'
+            report[key_].append(sym)
+    ctx = pd.concat(parts)
+    after = np.unique(dates[dates >= t0])
+    head = df[dates == after[0]] if len(after) else df.iloc[:0]   # pencerenin ilk tarihi
+    art = scan_price_artifacts(pd.concat(scan_parts + [head]))
     bad = art[~art['reason'].isin(_CLOSE_SAFE_ARTIFACTS)] if len(art) else art
     if len(bad):
         raise DataIntegrityError(
-            f"RL baglaminda ({report['start']}..{report['end']}) kapanisi etkileyen "
-            f"{len(bad)} artefakt: {bad.groupby(['reason', 'symbol']).size().head(10).to_dict()}")
+            f"RL baglaminda ya da baglam-pencere sinirinda kapanisi etkileyen {len(bad)} "
+            f"artefakt: {bad.groupby(['reason', 'symbol']).size().head(10).to_dict()}")
+    cd = pd.to_datetime(ctx.index.get_level_values('date'))
     report.update(n_ghost_days=int(len(ghosts)), n_stale_cells_dropped=int(len(stale)),
                   n_close_safe_artifacts=int(len(art)),
-                  rows_per_symbol_min=int(sub.groupby(level='symbol').size().min()))
-    return sub, report
+                  rows_per_symbol_min=int(ctx.groupby(level='symbol').size().min()),
+                  start=str(cd.min().date()), end=str(cd.max().date()))
+    ctx = ctx.copy()
+    ctx.attrs['series_start_symbols'] = list(report['series_start_symbols'])
+    return ctx, report
 
 
 def prepare_rl_panel(

@@ -1571,11 +1571,14 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # K18 olcekten bagimsiz ozellik seti).
         train_price_stats = temp_env.get_price_stats()
         # K25 (b): nedensel kolda test fiyat z'si yalniz <= t kapanislariyla; kayan
-        # pencerenin basi testten ONCEKI satirlarla (egitim + dogrulama) dolar.
+        # pencerenin basi testten ONCEKI satirlarla (baglam + egitim + dogrulama) dolar.
         # Olcek (price_stats) bu kolda gozleme girmez; meta ve protokol icin tasinir.
         test_norm = {'price_norm': request.price_norm, 'price_norm_macd': request.price_norm_macd}
         if request.price_norm == 'causal':
-            test_norm['price_context'] = pd.concat([train_df, val_df])
+            # pencere oncesi baglam + egitim + dogrulama: hepsi testten once (<= t). Kisa
+            # panelde egitim + dogrulama tek basina 252 seansi doldurmayabilir (hakem-2 K18 #3).
+            test_norm['price_context'] = pd.concat(
+                [f for f in (train_context, train_df, val_df) if f is not None and len(f)])
 
         def make_test_env():
             return make_env(
@@ -1635,7 +1638,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             from evaluation.observation_health import obs_health_failures
             training_state.setdefault("warnings", []).append(
                 f"Gozlem sagligi acik ({', '.join(obs_health_failures(observation_health))}): "
-                f"kirpilan oran %1'i asiyor ya da sabit bir gozlem boyutu var. Deneme "
+                f"kirpilan oran %1'i asiyor, sabit bir gozlem boyutu var ya da bir ozellik "
+                f"%90'dan fazla doygun (eski ortamda tanh(turbulence/2); karar K26). Deneme "
                 f"kaydinda acik: obs_health (Faz 9 §9.9).")
         if rl_protocol.get('features_in_support') is False:
             from evaluation.observation_health import support_failures
@@ -1644,6 +1648,14 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 f"test degerlerinin %1'inden fazlasi egitimdeki [min, maks] araliginin disinda "
                 f"(eski olcekte MACD TL cinsinden; price_norm='causal' MACD'yi ayni nedensel "
                 f"olcekle kurar). Deneme kaydinda acik: features_in_support (Faz 9 §9.9).")
+        if rl_protocol.get('dims_in_support') is False:
+            from evaluation.observation_health import dims_failures
+            worst = {f: max(v.items(), key=lambda kv: kv[1]) for f, v in
+                     dims_failures(observation_health).items()}
+            training_state.setdefault("warnings", []).append(
+                "Sembol duzeyinde egitim araligi asimi (>%1): " + ", ".join(
+                    f"{f} {sym} %{r * 100:.1f}" for f, (sym, r) in sorted(worst.items()))
+                + ". Deneme kaydinda acik: dims_in_support (Faz 9 §9.9).")
 
         metrics = actual_env.get_metrics()
 

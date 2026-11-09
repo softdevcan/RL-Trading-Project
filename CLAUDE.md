@@ -175,7 +175,7 @@ python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i �
                                            #          degismezligi, RL kapisi, olculen protokol (28)
 python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
                                            #          causal fiyat olcegi B0 + mutasyon, obs_health,
-                                           #          main ile bit-es, rota uctan uca (100)
+                                           #          main ile bit-es, rota uctan uca (108)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -466,15 +466,18 @@ borsapy/yf     → gold_fetcher.py       ─┘
     protokol maddesi bunu makine tarafindan uygular: `price_norm='stats'` kolunun kaydi ACIK kalir.
     Olcum `evaluation/observation_health.py`; rota manifest/kayit/`_metrics.json`'a yazar.
   - **K25 (b) nedensel kol:** `TradingEnv(price_norm='causal', price_context=<onceki satirlar>)`
-    — fiyat cinsinden ozellikler (O/H/L/C ve MACD) sembolun <= t son 252 kapanisinin olcegiyle;
+    — O/H/L/C sembolun <= t son 252 kapanisinin olcegiyle (MACD varsayilan eski tanimda;
     rota `TrainingRequest.price_norm='causal'` ile egitim env'ine pencere ONCESI son 252 seansi
-    (`integrity.rl_context_before`), test env'ine egitim + dogrulamayi baglam verir. Baglam env'in
-    ilk tarihinden once bitmeli (yoksa ValueError). `price_norm_macd=False` yalniz-fiyat ara kolu.
-    Etiket `'causal'` temizdir; iki env farkli tanimla (mod, W, macd) kurulursa `'mixed_norm'`.
+    `price_norm_macd=True` opt-in, karar K26); rota egitim env'ine pencere ONCESI son 252 gecerli
+    satiri (`integrity.rl_context_before`), test env'ine baglam + egitim + dogrulamayi verir. Baglam
+    env'in ilk tarihinden once bitmeli (yoksa ValueError). Etiket `'causal'` temizdir; iki env farkli
+    tanimla (mod, W, macd) -> `'mixed_norm'`, pencere dolmadan satir (seri basi haric) ->
+    `'causal_short_context'`. Nedensel z'nin destek icinde kalmasi GARANTI DEGIL; olculur.
   - **Gozlem sagligi kapilari (K18):** `obs_health` (kapili bloklarda kirpma <= %1, sabit boyut
     yok, ozellik basina doygunluk `sat_frac` <= %90; egitim + degerlendirme) ve
-    `features_in_support` (fiyat DISI her ozellik <= %1 destek disi). Eski ortamda
-    `tanh(turbulence/2)` %99,7 doygun: HER kolun kaydi `obs_health` ile acik (karar K26).
+    `features_in_support` (fiyat DISI her ozellik, havuzlu) ve `dims_in_support` (HER gozlem
+    boyutu = sembol x ozellik <= %1; havuz tek sembolu gizler). Eski ortamda `tanh(turbulence/2)`
+    %99,7 doygun: HER kolun kaydi `obs_health` ile acik (karar K26: MACD, turbulans, hacim).
   - Sarmalayicilarda (`create_env`, `create_env_with_weights`, HPO `create_env`) `price_stats`
     ZORUNLU anahtar; egitim cagrisi `price_stats=None`'i acikca yazar.
   - AST bekcisi held-out adli df (`test_df`, `splits.test`, `data['test']`, `df.loc[test_mask]`)

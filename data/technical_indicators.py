@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 #              RangeIndex'li sonuc df'e atanirken yine TUMUYLE NaN oluyordu. 'bfill'
 #              modunda fillna(0) bunu sabit 0'a ceviriyordu: mevcut RL modelleri ve
 #              tahmin hatti ADX = 0 ile egitildi.
-#   'wilder' : duzeltilmis hesap — indeks hizali, Wilder yumusatmasi (RMA: EMA
-#              alpha = 1/n, adjust=False; Wilder'in SMA tohumundan farki ~2n satirda
-#              soner), isinma NaN: ilk 2n-1 satir (n=14 -> 27). Yeni RL egitimi bunu
+#   'wilder' : duzeltilmis hesap — indeks hizali, klasik Wilder yumusatmasi (SMA
+#              tohumu + A_t = A_{t-1} + (x_t - A_{t-1})/n), isinma NaN: ilk 2n-1 satir
+#              (n=14 -> 27). Yeni RL egitimi bunu
 #              kullanir (rota `with_adx`); tahmin hatti Milestone 0' golden yenilemesine kadar
 #              legacy kalir (K1).
 ADX_MODES = ('legacy', 'wilder')
@@ -151,9 +151,9 @@ class TechnicalIndicators:
     def _adx_wilder(df: pd.DataFrame, period: int = ADX_PERIOD) -> pd.Series:
         """Duzeltilmis ADX (K18): tum seriler df'in indeksini tasir.
 
-        Ilk satirda onceki kapanis yok: TR ve +DM/-DM NaN. Yumusatma Wilder'in
-        RMA'si (EMA alpha = 1/n, adjust=False, min_periods = n): ATR ve DI satir
-        n'den, ADX satir 2n-1'den itibaren tanimli; oncesi NaN (nedensel isinma —
+        Ilk satirda onceki kapanis yok: TR ve +DM/-DM NaN. Yumusatma klasik Wilder
+        (SMA tohumu, sonra alpha = 1/n ozyineleme): ATR ve DI satir n'den, ADX satir
+        2n-1'den itibaren tanimli; oncesi NaN (nedensel isinma —
         'bfill' modunda bu NaN geriye doldurulur, RL kapisi blogu atar).
         Tanimsiz bolmeler: ATR = 0 -> DI = 0; DI+ + DI- = 0 -> DX = 0 (yon hareketi yok).
         Deger araligi [0, 100].
@@ -172,7 +172,18 @@ class TechnicalIndicators:
         minus_dm = down.where((down > up) & (down > 0), 0.0).mask(undefined)
 
         def rma(x):
-            return x.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
+            # Wilder (1978) yumusatmasi: ilk deger ilk n gecerli degerin ORTALAMASI (SMA
+            # tohumu), sonrasi A_t = A_{t-1} + (x_t - A_{t-1}) / n. Ilk degerle tohumlanan
+            # EMA ilk ~100 satirda klasik tanimdan ayrisiyordu (hakem-2 K18 #6).
+            valid = np.flatnonzero(x.notna().to_numpy())
+            out = pd.Series(np.nan, index=x.index)
+            if len(valid) < period:
+                return out
+            seed_pos = valid[0] + period - 1
+            seeded = x.copy()
+            seeded.iloc[:seed_pos] = np.nan
+            seeded.iloc[seed_pos] = x.iloc[valid[0]:seed_pos + 1].mean()
+            return seeded.ewm(alpha=1.0 / period, adjust=False).mean()
 
         atr = rma(tr)
 

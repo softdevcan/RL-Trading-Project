@@ -34,7 +34,7 @@ _IX_CLOSE = _OBS_COLUMNS.index('close')
 #              kapanisinin ortalama/std'si ile (None = genisleyen pencere). Yalniz
 #              <= t veri; held-out ortamda pencere `price_context` (degerlendirme
 #              penceresinden ONCEKI satirlar) ile doldurulur. MACD de fiyat cinsinden
-#              (TL) oldugu icin ayni olcekle: tanh(macd / std_t) ('stats': tanh(macd/0.1)).
+#              (TL) cinsindendir; price_norm_macd=True ile ayni olcege alinir (opt-in, K26).
 PRICE_NORM_MODES = ('stats', 'causal')
 # Tasarim varsayimlari (literatur dayanagi yok; Faz 9 §9.9): ~1 islem yili ve ~1 ay.
 CAUSAL_WINDOW = 252
@@ -100,13 +100,13 @@ class TradingEnv(gym.Env):
         #   price_context: yalnizca 'causal'. Bu ortamin ILK tarihinden ONCEKI satirlar
         #       (MultiIndex symbol, date; 'close'). Held-out ortamda pencerenin basini
         #       doldurur; bu tarihe esit ya da sonraki satir ValueError (ileriye bakis).
-        #   price_norm_macd: yalnizca 'causal'. True (varsayilan): MACD de nedensel olcekle;
-        #       False: MACD eski tanimda (tanh(macd/0.1)) — yalniz fiyatin nedensel oldugu
-        #       ara kol (hakem-rl K18 #5: kollari tek etkende ayirmak icin).
+        #   price_norm_macd: yalnizca 'causal'. False (varsayilan): MACD eski tanimda
+        #       (tanh(macd/0.1)) — K25 karari yalniz FIYAT olcegi. True: MACD de nedensel
+        #       olcekle tanh(macd/std_t) (opt-in; karar K26, hakem-2 K18 #2).
         price_norm: str = 'stats',
         price_norm_window: Optional[int] = CAUSAL_WINDOW,
         price_context: Optional[pd.DataFrame] = None,
-        price_norm_macd: bool = True,
+        price_norm_macd: bool = False,
     ):
         """
         Args:
@@ -166,6 +166,9 @@ class TradingEnv(gym.Env):
         self.price_norm_context_rows: Dict[str, int] = {}
         self.price_norm_warmup_rows: Dict[str, int] = {}
         self.price_norm_neutral_rows: Dict[str, int] = {}
+        # baglamin isaretledigi seri basi semboller (rl_context_before): bunlarda pencere
+        # dolmadan gecen satirlar kacinilmaz isinmadir (protokol istisnasi; hakem-2 K18 #3)
+        self.price_norm_series_start: set = set()
 
         # Faz 2 data
         self.fundamental_df = fundamental_df
@@ -332,6 +335,7 @@ class TradingEnv(gym.Env):
                     f"price_context bu ortamin ilk tarihinden ({self.dates[0]}) ONCE bitmeli; "
                     f"son baglam tarihi {cdates.max()} — esit/sonraki satir ileriye bakistir")
             ctx_syms = set(context.index.get_level_values('symbol'))
+            self.price_norm_series_start = set(context.attrs.get('series_start_symbols', []))
             for symbol in self.symbols:
                 if symbol in ctx_syms:
                     sub = context.xs(symbol, level='symbol').sort_index()
@@ -881,10 +885,9 @@ class TradingEnv(gym.Env):
                 volume_norm = np.log(volume_val / 1e6 + 1) / 3 if volume_val > 0 else 0.0
 
                 if self.price_norm == 'causal':
-                    # K25 (b): fiyat CINSINDEN olculen ozellikler (O/H/L/C ve MACD =
-                    # iki fiyat EMA'sinin farki, TL) ayni nedensel olcegi kullanir:
-                    # z = (p - ort_t) / std_t, MACD -> tanh(macd / std_t). Yalniz <= t.
-                    # price_norm_macd=False: MACD eski tanimda (yalniz-fiyat ara kolu).
+                    # K25 (b): O/H/L/C nedensel olcekle z = (p - ort_t) / std_t, yalniz <= t.
+                    # MACD (iki fiyat EMA'sinin farki, TL) price_norm_macd=True ise ayni
+                    # olcekle tanh(macd / std_t); varsayilan eski tanim (K26 karari).
                     scale = self._causal_scale(symbol, current_date)
                     if scale is None:
                         price_z = [0.0, 0.0, 0.0, 0.0]

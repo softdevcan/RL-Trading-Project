@@ -290,8 +290,8 @@ def main():
     )
     from env.trading_env import CAUSAL_MIN_PERIODS, CAUSAL_WINDOW, TradingEnv
     from evaluation.observation_health import (
-        feature_stats, features_in_support, market_matrix, obs_health_failures, obs_health_ok,
-        observation_health, price_in_support, support_failures,
+        dims_failures, dims_in_support, feature_stats, features_in_support, market_matrix,
+        obs_health_failures, obs_health_ok, observation_health, price_in_support, support_failures,
     )
     from evaluation.trial_registry import (
         CLEAN_PROTOCOL, open_protocol_items, price_stats_source, rl_eval_protocol,
@@ -319,8 +319,9 @@ def main():
           float(wil.min()) >= 0 and float(wil.max()) <= 100 and wil.nunique() > 100)
     ref = wilder_reference(w0["high"].to_numpy(), w0["low"].to_numpy(), w0["close"].to_numpy())
     diff_ref = np.abs(wil.to_numpy() - ref)
-    check("bagimsiz referans 1 (SMA tohumlu klasik Wilder): satir >= 400'de |fark| < 1e-6",
-          float(np.nanmax(diff_ref[400:])) < 1e-6, f"{np.nanmax(diff_ref[400:]):.2e}")
+    check("bagimsiz referans 1 (SMA tohumlu klasik Wilder): ilk tanimli satirdan (27) itibaren "
+          "|fark| < 1e-9 (hakem-2 K18 #6: tohum artik klasik)",
+          float(np.nanmax(diff_ref[2 * N - 1:])) < 1e-9, f"{np.nanmax(diff_ref[2 * N - 1:]):.2e}")
     check("  referansla ilk tanimli satir ayni (2n-1)",
           int(np.argmax(~np.isnan(ref))) == 2 * N - 1)
     try:
@@ -328,7 +329,8 @@ def main():
         pt = ta.adx(w0["high"], w0["low"], w0["close"], length=N)
         col = [c for c in pt.columns if c.startswith("ADX_")][0]
         dpt = np.abs(wil.to_numpy() - pt[col].to_numpy())
-        check("bagimsiz referans 2 (pandas_ta.adx): satir >= 400'de |fark| < 1e-6",
+        check("bagimsiz referans 2 (pandas_ta.adx; RMA ilk degerle tohumlu): satir >= 400'de "
+              "|fark| < 1e-6",
               float(np.nanmax(dpt[400:])) < 1e-6, f"{np.nanmax(dpt[400:]):.2e}")
     except ImportError:
         print("    pandas_ta yok: referans 2 atlandi")
@@ -455,21 +457,26 @@ def main():
 
     # -----------------------------------------------------------------------
     print("\nN — K25 (b): nedensel fiyat olcegi")
-    npan = with_random_indicators(ohlcv(n_days=420, drift=0.003, seed=5))   # TL gibi yukselen
+    # TL gibi yukselen panel: baglam (260 gun) + egitim (1500) + degerlendirme (140).
+    # Nedensel z'nin destek icinde kalmasi GARANTI DEGIL (rastgele yuruyuste tohuma bagli);
+    # bu tohum/uzunlukta destek icinde. Mekanizma ayrica olcek degismezligiyle sinaniyor.
+    npan = with_random_indicators(ohlcv(n_days=1900, drift=0.003, seed=5))
     nd = dates_of(npan)
-    n_tr, n_ev = before(npan, nd[300]), from_(npan, nd[300])
+    n_pre = before(npan, nd[260])
+    n_tr = from_(before(npan, nd[1760]), nd[260])
+    n_ctx, n_ev = before(npan, nd[1760]), from_(npan, nd[1760])
     ev_dates = dates_of(n_ev)
-    e_c = TradingEnv(n_ev, price_norm="causal", price_context=n_tr, missing_data_mode="own_last")
+    e_c = TradingEnv(n_ev, price_norm="causal", price_context=n_ctx, missing_data_mode="own_last")
     check("varsayilan price_norm 'stats'; get_price_norm kaydi",
           TradingEnv(n_tr).get_price_norm() == {"mode": "stats", "window": None, "min_periods": None,
                                                 "macd": None}
           and e_c.get_price_norm() == {"mode": "causal", "window": CAUSAL_WINDOW,
-                                       "min_periods": CAUSAL_MIN_PERIODS, "macd": True})
+                                       "min_periods": CAUSAL_MIN_PERIODS, "macd": False})
     check("baglam satirlari sembol basina sayiliyor", e_c.price_norm_context_rows ==
-          {s: 300 for s in ("W0.IS", "W1.IS", "W2.IS")})
+          {s: 1760 for s in ("W0.IS", "W1.IS", "W2.IS")})
     mm = market_matrix(e_c)
 
-    def ref_z(sym, k, window=CAUSAL_WINDOW, ctx=n_tr, ev=n_ev):
+    def ref_z(sym, k, window=CAUSAL_WINDOW, ctx=n_ctx, ev=n_ev):
         c_all = np.concatenate([ctx.xs(sym, level="symbol")["close"].to_numpy(),
                                 ev.xs(sym, level="symbol")["close"].to_numpy()])
         j = len(ctx.xs(sym, level="symbol")) + k
@@ -483,26 +490,26 @@ def main():
     check("z = (p - ort(son 252 kapanis <= t)) / std(ddof=1), O/H/L/C ayni istatistik", ok)
 
     def ref_sigma(sym, k):
-        c_all = np.concatenate([n_tr.xs(sym, level="symbol")["close"].to_numpy(),
+        c_all = np.concatenate([n_ctx.xs(sym, level="symbol")["close"].to_numpy(),
                                 n_ev.xs(sym, level="symbol")["close"].to_numpy()])
-        j = len(n_tr.xs(sym, level="symbol")) + k
+        j = len(n_ctx.xs(sym, level="symbol")) + k
         return c_all[max(0, j - CAUSAL_WINDOW + 1): j + 1].std(ddof=1)
 
-    ok_m = all(np.isclose(mm[k, si, 5], np.tanh(n_ev.xs(sym, level="symbol")["macd"].iloc[k]
+    e_m = TradingEnv(n_ev, price_norm="causal", price_context=n_ctx, price_norm_macd=True)
+    mm_m = market_matrix(e_m)
+    ok_m = all(np.isclose(mm_m[k, si, 5], np.tanh(n_ev.xs(sym, level="symbol")["macd"].iloc[k]
                                                 / ref_sigma(sym, k)), rtol=0, atol=1e-5)
                for k in (0, 50, len(ev_dates) - 1) for si, sym in enumerate(e_c.symbols))
-    check("MACD (fiyat cinsinden) ayni nedensel olcekle: tanh(macd / std_t)", ok_m)
+    check("opt-in (price_norm_macd=True): MACD ayni nedensel olcekle tanh(macd / std_t)", ok_m)
     e_s = TradingEnv(n_ev, price_stats=TradingEnv(n_tr).get_price_stats())
     check("  'stats' modunda MACD eski tanim tanh(macd / 0.1)",
           np.isclose(market_matrix(e_s)[3, 0, 5],
                      np.tanh(n_ev.xs("W0.IS", level="symbol")["macd"].iloc[3] / 0.1), atol=1e-6))
-    e_po = TradingEnv(n_ev, price_norm="causal", price_context=n_tr, price_norm_macd=False)
-    mpo = market_matrix(e_po)
-    check("ara kol (price_norm_macd=False): fiyat nedensel, MACD eski tanim",
-          np.allclose(mpo[:, :, :4], mm[:, :, :4])
-          and np.isclose(mpo[3, 0, 5], np.tanh(n_ev.xs("W0.IS", level="symbol")["macd"].iloc[3] / 0.1),
+    check("VARSAYILAN (hakem-2 K18 #2, K25 karari yalniz fiyat): fiyat nedensel, MACD eski tanim",
+          np.allclose(mm_m[:, :, :4], mm[:, :, :4])
+          and np.isclose(mm[3, 0, 5], np.tanh(n_ev.xs("W0.IS", level="symbol")["macd"].iloc[3] / 0.1),
                          atol=1e-6)
-          and e_po.get_price_norm()["macd"] is False and e_c.get_price_norm()["macd"] is True)
+          and e_c.get_price_norm()["macd"] is False and e_m.get_price_norm()["macd"] is True)
     e_wu = TradingEnv(n_ev, price_norm="causal")
     n_ev_rows = len(ev_dates)
     check(f"pencere kullanimi kayitta: baglamsiz {min(n_ev_rows, CAUSAL_WINDOW - 1)} satir pencere "
@@ -515,8 +522,21 @@ def main():
     cpan = ohlcv(n_days=400, start="2012-01-02")
     ctx, crep = integ.rl_context_before(cpan, start="2013-06-01", n_sessions=252)
     cd = dates_of(ctx)
-    check("son 252 seans, tamami pencereden once", len(cd) == 252 and cd.max() < pd.Timestamp("2013-06-01")
-          and crep["n_dates"] == 252 and crep["rows_per_symbol_min"] == 252)
+    check("sembol basina son 252 gecerli satir, tamami pencereden once; seri basi yok",
+          len(cd) == 252 and cd.max() < pd.Timestamp("2013-06-01")
+          and crep["rows_per_symbol_min"] == 252 and ctx.attrs["series_start_symbols"] == [])
+    lpan = ohlcv(n_days=400, start="2012-01-02", late=(2, 300))       # W2 2013 basinda listeleniyor
+    lctx, lrep = integ.rl_context_before(lpan, start="2013-06-01")
+    check("yeni listelenen sembol seri basi olarak isaretleniyor (attrs + rapor)",
+          lctx.attrs["series_start_symbols"] == ["W2.IS"] and lrep["series_start_symbols"] == ["W2.IS"]
+          and lrep["short_context_symbols"] == [], str(lrep))
+    jpan = cpan.copy()
+    jm = (jpan.index.get_level_values("symbol") == "W0.IS") & (
+        jpan.index.get_level_values("date") >= pd.Timestamp("2013-06-01"))
+    for c in ("open", "high", "low", "close"):
+        jpan.loc[jm, c] = jpan.loc[jm, c] * 3.0          # baglam -> pencere sinirinda sicrama
+    check("baglam-pencere sinirindaki sicrama yakalaniyor (hakem-2 K18 #8) -> DataIntegrityError",
+          raises_exc(lambda: integ.rl_context_before(jpan, start="2013-06-01"), integ.DataIntegrityError))
     bad = cpan.copy()
     bad.loc[("W0.IS", cd[100]), "close"] = -5.0
     check("kapanisi etkileyen artefakt (negatif fiyat) -> DataIntegrityError",
@@ -532,10 +552,11 @@ def main():
         st_pan.loc[("W2.IS", cd[80]), c] = prev_c          # tek sembolun duz satiri (bayat hucre)
     st_pan.loc[("W2.IS", cd[80]), "volume"] = 0.0
     sctx, srep = integ.rl_context_before(st_pan, start="2013-06-01")
-    check("bayat hucre prepare_rl_panel gibi atiliyor ve sayiliyor (hakem-rl K18 #6)",
+    check("bayat hucre prepare_rl_panel gibi atiliyor, sayiliyor; atimdan SONRA 252 satir "
+          "secildigi icin baglam kisalmiyor (hakem-2 K18 #8)",
           srep["n_stale_cells_dropped"] == 1 and ("W2.IS", cd[80]) not in sctx.index
-          and ("W1.IS", cd[80]) in sctx.index, str(srep))
-    e_x = TradingEnv(n_ev, price_norm="causal", price_norm_window=None, price_context=n_tr)
+          and ("W1.IS", cd[80]) in sctx.index and srep["rows_per_symbol_min"] == 252, str(srep))
+    e_x = TradingEnv(n_ev, price_norm="causal", price_norm_window=None, price_context=n_ctx)
     mx = market_matrix(e_x)
     check("genisleyen pencere (window=None) bagimsiz hesapla ayni",
           all(np.allclose(mx[k, si, :4], ref_z(sym, k, window=None), rtol=0, atol=1e-4)
@@ -558,7 +579,7 @@ def main():
         return upto, after
 
     def causal_env(f):
-        return TradingEnv(f, price_norm="causal", price_context=n_tr, missing_data_mode="own_last")
+        return TradingEnv(f, price_norm="causal", price_context=n_ctx, missing_data_mode="own_last")
 
     res = [b0(causal_env, k) for k in t_vals]
     check(f"B0: t sonrasi fiyat degisince t'ye kadar TUM gozlem bit-es, t in {t_vals}",
@@ -602,7 +623,7 @@ def main():
           raises(lambda: TradingEnv(n_ev, price_norm="causal", price_context=n_tr[["open"]]))
           and raises(lambda: TradingEnv(n_ev.drop(columns=["volume"]), price_norm="causal")))
     hol = holed(n_ev, sym="W1.IS", lo=40, hi=45)
-    eh = TradingEnv(hol, price_norm="causal", price_context=n_tr, missing_data_mode="own_last")
+    eh = TradingEnv(hol, price_norm="causal", price_context=n_ctx, missing_data_mode="own_last")
     mh = market_matrix(eh)
     check("own_last eksik gun: sembol son satirinin degeri ve O SATIRIN istatistigi",
           all(np.array_equal(mh[k, 1, :4], mh[39, 1, :4]) for k in range(40, 45))
@@ -611,12 +632,29 @@ def main():
     tr_stats_env = TradingEnv(n_tr, missing_data_mode="own_last")
     e_b9 = TradingEnv(n_ev, price_stats=tr_stats_env.get_price_stats(), missing_data_mode="own_last")
     h_b9 = observation_health(tr_stats_env, e_b9)
-    tr_causal_env = TradingEnv(n_tr, price_norm="causal", missing_data_mode="own_last")
+    tr_causal_env = TradingEnv(n_tr, price_norm="causal", price_context=n_pre,
+                               missing_data_mode="own_last")
     h_c = observation_health(tr_causal_env, e_c)
     check("yukselen panel: B9 olcegi destek DISI (price_in_support False)",
           price_in_support(h_b9) is False, str(h_b9["eval_out_of_train_support"]))
-    check("yukselen panel: nedensel olcek destek ICI (price_in_support True)",
+    check("bu fikstürde (tohum 5) nedensel olcek destek ICI — ozellik garanti degil, olculur",
           price_in_support(h_c) is True, str(h_c["eval_out_of_train_support"]))
+
+    def scaled(f, k):
+        g = f.copy()
+        for c in ("open", "high", "low", "close", "macd"):
+            g[c] = g[c] * k
+        return g
+
+    m_k = market_matrix(TradingEnv(scaled(n_ev, 7.0), price_norm="causal",
+                                   price_context=scaled(n_ctx, 7.0), price_norm_macd=True))
+    m_1 = market_matrix(TradingEnv(n_ev, price_norm="causal", price_context=n_ctx, price_norm_macd=True))
+    m_b9k = market_matrix(TradingEnv(scaled(n_ev, 7.0), price_stats=tr_stats_env.get_price_stats()))
+    m_b91 = market_matrix(TradingEnv(n_ev, price_stats=tr_stats_env.get_price_stats()))
+    check("mekanizma: fiyat duzeyi x7 -> nedensel fiyat z'si ve tanh(macd/std_t) degismiyor; "
+          "B9 z'si degisiyor",
+          np.allclose(m_k[:, :, [0, 1, 2, 3, 5]], m_1[:, :, [0, 1, 2, 3, 5]], atol=1e-4)
+          and not np.allclose(m_b9k[:, :, :4], m_b91[:, :, :4], atol=1e-2))
 
     # -----------------------------------------------------------------------
     print("\nP — protokol ve gozlem sagligi")
@@ -696,14 +734,50 @@ def main():
         src = n_tr.xs(sym, level="symbol").iloc[: int(m.sum())]
         for col in ("macd", "rsi", "cci", "adx", "turbulence", "volume"):
             ev_sup.loc[m, col] = src[col].to_numpy()
-    e_sup = TradingEnv(ev_sup, price_norm="causal", price_context=n_tr, missing_data_mode="own_last")
+    e_sup = TradingEnv(ev_sup, price_norm="causal", price_context=n_ctx, missing_data_mode="own_last")
     pr_c = rl_eval_protocol(e_sup, tr_causal_env)
     check("rl_eval_protocol: nedensel kol, yukselen fiyat + destekte gostergeler -> tamamen temiz",
           open_protocol_items(pr_c) == [], str(open_protocol_items(pr_c)))
     pr_r = rl_eval_protocol(e_c, tr_causal_env, health=h_c)
-    check("  bagimsiz rastgele gostergede features_in_support olculuyor (gurultu acabilir)",
+    check("  bagimsiz rastgele gostergede destek maddeleri olculuyor (gurultu acabilir)",
           pr_r["features_in_support"] in (True, False)
-          and open_protocol_items(pr_r) in ([], ["features_in_support"]), str(open_protocol_items(pr_r)))
+          and set(open_protocol_items(pr_r)) <= {"features_in_support", "dims_in_support"},
+          str(open_protocol_items(pr_r)))
+    # hakem-2 K18 #3: olcegin gercekte dolu pencereyle kuruldugu denetleniyor
+    check("baglamsiz degerlendirme ortami -> 'causal_short_context' (acik)",
+          price_stats_source(e_cold, tr_causal_env) == "causal_short_context")
+    tr_nc = TradingEnv(n_tr, price_norm="causal")
+    check("baglamsiz egitim ortami -> 'causal_short_context' (acik)",
+          price_stats_source(e_c, tr_nc) == "causal_short_context")
+    pre_ss = n_pre[~((n_pre.index.get_level_values("symbol") == "W2.IS")
+                     & (n_pre.index.get_level_values("date") < nd[240]))].copy()
+    pre_ss.attrs["series_start_symbols"] = ["W2.IS"]
+    tr_ss = TradingEnv(n_tr, price_norm="causal", price_context=pre_ss)
+    pre_ns = pre_ss.copy()
+    pre_ns.attrs["series_start_symbols"] = []
+    check("seri basi istisnasi: yalniz isaretli (yeni listelenmis) sembolde pencere dolmadan satir "
+          "-> 'causal'; isaret yoksa acik",
+          tr_ss.price_norm_warmup_rows["W2.IS"] > 0
+          and price_stats_source(e_c, tr_ss) == "causal"
+          and price_stats_source(e_c, TradingEnv(n_tr, price_norm="causal", price_context=pre_ns))
+          == "causal_short_context")
+
+    def fake_dims(**over):
+        base = {f: {"max": 0.0, "max_symbol": "W0.IS", "n_over_eps": 0, "n_dims": 3, "over_eps": {}}
+                for f in ("open", "high", "low", "close", "volume", "macd", "rsi", "cci", "adx",
+                          "turbulence")}
+        for f, v in over.items():
+            base[f] = {"max": v, "max_symbol": "W1.IS", "n_over_eps": 1, "n_dims": 3,
+                       "over_eps": {"W1.IS": v}}
+        return {"eval_out_of_train_support_dims": base}
+
+    check("dims_in_support (hakem-2 K18 #1): tek sembol boyutu %23 -> False, havuz gizleyemez",
+          dims_in_support(fake_dims(volume=0.23)) is False and dims_in_support(fake_dims()) is True
+          and dims_failures(fake_dims(volume=0.23)) == {"volume": {"W1.IS": 0.23}})
+    dd = h_c["eval_out_of_train_support_dims"]
+    pooled = h_c["eval_out_of_train_support_features"]
+    check("boyut olcusu havuzla tutarli: en buyuk boyut >= havuz, boyut sayisi = sembol sayisi",
+          all(dd[f]["max"] >= pooled[f] - 1e-12 for f in pooled) and dd["close"]["n_dims"] == 3)
 
     def fake_health(**oos):
         base = {f: 0.0 for f in ("open", "high", "low", "close", "volume", "macd", "rsi",

@@ -134,6 +134,26 @@ def out_of_support(train_market: np.ndarray, eval_market: np.ndarray) -> Dict[st
             for name, (a, b) in BLOCKS.items() if a < fps}
 
 
+def out_of_support_dims(train_market: np.ndarray, eval_market: np.ndarray, symbols,
+                        eps: float = SUPPORT_EPS) -> Dict[str, dict]:
+    """Ayni olcu GOZLEM BOYUTU (sembol x ozellik) basina (hakem-2 K18 #1).
+
+    Politika bir MLP: her boyut ayri girdidir. Havuzlu oran tek bir sembolu gizler
+    (gercek panelde SASA hacmi testte %23 destek disiyken havuz %0,87). Ozellik basina:
+    en buyuk boyut orani, o sembol, eps'i asan boyut sayisi.
+    """
+    outside = _outside(train_market, eval_market).mean(axis=0)   # (n_sym, fps)
+    out = {}
+    for j, (name, _) in enumerate(FEATURES[:eval_market.shape[2]]):
+        col = outside[:, j]
+        k = int(np.argmax(col))
+        out[name] = {'max': float(col[k]), 'max_symbol': str(symbols[k]),
+                     'n_over_eps': int(np.sum(col > eps)), 'n_dims': int(len(col)),
+                     'over_eps': {str(symbols[i]): round(float(col[i]), 4)
+                                  for i in np.flatnonzero(col > eps)}}
+    return out
+
+
 def out_of_support_features(train_market: np.ndarray, eval_market: np.ndarray) -> Dict[str, float]:
     """Ayni olcu ozellik basina (K18)."""
     outside = _outside(train_market, eval_market)
@@ -154,6 +174,7 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
         'n_eval_days': int(ev.shape[0]),
         'eval_out_of_train_support': None,
         'eval_out_of_train_support_features': None,
+        'eval_out_of_train_support_dims': None,
         'support_eps': SUPPORT_EPS,
         'obs_clip_eps': OBS_CLIP_EPS,
         'obs_sat_max': OBS_SAT_MAX,
@@ -166,6 +187,7 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
                      'rows_neutral': int(sum(e.price_norm_neutral_rows.values())),
                      'rows_total': int(sum(len(v) for v in e._causal_stats.values())),
                      'context_rows_min': int(min(e.price_norm_context_rows.values(), default=0)),
+                     'series_start_symbols': sorted(e.price_norm_series_start),
                      'by_symbol_window_not_full': {s: k for s, k in e.price_norm_warmup_rows.items() if k}}
                     if getattr(e, 'price_norm', 'stats') == 'causal' else None)
             for split, e in (('train', tr_env), ('eval', ev_env))},
@@ -175,6 +197,7 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
         idx = [tsyms.index(s) for s in esyms]
         health['eval_out_of_train_support'] = out_of_support(tr[:, idx, :], ev)
         health['eval_out_of_train_support_features'] = out_of_support_features(tr[:, idx, :], ev)
+        health['eval_out_of_train_support_dims'] = out_of_support_dims(tr[:, idx, :], ev, esyms)
     if seen_obs is not None and len(seen_obs):
         seen = np.asarray(seen_obs, dtype=np.float32)
         n = ev_env.n_stocks
@@ -238,6 +261,23 @@ def features_in_support(health: Optional[dict], eps: float = SUPPORT_EPS) -> Opt
     price = {'open', 'high', 'low', 'close'}
     vals = [v for k, v in oos.items() if k not in price]
     return bool(vals) and bool(max(vals) <= eps)
+
+
+def dims_in_support(health: Optional[dict], eps: float = SUPPORT_EPS) -> Optional[bool]:
+    """Protokol maddesi `dims_in_support` (hakem-2 K18 #1): kapili bloklarin HER gozlem
+    boyutunda (sembol x ozellik) degerlendirme degerlerinin <= eps'i egitim destegi disinda.
+    Havuzlu `price_in_support` / `features_in_support`'tan siki (onlari gerektirir)."""
+    dims = (health or {}).get('eval_out_of_train_support_dims')
+    if not dims:
+        return None
+    gated = {n for b in GATED_BLOCKS for n, _ in FEATURES[BLOCKS[b][0]:BLOCKS[b][1]]}
+    return all(v['max'] <= eps for k, v in dims.items() if k in gated)
+
+
+def dims_failures(health: Optional[dict], eps: float = SUPPORT_EPS) -> Dict[str, dict]:
+    """eps'i asan boyutlar: {ozellik: {sembol: oran}} (rapor/uyari icin)."""
+    dims = (health or {}).get('eval_out_of_train_support_dims') or {}
+    return {k: v['over_eps'] for k, v in dims.items() if v.get('over_eps')}
 
 
 def support_failures(health: Optional[dict], eps: float = SUPPORT_EPS) -> list:

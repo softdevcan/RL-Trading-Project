@@ -51,6 +51,9 @@ varsayilan olarak dislar). Maddeler:
       gostergeler) degerlendirme degerlerinin > %1'i egitim destegi disinda (K18;
       ozellik basina). Eski olcekte MACD TL cinsinden: test degerlerinin %28,7'si
       destek disi (Faz 9 §9.9). OLCULUR.
+  dims_in_support=False/None — kapili bloklarin bir GOZLEM BOYUTUNDA (sembol x ozellik)
+      degerlendirme degerlerinin > %1'i egitim destegi disinda (hakem-2 K18 #1: havuzlu
+      oran tek sembolu gizler; gercek panelde SASA hacmi %23). OLCULUR.
   price_stats_source='causal' de TEMIZDIR (K25 b): fiyat z'si yalniz <= t
       kapanislariyla kayan pencereden; egitim ve degerlendirme ortami ayni
       tanimla (mod + pencere) kurulmali, aksi 'mixed_norm' (acik).
@@ -93,6 +96,7 @@ CLEAN_PROTOCOL = {
     'hyperparams_clean': True,
     'obs_health': True,
     'features_in_support': True,
+    'dims_in_support': True,
 }
 # Ayni maddenin ikinci temiz degeri (K25 b: nedensel fiyat olcegi).
 CLEAN_ALTERNATIVES = {
@@ -131,6 +135,10 @@ def price_stats_source(eval_env, train_env) -> Optional[str]:
                               degerlendirmeden ONCE bitiyor (temiz; baglamin ilk tarihten
                               once bittigini env kurulumda zorlar)
     'mixed_norm'            : biri nedensel digeri olcekli ya da pencereler farkli
+    'causal_short_context'  : olcek pencerenin gercekte dolu olmadigi satirlarla kuruldu —
+                              degerlendirmede HERHANGI bir satir, egitimde seri basi
+                              (baglamin isaretledigi, yeni listelenmis) olmayan bir sembolde
+                              (hakem-2 K18 #3; baglamsiz kurulan ortam boyle cikar)
     'causal_unverified'     : egitim ortami yok
 
     Gymnasium sarmalayicilari (Monitor) `unwrapped` ile acilir.
@@ -150,6 +158,12 @@ def price_stats_source(eval_env, train_env) -> Optional[str]:
             return 'mixed_norm'
         if not (len(tr0.dates) and len(ev.dates) and tr0.dates[-1] < ev.dates[0]):
             return 'overlapping_window'
+        ev_short = any(getattr(ev, 'price_norm_warmup_rows', {}).values())
+        tr_series = getattr(tr0, 'price_norm_series_start', set())
+        tr_short = any(k for s_, k in getattr(tr0, 'price_norm_warmup_rows', {}).items()
+                       if s_ not in tr_series)
+        if ev_short or tr_short:
+            return 'causal_short_context'
         return 'causal'
     if getattr(ev, 'price_stats_source', 'own_window') != 'supplied':
         return 'own_window'
@@ -202,7 +216,8 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
     if eval_env is None:
         return {k: None for k in CLEAN_PROTOCOL}
     from evaluation.observation_health import (
-        features_in_support, obs_health_ok, observation_health, price_in_support,
+        dims_in_support, features_in_support, obs_health_ok, observation_health,
+        price_in_support,
     )
 
     base = getattr(eval_env, 'unwrapped', eval_env)
@@ -249,6 +264,7 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
         'hyperparams_clean': hyperparams_clean,
         'obs_health': obs_health_ok(health),
         'features_in_support': features_in_support(health),
+        'dims_in_support': dims_in_support(health),
     }
 
 
