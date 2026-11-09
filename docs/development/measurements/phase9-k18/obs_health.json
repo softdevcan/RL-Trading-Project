@@ -1,0 +1,1921 @@
+{
+ "created_at": "2026-11-09T21:00:05",
+ "command": "python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json",
+ "git_commit": "12aa13b84bb598457fc87b4a6267d5163384f34b",
+ "git_dirty": false,
+ "csv_sha256": "5ca2fe3f7f3719eaccf3966659ab3d3a4b74e815811855226357310358ec2e63",
+ "csv_span": [
+  "2000-05-10",
+  "2026-07-27",
+  6742
+ ],
+ "env_kwargs": {
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "phase": 1,
+  "reward_type": "simple",
+  "missing_data_mode": "own_last"
+ },
+ "configs": {
+  "pre_k18": {
+   "cfg": {
+    "adx": null,
+    "price_norm": "stats"
+   },
+   "panel_sha256": "f099c5bf16e28524214758be682c85bc33234146155d6408a08bb3af76832615",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 10,
+    "PGSUS.IS": 17
+   },
+   "gate_rows_after": 98628,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": true,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false
+     },
+     "open_items": [
+      "adx_constant",
+      "price_in_support",
+      "obs_health",
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.18
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1546,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.9
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9973,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.531,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.2
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.5307,
+        "sat_frac": 0.5369,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.5472,
+        "sat_frac": 0.5524,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.5157,
+        "sat_frac": 0.5211,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.5303,
+        "sat_frac": 0.5358,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 1.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9286,
+       "volume": 0.0096,
+       "indicators": 0.0459
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9294,
+       "high": 0.9289,
+       "low": 0.9287,
+       "close": 0.9275,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": null
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": true,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false
+     },
+     "open_items": [
+      "adx_constant",
+      "price_in_support",
+      "obs_health",
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.18
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1546,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.9
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9973,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.747,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.2
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.747,
+        "sat_frac": 0.749,
+        "constant_dims_frac": 0.6333
+       },
+       "high": {
+        "clip_frac": 0.7524,
+        "sat_frac": 0.755,
+        "constant_dims_frac": 0.6333
+       },
+       "low": {
+        "clip_frac": 0.7418,
+        "sat_frac": 0.7442,
+        "constant_dims_frac": 0.6333
+       },
+       "close": {
+        "clip_frac": 0.7469,
+        "sat_frac": 0.7491,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 1.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9888,
+       "volume": 0.0087,
+       "indicators": 0.0576
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9893,
+       "high": 0.9872,
+       "low": 0.9897,
+       "close": 0.9891,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": null
+    }
+   }
+  },
+  "k18_b9": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "stats"
+   },
+   "panel_sha256": "01711d7a2d22a57cd32c5e4241ebc86d7f1868b7e2f457a415fc7b7633674a8c",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.531,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.5307,
+        "sat_frac": 0.5369,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.5472,
+        "sat_frac": 0.5524,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.5157,
+        "sat_frac": 0.5211,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.5303,
+        "sat_frac": 0.5358,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9286,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9294,
+       "high": 0.9289,
+       "low": 0.9287,
+       "close": 0.9275,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": null
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.747,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.747,
+        "sat_frac": 0.749,
+        "constant_dims_frac": 0.6333
+       },
+       "high": {
+        "clip_frac": 0.7524,
+        "sat_frac": 0.755,
+        "constant_dims_frac": 0.6333
+       },
+       "low": {
+        "clip_frac": 0.7418,
+        "sat_frac": 0.7442,
+        "constant_dims_frac": 0.6333
+       },
+       "close": {
+        "clip_frac": 0.7469,
+        "sat_frac": 0.7491,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9888,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9893,
+       "high": 0.9872,
+       "low": 0.9897,
+       "close": 0.9891,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": null
+    }
+   }
+  },
+  "k18_causal_252": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 252
+   },
+   "panel_sha256": "01711d7a2d22a57cd32c5e4241ebc86d7f1868b7e2f457a415fc7b7633674a8c",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": false
+     },
+     "open_items": [
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0071,
+       "volume": 0.0096,
+       "indicators": 0.0042
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.007,
+       "high": 0.0061,
+       "low": 0.0076,
+       "close": 0.0077,
+       "volume": 0.0096,
+       "macd": 0.004,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2243
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": true
+     },
+     "open_items": [],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0003,
+       "volume": 0.0087,
+       "indicators": 0.0007
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0001,
+       "high": 0.0001,
+       "low": 0.0006,
+       "close": 0.0002,
+       "volume": 0.0087,
+       "macd": 0.0024,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2737
+    }
+   }
+  },
+  "k18_causal_63": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 63
+   },
+   "panel_sha256": "01711d7a2d22a57cd32c5e4241ebc86d7f1868b7e2f457a415fc7b7633674a8c",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": false
+     },
+     "open_items": [
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0005,
+       "volume": 0.0096,
+       "indicators": 0.0041
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0009,
+       "high": 0.0006,
+       "low": 0.0003,
+       "close": 0.0002,
+       "volume": 0.0096,
+       "macd": 0.0035,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2243
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": true
+     },
+     "open_items": [],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0008,
+       "volume": 0.0087,
+       "indicators": 0.0006
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0008,
+       "high": 0.0007,
+       "low": 0.0008,
+       "close": 0.0009,
+       "volume": 0.0087,
+       "macd": 0.0018,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2737
+    }
+   }
+  },
+  "k18_causal_expanding": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": null
+   },
+   "panel_sha256": "01711d7a2d22a57cd32c5e4241ebc86d7f1868b7e2f457a415fc7b7633674a8c",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "features_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0011,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0011,
+        "sat_frac": 0.0013,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0018,
+        "sat_frac": 0.0019,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0005,
+        "sat_frac": 0.0005,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0012,
+        "sat_frac": 0.0012,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.2022,
+       "volume": 0.0096,
+       "indicators": 0.0082
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.1952,
+       "high": 0.1895,
+       "low": 0.2223,
+       "close": 0.2019,
+       "volume": 0.0096,
+       "macd": 0.0236,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2243
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": true,
+      "features_in_support": true
+     },
+     "open_items": [
+      "price_in_support"
+     ],
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0764,
+       "volume": 0.0087,
+       "indicators": 0.0007
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0735,
+       "high": 0.0663,
+       "low": 0.0912,
+       "close": 0.0747,
+       "volume": 0.0087,
+       "macd": 0.0024,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      }
+     },
+     "price_norm_context_rows_min": 2737
+    }
+   }
+  }
+ },
+ "adx_profile_legacy": {
+  "n": 98628,
+  "n_nan": 0,
+  "min": 0.0,
+  "max": 0.0,
+  "mean": 0.0,
+  "quantiles": {
+   "0.01": 0.0,
+   "0.05": 0.0,
+   "0.25": 0.0,
+   "0.5": 0.0,
+   "0.75": 0.0,
+   "0.95": 0.0,
+   "0.99": 0.0
+  },
+  "frac_gt_25": 0.0,
+  "per_symbol_nunique_min": 1,
+  "per_symbol_mean_range": [
+   0.0,
+   0.0
+  ]
+ },
+ "adx_profile_wilder": {
+  "n": 98614,
+  "n_nan": 0,
+  "min": 6.6320702747008955,
+  "max": 84.96309060935862,
+  "mean": 26.33665356901418,
+  "quantiles": {
+   "0.01": 10.215,
+   "0.05": 12.66,
+   "0.25": 18.101,
+   "0.5": 24.012,
+   "0.75": 32.295,
+   "0.95": 47.919,
+   "0.99": 60.076
+  },
+  "frac_gt_25": 0.4629,
+  "per_symbol_nunique_min": 3231,
+  "per_symbol_mean_range": [
+   23.52,
+   28.06
+  ]
+ }
+}
