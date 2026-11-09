@@ -1,6 +1,6 @@
 # Hakem paneli
 
-**Durum:** 2026-11-06'da kuruldu. İlk kullanım K18'de olacak.
+**Durum:** 2026-11-06'da kuruldu. İlk kullanım K18 (2026-11-09).
 
 **Neden:** Faz 9 B9 incelemesinde tek bir hakem-2 koşumu **~301 bin token, 66 araç çağrısı ve ~23 dakika** harcadı (görev bildirimindeki `subagent_tokens`, `tool_uses`, `duration_ms`). Maliyetin iki ana kaynağı var:
 
@@ -67,3 +67,4 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 |---|---|---|---|---|---|---|
 | 2026-11-06 | B9 | hakem-2 (opus) | ~301 bin | 66 | ~23 dk | Panel öncesi, paket yok, planlar bütün okundu |
 | 2026-11-06 | B7 | hakem-2 (opus) | ~144 bin | 25 | ~12 dk | İnceleme paketiyle; küçük paket, B9 ile kıyas tam değil. 1 BÜYÜK bulgu (türbülans 0 başı) |
+| 2026-11-09 | K18 + K25 | hakem-rl (sonnet), ilk okuma | ~50 bin | 7 | ~1,5 dk | Panelin ilk kullanımı. Python koşmadı, JSON + aralıklı kod. 3 BÜYÜK bulgu (doygunluk kapı dışı, eğitim bağlamı, B7 düzeltmesinin yanlış negatifi) |
