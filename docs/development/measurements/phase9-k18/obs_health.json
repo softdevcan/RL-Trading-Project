@@ -1,7 +1,7 @@
 {
- "created_at": "2026-11-09T21:15:24",
+ "created_at": "2026-11-09T21:19:55",
  "command": "python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json",
- "git_commit": "e812b638e32f2d6c926efe470616c611acfcae68",
+ "git_commit": "b0c9b4fd5372e80ca698043773bf4eaa3fff4213",
  "git_dirty": false,
  "csv_sha256": "5ca2fe3f7f3719eaccf3966659ab3d3a4b74e815811855226357310358ec2e63",
  "csv_span": [
@@ -879,6 +879,7 @@
     "end": "2013-05-31",
     "n_ghost_days": 10,
     "n_close_safe_artifacts": 7,
+    "n_stale_cells_dropped": 8,
     "rows_per_symbol_min": 1
    },
    "splits": {
@@ -1049,7 +1050,7 @@
       },
       "price_norm_warmup": {
        "train": {
-        "rows_window_not_full": 744,
+        "rows_window_not_full": 752,
         "rows_neutral": 28,
         "rows_total": 68974,
         "context_rows_min": 1,
@@ -1058,12 +1059,12 @@
          "ARCLK.IS": 9,
          "ASELS.IS": 9,
          "BIMAS.IS": 9,
-         "EKGYO.IS": 9,
+         "EKGYO.IS": 10,
          "ENKAI.IS": 9,
          "EREGL.IS": 9,
          "FROTO.IS": 9,
          "GARAN.IS": 9,
-         "HALKB.IS": 9,
+         "HALKB.IS": 16,
          "ISCTR.IS": 9,
          "KCHOL.IS": 9,
          "KRDMD.IS": 9,
@@ -1270,7 +1271,7 @@
       },
       "price_norm_warmup": {
        "train": {
-        "rows_window_not_full": 744,
+        "rows_window_not_full": 752,
         "rows_neutral": 28,
         "rows_total": 68974,
         "context_rows_min": 1,
@@ -1279,12 +1280,12 @@
          "ARCLK.IS": 9,
          "ASELS.IS": 9,
          "BIMAS.IS": 9,
-         "EKGYO.IS": 9,
+         "EKGYO.IS": 10,
          "ENKAI.IS": 9,
          "EREGL.IS": 9,
          "FROTO.IS": 9,
          "GARAN.IS": 9,
-         "HALKB.IS": 9,
+         "HALKB.IS": 16,
          "ISCTR.IS": 9,
          "KCHOL.IS": 9,
          "KRDMD.IS": 9,
@@ -1365,6 +1366,7 @@
     "end": "2013-05-31",
     "n_ghost_days": 10,
     "n_close_safe_artifacts": 7,
+    "n_stale_cells_dropped": 8,
     "rows_per_symbol_min": 1
    },
    "splits": {
@@ -1795,6 +1797,7 @@
     "end": "2013-05-31",
     "n_ghost_days": 10,
     "n_close_safe_artifacts": 7,
+    "n_stale_cells_dropped": 8,
     "rows_per_symbol_min": 1
    },
    "splits": {
@@ -1948,14 +1951,14 @@
        }
       },
       "eval_out_of_train_support": {
-       "price": 0.208,
+       "price": 0.2079,
        "volume": 0.0096,
        "indicators": 0.0092
       },
       "eval_out_of_train_support_features": {
-       "open": 0.2012,
+       "open": 0.2011,
        "high": 0.198,
-       "low": 0.2251,
+       "low": 0.225,
        "close": 0.2076,
        "volume": 0.0096,
        "macd": 0.0289,
@@ -2232,6 +2235,7 @@
     "end": "2013-05-31",
     "n_ghost_days": 10,
     "n_close_safe_artifacts": 7,
+    "n_stale_cells_dropped": 8,
     "rows_per_symbol_min": 1
    },
    "splits": {
@@ -2402,7 +2406,7 @@
       },
       "price_norm_warmup": {
        "train": {
-        "rows_window_not_full": 744,
+        "rows_window_not_full": 752,
         "rows_neutral": 28,
         "rows_total": 68974,
         "context_rows_min": 1,
@@ -2411,12 +2415,12 @@
          "ARCLK.IS": 9,
          "ASELS.IS": 9,
          "BIMAS.IS": 9,
-         "EKGYO.IS": 9,
+         "EKGYO.IS": 10,
          "ENKAI.IS": 9,
          "EREGL.IS": 9,
          "FROTO.IS": 9,
          "GARAN.IS": 9,
-         "HALKB.IS": 9,
+         "HALKB.IS": 16,
          "ISCTR.IS": 9,
          "KCHOL.IS": 9,
          "KRDMD.IS": 9,
@@ -2625,7 +2629,7 @@
       },
       "price_norm_warmup": {
        "train": {
-        "rows_window_not_full": 744,
+        "rows_window_not_full": 752,
         "rows_neutral": 28,
         "rows_total": 68974,
         "context_rows_min": 1,
@@ -2634,12 +2638,12 @@
          "ARCLK.IS": 9,
          "ASELS.IS": 9,
          "BIMAS.IS": 9,
-         "EKGYO.IS": 9,
+         "EKGYO.IS": 10,
          "ENKAI.IS": 9,
          "EREGL.IS": 9,
          "FROTO.IS": 9,
          "GARAN.IS": 9,
-         "HALKB.IS": 9,
+         "HALKB.IS": 16,
          "ISCTR.IS": 9,
          "KCHOL.IS": 9,
          "KRDMD.IS": 9,
