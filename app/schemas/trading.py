@@ -59,6 +59,14 @@ class TrainingRequest(BaseModel):
         ge=0,
         lt=2**32,
     )
+    # Faz 9 / K25 (b): fiyat z'sinin tanimi. 'stats' = egitim penceresinin sabit
+    # olcegi (B9; eski ortamda test fiyatlarinin ~%99'u egitim desteginin disinda),
+    # 'causal' = yalniz <= t kapanislarla kayan z (252 seans). Milestone 0' iki kolu da kosar.
+    price_norm: Literal["stats", "causal"] = Field(
+        default="stats",
+        description="Price z-score definition: 'stats' (train-window scale, B9) or "
+                    "'causal' (rolling z from data up to t; K25)",
+    )
 
     class Config:
         json_schema_extra = {

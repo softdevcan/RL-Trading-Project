@@ -21,6 +21,14 @@ Olculenler:
 
 `SUPPORT_EPS` bir TASARIM VARSAYIMIDIR: degerlendirme fiyat degerlerinin en
 fazla %1'i egitim desteginin disinda olabilir. Esik degil OLCUM kayda girer.
+
+K18 (Faz 10 §6) — olcutun nihai tanimi (`obs_health_ok`, protokol maddesi
+`obs_health`): egitim VE degerlendirme penceresinde, kapili piyasa bloklarinda
+(fiyat, hacim, gostergeler) kirpilan oran (|x| >= 10) <= OBS_CLIP_EPS ve pencere
+boyunca sabit gozlem boyutu YOK. Ozellik basina tanh/sinir doygunlugu
+(`sat_frac`: |x| >= %99 x sinir) RAPORLANIR ama kapi degildir: doygun bir ozellik
+bilgi kaybidir, gecersiz girdi degil (dagilim disilik `price_in_support`'ta).
+OBS_CLIP_EPS de bir tasarim varsayimidir.
 """
 
 from __future__ import annotations
@@ -31,6 +39,8 @@ import numpy as np
 
 CLIP = 10.0
 SUPPORT_EPS = 0.01
+OBS_CLIP_EPS = 0.01
+SAT_LEVEL = 0.99
 
 # Sembol basina gozlem blogu (env/trading_env.py::_get_observation sirasi)
 BLOCKS = {
@@ -39,6 +49,18 @@ BLOCKS = {
     'indicators': (5, 10),   # macd, rsi, cci, adx, turbulence
     'fundamentals': (10, 17),  # yalnizca faz 2
 }
+# Kapiya giren bloklar: faz 2 temel oranlari sembol basina SABIT bir tablodan gelir
+# (zaman boyunca degismemesi tasarim geregi), sabit-boyut kurali onlara uygulanmaz.
+GATED_BLOCKS = ('price', 'volume', 'indicators')
+
+# Ozellik adi -> gozlemdeki donusumun mutlak siniri (doygunluk olcusu icin).
+# tanh ozellikleri ve (rsi-50)/50: 1; dogrusal z/log ozellikler: kirpma siniri 10.
+FEATURES = (
+    ('open', CLIP), ('high', CLIP), ('low', CLIP), ('close', CLIP), ('volume', CLIP),
+    ('macd', 1.0), ('rsi', 1.0), ('cci', 1.0), ('adx', CLIP), ('turbulence', 1.0),
+    ('roe', 1.0), ('roa', 1.0), ('debt_to_equity', 1.0), ('current_ratio', CLIP),
+    ('pe_ratio', 1.0), ('pb_ratio', 1.0), ('profit_margin', 1.0),
+)
 
 
 def _base(env):
@@ -81,14 +103,39 @@ def block_stats(market: np.ndarray) -> Dict[str, dict]:
     return out
 
 
-def out_of_support(train_market: np.ndarray, eval_market: np.ndarray) -> Dict[str, float]:
-    """Degerlendirme degerlerinin egitim [min, max] araligi disinda kalan orani (blok basina)."""
+def feature_stats(market: np.ndarray) -> Dict[str, dict]:
+    """Ozellik basina (tum semboller): kirpilan, doygun ve sabit boyut orani (K18)."""
+    t, n, fps = market.shape
+    out = {}
+    for j, (name, bound) in enumerate(FEATURES[:fps]):
+        x = market[:, :, j]
+        out[name] = {
+            'clip_frac': float(np.mean(np.abs(x) >= CLIP)),
+            'sat_frac': float(np.mean(np.abs(x) >= SAT_LEVEL * bound)),
+            'constant_dims_frac': float(np.mean(np.ptp(x, axis=0) == 0)) if t > 1 else None,
+        }
+    return out
+
+
+def _outside(train_market: np.ndarray, eval_market: np.ndarray) -> np.ndarray:
     lo = train_market.min(axis=0)
     hi = train_market.max(axis=0)
-    outside = (eval_market < lo) | (eval_market > hi)
+    return (eval_market < lo) | (eval_market > hi)
+
+
+def out_of_support(train_market: np.ndarray, eval_market: np.ndarray) -> Dict[str, float]:
+    """Degerlendirme degerlerinin egitim [min, max] araligi disinda kalan orani (blok basina)."""
+    outside = _outside(train_market, eval_market)
     fps = eval_market.shape[2]
     return {name: float(outside[:, :, a:b].mean())
             for name, (a, b) in BLOCKS.items() if a < fps}
+
+
+def out_of_support_features(train_market: np.ndarray, eval_market: np.ndarray) -> Dict[str, float]:
+    """Ayni olcu ozellik basina (K18)."""
+    outside = _outside(train_market, eval_market)
+    return {name: float(outside[:, :, j].mean())
+            for j, (name, _) in enumerate(FEATURES[:eval_market.shape[2]])}
 
 
 def observation_health(train_env, eval_env, seen_obs=None) -> dict:
@@ -98,15 +145,22 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
     health = {
         'train': block_stats(tr),
         'eval': block_stats(ev),
+        'train_features': feature_stats(tr),
+        'eval_features': feature_stats(ev),
         'n_train_days': int(tr.shape[0]),
         'n_eval_days': int(ev.shape[0]),
         'eval_out_of_train_support': None,
+        'eval_out_of_train_support_features': None,
         'support_eps': SUPPORT_EPS,
+        'obs_clip_eps': OBS_CLIP_EPS,
+        'price_norm': {'train': getattr(tr_env, 'price_norm', 'stats'),
+                       'eval': getattr(ev_env, 'price_norm', 'stats')},
     }
     tsyms, esyms = list(tr_env.symbols), list(ev_env.symbols)
     if set(esyms) <= set(tsyms) and tr.shape[2] == ev.shape[2] and len(tr) and len(ev):
         idx = [tsyms.index(s) for s in esyms]
         health['eval_out_of_train_support'] = out_of_support(tr[:, idx, :], ev)
+        health['eval_out_of_train_support_features'] = out_of_support_features(tr[:, idx, :], ev)
     if seen_obs is not None and len(seen_obs):
         seen = np.asarray(seen_obs, dtype=np.float32)
         n = ev_env.n_stocks
@@ -117,6 +171,62 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
             'obs_clip_frac': float(np.mean(np.abs(seen) >= CLIP)),
         }
     return health
+
+
+def obs_health_ok(health: Optional[dict], eps: float = OBS_CLIP_EPS) -> Optional[bool]:
+    """Protokol maddesi `obs_health` (K18): bkz. modul docstring'i.
+
+    Egitim ve degerlendirme penceresinde GATED_BLOCKS'un her birinde kirpilan oran
+    <= eps ve sabit boyut orani 0. Olcum yoksa (tek gunluk pencere) None.
+    """
+    if not health:
+        return None
+    for split in ('train', 'eval'):
+        blocks = health.get(split) or {}
+        for name in GATED_BLOCKS:
+            st = blocks.get(name)
+            if st is None:
+                continue
+            if st.get('constant_dims_frac') is None:
+                return None
+            if st['clip_frac'] > eps or st['constant_dims_frac'] > 0:
+                return False
+    return True
+
+
+def obs_health_failures(health: Optional[dict], eps: float = OBS_CLIP_EPS) -> list:
+    """`obs_health` neden acik: ['eval.price.clip', 'train.indicators.constant', ...]."""
+    out = []
+    for split in ('train', 'eval'):
+        for name in GATED_BLOCKS:
+            st = ((health or {}).get(split) or {}).get(name)
+            if not st:
+                continue
+            if st['clip_frac'] > eps:
+                out.append(f'{split}.{name}.clip')
+            if (st.get('constant_dims_frac') or 0) > 0:
+                out.append(f'{split}.{name}.constant')
+    return out
+
+
+def features_in_support(health: Optional[dict], eps: float = SUPPORT_EPS) -> Optional[bool]:
+    """Protokol maddesi `features_in_support` (K18): fiyat DISI her piyasa ozelligi
+    (hacim, gostergeler, faz 2 temel oranlar) icin degerlendirme degerlerinin <= eps'i
+    egitim destegi disinda mi. Ozellik basina (blok ortalamasi tek ozelligi gizler:
+    eski ortamda MACD %28,7 iken gosterge blogu %5,8). Fiyat `price_in_support`'ta.
+    """
+    oos = (health or {}).get('eval_out_of_train_support_features')
+    if not oos:
+        return None
+    price = {'open', 'high', 'low', 'close'}
+    vals = [v for k, v in oos.items() if k not in price]
+    return bool(vals) and bool(max(vals) <= eps)
+
+
+def support_failures(health: Optional[dict], eps: float = SUPPORT_EPS) -> list:
+    """Destek disi orani eps'i asan ozellikler (rapor/uyari icin)."""
+    oos = (health or {}).get('eval_out_of_train_support_features') or {}
+    return sorted(k for k, v in oos.items() if v > eps)
 
 
 def price_in_support(health: Optional[dict], eps: float = SUPPORT_EPS) -> Optional[bool]:

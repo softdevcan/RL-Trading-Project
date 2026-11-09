@@ -173,6 +173,9 @@ python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim 
                                            #          bekcisi, sarmalayicili betikler (103)
 python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i — B0 kesme
                                            #          degismezligi, RL kapisi, olculen protokol (28)
+python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
+                                           #          causal fiyat olcegi B0 + mutasyon, obs_health,
+                                           #          main ile bit-es, rota uctan uca (91)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -438,9 +441,9 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - olcum (2026-11-06): tam panelde 251 hayalet gun, 235 artefakt satiri; pencerede
     0 artefakt, 72 hayalet gun + 39 bayat hucre atiliyor, eksik hucre %0,076
   - gosterge isinma `bfill`'i: `prepare_rl_panel(drop_indicator_warmup=True)` bfill imzali bas
-    blogu atar (rota + HPO; gercek panelde ODAS 10, PGSUS 17 satir; B7, Faz 9 §9.7). Gostergeyi
-    `add_indicators_to_multi_symbol_df(warmup='nan')` ile uretmek ADX'i TUMUYLE NaN yapar (K18
-    koku) — tahmin hatti / CSV yeniden uretimi K18'e kadar 'bfill'de kalir. ADX K18'de acik
+    blogu atar (rota + HPO; B7, Faz 9 §9.7). Rotada 'wilder' ADX'in 27 satirlik NaN isinmasi da
+    atilir (gercek panelde ODAS 17, PGSUS 24 satir; K18, §9.9). Tahmin hatti `warmup='nan'` +
+    `adx='wilder'`'a Milestone 0' golden yenilemesiyle gecer (K1), oncesinde degil.
 - **Tarayici surekli yuksek ama sicramayan seviyeyi YAKALAMAZ** (TUPRS 2000-2003 > 10.000 TL
   satirlari "level_jump" degil). Bu satirlar pencere disinda; pencereyi geri cekme.
 - **`TradingEnv(missing_data_mode=...)`**: `'legacy'` (varsayilan, egitilmis modeller) eksik
@@ -460,9 +463,16 @@ borsapy/yf     → gold_fetcher.py       ─┘
     degerler esit mi). Sabit `'train_window'` YAZMA.
   - Bedeli: eski ortamda TL fiyatlari egitim olceginin cok ustunde -> test fiyat degerlerinin
     %74,7'si +-10'da kirpik, %98,9'u egitim destegi disinda (Faz 9 §9.5). `price_in_support`
-    protokol maddesi bunu makine tarafindan uygular: B7/K18 kapansa da eski ortam kaydi ACIK
-    kalir (K18 eski ortamin olcegini degistirmiyor; destek ici olcek karari K25).
+    protokol maddesi bunu makine tarafindan uygular: `price_norm='stats'` kolunun kaydi ACIK kalir.
     Olcum `evaluation/observation_health.py`; rota manifest/kayit/`_metrics.json`'a yazar.
+  - **K25 (b) nedensel kol:** `TradingEnv(price_norm='causal', price_context=<onceki satirlar>)`
+    — fiyat cinsinden ozellikler (O/H/L/C ve MACD) sembolun <= t son 252 kapanisinin olcegiyle;
+    rota `TrainingRequest.price_norm='causal'` ile test env'ine egitim + dogrulamayi baglam verir.
+    Baglam env'in ilk tarihinden once bitmeli (yoksa ValueError). Etiket `'causal'` temizdir;
+    egitim ve degerlendirme farkli tanimla kurulursa `'mixed_norm'` (acik). Varsayilan 'stats'.
+  - **Gozlem sagligi kapilari (K18):** `obs_health` (kapili bloklarda kirpma <= %1, sabit boyut
+    yok; egitim + degerlendirme) ve `features_in_support` (fiyat DISI her ozellik <= %1 destek
+    disi, ozellik basina). tanh doygunlugu (`sat_frac`) raporlanir, kapi degildir.
   - Sarmalayicilarda (`create_env`, `create_env_with_weights`, HPO `create_env`) `price_stats`
     ZORUNLU anahtar; egitim cagrisi `price_stats=None`'i acikca yazar.
   - AST bekcisi held-out adli df (`test_df`, `splits.test`, `data['test']`, `df.loc[test_mask]`)
@@ -476,8 +486,11 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - Olcum betigi: `scripts/analysis/measure_price_scale.py`; JSON'lar
     `docs/development/measurements/phase9-b9/` (panel SHA-256 + commit iceriyor).
   - Testte CPU'ya zorlamak icin `CUDA_VISIBLE_DEVICES=-1`: Windows'ta bos dize degiskeni SILER.
-- **ADX tum panelde 0** (sabit sutun) — Faz 10 K18, bu kapida duzeltilmedi;
-  `test_data_integrity.py` bunu bilinen acik olarak sabitler.
+- **ADX (K18):** `stock_data_with_indicators.csv`'deki ADX legacy hesabin sabit 0'idir (indeks
+  hizalama hatasi; eski modeller boyle egitildi). Rota ADX'i `with_adx(df, 'wilder')` ile
+  yeniden hesaplar ve meta'ya `indicator_spec` yazar. CSV'yi yeniden URETME: eski modeller ve
+  canli karar ayni dosyayi okuyor. Canli karar (`build_live_state`) hala legacy ADX ve 50/50
+  fiyat olcegiyle durum kuruyor — meta'daki `indicator_spec`/`price_norm`'u okumasi K13 isi.
 
 ### Akademik gecerlilik ve literatur (ONEMLI) → `docs/thesis/CLAUDE.md`
 Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir). Kodda da gecerli olan cekirdek:
@@ -494,9 +507,9 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
-  - **Bu kapidan SONRAKI RL sonuclari da on sonuctur** (B7 / K18 kapanana kadar; eski ortamda
-    `price_in_support` acik kaldikca SONRA da). B9 kapandi (§9.5) ama metrige etkisi
-    tanimlanamadi; eski ortamda fiyat ozellikleri destek disi; HPO gostergesiz (Y21, R1).
+  - **RL sonuclari on sonuctur**: 'stats' kolunda `price_in_support`/`features_in_support` acik;
+    'causal' kolu protokolde temiz cikabilir ama tek bolme, dogrulamasiz secim ve gostergesiz
+    HPO (R1, Y21) protokole girmeyen aciklar. Kol karsilastirmasi Milestone 0'da (>= 10 tohum).
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
     `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).

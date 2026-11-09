@@ -142,8 +142,10 @@ def activity_mask(df: pd.DataFrame) -> pd.DataFrame:
 INDICATOR_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence')
 # B7: bfill ile doldurulan isinma sutunlari. turbulence DISARIDA: Mahalanobis'in ilk
 # 252 tarihi nedensel bir 0 yer tutucudur, bfill degil (hakem-2 B7 #1 — sayilinca 2018
-# baslangicli panelde her sembolden ~1 yil atiliyordu). adx DISARIDA: sabit (K18).
-BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci')
+# baslangicli panelde her sembolden ~1 yil atiliyordu). adx ICERIDE (K18): 'wilder' ADX'in
+# ilk 2n-1 satiri NaN ('bfill' modunda geriye doldurulur); legacy ADX tum panelde sabit 0
+# (ya da tumuyle NaN) oldugu icin dedektor onu zaten atlar (nunique <= 1, notna yok).
+BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx')
 WARMUP_MIN_LEN = 2          # kapi, protokol ve rapor ayni esigi kullanir (hakem-2 B7 #4)
 WARMUP_WARN_ROWS = 30       # sembol basina bundan fazla atim beklenmez -> uyari
 LARGE_MOVE = 0.20   # rapor esigi (artefakt DEGIL): BIST fiyat limitini asan kapanis hareketi
@@ -156,7 +158,7 @@ def indicator_warmup_blocks(df: pd.DataFrame, min_len: int = WARMUP_MIN_LEN,
     `technical_indicators.py` varsayilan ('bfill') modda isinma boslugunu bfill ile
     dolduruyor (Faz 10 Y15): ilk gecerli (GELECEKTEKI) deger geriye yayiliyor. Ornek:
     ODAS CCI 2013-05-21..2013-06-17 sabit. B7 (Faz 9 §9.7) RL kapisinda bu blogu atar
-    (`prepare_rl_panel(drop_indicator_warmup=True)`). Tum panelde sabit sutunlar (ADX)
+    (`prepare_rl_panel(drop_indicator_warmup=True)`). Tum panelde sabit sutunlar (legacy ADX)
     ve turbulence'in nedensel 0 basi sayilmaz (BFILL_WARMUP_COLS).
     Donus: {sembol: {sutun: blok_uzunlugu}}.
     """
@@ -300,7 +302,8 @@ def prepare_rl_panel(
                 warmup_dropped[sym] = int(m.sum())
                 drop |= m
         # 'nan' modunda uretilmis panel: isinma satirlari NaN (bfill imzasi yok).
-        # Tumuyle NaN sutun (ADX, K18) haric, isinma sutununda NaN olan satir atilir.
+        # Tumuyle NaN sutun (legacy ADX, 'nan' modu) haric, isinma sutununda NaN olan satir
+        # atilir; 'wilder' ADX'in ilk 2n-1 NaN satiri da boylece atilir (K18).
         live = [c for c in BFILL_WARMUP_COLS if c in clean.columns and clean[c].notna().any()]
         if live:
             nan_rows = clean[live].isna().any(axis=1).to_numpy() & ~drop
