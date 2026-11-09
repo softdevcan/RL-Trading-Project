@@ -36,6 +36,10 @@ _settings = get_settings()
 # Setup logger
 logger = logging.getLogger(__name__)
 
+# Faz 9 / K18: RL egitiminin ADX surumu (data/technical_indicators.py ADX_MODES).
+# Gunluk karar (canli) hala legacy ADX ile gozlem kuruyor — K13 acik isi.
+RL_ADX_MODE = 'wilder'
+
 router = APIRouter(prefix="/trading", tags=["Trading"])
 
 # Training state — guarded by _training_lock (#23)
@@ -1175,11 +1179,30 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             df = add_indicators_to_multi_symbol_df(df)
             fetcher.save_data(df, 'stock_data_with_indicators.csv')
 
+        # Faz 9 / K18: CSV'deki ADX legacy hesabin sabit 0'idir (indeks hizalama
+        # hatasi). Yeni egitim ADX'i OHLCV'den 'wilder' ile yeniden hesaplar; CSV'ye
+        # YAZILMAZ (eski modeller ve canli karar ayni dosyayi okuyor). Isinmanin
+        # ilk 2n-1 NaN satiri asagidaki veri kapisinda atilir.
+        from data.technical_indicators import ADX_PERIOD, with_adx
+        df = with_adx(df, mode=RL_ADX_MODE)
+        indicator_spec = {'adx': RL_ADX_MODE, 'adx_period': ADX_PERIOD,
+                          'source': 'stock_data_with_indicators.csv',
+                          'warmup': 'bfill_csv_blocks_dropped_by_gate'}
+
         # Faz 10 / V + K17: RL penceresi 2013-06'dan baslar; pencerede fiyat
         # artefakti varsa egitim DURUR (DataIntegrityError), hayalet gunler ve
         # islem gormemis (bayat) hucreler atilir. Rapor meta dosyasina girer.
-        from data.integrity import prepare_rl_panel
+        from data.integrity import prepare_rl_panel, rl_context_before
         from evaluation.reproducibility import resolve_seed, snapshot_frame
+
+        # K25 (b): nedensel kolda egitim ortaminin kayan penceresi de ilk gunden dolu
+        # olsun (hakem-rl K18 #2) — pencere ONCESI son 252 seansin kapanisi baglam olur;
+        # gozleme girmez. Kapanisi etkileyen artefakt varsa durur.
+        train_context, train_context_report = None, None
+        if request.price_norm == 'causal':
+            from env.trading_env import CAUSAL_WINDOW
+            train_context, train_context_report = rl_context_before(
+                df, start=_settings.RL_DATA_START, n_sessions=CAUSAL_WINDOW)
 
         # B7: gosterge isinma blogu (bfill ile doldurulmus bas satirlar) atilir
         df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START,
@@ -1273,6 +1296,11 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 macro_df=macro_df,
                 # Faz 10 / V: eksik hucrede komsu sembol kopyalanmaz
                 missing_data_mode='own_last',
+                price_stats=None,
+                # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
+                price_norm=request.price_norm,
+                price_norm_macd=request.price_norm_macd,
+                price_context=train_context,
             )
 
         # Create one instance to get dimensions
@@ -1489,6 +1517,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'data_integrity': integrity_report,
                    'train_range': _range(train_df), 'val_range': _range(val_df),
                    'test_range': _range(test_df), 'missing_data_mode': 'own_last',
+                   'indicator_spec': indicator_spec,
+                   'price_norm': temp_env.get_price_norm(),
+                   'price_norm_train_context': train_context_report,
                    # 'protocol' test ortami kurulunca eklenir (olcek oradan olculur)
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
@@ -1521,6 +1552,11 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "price_stats": temp_env.get_price_stats(),
             # olcegi yedege dusen semboller (std tabani / 50-50; hakem-2 B9 #12)
             "price_stats_fallbacks": dict(temp_env.price_stats_fallbacks),
+            # K18 + K25: gozlemin gosterge ve fiyat tanimi. Canli karar (K13) bunlari
+            # okumadan durum kurarsa egitimdekinden FARKLI bir gozlem uretir.
+            "indicator_spec": indicator_spec,
+            "price_norm": temp_env.get_price_norm(),
+            "price_norm_train_context": train_context_report,
             "hyperparams_source": hyperparams_source.get('source'),
             "run_id": rl_manifest.run_id,
         })
@@ -1534,6 +1570,15 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # test fiyat ozelliklerinin buyuk kismi +-10'da kirpilir (Faz 9 §9.5;
         # K18 olcekten bagimsiz ozellik seti).
         train_price_stats = temp_env.get_price_stats()
+        # K25 (b): nedensel kolda test fiyat z'si yalniz <= t kapanislariyla; kayan
+        # pencerenin basi testten ONCEKI satirlarla (baglam + egitim + dogrulama) dolar.
+        # Olcek (price_stats) bu kolda gozleme girmez; meta ve protokol icin tasinir.
+        test_norm = {'price_norm': request.price_norm, 'price_norm_macd': request.price_norm_macd}
+        if request.price_norm == 'causal':
+            # pencere oncesi baglam + egitim + dogrulama: hepsi testten once (<= t). Kisa
+            # panelde egitim + dogrulama tek basina 252 seansi doldurmayabilir (hakem-2 K18 #3).
+            test_norm['price_context'] = pd.concat(
+                [f for f in (train_context, train_df, val_df) if f is not None and len(f)])
 
         def make_test_env():
             return make_env(
@@ -1547,6 +1592,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 macro_df=macro_df,
                 missing_data_mode='own_last',
                 price_stats=train_price_stats,
+                **test_norm,
             )
 
         # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
@@ -1588,6 +1634,28 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 f"destegi disinda (%{clip * 100:.0f}'i +-10'da kirpik): model egitimde "
                 f"gormedigi girdilerle karar verdi. Bu kosumun test metrikleri tez "
                 f"sayisi degildir (deneme kaydinda acik: price_in_support; Faz 9 §9.5).")
+        if rl_protocol.get('obs_health') is False:
+            from evaluation.observation_health import obs_health_failures
+            training_state.setdefault("warnings", []).append(
+                f"Gozlem sagligi acik ({', '.join(obs_health_failures(observation_health))}): "
+                f"kirpilan oran %1'i asiyor, sabit bir gozlem boyutu var ya da bir ozellik "
+                f"%90'dan fazla doygun (eski ortamda tanh(turbulence/2); karar K26). Deneme "
+                f"kaydinda acik: obs_health (Faz 9 §9.9).")
+        if rl_protocol.get('features_in_support') is False:
+            from evaluation.observation_health import support_failures
+            training_state.setdefault("warnings", []).append(
+                f"Fiyat disi ozellik(ler) {', '.join(support_failures(observation_health))}: "
+                f"test degerlerinin %1'inden fazlasi egitimdeki [min, maks] araliginin disinda "
+                f"(eski olcekte MACD TL cinsinden; price_norm='causal' MACD'yi ayni nedensel "
+                f"olcekle kurar). Deneme kaydinda acik: features_in_support (Faz 9 §9.9).")
+        if rl_protocol.get('dims_in_support') is False:
+            from evaluation.observation_health import dims_failures
+            worst = {f: max(v.items(), key=lambda kv: kv[1]) for f, v in
+                     dims_failures(observation_health).items()}
+            training_state.setdefault("warnings", []).append(
+                "Sembol duzeyinde egitim araligi asimi (>%1): " + ", ".join(
+                    f"{f} {sym} %{r * 100:.1f}" for f, (sym, r) in sorted(worst.items()))
+                + ". Deneme kaydinda acik: dims_in_support (Faz 9 §9.9).")
 
         metrics = actual_env.get_metrics()
 
@@ -1644,6 +1712,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     'reward_type': reward_type, 'missing_data_mode': 'own_last',
                     'rl_data_start': _settings.RL_DATA_START,
                     'symbols': list(temp_env.symbols),
+                    # K18 + K25: farkli gozlem tanimi farkli yapilandirmadir
+                    'indicator_spec': indicator_spec,
+                    'price_norm': temp_env.get_price_norm(),
                 },
                 seed=seed,
                 data_sha256=data_snapshot['sha256'],

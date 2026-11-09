@@ -31,7 +31,8 @@ varsayilan olarak dislar). Maddeler:
   indicator_bfill=True — egitim ya da degerlendirme verisinde sembol basinda bfill
       imzali gosterge blogu kaldi (Y15 / B7), acik. OLCULUR (rl_eval_protocol);
       rota/HPO blogu veri kapisinda atiyor (prepare_rl_panel drop_indicator_warmup).
-  adx_constant=True    — ADX tum panelde 0 (K18), acik
+  adx_constant=True    — ADX egitim ya da degerlendirme verisinde sabit (legacy ADX = 0;
+      K18), acik. Rota K18'den beri ADX'i 'wilder' ile yeniden hesaplar.
   indicators_present=False — gozlemin gosterge sutunlari panelde yok, env sabit
       varsayilan goruyor (HPO ham OHLCV okuyor; Faz 9 §9.5 Y21), acik
   price_in_support=False — degerlendirme fiyat ozelliklerinin > %1'i egitim
@@ -41,6 +42,21 @@ varsayilan olarak dislar). Maddeler:
   hyperparams_clean=False/None — hiperparametreler, kayitlari acik ya da
       bulunamayan bir HPO calismasindan (hakem-2 B9 #8). Varsayilan
       hiperparametre ve HPO'nun kendi denemesi icin True.
+  obs_health=False/None — gozlem sagligi (K18): egitim ya da degerlendirme
+      penceresinde fiyat/hacim/gosterge bloklarindan birinde kirpilan oran > %1
+      ya da pencere boyunca sabit bir gozlem boyutu var. OLCULUR
+      (evaluation.observation_health.obs_health_ok). Bu maddeyi tasimayan
+      (K18 oncesi) kayit acik sayilir.
+  features_in_support=False/None — fiyat DISI bir piyasa ozelliginin (hacim,
+      gostergeler) degerlendirme degerlerinin > %1'i egitim destegi disinda (K18;
+      ozellik basina). Eski olcekte MACD TL cinsinden: test degerlerinin %28,7'si
+      destek disi (Faz 9 §9.9). OLCULUR.
+  dims_in_support=False/None — kapili bloklarin bir GOZLEM BOYUTUNDA (sembol x ozellik)
+      degerlendirme degerlerinin > %1'i egitim destegi disinda (hakem-2 K18 #1: havuzlu
+      oran tek sembolu gizler; gercek panelde SASA hacmi %23). OLCULUR.
+  price_stats_source='causal' de TEMIZDIR (K25 b): fiyat z'si yalniz <= t
+      kapanislariyla kayan pencereden; egitim ve degerlendirme ortami ayni
+      tanimla (mod + pencere) kurulmali, aksi 'mixed_norm' (acik).
 
 DSR'nin N'si (hakem-2 #2): Bailey & LdP'nin N'si YAPILAN TUM denemelerdir.
 Budanan (pruned) ve basarisiz denemeler de `status` ile kaydedilir ve N'ye
@@ -78,13 +94,22 @@ CLEAN_PROTOCOL = {
     'indicators_present': True,
     'price_in_support': True,
     'hyperparams_clean': True,
+    'obs_health': True,
+    'features_in_support': True,
+    'dims_in_support': True,
+}
+# Ayni maddenin ikinci temiz degeri (K25 b: nedensel fiyat olcegi).
+CLEAN_ALTERNATIVES = {
+    'price_stats_source': ('causal',),
 }
 
 
 def open_protocol_items(protocol: Optional[dict]) -> List[str]:
     """Protokolde temiz olmayan (ya da hic beyan edilmemis) maddeler."""
     protocol = protocol or {}
-    return [k for k, clean in CLEAN_PROTOCOL.items() if protocol.get(k, None) != clean]
+    return [k for k, clean in CLEAN_PROTOCOL.items()
+            if protocol.get(k, None) != clean
+            and protocol.get(k, None) not in CLEAN_ALTERNATIVES.get(k, ())]
 
 
 def price_stats_source(eval_env, train_env) -> Optional[str]:
@@ -105,11 +130,41 @@ def price_stats_source(eval_env, train_env) -> Optional[str]:
                               50-50; TradingEnv.price_stats_fallbacks)
     None                    : degerlendirme ortami yok (deneme ortam kurulmadan bitti)
 
+    K25 (b) — ortamlardan biri price_norm='causal' ise olcek kullanilmaz:
+    'causal'                : iki ortam da nedensel, ayni pencere ve MACD tanimi, egitim penceresi
+                              degerlendirmeden ONCE bitiyor (temiz; baglamin ilk tarihten
+                              once bittigini env kurulumda zorlar)
+    'mixed_norm'            : biri nedensel digeri olcekli ya da pencereler farkli
+    'causal_short_context'  : olcek pencerenin gercekte dolu olmadigi satirlarla kuruldu —
+                              degerlendirmede HERHANGI bir satir, egitimde seri basi
+                              (baglamin isaretledigi, yeni listelenmis) olmayan bir sembolde
+                              (hakem-2 K18 #3; baglamsiz kurulan ortam boyle cikar)
+    'causal_unverified'     : egitim ortami yok
+
     Gymnasium sarmalayicilari (Monitor) `unwrapped` ile acilir.
     """
     if eval_env is None:
         return None
     ev = getattr(eval_env, 'unwrapped', eval_env)
+    tr0 = getattr(train_env, 'unwrapped', train_env) if train_env is not None else None
+    ev_norm = getattr(ev, 'price_norm', 'stats')
+    tr_norm = getattr(tr0, 'price_norm', 'stats') if tr0 is not None else None
+    if 'causal' in (ev_norm, tr_norm):
+        if tr0 is None:
+            return 'causal_unverified'
+        if ev_norm != tr_norm or any(
+                getattr(ev, a, None) != getattr(tr0, a, None)
+                for a in ('price_norm_window', 'price_norm_macd')):
+            return 'mixed_norm'
+        if not (len(tr0.dates) and len(ev.dates) and tr0.dates[-1] < ev.dates[0]):
+            return 'overlapping_window'
+        ev_short = any(getattr(ev, 'price_norm_warmup_rows', {}).values())
+        tr_series = getattr(tr0, 'price_norm_series_start', set())
+        tr_short = any(k for s_, k in getattr(tr0, 'price_norm_warmup_rows', {}).items()
+                       if s_ not in tr_series)
+        if ev_short or tr_short:
+            return 'causal_short_context'
+        return 'causal'
     if getattr(ev, 'price_stats_source', 'own_window') != 'supplied':
         return 'own_window'
     if train_env is None:
@@ -149,8 +204,9 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
                      hyperparams_clean: Optional[bool] = True) -> dict:
     """RL degerlendirme kaydinin protokolu; rota ve HPO ayni hesabi kullanir.
 
-    Ortamdan OLCULENLER: price_stats_source (koken), adx_constant,
-    indicators_present, price_in_support (`health` verilmezse burada olculur) ve
+    Ortamdan OLCULENLER: price_stats_source (koken), adx_constant (egitim ya da
+    degerlendirme verisinde), indicators_present, price_in_support ve obs_health
+    (K18; ikisi de `health`'ten — verilmezse burada olculur) ve
     indicator_bfill (B7: egitim YA DA degerlendirme verisinde sembol basinda
     bfill imzali gosterge blogu kaldi mi; `indicator_bfill` verilirse beyan onu
     ezer). Cagiranin BEYANI: hyperparams_clean (rota HPO calismasinin kaydindan
@@ -159,25 +215,46 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
     """
     if eval_env is None:
         return {k: None for k in CLEAN_PROTOCOL}
-    from evaluation.observation_health import observation_health, price_in_support
+    from evaluation.observation_health import (
+        dims_in_support, features_in_support, obs_health_ok, observation_health,
+        price_in_support,
+    )
 
     base = getattr(eval_env, 'unwrapped', eval_env)
     if health is None and train_env is not None:
         health = observation_health(train_env, base)
     present = indicators_present(base)
-    cols = base.df.columns
-    adx_const = ('adx' not in cols) or bool(base.df['adx'].nunique(dropna=True) <= 1)
-    if indicator_bfill is None and present:
-        from data.integrity import BFILL_WARMUP_COLS, indicator_warmup_blocks
-        frames = [base.df] + ([getattr(train_env, 'unwrapped', train_env).df]
-                              if train_env is not None else [])
 
-        def contaminated(f):
+    def _adx_const(frame):
+        return ('adx' not in frame.columns) or bool(frame['adx'].nunique(dropna=True) <= 1)
+
+    # K18: ADX egitim YA DA degerlendirme verisinde sabitse acik (eskiden yalniz degerlendirme)
+    adx_const = _adx_const(base.df) or (
+        train_env is not None and _adx_const(getattr(train_env, 'unwrapped', train_env).df))
+    if indicator_bfill is None and present:
+        from data.integrity import BFILL_WARMUP_COLS, WARMUP_MAX_ROWS, indicator_warmup_blocks
+        train_df = getattr(train_env, 'unwrapped', train_env).df if train_env is not None else None
+        # K18: bfill blogu yalniz sembolun SERI BASINDA olusur ve en fazla WARMUP_MAX_ROWS
+        # satir surer. Egitim penceresinde en az o kadar satiri olan sembolun degerlendirme
+        # penceresi basi seri basi degildir; oradaki tekrar dogaldir (kapanis degismeyince
+        # RSI birebir ayni kalir: gercek panelde VAKBN, test penceresinin ilk iki gunu —
+        # B7 olcutu bunu bfill sayip her rota test kaydini acik yaziyordu). Egitimde daha
+        # kisa gecmisi olan sembolun blogu degerlendirmeye tasabilir: o sembol sayilir
+        # (hakem-rl K18 #3).
+        if train_df is not None:
+            counts = train_df.groupby(level='symbol').size()
+            with_history = set(counts.index[counts >= WARMUP_MAX_ROWS])
+        else:
+            with_history = set()
+        frames = [(base.df, with_history)] + ([(train_df, set())] if train_df is not None else [])
+
+        def contaminated(f, skip):
             # bfill imzali bas blok YA DA ('nan' modu) isinma sutununda NaN satir
             live = [c for c in BFILL_WARMUP_COLS if c in f.columns and f[c].notna().any()]
-            return bool(indicator_warmup_blocks(f)) or bool(live and f[live].isna().any().any())
+            blocks = {s for s in indicator_warmup_blocks(f) if s not in skip}
+            return bool(blocks) or bool(live and f[live].isna().any().any())
 
-        indicator_bfill = any(contaminated(f) for f in frames)
+        indicator_bfill = any(contaminated(f, skip) for f, skip in frames)
     return {
         'price_stats_source': price_stats_source(base, train_env),
         'indicator_bfill': indicator_bfill if present else None,
@@ -185,6 +262,9 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
         'indicators_present': present,
         'price_in_support': price_in_support(health),
         'hyperparams_clean': hyperparams_clean,
+        'obs_health': obs_health_ok(health),
+        'features_in_support': features_in_support(health),
+        'dims_in_support': dims_in_support(health),
     }
 
 

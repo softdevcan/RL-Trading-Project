@@ -1,0 +1,5450 @@
+{
+ "created_at": "2026-11-09T22:03:39",
+ "command": "python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json",
+ "git_commit": "69c3a66ab63f39935009a122fc27070e8cfc3fbf",
+ "git_dirty": false,
+ "csv_sha256": "5ca2fe3f7f3719eaccf3966659ab3d3a4b74e815811855226357310358ec2e63",
+ "csv_span": [
+  "2000-05-10",
+  "2026-07-27",
+  6742
+ ],
+ "env_kwargs": {
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "phase": 1,
+  "reward_type": "simple",
+  "missing_data_mode": "own_last"
+ },
+ "configs": {
+  "pre_k18": {
+   "cfg": {
+    "adx": null,
+    "price_norm": "stats"
+   },
+   "panel_sha256": "f099c5bf16e28524214758be682c85bc33234146155d6408a08bb3af76832615",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 10,
+    "PGSUS.IS": 17
+   },
+   "gate_rows_after": 98628,
+   "train_context": null,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": true,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "adx_constant",
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.18
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1546,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.9
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9973,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.531,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.2
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.5307,
+        "sat_frac": 0.5369,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.5472,
+        "sat_frac": 0.5524,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.5157,
+        "sat_frac": 0.5211,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.5303,
+        "sat_frac": 0.5358,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 1.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9286,
+       "volume": 0.0096,
+       "indicators": 0.0459
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9294,
+       "high": 0.9289,
+       "low": 0.9287,
+       "close": 0.9275,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": null,
+       "eval": null
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8623,
+         "ASELS.IS": 0.9636,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 0.9899,
+         "ENKAI.IS": 0.8765,
+         "EREGL.IS": 0.7632,
+         "FROTO.IS": 0.9858,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.1599,
+         "ISCTR.IS": 0.9919,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8077,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.996,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.9939,
+         "SAHOL.IS": 0.998,
+         "SASA.IS": 0.9737,
+         "SISE.IS": 0.9939,
+         "SKBNK.IS": 0.8138,
+         "TAVHL.IS": 0.9636,
+         "TCELL.IS": 0.9393,
+         "THYAO.IS": 0.998,
+         "TKFEN.IS": 0.9838,
+         "TOASO.IS": 0.9757,
+         "TSKB.IS": 0.913,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 0.9534,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "high": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8644,
+         "ASELS.IS": 0.9676,
+         "BIMAS.IS": 0.9858,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8765,
+         "EREGL.IS": 0.7794,
+         "FROTO.IS": 0.9939,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.1538,
+         "ISCTR.IS": 0.9939,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8239,
+         "MGROS.IS": 0.998,
+         "ODAS.IS": 0.998,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.998,
+         "SASA.IS": 0.9717,
+         "SISE.IS": 0.9899,
+         "SKBNK.IS": 0.7753,
+         "TAVHL.IS": 0.9757,
+         "TCELL.IS": 0.9413,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9798,
+         "TOASO.IS": 0.9717,
+         "TSKB.IS": 0.9089,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9555,
+         "YKBNK.IS": 0.996
+        }
+       },
+       "low": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8603,
+         "ASELS.IS": 0.9636,
+         "BIMAS.IS": 0.9939,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8745,
+         "EREGL.IS": 0.7753,
+         "FROTO.IS": 0.9899,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.168,
+         "ISCTR.IS": 0.9919,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8097,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.996,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.9939,
+         "SASA.IS": 0.9798,
+         "SISE.IS": 0.9838,
+         "SKBNK.IS": 0.7854,
+         "TAVHL.IS": 0.9777,
+         "TCELL.IS": 0.9291,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9879,
+         "TOASO.IS": 0.9737,
+         "TSKB.IS": 0.9109,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9555,
+         "YKBNK.IS": 0.9939
+        }
+       },
+       "close": {
+        "max": 1.0,
+        "max_symbol": "MGROS.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.998,
+         "ARCLK.IS": 0.8623,
+         "ASELS.IS": 0.9656,
+         "BIMAS.IS": 0.9798,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8745,
+         "EREGL.IS": 0.7571,
+         "FROTO.IS": 0.9919,
+         "GARAN.IS": 0.998,
+         "HALKB.IS": 0.1559,
+         "ISCTR.IS": 0.9939,
+         "KCHOL.IS": 0.996,
+         "KRDMD.IS": 0.8097,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.998,
+         "PETKM.IS": 0.9919,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.996,
+         "SASA.IS": 0.9838,
+         "SISE.IS": 0.9919,
+         "SKBNK.IS": 0.7571,
+         "TAVHL.IS": 0.9818,
+         "TCELL.IS": 0.9393,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9899,
+         "TOASO.IS": 0.9777,
+         "TSKB.IS": 0.9049,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9534,
+         "YKBNK.IS": 0.9939
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.indicators.constant",
+       "train.turbulence.saturated",
+       "eval.price.clip",
+       "eval.indicators.constant",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": null
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": true,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "adx_constant",
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.18
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1546,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.9
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9973,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.747,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.2
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.747,
+        "sat_frac": 0.749,
+        "constant_dims_frac": 0.6333
+       },
+       "high": {
+        "clip_frac": 0.7524,
+        "sat_frac": 0.755,
+        "constant_dims_frac": 0.6333
+       },
+       "low": {
+        "clip_frac": 0.7418,
+        "sat_frac": 0.7442,
+        "constant_dims_frac": 0.6333
+       },
+       "close": {
+        "clip_frac": 0.7469,
+        "sat_frac": 0.7491,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 1.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9888,
+       "volume": 0.0087,
+       "indicators": 0.0576
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9893,
+       "high": 0.9872,
+       "low": 0.9897,
+       "close": 0.9891,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": null,
+       "eval": null
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9291,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "high": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.8704,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.7449,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "low": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9433,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "close": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9231,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.indicators.constant",
+       "train.turbulence.saturated",
+       "eval.price.clip",
+       "eval.price.constant",
+       "eval.indicators.constant",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": null
+    }
+   }
+  },
+  "k18_b9": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "stats"
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": null,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.531,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.5307,
+        "sat_frac": 0.5369,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.5472,
+        "sat_frac": 0.5524,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.5157,
+        "sat_frac": 0.5211,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.5303,
+        "sat_frac": 0.5358,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9286,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9294,
+       "high": 0.9289,
+       "low": 0.9287,
+       "close": 0.9275,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": null,
+       "eval": null
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8623,
+         "ASELS.IS": 0.9636,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 0.9899,
+         "ENKAI.IS": 0.8765,
+         "EREGL.IS": 0.7632,
+         "FROTO.IS": 0.9858,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.1599,
+         "ISCTR.IS": 0.9919,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8077,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.996,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.9939,
+         "SAHOL.IS": 0.998,
+         "SASA.IS": 0.9737,
+         "SISE.IS": 0.9939,
+         "SKBNK.IS": 0.8138,
+         "TAVHL.IS": 0.9636,
+         "TCELL.IS": 0.9393,
+         "THYAO.IS": 0.998,
+         "TKFEN.IS": 0.9838,
+         "TOASO.IS": 0.9757,
+         "TSKB.IS": 0.913,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 0.9534,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "high": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8644,
+         "ASELS.IS": 0.9676,
+         "BIMAS.IS": 0.9858,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8765,
+         "EREGL.IS": 0.7794,
+         "FROTO.IS": 0.9939,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.1538,
+         "ISCTR.IS": 0.9939,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8239,
+         "MGROS.IS": 0.998,
+         "ODAS.IS": 0.998,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.998,
+         "SASA.IS": 0.9717,
+         "SISE.IS": 0.9899,
+         "SKBNK.IS": 0.7753,
+         "TAVHL.IS": 0.9757,
+         "TCELL.IS": 0.9413,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9798,
+         "TOASO.IS": 0.9717,
+         "TSKB.IS": 0.9089,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9555,
+         "YKBNK.IS": 0.996
+        }
+       },
+       "low": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 0.8603,
+         "ASELS.IS": 0.9636,
+         "BIMAS.IS": 0.9939,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8745,
+         "EREGL.IS": 0.7753,
+         "FROTO.IS": 0.9899,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.168,
+         "ISCTR.IS": 0.9919,
+         "KCHOL.IS": 0.9939,
+         "KRDMD.IS": 0.8097,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.996,
+         "PETKM.IS": 0.9899,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.9939,
+         "SASA.IS": 0.9798,
+         "SISE.IS": 0.9838,
+         "SKBNK.IS": 0.7854,
+         "TAVHL.IS": 0.9777,
+         "TCELL.IS": 0.9291,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9879,
+         "TOASO.IS": 0.9737,
+         "TSKB.IS": 0.9109,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9555,
+         "YKBNK.IS": 0.9939
+        }
+       },
+       "close": {
+        "max": 1.0,
+        "max_symbol": "MGROS.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.998,
+         "ARCLK.IS": 0.8623,
+         "ASELS.IS": 0.9656,
+         "BIMAS.IS": 0.9798,
+         "EKGYO.IS": 0.9919,
+         "ENKAI.IS": 0.8745,
+         "EREGL.IS": 0.7571,
+         "FROTO.IS": 0.9919,
+         "GARAN.IS": 0.998,
+         "HALKB.IS": 0.1559,
+         "ISCTR.IS": 0.9939,
+         "KCHOL.IS": 0.996,
+         "KRDMD.IS": 0.8097,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 0.998,
+         "PETKM.IS": 0.9919,
+         "PGSUS.IS": 0.996,
+         "SAHOL.IS": 0.996,
+         "SASA.IS": 0.9838,
+         "SISE.IS": 0.9919,
+         "SKBNK.IS": 0.7571,
+         "TAVHL.IS": 0.9818,
+         "TCELL.IS": 0.9393,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 0.9899,
+         "TOASO.IS": 0.9777,
+         "TSKB.IS": 0.9049,
+         "TUPRS.IS": 0.996,
+         "VAKBN.IS": 0.9534,
+         "YKBNK.IS": 0.9939
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.price.clip",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx",
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": null
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "train_window",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.747,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.747,
+        "sat_frac": 0.749,
+        "constant_dims_frac": 0.6333
+       },
+       "high": {
+        "clip_frac": 0.7524,
+        "sat_frac": 0.755,
+        "constant_dims_frac": 0.6333
+       },
+       "low": {
+        "clip_frac": 0.7418,
+        "sat_frac": 0.7442,
+        "constant_dims_frac": 0.6333
+       },
+       "close": {
+        "clip_frac": 0.7469,
+        "sat_frac": 0.7491,
+        "constant_dims_frac": 0.6333
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.9888,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.9893,
+       "high": 0.9872,
+       "low": 0.9897,
+       "close": 0.9891,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": null,
+       "eval": null
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9291,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "high": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.8704,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.7449,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "low": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9433,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "close": {
+        "max": 1.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 30,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 1.0,
+         "ARCLK.IS": 1.0,
+         "ASELS.IS": 1.0,
+         "BIMAS.IS": 1.0,
+         "EKGYO.IS": 1.0,
+         "ENKAI.IS": 1.0,
+         "EREGL.IS": 1.0,
+         "FROTO.IS": 1.0,
+         "GARAN.IS": 1.0,
+         "HALKB.IS": 0.9231,
+         "ISCTR.IS": 1.0,
+         "KCHOL.IS": 1.0,
+         "KRDMD.IS": 1.0,
+         "MGROS.IS": 1.0,
+         "ODAS.IS": 1.0,
+         "PETKM.IS": 1.0,
+         "PGSUS.IS": 1.0,
+         "SAHOL.IS": 1.0,
+         "SASA.IS": 0.749,
+         "SISE.IS": 1.0,
+         "SKBNK.IS": 1.0,
+         "TAVHL.IS": 1.0,
+         "TCELL.IS": 1.0,
+         "THYAO.IS": 1.0,
+         "TKFEN.IS": 1.0,
+         "TOASO.IS": 1.0,
+         "TSKB.IS": 1.0,
+         "TUPRS.IS": 1.0,
+         "VAKBN.IS": 1.0,
+         "YKBNK.IS": 1.0
+        }
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.price.clip",
+       "eval.price.constant",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": null
+    }
+   }
+  },
+  "k18_causal_252": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 252
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": {
+    "n_sessions_requested": 252,
+    "lookback_dates": 504,
+    "n_ghost_days": 18,
+    "n_stale_cells_dropped": 12,
+    "n_close_safe_artifacts": 7,
+    "series_start_symbols": [
+     "ODAS.IS",
+     "PGSUS.IS"
+    ],
+    "short_context_symbols": [],
+    "start": "2012-05-22",
+    "end": "2013-05-31",
+    "rows_per_symbol_min": 1
+   },
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0071,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.007,
+       "high": 0.0061,
+       "low": 0.0076,
+       "close": 0.0077,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 492,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 242,
+         "PGSUS.IS": 250
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2244,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.058704453441295545,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 7,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "GARAN.IS": 0.0587,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0385,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0162
+        }
+       },
+       "high": {
+        "max": 0.06275303643724696,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0121,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0628,
+         "HALKB.IS": 0.0243,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0202,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0142
+        }
+       },
+       "low": {
+        "max": 0.05465587044534413,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0547,
+         "HALKB.IS": 0.0304,
+         "ISCTR.IS": 0.0223,
+         "MGROS.IS": 0.0283,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "close": {
+        "max": 0.0728744939271255,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0162,
+         "GARAN.IS": 0.0729,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0142,
+         "MGROS.IS": 0.0304,
+         "VAKBN.IS": 0.0263,
+         "YKBNK.IS": 0.0202
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx",
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2244
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0003,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0001,
+       "high": 0.0001,
+       "low": 0.0006,
+       "close": 0.0002,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 492,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 242,
+         "PGSUS.IS": 250
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2738,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "high": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "EKGYO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "low": {
+        "max": 0.006072874493927126,
+        "max_symbol": "FROTO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "close": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2738
+    }
+   }
+  },
+  "k18_causal_63": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 63
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": {
+    "n_sessions_requested": 252,
+    "lookback_dates": 504,
+    "n_ghost_days": 18,
+    "n_stale_cells_dropped": 12,
+    "n_close_safe_artifacts": 7,
+    "series_start_symbols": [
+     "ODAS.IS",
+     "PGSUS.IS"
+    ],
+    "short_context_symbols": [],
+    "start": "2012-05-22",
+    "end": "2013-05-31",
+    "rows_per_symbol_min": 1
+   },
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0005,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0008,
+       "high": 0.0006,
+       "low": 0.0003,
+       "close": 0.0002,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 114,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 53,
+         "PGSUS.IS": 61
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2244,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.010121457489878543,
+        "max_symbol": "KRDMD.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "KRDMD.IS": 0.0101
+        }
+       },
+       "high": {
+        "max": 0.010121457489878543,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "SKBNK.IS": 0.0101
+        }
+       },
+       "low": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ISCTR.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "close": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "EREGL.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx",
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2244
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0008,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0008,
+       "high": 0.0007,
+       "low": 0.0008,
+       "close": 0.0009,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 114,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 53,
+         "PGSUS.IS": 61
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2738,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.018218623481781375,
+        "max_symbol": "TKFEN.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "TKFEN.IS": 0.0182
+        }
+       },
+       "high": {
+        "max": 0.012145748987854251,
+        "max_symbol": "TKFEN.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "TKFEN.IS": 0.0121
+        }
+       },
+       "low": {
+        "max": 0.016194331983805668,
+        "max_symbol": "TKFEN.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "TKFEN.IS": 0.0162
+        }
+       },
+       "close": {
+        "max": 0.016194331983805668,
+        "max_symbol": "TKFEN.IS",
+        "n_over_eps": 1,
+        "n_dims": 30,
+        "over_eps": {
+         "TKFEN.IS": 0.0162
+        }
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2738
+    }
+   }
+  },
+  "k18_causal_expanding": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": null
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": {
+    "n_sessions_requested": 252,
+    "lookback_dates": 504,
+    "n_ghost_days": 18,
+    "n_stale_cells_dropped": 12,
+    "n_close_safe_artifacts": 7,
+    "series_start_symbols": [
+     "ODAS.IS",
+     "PGSUS.IS"
+    ],
+    "short_context_symbols": [],
+    "start": "2012-05-22",
+    "end": "2013-05-31",
+    "rows_per_symbol_min": 1
+   },
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0013,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0013,
+        "sat_frac": 0.0013,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0021,
+        "sat_frac": 0.0022,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0006,
+        "sat_frac": 0.0008,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0013,
+        "sat_frac": 0.0015,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.2284,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.2211,
+       "high": 0.2161,
+       "low": 0.2484,
+       "close": 0.2281,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {}
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2244,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.9777327935222672,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 22,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.9777,
+         "ASELS.IS": 0.0344,
+         "BIMAS.IS": 0.6134,
+         "EKGYO.IS": 0.5668,
+         "GARAN.IS": 0.5547,
+         "HALKB.IS": 0.4676,
+         "ISCTR.IS": 0.1356,
+         "KCHOL.IS": 0.1134,
+         "MGROS.IS": 0.4049,
+         "ODAS.IS": 0.0992,
+         "PETKM.IS": 0.0506,
+         "PGSUS.IS": 0.2389,
+         "SASA.IS": 0.0223,
+         "SKBNK.IS": 0.2551,
+         "TAVHL.IS": 0.2429,
+         "TCELL.IS": 0.3259,
+         "THYAO.IS": 0.1498,
+         "TKFEN.IS": 0.0304,
+         "TSKB.IS": 0.0202,
+         "TUPRS.IS": 0.5911,
+         "VAKBN.IS": 0.5243,
+         "YKBNK.IS": 0.2105
+        }
+       },
+       "high": {
+        "max": 0.97165991902834,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 22,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.9717,
+         "ASELS.IS": 0.0344,
+         "BIMAS.IS": 0.6073,
+         "EKGYO.IS": 0.5466,
+         "GARAN.IS": 0.4717,
+         "HALKB.IS": 0.4615,
+         "ISCTR.IS": 0.1194,
+         "KCHOL.IS": 0.1073,
+         "MGROS.IS": 0.3988,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.0223,
+         "PGSUS.IS": 0.251,
+         "SASA.IS": 0.0182,
+         "SKBNK.IS": 0.247,
+         "TAVHL.IS": 0.2389,
+         "TCELL.IS": 0.3016,
+         "THYAO.IS": 0.1802,
+         "TKFEN.IS": 0.0324,
+         "TSKB.IS": 0.0243,
+         "TUPRS.IS": 0.5486,
+         "VAKBN.IS": 0.5729,
+         "YKBNK.IS": 0.2146
+        }
+       },
+       "low": {
+        "max": 0.9757085020242915,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 22,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.9757,
+         "ASELS.IS": 0.0587,
+         "BIMAS.IS": 0.6134,
+         "EKGYO.IS": 0.6073,
+         "GARAN.IS": 0.6781,
+         "HALKB.IS": 0.4312,
+         "ISCTR.IS": 0.1437,
+         "KCHOL.IS": 0.3664,
+         "MGROS.IS": 0.4717,
+         "ODAS.IS": 0.1235,
+         "PETKM.IS": 0.0668,
+         "PGSUS.IS": 0.2652,
+         "SASA.IS": 0.0283,
+         "SKBNK.IS": 0.249,
+         "TAVHL.IS": 0.2389,
+         "TCELL.IS": 0.4879,
+         "THYAO.IS": 0.1781,
+         "TKFEN.IS": 0.0324,
+         "TSKB.IS": 0.0263,
+         "TUPRS.IS": 0.6498,
+         "VAKBN.IS": 0.5567,
+         "YKBNK.IS": 0.1964
+        }
+       },
+       "close": {
+        "max": 0.9655870445344129,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 22,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.9656,
+         "ASELS.IS": 0.0425,
+         "BIMAS.IS": 0.6498,
+         "EKGYO.IS": 0.5789,
+         "GARAN.IS": 0.4676,
+         "HALKB.IS": 0.4575,
+         "ISCTR.IS": 0.1316,
+         "KCHOL.IS": 0.2247,
+         "MGROS.IS": 0.4069,
+         "ODAS.IS": 0.1255,
+         "PETKM.IS": 0.0587,
+         "PGSUS.IS": 0.247,
+         "SASA.IS": 0.0283,
+         "SKBNK.IS": 0.2409,
+         "TAVHL.IS": 0.2571,
+         "TCELL.IS": 0.3765,
+         "THYAO.IS": 0.1822,
+         "TKFEN.IS": 0.0304,
+         "TSKB.IS": 0.0243,
+         "TUPRS.IS": 0.6032,
+         "VAKBN.IS": 0.5344,
+         "YKBNK.IS": 0.2065
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx",
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": 2244
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": false,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_in_support",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0865,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0843,
+       "high": 0.0771,
+       "low": 0.1015,
+       "close": 0.0831,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {}
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2738,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 1.0,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 9,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.2328,
+         "ASELS.IS": 0.2348,
+         "BIMAS.IS": 0.0749,
+         "EKGYO.IS": 0.3421,
+         "GARAN.IS": 0.0263,
+         "HALKB.IS": 1.0,
+         "SKBNK.IS": 0.1781,
+         "TKFEN.IS": 0.1518,
+         "VAKBN.IS": 0.2854
+        }
+       },
+       "high": {
+        "max": 1.0,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.1579,
+         "ASELS.IS": 0.1923,
+         "BIMAS.IS": 0.0749,
+         "EKGYO.IS": 0.2672,
+         "HALKB.IS": 1.0,
+         "SKBNK.IS": 0.1255,
+         "TKFEN.IS": 0.1397,
+         "VAKBN.IS": 0.3522
+        }
+       },
+       "low": {
+        "max": 1.0,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 10,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.249,
+         "ASELS.IS": 0.4028,
+         "BIMAS.IS": 0.0749,
+         "EKGYO.IS": 0.4575,
+         "GARAN.IS": 0.0729,
+         "HALKB.IS": 1.0,
+         "SKBNK.IS": 0.164,
+         "TCELL.IS": 0.0223,
+         "TKFEN.IS": 0.168,
+         "VAKBN.IS": 0.4332
+        }
+       },
+       "close": {
+        "max": 1.0,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 9,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.1842,
+         "ASELS.IS": 0.2409,
+         "BIMAS.IS": 0.0749,
+         "EKGYO.IS": 0.3664,
+         "HALKB.IS": 1.0,
+         "SKBNK.IS": 0.1275,
+         "TCELL.IS": 0.0182,
+         "TKFEN.IS": 0.1437,
+         "VAKBN.IS": 0.33
+        }
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "close",
+       "high",
+       "low",
+       "macd",
+       "open"
+      ]
+     },
+     "price_norm_context_rows_min": 2738
+    }
+   }
+  },
+  "k18_causal_252_macd": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 252,
+    "macd": true
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": {
+    "n_sessions_requested": 252,
+    "lookback_dates": 504,
+    "n_ghost_days": 18,
+    "n_stale_cells_dropped": 12,
+    "n_close_safe_artifacts": 7,
+    "series_start_symbols": [
+     "ODAS.IS",
+     "PGSUS.IS"
+    ],
+    "short_context_symbols": [],
+    "start": "2012-05-22",
+    "end": "2013-05-31",
+    "rows_per_symbol_min": 1
+   },
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0071,
+       "volume": 0.0096,
+       "indicators": 0.0042
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.007,
+       "high": 0.0061,
+       "low": 0.0076,
+       "close": 0.0077,
+       "volume": 0.0096,
+       "macd": 0.004,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 492,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 242,
+         "PGSUS.IS": 250
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2244,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.058704453441295545,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 7,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "GARAN.IS": 0.0587,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0385,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0162
+        }
+       },
+       "high": {
+        "max": 0.06275303643724696,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0121,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0628,
+         "HALKB.IS": 0.0243,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0202,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0142
+        }
+       },
+       "low": {
+        "max": 0.05465587044534413,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0547,
+         "HALKB.IS": 0.0304,
+         "ISCTR.IS": 0.0223,
+         "MGROS.IS": 0.0283,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "close": {
+        "max": 0.0728744939271255,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0162,
+         "GARAN.IS": 0.0729,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0142,
+         "MGROS.IS": 0.0304,
+         "VAKBN.IS": 0.0263,
+         "YKBNK.IS": 0.0202
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.02834008097165992,
+        "max_symbol": "VAKBN.IS",
+        "n_over_eps": 6,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0121,
+         "GARAN.IS": 0.0162,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0121,
+         "MGROS.IS": 0.0162,
+         "VAKBN.IS": 0.0283
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx"
+      ]
+     },
+     "price_norm_context_rows_min": 2244
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": true,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "obs_health",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0003,
+       "volume": 0.0087,
+       "indicators": 0.0007
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0001,
+       "high": 0.0001,
+       "low": 0.0006,
+       "close": 0.0002,
+       "volume": 0.0087,
+       "macd": 0.0027,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 492,
+        "rows_neutral": 28,
+        "rows_total": 68974,
+        "context_rows_min": 1,
+        "series_start_symbols": [
+         "ODAS.IS",
+         "PGSUS.IS"
+        ],
+        "by_symbol_window_not_full": {
+         "ODAS.IS": 242,
+         "PGSUS.IS": 250
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2738,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "high": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "EKGYO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "low": {
+        "max": 0.006072874493927126,
+        "max_symbol": "FROTO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "close": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.03441295546558704,
+        "max_symbol": "FROTO.IS",
+        "n_over_eps": 3,
+        "n_dims": 30,
+        "over_eps": {
+         "FROTO.IS": 0.0344,
+         "SASA.IS": 0.0142,
+         "TUPRS.IS": 0.0182
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": []
+     },
+     "price_norm_context_rows_min": 2738
+    }
+   }
+  },
+  "k18_causal_252_no_train_ctx": {
+   "cfg": {
+    "adx": "wilder",
+    "price_norm": "causal",
+    "window": 252,
+    "train_ctx": false
+   },
+   "panel_sha256": "9439764f07559faeac6eb48254ca749ee8509d919543a7e9b9e267ad8ab81d1e",
+   "panel": [
+    "2013-06-03",
+    "2026-07-27",
+    3291
+   ],
+   "train": [
+    "2013-06-03",
+    "2022-08-11",
+    2303
+   ],
+   "val": [
+    "2022-08-12",
+    "2024-08-05",
+    494
+   ],
+   "test": [
+    "2024-08-06",
+    "2026-07-27",
+    494
+   ],
+   "n_symbols": 30,
+   "gate_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "gate_rows_after": 98614,
+   "train_context": null,
+   "splits": {
+    "val": {
+     "protocol": {
+      "price_stats_source": "causal_short_context",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_stats_source",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {},
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7418,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0096,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0071,
+       "volume": 0.0096,
+       "indicators": 0.0485
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.007,
+       "high": 0.0061,
+       "low": 0.0076,
+       "close": 0.0077,
+       "volume": 0.0096,
+       "macd": 0.2254,
+       "rsi": 0.0038,
+       "cci": 0.0005,
+       "adx": 0.0129,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 7530,
+        "rows_neutral": 570,
+        "rows_total": 68974,
+        "context_rows_min": 0,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {
+         "AKBNK.IS": 251,
+         "ARCLK.IS": 251,
+         "ASELS.IS": 251,
+         "BIMAS.IS": 251,
+         "EKGYO.IS": 251,
+         "ENKAI.IS": 251,
+         "EREGL.IS": 251,
+         "FROTO.IS": 251,
+         "GARAN.IS": 251,
+         "HALKB.IS": 251,
+         "ISCTR.IS": 251,
+         "KCHOL.IS": 251,
+         "KRDMD.IS": 251,
+         "MGROS.IS": 251,
+         "ODAS.IS": 251,
+         "PETKM.IS": 251,
+         "PGSUS.IS": 251,
+         "SAHOL.IS": 251,
+         "SASA.IS": 251,
+         "SISE.IS": 251,
+         "SKBNK.IS": 251,
+         "TAVHL.IS": 251,
+         "TCELL.IS": 251,
+         "THYAO.IS": 251,
+         "TKFEN.IS": 251,
+         "TOASO.IS": 251,
+         "TSKB.IS": 251,
+         "TUPRS.IS": 251,
+         "VAKBN.IS": 251,
+         "YKBNK.IS": 251
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2244,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.058704453441295545,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 7,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "GARAN.IS": 0.0587,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0385,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0162
+        }
+       },
+       "high": {
+        "max": 0.06275303643724696,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0121,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0628,
+         "HALKB.IS": 0.0243,
+         "ISCTR.IS": 0.0101,
+         "MGROS.IS": 0.0202,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0142
+        }
+       },
+       "low": {
+        "max": 0.05465587044534413,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0121,
+         "GARAN.IS": 0.0547,
+         "HALKB.IS": 0.0304,
+         "ISCTR.IS": 0.0223,
+         "MGROS.IS": 0.0283,
+         "VAKBN.IS": 0.0283,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "close": {
+        "max": 0.0728744939271255,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0243,
+         "EKGYO.IS": 0.0162,
+         "GARAN.IS": 0.0729,
+         "HALKB.IS": 0.0263,
+         "ISCTR.IS": 0.0142,
+         "MGROS.IS": 0.0304,
+         "VAKBN.IS": 0.0263,
+         "YKBNK.IS": 0.0202
+        }
+       },
+       "volume": {
+        "max": 0.10121457489878542,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0182,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.083,
+         "ISCTR.IS": 0.0101,
+         "TCELL.IS": 0.0142
+        }
+       },
+       "macd": {
+        "max": 0.6983805668016194,
+        "max_symbol": "GARAN.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.585,
+         "ASELS.IS": 0.0911,
+         "EKGYO.IS": 0.6457,
+         "ENKAI.IS": 0.1012,
+         "EREGL.IS": 0.0101,
+         "FROTO.IS": 0.164,
+         "GARAN.IS": 0.6984,
+         "HALKB.IS": 0.1194,
+         "ISCTR.IS": 0.6538,
+         "KRDMD.IS": 0.081,
+         "ODAS.IS": 0.5304,
+         "PETKM.IS": 0.3684,
+         "SAHOL.IS": 0.0769,
+         "SASA.IS": 0.5992,
+         "SISE.IS": 0.2449,
+         "SKBNK.IS": 0.3381,
+         "TCELL.IS": 0.0607,
+         "TSKB.IS": 0.3947,
+         "VAKBN.IS": 0.3603,
+         "YKBNK.IS": 0.6397
+        }
+       },
+       "rsi": {
+        "max": 0.02834008097165992,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 5,
+        "n_dims": 30,
+        "over_eps": {
+         "HALKB.IS": 0.0162,
+         "MGROS.IS": 0.0243,
+         "SKBNK.IS": 0.0283,
+         "TAVHL.IS": 0.0121,
+         "VAKBN.IS": 0.0202
+        }
+       },
+       "cci": {
+        "max": 0.004048582995951417,
+        "max_symbol": "ARCLK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.10526315789473684,
+        "max_symbol": "SKBNK.IS",
+        "n_over_eps": 8,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.0283,
+         "KCHOL.IS": 0.0587,
+         "MGROS.IS": 0.0648,
+         "SASA.IS": 0.0668,
+         "SKBNK.IS": 0.1053,
+         "TOASO.IS": 0.0101,
+         "VAKBN.IS": 0.0162,
+         "YKBNK.IS": 0.0223
+        }
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "adx",
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2244
+    },
+    "test": {
+     "protocol": {
+      "price_stats_source": "causal_short_context",
+      "indicator_bfill": false,
+      "adx_constant": false,
+      "indicators_present": true,
+      "price_in_support": true,
+      "hyperparams_clean": true,
+      "obs_health": false,
+      "features_in_support": false,
+      "dims_in_support": false
+     },
+     "open_items": [
+      "price_stats_source",
+      "obs_health",
+      "features_in_support",
+      "dims_in_support"
+     ],
+     "b7_old_rule_eval_blocks": {
+      "VAKBN.IS": {
+       "rsi": 2
+      }
+     },
+     "health": {
+      "train": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "train_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.1545,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0141,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.9971,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval": {
+       "price": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "indicators": {
+        "clip_frac": 0.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_features": {
+       "open": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "high": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "low": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "close": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "volume": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "macd": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.7501,
+        "constant_dims_frac": 0.0
+       },
+       "rsi": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "cci": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0104,
+        "constant_dims_frac": 0.0
+       },
+       "adx": {
+        "clip_frac": 0.0,
+        "sat_frac": 0.0,
+        "constant_dims_frac": 0.0
+       },
+       "turbulence": {
+        "clip_frac": 0.0,
+        "sat_frac": 1.0,
+        "constant_dims_frac": 0.0
+       }
+      },
+      "eval_out_of_train_support": {
+       "price": 0.0003,
+       "volume": 0.0087,
+       "indicators": 0.0577
+      },
+      "eval_out_of_train_support_features": {
+       "open": 0.0001,
+       "high": 0.0001,
+       "low": 0.0006,
+       "close": 0.0002,
+       "volume": 0.0087,
+       "macd": 0.2874,
+       "rsi": 0.0003,
+       "cci": 0.0003,
+       "adx": 0.0003,
+       "turbulence": 0.0
+      },
+      "price_norm_warmup": {
+       "train": {
+        "rows_window_not_full": 7530,
+        "rows_neutral": 570,
+        "rows_total": 68974,
+        "context_rows_min": 0,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {
+         "AKBNK.IS": 251,
+         "ARCLK.IS": 251,
+         "ASELS.IS": 251,
+         "BIMAS.IS": 251,
+         "EKGYO.IS": 251,
+         "ENKAI.IS": 251,
+         "EREGL.IS": 251,
+         "FROTO.IS": 251,
+         "GARAN.IS": 251,
+         "HALKB.IS": 251,
+         "ISCTR.IS": 251,
+         "KCHOL.IS": 251,
+         "KRDMD.IS": 251,
+         "MGROS.IS": 251,
+         "ODAS.IS": 251,
+         "PETKM.IS": 251,
+         "PGSUS.IS": 251,
+         "SAHOL.IS": 251,
+         "SASA.IS": 251,
+         "SISE.IS": 251,
+         "SKBNK.IS": 251,
+         "TAVHL.IS": 251,
+         "TCELL.IS": 251,
+         "THYAO.IS": 251,
+         "TKFEN.IS": 251,
+         "TOASO.IS": 251,
+         "TSKB.IS": 251,
+         "TUPRS.IS": 251,
+         "VAKBN.IS": 251,
+         "YKBNK.IS": 251
+        }
+       },
+       "eval": {
+        "rows_window_not_full": 0,
+        "rows_neutral": 0,
+        "rows_total": 14820,
+        "context_rows_min": 2738,
+        "series_start_symbols": [],
+        "by_symbol_window_not_full": {}
+       }
+      },
+      "eval_out_of_train_support_dims": {
+       "open": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "high": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "EKGYO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "low": {
+        "max": 0.006072874493927126,
+        "max_symbol": "FROTO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "close": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "volume": {
+        "max": 0.23279352226720648,
+        "max_symbol": "SASA.IS",
+        "n_over_eps": 2,
+        "n_dims": 30,
+        "over_eps": {
+         "EREGL.IS": 0.0101,
+         "SASA.IS": 0.2328
+        }
+       },
+       "macd": {
+        "max": 0.8319838056680162,
+        "max_symbol": "YKBNK.IS",
+        "n_over_eps": 20,
+        "n_dims": 30,
+        "over_eps": {
+         "AKBNK.IS": 0.8239,
+         "ASELS.IS": 0.1883,
+         "EKGYO.IS": 0.7287,
+         "ENKAI.IS": 0.1235,
+         "EREGL.IS": 0.0283,
+         "FROTO.IS": 0.4717,
+         "GARAN.IS": 0.8279,
+         "HALKB.IS": 0.3522,
+         "ISCTR.IS": 0.7976,
+         "KRDMD.IS": 0.1134,
+         "ODAS.IS": 0.1073,
+         "PETKM.IS": 0.2247,
+         "SAHOL.IS": 0.4312,
+         "SASA.IS": 0.6194,
+         "SISE.IS": 0.3522,
+         "SKBNK.IS": 0.3603,
+         "TCELL.IS": 0.2915,
+         "TSKB.IS": 0.3623,
+         "VAKBN.IS": 0.587,
+         "YKBNK.IS": 0.832
+        }
+       },
+       "rsi": {
+        "max": 0.006072874493927126,
+        "max_symbol": "HALKB.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "cci": {
+        "max": 0.0020242914979757085,
+        "max_symbol": "ENKAI.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "adx": {
+        "max": 0.004048582995951417,
+        "max_symbol": "TOASO.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       },
+       "turbulence": {
+        "max": 0.0,
+        "max_symbol": "AKBNK.IS",
+        "n_over_eps": 0,
+        "n_dims": 30,
+        "over_eps": {}
+       }
+      },
+      "obs_health_failures": [
+       "train.turbulence.saturated",
+       "eval.turbulence.saturated"
+      ],
+      "support_failures": [
+       "macd"
+      ]
+     },
+     "price_norm_context_rows_min": 2738
+    }
+   }
+  }
+ },
+ "adx_profile_legacy": {
+  "n": 98628,
+  "n_nan": 0,
+  "min": 0.0,
+  "max": 0.0,
+  "mean": 0.0,
+  "quantiles": {
+   "0.01": 0.0,
+   "0.05": 0.0,
+   "0.25": 0.0,
+   "0.5": 0.0,
+   "0.75": 0.0,
+   "0.95": 0.0,
+   "0.99": 0.0
+  },
+  "frac_gt_25": 0.0,
+  "per_symbol_nunique_min": 1,
+  "per_symbol_mean_range": [
+   0.0,
+   0.0
+  ]
+ },
+ "adx_profile_wilder": {
+  "n": 98614,
+  "n_nan": 0,
+  "min": 6.6320702747008955,
+  "max": 84.96309060935862,
+  "mean": 26.323976203564655,
+  "quantiles": {
+   "0.01": 10.217,
+   "0.05": 12.665,
+   "0.25": 18.1,
+   "0.5": 24.009,
+   "0.75": 32.278,
+   "0.95": 47.851,
+   "0.99": 59.99
+  },
+  "frac_gt_25": 0.4628,
+  "per_symbol_nunique_min": 3231,
+  "per_symbol_mean_range": [
+   23.52,
+   28.06
+  ]
+ },
+ "turbulence_scaling": {
+  "n_symbols": 30,
+  "turbulence_quantiles_train": {
+   "0.01": 8.94,
+   "0.1": 16.05,
+   "0.5": 31.99,
+   "0.9": 69.91,
+   "0.99": 149.46
+  },
+  "tanh(t/2) [mevcut]": {
+   "sat_train": 0.9983,
+   "sat_test": 1.0,
+   "oos_test": 0.0,
+   "std_train": 0.0185
+  },
+  "tanh(t/n), n=30": {
+   "sat_train": 0.0669,
+   "sat_test": 0.0324,
+   "oos_test": 0.0,
+   "std_train": 0.1854
+  },
+  "tanh(log1p(t)/5)": {
+   "sat_train": 0.0,
+   "sat_test": 0.0,
+   "oos_test": 0.0,
+   "std_train": 0.0711
+  }
+ }
+}

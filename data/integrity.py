@@ -142,9 +142,15 @@ def activity_mask(df: pd.DataFrame) -> pd.DataFrame:
 INDICATOR_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turbulence')
 # B7: bfill ile doldurulan isinma sutunlari. turbulence DISARIDA: Mahalanobis'in ilk
 # 252 tarihi nedensel bir 0 yer tutucudur, bfill degil (hakem-2 B7 #1 — sayilinca 2018
-# baslangicli panelde her sembolden ~1 yil atiliyordu). adx DISARIDA: sabit (K18).
-BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci')
+# baslangicli panelde her sembolden ~1 yil atiliyordu). adx ICERIDE (K18): 'wilder' ADX'in
+# ilk 2n-1 satiri NaN ('bfill' modunda geriye doldurulur); legacy ADX tum panelde sabit 0
+# (ya da tumuyle NaN) oldugu icin dedektor onu zaten atlar (nunique <= 1, notna yok).
+BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx')
 WARMUP_MIN_LEN = 2          # kapi, protokol ve rapor ayni esigi kullanir (hakem-2 B7 #4)
+# Bir gosterge isinma blogunun en fazla uzunlugu: 'wilder' ADX'in 2n-1 = 27 NaN satiri +
+# geriye doldurulan ilk gecerli deger (n = 14). CCI 20, RSI daha kisa. Protokol, egitimde
+# bu kadar satiri olan sembolun degerlendirme basini seri basi saymaz (K18).
+WARMUP_MAX_ROWS = 28
 WARMUP_WARN_ROWS = 30       # sembol basina bundan fazla atim beklenmez -> uyari
 LARGE_MOVE = 0.20   # rapor esigi (artefakt DEGIL): BIST fiyat limitini asan kapanis hareketi
 
@@ -156,7 +162,7 @@ def indicator_warmup_blocks(df: pd.DataFrame, min_len: int = WARMUP_MIN_LEN,
     `technical_indicators.py` varsayilan ('bfill') modda isinma boslugunu bfill ile
     dolduruyor (Faz 10 Y15): ilk gecerli (GELECEKTEKI) deger geriye yayiliyor. Ornek:
     ODAS CCI 2013-05-21..2013-06-17 sabit. B7 (Faz 9 §9.7) RL kapisinda bu blogu atar
-    (`prepare_rl_panel(drop_indicator_warmup=True)`). Tum panelde sabit sutunlar (ADX)
+    (`prepare_rl_panel(drop_indicator_warmup=True)`). Tum panelde sabit sutunlar (legacy ADX)
     ve turbulence'in nedensel 0 basi sayilmaz (BFILL_WARMUP_COLS).
     Donus: {sembol: {sutun: blok_uzunlugu}}.
     """
@@ -213,6 +219,94 @@ def health_report(df: pd.DataFrame, ghost_threshold: float = 0.9) -> dict:
         'indicator_warmup_blocks': indicator_warmup_blocks(df),
         'n_large_moves': int(len(large_moves(df))),
     }
+
+
+# Kapanisi etkilemeyen artefakt nedeni: baglam yalniz 'close' kullanir (K25 b).
+_CLOSE_SAFE_ARTIFACTS = frozenset({'ohlc_inconsistent'})
+
+
+def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions: int = 252,
+                      ghost_threshold: float = 0.9, lookback_factor: int = 2
+                      ) -> Tuple[pd.DataFrame, dict]:
+    """RL penceresinden ONCEKI baglam: sembol basina son `n_sessions` GECERLI satir (K25 b).
+
+    Nedensel fiyat olceginin EGITIM ortamina baglami: kayan pencere egitimin ilk
+    gunlerinde de dolu olsun, test ortamiyla ayni tanimi gorsun (hakem-rl K18 #2).
+    Yalniz 'close' kullanilir ve gozleme girmez.
+
+    Sira (hakem-2 K18 #8): pencereden onceki son `lookback_factor * n_sessions` panel
+    tarihi -> hayalet gun ve bayat hucre atimi -> sembol basina son n_sessions satir.
+    Boylece atim baglami kisaltmaz. Bu kadar satiri olmayan sembol:
+      * ilk satiri bakis araliginin icindeyse SERI BASI (yeni listelenmis; isinma kacinilmaz)
+        -> `attrs['series_start_symbols']`
+      * degilse kisa baglam (uzun islem durmasi) -> rapor `short_context_symbols`
+    Artefakt taramasi baglam + pencerenin ILK tarihi uzerinde (sinir gecisi de taranir);
+    kapanisi etkileyen artefakt DataIntegrityError, 'ohlc_inconsistent' kalir ama sayilir.
+    """
+    start = start or RL_DATA_START
+    t0 = pd.Timestamp(start)
+    dates = pd.to_datetime(df.index.get_level_values('date'))
+    if getattr(dates, 'tz', None) is not None:
+        dates = dates.tz_localize(None)
+    uniq = np.unique(dates[dates < t0])
+    look = uniq[-lookback_factor * n_sessions:] if len(uniq) else uniq
+    report = {'n_sessions_requested': int(n_sessions), 'lookback_dates': int(len(look)),
+              'n_ghost_days': 0, 'n_stale_cells_dropped': 0, 'n_close_safe_artifacts': 0,
+              'series_start_symbols': [], 'short_context_symbols': [], 'start': None, 'end': None}
+    sub = df[np.isin(dates, look)]
+    first_ever = _long(df).groupby('symbol', sort=False)['date'].min()
+    if sub.empty:
+        # pencere oncesi hic veri yok: her sembolun serisi pencerede basliyor (hakem-2 K18 N1)
+        report['series_start_symbols'] = [str(x) for x in first_ever.index]
+        sub.attrs['series_start_symbols'] = list(report['series_start_symbols'])
+        return sub, report
+    ghosts = find_ghost_days(sub, ghost_threshold)
+    sdates = pd.to_datetime(sub.index.get_level_values('date'))
+    if getattr(sdates, 'tz', None) is not None:
+        sdates = sdates.tz_localize(None)
+    sub = sub[~sdates.isin(ghosts)]
+    stale = find_stale_cells(sub)
+    if len(stale):
+        key = pd.MultiIndex.from_frame(stale[['symbol', 'date']])
+        idx = sub.index
+        cdates = pd.to_datetime(idx.get_level_values('date'))
+        if getattr(cdates, 'tz', None) is not None:
+            cdates = cdates.tz_localize(None)
+        sub = sub[~pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates]).isin(key)]
+    # sembol basina son n_sessions satir (+1: taramada ilk satirin onculu de olsun)
+    parts, scan_parts = [], []
+    for sym, g in sub.groupby(level='symbol', sort=False):
+        g = g.sort_index(level='date')
+        parts.append(g.iloc[-n_sessions:])
+        scan_parts.append(g.iloc[-(n_sessions + 1):])
+        if len(g) < n_sessions:
+            fe = pd.Timestamp(first_ever.get(sym))
+            fe = fe.tz_localize(None) if fe.tzinfo is not None else fe
+            key_ = 'series_start_symbols' if fe >= pd.Timestamp(look[0]) else 'short_context_symbols'
+            report[key_].append(sym)
+    # baglamda HIC satiri olmayan, serisi bakis araligindan sonra baslayan sembol de seri
+    # basidir (pencere icinde listelenmis; hakem-2 K18 N1)
+    seen = set(sub.index.get_level_values('symbol'))
+    for sym, fe in first_ever.items():
+        if sym not in seen and pd.Timestamp(fe) >= pd.Timestamp(look[0]):
+            report['series_start_symbols'].append(sym)
+    ctx = pd.concat(parts)
+    after = np.unique(dates[dates >= t0])
+    head = df[dates == after[0]] if len(after) else df.iloc[:0]   # pencerenin ilk tarihi
+    art = scan_price_artifacts(pd.concat(scan_parts + [head]))
+    bad = art[~art['reason'].isin(_CLOSE_SAFE_ARTIFACTS)] if len(art) else art
+    if len(bad):
+        raise DataIntegrityError(
+            f"RL baglaminda ya da baglam-pencere sinirinda kapanisi etkileyen {len(bad)} "
+            f"artefakt: {bad.groupby(['reason', 'symbol']).size().head(10).to_dict()}")
+    cd = pd.to_datetime(ctx.index.get_level_values('date'))
+    report.update(n_ghost_days=int(len(ghosts)), n_stale_cells_dropped=int(len(stale)),
+                  n_close_safe_artifacts=int(len(art)),
+                  rows_per_symbol_min=int(ctx.groupby(level='symbol').size().min()),
+                  start=str(cd.min().date()), end=str(cd.max().date()))
+    ctx = ctx.copy()
+    ctx.attrs['series_start_symbols'] = list(report['series_start_symbols'])
+    return ctx, report
 
 
 def prepare_rl_panel(
@@ -300,7 +394,8 @@ def prepare_rl_panel(
                 warmup_dropped[sym] = int(m.sum())
                 drop |= m
         # 'nan' modunda uretilmis panel: isinma satirlari NaN (bfill imzasi yok).
-        # Tumuyle NaN sutun (ADX, K18) haric, isinma sutununda NaN olan satir atilir.
+        # Tumuyle NaN sutun (legacy ADX, 'nan' modu) haric, isinma sutununda NaN olan satir
+        # atilir; 'wilder' ADX'in ilk 2n-1 NaN satiri da boylece atilir (K18).
         live = [c for c in BFILL_WARMUP_COLS if c in clean.columns and clean[c].notna().any()]
         if live:
             nan_rows = clean[live].isna().any(axis=1).to_numpy() & ~drop

@@ -27,6 +27,19 @@ _IX_HIGH = _OBS_COLUMNS.index('high')
 _IX_LOW = _OBS_COLUMNS.index('low')
 _IX_CLOSE = _OBS_COLUMNS.index('close')
 
+# Faz 9 / K25 (b): fiyat z-skorunun tanimi.
+#   'stats'  : (varsayilan, eski) sembol basina sabit ortalama/std — ortamin kendi
+#              penceresinden ya da verilen `price_stats` (B9).
+#   'causal' : t gunundeki z, sembolun t'ye kadarki (dahil) SON `price_norm_window`
+#              kapanisinin ortalama/std'si ile (None = genisleyen pencere). Yalniz
+#              <= t veri; held-out ortamda pencere `price_context` (degerlendirme
+#              penceresinden ONCEKI satirlar) ile doldurulur. MACD de fiyat cinsinden
+#              (TL) cinsindendir; price_norm_macd=True ile ayni olcege alinir (opt-in, K26).
+PRICE_NORM_MODES = ('stats', 'causal')
+# Tasarim varsayimlari (literatur dayanagi yok; Faz 9 §9.9): ~1 islem yili ve ~1 ay.
+CAUSAL_WINDOW = 252
+CAUSAL_MIN_PERIODS = 20
+
 
 class TradingEnv(gym.Env):
     """
@@ -80,6 +93,20 @@ class TradingEnv(gym.Env):
         #          eksik/bozuksa ValueError — kendi penceresine ya da 50/50'ye
         #          sessizce dusmek ileriye bakisi geri getirirdi.
         price_stats: Optional[Dict[str, Dict[str, float]]] = None,
+        # Faz 9 / K25 (b): 'stats' (varsayilan, eski) | 'causal' — bkz. PRICE_NORM_MODES.
+        #   price_norm_window: kayan pencere uzunlugu (sembolun kendi satirlari);
+        #       None = genisleyen pencere. En az CAUSAL_MIN_PERIODS gozlem yoksa ya da
+        #       std ~0 ise o gunun fiyat z'leri 0 (notr).
+        #   price_context: yalnizca 'causal'. Bu ortamin ILK tarihinden ONCEKI satirlar
+        #       (MultiIndex symbol, date; 'close'). Held-out ortamda pencerenin basini
+        #       doldurur; bu tarihe esit ya da sonraki satir ValueError (ileriye bakis).
+        #   price_norm_macd: yalnizca 'causal'. False (varsayilan): MACD eski tanimda
+        #       (tanh(macd/0.1)) — K25 karari yalniz FIYAT olcegi. True: MACD de nedensel
+        #       olcekle tanh(macd/std_t) (opt-in; karar K26, hakem-2 K18 #2).
+        price_norm: str = 'stats',
+        price_norm_window: Optional[int] = CAUSAL_WINDOW,
+        price_context: Optional[pd.DataFrame] = None,
+        price_norm_macd: bool = False,
     ):
         """
         Args:
@@ -117,6 +144,31 @@ class TradingEnv(gym.Env):
         if missing_data_mode not in ('legacy', 'own_last'):
             raise ValueError(f"missing_data_mode 'legacy' ya da 'own_last' olmali: {missing_data_mode}")
         self.missing_data_mode = missing_data_mode
+
+        if price_norm not in PRICE_NORM_MODES:
+            raise ValueError(f"price_norm {PRICE_NORM_MODES} icinden olmali: {price_norm}")
+        if price_norm == 'causal':
+            if price_norm_window is not None and (
+                    not isinstance(price_norm_window, (int, np.integer))
+                    or price_norm_window < CAUSAL_MIN_PERIODS):
+                raise ValueError(f"price_norm_window None ya da >= {CAUSAL_MIN_PERIODS} "
+                                 f"tamsayi olmali: {price_norm_window}")
+        elif price_context is not None:
+            raise ValueError("price_context yalnizca price_norm='causal' ile anlamli")
+        self.price_norm = price_norm
+        self.price_norm_window = (int(price_norm_window) if price_norm == 'causal'
+                                  and price_norm_window is not None else None)
+        self.price_norm_min_periods = CAUSAL_MIN_PERIODS if price_norm == 'causal' else None
+        self.price_norm_macd = bool(price_norm_macd) if price_norm == 'causal' else None
+        # sembol -> baglamdan gelen satir sayisi; pencere dolmadan (< W gozlem) ve notr
+        # (< min_periods ya da std ~0) kalan KENDI satir sayisi (yalnizca 'causal';
+        # hakem-rl K18 #2: gercekte kullanilan pencere kayda girer)
+        self.price_norm_context_rows: Dict[str, int] = {}
+        self.price_norm_warmup_rows: Dict[str, int] = {}
+        self.price_norm_neutral_rows: Dict[str, int] = {}
+        # baglamin isaretledigi seri basi semboller (rl_context_before): bunlarda pencere
+        # dolmadan gecen satirlar kacinilmaz isinmadir (protokol istisnasi; hakem-2 K18 #3)
+        self.price_norm_series_start: set = set()
 
         # Faz 2 data
         self.fundamental_df = fundamental_df
@@ -217,6 +269,9 @@ class TradingEnv(gym.Env):
         # Gözlem vektörünü değiştirmez; yalnız aynı değerleri O(1) okur.
         self._dates_list = list(self.dates)
         self._build_lookup_cache()
+        self._causal_stats: Optional[Dict[str, np.ndarray]] = None
+        if self.price_norm == 'causal':
+            self._causal_stats = self._build_causal_stats(price_context)
 
         logger.info(f"TradingEnv initialized (Phase {phase}, Reward: {reward_type.upper()}):")
         logger.info(f"  Stocks: {self.n_stocks} ({', '.join(self.symbols)})")
@@ -224,6 +279,10 @@ class TradingEnv(gym.Env):
         logger.info(f"  State dimension: {state_dim}")
         logger.info(f"  Action dimension: {self.n_stocks}")
         logger.info(f"  Price stats: {self.price_stats_source}")
+        if self.price_norm == 'causal':
+            logger.info(f"  Price norm: causal (window={self.price_norm_window}, "
+                        f"min_periods={self.price_norm_min_periods}, baglam satiri min "
+                        f"{min(self.price_norm_context_rows.values(), default=0)})")
         if self.use_predictions:
             logger.info(f"  Prediction features: ✓ (+{self.n_stocks * self.prediction_features_per_stock} features)")
         if phase == 2:
@@ -255,6 +314,73 @@ class TradingEnv(gym.Env):
             except Exception:
                 self.price_stats[symbol] = {'mean': 50.0, 'std': 50.0}
                 self.price_stats_fallbacks[symbol] = 'default_50_50'
+
+    def _build_causal_stats(self, context: Optional[pd.DataFrame]) -> Dict[str, np.ndarray]:
+        """K25 (b): sembolun her SATIRI icin <= o satir kapanislarinin ortalama/std'si.
+
+        Dizi sembolun lookup cache satirlariyla hizalidir (ayni i). Baglam satirlari
+        bu ortamin ilk tarihinden ONCE olmali; pencerenin basini doldurur, kendileri
+        gozleme girmez. Lookup cache zorunlu (.loc yolu bu hizalamayi tasimaz).
+        """
+        if self._lookup_cache is None:
+            raise ValueError("price_norm='causal' lookup cache ister (zorunlu OHLCV sutunlari, "
+                             "sembol basina sirali tarih); .loc yolu desteklenmiyor")
+        ctx_close: Dict[str, np.ndarray] = {}
+        if context is not None:
+            if not isinstance(context.index, pd.MultiIndex) or 'close' not in context.columns:
+                raise ValueError("price_context MultiIndex (symbol, date) ve 'close' tasimali")
+            cdates = context.index.get_level_values('date')
+            if len(cdates) and (cdates >= self.dates[0]).any():
+                raise ValueError(
+                    f"price_context bu ortamin ilk tarihinden ({self.dates[0]}) ONCE bitmeli; "
+                    f"son baglam tarihi {cdates.max()} — esit/sonraki satir ileriye bakistir")
+            ctx_syms = set(context.index.get_level_values('symbol'))
+            self.price_norm_series_start = set(context.attrs.get('series_start_symbols', []))
+            for symbol in self.symbols:
+                if symbol in ctx_syms:
+                    sub = context.xs(symbol, level='symbol').sort_index()
+                    ctx_close[symbol] = sub['close'].to_numpy(dtype=np.float64)
+        out: Dict[str, np.ndarray] = {}
+        for symbol in self.symbols:
+            ctx = ctx_close.get(symbol, np.empty(0))
+            own = self._lookup_cache['values'][symbol][:, _IX_CLOSE]
+            s = pd.Series(np.concatenate([ctx, own]))
+            win = (s.rolling(self.price_norm_window, min_periods=CAUSAL_MIN_PERIODS)
+                   if self.price_norm_window is not None
+                   else s.expanding(min_periods=CAUSAL_MIN_PERIODS))
+            mean = win.mean().to_numpy()[len(ctx):]
+            std = win.std().to_numpy()[len(ctx):]
+            out[symbol] = np.column_stack([mean, std])
+            self.price_norm_context_rows[symbol] = int(len(ctx))
+            if self.price_norm_window is not None:
+                n_avail = s.notna().cumsum().to_numpy()[len(ctx):]
+                self.price_norm_warmup_rows[symbol] = int(np.sum(n_avail < self.price_norm_window))
+            else:
+                self.price_norm_warmup_rows[symbol] = 0
+            self.price_norm_neutral_rows[symbol] = int(np.sum(
+                ~(np.isfinite(mean) & np.isfinite(std) & (std > 1e-8))))
+        return out
+
+    def _causal_scale(self, symbol: str, current_date) -> Optional[Tuple[float, float]]:
+        """Nedensel (ortalama, std); gozlemdeki satirla AYNI satirin istatistigi.
+
+        Satir o gune aitse o gunun, own_last'ta eksik gunde sembolun son satirinin
+        istatistigi kullanilir. Tanimsizsa (az gozlem, std ~0) None -> notr 0.
+        """
+        cache = self._lookup_cache
+        i = cache['positions'][symbol].get(current_date)
+        if i is None:
+            i = int(np.searchsorted(cache['dates'][symbol], np.datetime64(current_date),
+                                    side='right')) - 1
+        mean, std = self._causal_stats[symbol][i]
+        if not (np.isfinite(mean) and np.isfinite(std) and std > 1e-8):
+            return None
+        return float(mean), float(std)
+
+    def get_price_norm(self) -> Dict[str, Optional[object]]:
+        """Fiyat z tanimi (model meta dosyasina ve manifeste yazilir; K25)."""
+        return {'mode': self.price_norm, 'window': self.price_norm_window,
+                'min_periods': self.price_norm_min_periods, 'macd': self.price_norm_macd}
 
     def get_price_stats(self) -> Dict[str, Dict[str, float]]:
         """Return price normalization stats (save these for inference).
@@ -758,17 +884,36 @@ class TradingEnv(gym.Env):
                         volume_val = 0.0
                 volume_norm = np.log(volume_val / 1e6 + 1) / 3 if volume_val > 0 else 0.0
 
-                # Dynamic z-score normalization using per-symbol price stats (#2)
-                stats = self.price_stats.get(symbol, {'mean': 50.0, 'std': 50.0})
-                p_mean, p_std = stats['mean'], stats['std']
+                if self.price_norm == 'causal':
+                    # K25 (b): O/H/L/C nedensel olcekle z = (p - ort_t) / std_t, yalniz <= t.
+                    # MACD (iki fiyat EMA'sinin farki, TL) price_norm_macd=True ise ayni
+                    # olcekle tanh(macd / std_t); varsayilan eski tanim (K26 karari).
+                    scale = self._causal_scale(symbol, current_date)
+                    if scale is None:
+                        price_z = [0.0, 0.0, 0.0, 0.0]
+                    else:
+                        c_mean, c_std = scale
+                        price_z = [(float(p) - c_mean) / c_std for p in
+                                   (open_price, high_price, low_price, close_price)]
+                    if not self.price_norm_macd:
+                        macd_feat = np.tanh(macd / 0.1)
+                    else:
+                        macd_feat = 0.0 if scale is None else np.tanh(macd / scale[1])
+                else:
+                    # Dynamic z-score normalization using per-symbol price stats (#2)
+                    stats = self.price_stats.get(symbol, {'mean': 50.0, 'std': 50.0})
+                    p_mean, p_std = stats['mean'], stats['std']
+                    price_z = [
+                        (float(open_price) - p_mean) / p_std,
+                        (float(high_price) - p_mean) / p_std,
+                        (float(low_price) - p_mean) / p_std,
+                        (float(close_price) - p_mean) / p_std,
+                    ]
+                    macd_feat = np.tanh(macd / 0.1)
 
-                stock_features = [
-                    (float(open_price) - p_mean) / p_std,
-                    (float(high_price) - p_mean) / p_std,
-                    (float(low_price) - p_mean) / p_std,
-                    (float(close_price) - p_mean) / p_std,
+                stock_features = price_z + [
                     volume_norm,
-                    np.tanh(macd / 0.1),
+                    macd_feat,
                     (rsi - 50) / 50,
                     np.tanh(cci / 100),
                     (adx - 25) / 25,

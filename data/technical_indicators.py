@@ -15,6 +15,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Faz 9 / K18 (Faz 10 §6): ADX hesabinin surumu.
+#   'legacy' : eski hesap (varsayilan; davranis dondurma). Tarih indeksli bir df'te
+#              +DM/-DM RangeIndex'li, ATR tarih indeksli seri olarak kuruluyordu;
+#              bolmede indeks hizalamasi DI'lari TUMUYLE NaN yapiyor, dx = 0 cikiyor,
+#              RangeIndex'li sonuc df'e atanirken yine TUMUYLE NaN oluyordu. 'bfill'
+#              modunda fillna(0) bunu sabit 0'a ceviriyordu: mevcut RL modelleri ve
+#              tahmin hatti ADX = 0 ile egitildi.
+#   'wilder' : duzeltilmis hesap — indeks hizali, klasik Wilder yumusatmasi (SMA
+#              tohumu + A_t = A_{t-1} + (x_t - A_{t-1})/n), isinma NaN: ilk 2n-1 satir
+#              (n=14 -> 27). Yeni RL egitimi bunu
+#              kullanir (rota `with_adx`); tahmin hatti Milestone 0' golden yenilemesine kadar
+#              legacy kalir (K1).
+ADX_MODES = ('legacy', 'wilder')
+ADX_PERIOD = 14
+
 
 class TechnicalIndicators:
     """Ansari et al. teknik indikatörleri"""
@@ -86,17 +101,24 @@ class TechnicalIndicators:
         return cci
 
     @staticmethod
-    def calculate_adx(df: pd.DataFrame, period=14) -> pd.Series:
+    def calculate_adx(df: pd.DataFrame, period=14, mode: str = 'legacy') -> pd.Series:
         """
         ADX (Average Directional Index)
 
         Args:
             df: DataFrame with 'high', 'low', 'close' columns
             period: ADX period (default 14)
+            mode: 'legacy' (varsayilan, eski hesap) | 'wilder' (K18) — bkz. ADX_MODES
 
         Returns:
             ADX values
         """
+        if mode not in ADX_MODES:
+            raise ValueError(f"adx mode {ADX_MODES} icinden olmali: {mode}")
+        if mode == 'wilder':
+            return TechnicalIndicators._adx_wilder(df, period)
+
+        # --- legacy: DEGISTIRME (davranis dondurma; bkz. ADX_MODES) ---
         # True Range
         high_low = df['high'] - df['low']
         high_close = np.abs(df['high'] - df['close'].shift())
@@ -126,6 +148,55 @@ class TechnicalIndicators:
         return adx
 
     @staticmethod
+    def _adx_wilder(df: pd.DataFrame, period: int = ADX_PERIOD) -> pd.Series:
+        """Duzeltilmis ADX (K18): tum seriler df'in indeksini tasir.
+
+        Ilk satirda onceki kapanis yok: TR ve +DM/-DM NaN. Yumusatma klasik Wilder
+        (SMA tohumu, sonra alpha = 1/n ozyineleme): ATR ve DI satir n'den, ADX satir
+        2n-1'den itibaren tanimli; oncesi NaN (nedensel isinma —
+        'bfill' modunda bu NaN geriye doldurulur, RL kapisi blogu atar).
+        Tanimsiz bolmeler: ATR = 0 -> DI = 0; DI+ + DI- = 0 -> DX = 0 (yon hareketi yok).
+        Deger araligi [0, 100].
+        """
+        high = df['high'].astype(float)
+        low = df['low'].astype(float)
+        close = df['close'].astype(float)
+        prev_close = close.shift()
+
+        tr = pd.concat([high - low, (high - prev_close).abs(), (low - prev_close).abs()],
+                       axis=1).max(axis=1, skipna=False)
+        up = high.diff()
+        down = -low.diff()
+        undefined = up.isna() | down.isna()
+        plus_dm = up.where((up > down) & (up > 0), 0.0).mask(undefined)
+        minus_dm = down.where((down > up) & (down > 0), 0.0).mask(undefined)
+
+        def rma(x):
+            # Wilder (1978) yumusatmasi: ilk deger ilk n gecerli degerin ORTALAMASI (SMA
+            # tohumu), sonrasi A_t = A_{t-1} + (x_t - A_{t-1}) / n. Ilk degerle tohumlanan
+            # EMA ilk ~100 satirda klasik tanimdan ayrisiyordu (hakem-2 K18 #6).
+            valid = np.flatnonzero(x.notna().to_numpy())
+            out = pd.Series(np.nan, index=x.index)
+            if len(valid) < period:
+                return out
+            seed_pos = valid[0] + period - 1
+            seeded = x.copy()
+            seeded.iloc[:seed_pos] = np.nan
+            seeded.iloc[seed_pos] = x.iloc[valid[0]:seed_pos + 1].mean()
+            return seeded.ewm(alpha=1.0 / period, adjust=False).mean()
+
+        atr = rma(tr)
+
+        def di(dm):
+            # atr NaN -> NaN (isinma); atr == 0 -> 0; aksi halde 100 * dm / atr
+            return (100.0 * rma(dm) / atr.where(atr > 0)).mask(atr == 0, 0.0)
+
+        plus_di, minus_di = di(plus_dm), di(minus_dm)
+        den = plus_di + minus_di
+        dx = (100.0 * (plus_di - minus_di).abs() / den.where(den > 0)).mask(den == 0, 0.0)
+        return rma(dx)
+
+    @staticmethod
     def calculate_turbulence(df: pd.DataFrame, window=252) -> pd.Series:
         """
         Turbulence Index — symbol-level fallback (rolling volatility).
@@ -143,7 +214,8 @@ class TechnicalIndicators:
         volatility = returns.rolling(window=window, min_periods=20).std()
         return (volatility * 100).fillna(0)
 
-    def add_all_indicators(self, df: pd.DataFrame, warmup: str = 'bfill') -> pd.DataFrame:
+    def add_all_indicators(self, df: pd.DataFrame, warmup: str = 'bfill',
+                           adx: str = 'legacy') -> pd.DataFrame:
         """
         Tüm teknik indikatörleri DataFrame'e ekle
 
@@ -155,8 +227,10 @@ class TechnicalIndicators:
                 'nan': yalnizca ffill (nedensel); RSI/CCI isinma satirlari NaN kalir. Kesme
                     degismezligi (B0) bu modda gecer; RL veri kapisi bu satirlari atar.
                     Not: MACD ewm(adjust=False) ilk satirdan deger uretir (NaN isinmasi yok);
-                    sembol duzeyi turbulence 0 ile baslar (nedensel yer tutucu); ADX bu
-                    modda TUMUYLE NaN cikar — "ADX = 0"in koku (K18).
+                    sembol duzeyi turbulence 0 ile baslar (nedensel yer tutucu); legacy ADX
+                    bu modda TUMUYLE NaN cikar — "ADX = 0"in koku (K18).
+            adx: Faz 9 / K18 — 'legacy' (varsayilan, eski hesap; ADX = 0) | 'wilder'
+                (duzeltilmis; ilk 2n-1 satir NaN isinma). Bkz. ADX_MODES.
 
         Returns:
             DataFrame with technical indicators
@@ -170,7 +244,7 @@ class TechnicalIndicators:
         df['macd_hist'] = macd_hist
         df['rsi'] = self.calculate_rsi(df)
         df['cci'] = self.calculate_cci(df)
-        df['adx'] = self.calculate_adx(df)
+        df['adx'] = self.calculate_adx(df, mode=adx)
         df['turbulence'] = self.calculate_turbulence(df)
 
         # NaN değerleri forward fill
@@ -230,13 +304,39 @@ def _calculate_mahalanobis_turbulence(df: pd.DataFrame, window: int = 252) -> pd
     return turbulence_values.fillna(0)
 
 
-def add_indicators_to_multi_symbol_df(df: pd.DataFrame, warmup: str = 'bfill') -> pd.DataFrame:
+def with_adx(df: pd.DataFrame, mode: str = 'wilder', period: int = ADX_PERIOD) -> pd.DataFrame:
+    """Cok sembollu panelin 'adx' sutununu OHLCV'den yeniden hesapla (K18).
+
+    Diger sutunlara dokunulmaz (bit-es). Egitim rotasi on hesaplanmis
+    `stock_data_with_indicators.csv`'yi (legacy ADX = 0) okuyup bunu cagirir; CSV'yi
+    yeniden uretmek eski modellerin canli girdisini degistirirdi. Satir ve sembol
+    sirasi korunur; isinma satirlari NaN kalir (RL kapisi atar).
+    Yalnizca 'wilder': legacy ADX'in panel karsiligi zaten CSV'deki sabit 0'dir.
+    """
+    if mode != 'wilder':
+        raise ValueError(f"with_adx yalnizca 'wilder' kabul eder: {mode}")
+    out = df.copy()
+    sym_level = out.index.get_level_values('symbol')
+    adx = np.full(len(out), np.nan)
+    for symbol in pd.unique(sym_level):
+        pos = np.flatnonzero(sym_level == symbol)
+        sub = out.iloc[pos].droplevel('symbol')
+        order = np.argsort(sub.index.values, kind='stable')
+        vals = TechnicalIndicators.calculate_adx(sub.iloc[order], period=period, mode=mode)
+        adx[pos[order]] = vals.to_numpy(dtype=float)
+    out['adx'] = adx
+    return out
+
+
+def add_indicators_to_multi_symbol_df(df: pd.DataFrame, warmup: str = 'bfill',
+                                      adx: str = 'legacy') -> pd.DataFrame:
     """
     Multi-symbol DataFrame'e teknik indikatörleri ekle
 
     Args:
         df: Multi-index DataFrame (symbol, date)
         warmup: 'bfill' (varsayilan, eski) | 'nan' — bkz. TechnicalIndicators.add_all_indicators
+        adx: 'legacy' (varsayilan, eski; ADX = 0) | 'wilder' (K18) — bkz. ADX_MODES
 
     Returns:
         DataFrame with technical indicators for all symbols
@@ -251,7 +351,7 @@ def add_indicators_to_multi_symbol_df(df: pd.DataFrame, warmup: str = 'bfill') -
         symbol_df = df.xs(symbol, level='symbol').copy()
 
         # İndikatörleri ekle
-        symbol_df = calculator.add_all_indicators(symbol_df, warmup=warmup)
+        symbol_df = calculator.add_all_indicators(symbol_df, warmup=warmup, adx=adx)
 
         result_dfs.append((symbol, symbol_df))
 

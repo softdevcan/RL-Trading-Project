@@ -649,7 +649,10 @@ def main():
     from data.integrity import prepare_rl_panel
     from evaluation.trial_registry import load_returns
 
-    rl_panel, _ = prepare_rl_panel(panel, start=get_settings().RL_DATA_START)
+    from data.technical_indicators import with_adx
+    # rotanin veri yolu: K18 ADX yeniden hesabi -> veri kapisi (B7 isinma atimi dahil)
+    rl_panel, _ = prepare_rl_panel(with_adx(panel), start=get_settings().RL_DATA_START,
+                                   drop_indicator_warmup=True)
     r_train, _, r_test = DataFetcher().split_data(rl_panel)
     r_tdates = dates_of(r_test)
 

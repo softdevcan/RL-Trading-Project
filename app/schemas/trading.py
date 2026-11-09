@@ -59,6 +59,21 @@ class TrainingRequest(BaseModel):
         ge=0,
         lt=2**32,
     )
+    # Faz 9 / K25 (b): fiyat z'sinin tanimi. 'stats' = egitim penceresinin sabit
+    # olcegi (B9; eski ortamda test fiyatlarinin ~%99'u egitim desteginin disinda),
+    # 'causal' = yalniz <= t kapanislarla kayan z (252 seans). Milestone 0' iki kolu da kosar.
+    price_norm: Literal["stats", "causal"] = Field(
+        default="stats",
+        description="Price z-score definition: 'stats' (train-window scale, B9) or "
+                    "'causal' (rolling z from data up to t; K25)",
+    )
+    # Yalniz 'causal' ile anlamli. False (varsayilan): MACD eski tanimda — K25 karari
+    # yalniz FIYAT olcegi. True: MACD de nedensel olcekle (opt-in; karar K26, hakem-2 K18 #2).
+    price_norm_macd: bool = Field(
+        default=False,
+        description="With price_norm='causal': keep the legacy tanh(macd/0.1) (default) or "
+                    "also scale MACD by the causal std (opt-in, decision K26)",
+    )
 
     class Config:
         json_schema_extra = {
