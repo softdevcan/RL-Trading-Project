@@ -526,6 +526,15 @@ def main():
     _, hrep = integ.rl_context_before(hl, start="2013-06-01")
     check("'ohlc_inconsistent' kapanisi etkilemez: kalir ama sayilir",
           hrep["n_close_safe_artifacts"] >= 1)
+    st_pan = cpan.copy()
+    prev_c = float(st_pan.loc[("W2.IS", cd[79]), "close"])
+    for c in ("open", "high", "low", "close"):
+        st_pan.loc[("W2.IS", cd[80]), c] = prev_c          # tek sembolun duz satiri (bayat hucre)
+    st_pan.loc[("W2.IS", cd[80]), "volume"] = 0.0
+    sctx, srep = integ.rl_context_before(st_pan, start="2013-06-01")
+    check("bayat hucre prepare_rl_panel gibi atiliyor ve sayiliyor (hakem-rl K18 #6)",
+          srep["n_stale_cells_dropped"] == 1 and ("W2.IS", cd[80]) not in sctx.index
+          and ("W1.IS", cd[80]) in sctx.index, str(srep))
     e_x = TradingEnv(n_ev, price_norm="causal", price_norm_window=None, price_context=n_tr)
     mx = market_matrix(e_x)
     check("genisleyen pencere (window=None) bagimsiz hesapla ayni",

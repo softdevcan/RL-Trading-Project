@@ -254,13 +254,23 @@ def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions:
     if getattr(sdates, 'tz', None) is not None:
         sdates = sdates.tz_localize(None)
     sub = sub[~sdates.isin(ghosts)]
+    # Bayat hucre (tek sembolun duz satiri): prepare_rl_panel ile ayni ayiklama (hakem-rl K18 #6)
+    stale = find_stale_cells(sub)
+    if len(stale):
+        key = pd.MultiIndex.from_frame(stale[['symbol', 'date']])
+        idx = sub.index
+        cdates = pd.to_datetime(idx.get_level_values('date'))
+        if getattr(cdates, 'tz', None) is not None:
+            cdates = cdates.tz_localize(None)
+        sub = sub[~pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates]).isin(key)]
     art = scan_price_artifacts(sub)
     bad = art[~art['reason'].isin(_CLOSE_SAFE_ARTIFACTS)] if len(art) else art
     if len(bad):
         raise DataIntegrityError(
             f"RL baglaminda ({report['start']}..{report['end']}) kapanisi etkileyen "
             f"{len(bad)} artefakt: {bad.groupby(['reason', 'symbol']).size().head(10).to_dict()}")
-    report.update(n_ghost_days=int(len(ghosts)), n_close_safe_artifacts=int(len(art)),
+    report.update(n_ghost_days=int(len(ghosts)), n_stale_cells_dropped=int(len(stale)),
+                  n_close_safe_artifacts=int(len(art)),
                   rows_per_symbol_min=int(sub.groupby(level='symbol').size().min()))
     return sub, report
 
