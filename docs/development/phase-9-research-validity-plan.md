@@ -817,7 +817,7 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 
 **Ölçüm — gerçek panel.**
 - Komut: `python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json`.
-- Çıktı: [measurements/phase9-k18/obs_health.json](measurements/phase9-k18/obs_health.json). Commit 5f1c2d4, `git_dirty=false`; CSV SHA-256 `5ca2fe3f…`, K18 paneli `9439764f…`.
+- Çıktı: [measurements/phase9-k18/obs_health.json](measurements/phase9-k18/obs_health.json). Commit 69c3a66, `git_dirty=false` (5f1c2d4 ile birebir aynı sayılar); CSV SHA-256 `5ca2fe3f…`, K18 paneli `9439764f…`.
 - Veri yolu rotanınki; eğitim yapılmıyor. Bölmeler: eğitim 2013-06-03..2022-08-11 (2.303 gün), doğrulama 2022-08-12..2024-08-05 (494), test 2024-08-06..2026-07-27 (494), 30 sembol.
 - Nedensel kollarda eğitim bağlamı `rl_context_before`, test bağlamı bağlam + eğitim + doğrulama.
 - **Kırpma:** K18 öncesi ve B9 kollarında %74,7; nedensel kollarda %0.

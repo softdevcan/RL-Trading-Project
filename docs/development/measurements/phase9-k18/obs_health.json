@@ -1,7 +1,7 @@
 {
- "created_at": "2026-11-09T21:57:36",
+ "created_at": "2026-11-09T22:03:39",
  "command": "python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json",
- "git_commit": "5f1c2d4db3263ab870eca3bc73669d960b288cd4",
+ "git_commit": "69c3a66ab63f39935009a122fc27070e8cfc3fbf",
  "git_dirty": false,
  "csv_sha256": "5ca2fe3f7f3719eaccf3966659ab3d3a4b74e815811855226357310358ec2e63",
  "csv_span": [
