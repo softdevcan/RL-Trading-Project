@@ -175,7 +175,7 @@ python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i �
                                            #          degismezligi, RL kapisi, olculen protokol (28)
 python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
                                            #          causal fiyat olcegi B0 + mutasyon, obs_health,
-                                           #          main ile bit-es, rota uctan uca (91)
+                                           #          main ile bit-es, rota uctan uca (99)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -467,12 +467,14 @@ borsapy/yf     → gold_fetcher.py       ─┘
     Olcum `evaluation/observation_health.py`; rota manifest/kayit/`_metrics.json`'a yazar.
   - **K25 (b) nedensel kol:** `TradingEnv(price_norm='causal', price_context=<onceki satirlar>)`
     — fiyat cinsinden ozellikler (O/H/L/C ve MACD) sembolun <= t son 252 kapanisinin olcegiyle;
-    rota `TrainingRequest.price_norm='causal'` ile test env'ine egitim + dogrulamayi baglam verir.
-    Baglam env'in ilk tarihinden once bitmeli (yoksa ValueError). Etiket `'causal'` temizdir;
-    egitim ve degerlendirme farkli tanimla kurulursa `'mixed_norm'` (acik). Varsayilan 'stats'.
+    rota `TrainingRequest.price_norm='causal'` ile egitim env'ine pencere ONCESI son 252 seansi
+    (`integrity.rl_context_before`), test env'ine egitim + dogrulamayi baglam verir. Baglam env'in
+    ilk tarihinden once bitmeli (yoksa ValueError). `price_norm_macd=False` yalniz-fiyat ara kolu.
+    Etiket `'causal'` temizdir; iki env farkli tanimla (mod, W, macd) kurulursa `'mixed_norm'`.
   - **Gozlem sagligi kapilari (K18):** `obs_health` (kapili bloklarda kirpma <= %1, sabit boyut
-    yok; egitim + degerlendirme) ve `features_in_support` (fiyat DISI her ozellik <= %1 destek
-    disi, ozellik basina). tanh doygunlugu (`sat_frac`) raporlanir, kapi degildir.
+    yok, ozellik basina doygunluk `sat_frac` <= %90; egitim + degerlendirme) ve
+    `features_in_support` (fiyat DISI her ozellik <= %1 destek disi). Eski ortamda
+    `tanh(turbulence/2)` %99,7 doygun: HER kolun kaydi `obs_health` ile acik (karar K26).
   - Sarmalayicilarda (`create_env`, `create_env_with_weights`, HPO `create_env`) `price_stats`
     ZORUNLU anahtar; egitim cagrisi `price_stats=None`'i acikca yazar.
   - AST bekcisi held-out adli df (`test_df`, `splits.test`, `data['test']`, `df.loc[test_mask]`)
@@ -507,9 +509,9 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
-  - **RL sonuclari on sonuctur**: 'stats' kolunda `price_in_support`/`features_in_support` acik;
-    'causal' kolu protokolde temiz cikabilir ama tek bolme, dogrulamasiz secim ve gostergesiz
-    HPO (R1, Y21) protokole girmeyen aciklar. Kol karsilastirmasi Milestone 0'da (>= 10 tohum).
+  - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans, K26);
+    'stats' kolunda ayrica `price_in_support`/`features_in_support`. Protokole girmeyen aciklar:
+    tek bolme, dogrulamasiz secim, gostergesiz HPO (R1, Y21). Kol karsilastirmasi Milestone 0'da.
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
     `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).

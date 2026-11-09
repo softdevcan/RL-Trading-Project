@@ -147,6 +147,10 @@ INDICATOR_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx', 'turb
 # (ya da tumuyle NaN) oldugu icin dedektor onu zaten atlar (nunique <= 1, notna yok).
 BFILL_WARMUP_COLS = ('macd', 'macd_signal', 'macd_hist', 'rsi', 'cci', 'adx')
 WARMUP_MIN_LEN = 2          # kapi, protokol ve rapor ayni esigi kullanir (hakem-2 B7 #4)
+# Bir gosterge isinma blogunun en fazla uzunlugu: 'wilder' ADX'in 2n-1 = 27 NaN satiri +
+# geriye doldurulan ilk gecerli deger (n = 14). CCI 20, RSI daha kisa. Protokol, egitimde
+# bu kadar satiri olan sembolun degerlendirme basini seri basi saymaz (K18).
+WARMUP_MAX_ROWS = 28
 WARMUP_WARN_ROWS = 30       # sembol basina bundan fazla atim beklenmez -> uyari
 LARGE_MOVE = 0.20   # rapor esigi (artefakt DEGIL): BIST fiyat limitini asan kapanis hareketi
 
@@ -215,6 +219,50 @@ def health_report(df: pd.DataFrame, ghost_threshold: float = 0.9) -> dict:
         'indicator_warmup_blocks': indicator_warmup_blocks(df),
         'n_large_moves': int(len(large_moves(df))),
     }
+
+
+# Kapanisi etkilemeyen artefakt nedeni: baglam yalniz 'close' kullanir (K25 b).
+_CLOSE_SAFE_ARTIFACTS = frozenset({'ohlc_inconsistent'})
+
+
+def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions: int = 252,
+                      ghost_threshold: float = 0.9) -> Tuple[pd.DataFrame, dict]:
+    """RL penceresinden ONCEKI son `n_sessions` panel tarihi (K25 b, hakem-rl K18 #2).
+
+    Nedensel fiyat olceginin EGITIM ortamina baglami: kayan pencere egitimin ilk
+    gunlerinde de dolu olsun, test ortamiyla ayni tanimi gorsun. Yalniz 'close'
+    kullanilir ve gozleme girmez. Hayalet gunler atilir. Kapanisi etkileyen artefakt
+    (negatif fiyat, sicrama, asiri getiri, sadelestirme) varsa DataIntegrityError;
+    'ohlc_inconsistent' satirlari kalir ama SAYILIR (rapor meta'ya yazilir).
+    """
+    start = start or RL_DATA_START
+    dates = pd.to_datetime(df.index.get_level_values('date'))
+    if getattr(dates, 'tz', None) is not None:
+        dates = dates.tz_localize(None)
+    before = dates < pd.Timestamp(start)
+    uniq = np.unique(dates[before])
+    keep = uniq[-n_sessions:] if len(uniq) else uniq
+    sub = df[before & np.isin(dates, keep)]
+    report = {'n_sessions_requested': int(n_sessions), 'n_dates': int(len(keep)),
+              'start': str(pd.Timestamp(keep[0]).date()) if len(keep) else None,
+              'end': str(pd.Timestamp(keep[-1]).date()) if len(keep) else None,
+              'n_ghost_days': 0, 'n_close_safe_artifacts': 0}
+    if sub.empty:
+        return sub, report
+    ghosts = find_ghost_days(sub, ghost_threshold)
+    sdates = pd.to_datetime(sub.index.get_level_values('date'))
+    if getattr(sdates, 'tz', None) is not None:
+        sdates = sdates.tz_localize(None)
+    sub = sub[~sdates.isin(ghosts)]
+    art = scan_price_artifacts(sub)
+    bad = art[~art['reason'].isin(_CLOSE_SAFE_ARTIFACTS)] if len(art) else art
+    if len(bad):
+        raise DataIntegrityError(
+            f"RL baglaminda ({report['start']}..{report['end']}) kapanisi etkileyen "
+            f"{len(bad)} artefakt: {bad.groupby(['reason', 'symbol']).size().head(10).to_dict()}")
+    report.update(n_ghost_days=int(len(ghosts)), n_close_safe_artifacts=int(len(art)),
+                  rows_per_symbol_min=int(sub.groupby(level='symbol').size().min()))
+    return sub, report
 
 
 def prepare_rl_panel(

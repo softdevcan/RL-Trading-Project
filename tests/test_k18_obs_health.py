@@ -212,6 +212,14 @@ def trajectory(env, actions):
     return out
 
 
+def raises_exc(fn, exc):
+    try:
+        fn()
+        return False
+    except exc:
+        return True
+
+
 def holed(panel, sym="W1.IS", lo=60, hi=65):
     d = dates_of(panel)[lo:hi]
     idx = panel.index
@@ -453,9 +461,10 @@ def main():
     ev_dates = dates_of(n_ev)
     e_c = TradingEnv(n_ev, price_norm="causal", price_context=n_tr, missing_data_mode="own_last")
     check("varsayilan price_norm 'stats'; get_price_norm kaydi",
-          TradingEnv(n_tr).get_price_norm() == {"mode": "stats", "window": None, "min_periods": None}
+          TradingEnv(n_tr).get_price_norm() == {"mode": "stats", "window": None, "min_periods": None,
+                                                "macd": None}
           and e_c.get_price_norm() == {"mode": "causal", "window": CAUSAL_WINDOW,
-                                       "min_periods": CAUSAL_MIN_PERIODS})
+                                       "min_periods": CAUSAL_MIN_PERIODS, "macd": True})
     check("baglam satirlari sembol basina sayiliyor", e_c.price_norm_context_rows ==
           {s: 300 for s in ("W0.IS", "W1.IS", "W2.IS")})
     mm = market_matrix(e_c)
@@ -487,6 +496,36 @@ def main():
     check("  'stats' modunda MACD eski tanim tanh(macd / 0.1)",
           np.isclose(market_matrix(e_s)[3, 0, 5],
                      np.tanh(n_ev.xs("W0.IS", level="symbol")["macd"].iloc[3] / 0.1), atol=1e-6))
+    e_po = TradingEnv(n_ev, price_norm="causal", price_context=n_tr, price_norm_macd=False)
+    mpo = market_matrix(e_po)
+    check("ara kol (price_norm_macd=False): fiyat nedensel, MACD eski tanim",
+          np.allclose(mpo[:, :, :4], mm[:, :, :4])
+          and np.isclose(mpo[3, 0, 5], np.tanh(n_ev.xs("W0.IS", level="symbol")["macd"].iloc[3] / 0.1),
+                         atol=1e-6)
+          and e_po.get_price_norm()["macd"] is False and e_c.get_price_norm()["macd"] is True)
+    e_wu = TradingEnv(n_ev, price_norm="causal")
+    n_ev_rows = len(ev_dates)
+    check(f"pencere kullanimi kayitta: baglamsiz {min(n_ev_rows, CAUSAL_WINDOW - 1)} satir pencere "
+          f"dolmadan, {CAUSAL_MIN_PERIODS - 1} notr; baglamli 0",
+          sum(e_wu.price_norm_warmup_rows.values()) == 3 * min(n_ev_rows, CAUSAL_WINDOW - 1)
+          and sum(e_wu.price_norm_neutral_rows.values()) == 3 * (CAUSAL_MIN_PERIODS - 1)
+          and sum(e_c.price_norm_warmup_rows.values()) == 0)
+
+    print("\nC — pencere oncesi baglam (rl_context_before)")
+    cpan = ohlcv(n_days=400, start="2012-01-02")
+    ctx, crep = integ.rl_context_before(cpan, start="2013-06-01", n_sessions=252)
+    cd = dates_of(ctx)
+    check("son 252 seans, tamami pencereden once", len(cd) == 252 and cd.max() < pd.Timestamp("2013-06-01")
+          and crep["n_dates"] == 252 and crep["rows_per_symbol_min"] == 252)
+    bad = cpan.copy()
+    bad.loc[("W0.IS", cd[100]), "close"] = -5.0
+    check("kapanisi etkileyen artefakt (negatif fiyat) -> DataIntegrityError",
+          raises_exc(lambda: integ.rl_context_before(bad, start="2013-06-01"), integ.DataIntegrityError))
+    hl = cpan.copy()
+    hl.loc[("W1.IS", cd[50]), "high"] = hl.loc[("W1.IS", cd[50]), "low"] * 0.5
+    _, hrep = integ.rl_context_before(hl, start="2013-06-01")
+    check("'ohlc_inconsistent' kapanisi etkilemez: kalir ama sayilir",
+          hrep["n_close_safe_artifacts"] >= 1)
     e_x = TradingEnv(n_ev, price_norm="causal", price_norm_window=None, price_context=n_tr)
     mx = market_matrix(e_x)
     check("genisleyen pencere (window=None) bagimsiz hesapla ayni",
@@ -622,10 +661,20 @@ def main():
     pr_leg = rl_eval_protocol(TradingEnv(with_adx(leg_ev)), lt)
     check("adx_constant egitim ortamini da olcuyor (egitim legacy, test wilder -> True)",
           pr_leg["adx_constant"] is True)
-    tm = market_matrix(TradingEnv(npan.assign(turbulence=50.0 + np.arange(len(npan)) % 7)))
+    # tanh(3..4,5) = 0,995..0,9998: doygun ama float32'de AYIRT EDILEBILIR (tanh(25) tam 1,0
+    # olur ve boyut sabit sayilir — o durum zaten 'constant' kuralina takilir)
+    sat_pan = npan.assign(turbulence=6.0 + 0.5 * (np.arange(len(npan)) % 7))
+    tm = market_matrix(TradingEnv(sat_pan))
     fs = feature_stats(tm)
-    check("doygunluk raporlaniyor: tanh(turb/2), turb >= 50 -> sat_frac 1, kapi degil",
-          fs["turbulence"]["sat_frac"] == 1.0 and fs["turbulence"]["clip_frac"] == 0.0)
+    check("doygunluk olculuyor: tanh(turb/2), turb 6..9 -> sat_frac 1, kirpma 0, sabit degil",
+          fs["turbulence"]["sat_frac"] == 1.0 and fs["turbulence"]["clip_frac"] == 0.0
+          and fs["turbulence"]["constant_dims_frac"] == 0.0)
+    h_sat = observation_health(
+        TradingEnv(before(sat_pan, nd[300]), price_norm="causal"),
+        TradingEnv(from_(sat_pan, nd[300]), price_norm="causal", price_context=before(sat_pan, nd[300])))
+    check("doymus ozellik kapida (hakem-rl K18 #1): obs_health False, 'train.turbulence.saturated'",
+          obs_health_ok(h_sat) is False and "train.turbulence.saturated" in obs_health_failures(h_sat)
+          and "eval.turbulence.saturated" in obs_health_failures(h_sat), str(obs_health_failures(h_sat)))
     check("obs_health tek gunluk pencerede olculemez (None)",
           obs_health_ok({"train": {"price": {"clip_frac": 0.0, "constant_dims_frac": None}},
                          "eval": {}}) is None)
@@ -680,6 +729,18 @@ def main():
     check("degerlendirmede listelenen sembolun bfill blogu hala yakalaniyor (True); o sembol "
           "cikinca False", pr_l2["indicator_bfill"] is True and pr_l2c["indicator_bfill"] is False,
           f"{pr_l2['indicator_bfill']} / {pr_l2c['indicator_bfill']}")
+    # hakem-rl K18 #3: egitimde KISA gecmisi olan sembolun blogu degerlendirmeye tasar
+    late3 = add_ind(ohlcv(n_days=200, late=(2, 119)))        # W2 egitimde tek satir
+    l3d = dates_of(late3)
+    tr_l3 = late3[(late3.index.get_level_values("date") >= l3d[30])
+                  & (late3.index.get_level_values("date") < l3d[120])]
+    ev_l3 = from_(late3, l3d[120])
+    n_w2 = int((tr_l3.index.get_level_values("symbol") == "W2.IS").sum())
+    pr_l3 = rl_eval_protocol(TradingEnv(ev_l3), TradingEnv(tr_l3))
+    check(f"egitimde {n_w2} satiri olan (< WARMUP_MAX_ROWS = {integ.WARMUP_MAX_ROWS}) sembolun "
+          "degerlendirmeye tasan bfill blogu yakalaniyor (eski 'gecmisi var' kurali kacirirdi)",
+          n_w2 == 1 and "W2.IS" in integ.indicator_warmup_blocks(ev_l3)
+          and pr_l3["indicator_bfill"] is True, str(pr_l3["indicator_bfill"]))
 
     # -----------------------------------------------------------------------
     print("\nR — rota uctan uca (_run_training_inner, sentetik panel, CPU)")
@@ -708,7 +769,9 @@ def main():
               and rec["config"].get("indicator_spec", {}).get("adx") == "wilder"
               and rec["config"].get("price_norm", {}).get("mode") == "stats", str(rec and rec["protocol"]))
 
-    state_c, created_c = run_route(rpan, price_norm="causal")
+    # Nedensel kol: panel RL penceresinden (2013-06) ONCE baslasin ki egitim baglami sinansin
+    rpan2 = with_random_indicators(ohlcv(n_days=420, drift=0.002, seed=9, start="2012-06-01"))
+    state_c, created_c = run_route(rpan2, price_norm="causal")
     check("causal rota tamamlandi", state_c.get("state") == "completed", str(state_c.get("error")))
     if state_c.get("state") == "completed":
         test_c = created_c[-1]
@@ -718,6 +781,14 @@ def main():
               and dates_of(test_c["kw"]["price_context"]).max() < r_tdates[0]
               and min(test_c["env"].price_norm_context_rows.values())
               == len(dates_of(test_c["kw"]["price_context"])))
+        tr_c = created_c[0]
+        ctx_tr = tr_c["kw"].get("price_context")
+        check("egitim ortami pencere oncesi son 252 seansi baglam aliyor (hakem-rl K18 #2); "
+              "pencere ilk gunden dolu",
+              ctx_tr is not None and dates_of(ctx_tr).max() < pd.Timestamp(get_settings().RL_DATA_START)
+              and set(tr_c["env"].price_norm_context_rows.values()) == {252}
+              and sum(tr_c["env"].price_norm_warmup_rows.values()) == 0,
+              str(tr_c["env"].price_norm_context_rows))
         rec_c = route_trial(state_c)
         check("kayit: price_stats_source='causal'; meta ve config price_norm causal",
               rec_c["protocol"]["price_stats_source"] == "causal"
@@ -725,7 +796,7 @@ def main():
         n_s, fps = test_c["env"].n_stocks, test_c["env"].features_per_stock
         for k in (0, 6):
             t = r_tdates[k]
-            st_p, cr_p = run_route(perturb_after(rpan, t), price_norm="causal")
+            st_p, cr_p = run_route(perturb_after(rpan2, t), price_norm="causal")
             tp = cr_p[-1] if st_p.get("state") == "completed" else None
             if tp is None:
                 check(f"rota B0 t={k}: kosum tamamlandi", False, str(st_p.get("error")))

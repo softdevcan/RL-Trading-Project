@@ -127,7 +127,7 @@ def price_stats_source(eval_env, train_env) -> Optional[str]:
     None                    : degerlendirme ortami yok (deneme ortam kurulmadan bitti)
 
     K25 (b) — ortamlardan biri price_norm='causal' ise olcek kullanilmaz:
-    'causal'                : iki ortam da nedensel, ayni pencere tanimi, egitim penceresi
+    'causal'                : iki ortam da nedensel, ayni pencere ve MACD tanimi, egitim penceresi
                               degerlendirmeden ONCE bitiyor (temiz; baglamin ilk tarihten
                               once bittigini env kurulumda zorlar)
     'mixed_norm'            : biri nedensel digeri olcekli ya da pencereler farkli
@@ -144,8 +144,9 @@ def price_stats_source(eval_env, train_env) -> Optional[str]:
     if 'causal' in (ev_norm, tr_norm):
         if tr0 is None:
             return 'causal_unverified'
-        if ev_norm != tr_norm or getattr(ev, 'price_norm_window', None) != getattr(
-                tr0, 'price_norm_window', None):
+        if ev_norm != tr_norm or any(
+                getattr(ev, a, None) != getattr(tr0, a, None)
+                for a in ('price_norm_window', 'price_norm_macd')):
             return 'mixed_norm'
         if not (len(tr0.dates) and len(ev.dates) and tr0.dates[-1] < ev.dates[0]):
             return 'overlapping_window'
@@ -216,15 +217,20 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
     adx_const = _adx_const(base.df) or (
         train_env is not None and _adx_const(getattr(train_env, 'unwrapped', train_env).df))
     if indicator_bfill is None and present:
-        from data.integrity import BFILL_WARMUP_COLS, indicator_warmup_blocks
+        from data.integrity import BFILL_WARMUP_COLS, WARMUP_MAX_ROWS, indicator_warmup_blocks
         train_df = getattr(train_env, 'unwrapped', train_env).df if train_env is not None else None
-        # K18: bfill blogu yalniz sembolun SERI BASINDA olusur. Egitim penceresinde
-        # gecmisi olan sembolun degerlendirme penceresi basi seri basi degildir;
-        # oradaki tekrar dogaldir (kapanis degismeyince RSI birebir ayni kalir:
-        # gercek panelde VAKBN, test penceresinin ilk iki gunu — B7 olcutu bunu
-        # bfill sayip her rota test kaydini acik yaziyordu).
-        with_history = (set(train_df.index.get_level_values('symbol'))
-                        if train_df is not None else set())
+        # K18: bfill blogu yalniz sembolun SERI BASINDA olusur ve en fazla WARMUP_MAX_ROWS
+        # satir surer. Egitim penceresinde en az o kadar satiri olan sembolun degerlendirme
+        # penceresi basi seri basi degildir; oradaki tekrar dogaldir (kapanis degismeyince
+        # RSI birebir ayni kalir: gercek panelde VAKBN, test penceresinin ilk iki gunu —
+        # B7 olcutu bunu bfill sayip her rota test kaydini acik yaziyordu). Egitimde daha
+        # kisa gecmisi olan sembolun blogu degerlendirmeye tasabilir: o sembol sayilir
+        # (hakem-rl K18 #3).
+        if train_df is not None:
+            counts = train_df.groupby(level='symbol').size()
+            with_history = set(counts.index[counts >= WARMUP_MAX_ROWS])
+        else:
+            with_history = set()
         frames = [(base.df, with_history)] + ([(train_df, set())] if train_df is not None else [])
 
         def contaminated(f, skip):

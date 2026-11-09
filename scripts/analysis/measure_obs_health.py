@@ -13,6 +13,11 @@ Yapilandirmalar:
   k18_causal_252      ADX 'wilder', price_norm='causal', W=252 -> K25 (b) kolu
   k18_causal_63       ayni, W=63 (pencere duyarliligi)
   k18_causal_expanding ayni, genisleyen pencere (neden kayan secildi)
+  k18_causal_252_price_only  W=252, MACD eski tanimda (price_norm_macd=False; ara kol)
+  k18_causal_252_no_train_ctx W=252, egitim ortami BAGLAMSIZ (hakem-rl K18 #2 asimetrisi)
+
+Nedensel kollarda egitim ortami rotadaki gibi pencere oncesi son 252 seansi
+(`data.integrity.rl_context_before`) baglam alir; test ortami egitim + dogrulamayi.
 
 Ayrica: gercek panelde ADX dagilimi ve veri kapisinin ADX isinmasi yuzunden
 fazladan attigi satirlar.
@@ -51,6 +56,9 @@ CONFIGS = {
     "k18_causal_252": dict(adx="wilder", price_norm="causal", window=252),
     "k18_causal_63": dict(adx="wilder", price_norm="causal", window=63),
     "k18_causal_expanding": dict(adx="wilder", price_norm="causal", window=None),
+    "k18_causal_252_price_only": dict(adx="wilder", price_norm="causal", window=252, macd=False),
+    "k18_causal_252_no_train_ctx": dict(adx="wilder", price_norm="causal", window=252,
+                                        train_ctx=False),
 }
 
 
@@ -62,19 +70,21 @@ def span(frame):
 def windows(csv, adx_mode):
     from app.core.config import get_settings
     from data.data_fetcher import DataFetcher
-    from data.integrity import prepare_rl_panel
+    from data.integrity import prepare_rl_panel, rl_context_before
     from data.technical_indicators import with_adx
 
     df = csv if adx_mode is None else with_adx(csv, mode=adx_mode)
+    ctx, ctx_report = rl_context_before(df, start=get_settings().RL_DATA_START, n_sessions=252)
     panel, report = prepare_rl_panel(df, start=get_settings().RL_DATA_START,
                                      drop_indicator_warmup=True)
+    report = dict(report, train_context=ctx_report)
     train_df, val_df, test_df = DataFetcher().split_data(panel)
     syms = set(train_df.index.get_level_values("symbol").unique())
 
     def align(f):
         return f[f.index.get_level_values("symbol").isin(syms)]
 
-    return panel, report, train_df, align(val_df), align(test_df)
+    return panel, report, train_df, align(val_df), align(test_df), ctx
 
 
 def summarize(health):
@@ -90,6 +100,10 @@ def summarize(health):
         b: round(v, 4) for b, v in (health["eval_out_of_train_support"] or {}).items()}
     out["eval_out_of_train_support_features"] = {
         f: round(v, 4) for f, v in (health.get("eval_out_of_train_support_features") or {}).items()}
+    out["price_norm_warmup"] = health.get("price_norm_warmup")
+    from evaluation.observation_health import obs_health_failures, support_failures
+    out["obs_health_failures"] = obs_health_failures(health)
+    out["support_failures"] = support_failures(health)
     return out
 
 
@@ -139,17 +153,23 @@ def main():
         cfg = CONFIGS[name]
         if cfg["adx"] not in cache:
             cache[cfg["adx"]] = windows(csv, cfg["adx"])
-        panel, report, train_df, val_df, test_df = cache[cfg["adx"]]
+        panel, report, train_df, val_df, test_df, train_ctx = cache[cfg["adx"]]
         norm = {}
         if cfg["price_norm"] == "causal":
-            norm = dict(price_norm="causal", price_norm_window=cfg["window"])
-        tr_env = make_env(df=train_df, price_stats=None, **norm, **KW)
+            norm = dict(price_norm="causal", price_norm_window=cfg["window"],
+                        price_norm_macd=cfg.get("macd", True))
+        tr_extra = dict(norm)
+        if norm and cfg.get("train_ctx", True):
+            tr_extra["price_context"] = train_ctx
+        tr_env = make_env(df=train_df, price_stats=None, **tr_extra, **KW)
         st = tr_env.get_price_stats()
         entry = {"cfg": cfg, "panel_sha256": frame_sha256(panel), "panel": span(panel),
                  "train": span(train_df), "val": span(val_df), "test": span(test_df),
                  "n_symbols": int(tr_env.n_stocks),
                  "gate_warmup_dropped": report.get("indicator_warmup_dropped"),
-                 "gate_rows_after": report.get("rows_after"), "splits": {}}
+                 "gate_rows_after": report.get("rows_after"),
+                 "train_context": report.get("train_context") if tr_extra.get("price_context") is not None else None,
+                 "splits": {}}
         for split, frame, ctx in (("val", val_df, train_df),
                                   ("test", test_df, pd.concat([train_df, val_df]))):
             extra = dict(norm)
@@ -170,8 +190,32 @@ def main():
               f"price_oos={t['health']['eval_out_of_train_support'].get('price')} "
               f"price_clip={t['health']['eval']['price']['clip_frac']}", flush=True)
 
-    for mode, (panel, report, *_rest) in cache.items():
+    for mode, (panel, report, *_rest) in cache.items():  # noqa: B007
         result[f"adx_profile_{mode or 'legacy'}"] = adx_profile(panel)
+
+    # K26 onerisinin dayanagi: turbulans donusumunun doygunlugu (env DISINDA, panel
+    # sutunundan; turbulans tarih basina tek deger, semboller arasinda ayni).
+    if "wilder" in cache:
+        _p, _r, tr_df, _v, te_df, _c = cache["wilder"]
+        n_sym = int(tr_df.index.get_level_values("symbol").nunique())
+
+        def one(frame):
+            return frame["turbulence"].groupby(level="date").first().astype(float)
+
+        t_tr, t_te = one(tr_df), one(te_df)
+        cands = {"tanh(t/2) [mevcut]": lambda t: np.tanh(t / 2.0),
+                 f"tanh(t/n), n={n_sym}": lambda t: np.tanh(t / n_sym),
+                 "tanh(log1p(t)/5)": lambda t: np.tanh(np.log1p(t) / 5.0)}
+        out = {"n_symbols": n_sym,
+               "turbulence_quantiles_train": {str(q): round(float(t_tr.quantile(q)), 2)
+                                              for q in (0.01, 0.1, 0.5, 0.9, 0.99)}}
+        for name, f in cands.items():
+            a, b = f(t_tr), f(t_te)
+            out[name] = {"sat_train": round(float((a.abs() >= 0.99).mean()), 4),
+                         "sat_test": round(float((b.abs() >= 0.99).mean()), 4),
+                         "oos_test": round(float(((b < a.min()) | (b > a.max())).mean()), 4),
+                         "std_train": round(float(a.std()), 4)}
+        result["turbulence_scaling"] = out
 
     out = args.out or os.path.join("results", f"obs_health_{datetime.now():%Y%m%d_%H%M%S}.json")
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)

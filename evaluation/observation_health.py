@@ -24,11 +24,13 @@ fazla %1'i egitim desteginin disinda olabilir. Esik degil OLCUM kayda girer.
 
 K18 (Faz 10 §6) — olcutun nihai tanimi (`obs_health_ok`, protokol maddesi
 `obs_health`): egitim VE degerlendirme penceresinde, kapili piyasa bloklarinda
-(fiyat, hacim, gostergeler) kirpilan oran (|x| >= 10) <= OBS_CLIP_EPS ve pencere
-boyunca sabit gozlem boyutu YOK. Ozellik basina tanh/sinir doygunlugu
-(`sat_frac`: |x| >= %99 x sinir) RAPORLANIR ama kapi degildir: doygun bir ozellik
-bilgi kaybidir, gecersiz girdi degil (dagilim disilik `price_in_support`'ta).
-OBS_CLIP_EPS de bir tasarim varsayimidir.
+(fiyat, hacim, gostergeler) kirpilan oran (|x| >= 10) <= OBS_CLIP_EPS, pencere
+boyunca sabit gozlem boyutu YOK ve hicbir ozellik doymus degil: ozellik basina
+doygunluk (`sat_frac`: |x| >= %99 x sinir) <= OBS_SAT_MAX. Doymus ozellik gozlemde
+neredeyse sabit bir boyuttur — ADX = 0 hatasinin RL karsiligi (hakem-rl K18 #1;
+eski ortamda tanh(turbulence/2) egitimde %99,7 doygun). Dagilim disilik ayri
+maddelerde (`price_in_support`, `features_in_support`). OBS_CLIP_EPS ve OBS_SAT_MAX
+tasarim varsayimidir.
 """
 
 from __future__ import annotations
@@ -41,6 +43,7 @@ CLIP = 10.0
 SUPPORT_EPS = 0.01
 OBS_CLIP_EPS = 0.01
 SAT_LEVEL = 0.99
+OBS_SAT_MAX = 0.90
 
 # Sembol basina gozlem blogu (env/trading_env.py::_get_observation sirasi)
 BLOCKS = {
@@ -153,8 +156,19 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
         'eval_out_of_train_support_features': None,
         'support_eps': SUPPORT_EPS,
         'obs_clip_eps': OBS_CLIP_EPS,
+        'obs_sat_max': OBS_SAT_MAX,
         'price_norm': {'train': getattr(tr_env, 'price_norm', 'stats'),
                        'eval': getattr(ev_env, 'price_norm', 'stats')},
+        # K25 (b): gercekte kullanilan pencere (hakem-rl K18 #2) — pencere dolmadan ve
+        # notr kalan kendi satir sayisi, baglam satiri (sembol basina en az)
+        'price_norm_warmup': {
+            split: ({'rows_window_not_full': int(sum(e.price_norm_warmup_rows.values())),
+                     'rows_neutral': int(sum(e.price_norm_neutral_rows.values())),
+                     'rows_total': int(sum(len(v) for v in e._causal_stats.values())),
+                     'context_rows_min': int(min(e.price_norm_context_rows.values(), default=0)),
+                     'by_symbol_window_not_full': {s: k for s, k in e.price_norm_warmup_rows.items() if k}}
+                    if getattr(e, 'price_norm', 'stats') == 'causal' else None)
+            for split, e in (('train', tr_env), ('eval', ev_env))},
     }
     tsyms, esyms = list(tr_env.symbols), list(ev_env.symbols)
     if set(esyms) <= set(tsyms) and tr.shape[2] == ev.shape[2] and len(tr) and len(ev):
@@ -173,30 +187,12 @@ def observation_health(train_env, eval_env, seen_obs=None) -> dict:
     return health
 
 
-def obs_health_ok(health: Optional[dict], eps: float = OBS_CLIP_EPS) -> Optional[bool]:
-    """Protokol maddesi `obs_health` (K18): bkz. modul docstring'i.
-
-    Egitim ve degerlendirme penceresinde GATED_BLOCKS'un her birinde kirpilan oran
-    <= eps ve sabit boyut orani 0. Olcum yoksa (tek gunluk pencere) None.
-    """
-    if not health:
-        return None
-    for split in ('train', 'eval'):
-        blocks = health.get(split) or {}
-        for name in GATED_BLOCKS:
-            st = blocks.get(name)
-            if st is None:
-                continue
-            if st.get('constant_dims_frac') is None:
-                return None
-            if st['clip_frac'] > eps or st['constant_dims_frac'] > 0:
-                return False
-    return True
-
-
-def obs_health_failures(health: Optional[dict], eps: float = OBS_CLIP_EPS) -> list:
-    """`obs_health` neden acik: ['eval.price.clip', 'train.indicators.constant', ...]."""
+def obs_health_failures(health: Optional[dict], eps: float = OBS_CLIP_EPS,
+                        sat_max: float = OBS_SAT_MAX) -> list:
+    """`obs_health` neden acik: ['eval.price.clip', 'train.indicators.constant',
+    'train.turbulence.saturated', ...]. Kapsam: GATED_BLOCKS ve onlarin ozellikleri."""
     out = []
+    gated = {n for b in GATED_BLOCKS for n, _ in FEATURES[BLOCKS[b][0]:BLOCKS[b][1]]}
     for split in ('train', 'eval'):
         for name in GATED_BLOCKS:
             st = ((health or {}).get(split) or {}).get(name)
@@ -206,7 +202,28 @@ def obs_health_failures(health: Optional[dict], eps: float = OBS_CLIP_EPS) -> li
                 out.append(f'{split}.{name}.clip')
             if (st.get('constant_dims_frac') or 0) > 0:
                 out.append(f'{split}.{name}.constant')
+        for feat, st in ((health or {}).get(f'{split}_features') or {}).items():
+            if feat in gated and st.get('sat_frac') is not None and st['sat_frac'] > sat_max:
+                out.append(f'{split}.{feat}.saturated')
     return out
+
+
+def obs_health_ok(health: Optional[dict], eps: float = OBS_CLIP_EPS,
+                  sat_max: float = OBS_SAT_MAX) -> Optional[bool]:
+    """Protokol maddesi `obs_health` (K18): bkz. modul docstring'i.
+
+    Egitim ve degerlendirme penceresinde GATED_BLOCKS'un her birinde kirpilan oran
+    <= eps, sabit boyut orani 0 ve ozellik basina doygunluk <= sat_max. Olcum yoksa
+    (tek gunluk pencere) None.
+    """
+    if not health:
+        return None
+    for split in ('train', 'eval'):
+        for name in GATED_BLOCKS:
+            st = (health.get(split) or {}).get(name)
+            if st is not None and st.get('constant_dims_frac') is None:
+                return None
+    return not obs_health_failures(health, eps, sat_max)
 
 
 def features_in_support(health: Optional[dict], eps: float = SUPPORT_EPS) -> Optional[bool]:

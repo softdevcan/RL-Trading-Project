@@ -100,9 +100,13 @@ class TradingEnv(gym.Env):
         #   price_context: yalnizca 'causal'. Bu ortamin ILK tarihinden ONCEKI satirlar
         #       (MultiIndex symbol, date; 'close'). Held-out ortamda pencerenin basini
         #       doldurur; bu tarihe esit ya da sonraki satir ValueError (ileriye bakis).
+        #   price_norm_macd: yalnizca 'causal'. True (varsayilan): MACD de nedensel olcekle;
+        #       False: MACD eski tanimda (tanh(macd/0.1)) — yalniz fiyatin nedensel oldugu
+        #       ara kol (hakem-rl K18 #5: kollari tek etkende ayirmak icin).
         price_norm: str = 'stats',
         price_norm_window: Optional[int] = CAUSAL_WINDOW,
         price_context: Optional[pd.DataFrame] = None,
+        price_norm_macd: bool = True,
     ):
         """
         Args:
@@ -155,8 +159,13 @@ class TradingEnv(gym.Env):
         self.price_norm_window = (int(price_norm_window) if price_norm == 'causal'
                                   and price_norm_window is not None else None)
         self.price_norm_min_periods = CAUSAL_MIN_PERIODS if price_norm == 'causal' else None
-        # sembol -> baglamdan gelen satir sayisi (yalnizca 'causal')
+        self.price_norm_macd = bool(price_norm_macd) if price_norm == 'causal' else None
+        # sembol -> baglamdan gelen satir sayisi; pencere dolmadan (< W gozlem) ve notr
+        # (< min_periods ya da std ~0) kalan KENDI satir sayisi (yalnizca 'causal';
+        # hakem-rl K18 #2: gercekte kullanilan pencere kayda girer)
         self.price_norm_context_rows: Dict[str, int] = {}
+        self.price_norm_warmup_rows: Dict[str, int] = {}
+        self.price_norm_neutral_rows: Dict[str, int] = {}
 
         # Faz 2 data
         self.fundamental_df = fundamental_df
@@ -339,6 +348,13 @@ class TradingEnv(gym.Env):
             std = win.std().to_numpy()[len(ctx):]
             out[symbol] = np.column_stack([mean, std])
             self.price_norm_context_rows[symbol] = int(len(ctx))
+            if self.price_norm_window is not None:
+                n_avail = s.notna().cumsum().to_numpy()[len(ctx):]
+                self.price_norm_warmup_rows[symbol] = int(np.sum(n_avail < self.price_norm_window))
+            else:
+                self.price_norm_warmup_rows[symbol] = 0
+            self.price_norm_neutral_rows[symbol] = int(np.sum(
+                ~(np.isfinite(mean) & np.isfinite(std) & (std > 1e-8))))
         return out
 
     def _causal_scale(self, symbol: str, current_date) -> Optional[Tuple[float, float]]:
@@ -360,7 +376,7 @@ class TradingEnv(gym.Env):
     def get_price_norm(self) -> Dict[str, Optional[object]]:
         """Fiyat z tanimi (model meta dosyasina ve manifeste yazilir; K25)."""
         return {'mode': self.price_norm, 'window': self.price_norm_window,
-                'min_periods': self.price_norm_min_periods}
+                'min_periods': self.price_norm_min_periods, 'macd': self.price_norm_macd}
 
     def get_price_stats(self) -> Dict[str, Dict[str, float]]:
         """Return price normalization stats (save these for inference).
@@ -868,14 +884,18 @@ class TradingEnv(gym.Env):
                     # K25 (b): fiyat CINSINDEN olculen ozellikler (O/H/L/C ve MACD =
                     # iki fiyat EMA'sinin farki, TL) ayni nedensel olcegi kullanir:
                     # z = (p - ort_t) / std_t, MACD -> tanh(macd / std_t). Yalniz <= t.
+                    # price_norm_macd=False: MACD eski tanimda (yalniz-fiyat ara kolu).
                     scale = self._causal_scale(symbol, current_date)
                     if scale is None:
-                        price_z, macd_feat = [0.0, 0.0, 0.0, 0.0], 0.0
+                        price_z = [0.0, 0.0, 0.0, 0.0]
                     else:
                         c_mean, c_std = scale
                         price_z = [(float(p) - c_mean) / c_std for p in
                                    (open_price, high_price, low_price, close_price)]
-                        macd_feat = np.tanh(macd / c_std)
+                    if not self.price_norm_macd:
+                        macd_feat = np.tanh(macd / 0.1)
+                    else:
+                        macd_feat = 0.0 if scale is None else np.tanh(macd / scale[1])
                 else:
                     # Dynamic z-score normalization using per-symbol price stats (#2)
                     stats = self.price_stats.get(symbol, {'mean': 50.0, 'std': 50.0})

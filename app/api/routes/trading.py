@@ -1192,8 +1192,17 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # Faz 10 / V + K17: RL penceresi 2013-06'dan baslar; pencerede fiyat
         # artefakti varsa egitim DURUR (DataIntegrityError), hayalet gunler ve
         # islem gormemis (bayat) hucreler atilir. Rapor meta dosyasina girer.
-        from data.integrity import prepare_rl_panel
+        from data.integrity import prepare_rl_panel, rl_context_before
         from evaluation.reproducibility import resolve_seed, snapshot_frame
+
+        # K25 (b): nedensel kolda egitim ortaminin kayan penceresi de ilk gunden dolu
+        # olsun (hakem-rl K18 #2) — pencere ONCESI son 252 seansin kapanisi baglam olur;
+        # gozleme girmez. Kapanisi etkileyen artefakt varsa durur.
+        train_context, train_context_report = None, None
+        if request.price_norm == 'causal':
+            from env.trading_env import CAUSAL_WINDOW
+            train_context, train_context_report = rl_context_before(
+                df, start=_settings.RL_DATA_START, n_sessions=CAUSAL_WINDOW)
 
         # B7: gosterge isinma blogu (bfill ile doldurulmus bas satirlar) atilir
         df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START,
@@ -1290,6 +1299,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 price_stats=None,
                 # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
                 price_norm=request.price_norm,
+                price_norm_macd=request.price_norm_macd,
+                price_context=train_context,
             )
 
         # Create one instance to get dimensions
@@ -1508,6 +1519,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'test_range': _range(test_df), 'missing_data_mode': 'own_last',
                    'indicator_spec': indicator_spec,
                    'price_norm': temp_env.get_price_norm(),
+                   'price_norm_train_context': train_context_report,
                    # 'protocol' test ortami kurulunca eklenir (olcek oradan olculur)
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
@@ -1544,6 +1556,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             # okumadan durum kurarsa egitimdekinden FARKLI bir gozlem uretir.
             "indicator_spec": indicator_spec,
             "price_norm": temp_env.get_price_norm(),
+            "price_norm_train_context": train_context_report,
             "hyperparams_source": hyperparams_source.get('source'),
             "run_id": rl_manifest.run_id,
         })
@@ -1560,7 +1573,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # K25 (b): nedensel kolda test fiyat z'si yalniz <= t kapanislariyla; kayan
         # pencerenin basi testten ONCEKI satirlarla (egitim + dogrulama) dolar.
         # Olcek (price_stats) bu kolda gozleme girmez; meta ve protokol icin tasinir.
-        test_norm = {'price_norm': request.price_norm}
+        test_norm = {'price_norm': request.price_norm, 'price_norm_macd': request.price_norm_macd}
         if request.price_norm == 'causal':
             test_norm['price_context'] = pd.concat([train_df, val_df])
 

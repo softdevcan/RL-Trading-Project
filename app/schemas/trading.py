@@ -67,6 +67,13 @@ class TrainingRequest(BaseModel):
         description="Price z-score definition: 'stats' (train-window scale, B9) or "
                     "'causal' (rolling z from data up to t; K25)",
     )
+    # Yalniz 'causal' ile anlamli: False -> MACD eski tanimda (yalniz fiyatin nedensel
+    # oldugu ara kol; Milestone 0' kollarini tek etkende ayirmak icin, hakem-rl K18 #5).
+    price_norm_macd: bool = Field(
+        default=True,
+        description="With price_norm='causal': also scale MACD by the causal std (default) "
+                    "or keep the legacy tanh(macd/0.1) (price-only arm)",
+    )
 
     class Config:
         json_schema_extra = {
