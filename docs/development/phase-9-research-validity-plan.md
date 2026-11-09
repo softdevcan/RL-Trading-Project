@@ -847,13 +847,13 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
     - `tanh(t/2)`: %99,8 / %100;
     - `tanh(t/30)` (n = sembol sayısı): %6,7 / %3,2;
     - `tanh(log1p(t)/5)`: %0 / %0, ama std 0,07'ye sıkışıyor.
-  - Üçünde de test destek dışı 0. Karar K26.
+  - Üçünde de test destek dışı 0. K26 kararı (a): eski ortamda yalnız beyan; adaylar M2 `obs_spec`'ine taşınır (Faz 10 §6).
   - CCI %1,0–1,4 doygun.
 - **ADX dağılımı** (pencere, `wilder`): medyan 24,0, %1–%99 aralığı 10,2–60,0, gözlemlerin %46,3'ü > 25, sembol ortalamaları 23,5–28,1. Kaynak: JSON `adx_profile_wilder`.
 
 **Okuma ve sınırlamalar.**
-- **Eski ortamın hiçbir kolu protokolde temiz değil** (türbülans: `obs_health`; hacim ve doğrulamada fiyat/ADX: `dims_in_support`; MACD eski tanımda: `features_in_support`). K26'dan sonra bile RL sonuçları kanıt sayılmayacak. Protokole girmeyen açıklar sürüyor: tek bölme, doğrulamasız seçim ve göstergesiz HPO (R1, Y21). Kol karşılaştırması ve ≥ 10 tohum Milestone 0''da (K25).
-- **Kollar özellik başına ayrışabiliyor:** fiyat (K25), MACD, türbülans, hacim (K26). Milestone 0' tasarımı bunları ayrı etkenler olarak yazmalı (M8 ön kaydı).
+- **Eski ortamın hiçbir kolu protokolde temiz değil** (türbülans: `obs_health`; hacim ve doğrulamada fiyat/ADX: `dims_in_support`; MACD eski tanımda: `features_in_support`). K26 = (a) olduğu için bu kalıcı: eski ortam yalnız sadık replikasyon olarak, sınırlamaları beyanlı raporlanır; tezin kanıtı yeni ortamdan (MAPPO ↔ SARL-eşmimari) gelir. Protokole girmeyen açıklar sürüyor: tek bölme, doğrulamasız seçim ve göstergesiz HPO (R1, Y21). Kol karşılaştırması ve ≥ 10 tohum Milestone 0''da (K25).
+- **Milestone 0' kolları yalnız fiyat ölçeğinde ayrışıyor** (K25: `stats` ↔ `causal`). K26 = (a) olduğu için MACD, türbülans ve hacim iki kolda da Ansari tanımında; Y13 kıyası bunlarla karışmıyor.
 - **Eşikler gürültüye yakın.** Havuzlu hacim %0,87 (test) ve %0,96 (doğrulama). Eşikler tasarım varsayımı ve tek bir pencereyle ölçülüyor. R1'in walk-forward katlarında kat başına raporlanmalı. Doğrulamada seçim yapan tek yol HPO; onun kaydı da `rl_eval_protocol`'den geçiyor (hakem-rl #4).
 - **Göstergeler ham panelde, hayalet günler atılmadan hesaplanıyor.** Bu tüm göstergeler için önceden vardı; ADX de aynı yoldan geçiyor.
 - **Canlı karar** (`build_live_state`) hâlâ legacy ADX'le, nedensel ölçeksiz ve 50/50 fiyat ölçeğiyle durum kuruyor. Meta'daki `indicator_spec` ve `price_norm` alanlarını okuması K13'ün işi (Y12). Meta hâlâ `price_stats`'ı da taşıyor; nedensel modelde canlı karar bunu kullanırsa gözlem bozulur (hakem-rl notu).
@@ -865,7 +865,7 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 - K18 öncesi deneme kayıtları yeni maddeleri taşımadığı için açık sayılıyor (ihtiyatlı).
 
 **Açık kalanlar:**
-- **K26:** eski ortamda MACD, türbülans ve hacim ölçeği (kullanıcı kararı; Faz 10 §6).
+- **K26 kapandı (2026-11-09): (a), yalnız beyan** (Faz 10 §6). Ölçeksiz özellik tasarımı M2 `obs_spec`'inde.
 - Canlı karar paritesi (K13).
 - HPO'da nedensel kol ve göstergeler (R1).
 - MARL `obs_spec` (M2; `obs_health` ve `dims_in_support` aynı ölçütü uygular).
@@ -936,3 +936,4 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - Açık: GPU belirlenimciliği (#5), HPO → rota seçim soyu (#14); destek içi üçüncü kol için karar K25.
 - **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7). hakem-2 (§9.8): "Büyük revizyon"; dedektör türbülansın nedensel 0 başını blok sanıyordu, düzeltildi. Paketli inceleme ~144 bin token.
 - **2026-11-09 (K18 + K25 b):** K25 kararı (b). ADX'in kök nedeni indeks hizalaması; `wilder` bayrağı rota varsayılanı oldu (iki bağımsız referans). Eski ortama opt-in nedensel fiyat ölçeği eklendi (`price_norm='causal'`, W=252; MACD aynı ölçekle). Yeni ölçülen protokol maddeleri: `obs_health` ve `features_in_support`. Gerçek panelde nedensel kol test fiyatlarının havuzlu destek dışılığını %98,9'dan %0,03'e indiriyor. Doğrulamada sembol düzeyinde aşım sürüyor (`dims_in_support`). Türbülans doygunluğu yüzünden eski ortamın hiçbir kolu `obs_health`'ten geçmiyor; MACD, türbülans ve hacim için karar K26 önerildi. B7 ölçütünün yanlış pozitifi bulunup düzeltildi. Panel (§9.10): hakem-rl iki okuma (Büyük → Küçük revizyon), hakem-2 Büyük revizyon (RED yok). Düzeltmeler: boyut düzeyi kapı, MACD varsayılanı geri alındı, `causal_short_context`, klasik Wilder tohumu, sembol başına bağlam.
+- **2026-11-09 (K26):** kullanıcı kararı (a), yalnız beyan. Eski ortam sadık Ansari replikasyonu olarak kalıyor; ölçeksiz özellik adayları (`tanh(macd/σ_t)`, `tanh(turb/n)`) M2 `obs_spec`'ine taşınıyor. Gerekçe Faz 10 §6 K26.

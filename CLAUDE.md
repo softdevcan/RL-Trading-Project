@@ -477,7 +477,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
     yok, ozellik basina doygunluk `sat_frac` <= %90; egitim + degerlendirme) ve
     `features_in_support` (fiyat DISI her ozellik, havuzlu) ve `dims_in_support` (HER gozlem
     boyutu = sembol x ozellik <= %1; havuz tek sembolu gizler). Eski ortamda `tanh(turbulence/2)`
-    %99,7 doygun: HER kolun kaydi `obs_health` ile acik (karar K26: MACD, turbulans, hacim).
+    %99,7 doygun: HER kolun kaydi `obs_health` ile acik. K26 = (a): eski ortamda DUZELTILMEZ,
+    beyan edilir; olceksiz ozellikler (MACD, turbulans, hacim) M2 `obs_spec`'inde tasarlanir.
   - Sarmalayicilarda (`create_env`, `create_env_with_weights`, HPO `create_env`) `price_stats`
     ZORUNLU anahtar; egitim cagrisi `price_stats=None`'i acikca yazar.
   - AST bekcisi held-out adli df (`test_df`, `splits.test`, `data['test']`, `df.loc[test_mask]`)
@@ -512,7 +513,7 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
-  - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans, K26);
+  - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans; K26 = a, kalici);
     'stats' kolunda ayrica `price_in_support`/`features_in_support`. Protokole girmeyen aciklar:
     tek bolme, dogrulamasiz secim, gostergesiz HPO (R1, Y21). Kol karsilastirmasi Milestone 0'da.
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
