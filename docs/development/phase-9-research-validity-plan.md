@@ -712,6 +712,119 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 | 5 | KÜÇÜK | PGSUS'un IPO günü tek satır, ardından 3 ay boşluk; "ilk n seans" ifadesi yanlış | **Kabul.** İfade "pencere içi ilk n satır" oldu, boşluk §9.7'ye yazıldı. **Açık:** tek satırlık IPO günü ve boşluk eksik hücre kaydında ayrıca işaretlenmeli (V) |
 | 6 | KÜÇÜK | Belge izi: `integrity.py` docstring'i, `nan` modu docstring'i, CLAUDE.md'de `clean_data` tarifi, "ölçüldü" ibaresinin komutu | **Kabul, düzeltildi** |
 
+### 9.9 K18 + K25 (b) — ADX, nedensel fiyat ölçeği, gözlem sağlığı (2026-11-09, dal `feat/phase9-k18-adx-obs-health`)
+
+**Karar.** K25 için (b) seçildi (kullanıcı, 2026-11-09) ve K18 dalında uygulandı (Faz 10 §6).
+
+**Sorun.**
+- **ADX ≡ 0 (Faz 10 §8 #2).** B7'de `warmup='nan'` modunda ADX tümüyle NaN çıkmıştı (§9.7). Kök neden bir indeks hizalama hatası. `calculate_adx`'te +DM/−DM RangeIndex'li seri olarak kuruluyor, ATR tarih indeksli. Bölmede pandas indeksleri hizalıyor, DI'lar tümüyle NaN oluyor ve `dx = 0` çıkıyor. RangeIndex'li sonuç tarih indeksli df'e atanınca yine tümüyle NaN oluyor. Eski yol bunu `fillna(0)` ile sabit 0'a çeviriyordu. Mevcut RL modelleri ve tahmin hattı ADX = 0 ile eğitildi. Aynı fonksiyon RangeIndex'li bir df'te doğru çalışırdı.
+- **K25.** B9 sonrası eski ortamda test fiyat özelliklerinin %98,9'u eğitim desteğinin dışında (§9.5).
+- **§9.6 #9.** Gözlem sağlığı ölçütünün nihai tanımı (eşikler) K18'e bırakılmıştı.
+
+**Değişiklik** (hepsi bayrakla; varsayılanlar eski davranış):
+- **ADX** (`data/technical_indicators.py`):
+  - `adx='legacy'|'wilder'` bayrağı eklendi; varsayılan `legacy`.
+  - `wilder` kipi indeks hizalı çalışıyor. Yumuşatma Wilder'in RMA'sı: EMA, α = 1/n, `adjust=False`, `min_periods = n`. İlk 2n−1 = 27 satır NaN ısınma. Tanımsız bölmeler 0: ATR = 0 ise DI = 0; DI⁺ + DI⁻ = 0 ise DX = 0.
+  - Rota ADX'i `with_adx(df, 'wilder')` ile OHLCV'den yeniden hesaplıyor (`RL_ADX_MODE`). CSV'ye yazılmıyor, çünkü eski modeller ve canlı karar aynı dosyayı okuyor. Meta, manifest ve deneme kaydının `config` alanı `indicator_spec` taşıyor.
+- **Veri kapısı:** `adx` artık `BFILL_WARMUP_COLS`'ta. Legacy ADX sabit (ya da tümüyle NaN) olduğu için dedektör onu zaten atlıyor; legacy panelde kapı main ile aynı.
+- **K25 (b)** (`env/trading_env.py`):
+  - `price_norm='stats'|'causal'` bayrağı; varsayılan `stats`.
+  - `causal` kipinde t günündeki ölçek, sembolün t'ye kadarki (dahil) son W kapanışının ortalaması ve std'si (ddof=1). W = 252 (`CAUSAL_WINDOW`); `None` genişleyen pencere demek. En az 20 gözlem gerekiyor (`CAUSAL_MIN_PERIODS`); yoksa ya da std ≈ 0 ise o günün fiyat özellikleri 0 (nötr). W ve 20 tasarım varsayımı; literatür dayanağı yok.
+  - Held-out ortam pencerenin başını `price_context` ile dolduruyor. Bu, değerlendirme penceresinden önceki satırlar; rotada eğitim + doğrulama. Bağlamın ortamın ilk tarihinden önce bitmesi zorunlu, aksi `ValueError`. Lookup cache zorunlu (`.loc` yolu desteklenmiyor).
+  - Eğitim ortamına bağlam verilmiyor: kapı pencere öncesini kesiyor. Bu yüzden eğitimin ilk 19 satırı nötr, ilk 252 satırı genişleyen pencere (nedensel).
+  - Rotada `TrainingRequest.price_norm` alanı; varsayılan `stats`. Meta ve manifest `price_norm` taşıyor.
+- **MACD de nedensel ölçekle — uygulama yorumu, hakem ve kullanıcı onayına açık.** K25 metni "fiyat ölçeği" diyor. MACD iki fiyat EMA'sının farkı, birimi TL. Eski ölçekte `tanh(macd/0,1)` testte %75 doygun ve değerlerinin %28,7'si eğitim desteği dışında (aşağıdaki tablo). Bu yüzden `causal` kipinde `tanh(macd/std_t)` kullanılıyor; std_t fiyat z'siyle aynı. Yeni sabit eklenmedi. `stats` kipinde MACD eski tanımında kalıyor.
+- **Protokol** (`evaluation/trial_registry.py`, `evaluation/observation_health.py`):
+  - `price_stats_source='causal'` temiz sayılıyor. Koşul: iki ortam da nedensel, pencere tanımı aynı ve eğitim penceresi değerlendirmeden önce bitiyor. Aksi `mixed_norm`, `overlapping_window` ya da `causal_unverified`; hepsi açık.
+  - **`obs_health`** (yeni, ölçülüyor): eğitim ve değerlendirme penceresinde fiyat, hacim ve gösterge bloklarında kırpılan oran (|x| ≥ 10) en fazla %1 ve pencere boyunca sabit gözlem boyutu yok. Faz 2'nin temel oranları sembol başına sabit bir tablodan geldiği için bu kurala girmiyor.
+  - **`features_in_support`** (yeni, ölçülüyor): fiyat dışı her piyasa özelliğinde, değerlendirme değerlerinin en fazla %1'i eğitim [min, maks] aralığı dışında. Ölçü özellik başına, çünkü blok ortalaması tek bir özelliği gizliyor (eski ölçekte MACD %28,7 iken gösterge bloğu %5,8).
+  - Özellik başına doygunluk raporlanıyor ama kapı değil: `sat_frac`, \|x\| ≥ %99 × sınır. Doygun bir özellik bilgi kaybıdır, geçersiz girdi değil.
+  - `adx_constant` artık eğitim ortamını da ölçüyor.
+  - Bu maddeleri taşımayan (K18 öncesi) kayıt açık sayılıyor.
+  - Eşik (%1) tasarım varsayımı; `SUPPORT_EPS` ile aynı.
+- **B7 ölçütünün yanlış pozitifi (yeni bulgu, K18 ölçümünde).** Protokolün bfill dedektörü değerlendirme penceresinin başını sembolün seri başı sanıyordu. Gerçek panelde VAKBN'nin RSI'ı test penceresinin ilk iki gününde birebir aynı; kapanış değişmeyince RSI aynı kalıyor. Bu yüzden B7'den beri gerçek paneldeki her rota test kaydı `indicator_bfill=True` (açık) yazıyordu. §9.7'deki "rota kayıtlarında `indicator_bfill=False`" cümlesi bu panelde doğru değildi. Hata güvenli yöndeydi: kaydı açıyordu, sızıntı gizlemiyordu. Düzeltme: eğitimde geçmişi olan sembolün değerlendirme penceresi başı sayılmıyor. Değerlendirmede listelenen sembolün bloğu hâlâ yakalanıyor.
+
+**Kabul** (`python tests/test_k18_obs_health.py`, ağ yok, CPU, **91/91**):
+- **A, ADX:**
+  - Legacy kök neden kayıt olarak sabit: RangeIndex'li sıfır serisi; `nan` modunda tümüyle NaN, `bfill` modunda 0.
+  - `wilder`: df indeksini taşıyor, ilk 27 satır NaN, değerler [0, 100].
+  - İki bağımsız referansla 400. satırdan sonra \|fark\| < 1e-6: testte yazılmış, SMA tohumlu klasik Wilder döngüsü ve `pandas_ta.adx` 0.4.71b0. İlk tanımlı satırlar karşılaştırılmıyor; tohumlama farkı orada sıfır değil.
+  - Düz trendde ADX > 90, yatay seride 0.
+  - B0: t ∈ {3, 26, 27, 60, 300} için `nan` + `wilder` kesme değişmez. `bfill` + `wilder` ısınma içindeki t'de kalıyor.
+- **D, dondurma:** main @ 01aabdb (`git show`) ile bit-eş:
+  - göstergeler (`bfill` ve `nan`);
+  - veri kapısı, legacy panel, `drop_indicator_warmup` her iki değeri;
+  - env'de 8 yapılandırma: tam/delikli × legacy/own_last, faz 3, ATR + Kelly, ham OHLCV, verilen ölçek.
+- **G, kapı:**
+  - Geç listelenen sembol dahil her sembolden 27 satır atılıyor.
+  - Bağımsız `nan` referansına göre kalan her satırda göstergeler nedensel olarak tanımlı.
+  - **Mutasyon:** dedektör ve NaN taraması `adx`'i bilmezse, geriye doldurulmuş ADX satırları kalıyor ve test bunu yakalıyor. İlk sürümde mutasyon boştu: `indicator_warmup_blocks`'un varsayılan argümanı tanım anında bağlanıyor; düzeltildi.
+- **N, K25:**
+  - z ve `tanh(macd/std_t)` bağımsız numpy hesabıyla aynı; genişleyen pencere de.
+  - Bağlamsız ortamda ilk 19 gün nötr.
+  - **B0, t ∈ {0, 60, T−2}:** t sonrası fiyatlar değişince t'ye kadar **tüm gözlem vektörü** bit-eş kalıyor; t+1 değişiyor.
+  - **Mutasyon:** merkezli (gelecekli) pencere t=0'da yakalanıyor. Eski kendi-pencere ölçeği de t=0'da kalıyor.
+  - Penceresine taşan bağlam, `stats` kipinde verilen bağlam, `close`'suz bağlam ve önbelleksiz panel `ValueError` veriyor.
+  - `own_last` eksik günde sembolün son satırının değeri ve o satırın istatistiği kullanılıyor.
+  - Yükselen sentetik panelde B9 ölçeği destek dışı, nedensel ölçek destek içi.
+- **P, protokol:**
+  - Etiketler: `causal`, `mixed_norm` (iki yönde ve farklı pencerede), `overlapping_window`, `causal_unverified`.
+  - `obs_health`: kırpma ve sabit ADX'i yakalıyor. Ayırt edici durum: kırpmasız destek dışılıkta `obs_health` True, `price_in_support` False; ikisi farklı şeyleri ölçüyor.
+  - `features_in_support` tek bir özelliğin aşımını yakalıyor.
+  - B7 yanlış pozitifi: düzeltmeden önceki dedektör pencere başında "blok" görüyor; protokol `False` veriyor. Değerlendirmede listelenen sembolün bloğu `True`, o sembol çıkarılınca `False`.
+- **R, rota uçtan uca** (sentetik panel, CPU):
+  - Eğitim ortamı rotanın `wilder` ADX'ini görüyor, CSV'deki ADX'i değil.
+  - Meta, kayıt ve config `indicator_spec` ile `price_norm` taşıyor.
+  - Nedensel kolda test bağlamı eğitim + doğrulama satırları ve etiket `causal`.
+  - **t ∈ {0, 6}:** t sonrası fiyat değişince test piyasa bloğu t'ye kadar bit-eş, t+1'de değişiyor.
+- **X, gerçek panel:**
+  - Her sembolde yalnız ilk 27 satır NaN; ADX [0, 100] aralığında ve sabit değil.
+  - Kapı yalnız ODAS'tan 17 ve PGSUS'tan 24 pencere içi satır atıyor (B7'de 10 ve 17). Kalan satırlar sembol başına bağımsız referansla nedensel.
+- **Uyarlanan eski testler:**
+  - B9 rota testi test penceresini artık rotanın veri yolundan türetiyor (`with_adx` → kapı).
+  - C testinin "temiz" fikstürüne yeni maddeler eklendi.
+  - Rotanın yeni uyarı metni, B9'un "destek dışı uyarısı yok" alt dizge kontrolüyle çakışıyordu; metin ayrıştırıldı.
+- **Diğer takımlar yeşil:** B9 103, C 39, B7 28, V 27, eksik hücre 17, lookup 41, fiyat bekçisi 26, A 51, eğitim durumu, günlük karar 18, evren 22, manifest. Tahmin regresyon golden'ı da korunuyor (`test_prediction_regression`: davranış korunmuş).
+
+**Ölçüm — gerçek panel.**
+- Komut: `python scripts/analysis/measure_obs_health.py --out docs/development/measurements/phase9-k18/obs_health.json`.
+- Çıktı: [measurements/phase9-k18/obs_health.json](measurements/phase9-k18/obs_health.json). Commit 12aa13b, `git_dirty=false`; CSV SHA-256 `5ca2fe3f…`; K18 paneli `01711d7a…`.
+- Veri yolu rotanınki; eğitim yapılmıyor. Bölmeler §9.5 ile aynı: eğitim 2013-06-03..2022-08-11, test 2024-08-06..2026-07-27, 30 sembol.
+- Sayılar test penceresinden; ayrı belirtilmedikçe ölçek bağlamı eğitim + doğrulama.
+
+| Yapılandırma | Fiyat destek dışı | Fiyat kırpık | MACD destek dışı | MACD doygun | Açık maddeler (test) | Açık maddeler (doğrulama) |
+|---|---|---|---|---|---|---|
+| K18 öncesi rota (legacy ADX, B9) | %98,9 | %74,7 | %28,7 | %75,0 | `adx_constant`, `price_in_support`, `obs_health`, `features_in_support` | aynı |
+| K18 rota varsayılanı (`wilder`, B9) | %98,9 | %74,7 | %28,7 | %75,0 | `price_in_support`, `obs_health`, `features_in_support` | aynı |
+| **Nedensel, W=252** | **%0,03** | **%0** | **%0,24** | **%0** | **yok** | `features_in_support` (ADX %1,29) |
+| Nedensel, W=63 (duyarlılık) | %0,08 | %0 | %0,18 | %0 | yok | `features_in_support` (ADX %1,29) |
+| Nedensel, genişleyen | %7,6 | %0 | %0,24 | %0 | `price_in_support` | `price_in_support` (%20,2), `features_in_support` |
+
+- **Neden kayan pencere:** genişleyen ortalama TL enflasyonunun gerisinde kalıyor; z zamanla kayıyor (test %7,6, doğrulama %20,2 destek dışı). W=63 ile W=252 aynı sonucu veriyor; bu panelde W kritik değil.
+- **Eşik gürültüye yakın.** Kapıdan geçen değerlerin bir kısmı eşiğe çok yakın: hacim %0,87 (test) ve %0,96 (doğrulama), ADX doğrulamada %1,29. %1 eşiği bir tasarım varsayımı ve tek bir pencereyle ölçülüyor. Eşiğe yakın bir madde koşumdan koşuma yön değiştirebilir. Rotada doğrulama ortamı yok (R1); test kaydı bu yüzden temiz çıkıyor.
+- **Türbülans** her yapılandırmada eğitimde %99,7, testte %100 doygun (`tanh(turb/2)`; 30 sembollü Mahalanobis uzaklığı 2'nin çok üstünde). Özellik pratikte sabit +1. Kapı değil, ama bu bir bilgi kaybı; MARL `obs_spec`'inde (M2) doygunluk sınırı konmalı. CCI %1,0–1,4 doygun.
+- **ADX dağılımı** (pencere, `wilder`): medyan 24,0, %1–%99 aralığı 10,2–60,1, gözlemlerin %46,3'ü > 25, sembol ortalamaları 23,5–28,1. Kaynak: JSON `adx_profile_wilder`.
+
+**Okuma ve sınırlamalar.**
+- **Nedensel kol, protokolün ölçtüğü maddelerde temiz bir test kaydı üretebilir.** Bu, RL sonuçlarının kanıt olduğu anlamına gelmiyor. Protokole girmeyen açıklar sürüyor: tek bölme, doğrulamasız seçim ve göstergesiz HPO (R1, Y21). Kol karşılaştırması ve ≥ 10 tohum Milestone 0''da (K25).
+- **İki kol iki özellikte farklı:** fiyat ve MACD. Milestone 0''da B9 kolu ile nedensel kol arasındaki fark yalnız fiyat ölçeğinden gelmeyecek. Y13'ün etkisini ayırt etmek için MACD'yi B9 tanımında tutan bir ara kol gerekebilir; bu M8 ön kaydında karara bağlanmalı.
+- **Göstergeler ham panelde, hayalet günler atılmadan hesaplanıyor.** Bu tüm göstergeler için önceden vardı; ADX de aynı yoldan geçiyor.
+- **Canlı karar** (`build_live_state`) hâlâ legacy ADX'le, nedensel ölçeksiz ve 50/50 fiyat ölçeğiyle durum kuruyor. Meta'daki `indicator_spec` ve `price_norm` alanlarını okuması K13'ün işi (Y12). Yeni modellerin günlük kararı eğitimdeki gözlemle uyuşmuyor.
+- **HPO** hâlâ ham OHLCV ve `stats` kipinde (Y21); nedensel kol R1'de HPO'ya taşınacak.
+- **Tahmin hattı** legacy ADX'te kalıyor. `nan` + `wilder` modlarına geçiş Milestone 0' golden yenilemesiyle (K1); artık bunu engelleyen bir ADX nedeni yok.
+
+**Etkileri:**
+- Bu daldan sonra eğitilen rota modellerinin ADX'i gerçek değerler taşıyor. ODAS'ın 17, PGSUS'un 24 pencere içi satırı eksik hücre.
+- K18 öncesi deneme kayıtları `obs_health` ve `features_in_support` taşımadığı için açık sayılıyor (ihtiyatlı).
+- `stats` kolunun gerçek paneldeki kayıtları açık kalıyor: `price_in_support`, `obs_health`, `features_in_support`.
+
+**Açık kalanlar:**
+- Canlı karar parite (K13).
+- HPO'da nedensel kol ve göstergeler (R1).
+- Türbülans doygunluğu ve MARL `obs_spec` doygunluk sınırı (M2).
+- Kol tasarımında MACD ara kolu (M8).
+- Eşik duyarlılığı: %1'in tek pencerelik ölçümü (M8; R1'in walk-forward katlarında kat başına raporlanmalı).
+
 ---
 
 ## Versiyon geçmişi
@@ -743,3 +856,4 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - Ölçüm JSON'ları depoda arşivlendi.
   - Açık: GPU belirlenimciliği (#5), HPO → rota seçim soyu (#14); destek içi üçüncü kol için karar K25.
 - **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7). hakem-2 (§9.8): "Büyük revizyon"; dedektör türbülansın nedensel 0 başını blok sanıyordu, düzeltildi. Paketli inceleme ~144 bin token.
+- **2026-11-09 (K18 + K25 b):** K25 kararı (b). ADX'in kök nedeni indeks hizalaması; `wilder` bayrağı rota varsayılanı oldu (iki bağımsız referans). Eski ortama opt-in nedensel fiyat ölçeği eklendi (`price_norm='causal'`, W=252; MACD aynı ölçekle). Yeni ölçülen protokol maddeleri: `obs_health` ve `features_in_support`. Gerçek panelde nedensel kolun test kaydı protokolde temiz (fiyat destek dışı %98,9 → %0,03). B7 ölçütünün yanlış pozitifi bulunup düzeltildi (§9.9).
