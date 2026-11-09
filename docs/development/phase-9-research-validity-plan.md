@@ -767,7 +767,7 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - Yani B7 ölçütü bu panelde her rota test kaydına `indicator_bfill=True` (açık) yazardı. Depoda gerçek panelle yazılmış bir rota kaydı yok (`trial_registry.jsonl` bulunamadı); bu gözlenmiş bir kayıt değil, ölçülmüş bir koşullu. §9.7'deki "rota kayıtlarında `indicator_bfill=False`" cümlesi bu panel için doğru değildi. Hata güvenli yöndeydi.
   - Düzeltme: eğitimde en az `WARMUP_MAX_ROWS` = 28 satırı olan sembolün değerlendirme penceresi başı sayılmıyor. 28, en uzun ısınma: `wilder` ADX'in 27 NaN satırı + ilk geçerli değer. Eğitimde daha kısa geçmişi olan sembolün değerlendirmeye taşan bloğu yakalanıyor (hakem-rl #3), değerlendirmede listelenen sembolün bloğu da.
 
-**Kabul** (`python tests/test_k18_obs_health.py`, ağ yok, CPU, **108/108**; hakem düzeltmelerinden önce 91):
+**Kabul** (`python tests/test_k18_obs_health.py`, ağ yok, CPU, **109/109**; hakem düzeltmelerinden önce 91):
 - **A, ADX:**
   - Legacy kök neden kayıt olarak sabit: RangeIndex'li sıfır serisi; `nan` modunda tümüyle NaN, `bfill` modunda 0.
   - `wilder`: df indeksini taşıyor, ilk 27 satır NaN, değerler [0, 100].
@@ -835,9 +835,9 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 - **Sembol düzeyinde** (`dims_in_support`; JSON `eval_out_of_train_support_dims`; nedensel W=252):
   - **Test:** hiçbir fiyat boyutu %1'i aşmıyor. Hacimde 2 sembol aşıyor, en büyüğü SASA %23,3. MACD eski tanımda 20 sembol aşıyor (en büyük YKBNK %83,2); opt-in nedensel MACD'de 3 sembol (en büyük FROTO %3,4).
   - **Doğrulama:** fiyatta 8 sembol aşıyor (en büyük GARAN kapanış %7,3). ADX'te 8 sembol (SKBNK %10,5), hacimde 5 (ENKAI %10,1), RSI'da 5 (SKBNK %2,8).
-  - W=63'te testte 1 fiyat boyutu aşıyor (TKFEN, en çok %1,8).
+  - W=63'te testte 1 sembol aşıyor (TKFEN, O/H/L/C'nin dördü, yani 4 fiyat boyutu; en çok %1,8); W=252'de 0. Fiyat boyutlarında W=252 daha iyi.
 - **Okuma.** Nedensel ölçek fiyatın **düzey** bağımlılığını kaldırıyor; mekanizma ×7 testinde gösterildi. Ama destek içinde kalmayı garanti etmiyor. Havuzlu %0,03 sembol düzeyindeki aşımları gizliyordu; doğrulamada sekiz sembolün fiyat boyutu eğitim aralığının dışına taşıyor. "Nedensel kol fiyatı desteğe alıyor" ifadesi yalnız test penceresi ve fiyat boyutları için doğru.
-- **Neden kayan pencere:** genişleyen ortalama TL enflasyonunun gerisinde kalıyor (test %8,7, doğrulama %22,8 destek dışı). W=63 ile W=252 aynı protokol sonucunu veriyor.
+- **Neden kayan pencere:** genişleyen ortalama TL enflasyonunun gerisinde kalıyor (test %8,7, doğrulama %22,8 destek dışı). W=63 ile W=252 aynı protokol sonucunu veriyor, çünkü ikisi de hacim ve MACD yüzünden açık; fiyat boyutlarında W=252 daha iyi (hakem-2 N2).
 - **Eğitim bağlamı:**
   - Aralık 2012-05-22..2013-05-31; 18 hayalet gün ve 12 bayat hücre atıldı, 7 `ohlc_inconsistent` satırı kaldı. Seri başı: ODAS, PGSUS (JSON `train_context`).
   - Eğitimde pencere dolmadan geçen satır bağlamsız 7.530'dan (%10,9) 492'ye indi; bunların tamamı ODAS (242) ve PGSUS (250), seri başı. Nötr satır 570'ten 28'e indi.
@@ -879,8 +879,9 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 | hakem-rl (sonnet) | ilk | Büyük revizyon | ~50 bin | 7 | ~1,5 dk |
 | hakem-rl (sonnet) | ikinci (SendMessage) | Küçük revizyon | ~57 bin | 3 | ~0,5 dk |
 | hakem-2 (opus) | son kapı | Büyük revizyon (RED yok) | ~143 bin | 39 | ~8,6 dk |
+| hakem-2 (opus) | ikinci (SendMessage) | Kabul | ~165 bin (önceki bağlamla) | 8 | ~1,7 dk |
 
-Panel toplamı ~250 bin token. Tek başına B9 hakem-2 ~301 bin harcamıştı; paket ve kapsam farklı olduğu için kıyas tam değil. hakem-2 sonrası düzeltmeler son kapıya ikinci kez okutulmadı (bkz. aşağıdaki not).
+İlk okumalar ~250 bin token; ikinci okumalarla birlikte bildirimlerin toplamı ~415 bin. İkinci okuma bildirimi önceki bağlamı da sayıyor olabilir. Tek başına B9 hakem-2 ~301 bin harcamıştı; paket ve kapsam farklı olduğu için kıyas tam değil.
 
 | # | Kaynak | Cid. | İtiraz | Yanıt |
 |---|---|---|---|---|
@@ -899,7 +900,9 @@ Panel toplamı ~250 bin token. Tek başına B9 hakem-2 ~301 bin harcamıştı; p
 | H7 | hakem-2 | KÜÇÜK | "Varsayılan yollar main ile bit-eş" rota için doğru değil | **Kabul.** Kabul cümlesi "fonksiyon ve env varsayılanları; rotanın ADX'i bilinçli olarak değişti" oldu |
 | H8 | hakem-2 | KÜÇÜK | Bağlam 252 tarih seçip sonra atıyor (etkin 242); sınır taranmıyor | **Kabul, düzeltildi.** Atımdan sonra sembol başına 252 satır; tarama bağlam + pencerenin ilk tarihi; ilk satırın öncülü dahil |
 
-**Not.** hakem-2 düzeltmeleri (H1–H8) son kapıya ikinci kez okutulmadı; kullanıcı kararına bırakıldı (maliyet). Düzeltmelerin kanıtı: test 108/108 ve commit 5f1c2d4'teki yenilenmiş ölçüm.
+**hakem-2 ikinci okuma (SendMessage): Kabul.** H1–H8 karşılandı. hakem-2 JSON'daki boyut değerlerini kendi sembol başına ölçümüyle birebir buldu, H6'yı bağımsız referansla yeniden üretti (2,8e-14). İki yeni KÜÇÜK not düzeltildi:
+- **N1:** pencere içinde listelenen sembol, bağlamda satırı olmadığı için seri başı listesine girmiyordu. Hata güvenli yöndeydi; gerçek panelde etkisi yok. Düzeltildi, test C'ye eklendi.
+- **N2:** W=63 ifadeleri düzeltildi.
 
 ---
 

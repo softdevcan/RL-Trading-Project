@@ -254,8 +254,11 @@ def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions:
               'n_ghost_days': 0, 'n_stale_cells_dropped': 0, 'n_close_safe_artifacts': 0,
               'series_start_symbols': [], 'short_context_symbols': [], 'start': None, 'end': None}
     sub = df[np.isin(dates, look)]
+    first_ever = _long(df).groupby('symbol', sort=False)['date'].min()
     if sub.empty:
-        sub.attrs['series_start_symbols'] = []
+        # pencere oncesi hic veri yok: her sembolun serisi pencerede basliyor (hakem-2 K18 N1)
+        report['series_start_symbols'] = [str(x) for x in first_ever.index]
+        sub.attrs['series_start_symbols'] = list(report['series_start_symbols'])
         return sub, report
     ghosts = find_ghost_days(sub, ghost_threshold)
     sdates = pd.to_datetime(sub.index.get_level_values('date'))
@@ -272,7 +275,6 @@ def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions:
         sub = sub[~pd.MultiIndex.from_arrays([idx.get_level_values('symbol'), cdates]).isin(key)]
     # sembol basina son n_sessions satir (+1: taramada ilk satirin onculu de olsun)
     parts, scan_parts = [], []
-    first_ever = _long(df).groupby('symbol', sort=False)['date'].min()
     for sym, g in sub.groupby(level='symbol', sort=False):
         g = g.sort_index(level='date')
         parts.append(g.iloc[-n_sessions:])
@@ -282,6 +284,12 @@ def rl_context_before(df: pd.DataFrame, start: Optional[str] = None, n_sessions:
             fe = fe.tz_localize(None) if fe.tzinfo is not None else fe
             key_ = 'series_start_symbols' if fe >= pd.Timestamp(look[0]) else 'short_context_symbols'
             report[key_].append(sym)
+    # baglamda HIC satiri olmayan, serisi bakis araligindan sonra baslayan sembol de seri
+    # basidir (pencere icinde listelenmis; hakem-2 K18 N1)
+    seen = set(sub.index.get_level_values('symbol'))
+    for sym, fe in first_ever.items():
+        if sym not in seen and pd.Timestamp(fe) >= pd.Timestamp(look[0]):
+            report['series_start_symbols'].append(sym)
     ctx = pd.concat(parts)
     after = np.unique(dates[dates >= t0])
     head = df[dates == after[0]] if len(after) else df.iloc[:0]   # pencerenin ilk tarihi

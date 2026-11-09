@@ -530,6 +530,15 @@ def main():
     check("yeni listelenen sembol seri basi olarak isaretleniyor (attrs + rapor)",
           lctx.attrs["series_start_symbols"] == ["W2.IS"] and lrep["series_start_symbols"] == ["W2.IS"]
           and lrep["short_context_symbols"] == [], str(lrep))
+    wpan = ohlcv(n_days=400, start="2012-01-02", late=(2, 380))      # W2 pencere ICINDE listeleniyor
+    _, wrep = integ.rl_context_before(wpan, start="2013-06-01")
+    epan = ohlcv(n_days=100, start="2014-01-02")                     # pencere oncesi hic veri yok
+    ectx, erep = integ.rl_context_before(epan, start="2013-06-01")
+    check("pencere icinde listelenen sembol ve pencere oncesi verisi olmayan panel seri basi "
+          "(hakem-2 K18 N1)",
+          wrep["series_start_symbols"] == ["W2.IS"] and ectx.empty
+          and sorted(erep["series_start_symbols"]) == ["W0.IS", "W1.IS", "W2.IS"]
+          and sorted(ectx.attrs["series_start_symbols"]) == ["W0.IS", "W1.IS", "W2.IS"], str(wrep))
     jpan = cpan.copy()
     jm = (jpan.index.get_level_values("symbol") == "W0.IS") & (
         jpan.index.get_level_values("date") >= pd.Timestamp("2013-06-01"))

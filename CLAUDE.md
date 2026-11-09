@@ -175,7 +175,7 @@ python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i â
                                            #          degismezligi, RL kapisi, olculen protokol (28)
 python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
                                            #          causal fiyat olcegi B0 + mutasyon, obs_health,
-                                           #          main ile bit-es, rota uctan uca (108)
+                                           #          main ile bit-es, rota uctan uca (109)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
