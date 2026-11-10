@@ -77,40 +77,10 @@ class ProgressCallback(BaseCallback):
         return True
 
 
-class TrialPruningCallback(BaseCallback):
-    """
-    Optuna pruning callback.
-    Training sırasında kötü performans gösteren trial'ları erken durdurur.
-    """
-
-    def __init__(self, trial: optuna.Trial, eval_freq: int, pruning_start_step: int = 0):
-        super().__init__()
-        self.trial = trial
-        self.eval_freq = eval_freq
-        self.pruning_start_step = pruning_start_step
-        self.eval_idx = 0
-        self.is_pruned = False
-
-    def _on_step(self) -> bool:
-        if self.n_calls % self.eval_freq == 0 and self.n_calls >= self.pruning_start_step:
-            # Get current reward from training
-            if len(self.locals.get("infos", [])) > 0:
-                info = self.locals["infos"][0]
-                if "episode" in info:
-                    mean_reward = info["episode"]["r"]
-
-                    # Report to Optuna
-                    self.trial.report(mean_reward, self.eval_idx)
-
-                    # Check if should prune
-                    if self.trial.should_prune():
-                        self.is_pruned = True
-                        logger.info(f"Trial {self.trial.number} pruned at step {self.n_calls}")
-                        return False
-
-                    self.eval_idx += 1
-
-        return True
+# Faz 9 / R1: tanimsiz dogrulama metrigi (model hicbir kontrol noktasinda islem
+# yapmadi) icin amac degeri. NaN Optuna'da denemeyi BASARISIZ sayar; sonlu ve cok
+# dusuk bir deger TPE'nin o bolgeden uzaklasmasini saglar.
+UNDEFINED_OBJECTIVE = -1e6
 
 
 class BaseHyperparameterOptimizer:
@@ -181,11 +151,16 @@ class BaseHyperparameterOptimizer:
 
         # Pruner (Early stopping)
         if pruner is None:
-            # Adjusted for smaller n_trials: start pruning after first 20% of trials
-            # and warmup for ~20% of total_timesteps (assuming 50k-100k timesteps)
+            # Faz 9 / R1: rapor adimi KONTROL NOKTASI SIRASI (0..N_CHECKPOINTS-1) ve
+            # raporlanan deger DOGRULAMA metrigi. Eskiden egitim bolum odulu, o da
+            # yalniz `eval_freq` kati bolum sonuna denk gelirse raporlaniyor,
+            # `n_warmup_steps=10000` ise rapor adimi 0,1,2.. oldugu icin budamayi
+            # hic baslatmiyordu. Butcenin ilk yarisinda budama yok (tasarim varsayimi:
+            # bir yillik dogrulamada erken kontrol noktalari gurultulu).
+            from evaluation.rl_folds import N_CHECKPOINTS
             pruner = MedianPruner(
                 n_startup_trials=max(2, n_trials // 5),  # 20% of trials or min 2
-                n_warmup_steps=10000  # ~20% of 50k timesteps
+                n_warmup_steps=N_CHECKPOINTS // 2,
             )
         self.pruner = pruner
 
@@ -229,168 +204,45 @@ class BaseHyperparameterOptimizer:
 
         return params
 
-    def create_env(
-        self,
-        stock_symbols: list,
-        start_date: str,
-        end_date: str,
-        phase: int = 2,
-        reward_type: str = 'psr',
-        use_cached_data: bool = True,
-        *,
-        price_stats: Optional[Dict[str, Dict[str, float]]],
-    ) -> gym.Env:
-        """
-        Trading environment oluşturur.
+    def _phase2_frames(self, stock_symbols: list):
+        """Faz 2 ortaminin temel + makro tablolari (rotayla ayni dosyalar)."""
+        if self.phase != 2:
+            return None, None
+        from data.fundamental_fetcher import FundamentalDataFetcher
+        from data.macro_fetcher import MacroDataFetcher
 
-        Args:
-            stock_symbols: Hisse senedi sembolleri
-            start_date: Başlangıç tarihi
-            end_date: Bitiş tarihi
-            phase: 1=Faz1 (56 features), 2=Faz2 (97 features with fundamental+macro)
-            reward_type: 'simple' (baseline) or 'psr' (risk-aware)
-            use_cached_data: True ise data/bist/raw_stock_data.csv'den okur (CSV
-                ezilmez, yfinance çağrısı yok). Dosya yoksa fallback yfinance.
-            price_stats: Faz 9 / B9 — ZORUNLU anahtar (hakem-2 B9 #6: varsayilani
-                sizintili yol olmasin). Dogrulama ortami icin EGITIM ortaminin
-                `get_price_stats()` ciktisi; egitim ortami icin acikca None
-                (olcek bu pencereden — egitim ortaminda dogru tanim).
-
-        Returns:
-            Trading environment
-        """
-        # 1. Fetch market data
-        df = None
-        data_fetcher = None  # asagidaki temizlik adimi bunu her dalda bekliyor
-        if use_cached_data:
-            try:
-                data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
-                full_df = data_fetcher.load_data('raw_stock_data.csv')
-
-                # The CSV stores ALL cached symbols/dates — filter to the requested
-                # symbols and date window. Match the user-supplied date strings to
-                # the index's tz (naive vs aware) to avoid an incompatible-compare
-                # error when the CSV was saved from a tz-aware yfinance pull.
-                full_df = full_df[full_df.index.get_level_values('symbol').isin(stock_symbols)]
-                idx_dates = full_df.index.get_level_values('date')
-                start_ts = pd.Timestamp(start_date)
-                end_ts = pd.Timestamp(end_date)
-                if idx_dates.tz is not None:
-                    start_ts = start_ts.tz_localize(idx_dates.tz)
-                    end_ts = end_ts.tz_localize(idx_dates.tz)
-                mask = (idx_dates >= start_ts) & (idx_dates <= end_ts)
-                df = full_df[mask]
-                missing = set(stock_symbols) - set(df.index.get_level_values('symbol').unique())
-                if missing:
-                    logger.warning(
-                        f"Cached CSV missing symbols {missing}; falling back to yfinance"
-                    )
-                    df = None
-                elif df.empty:
-                    logger.warning(
-                        f"Cached CSV has no rows for {start_date}..{end_date}; "
-                        f"falling back to yfinance"
-                    )
-                    df = None
-                else:
-                    logger.info(
-                        f"📂 Loaded cached data: {len(df)} rows, "
-                        f"{df.index.get_level_values('date').min().date()} to "
-                        f"{df.index.get_level_values('date').max().date()}"
-                    )
-            except FileNotFoundError:
-                logger.warning("Cached CSV not found; falling back to yfinance")
-                df = None
-
-        if df is None:
-            data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
-            df = data_fetcher.fetch_stock_data(stock_symbols)
-
-        # Temizlik ZORUNLU — bu yol 'raw_stock_data.csv'yi ham yukluyordu.
-        # Ham dosyada negatif fiyatlar var (yfinance'in 2005 TL sadelestirmesi
-        # oncesine ait duzeltme artefaktlari). Negatif fiyat TradingEnv'de
-        # bakiyeyi -initial_balance'in altina cekiyor, gozlemdeki log() NaN
-        # uretiyor ve trial "Normal(loc: nan)" ile cokuyordu.
-        if df is not None and not df.empty:
-            if data_fetcher is None:
-                data_fetcher = DataFetcher(start_date=start_date, end_date=end_date)
-            rows_before = len(df)
-            df = data_fetcher.clean_data(df, leading='drop')  # B7: bas satira gelecek yazilmaz
-            if len(df) != rows_before:
-                logger.info(
-                    f"🧹 Temizlik: {rows_before - len(df):,} satir dusuruldu "
-                    f"(negatif/sifir fiyat, duplicate) -> {len(df):,} satir kaldi"
-                )
-
-        if df is None or df.empty:
-            raise ValueError(f"No data fetched for {stock_symbols}")
-
-        # Faz 10 / V + K17: egitim rotasiyla AYNI veri kapisi. Pencere
-        # RL_DATA_START'tan once baslayamaz; pencerede fiyat artefakti varsa
-        # deneme durur; hayalet gun ve bayat hucreler atilir.
-        from data.integrity import RL_DATA_START, prepare_rl_panel
+        fund_fetcher = FundamentalDataFetcher()
         try:
-            from app.core.config import get_settings
-            rl_start = get_settings().RL_DATA_START
-        except Exception:
-            rl_start = RL_DATA_START
-        eff_start = max(pd.Timestamp(start_date), pd.Timestamp(rl_start))
-        if pd.Timestamp(start_date) < pd.Timestamp(rl_start):
-            logger.warning(
-                f"HPO penceresi {start_date} istendi; RL veri penceresi {rl_start}'den "
-                f"once baslayamaz (Faz 10 K17) -> {eff_start.date()} kullaniliyor"
-            )
-        # B7: gosterge isinma blogu atilir (HPO paneli bugun gostergesiz — Y21;
-        # R1 gostergeli paneli bagladiginda gecerli olur)
-        df, self.last_integrity_report = prepare_rl_panel(
-            df, start=str(eff_start.date()), end=end_date, drop_indicator_warmup=True)
+            fundamental_df = fund_fetcher.load_data('fundamental_data.csv')
+        except FileNotFoundError:
+            logger.warning("Fundamental data not found, fetching...")
+            fundamental_df = fund_fetcher.fetch_fundamental_data(stock_symbols, save=True)
+        macro_fetcher = MacroDataFetcher()  # anahtar .env'deki EVDS_API_KEY'den
+        try:
+            macro_df = macro_fetcher.load_data('macro_data.csv')
+        except FileNotFoundError:
+            logger.warning("Macro data not found, fetching...")
+            macro_df = macro_fetcher.fetch_macro_data(save=True)
+        return fundamental_df, macro_df
 
-        # 2. Load Phase 2 data (fundamental + macro) if needed
-        fundamental_df = None
-        macro_df = None
+    def make_env(self, fold_data, role: str, *, train_env=None, monitor: bool = False) -> gym.Env:
+        """Katin bir blogu icin ortam — egitim rotasiyla AYNI cagri (R1, Y21).
 
-        if phase == 2:
-            from data.fundamental_fetcher import FundamentalDataFetcher
-            from data.macro_fetcher import MacroDataFetcher
-
-            # Load fundamental data
-            try:
-                fund_fetcher = FundamentalDataFetcher()
-                fundamental_df = fund_fetcher.load_data('fundamental_data.csv')
-                logger.info(f"✅ Loaded fundamental data: {len(fundamental_df)} symbols")
-            except FileNotFoundError:
-                logger.warning("⚠️  Fundamental data not found, fetching...")
-                fundamental_df = fund_fetcher.fetch_fundamental_data(stock_symbols, save=True)
-
-            # Load macro data
-            try:
-                macro_fetcher = MacroDataFetcher()  # anahtar .env'deki EVDS_API_KEY'den
-                macro_df = macro_fetcher.load_data('macro_data.csv')
-                logger.info(f"✅ Loaded macro data: {len(macro_df)} rows")
-            except FileNotFoundError:
-                logger.warning("⚠️  Macro data not found, fetching...")
-                macro_df = macro_fetcher.fetch_macro_data(save=True)
-
-        # 3. Create environment
-        env = TradingEnv(
-            df=df,
-            initial_balance=1_000_000,
-            commission_rate=0.001,
-            max_shares_per_trade=100,
-            phase=phase,
-            reward_type=reward_type,
-            fundamental_df=fundamental_df,
-            macro_df=macro_df,
-            missing_data_mode='own_last',  # Faz 10 / V
-            price_stats=price_stats,       # Faz 9 / B9
-        )
-
-        # 4. Monitor for statistics
-        log_dir = f"logs/hyperopt_{self.algorithm_name}_phase{phase}"
-        os.makedirs(log_dir, exist_ok=True)
-        env = Monitor(env, log_dir)
-
-        logger.info(f"Environment created: Phase {phase}, Reward: {reward_type.upper()}")
+        Eskiden `create_env` ham `raw_stock_data.csv`'yi okuyordu: gosterge yok
+        (10 ozelligin 5'i sabit varsayilan), varsayilan evren 5 sembol, pencereler
+        istekten. Simdi panel, kat, olcek ve nedensel baglam
+        `evaluation.rl_folds`'tan gelir; dogrulama ortami egitim ortami verilmeden
+        kurulamaz (olcegin kaynagi; B9).
+        """
+        from evaluation import rl_folds
+        env = rl_folds.make_fold_env(
+            fold_data, role, train_env=train_env,
+            price_norm=self.price_norm, price_norm_macd=self.price_norm_macd,
+            **self.env_settings)
+        if monitor:
+            log_dir = f"logs/hyperopt_{self.algorithm_name}_phase{self.phase}"
+            os.makedirs(log_dir, exist_ok=True)
+            env = Monitor(env, log_dir)
         return env
 
     def create_model(self, trial: optuna.Trial, env: gym.Env, hyperparams: Dict[str, Any]):
@@ -407,58 +259,10 @@ class BaseHyperparameterOptimizer:
         """
         raise NotImplementedError("Alt sınıflar create_model metodunu implement etmeli")
 
-    def evaluate_model(self, model, env: gym.Env, n_eval_episodes: int = 5) -> Dict[str, float]:
-        """
-        Model performansını değerlendirir.
-
-        Args:
-            model: Trained model
-            env: Evaluation environment
-            n_eval_episodes: Episode sayısı
-
-        Returns:
-            Evaluation metrics
-        """
-        episode_rewards = []
-        episode_sharpe_ratios = []
-        episode_returns = []
-
-        for _ in range(n_eval_episodes):
-            obs, _ = env.reset()
-            done = False
-            episode_reward = 0
-            final_info = {}
-
-            while not done:
-                action, _ = model.predict(obs, deterministic=True)
-                obs, reward, terminated, truncated, info = env.step(action)
-                done = terminated or truncated
-                episode_reward += reward
-
-                # Episode bittiğinde info'yu kaydet
-                if done:
-                    final_info = info
-
-            episode_rewards.append(episode_reward)
-
-            # Final info'dan metrics al (episode bittiğinde ekleniyor)
-            if 'sharpe_ratio' in final_info:
-                episode_sharpe_ratios.append(final_info['sharpe_ratio'])
-            if 'cumulative_return' in final_info:
-                episode_returns.append(final_info['cumulative_return'])
-
-        metrics = {
-            'mean_reward': np.mean(episode_rewards),
-            'std_reward': np.std(episode_rewards),
-            'mean_sharpe_ratio': np.mean(episode_sharpe_ratios) if episode_sharpe_ratios else 0.0,
-            'mean_return': np.mean(episode_returns) if episode_returns else 0.0,
-        }
-
-        return metrics
-
-    def _register_trial(self, trial, hyperparams, stock_symbols, windows, total_timesteps,
-                        status, metrics=None, returns=None, dates=None,
-                        val_env=None, train_env=None, health=None):
+    def _register_trial(self, trial, hyperparams, fold_data, total_timesteps, status,
+                        metrics=None, returns=None, dates=None,
+                        val_env=None, train_env=None, health=None,
+                        selection_metric=None, selection=None):
         """Faz 9 / C2 — Optuna denemesini deneme kaydina yaz (kayit hatasi denemeyi bozmaz).
 
         Protokol rotayla ayni hesaptan, dogrulama ortaminin kendisinden ve
@@ -467,223 +271,220 @@ class BaseHyperparameterOptimizer:
         (beyan edilmemis = acik) — kayit yine yazilir, N'ye sayilir.
         """
         try:
+            from evaluation.splits import is_canonical as _is_canonical
             from evaluation.trial_registry import CLEAN_PROTOCOL, register_trial, rl_eval_protocol
             try:
                 # HPO denemesinin hiperparametreleri kendi yapilandirmasidir -> True
-                protocol = rl_eval_protocol(val_env, train_env,
-                                            health=health, hyperparams_clean=True)
+                protocol = rl_eval_protocol(val_env, train_env, health=health,
+                                            hyperparams_clean=True,
+                                            split_from_spec=_is_canonical(fold_data.spec),
+                                            selection_metric=selection_metric)
             except Exception as exc:
                 logger.warning(f"Deneme protokolu olculemedi ({exc}); maddeler acik yaziliyor")
                 protocol = {k: None for k in CLEAN_PROTOCOL}
-            train_start, train_end, val_start, val_end = windows
+            ranges = fold_data.report['ranges']
+            base_train = getattr(train_env, 'unwrapped', train_env) if train_env is not None else None
+            settings = {k: v for k, v in self.env_settings.items()
+                        if k not in ('fundamental_df', 'macro_df')}
             return register_trial(
                 kind='rl_hpo',
                 config={'algorithm': self.algorithm_name, 'phase': self.phase,
                         'reward_type': self.reward_type, 'hyperparameters': hyperparams,
-                        'symbols': list(stock_symbols), 'train': [train_start, train_end],
-                        'val': [val_start, val_end], 'total_timesteps': total_timesteps,
-                        'missing_data_mode': 'own_last'},
+                        'symbols': list(fold_data.symbols), 'train': ranges['train'],
+                        'val': ranges['val'], 'total_timesteps': total_timesteps,
+                        'missing_data_mode': 'own_last',
+                        # rotanin kaydiyla ayni anahtarlar: soy kiyaslamasi bunlardan (R1)
+                        'indicator_spec': self.indicator_spec,
+                        'price_norm': base_train.get_price_norm() if base_train is not None else None,
+                        **settings},
                 seed=self.seed,
                 status=status,
                 metrics=metrics or {},
                 returns=returns, dates=dates, split='val',
-                # B9: dogrulama ortami egitim olcegini aliyor -> 'train_window'.
-                # HPO ham OHLCV okudugu icin indicators_present=False: kayit
-                # yine 'protocol_open' (Faz 9 §9.5 Y21, R1).
+                fold=fold_data.fold,
+                split_spec={'name': fold_data.spec.name, 'digest': fold_data.spec.digest()},
                 protocol=protocol,
                 extra={'study': getattr(trial.study, 'study_name', None),
                        'optuna_trial': trial.number,
-                       'observation_health': health},
+                       'observation_health': health,
+                       'val_range': ranges['val'],
+                       'selection': selection},
             )
         except Exception as exc:
             logger.warning(f"Deneme kaydina yazilamadi ({exc})")
             return None
 
-    def objective(
-        self,
-        trial: optuna.Trial,
-        stock_symbols: list,
-        train_start: str,
-        train_end: str,
-        val_start: str,
-        val_end: str,
-        total_timesteps: int = 100_000,
-        eval_freq: int = 5000,
-        n_eval_episodes: int = 5,
-        use_cached_data: bool = True,
-    ) -> float:
-        """
-        Optuna objective function.
+    def objective(self, trial: optuna.Trial, fold_data, total_timesteps: int = 100_000,
+                  risk_free=None) -> float:
+        """Optuna amac fonksiyonu (R1): egitim rotasinin YAPACAGI seyin testsiz hali.
 
-        Args:
-            trial: Optuna trial
-            stock_symbols: Stock symbols
-            train_start: Training start date
-            train_end: Training end date
-            val_start: Validation start date
-            val_end: Validation end date
-            total_timesteps: Training timesteps
-            eval_freq: Evaluation frequency
-            n_eval_episodes: Number of evaluation episodes
-
-        Returns:
-            Objective value (Sharpe ratio veya cumulative return)
+        Katin egitim blogunda egit; butce boyunca esit aralikli kontrol
+        noktalarinda DOGRULAMA blogunda risksiz faiz ustu Sharpe'i olc; amac =
+        en iyi kontrol noktasinin metrigi (rotanin secim kuraliyla ayni). Test
+        blogu burada HIC kurulmaz.
         """
+        import shutil
+        import tempfile
+
+        from evaluation import rl_folds
+
+        train_env = val_env = None
+        hyperparams: Dict[str, Any] = {}
+        ckpt_dir = tempfile.mkdtemp(prefix=f"hpo_{self.algorithm_name}_{trial.number}_")
+        metric_name = (rl_folds.SELECTION_METRIC if risk_free is not None
+                       else rl_folds.SELECTION_METRIC_RF0)
         try:
-            # Suggest hyperparameters
             hyperparams = self.suggest_hyperparameters(trial)
+            logger.info(f"Trial {trial.number}: {hyperparams}")
 
-            logger.info(f"\n{'='*80}")
-            logger.info(f"Trial {trial.number}: Testing hyperparameters")
-            logger.info(f"{'='*80}")
-            for key, value in hyperparams.items():
-                logger.info(f"  {key}: {value}")
+            train_env = self.make_env(fold_data, 'train', monitor=True)
+            # kayit ve protokol icin tek bir dogrulama ortami; olcumler taze ortamda
+            val_env = self.make_env(fold_data, 'val', train_env=train_env)
+            model = self.create_model(trial, train_env, dict(hyperparams))
 
-            # Create environments with Phase and Reward Type
-            train_env = self.create_env(stock_symbols, train_start, train_end,
-                                       phase=self.phase, reward_type=self.reward_type,
-                                       use_cached_data=use_cached_data,
-                                       price_stats=None)  # egitim: kendi penceresi
-            # Faz 9 / B9 (Faz 10 Y13): dogrulama ortami fiyati EGITIM
-            # penceresinin olcegiyle z-skorlar; kendi penceresinin ortalama/
-            # std'si dogrulamanin gelecegini tasirdi. Monitor sarmalayicisi
-            # oldugu icin `unwrapped`.
-            train_price_stats = train_env.unwrapped.get_price_stats()
-            val_env = self.create_env(stock_symbols, val_start, val_end,
-                                     phase=self.phase, reward_type=self.reward_type,
-                                     use_cached_data=use_cached_data,
-                                     price_stats=train_price_stats)
+            def on_checkpoint(idx: int, rec: dict) -> bool:
+                value = rec['metric'] if rec['metric'] is not None else UNDEFINED_OBJECTIVE
+                trial.report(value, idx)
+                return not trial.should_prune()
 
-            # Create model
-            model = self.create_model(trial, train_env, hyperparams)
-
-            # Callbacks
+            validation_cb = rl_folds.make_validation_callback(
+                lambda: self.make_env(fold_data, 'val', train_env=train_env),
+                total_timesteps=total_timesteps, checkpoint_dir=ckpt_dir,
+                risk_free=risk_free, on_checkpoint=on_checkpoint)
             progress_callback = ProgressCallback(trial.number, total_timesteps)
-            pruning_callback = TrialPruningCallback(trial, eval_freq=eval_freq)
-            callbacks = [progress_callback, pruning_callback]
 
-            # Train
             start_time = time.time()
-            model.learn(total_timesteps=total_timesteps, callback=callbacks)
+            model.learn(total_timesteps=total_timesteps,
+                        callback=[progress_callback, validation_cb])
             train_time = time.time() - start_time
-
-            # Check if pruned
-            if pruning_callback.is_pruned:
+            if validation_cb.stopped_early:
                 raise optuna.TrialPruned()
 
-            # Evaluate on validation set
-            metrics = self.evaluate_model(model, val_env, n_eval_episodes)
-
-            # Log results with timing breakdown
+            selection = rl_folds.select_checkpoint(validation_cb.records)
+            selection_report = {
+                'metric': metric_name, 'rule': 'argmax_validation',
+                'selected_index': selection['index'], 'selected_step': selection['step'],
+                'selected_metric': selection['metric'], 'degenerate': selection['degenerate'],
+                'checkpoints': [{k: v for k, v in r.items() if k != 'path'}
+                                for r in validation_cb.records],
+            }
+            # secilen kontrol noktasinin dogrulama getirisi kayda girer (DSR'nin V'si)
+            best_model = model if selection['final'] else type(model).load(
+                selection['path'], device=model.device)
+            episode = rl_folds.run_episode(best_model, val_env)
+            value = selection['metric'] if not selection['degenerate'] else UNDEFINED_OBJECTIVE
             total_time = time.time() - start_time
-            eval_time = total_time - train_time
 
-            logger.info(f"\n{'='*80}")
-            logger.info(f"Trial {trial.number} Results:")
-            logger.info(f"  Mean Reward: {metrics['mean_reward']:.4f}")
-            logger.info(f"  Sharpe Ratio: {metrics['mean_sharpe_ratio']:.4f}")
-            logger.info(f"  Cumulative Return: {metrics['mean_return']:.4f}")
-            logger.info(f"  Training Time: {train_time:.2f}s")
-            logger.info(f"  Evaluation Time: {eval_time:.2f}s")
-            logger.info(f"  Total Time: {total_time:.2f}s ({total_time/60:.2f} min)")
-            logger.info(f"{'='*80}\n")
-
-            # Store additional metrics
-            trial.set_user_attr("mean_reward", metrics['mean_reward'])
-            trial.set_user_attr("sharpe_ratio", metrics['mean_sharpe_ratio'])
-            trial.set_user_attr("cumulative_return", metrics['mean_return'])
+            trial.set_user_attr("sharpe_ratio", selection['metric'])
+            trial.set_user_attr("selection_metric", metric_name)
+            trial.set_user_attr("selected_step", selection['step'])
+            trial.set_user_attr("cumulative_return", selection.get('cumulative_return'))
             trial.set_user_attr("training_time", train_time)
-            trial.set_user_attr("evaluation_time", eval_time)
+            trial.set_user_attr("evaluation_time", total_time - train_time)
             trial.set_user_attr("total_time", total_time)
 
-            # Faz 9 / C2: her Optuna denemesi deneme kaydina girer (DSR'nin N'si
-            # yalnizca kazanani degil TUM denemeleri sayar). Getiri serisi son
-            # dogrulama bolumunden.
-            base_env = getattr(val_env, 'unwrapped', val_env)
-            pv = np.asarray(getattr(base_env, 'portfolio_values', []), dtype=float)
-            rets = pv[1:] / pv[:-1] - 1.0 if len(pv) > 1 else None
-            dates = None
-            if rets is not None:
-                s0 = base_env.frame_bound[0]
-                dates = base_env._dates_list[s0 + 1: s0 + 1 + len(rets)]
             # B9 bedeli (hakem-2 B9 #1, #8): dogrulama gozlemi egitim desteginde mi
             from evaluation.observation_health import observation_health
             health = observation_health(train_env, val_env)
-            tid = self._register_trial(trial, hyperparams, stock_symbols,
-                                       (train_start, train_end, val_start, val_end),
-                                       total_timesteps, 'completed',
-                                       metrics={k: float(v) for k, v in metrics.items()},
-                                       returns=rets, dates=dates,
-                                       val_env=val_env, train_env=train_env, health=health)
+            tid = self._register_trial(
+                trial, hyperparams, fold_data, total_timesteps, 'completed',
+                metrics={metric_name: selection['metric'],
+                         'sharpe_rf0': selection.get('sharpe_rf0'),
+                         'cumulative_return': selection.get('cumulative_return'),
+                         'selected_step': selection['step']},
+                returns=episode['returns'], dates=episode['dates'],
+                val_env=val_env, train_env=train_env, health=health,
+                selection_metric=metric_name, selection=selection_report)
             if tid:
                 trial.set_user_attr("trial_registry_id", tid)
-
-            # Return objective (maximize Sharpe ratio)
-            return metrics['mean_sharpe_ratio']
+            logger.info(f"Trial {trial.number}: {metric_name}={selection['metric']} "
+                        f"(adim {selection['step']}/{total_timesteps}, {total_time:.1f}s)")
+            return float(value)
 
         except optuna.TrialPruned:
             logger.info(f"Trial {trial.number} was pruned")
             # Budanan deneme de bir denemedir: N'ye sayilir (hakem-2 #2a)
-            self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
-                                 (train_start, train_end, val_start, val_end),
-                                 total_timesteps, 'pruned',
-                                 val_env=locals().get('val_env'),
-                                 train_env=locals().get('train_env'))
+            self._register_trial(trial, hyperparams, fold_data, total_timesteps, 'pruned',
+                                 val_env=val_env, train_env=train_env,
+                                 selection_metric=metric_name)
             raise
 
         except Exception as e:
             logger.error(f"Trial {trial.number} failed with error: {e}")
-            self._register_trial(trial, locals().get('hyperparams', {}), stock_symbols,
-                                 (train_start, train_end, val_start, val_end),
-                                 total_timesteps, 'failed', metrics={'error': str(e)[:200]},
-                                 val_env=locals().get('val_env'),
-                                 train_env=locals().get('train_env'))
+            self._register_trial(trial, hyperparams, fold_data, total_timesteps, 'failed',
+                                 metrics={'error': str(e)[:200]},
+                                 val_env=val_env, train_env=train_env,
+                                 selection_metric=metric_name)
             raise
 
         finally:
-            # Cleanup
-            if 'train_env' in locals():
-                train_env.close()
-            if 'val_env' in locals():
-                val_env.close()
+            for env in (train_env, val_env):
+                if env is not None:
+                    env.close()
+            shutil.rmtree(ckpt_dir, ignore_errors=True)
 
     def optimize(
         self,
-        stock_symbols: list,
-        train_start: str,
-        train_end: str,
-        val_start: str,
-        val_end: str,
+        stock_symbols: Optional[list] = None,
+        fold: Optional[str] = None,
         total_timesteps: int = 100_000,
-        eval_freq: int = 5000,
-        n_eval_episodes: int = 5,
+        *,
+        split_spec: Optional[str] = None,
+        price_norm: str = 'stats',
+        price_norm_macd: bool = False,
+        env_settings: Optional[Dict[str, Any]] = None,
         show_progress_bar: bool = True,
-        use_cached_data: bool = True,
+        panel_df: Optional[pd.DataFrame] = None,
     ) -> optuna.Study:
         """
-        Hiper parametre optimizasyonu çalıştırır.
+        Hiper parametre optimizasyonu calistirir (Faz 9 / R1).
 
         Args:
-            stock_symbols: Stock symbols (e.g., ['THYAO.IS', 'SAHOL.IS'])
-            train_start: Training start date (e.g., '2018-01-01')
-            train_end: Training end date
-            val_start: Validation start date
-            val_end: Validation end date
-            total_timesteps: Training timesteps per trial
-            eval_freq: Evaluation frequency
-            n_eval_episodes: Number of evaluation episodes
-            show_progress_bar: Show Optuna progress bar
+            stock_symbols: None = RL panelinin TUM sembolleri (rotanin evreni). Alt
+                kume verilirse arama o evrende yapilir; rota baska evrenle egitirse
+                kaydi `hpo_universe_mismatch` ile acik kalir.
+            fold: `evaluation/splits.py` kat adi. None = tanimin ILK kati: o katin
+                dogrulamasi butun katlarin testinden once biter, bulunan ayar her
+                katta temiz kullanilabilir (tasarim varsayimi; kat basina HPO da
+                kurali saglar, maliyeti kat sayisi kadar).
+            total_timesteps: deneme basina egitim adimi.
+            split_spec: bolme tanimi adi (varsayilan 'wf-v1').
+            price_norm / price_norm_macd: rotadaki kolla AYNI olmali (K25).
+            env_settings: initial_balance, commission_rate, max_shares_per_trade
+                (varsayilanlar egitim isteginin varsayilanlari).
+            panel_df: gostergeli ham panel (test icin; verilmezse dosyadan).
 
-        Returns:
-            Optimized Optuna study
+        Tarih pencereleri artik istekten ALINMAZ: eski imza (train_start, ...)
+        kaldirildi. Test blogu burada hic okunmaz.
         """
+        from evaluation import rl_folds
+        from evaluation.reproducibility import resolve_seed
+        from evaluation.splits import get_spec
+
+        spec = get_spec(split_spec)
+        fold_def = spec.fold(fold) if fold is not None else spec.folds[0]
+        self.price_norm, self.price_norm_macd = price_norm, price_norm_macd
+        # Ayar tohumu kayda girer; egitim tohumu bundan FARKLI olmali (Eimer vd. 2023) —
+        # rota `hpo_lineage` ile olcer. Calismanin butun denemeleri ayni tohumu paylasir.
+        self.seed = resolve_seed(self.seed)
+
+        rl_panel = rl_folds.load_rl_panel(price_norm=price_norm, df=panel_df)
+        self.indicator_spec = rl_panel.indicator_spec
+        fold_data = rl_folds.build_fold(rl_panel, spec, fold_def, symbols=stock_symbols)
+        fundamental_df, macro_df = self._phase2_frames(fold_data.symbols)
+        self.env_settings = {'initial_balance': 1_000_000, 'commission_rate': 0.001,
+                             'max_shares_per_trade': 100, **(env_settings or {}),
+                             'phase': self.phase, 'reward_type': self.reward_type,
+                             'fundamental_df': fundamental_df, 'macro_df': macro_df}
+        val_dates = sorted(pd.unique(pd.to_datetime(fold_data.val.index.get_level_values('date'))))
+        risk_free = rl_folds.load_risk_free(val_dates)
+        self.fold_report = fold_data.report
+
         logger.info(f"\n{'='*80}")
-        logger.info(f"🚀 Starting Hyperparameter Optimization for {self.algorithm_name.upper()}")
-        logger.info(f"{'='*80}")
-        logger.info(f"Stocks: {stock_symbols}")
-        logger.info(f"Train Period: {train_start} to {train_end}")
-        logger.info(f"Val Period: {val_start} to {val_end}")
-        logger.info(f"Trials: {self.n_trials}, Jobs: {self.n_jobs}")
+        logger.info(f"Starting Hyperparameter Optimization for {self.algorithm_name.upper()}")
+        logger.info(f"Kat {spec.name}/{fold_data.fold}: {fold_data.report['ranges']}")
+        logger.info(f"Semboller: {len(fold_data.symbols)} | price_norm={price_norm} | "
+                    f"tohum {self.seed} | Trials: {self.n_trials}, Jobs: {self.n_jobs}")
         logger.info(f"{'='*80}\n")
 
         # Create study
@@ -694,18 +495,7 @@ class BaseHyperparameterOptimizer:
 
         # Optimize
         self.study.optimize(
-            lambda trial: self.objective(
-                trial,
-                stock_symbols,
-                train_start,
-                train_end,
-                val_start,
-                val_end,
-                total_timesteps,
-                eval_freq,
-                n_eval_episodes,
-                use_cached_data,
-            ),
+            lambda trial: self.objective(trial, fold_data, total_timesteps, risk_free),
             n_trials=self.n_trials,
             n_jobs=self.n_jobs,
             show_progress_bar=show_progress_bar,
@@ -791,6 +581,10 @@ class BaseHyperparameterOptimizer:
             'n_trials': len(self.study.trials),
             'timestamp': datetime.now().isoformat(),
             'timing_statistics': self.timing_stats if hasattr(self, 'timing_stats') else {},
+            # Faz 9 / R1: ayarin hangi kat / bolme / tohumla arandigi
+            'fold_report': getattr(self, 'fold_report', None),
+            'seed': self.seed,
+            'price_norm': getattr(self, 'price_norm', None),
             'all_trials': trial_details,
         }
 

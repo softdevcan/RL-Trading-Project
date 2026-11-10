@@ -74,6 +74,17 @@ class TrainingRequest(BaseModel):
         description="With price_norm='causal': keep the legacy tanh(macd/0.1) (default) or "
                     "also scale MACD by the causal std (opt-in, decision K26)",
     )
+    # Faz 9 / R1: walk-forward kati. Pencereler oranla degil `evaluation/splits.py`'deki
+    # sabit tarihli tanimdan gelir. None = panelin tamamen kapsadigi EN SON kat.
+    fold: Optional[str] = Field(
+        default=None,
+        description="Walk-forward fold name (test year, e.g. '2025'); None = latest fold "
+                    "whose test block is complete in the panel",
+    )
+    split_spec: Optional[str] = Field(
+        default=None,
+        description="Split definition name (default 'wf-v1', evaluation/splits.py)",
+    )
 
     class Config:
         json_schema_extra = {

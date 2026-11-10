@@ -34,7 +34,6 @@ from app.schemas.hyperopt import (
 )
 from app.auth.deps import RequireWriter
 from app.services import background_jobs as jobs
-from data.bist30_symbols import PHASE1_SYMBOLS
 from hyperparameter_optimization.optimizers import (
     PPOOptimizer,
     A2COptimizer,
@@ -77,12 +76,19 @@ def get_optimizer_class(algorithm: AlgorithmType):
     return optimizer_map[algorithm]
 
 
+def _resolve_fold(request: OptimizationRequest):
+    """Istegin bolme tanimi ve kati (Faz 9 / R1). None = tanimin ilk kati."""
+    from evaluation.splits import get_spec
+    spec = get_spec(request.split_spec)
+    return spec, (spec.fold(request.fold) if request.fold else spec.folds[0])
+
+
 def create_study_info_from_request(
     study_id: str,
     request: OptimizationRequest
 ) -> StudyInfo:
-    """Request'ten StudyInfo oluşturur"""
-    stock_symbols = request.stock_symbols if request.stock_symbols else PHASE1_SYMBOLS
+    """Request'ten StudyInfo olusturur"""
+    _, fold = _resolve_fold(request)
 
     return StudyInfo(
         study_id=study_id,
@@ -91,11 +97,13 @@ def create_study_info_from_request(
         status=StudyStatus.PENDING,
         n_trials=request.n_trials,
         total_timesteps=request.total_timesteps,
-        stock_symbols=stock_symbols,
-        train_start=request.train_start,
-        train_end=request.train_end,
-        val_start=request.val_start,
-        val_end=request.val_end,
+        # None = RL panelinin tum sembolleri (kosum baslayinca belli olur)
+        stock_symbols=request.stock_symbols or [],
+        # araliklar katin tanim sinirlaridir; bitisler HARIC
+        train_start=fold.train_start,
+        train_end=fold.val_start,
+        val_start=fold.val_start,
+        val_end=fold.test_start,
         phase=request.phase,
         reward_type=request.reward_type,
         created_at=datetime.now(),
@@ -137,9 +145,6 @@ async def run_optimization_background(
             "message": "Optimization started"
         })
 
-        # Get stock symbols
-        stock_symbols = request.stock_symbols if request.stock_symbols else PHASE1_SYMBOLS
-
         # Create optimizer
         OptimizerClass = get_optimizer_class(request.algorithm)
         optimizer = OptimizerClass(
@@ -147,7 +152,7 @@ async def run_optimization_background(
             storage=OPTUNA_STORAGE,
             n_trials=request.n_trials,
             n_jobs=1,  # Parallelization handled by PyTorch/TF, not Optuna
-            seed=None,  # No seed for better exploration across different algorithms
+            seed=None,  # optimizer bir tohum URETIR ve kayda yazar (R1: ayar tohumu)
             phase=request.phase,  # Phase 2 support
             reward_type=request.reward_type,  # PSR or simple reward
         )
@@ -191,15 +196,13 @@ async def run_optimization_background(
         # Optimize (callback sistemi şu an için basit tutuyoruz)
         # TODO: Add proper callback support to optimizer.optimize()
         study = optimizer.optimize(
-            stock_symbols=stock_symbols,
-            train_start=request.train_start,
-            train_end=request.train_end,
-            val_start=request.val_start,
-            val_end=request.val_end,
+            # Faz 9 / R1 (Y21): panel, evren, kat ve gozlem tanimi egitim rotasiyla ortak
+            stock_symbols=request.stock_symbols or None,
+            fold=request.fold,
             total_timesteps=request.total_timesteps,
-            eval_freq=request.eval_freq,
-            n_eval_episodes=request.n_eval_episodes,
-            use_cached_data=request.use_cached_data,
+            split_spec=request.split_spec,
+            price_norm=request.price_norm,
+            price_norm_macd=request.price_norm_macd,
             show_progress_bar=False,  # Disable for background
         )
 
@@ -258,16 +261,19 @@ async def run_optimization_background(
 @router.get("/data-range")
 async def get_cached_data_range():
     """
-    Mevcut data/bist/raw_stock_data.csv'nin tarih aralığını ve sembol listesini
-    döner. UI hyperopt sayfasındaki DatePicker'ın min/max sınırlarını ve
-    sembol seçicisini buradan dolduruyor.
+    RL panelinin (egitim rotasiyla ayni dosya) tarih araligini, sembollerini ve
+    bolme taniminin katlarini doner. Pano kat secicisini buradan doldurur
+    (Faz 9 / R1: pencereler serbest tarih degil, `evaluation/splits.py` katlari).
     """
+    from evaluation.rl_folds import RL_PANEL_FILE
+    from evaluation.splits import fold_complete, get_spec
+
+    spec = get_spec()
     try:
         from data.data_fetcher import DataFetcher
-        import pandas as pd
 
         fetcher = DataFetcher()
-        df = fetcher.load_data('raw_stock_data.csv')
+        df = fetcher.load_data(RL_PANEL_FILE)
         dates = df.index.get_level_values('date')
         if dates.tz is not None:
             dates = dates.tz_localize(None)
@@ -279,6 +285,10 @@ async def get_cached_data_range():
             "max_date": dates.max().strftime("%Y-%m-%d"),
             "symbols": symbols,
             "total_rows": int(len(df)),
+            "split_spec": spec.name,
+            "folds": [{"name": f.name, "train": [f.train_start, f.val_start],
+                       "val": [f.val_start, f.test_start], "test": [f.test_start, f.test_end],
+                       "complete": fold_complete(df, f)} for f in spec.folds],
         }
     except FileNotFoundError:
         return {
@@ -287,10 +297,10 @@ async def get_cached_data_range():
             "max_date": None,
             "symbols": [],
             "total_rows": 0,
+            "split_spec": spec.name,
+            "folds": [],
             "message": (
-                "data/bist/raw_stock_data.csv bulunamadı. 'Veri' sayfasından "
-                "veri çekin veya hyperopt için 'yfinance'tan tazele' seçeneğini "
-                "işaretleyin."
+                f"data/bist/{RL_PANEL_FILE} bulunamadi. 'Veri' sayfasindan veri cekin."
             ),
         }
 
@@ -304,6 +314,20 @@ async def start_optimization(
     """
     Hiper parametre optimizasyonu başlatır
     """
+    # Faz 9 / R1: pencereler istekten alinmaz. Eski alanlari sessizce yok saymak,
+    # kullanicinin sectigini sandigi pencerenin kullanilmadigi anlamina gelirdi.
+    legacy = [k for k in ("train_start", "train_end", "val_start", "val_end")
+              if getattr(request, k, None)]
+    if legacy:
+        raise HTTPException(
+            status_code=400,
+            detail=(f"{', '.join(legacy)} artik kabul edilmiyor: pencereler "
+                    f"evaluation/splits.py katlarindan gelir. `fold` alanini kullanin "
+                    f"(GET /api/hyperopt/data-range katlari listeler)."))
+    try:
+        _resolve_fold(request)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc).strip('"'))
     try:
         # Create unique study ID
         study_id = str(uuid.uuid4())

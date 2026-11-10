@@ -126,7 +126,8 @@ with tempfile.TemporaryDirectory() as tmp:
     clean = {"price_stats_source": "train_window", "indicator_bfill": False, "adx_constant": False,
              "indicators_present": True, "price_in_support": True, "hyperparams_clean": True,
              "obs_health": True, "features_in_support": True,
-             "dims_in_support": True}  # K18: eksik madde acik sayilir
+             "dims_in_support": True,  # K18: eksik madde acik sayilir
+             "split_from_spec": True, "selection_metric": "val_excess_sharpe"}  # R1
     cfgs = [{"algorithm": "PPO", "lr": lr} for lr in (1e-4, 3e-4, 1e-3)]
     for i, cfg in enumerate(cfgs):
         for seed in (1, 2):
@@ -144,7 +145,8 @@ with tempfile.TemporaryDirectory() as tmp:
                              "adx_constant": True, "indicators_present": True,
                              "price_in_support": True, "hyperparams_clean": True,
                              "obs_health": True, "features_in_support": True,
-             "dims_in_support": True})
+             "dims_in_support": True,
+             "split_from_spec": True, "selection_metric": "val_excess_sharpe"})
     trials = load_trials(directory=tmp)
     check("7 deneme okundu (spike ve acik-protokol varsayilan olarak dislandi)",
           len(trials) == 7, str(len(trials)))

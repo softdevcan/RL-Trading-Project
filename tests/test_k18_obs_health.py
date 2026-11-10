@@ -256,6 +256,14 @@ def run_route(panel, seed=11, perturb=None, **req_kw):
     orig_load = dfm.DataFetcher.load_data
     dfm.DataFetcher.load_data = lambda self, filename="raw_stock_data.csv": panel.copy()
     tem.make_env = rec_make_env
+    # R1: rota pencereyi bolme tanimindan alir. Sentetik panel icin eski oranli
+    # bolmeyle (split_data) AYNI sinirlari veren gecici, kanonik OLMAYAN tanim.
+    from evaluation import rl_folds, splits
+    if 'split_spec' not in req_kw:
+        gated = rl_folds.load_rl_panel(price_norm=req_kw.get('price_norm', 'stats'),
+                                       df=panel.copy(), adx_mode=tr.RL_ADX_MODE).panel
+        req_kw['split_spec'] = splits.register_ratio_spec(
+            gated.index.get_level_values('date')).name
     try:
         state = tr._empty_training_state()
         req = TrainingRequest(algorithm="A2C", phase=1, total_timesteps=256,
@@ -744,10 +752,10 @@ def main():
         for col in ("macd", "rsi", "cci", "adx", "turbulence", "volume"):
             ev_sup.loc[m, col] = src[col].to_numpy()
     e_sup = TradingEnv(ev_sup, price_norm="causal", price_context=n_ctx, missing_data_mode="own_last")
-    pr_c = rl_eval_protocol(e_sup, tr_causal_env)
+    pr_c = rl_eval_protocol(e_sup, tr_causal_env, split_from_spec=True, selection_metric='val_excess_sharpe')
     check("rl_eval_protocol: nedensel kol, yukselen fiyat + destekte gostergeler -> tamamen temiz",
           open_protocol_items(pr_c) == [], str(open_protocol_items(pr_c)))
-    pr_r = rl_eval_protocol(e_c, tr_causal_env, health=h_c)
+    pr_r = rl_eval_protocol(e_c, tr_causal_env, health=h_c, split_from_spec=True, selection_metric='val_excess_sharpe')
     check("  bagimsiz rastgele gostergede destek maddeleri olculuyor (gurultu acabilir)",
           pr_r["features_in_support"] in (True, False)
           and set(open_protocol_items(pr_r)) <= {"features_in_support", "dims_in_support"},

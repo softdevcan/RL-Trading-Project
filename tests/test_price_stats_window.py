@@ -358,6 +358,14 @@ def run_route(panel, strip_price_stats=False, seed=11, **req_kw):
     orig_load = dfm.DataFetcher.load_data
     dfm.DataFetcher.load_data = lambda self, filename="raw_stock_data.csv": panel.copy()
     tem.make_env = rec_make_env
+    # R1: rota pencereyi bolme tanimindan alir. Sentetik panel icin eski oranli
+    # bolmeyle (split_data) AYNI sinirlari veren gecici, kanonik OLMAYAN tanim.
+    from evaluation import rl_folds, splits
+    if 'split_spec' not in req_kw:
+        gated = rl_folds.load_rl_panel(price_norm=req_kw.get('price_norm', 'stats'),
+                                       df=panel.copy(), adx_mode=tr.RL_ADX_MODE).panel
+        req_kw['split_spec'] = splits.register_ratio_spec(
+            gated.index.get_level_values('date')).name
     try:
         state = tr._empty_training_state()
         req = TrainingRequest(algorithm="A2C", phase=1, total_timesteps=256,
@@ -604,7 +612,8 @@ def main():
     sp_eval = sp[sp.index.get_level_values("date") >= sd_[112]]
     sp_train_env = TradingEnv(sp_train, initial_balance=100_000, missing_data_mode="own_last")
     sp_eval_env = TradingEnv(sp_eval, price_stats=sp_train_env.get_price_stats())
-    pr_clean = rl_eval_protocol(sp_eval_env, sp_train_env, indicator_bfill=False)
+    pr_clean = rl_eval_protocol(sp_eval_env, sp_train_env, indicator_bfill=False,
+                                split_from_spec=True, selection_metric='val_excess_sharpe')
     check("destekte + egitim olcegi + bfill yok: protokol tamamen temiz",
           open_protocol_items(pr_clean) == [], str(open_protocol_items(pr_clean)))
     pr = rl_eval_protocol(e1, train_env)
@@ -766,50 +775,46 @@ def main():
               pu["hyperparams_clean"] is None and pu["hyperparams_open_items"] == ["hpo_trials_not_in_registry"])
 
     # -----------------------------------------------------------------------
-    print("\nH — HPO objective (dogrulama ortami)")
-    import optuna
-
-    import data.data_fetcher as dfm
+    print("\nH — HPO objective (dogrulama ortami; R1: rotayla ortak panel ve kat)")
+    from evaluation import rl_folds, splits
     from hyperparameter_optimization.base_optimizer import BaseHyperparameterOptimizer
 
     class TinyOptimizer(BaseHyperparameterOptimizer):
         def create_model(self, trial, env, hyperparams):
             from stable_baselines3 import A2C
-            return A2C("MlpPolicy", env, n_steps=8, seed=5, device="cpu", verbose=0)
+            return A2C("MlpPolicy", env, n_steps=8, seed=self.seed, device="cpu", verbose=0)
 
-    raw_panel = synthetic_panel(indicators=False)
-    rd = dates_of(raw_panel)
-    tr_s, tr_e, va_s, va_e = (str(rd[0].date()), str(rd[109].date()),
-                              str(rd[110].date()), str(rd[-1].date()))
+    # R1 (Y21): HPO artik ham OHLCV'yi degil rotanin GOSTERGELI panelini okuyor
+    hpo_panel = synthetic_panel()
+    gated_h = rl_folds.load_rl_panel(df=hpo_panel.copy()).panel
+    hspec = splits.register_ratio_spec(gated_h.index.get_level_values("date"))
     cwd = os.getcwd()
     hpo_dir = os.path.join(_TMP, "hpo_cwd")
     os.makedirs(hpo_dir, exist_ok=True)
-    orig_load = dfm.DataFetcher.load_data
-    dfm.DataFetcher.load_data = lambda self, filename="raw_stock_data.csv": raw_panel.copy()
     os.chdir(hpo_dir)  # Monitor goreli 'logs/hyperopt_*' dizinine yaziyor
+    made = []
     try:
         db = os.path.join(_TMP, "hpo.db").replace("\\", "/")
         opt = TinyOptimizer("a2c", study_name="b9_hpo", storage=f"sqlite:///{db}", n_trials=1,
                             seed=5, phase=1, reward_type="simple")
-        check("create_env'de price_stats ZORUNLU anahtar (hakem-2 #6)",
-              raises(lambda: opt.create_env(["S0.IS"], tr_s, tr_e, phase=1, reward_type="simple"),
-                     TypeError))
-        made = []
-        orig_create = opt.create_env
+        orig_make = opt.make_env
 
-        def rec_create(*a, **kw):
-            env = orig_create(*a, **kw)
-            made.append(env)
+        def rec_make(fold_data, role, **kw):
+            env = orig_make(fold_data, role, **kw)
+            made.append((role, env, fold_data))
             return env
 
-        opt.create_env = rec_create
-        trial = opt.create_study().ask()
-        opt.objective(trial, ["S0.IS", "S1.IS", "S2.IS"], tr_s, tr_e, va_s, va_e,
-                      total_timesteps=16, eval_freq=10 ** 9, n_eval_episodes=1)
+        opt.make_env = rec_make
+        opt.optimize(fold="ratio", total_timesteps=64, split_spec=hspec.name,
+                     show_progress_bar=False, panel_df=hpo_panel.copy())
     finally:
         os.chdir(cwd)
-        dfm.DataFetcher.load_data = orig_load
-    tr_env, va_env = made[0].unwrapped, made[1].unwrapped
+    tr_env = next(e for r, e, _ in made if r == "train").unwrapped
+    va_env = next(e for r, e, _ in made if r == "val").unwrapped
+    check("dogrulama ortami egitim ortami verilmeden kurulamaz (hakem-2 #6: sizintili varsayilan yok)",
+          raises(lambda: orig_make(made[0][2], "val"), ValueError))
+    check("HPO test blogunu HIC kurmuyor", all(r in ("train", "val") for r, _, _ in made),
+          str(sorted({r for r, _, _ in made})))
     check("dogrulama ortami 'supplied' ve olcegi egitim ortaminin olcegi",
           va_env.price_stats_source == "supplied"
           and va_env.get_price_stats() == {s: tr_env.get_price_stats()[s] for s in va_env.symbols})
@@ -824,14 +829,22 @@ def main():
         check("HPO kaydi price_stats_source='train_window', acik maddelerde degil",
               hp["protocol"].get("price_stats_source") == "train_window"
               and "price_stats_source" not in hp["protocol_open"], str(hp["protocol"]))
-        check("HPO kaydi ham OHLCV yuzunden acik: indicators_present=False",
-              hp["protocol"].get("indicators_present") is False and "indicators_present" in hp["protocol_open"])
+        check("HPO kaydi gostergeli panelden: indicators_present=True (Y21 kapandi)",
+              hp["protocol"].get("indicators_present") is True
+              and "indicators_present" not in hp["protocol_open"])
         check("HPO kaydi destek olcumunu ve sagligi tasiyor",
               hp["protocol"].get("price_in_support") is not None
               and (hp.get("extra") or {}).get("observation_health") is not None)
+        check("HPO kaydi kati, bolme ozetini ve ayar tohumunu tasiyor",
+              hp.get("fold") == "ratio" and (hp.get("split_spec") or {}).get("digest") == hspec.digest()
+              and hp.get("seed") == 5, str((hp.get("fold"), hp.get("split_spec"), hp.get("seed"))))
+        check("gecici (kanonik olmayan) bolme tanimi: split_from_spec acik",
+              hp["protocol"].get("split_from_spec") is False
+              and "split_from_spec" in hp["protocol_open"])
 
     # -----------------------------------------------------------------------
     print("\nS — sarmalayiciyla env kuran betikler (davranis)")
+    import optuna
     from stable_baselines3 import A2C
 
     import scripts.optimization.ab_test_rewards as ab

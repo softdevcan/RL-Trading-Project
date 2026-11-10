@@ -3,7 +3,7 @@ Hyperparameter Optimization API Schemas
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Literal, Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
@@ -59,41 +59,38 @@ class OptimizationRequest(BaseModel):
 
     stock_symbols: Optional[List[str]] = Field(
         None,
-        description="Hisse senedi sembolleri (None ise PHASE1_SYMBOLS)"
+        description="Hisse senedi sembolleri (None = RL panelinin TUM sembolleri; egitim rotasinin evreni — Faz 9 R1)"
     )
 
-    train_start: str = Field(
-        "2018-01-01",
-        description="Training başlangıç tarihi (YYYY-MM-DD)"
+    # Faz 9 / R1: pencereler istekten ALINMAZ. Kat `evaluation/splits.py`'deki sabit
+    # tarihli tanimdan gelir (egitim rotasiyla ayni). None = tanimin ILK kati: o katin
+    # dogrulamasi butun katlarin testinden once biter.
+    fold: Optional[str] = Field(
+        None,
+        description="Walk-forward kat adi (test yili, or. '2021'); None = ilk kat"
     )
 
-    train_end: str = Field(
-        "2022-12-31",
-        description="Training bitiş tarihi (YYYY-MM-DD)"
+    split_spec: Optional[str] = Field(
+        None,
+        description="Bolme tanimi adi (varsayilan 'wf-v1')"
     )
 
-    val_start: str = Field(
-        "2023-01-01",
-        description="Validation başlangıç tarihi (YYYY-MM-DD)"
+    price_norm: Literal["stats", "causal"] = Field(
+        "stats",
+        description="Fiyat z tanimi; egitim rotasindaki kolla ayni olmali (K25)"
     )
 
-    val_end: str = Field(
-        "2023-12-31",
-        description="Validation bitiş tarihi (YYYY-MM-DD)"
+    price_norm_macd: bool = Field(
+        False,
+        description="Yalniz price_norm='causal' ile: MACD de nedensel olcekle (opt-in, K26)"
     )
 
-    eval_freq: int = Field(
-        5_000,
-        ge=1_000,
-        description="Evaluation frequency"
-    )
-
-    n_eval_episodes: int = Field(
-        5,
-        ge=1,
-        le=20,
-        description="Evaluation episode sayısı"
-    )
+    # Eski alanlar (R1 oncesi). Verilirse istek REDDEDILIR: sessizce yok saymak,
+    # kullanicinin sectigini sandigi pencerenin kullanilmadigi anlamina gelirdi.
+    train_start: Optional[str] = Field(None, description="KALDIRILDI (R1): `fold` kullanin")
+    train_end: Optional[str] = Field(None, description="KALDIRILDI (R1): `fold` kullanin")
+    val_start: Optional[str] = Field(None, description="KALDIRILDI (R1): `fold` kullanin")
+    val_end: Optional[str] = Field(None, description="KALDIRILDI (R1): `fold` kullanin")
 
     study_name: Optional[str] = Field(
         None,
@@ -112,25 +109,14 @@ class OptimizationRequest(BaseModel):
         description="Reward function type (simple or psr)"
     )
 
-    use_cached_data: bool = Field(
-        True,
-        description=(
-            "True ise data/bist/raw_stock_data.csv'den okur (yfinance çağrısı yok, "
-            "CSV ezilmez). False ise yfinance'tan tazeler. CSV bulunmazsa otomatik "
-            "fallback yfinance."
-        )
-    )
-
     class Config:
         json_schema_extra = {
             "example": {
                 "algorithm": "ppo",
                 "n_trials": 50,
                 "total_timesteps": 100_000,
-                "train_start": "2018-01-01",
-                "train_end": "2022-12-31",
-                "val_start": "2023-01-01",
-                "val_end": "2023-12-31"
+                "fold": "2021",
+                "price_norm": "stats"
             }
         }
 
