@@ -2527,7 +2527,7 @@ async def get_best_models():
 
 
 @router.post("/analysis/generate-report")
-async def generate_analysis_report(background_tasks: BackgroundTasks):
+async def generate_analysis_report(background_tasks: BackgroundTasks, user: RequireWriter):
     """
     Generate comprehensive academic analysis report
 
