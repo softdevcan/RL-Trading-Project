@@ -139,6 +139,9 @@ def main() -> int:
         r = c.post("/api/trading/train", json={"algorithm": "ppo", "total_timesteps": 100},
                    headers={"X-CSRF-Token": csrf})
         check("viewer egitim baslatamiyor -> 403", r.status_code == 403, f"(got {r.status_code})")
+        r = c.post("/api/trading/analysis/generate-report", json={}, headers={"X-CSRF-Token": csrf})
+        check("viewer rapor alt sureci baslatamiyor -> 403 (§9.13)", r.status_code == 403,
+              f"(got {r.status_code})")
 
         r = c.get("/api/trading/models")
         check("viewer model listesini okuyabiliyor", r.status_code == 200, f"(got {r.status_code})")

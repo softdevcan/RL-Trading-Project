@@ -88,7 +88,7 @@ harf + rakam. 5 hatalı denemede hesap 15 dakika kilitlenir; ayrıca IP başına
 | `admin` | + kullanıcı yönetimi, denetim kaydı, `/docs` ve `/openapi.json`. |
 
 Kod tarafında: `RequireWriter` (viewer'ı bloklar), `RequireAdmin`. Korunan uçlar:
-`/trading/train`, `/trading/data/generate|update`, `/trading/daily-decision`,
+`/trading/train`, `/trading/data/update`, `/trading/daily-decision`,
 `/trading/apply-decision`, `DELETE /trading/models/{name}`, `/prediction/train`,
 `/prediction/predict`, `/prediction/evaluate`, `/prediction/train-ensemble`,
 `/prediction/cross-validate`, `/prediction/optimize`, tüm `/admin/*`.

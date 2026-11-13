@@ -9,7 +9,10 @@ API endpoint'leri:
   GET  /api/trading/data/status
   POST /api/trading/data/update
   GET  /api/trading/data/list
-  POST /api/trading/data/generate  (legacy)
+
+Eski "Veri Üret" düğmesi ve /api/trading/data/generate kaldırıldı (Faz 9 §9.13):
+5 sembollü 2018 panelini ham ve göstergeli CSV'nin üzerine yazıyordu. Paneli
+tazelemenin yolu "Yeniden İndir (tam)".
 """
 
 import os
@@ -325,18 +328,6 @@ def layout():
                             className="w-100",
                         ),
                     ], md=4, className="d-flex flex-column justify-content-end"),
-
-                    dbc.Col([
-                        html.Label("\u200b", style={"display": "block"}),
-                        dbc.Button(
-                            [html.I(className="bi bi-database me-2"),
-                             "Veri Üret (eski)"],
-                            id="data-generate-btn",
-                            color="secondary",
-                            outline=True,
-                            className="w-100",
-                        ),
-                    ], md=3, className="d-flex flex-column justify-content-end"),
                 ], className="align-items-end g-3"),
 
                 html.Div(id="data-action-result", className="mt-3"),
@@ -650,29 +641,6 @@ def register_callbacks(app):
             payload["gold_metrics"] = gold_metrics or GOLD_DEFAULT_METRICS_BORSAPY
         result = api.update_data(payload)
         return _render_update_result(result)
-
-    # Legacy veri üret
-    @app.callback(
-        Output("data-action-result", "children", allow_duplicate=True),
-        Input("data-generate-btn", "n_clicks"),
-        [State("data-date-range", "start_date"), State("data-date-range", "end_date")],
-        prevent_initial_call=True,
-    )
-    def generate_data(n, start, end):
-        if not n:
-            return ""
-        result = api.generate_data({"start_date": start, "end_date": end})
-        if result and result.get("status") == "success":
-            return dbc.Alert(
-                [html.I(className="bi bi-check-circle me-2"),
-                 f"Veri başarıyla üretildi: {result.get('total_rows', 0):,} satır"],
-                color="success", dismissable=True,
-            )
-        return dbc.Alert(
-            [html.I(className="bi bi-exclamation-triangle me-2"),
-             f"Veri üretimi başarısız: {result}"],
-            color="danger", dismissable=True,
-        )
 
 
 # ── Render yardımcıları ────────────────────────────────────────────────────────

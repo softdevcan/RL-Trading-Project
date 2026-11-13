@@ -100,8 +100,16 @@ def main() -> int:
         check("Giris sonrasi API erisimi", r.status_code == 200, f"(got {r.status_code})")
 
         print("\n4) CSRF korumasi")
-        r = c.post("/api/trading/data/generate", json={})
+        # Eskiden /api/trading/data/generate kullaniliyordu (Faz 9 §9.13'te kaldirildi).
+        # CSRF middleware rota eslesmesinden ONCE calistigi icin var olmayan bir uc da
+        # 403 donerdi; kontrol bu yuzden asagida basligiyla 201 alan AYNI uca bakar ve
+        # reddedilen istegin yan etkisi olmadigini dogrular.
+        r = c.post("/api/admin/users", json={"email": "csrf@test.local", "role": "user"})
         check("CSRF header'siz POST -> 403", r.status_code == 403, f"(got {r.status_code})")
+        r = c.get("/api/admin/users")
+        emails = [u.get("email") for u in r.json().get("users", [])] if r.status_code == 200 else None
+        check("Reddedilen POST kullanici acmadi",
+              emails is not None and "csrf@test.local" not in emails, f"(got {r.status_code}: {emails})")
 
         print("\n5) Yetkilendirme (RBAC)")
         r = c.get("/api/admin/users")
