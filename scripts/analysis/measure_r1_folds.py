@@ -23,6 +23,7 @@ Bu bir OLCUMDUR, test degil; sayilar Faz 9 §9.11'e komutuyla yazilir.
 Kullanim (depo kokunden):
     python scripts/analysis/measure_r1_folds.py \
         --old-panel data/bist/backup_2026-07-27/raw_stock_data.csv --dividends \
+        --old-indicator-panel data/bist/backup_2026-07-27/stock_data_with_indicators.csv \
         --out docs/development/measurements/phase9-r1/folds.json
 """
 
@@ -226,6 +227,9 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--old-panel", default=None, help="eski ham CSV (panel tazeleme karsilastirmasi)")
     ap.add_argument("--dividends", action="store_true", help="yfinance temettu tarihleri (ag)")
+    ap.add_argument("--old-indicator-panel", default=None,
+                    help="eski gostergeli CSV: GUNCEL kapi ondan da gecirilir (kapi sayilarindaki "
+                         "farkin veriden mi koddan mi geldigini ayirmak icin)")
     args = ap.parse_args()
 
     from app.core.config import get_settings
@@ -263,6 +267,24 @@ def main():
     folds, gate = measure_folds(csv, spec)
     result["gate"] = {"full_panel": full, **gate}
     result["norms"] = folds
+    if args.old_indicator_panel:
+        # Ayni (guncel) kapi eski panele: fark veriden mi koddan mi (K18 isinma atimi vb.)
+        from evaluation import rl_folds
+        p = args.old_indicator_panel
+        p = p if os.path.isabs(p) else os.path.join(ROOT, p)
+        old_ind = fetcher.load_data(os.path.relpath(p, data_dir))
+        end = pd.to_datetime(old_ind.index.get_level_values("date")).max()
+        new_cut = csv[pd.to_datetime(csv.index.get_level_values("date")) <= end]
+        keys = ("rows_after", "n_dates", "missing_cell_frac", "n_ghost_days",
+                "n_stale_cells_dropped", "indicator_warmup_dropped", "n_large_moves", "n_artifacts")
+        result["gate_same_code"] = {
+            "old_panel": {"path": os.path.relpath(p, ROOT).replace("\\", "/"),
+                          "file_sha256": file_sha256(p), "end": str(end.date())},
+            "old": {k: rl_folds.load_rl_panel(price_norm="stats", df=old_ind).integrity_report[k]
+                    for k in keys},
+            "new_cut_to_old_end": {k: rl_folds.load_rl_panel(price_norm="stats", df=new_cut)
+                                   .integrity_report[k] for k in keys},
+        }
     if args.old_panel:
         result["panel_refresh"] = panel_refresh(os.path.join(ROOT, args.old_panel)
                                                 if not os.path.isabs(args.old_panel) else args.old_panel,
