@@ -366,6 +366,8 @@ class BaseHyperparameterOptimizer:
                 'selected_index': selection['index'], 'selected_step': selection['step'],
                 'selected_metric': selection['metric'], 'degenerate': selection['degenerate'],
                 'n_valid': selection['n_valid'], 'n_distinct': selection['n_distinct'],
+                'n_negative_mean_excess': selection['n_negative_mean_excess'],
+                'last_metric': selection['last_metric'],
                 'checkpoints': [{k: v for k, v in r.items() if k != 'path'}
                                 for r in validation_cb.records],
             }

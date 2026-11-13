@@ -178,7 +178,7 @@ python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagims
                                            #          main ile bit-es, rota uctan uca (109)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
-                                           #          bit-es, rota<->HPO ayni gozlem, kayit (75, ~35 sn)
+                                           #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (82, ~40 sn)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)

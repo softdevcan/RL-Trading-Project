@@ -494,6 +494,14 @@ def main():
           "arasina dusen noktalar ayni model; hakem-rl R1 #4)",
           None not in shas and sel_b.get("n_distinct") == len(set(shas))
           and 1 < sel_b["n_distinct"] < rl_folds.N_CHECKPOINTS, f"{sel_b.get('n_distinct')} / {shas}")
+    cks = sel_b.get("checkpoints") or []
+    last = max(cks, key=lambda c: c["step"]) if cks else {}
+    check("secim raporu tani tasir: her noktada ortalama fazla getiri, negatif nokta sayisi, "
+          "son noktanin dogrulama metrigi (hakem-finans R1 #1; karar 2026-11-14)",
+          bool(cks) and all(c.get("mean_excess") is not None for c in cks)
+          and sel_b.get("n_negative_mean_excess") == sum(c["mean_excess"] < 0 for c in cks)
+          and sel_b.get("last_metric") == last.get("metric"), str({k: sel_b.get(k) for k in
+                                                                    ("n_negative_mean_excess", "last_metric")}))
     cr = lambda s: (s.get("metrics") or {}).get("cumulative_return")
     check("... ve test metrigi degisir (olcut bos degil)", cr(s_pert) != cr(s_base),
           f"{cr(s_base)} / {cr(s_pert)}")
@@ -515,6 +523,7 @@ def main():
     # secim son noktaya dustu, bu dal calismadi. Secimi 4. noktaya zorla.
     from stable_baselines3 import A2C as _A2C
     captured = {}
+    real_select = rl_folds.select_checkpoint
 
     def forced_pick(records):
         chosen = records[3]
@@ -522,8 +531,7 @@ def main():
         captured["chosen"] = params_digest(_A2C.load(chosen["path"], device="cpu"))
         captured["final"] = params_digest(_A2C.load(final["path"], device="cpu"))
         captured["step"] = chosen["step"]
-        return {**chosen, "degenerate": False, "rank": 1, "n_valid": len(records),
-                "n_distinct": len({r["params_sha"] for r in records})}
+        return {**real_select(records), **chosen}   # tani alanlari gercek kuraldan
 
     with patched(rl_folds, "select_checkpoint", forced_pick):
         s_f, t_f, w_f = run_route(panel)
@@ -790,6 +798,11 @@ def main():
                                                                      (30, 0.3, "b")])])
     check("secim: ayni agirlikli noktalar tek aday sayilir (n_distinct)",
           dup["n_distinct"] == 2 and dup["step"] == 30)
+    neg = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": m, "mean_excess": e}
+                                      for i, (s, m, e) in enumerate([(10, -0.5, -0.2), (20, 0.4, 0.1),
+                                                                     (30, -0.1, -0.05)])])
+    check("tani: negatif ortalamali nokta sayisi ve son noktanin metrigi; secim kurali degismez",
+          neg["n_negative_mean_excess"] == 2 and neg["last_metric"] == -0.1 and neg["step"] == 20)
     deg = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": None}
                                       for i, s in enumerate([10, 20])])
     check("hicbir metrik tanimli degilse son nokta + degenerate=True",
@@ -801,6 +814,9 @@ def main():
     hand = x.mean() / x.std(ddof=1) * np.sqrt(252)
     check("excess_sharpe: elle hesapla esit (risksiz faiz seans basina dusulur)",
           abs(rl_folds.excess_sharpe(r, d, rf) - hand) < 1e-12)
+    check("mean_excess: elle hesapla esit (yillik), risksiz faiz yoksa None",
+          abs(rl_folds.mean_excess(r, d, rf) - x.mean() * 252) < 1e-12
+          and rl_folds.mean_excess(r, d, None) is None)
     check("excess_sharpe: sabit brut getiri (islem yok) ve < 3 gozlem -> None",
           rl_folds.excess_sharpe(np.zeros(30)) is None
           and rl_folds.excess_sharpe([0.01, 0.02]) is None)

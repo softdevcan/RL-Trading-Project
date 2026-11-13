@@ -246,6 +246,7 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Testler:** A3 (ikili Sharpe), A4 (MCS), A1 (DSR, N deneme kaydından), A5 (tohum dağılımı); aile başına BH-FDR (A7) — aile = bir hipotezin tüm karşılaştırmaları.
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
+- **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır.
 
 ---
 
@@ -920,7 +921,7 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 | 2013-06 öncesi | Alınmadı | Pencereyi geri çekmek panelin en geç başlayan sembollerini düşürür: PGSUS 2013-04-26, ODAS 2013-05-21 (Faz 10 Ek A komut 1). Eski ortam etkin olmayan sembolü maskeleyemiyor. Kullanıcı notu: eski veri performansı iyileştirirse alınabilir. M2 aktiflik maskesiyle denenebilir |
 | Purge | 0 seans | Eski ortamda ödül ufku bir adım; ortam kendi penceresinin son gününde bitiyor. **Varsayılmadı, ölçüldü:** kat sınırında B0 (aşağıda test B). Ufuk büyürse (Faz 10 K12, t+1 açılış) test kırılır ve değer yükseltilir |
 | Kontrol noktası | Bütçe boyunca 10 eşit aralıklı nokta, sonuncusu bütçe sonu. Her noktada doğrulama bloğunda belirlenimci tek geçiş. Seçim: risksiz faiz üstü yıllık Sharpe'ın argmax'ı, eşitlikte en erken adım. Erken durdurma ve yeniden uyum yok | Tasarım varsayımı (N = 10; bir yıllık doğrulamada yıllık Sharpe'ın standart hatası kabaca 1). Kollar eşit ortam adımı alır. Test yalnız seçilen modelle, bir kez okunur. Seçimde kullanılan tahminin seçilen model için yanlı olması: Varma & Simon 2006; Cawley & Talbot 2010 (özetten) |
-| Seçim metriği | `val_excess_sharpe`; risksiz faiz `evaluation/risk_free.py`'den (A8) | Seri yoksa rf = 0 ve kayıt açık (`selection_metric='val_sharpe_rf0'`); sabite sessizce düşülmez |
+| Seçim metriği | `val_excess_sharpe`; risksiz faiz `evaluation/risk_free.py`'den (A8) | Seri yoksa rf = 0 ve kayıt açık (`selection_metric='val_sharpe_rf0'`); sabite sessizce düşülmez. Ortalama fazla getiri negatifken davranışı ölçüldü; tanı kayda giriyor (§9.12, kullanıcı kararı 2026-11-14) |
 | HPO | (a) yalnız ilk katta: 2021 katının doğrulaması (2020) bütün testlerden önce bitiyor. Panel, kat ve ortam rotayla aynı. Amaç = en iyi kontrol noktasının doğrulama metriği. Budama aynı metrikten; bütçenin ilk yarısında budama yok | Y21 kapandı: HPO göstergeli CSV'yi, `wilder` ADX'i, veri kapısını ve nedensel kolu rotayla aynı yoldan alıyor. Ayar tohumu kayda giriyor; rota soyu ölçüyor (`hpo_lineage`). Ayar ve sınama tohumlarının ayrılması: Eimer vd. 2023 (özetten) |
 
 **Deneme kaydı ([evaluation/trial_registry.py](../../evaluation/trial_registry.py)).**
@@ -1038,6 +1039,50 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - 2013-06 öncesi veri (M2 aktiflik maskesi).
 - Canlı karar paritesi (K13): meta `fold` ve `selected_step` taşıyor, canlı karar okumuyor.
 - Seçim protokolü kaynaklarının tam metni (verification §8.4).
+- Seçim kuralının test karşılaştırması (argmax ↔ son nokta) → M8 ön kaydı (§9.12).
+- Nakit getirisi: ortamda nakit 0 kazanıyor, seçim metriği rf düşüyor → M2 ortam tasarımı (§9.12 F2).
+
+### 9.12 Hakem paneli (R1, 2026-11-13/14)
+
+| Hakem (model) | Okuma | Karar | Token | Araç | Süre |
+|---|---|---|---|---|---|
+| hakem-rl (sonnet) | ilk | Küçük revizyon | ~57 bin | 9 | ~1 dk |
+| hakem-finans (sonnet) | ilk | Küçük revizyon | ~66 bin | 9 | ~2 dk |
+
+**Paneli izleyen ölçüm.** Komut: `python scripts/analysis/measure_r1_selection.py --folds 2021,2025 --timesteps 50000 --b0-fold 2026 --out docs/development/measurements/phase9-r1/selection.json`. Koşum commit `7ab7a33` üzerinde, temiz ağaçta yapıldı.
+- Kurulum: gerçek panel, rotanın A2C varsayılanları, CPU, tek tohum (7). Deneme kaydına yazılmadı; test bloğu kurulmadı.
+- **Seçim metriği.**
+  - 2021 katında (doğrulama 2020, rf yıllık %10,0) 10 noktanın 0'ının ortalama fazla getirisi negatif.
+  - 2025 katında (doğrulama 2024, rf %40,5) 10 noktanın **10'u** negatif.
+  - 2025'te dört kural da (fazla getiri Sharpe'ı, rf = 0 Sharpe, ortalama fazla getiri, işarete duyarlı Sharpe) aynı noktayı, yani son noktayı seçti. En oynak nokta (4) seçilmedi; noktaların oynaklığı %23–25 aralığında.
+  - 2021'de rf = 0 Sharpe başka bir nokta seçiyor (8 yerine 4).
+  - Her katta 10 noktanın ağırlıkları farklı. Callback'in metriği bağımsız yeniden hesapla birebir.
+  - Tek tohum ve tek algoritma olduğu için bu bir tanıdır, genelleme değil.
+- **Gerçek panel B0** (2026 katı; ham fiyat doğrulama ya da test başından itibaren değiştirildi, CSV'yi üreten gösterge hattı yeniden koşuldu): iki kolda ve iki sınırda sınırdan önceki ortamın izi bit-eş, sonraki ortamın izi değişiyor (JSON `real_b0`).
+
+**Kullanıcı kararları (2026-11-14).**
+- **Seçim metriği korunur** (M8 birincil metriğiyle tutarlı). Her kontrol noktasına yıllık ortalama fazla getiri (`mean_excess`) yazılır; seçim raporu negatif ortalamalı nokta sayısını (`n_negative_mean_excess`) ve son noktanın doğrulama metriğini (`last_metric`) taşır. Nakit getirisi (ortamda 0) M2 ortam tasarımına girer.
+- **Son kontrol noktasının test karşılaştırması M8'e.** "Test bir kez" kuralı korunur. "Seçim kuralı: argmax ↔ son nokta" M8 ön kaydında önceden tanımlı bir etken olur; her kural kendi kaydıyla bir kez okunur ve N'ye sayılır. R1'de yalnız doğrulama tarafındaki fark raporlanır.
+
+| # | Kaynak | Cid. | İtiraz | Yanıt |
+|---|---|---|---|---|
+| R1 | hakem-rl | BÜYÜK | Seçimin değeri ölçülmüyor; son nokta referansı yok | **Kısmen.** Test bir kez okunur (Varma & Simon 2006; Cawley & Talbot 2010). Doğrulama tarafındaki fark `last_metric` ile raporlanıyor; test tarafı M8'de (karar yukarıda) |
+| R2 | hakem-rl | BÜYÜK | Pasif referans (al-tut, nakit) yok | **Plan D1** (1/N, al-tut, XU030); R1 kapsamı dışında. Paketin bilinen açıklar listesinde eksikti |
+| R3 | hakem-rl | BÜYÜK | `stats` kolunda seçim destek dışı doğrulama gözlemleriyle yapılıyor | **Kabul, beyan.** Bu seçimi zayıflatır ama testin ölçümünü yanlı kılmaz; `protocol_val` bilgi alanı olarak kalır (K18 #4). `stats` kayıtları zaten `price_in_support` ile açık. Kol karşılaştırmasında referans `causal` (Milestone 0') |
+| R4 | hakem-rl | KÜÇÜK | Güncelleme arasına düşen noktalar aynı modeli ölçüyor | **Kabul, düzeltildi:** `params_sha` + `n_distinct` (test C, I) |
+| R5 | hakem-rl | KÜÇÜK | 2021 katında HPO ve kontrol noktası seçimi aynı doğrulama yılını kullanıyor | **Beyan.** Test dokunulmuyor; doğrulama metriği kanıt olarak kullanılmıyor ve çift seçimle iyimser olduğu biliniyor |
+| R6 | hakem-rl | KÜÇÜK | Tek tohum; seçim kararlılığı ölçülmedi | **Beyan.** R1 performans sayısı üretmiyor; ≥ 10 tohum Milestone 0''da |
+| R7 | hakem-rl | KÜÇÜK | Katlar arasında bütçe/seans oranı sabit değil (1.651 → 2.901 seans) | **Beyan,** M8 (bütçe ölçekleme ya da kol) |
+| R8 | hakem-rl | KÜÇÜK | TD3/SAC bit-eşliği test edilmemiş; `learning_starts` öncesi noktalar eğitilmemiş politikayı ölçüyor | **Kabul.** Test D TD3 ve SAC'ı da kapsıyor, ikisi de bit-eş. `learning_starts` (rota varsayılanı 1000) öncesine düşen noktalar beyan edilir |
+| F1 | hakem-finans | BÜYÜK | Ortalama fazla getiri negatifken Sharpe oynaklığı ödüllendirir | **Ölçüldü:** 2025'te 10/10 negatif, ama seçim değişmedi. Karar: metrik korunur, tanı kayda girer |
+| F2 | hakem-finans | BÜYÜK | Nakit 0 kazanırken metrik rf düşüyor (asimetri) | **Kabul, beyan.** Ortam değişmez (davranış dondurma); `sharpe_rf0` her noktada kayıtlı. Nakit getirisi M2'de |
+| F3 | hakem-finans | KÜÇÜK | Düzeltilmiş fiyat türetimi fⱼ'nin sonradan değişmemesine bağlı | **Kabul,** §9.11 metni "bir indirme içinde ve fⱼ sabitken" diye sınırlandı |
+| F4 | hakem-finans | KÜÇÜK | Pay sınırının TL değeri değişken; baseline'larla karşılaştırma kayar | **Kabul, beyan** (§9.11); D1'de |
+| F5 | hakem-finans | KÜÇÜK | Temettü brüt ve gecikmesiz yeniden yatırılıyor | **Kabul, beyan** (§9.11) |
+| F6 | hakem-finans | KÜÇÜK | Tek tohum; seçilen ve son noktanın testi | R1 ve R6 ile aynı (M8) |
+| F7 | hakem-finans | KÜÇÜK | Takvim yılı blokları rejime özgü; arife yarım günleri hacmi yanlı yapar | **Beyan,** M8 raporu. Yarım gün işareti M2 `obs_spec`'inde |
+| FS1 | hakem-finans (soru 1) | — | Kat sınırı B0'ın gerçek panelde de doğrulanması | **Yapıldı:** `real_b0` bit-eş |
+| FS5 | hakem-finans (soru 5) | — | SHA tek başına yetmez; dosyanın kendisi korunmalı | **Kabul.** Yedekler (`data/bist/backup_*`) yerel ve git dışında. Makine dışı kopya kullanıcı işi (açık) |
 
 ---
 

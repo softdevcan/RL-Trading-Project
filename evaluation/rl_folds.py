@@ -225,6 +225,25 @@ def excess_sharpe(returns, dates=None, risk_free: Optional[pd.Series] = None,
     return float(r[ok].mean() / sd * np.sqrt(periods))
 
 
+def mean_excess(returns, dates, risk_free: Optional[pd.Series],
+                periods: int = PERIODS_PER_YEAR) -> Optional[float]:
+    """Yillik ortalama fazla getiri (tani; secim kurali degil). Risksiz faiz yoksa None.
+
+    Neden (hakem-finans R1 #1-#2, kullanici karari 2026-11-14): ortamda nakit faiz
+    kazanmiyor, secim metrigi faizi dusuyor. Ortalama fazla getiri negatifken Sharpe
+    ~ -rf/sigma olur ve argmax oynakligi odullendirebilir. Metrik korunur; bu deger her
+    kontrol noktasinda kayda girer, kac noktanin negatif oldugu raporlanir.
+    """
+    if risk_free is None or dates is None:
+        return None
+    r = np.asarray(returns, dtype=float)
+    idx = pd.DatetimeIndex(pd.to_datetime(list(dates)))
+    idx = idx.tz_localize(None) if idx.tz is not None else idx
+    ex = r - pd.Series(risk_free).reindex(idx).to_numpy(dtype=float)
+    ex = ex[np.isfinite(ex)]
+    return float(ex.mean() * periods) if ex.size else None
+
+
 def run_episode(model, env, collect_obs: bool = False) -> dict:
     """Ortamda belirlenimci tek gecis. Donus: gunluk getiri, tarihleri, portfoy serisi."""
     base = getattr(env, 'unwrapped', env)
@@ -278,12 +297,18 @@ def select_checkpoint(records: List[dict]) -> dict:
     # Ayni agirlikli noktalar ayri aday degildir (hakem-rl R1 #4: PPO/A2C'de izgara noktasi
     # guncellemeler arasina duserse ardisik noktalar ayni modeli olcer).
     n_distinct = len({r['params_sha'] for r in records if r.get('params_sha')}) or None
+    # Tani (kural degil): negatif ortalama fazla getirili nokta sayisi (hakem-finans R1 #1)
+    # ve son noktanin dogrulama metrigi — secilen ile son arasindaki fark testsiz raporlanir;
+    # "argmax <-> son nokta" karsilastirmasinin TEST tarafi M8 on kaydinda (kullanici karari).
+    diag = {'n_distinct': n_distinct,
+            'n_negative_mean_excess': sum(1 for r in records if (r.get('mean_excess') or 0) < 0)
+            if any(r.get('mean_excess') is not None for r in records) else None,
+            'last_metric': max(records, key=lambda r: r['step']).get('metric')}
     if not valid:
         chosen = max(records, key=lambda r: r['step'])
-        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0, 'n_distinct': n_distinct}
+        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0, **diag}
     chosen = sorted(valid, key=lambda r: (-r['metric'], r['step']))[0]
-    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid),
-            'n_distinct': n_distinct}
+    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid), **diag}
 
 
 def make_validation_callback(val_env_factory: Callable[[], object], total_timesteps: int,
@@ -335,6 +360,7 @@ def make_validation_callback(val_env_factory: Callable[[], object], total_timest
                 'final': bool(final), 'path': path + '.zip',
                 'metric': excess_sharpe(ep['returns'], ep['dates'], risk_free),
                 'sharpe_rf0': excess_sharpe(ep['returns']),
+                'mean_excess': mean_excess(ep['returns'], ep['dates'], risk_free),
                 'cumulative_return': float(ep['portfolio_values'][-1] / ep['portfolio_values'][0] - 1.0)
                 if len(ep['portfolio_values']) > 1 else None,
                 'n_trades': ep['n_trades'], 'n_returns': int(len(ep['returns'])),
