@@ -329,9 +329,17 @@ class StackingEnsemble:
         if self.use_tats and len(meta_predictions) >= 1:
             self.tats_corrector = TATSCorrector()
             meta_X_for_tats, tats_min_len = self._stack_aligned(meta_predictions)
-            tats_y = y_meta[-tats_min_len:]
-            current_prices_meta = y_base[-tats_min_len:]
-            tats_result = self.tats_corrector.fit(meta_X_for_tats, tats_y, current_prices_meta)
+            # Faz 9 B10 (Y20): "mevcut fiyat" meta satirlarinin KENDI kapanisi (eskiden
+            # taban bolumunun son hedefleri y_base idi) ve etiket gercek getiriden:
+            # log_return hedefinde gelecek fiyat = close * exp(y). Hizalama OOF ile ayni
+            # (sondan tats_min_len). tats.fit fiyat bekler; birim artik fiyat.
+            close_meta = self._tats_inputs_close(feat_df, base_end, meta_end)[-tats_min_len:]
+            y_meta_tail = y_meta[-tats_min_len:].astype(np.float64)
+            if self.target_type == 'log_return':
+                future_meta = close_meta * np.exp(y_meta_tail)
+            else:
+                future_meta = y_meta_tail
+            tats_result = self.tats_corrector.fit(meta_X_for_tats, future_meta, close_meta)
             test_metrics['tats_trained'] = tats_result.get('trained', False)
 
         # ------------------------------------------------------------------
@@ -387,6 +395,11 @@ class StackingEnsemble:
         self._save_ensemble_meta(symbol, model_results, test_metrics)
 
         return self._build_result(symbol, model_results, test_metrics, n, split)
+
+    @staticmethod
+    def _tats_inputs_close(feat_df: pd.DataFrame, base_end: int, meta_end: int) -> np.ndarray:
+        """Meta bolumunun (X[base_end:meta_end]) satir satir kapanisi (B10)."""
+        return feat_df['close'].to_numpy(dtype=np.float64)[base_end:meta_end]
 
     @staticmethod
     def _stack_aligned(predictions: Dict[str, np.ndarray]):

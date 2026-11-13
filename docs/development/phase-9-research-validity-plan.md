@@ -1172,6 +1172,19 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 **Panel (B8).** hakem-finans (sonnet) Kabul, 4 KÜÇÜK (~44 bin token, 7 araç, ~0,6 dk); hakem-2 (opus) Kabul, 6 KÜÇÜK (~70 bin token, 19 araç, ~3,1 dk; eğitim hattı mutasyonunu kendi koştu: iki modda 4 katın bit-eş kontrolü kırıldı). İşlenenler: kat başına test ve eşitlik (finans #1, h2 #4), embargo etkisiz beyanı (finans #2), gerçek hat ölçülmedi (finans #3), ortak küme + CV/final ayrık (finans #4), eğitim hattı mutasyonu (h2 #1), protokol etiketi (h2 #2), arşivlenmemiş sayı metinden çıktı (h2 #3), diğer açık kanallar (h2 #5). h2 #6 (§9.6 "Sıradaki" satırı) tarihsel bölüm olduğu için değiştirilmedi.
 
+### 9.16 B10 — TATS uyum girdileri (2026-11-14, dal `feat/phase9-b10-tats-labels`)
+
+**Kapsam.** Faz 10 §3.1.1 B10, Y20. TATS trend sınıflandırıcısı iki hatayla üretilmiş etiketlerle eğitiliyordu: "mevcut fiyat" meta bölümünün kapanışı değil taban bölümünün son hedefleriydi (`y_base`, yanlış pencere) ve varsayılan `log_return` hedefinde iki dizi de log-getiriydi (yanlış birim).
+
+- **Değişiklik** ([ensemble.py](../../prediction/models/ensemble.py), TATS uyum bloğu; yeni bayrak yok). Mevcut fiyat = meta satırlarının kendi kapanışı (`_tats_inputs_close`: `feat_df['close'][base_end:meta_end]`, OOF ile aynı sondan hizalama). `log_return` hedefinde gelecek fiyat `close · exp(y)`, `abs_price`'ta `y`. `tats.py` değişmedi; girdisi artık tanımındaki birimde (fiyat).
+- **Varsayılan çevrildi (kullanıcı kararı 2026-11-14, K1 seçenek 1).** `use_tats=True` varsayılan hatta etkili; golden Milestone 0' ile bir kez yenilenir. Golden yeşil kaldı (aşağıda).
+- **Kabul.** `python tests/test_tats_labels.py` → 9/0 (gerçek `StackingEnsemble.train`, yalnız XGBoost + LightGBM, CPU, diske yazmadan; 30 günlük yukarı/yatay/aşağı rejimli sentetik).
+  - İki hedef türünde de uyum girdisinin mevcut fiyatı meta satırlarının kapanışıyla birebir; gerçekleşen t+1 getirisine göre etiket isabeti 1,0000 (üç sınıf).
+  - Eski girdilerle (Y20) aynı veride isabet `log_return` 0,2456, `abs_price` 0,5351.
+  - Mutasyon üretim yolundan: meta kapanışı bir gün kayık okunursa `abs_price`'ta isabet 0,9737'ye düşüyor. `log_return`'de kapanış sadeleşir (gelecek = c · exp(y)) ve etiket yalnız `y`'ye bağlı; hizalama hatası orada etiketi değiştiremez.
+- **Golden.** `python tests/test_prediction_regression.py` → "[REGRESYON] GECTI (OK) - davranis korunmus." (B10 dalında, 2026-11-14). Faz 10 tablosundaki "golden değişir" öngörüsü bu golden için tutmadı. **Bu B10 için kanıt değil:** anlık görüntü TATS meta alanını taşımıyor, test metriği TATS'sız hesaplanıyor (açık 1); golden TATS'ı yalnız son tahminin yönü ve değişim yüzdesi üzerinden görebilir ve o tahminde fark yok. Nedeni (o noktada çatışma olmaması mı) ölçülmedi. Golden'ın sentetik veriyle kurulduğu da §9.3'te beyanlı. K1 seçenek 1'in "golden kırmızı kalır" bedeli bu yüzden doğmadı.
+- **Açık (B10 kabulünün dışında, Y20'ye hakem-2'nin eklediği iki sorun).** TATS test metriğinde değerlendirilmiyor (test metrikleri TATS uyumundan önce ve TATS'sız) ve diskten yüklenen modelde TATS çalışmıyor. B10 sonrası K3/K4 kolları hâlâ TATS'ın etkisini ölçemiyor; Makale 2'den önce kapanmalı (plana eklenmesi kullanıcı kararı).
+- **Etkisi ölçülmedi.** Gerçek veride etiket dağılımı ve tahmin farkı ölçülmedi; tahmin hattı CV'si ayrıca kırık (§9.15).
 ---
 
 ## Versiyon geçmişi
@@ -1210,3 +1223,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.13):** legacy "veri üret" düğmesi ve `/data/generate` kaldırıldı (§9.11 bulgu 6). `test_auth` CSRF kontrolü içi boş kalmasın diye başlıkla kabul edilen aynı uca taşındı (29). Yan bulgu `/analysis/generate-report` RBAC'sızdı, `RequireWriter` eklendi (`test_workspace_isolation` 19).
 - **2026-11-14 (§9.14):** B5 maliyet ölçümü: 67.086 ayrıştırma; en pahalı yapılandırma (W 256, trials 100) 14 süreçle ~2,5 sa, tek süreçte ~34 sa. Hesaplama Makale 2 tarihini kaydırmıyor; K5 kullanıcıda.
 - **2026-11-14 (§9.15, B8):** CV'de özellik seçimi her katın yalnız eğitim bölümünde (Y16). Kabul `test_cv_feature_selection` 13: her katın kendi test `y`'si karışınca küme bit-eş; mutasyon kırılıyor. hakem-finans: Kabul (küçük notlar işlendi).
+- **2026-11-14 (§9.16, B10):** TATS uyum girdileri meta bölümünün kendi kapanışından ve gerçek getiriden (Y20); varsayılan çevrildi (K1, golden Milestone 0'). Kabul `test_tats_labels` 9.
