@@ -1006,6 +1006,9 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - Günlük log-getiri yalnız bu 4 günde farklı (en fazla 0,0041).
 - **Ders:** auto_adjust edilmiş yfinance paneli değişmez değil; tam indirme geçmişi geriye dönük değiştirebiliyor. Bir sonuç yeniden üretilecekse veri yeniden indirilmez, anlık görüntü (C3) kullanılır. Veri kapısı tek paneldeki bozukluğu yakalar; iki indirme arasındaki farkı panel SHA-256'sı ayırır.
 - B9 ve K18 ölçüm JSON'ları eski panelin SHA'sına ait ve tarihsel kayıt olarak değişmez.
+- **Düzeltilmiş fiyat ve nokta-zamanlılık (analitik, ölçülmedi).** `Ticker.history` varsayılanı `auto_adjust=True` ([data_fetcher.py:164](../../data/data_fetcher.py#L164); yfinance 0.2.66). Çarpımsal düzeltmede p̃ₜ = pₜ · Πⱼ﹥ₜ fⱼ = C · TRₜ; burada TRₜ = pₜ / Πⱼ≤ₜ fⱼ, t'ye kadarki bilgiyle kurulan toplam getiri endeksi, C = Πⱼ fⱼ ise indirme tarihine kadarki tüm temettü ve bölünme çarpanları (sembol başına tek sabit).
+  - Ölçekten bağımsız özellikler (getiri, aynı seriden kurulan `stats` z'si, nedensel kayan z) C'yi taşımaz: gelecek temettü bilgisi sadeleşir.
+  - Ölçeğe bağlı olanlar C'yi taşır: TL cinsinden MACD (`tanh(macd/0,1)`), pay adediyle işlem büyüklüğü (`max_shares_per_trade`) ve portföydeki pay sayıları. Bunlar K26'da zaten ölçeğe bağlı diye beyanlı; burada eklenen, ölçeğin gelecekteki temettüleri de içermesi. Ölçeksiz gözlem ve ağırlık tabanlı eylem M2'de (K26, Y6).
 
 **Bu paketin bulguları.**
 1. Panoda HPO doğrulama penceresi CSV'nin sonuna uzanıyordu; rotanın test dönemini içeriyordu. **Kapandı:** kat seçici.
