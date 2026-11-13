@@ -51,6 +51,7 @@ KW = dict(initial_balance=1_000_000, commission_rate=0.001, max_shares_per_trade
           phase=1, reward_type="simple")
 NORMS = ("stats", "causal")
 NOT_MEASURABLE_WITHOUT_TRAINING = ("selection_metric",)
+STEP_REL = 1e-5   # panel tazeleme: kapanis oraninda basamak esigi (goreli)
 
 
 def r4(x):
@@ -172,7 +173,10 @@ def panel_refresh(old_path, new_path, start, dividends=False):
         r = (g["close_n"] / g["close_o"]).to_numpy()
         lr_o, lr_n = np.diff(np.log(g["close_o"].to_numpy())), np.diff(np.log(g["close_n"].to_numpy()))
         dr = np.abs(lr_n - lr_o)
-        steps = np.flatnonzero(np.abs(np.diff(r)) > 1e-6) + 1
+        # basamak: oranin GORELI degisimi > STEP_REL. Saklanan fiyatlarin yuvarlamasi
+        # orani ~1e-6 oynatiyor (olculdu: sabit oranli sembollerde getiri farki <= 1,1e-6);
+        # en kucuk gercek basamak (SKBNK 2026-06-08) 1,1e-3.
+        steps = np.flatnonzero(np.abs(np.diff(r)) / r[:-1] > STEP_REL) + 1
         per[s] = {"ratio_min": round(float(r.min()), 6), "ratio_max": round(float(r.max()), 6),
                   "spread_pct": round(float((r.max() / r.min() - 1) * 100), 5),
                   "step_dates": [str(pd.Timestamp(g["date"].iloc[i]).date()) for i in steps],
