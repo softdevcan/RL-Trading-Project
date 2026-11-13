@@ -36,6 +36,11 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 
 
+# Panelin ilk tarihi egitim baslangicindan en fazla bu kadar sonra olabilir (baslangic
+# tatil/hafta sonuna denk gelebilir; RL penceresi 2013-06-01 Cumartesi, ilk seans 06-03).
+START_TOLERANCE_DAYS = 10
+
+
 class SplitCoverageError(ValueError):
     """Panel istenen kati kapsamiyor (bos blok ya da tamamlanmamis test)."""
 
@@ -183,6 +188,28 @@ def fold_complete(df: pd.DataFrame, fold: Fold, spec: Optional[SplitSpec] = None
     return d.max() >= pd.Timestamp(fold.test_end)
 
 
+def fold_coverage(df: pd.DataFrame, spec: Optional[SplitSpec] = None) -> List[dict]:
+    """Panelin tanimdaki her kati TARIH olarak kapsayip kapsamadigi (pano ve veri uclari).
+
+    `complete` = egitim baslangici panelde (`fold_frames` ile ayni tolerans) VE test
+    blogu tamamlanmis. Yalniz test bitisine bakmak 2018'de baslayan bir paneli her
+    katta "tamam" gosterirdi, oysa hicbir kat kurulamaz. Veri kapisinin sonucu (hayalet
+    gun, artefakt) ve sembol evreni burada olculmez; onlar kat kurulurken raporlanir.
+    """
+    spec = spec or get_spec()
+    d = _naive_dates(df)
+    out = []
+    for f in spec.folds:
+        starts_ok = bool(len(d)) and bool(
+            d.min() <= pd.Timestamp(f.train_start) + pd.Timedelta(days=START_TOLERANCE_DAYS))
+        ends_ok = fold_complete(df, f, spec)
+        out.append({'name': f.name, 'train': [f.train_start, f.val_start],
+                    'val': [f.val_start, f.test_start], 'test': [f.test_start, f.test_end],
+                    'starts_ok': starts_ok, 'ends_ok': ends_ok,
+                    'complete': starts_ok and ends_ok})
+    return out
+
+
 def latest_complete_fold(df: pd.DataFrame, spec: SplitSpec) -> Fold:
     """Panelin TAMAMEN kapsadigi en son kat (rota varsayilani)."""
     done = [f for f in spec.folds if fold_complete(df, f, spec)]
@@ -219,7 +246,7 @@ def fold_frames(df: pd.DataFrame, spec: SplitSpec, fold) -> dict:
             f"Kat '{f.name}': test blogu {f.test_start}..{f.test_end} (haric) panelde "
             f"tamamlanmamis — panel sonu {d.max().date()}. Veriyi guncelleyin; kisa test "
             f"sessizce kabul edilmez.")
-    if d.min() > t0 + pd.Timedelta(days=10):
+    if d.min() > t0 + pd.Timedelta(days=START_TOLERANCE_DAYS):
         raise SplitCoverageError(
             f"Kat '{f.name}': egitim {f.train_start}'de baslamali, panel {d.min().date()}'de "
             f"basliyor (RL veri penceresi bolme tanimiyla uyusmuyor).")

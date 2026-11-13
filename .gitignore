@@ -62,6 +62,8 @@ data/**/*.csv
 data/**/*_quality.json
 # Faz 9 (A8): risk_free.csv'nin kaynak/seri kodu yan dosyasi — veriyle birlikte uretilir
 data/**/*_source.json
+# Faz 9 (R1): panel yedekleri ve sagama dosyalari (veri, kod degil)
+data/bist/backup_*/
 # Faz 9 (C3): egitimin gordugu panelin parquet anlik goruntuleri (veri, kod degil;
 # ozetleri — SHA-256 — model meta ve manifestte tutulur)
 data/snapshots/

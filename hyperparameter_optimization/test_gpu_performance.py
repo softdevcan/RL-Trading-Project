@@ -88,15 +88,11 @@ print(f"   ✅ Optimizer created: {optimizer.study_name}")
 start_time = time.time()
 
 try:
+    # Faz 9 / R1: pencere wf-v1'in ilk katindan (serbest tarih yok)
     study = optimizer.optimize(
         stock_symbols=PHASE1_SYMBOLS[:2],  # Only 2 stocks for speed
-        train_start='2023-01-01',
-        train_end='2023-06-30',  # 6 months
-        val_start='2023-07-01',
-        val_end='2023-09-30',    # 3 months
+        fold=None,
         total_timesteps=1000,     # Very small for quick test
-        eval_freq=500,
-        n_eval_episodes=2,
         show_progress_bar=False
     )
 

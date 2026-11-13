@@ -11,10 +11,10 @@ Kullanım Örnekleri:
     # 2. Tüm algoritmaları optimize etme
     python run_optimization.py --algorithm all --trials 30
 
-    # 3. Özel tarih aralığı ile
-    python run_optimization.py --algorithm sac --trials 20 \
-        --train-start 2018-01-01 --train-end 2022-12-31 \
-        --val-start 2023-01-01 --val-end 2023-12-31
+    # 3. Belirli bir walk-forward kati ve nedensel fiyat kolu ile (Faz 9 / R1).
+    #    Pencereler serbest tarih DEGIL: evaluation/splits.py katlarindan gelir.
+    #    Varsayilan kat = tanimin ilk kati (dogrulamasi butun testlerden once biter).
+    python run_optimization.py --algorithm sac --trials 20 --fold 2021 --price-norm causal
 
     # 4. Paralel çalıştırma (dikkat: GPU memory!)
     python run_optimization.py --algorithm ppo --trials 100 --jobs 2
@@ -36,7 +36,6 @@ from hyperparameter_optimization.optimizers import (
     TD3Optimizer,
     SACOptimizer
 )
-from data.bist30_symbols import PHASE1_SYMBOLS
 
 
 def parse_args():
@@ -78,56 +77,37 @@ def parse_args():
         help="Her trial için training timesteps (default: 100000)"
     )
 
-    parser.add_argument(
-        "--eval-freq",
-        type=int,
-        default=5_000,
-        help="Evaluation frequency (default: 5000)"
-    )
-
-    parser.add_argument(
-        "--n-eval-episodes",
-        type=int,
-        default=5,
-        help="Evaluation episode sayısı (default: 5)"
-    )
-
-    # Stock symbols
+    # Stock symbols. None = RL panelinin TUM sembolleri (egitim rotasinin evreni).
+    # Alt kume verilirse rota kaydi `hpo_universe_mismatch` ile acik kalir (Faz 9 / R1).
     parser.add_argument(
         "--stocks",
         type=str,
         nargs="+",
-        default=PHASE1_SYMBOLS,  # AKBNK.IS, THYAO.IS, TUPRS.IS, BIMAS.IS, ASELS.IS
-        help="Hisse senedi sembolleri (default: PHASE1_SYMBOLS - AKBNK, THYAO, TUPRS, BIMAS, ASELS)"
+        default=None,
+        help="Hisse senedi sembolleri (default: RL panelinin tum sembolleri)"
     )
 
-    # Date ranges
+    # Faz 9 / R1: pencereler evaluation/splits.py katlarindan (serbest tarih yok)
     parser.add_argument(
-        "--train-start",
+        "--fold",
         type=str,
-        default="2018-01-01",
-        help="Training başlangıç tarihi (default: 2018-01-01)"
-    )
-
-    parser.add_argument(
-        "--train-end",
-        type=str,
-        default="2022-12-31",
-        help="Training bitiş tarihi (default: 2022-12-31)"
+        default=None,
+        help="Walk-forward kat adi, or. 2021 (default: tanimin ilk kati)"
     )
 
     parser.add_argument(
-        "--val-start",
+        "--split-spec",
         type=str,
-        default="2023-01-01",
-        help="Validation başlangıç tarihi (default: 2023-01-01)"
+        default=None,
+        help="Bolme tanimi adi (default: wf-v1)"
     )
 
     parser.add_argument(
-        "--val-end",
+        "--price-norm",
         type=str,
-        default="2023-12-31",
-        help="Validation bitiş tarihi (default: 2023-12-31)"
+        choices=["stats", "causal"],
+        default="stats",
+        help="Fiyat z tanimi; egitim rotasindaki kolla ayni olmali (K25, default: stats)"
     )
 
     # Study configuration
@@ -213,9 +193,9 @@ def run_single_optimization(algorithm: str, args):
     print(f"🚀 Starting Hyperparameter Optimization: {algorithm.upper()}")
     print(f"{'='*100}")
     print(f"Configuration:")
-    print(f"  Stocks: {args.stocks}")
-    print(f"  Train Period: {args.train_start} to {args.train_end}")
-    print(f"  Val Period: {args.val_start} to {args.val_end}")
+    print(f"  Stocks: {args.stocks or 'RL panelinin tum sembolleri'}")
+    print(f"  Fold: {args.split_spec or 'wf-v1'} / {args.fold or 'ilk kat'}")
+    print(f"  Price norm: {args.price_norm}")
     print(f"  Phase: {args.phase} ({'56 features' if args.phase == 1 else '97 features (Fundamental + Macro)'})")
     print(f"  Reward Type: {args.reward_type.upper()}")
     print(f"  Trials: {args.trials}")
@@ -230,13 +210,10 @@ def run_single_optimization(algorithm: str, args):
     # Run optimization
     study = optimizer.optimize(
         stock_symbols=args.stocks,
-        train_start=args.train_start,
-        train_end=args.train_end,
-        val_start=args.val_start,
-        val_end=args.val_end,
+        fold=args.fold,
         total_timesteps=args.timesteps,
-        eval_freq=args.eval_freq,
-        n_eval_episodes=args.n_eval_episodes,
+        split_spec=args.split_spec,
+        price_norm=args.price_norm,
         show_progress_bar=not args.no_progress_bar
     )
 

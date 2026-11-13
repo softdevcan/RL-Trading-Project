@@ -266,7 +266,7 @@ async def get_cached_data_range():
     (Faz 9 / R1: pencereler serbest tarih degil, `evaluation/splits.py` katlari).
     """
     from evaluation.rl_folds import RL_PANEL_FILE
-    from evaluation.splits import fold_complete, get_spec
+    from evaluation.splits import fold_coverage, get_spec
 
     spec = get_spec()
     try:
@@ -286,9 +286,8 @@ async def get_cached_data_range():
             "symbols": symbols,
             "total_rows": int(len(df)),
             "split_spec": spec.name,
-            "folds": [{"name": f.name, "train": [f.train_start, f.val_start],
-                       "val": [f.val_start, f.test_start], "test": [f.test_start, f.test_end],
-                       "complete": fold_complete(df, f)} for f in spec.folds],
+            # complete = egitim baslangici + test bitisi panelde (evaluation.splits)
+            "folds": fold_coverage(df, spec),
         }
     except FileNotFoundError:
         return {

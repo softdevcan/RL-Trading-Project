@@ -247,6 +247,17 @@ async def start_training(
         background_tasks: FastAPI background tasks
         user: Aktif kullanici — egitim onun calisma alanina yazilir (viewer yapamaz)
     """
+    # Faz 9 / R1: bolme tanimi ve kat ADI arka plan gorevinden ONCE dogrulanir (HPO
+    # ucuyla ayni). Eskiden bilinmeyen kat gorevi baslatip ancak orada KeyError veriyordu.
+    # Panelin kati kapsayip kapsamadigi gorevde olculur (SplitCoverageError).
+    from evaluation.splits import get_spec
+    try:
+        _spec = get_spec(request.split_spec)
+        if request.fold:
+            _spec.fold(request.fold)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc).strip('"'))
+
     # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
     _check_training_data_freshness(request.phase)
 
@@ -542,17 +553,17 @@ async def generate_data(
         # Save
         fetcher.save_data(df, 'stock_data_with_indicators.csv')
 
-        # Get train/val/test split info
-        train_df, val_df, test_df = fetcher.split_data(df)
+        # Faz 9 / R1: eskiden `split_data` (70/15/15) satir sayilari donuyordu; egitim o
+        # bolmeyi artik kullanmiyor. Panelin hangi walk-forward katlarini kapsadigi doner.
+        from evaluation.splits import fold_coverage, get_spec
 
         return {
             "status": "success",
             "message": "Data generated successfully",
             "symbols": symbols,
             "total_rows": len(df),
-            "train_rows": len(train_df),
-            "val_rows": len(val_df),
-            "test_rows": len(test_df),
+            "split_spec": get_spec().name,
+            "folds": fold_coverage(df),
             "columns": df.columns.tolist(),
             "date_range": {
                 "start": str(df.index.get_level_values('date').min().date()),
@@ -579,14 +590,14 @@ async def get_data_info():
             }
 
         df = fetcher.load_data('stock_data_with_indicators.csv')
-        train_df, val_df, test_df = fetcher.split_data(df)
+        # Faz 9 / R1: `split_data` satir sayilari yerine walk-forward kat kapsami
+        from evaluation.splits import fold_coverage, get_spec
 
         return {
             "status": "exists",
             "total_rows": len(df),
-            "train_rows": len(train_df),
-            "val_rows": len(val_df),
-            "test_rows": len(test_df),
+            "split_spec": get_spec().name,
+            "folds": fold_coverage(df),
             "columns": df.columns.tolist(),
             "symbols": df.index.get_level_values('symbol').unique().tolist(),
             "date_range": {
