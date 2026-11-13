@@ -122,6 +122,7 @@ class WalkForwardTrainer:
         X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
         y = np.nan_to_num(y, nan=0.0)
 
+        selector = None
         if self.select_features:
             # Faz 6 (2.4): config'te cache dizini verilmisse feature-selection
             # sonucu icerik-hash'ine gore cache'lenir (bos = kapali, davranissiz).
@@ -132,14 +133,8 @@ class WalkForwardTrainer:
             except Exception:
                 _cache_dir = None
             selector = FeatureSelector(max_features=self.max_features, cache_dir=_cache_dir)
-            X_df = pd.DataFrame(X, columns=feature_cols)
-            y_series = pd.Series(y)
-            selection = selector.fit_select(X_df, y_series, feature_cols)
-            selected_cols = selection['selected_features']
-            selected_indices = [feature_cols.index(c) for c in selected_cols if c in feature_cols]
-            X = X[:, selected_indices]
-            feature_cols = selected_cols
-            logger.info(f"  Ozellik secimi: {selection['n_original']} -> {selection['n_selected']}")
+        all_feature_cols = list(feature_cols)
+        selected_per_fold: List[Dict[str, Any]] = []
 
         n = len(X)
         fold_size = n // (self.n_splits + 1)
@@ -166,6 +161,24 @@ class WalkForwardTrainer:
 
             X_train, y_train = X[:train_end], y[:train_end]
             X_test, y_test = X[test_start:test_end], y[test_start:test_end]
+
+            # Faz 9 B8 (Y16): ozellik secimi YALNIZ bu katin egitim bolumunde. Eskiden
+            # katlara bolmeden once tum X, y uzerinde yapiliyordu -> CV metrikleri test
+            # katinin hedeflerini gormus kumeyle hesaplaniyordu. Onbellek anahtari
+            # X_train/y_train'in icerik hash'i oldugu icin kat sinirini kendiliginden tasir.
+            feature_cols = all_feature_cols
+            if selector is not None:
+                selection = selector.fit_select(
+                    pd.DataFrame(X_train, columns=all_feature_cols), pd.Series(y_train),
+                    all_feature_cols,
+                )
+                feature_cols = [c for c in selection['selected_features'] if c in all_feature_cols]
+                idx = [all_feature_cols.index(c) for c in feature_cols]
+                X_train, X_test = X_train[:, idx], X_test[:, idx]
+                selected_per_fold.append({'fold': fold + 1, 'train_end': int(train_end),
+                                          'features': feature_cols})
+                logger.info(f"  Fold {fold + 1} ozellik secimi (yalniz egitim): "
+                            f"{selection['n_original']} -> {selection['n_selected']}")
 
             val_split = int(len(X_train) * 0.85)
             X_tr, X_val = X_train[:val_split], X_train[val_split:]
@@ -211,6 +224,8 @@ class WalkForwardTrainer:
                         ) from exc
 
         summary = self._summarize_cv_results(all_results, symbol, failed_folds=failed_folds)
+        if selector is not None:
+            summary['selected_features_per_fold'] = selected_per_fold
 
         self._save_experiment(summary, symbol)
 

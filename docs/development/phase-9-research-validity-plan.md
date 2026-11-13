@@ -1150,6 +1150,19 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **Ölçümü etkileyen kod notları (B5 uygulamasına).** PyEMD `CEEMDAN` varsayılanı `parallel=True` ve her çağrıda süreç havuzu kuruyor; pencere başına çağrıda dışarıdan paralellik gerekir. Mevcut hat sembolü iki kez ayrıştırıyor (`filter_noise` + `extract_imf_features`); `max_imf` parametresi kullanılmıyor.
 - **K5.** B5 hesaplama süresi Makale 2 tarihini kaydırmıyor; tarih kalan paketlerin eforuna bağlı. Karar kullanıcıda.
 
+### 9.15 B8 — CV'de özellik seçimi katın eğitim bölümünde (2026-11-14, dal `feat/phase9-b8-fold-feature-selection`)
+
+**Kapsam.** Faz 10 §3.1.1 B8, Y16. `WalkForwardTrainer.cross_validate` özellik seçimini katlara bölmeden önce tüm `X, y` üzerinde yapıyordu; her katın CV metriği test hedeflerini görmüş kümeyle hesaplanıyordu.
+
+- **Değişiklik** ([trainer.py](../../prediction/trainer.py), tek fonksiyon, yeni bayrak yok). Her kat `FeatureSelector.fit_select`'i yalnız `X[:train_end], y[:train_end]` üzerinde çağırır; eğitim, iç doğrulama ve test sütunları o kümeye indirgenir. Özet kat başına kümeyi taşır (`selected_features_per_fold`: kat, `train_end`, özellikler).
+- **Önbellek.** Anahtar zaten girdinin içerik hash'i (`FeatureSelector._cache_key`); her katın eğitim dilimi farklı olduğu için kat sınırı anahtara kendiliğinden giriyor. Yeni alan eklenmedi.
+- **Kapsam kontrolü.** `FeatureSelector` yalnız burada kullanılıyor; `train_final_models`, ensemble ve tahmin HPO'su kullanmıyor (grep). CV diske model yazmıyor; tahmin golden'ı CV'yi kapsamıyor.
+- **Kabul.** `python tests/test_cv_feature_selection.py` → 4/0 (sentetik veri, sahte model, gerçek `FeatureSelector`, CPU).
+  - Son katın test bölümündeki `y` karıştırılınca dört katın da seçilen kümesi bit-eş; her katta `train_end` son test başlangıcından önce.
+  - Mutasyon: aynı karıştırmada tüm seride seçim (eski davranış) kümeyi değiştiriyor; test kırılabilir.
+- **Etkisi.** CV metrikleri değişir (beklenen). Seçim bir kez yerine kat sayısı kadar koşar.
+- **Beyan.** Katın içindeki %15'lik iç doğrulama dilimi (erken durdurma) seçime dahil: test metriğini değil yalnız iç doğrulamayı iyimser yapar. `fold_size = n // (n_splits + 1)` bölmesi değişmedi.
+
 ---
 
 ## Versiyon geçmişi
@@ -1187,3 +1200,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (R1 paneli):** hakem-rl ve hakem-finans Küçük revizyon, hakem-2 Büyük revizyon (RED yok) — §9.12. Kullanıcı kararları: seçim metriği korunur, tanı kayda; argmax ↔ son nokta M8'e; okunmuş test pencereleri ölçülen bayrakla (`eval_window_unexposed`; 2024–2026 doğrulayıcı değil). Yeni madde `fundamentals_pit`. Gerçek panelde seçim metriği tanısı (2025'te 10/10 negatif, ayırt edici değil) ve geniş B0 ailesi bit-eş. `test_rl_walk_forward` 90.
 - **2026-11-14 (§9.13):** legacy "veri üret" düğmesi ve `/data/generate` kaldırıldı (§9.11 bulgu 6). `test_auth` CSRF kontrolü içi boş kalmasın diye başlıkla kabul edilen aynı uca taşındı (29). Yan bulgu `/analysis/generate-report` RBAC'sızdı, `RequireWriter` eklendi (`test_workspace_isolation` 19).
 - **2026-11-14 (§9.14):** B5 maliyet ölçümü: 67.086 ayrıştırma; en pahalı yapılandırma (W 256, trials 100) 14 süreçle ~2,5 sa, tek süreçte ~34 sa. Hesaplama Makale 2 tarihini kaydırmıyor; K5 kullanıcıda.
+- **2026-11-14 (§9.15, B8):** CV'de özellik seçimi her katın yalnız eğitim bölümünde (Y16). Kabul `test_cv_feature_selection` 4: test `y`'si karışınca küme bit-eş; mutasyon (tüm seride seçim) kırılıyor.
