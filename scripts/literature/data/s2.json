@@ -3714,5 +3714,83 @@
   "venue": "",
   "year": 1995,
   "citationCount": 1798
+ },
+ "Varma2006_CVBias": {
+  "paperId": "bf75f2555e8485d536ac217068b7963de3d6fa02",
+  "externalIds": {
+   "PubMedCentral": "1397873",
+   "DBLP": "journals/bmcbi/VarmaS06",
+   "MAG": "2141007997",
+   "DOI": "10.1186/1471-2105-7-91",
+   "CorpusId": 17578642,
+   "PubMed": "16504092"
+  },
+  "publicationVenue": {
+   "id": "be3f884c-b44a-496a-a593-1cad3f89d254",
+   "name": "BMC Bioinformatics",
+   "type": "journal",
+   "alternate_names": [
+    "BMC Bioinform"
+   ],
+   "issn": "1471-2105",
+   "url": "http://www.biomedcentral.com/bmcbioinformatics",
+   "alternate_urls": [
+    "http://www.pubmedcentral.nih.gov/tocrender.fcgi?journal=13",
+    "http://www.biomedcentral.com/bmcbioinformatics/"
+   ]
+  },
+  "title": "Bias in error estimation when using cross-validation for model selection",
+  "venue": "BMC Bioinformatics",
+  "year": 2006,
+  "citationCount": 2617,
+  "influentialCitationCount": 85,
+  "authors": [
+   {
+    "authorId": "145335143",
+    "name": "Sudhir Varma"
+   },
+   {
+    "authorId": "2274268072",
+    "name": "R. Simon"
+   }
+  ]
+ },
+ "Eimer2023_RLHPO": {
+  "paperId": "b0f739137b29f6685620f3ea1ab351a6802685eb",
+  "externalIds": {
+   "DBLP": "conf/icml/EimerLR23",
+   "ArXiv": "2306.01324",
+   "DOI": "10.48550/arXiv.2306.01324",
+   "CorpusId": 259063671
+  },
+  "publicationVenue": {
+   "id": "fc0a208c-acb7-47dc-a0d4-af8190e21d29",
+   "name": "International Conference on Machine Learning",
+   "type": "conference",
+   "alternate_names": [
+    "ICML",
+    "Int Conf Mach Learn"
+   ],
+   "url": "https://icml.cc/"
+  },
+  "title": "Hyperparameters in Reinforcement Learning and How To Tune Them",
+  "venue": "International Conference on Machine Learning",
+  "year": 2023,
+  "citationCount": 138,
+  "influentialCitationCount": 9,
+  "authors": [
+   {
+    "authorId": "1944688061",
+    "name": "Theresa Eimer"
+   },
+   {
+    "authorId": "145963266",
+    "name": "M. Lindauer"
+   },
+   {
+    "authorId": "48647153",
+    "name": "R. Raileanu"
+   }
+  ]
  }
 }

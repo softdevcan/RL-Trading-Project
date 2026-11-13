@@ -5669,5 +5669,106 @@
   ],
   "topic": "Financial Risk and Volatility Modeling",
   "openalex": "https://openalex.org/W3123289511"
+ },
+ "Varma2006_CVBias": {
+  "group": "G-Degerlendirme",
+  "ident": "doi:10.1186/1471-2105-7-91",
+  "note": "R1 secim protokolu (BMC Bioinformatics 7:91)",
+  "title": "Bias in error estimation when using cross-validation for model selection",
+  "year": 2006,
+  "authors": [
+   "Sudhir Varma",
+   "Richard M Simon"
+  ],
+  "venue_type": "journal",
+  "venue": "BMC Bioinformatics",
+  "issn_l": "1471-2105",
+  "all_venues": [
+   "BMC Bioinformatics",
+   "DOAJ (DOAJ: Directory of Open Access Journals)",
+   "PubMed",
+   "PubMed Central"
+  ],
+  "cited_by": 2935,
+  "cited_split": [
+   2935
+  ],
+  "doi": "https://doi.org/10.1186/1471-2105-7-91",
+  "oa_url": "https://bmcbioinformatics.biomedcentral.com/counter/pdf/10.1186/1471-2105-7-91",
+  "keywords": [
+   "prediction error estimation",
+   "model selection",
+   "nested cross-validation",
+   "classifier parameter tuning",
+   "support vector machine"
+  ],
+  "topic": "Gene expression and cancer classification",
+  "openalex": "https://openalex.org/W2141007997"
+ },
+ "Cawley2010_SelectionBias": {
+  "group": "G-Degerlendirme",
+  "ident": "title:On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation",
+  "note": "JMLR 11 (2010) 2079-2107",
+  "title": "On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation",
+  "year": 2010,
+  "authors": [
+   "Gavin C. Cawley",
+   "Nicola L. C. Talbot"
+  ],
+  "venue_type": "journal",
+  "venue": "Journal of Machine Learning Research",
+  "issn_l": "1532-4435",
+  "all_venues": [
+   "Journal of Machine Learning Research",
+   "UEA Digital Repository (University of East Anglia)"
+  ],
+  "cited_by": 1935,
+  "cited_split": [
+   1935
+  ],
+  "doi": "https://doi.org/10.5555/1756006.1859921",
+  "oa_url": null,
+  "keywords": [
+   "model selection bias",
+   "k-fold cross-validation",
+   "bias-variance decomposition",
+   "performance bounds"
+  ],
+  "topic": "Machine Learning and Data Classification",
+  "openalex": "https://openalex.org/W2154776925"
+ },
+ "Eimer2023_RLHPO": {
+  "group": "G-Degerlendirme",
+  "ident": "arxiv:2306.01324",
+  "note": "ICML 2023 (PMLR 202:9104-9149)",
+  "title": "Hyperparameters in Reinforcement Learning and How To Tune Them",
+  "year": 2023,
+  "authors": [
+   "Theresa Eimer",
+   "Marius Lindauer",
+   "Roberta Răileanu"
+  ],
+  "venue_type": "repository",
+  "venue": "arXiv (Cornell University)",
+  "issn_l": "2331-8422",
+  "all_venues": [
+   "arXiv (Cornell University)"
+  ],
+  "cited_by": 42,
+  "cited_split": [
+   42,
+   42
+  ],
+  "doi": "https://doi.org/10.48550/arxiv.2306.01324",
+  "oa_url": "https://arxiv.org/pdf/2306.01324",
+  "keywords": [
+   "hyperparameter optimization",
+   "deep reinforcement learning",
+   "reproducibility",
+   "sample efficiency",
+   "overfitting"
+  ],
+  "topic": "Reinforcement Learning in Robotics",
+  "openalex": "https://openalex.org/W4379473886"
  }
 }

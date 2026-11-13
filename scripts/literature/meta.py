@@ -399,3 +399,18 @@ PDF.update({
 })
 
 ROLE["Yang2018_MeanField"] = ("B", "Büyük N için ortalama alan — iletişim tablosunda kapsam dışı gerekçesi")
+
+# Faz 9 / R1 secim protokolu (2026-11-13; kunyeler Crossref / jmlr.org / PMLR + arXiv API ile
+# dogrulandi, gerekceler OZETTEN — tam metin okunmadi)
+ROLE.update({
+ "Varma2006_CVBias":("Y","R1 — ayarı CV ile seçilmiş modelin CV hata tahmini belirgin yanlı; iç içe CV (özetten; tam metin okunmalı)"),
+ "Cawley2010_SelectionBias":("Y","R1 — model seçim ölçütüne aşırı uyum ve değerlendirmede seçim yanlılığı (özetten; tam metin okunmalı)"),
+ "Eimer2023_RLHPO":("Y","R1 — RL HPO'da ayar ve sınama tohumlarının ayrılması (özetten; tam metin okunmalı)"),
+})
+VENUE.update({
+ "Cawley2010_SelectionBias":("Journal of Machine Learning Research 11","dergi","K1",2010),
+ "Eimer2023_RLHPO":("ICML 2023 (PMLR 202)","konf. CORE A*","K2",2023),
+})
+INDEX.update({
+ "1471-2105":("SCIE","B"),   # BMC Bioinformatics — MJL'de dogrulanmali
+})

@@ -26,6 +26,7 @@ COVERAGE = [
  ("Tahmin karşılaştırma testleri", "A2", ["Diebold1995_DM","Diebold2015_DM20","Harvey1997_HLN","NeweyWest1987"]),
  ("Strateji karşılaştırma ve çoklu test", "A1, A3–A7", ["Ledoit2008_SharpeTest","Politis1994_StatBoot","Bailey2014_DSR","Bailey2017_PBO","Hansen2011_MCS","White2000_RealityCheck","Hansen2005_SPA","Benjamini1995_FDR","Harvey2016_CrossSection"]),
  ("RL'de tohum ve raporlama", "C1, A5", ["Henderson2018_Matters","Agarwal2021_Precipice"]),
+ ("Model seçimi ve HPO protokolü (walk-forward kat, kontrol noktası, ayar/sınama tohumu)", "R1, evaluation/rl_folds.py, hyperopt", ["Varma2006_CVBias","Cawley2010_SelectionBias","Eimer2023_RLHPO"]),
  ("Veri yanlılıkları (hayatta kalma)", "E1, D5", ["Brown1992_Survivorship"]),
  ("Yorumlanabilirlik — M7", "M7", ["Jain2019_AttnNot","Wiegreffe2019_AttnNotNot","Foerster2018_COMA"]),
  ("Araçlar (MARL)", "M1", ["Terry2021_PettingZoo","Liang2018_RLlib","Bettini2024_BenchMARL","Fey2019_PyG"]),

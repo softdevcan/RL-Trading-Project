@@ -63,26 +63,26 @@
 
 ## 2. Seçilmiş kaynakça — özet
 
-Değerlendirilen **169** kayıttan **148** seçildi, **21** elendi (Ek A).
+Değerlendirilen **172** kayıttan **151** seçildi, **21** elendi (Ek A).
 
 | Kademe | Tanım | Seçilen |
 |---|---|---|
-| K1 | SCIE / SSCI dergi | **85** |
-| K2 | Üst düzey hakemli konferans (CORE A*/A) | 41 |
+| K1 | SCIE / SSCI dergi | **87** |
+| K2 | Üst düzey hakemli konferans (CORE A*/A) | 42 |
 | K3 | Diğer hakemli (TR Dizin/ESCI dergi, LNCS/LNNS, kitap, sıralamasız konferans) | 16 |
 | K4 | Hakemsiz (ön baskı, tez) | 6 |
 
 | Rol | Seçilen |
 |---|---|
 | Z zorunlu atıf | 23 |
-| Y yöntem kaynağı | 79 |
+| Y yöntem kaynağı | 82 |
 | B bağlam | 46 |
 
 | Dönem | Seçilen |
 |---|---|
 | 2025–2026 | 29 |
-| 2020–2024 | 38 |
-| ≤2019 | 81 |
+| 2020–2024 | 39 |
+| ≤2019 | 83 |
 
 ### 2.1 Kapsam matrisi — her bileşen kaynakla dayanaklı mı?
 
@@ -115,6 +115,7 @@ Her satır tezin ya da kodun bir bileşeni. **K1/K2** sütunu o bileşeni SCIE/S
 | Tahmin karşılaştırma testleri | A2 | Diebold & Mariano (1995) [K1]; Diebold (2015) [K1]; Harvey vd. (1997) [K1]; Newey & West (1987) [K1] | ✓ 4 |
 | Strateji karşılaştırma ve çoklu test | A1, A3–A7 | Ledoit & Wolf (2008) [K1]; Politis & Romano (1994) [K1]; Bailey & López de Prado (2014) [K1]; Bailey vd. (2017) [K1]; Hansen vd. (2011) [K1]; White (2000) [K1]; Hansen (2005) [K1]; Benjamini & Hochberg (1995) [K1]; Harvey vd. (2016) [K1] | ✓ 9 |
 | RL'de tohum ve raporlama | C1, A5 | Henderson vd. (2018) [K2]; Agarwal vd. (2021) [K2] | ✓ 2 |
+| Model seçimi ve HPO protokolü (walk-forward kat, kontrol noktası, ayar/sınama tohumu) | R1, evaluation/rl_folds.py, hyperopt | Varma & Simon (2006) [K1]; Cawley & Talbot (2010) [K1]; Eimer vd. (2023) [K2] | ✓ 3 |
 | Veri yanlılıkları (hayatta kalma) | E1, D5 | Brown vd. (1992) [K1] | ✓ 1 |
 | Yorumlanabilirlik — M7 | M7 | Jain & Wallace (2019) [K2]; Wiegreffe & Pinter (2019) [K2]; Foerster vd. (2018) [K2] | ✓ 3 |
 | Araçlar (MARL) | M1 | Terry vd. (2021) [K2]; Liang vd. (2018) [K2]; Bettini vd. (2024) [K1]; Fey & Lenssen (2019) [K3] | ✓ 3 |
@@ -321,7 +322,7 @@ Sütunlar: **Atıf** = Semantic Scholar · OpenAlex (2026-10-07; parantezde yıl
 | 121 | Performance Measurement in a Downside Risk Framework | Frank A. Sortino, Lee N. Price | 1994 | The Journal of Investing | K3 · WoS dışı olabilir [doğrula] | 894 · 915 (29/yıl) | performance measurement; downside risk; downside deviation; risk-adjusted performance; portfolio performance evaluation | [DOI](https://doi.org/10.3905/joi.3.3.59) | **Y** yöntem — Sortino oranı |
 | 122 | Deep Reinforcement Learning for Trading | Zihao Zhang, Stefan Zohren, Stephen Roberts | 2020 | The Journal of Financial Data Science | K3 · MJL'de bulunamadı (benzer adlı başka dergi var) [MJL] | 275 · 229 (46/yıl) | deep reinforcement learning; trading strategies; futures contracts; continuous action spaces; discrete action space | [DOI](https://doi.org/10.3905/jfds.2020.1.030) · [arşiv](../reference/papers/F_regime-reward/2020_Zhang_DRL-Trading-Costs.pdf) | B bağlam — Maliyet duyarlılığı raporlama örneği |
 
-### I. Değerlendirme metodolojisi ve istatistiksel testler (17)
+### I. Değerlendirme metodolojisi ve istatistiksel testler (20)
 
 | # | Başlık | Yazarlar | Yıl | Yayın yeri | Kademe · indeks | Atıf | Anahtar kelimeler | Erişim | Rol |
 |---|---|---|---|---|---|---|---|---|---|
@@ -329,42 +330,45 @@ Sütunlar: **Atıf** = Semantic Scholar · OpenAlex (2026-10-07; parantezde yıl
 | 124 | A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix | Whitney K. Newey, Kenneth D. West | 1987 | Econometrica | K1 · SSCI [MJL] | — · 17664 (453/yıl) | asymptotic covariance matrix | [DOI](https://doi.org/10.2307/1913610) | **Y** yöntem — HAC varyans |
 | 125 | Comparing Predictive Accuracy | Francis X. Diebold, Roberto S. Mariano | 1995 | Journal of Business and Economic Statistics | K1 · SSCI + SCIE [MJL] | — · 5155 (166/yıl) | forecast accuracy comparison; forecast evaluation; null hypothesis testing; asymptotic tests | [DOI](https://doi.org/10.1080/07350015.1995.10524599) | **Y** yöntem — DM testi — A2 |
 | 126 | Optimal Versus Naive Diversification: How Inefficient is the 1/ N Portfolio Strategy? | Victor DeMiguel, Lorenzo Garlappi, Raman Uppal | 2009 | Review of Financial Studies 22 | K1 · SSCI [MJL] | 3271 · 3329 (196/yıl) | 1/N portfolio; naive diversification; portfolio optimization; mean-variance model; estimation error | [DOI](https://doi.org/10.1093/rfs/hhm075) | **Z** zorunlu — 1/N baseline'ının zorunluluk gerekçesi |
-| 127 | The Stationary Bootstrap | Dimitris N. Politis, Joseph P. Romano | 1994 | Journal of the American Statistical Association | K1 · SCIE [MJL] | 2769 · 2517 (87/yıl) | stationary bootstrap; resampling; standard errors; confidence regions; geometric distribution | [DOI](https://doi.org/10.1080/01621459.1994.10476870) | **Y** yöntem — Durağan bootstrap |
-| 128 | … and the Cross-Section of Expected Returns | Campbell R. Harvey, Yan Liu, Caroline Zhu | 2016 | Review of Financial Studies | K1 · SSCI [MJL] | — · 2185 (199/yıl) | cross-section of expected returns; multiple comparisons; false positives; significance threshold; data mining | [DOI](https://doi.org/10.1093/rfs/hhv059) · [açık erişim](https://academic.oup.com/rfs/article-pdf/29/1/5/24450794/hhv059.pdf) | **Z** zorunlu — Finansta çoklu test — DSR/FDR zorunluluğunun gerekçesi |
-| 129 | The Model Confidence Set | Peter R. Hansen, Asger Lunde, James M. Nason | 2011 | Econometrica | K1 · SSCI [MJL] | — · 2154 (144/yıl) | model confidence set; model selection; inflation forecasting; Taylor rule; forecast evaluation | [DOI](https://doi.org/10.3982/ecta5771) | **Y** yöntem — Model Confidence Set — A4 |
-| 130 | Testing the equality of prediction mean squared errors | David I. Harvey, Stephen J. Leybourne, Paul Newbold | 1997 | International Journal of Forecasting | K1 · SSCI [WD] | 2046 · 2106 (73/yıl) | mean squared prediction error; forecast accuracy comparison; equality testing; forecast evaluation; hypothesis testing | [DOI](https://doi.org/10.1016/s0169-2070(96)00719-4) | **Y** yöntem — DM küçük örneklem düzeltmesi |
-| 131 | A Reality Check for Data Snooping | Halbert White | 2000 | Econometrica | K1 · SSCI [MJL] | 1857 · 1890 (73/yıl) | data snooping; data reuse; model selection; specification search; time series forecasting | [DOI](https://doi.org/10.1111/1468-0262.00152) | B bağlam — Veri madenciliği için Reality Check |
-| 132 | A Test for Superior Predictive Ability | Peter Reinhard Hansen | 2005 | Journal of Business and Economic Statistics | K1 · SSCI + SCIE [MJL] | 1277 · 1245 (61/yıl) | superior predictive ability; reality check; data snooping; forecast evaluation; inflation forecasting | [DOI](https://doi.org/10.1198/073500105000000063) · [açık erişim](https://doi.org/10.17615/wehz-da64) | B bağlam — Üstün tahmin yeteneği testi |
-| 133 | Survivorship Bias in Performance Studies | Stephen J. Brown, William N. Goetzmann, Roger G. Ibbotson, Stephen A. Ross | 1992 | Review of Financial Studies | K1 · SSCI [MJL] | 1119 · 1164 (34/yıl) | survivorship bias; performance studies; time series; manager performance evaluation; equity analysis | [DOI](https://doi.org/10.1093/rfs/5.4.553) | **Y** yöntem — Hayatta kalma yanlılığı — D5 |
-| 134 | Robust performance hypothesis testing with the Sharpe ratio | Olivier Ledoit, Michael Wolf | 2008 | Journal of Empirical Finance | K1 · SSCI [WD] | 907 · 997 (55/yıl) | Sharpe ratio; robust inference; heavy-tailed returns; investment strategy comparison; finite sample properties | [DOI](https://doi.org/10.1016/j.jempfin.2008.03.002) · [açık erişim](https://www.zora.uzh.ch/handle/20.500.14742/35335) · [arşiv](../reference/papers/G_evaluation/2008_LedoitWolf_SharpeTest_WP.pdf) | **Y** yöntem — Sharpe farkı testi — A3 |
-| 135 | Comparing Predictive Accuracy, Twenty Years Later: A Personal Perspective on the Use and Abuse of Diebold–Mariano Tests | Francis X. Diebold | 2015 | Journal of Business and Economic Statistics | K1 · SSCI + SCIE [MJL] | 552 · 515 (50/yıl) | Diebold-Mariano test; forecast evaluation; model comparison; prediction accuracy; forecasting model comparison | [DOI](https://doi.org/10.1080/07350015.2014.983236) · [arşiv](../reference/papers/E_forecast-leakage/2015_Diebold_DM-TwentyYearsLater.pdf) | **Y** yöntem — DM'nin doğru kullanımı |
-| 136 | The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality | David H. Bailey, Marcos López de Prado | 2014 | The Journal of Portfolio Management | K1 · SSCI [MJL] | 179 · 120 (15/yıl) | Sharpe ratio; selection bias; backtest overfitting; multiple comparisons; non-normal returns | [DOI](https://doi.org/10.3905/jpm.2014.40.5.094) · [arşiv](../reference/papers/G_evaluation/2014_Bailey_DeflatedSharpe.pdf) | **Y** yöntem — Deflated Sharpe — A1 altın değeri |
-| 137 | The probability of backtest overfitting | David H. Bailey, Jonathan Michael Borwein, Marcos López de Prado, Qiji Jim Zhu | 2017 | Journal of Computational Finance 20(4) | K1 · SSCI [WD] | — · 104 (12/yıl) | backtest overfitting; investment strategy selection; asset allocation; model-free estimation; nonparametric estimation | [DOI](https://doi.org/10.21314/jcf.2016.322) · [açık erişim](https://escholarship.org/uc/item/4w1110bb) · [arşiv](../reference/papers/G_evaluation/2017_Bailey_PBO.pdf) | **Y** yöntem — PBO/CSCV — A6 |
-| 138 | Deep Reinforcement Learning That Matters | Peter B. Henderson, Riashat Islam, Philip Bachman, Joëlle Pineau vd. | 2018 | AAAI 2018 | K2 · konf. CORE A* | 2568 · 1604 (321/yıl) | deep reinforcement learning; reproducibility; benchmark environments; non-determinism; variance | [DOI](https://doi.org/10.1609/aaai.v32i1.11694) · [arXiv](https://arxiv.org/abs/1709.06560) · [arşiv](../reference/papers/G_evaluation/2018_Henderson_DRL-Matters.pdf) | **Y** yöntem — DRL'de tohum varyansı |
-| 139 | Deep Reinforcement Learning at the Edge of the Statistical Precipice | Rishabh Agarwal, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville vd. | 2021 | NeurIPS 2021 | K2 · konf. CORE A* | 1073 · 41 (215/yıl) | statistical uncertainty; interval estimates; performance profiles; Arcade Learning Environment; Procgen | [arXiv](https://arxiv.org/abs/2108.13264) · [arşiv](../reference/papers/G_evaluation/2021_Agarwal_StatisticalPrecipice.pdf) | **Y** yöntem — Tohum protokolü, IQM, katmanlı bootstrap |
+| 127 | Bias in error estimation when using cross-validation for model selection | Sudhir Varma, Richard M Simon | 2006 | BMC Bioinformatics | K1 · SCIE [doğrula] | 2617 · 2935 (147/yıl) | prediction error estimation; model selection; nested cross-validation; classifier parameter tuning; support vector machine | [DOI](https://doi.org/10.1186/1471-2105-7-91) · [açık erişim](https://bmcbioinformatics.biomedcentral.com/counter/pdf/10.1186/1471-2105-7-91) | **Y** yöntem — R1 — ayarı CV ile seçilmiş modelin CV hata tahmini belirgin yanlı; iç içe CV (özetten; tam metin okunmalı) |
+| 128 | The Stationary Bootstrap | Dimitris N. Politis, Joseph P. Romano | 1994 | Journal of the American Statistical Association | K1 · SCIE [MJL] | 2769 · 2517 (87/yıl) | stationary bootstrap; resampling; standard errors; confidence regions; geometric distribution | [DOI](https://doi.org/10.1080/01621459.1994.10476870) | **Y** yöntem — Durağan bootstrap |
+| 129 | … and the Cross-Section of Expected Returns | Campbell R. Harvey, Yan Liu, Caroline Zhu | 2016 | Review of Financial Studies | K1 · SSCI [MJL] | — · 2185 (199/yıl) | cross-section of expected returns; multiple comparisons; false positives; significance threshold; data mining | [DOI](https://doi.org/10.1093/rfs/hhv059) · [açık erişim](https://academic.oup.com/rfs/article-pdf/29/1/5/24450794/hhv059.pdf) | **Z** zorunlu — Finansta çoklu test — DSR/FDR zorunluluğunun gerekçesi |
+| 130 | The Model Confidence Set | Peter R. Hansen, Asger Lunde, James M. Nason | 2011 | Econometrica | K1 · SSCI [MJL] | — · 2154 (144/yıl) | model confidence set; model selection; inflation forecasting; Taylor rule; forecast evaluation | [DOI](https://doi.org/10.3982/ecta5771) | **Y** yöntem — Model Confidence Set — A4 |
+| 131 | Testing the equality of prediction mean squared errors | David I. Harvey, Stephen J. Leybourne, Paul Newbold | 1997 | International Journal of Forecasting | K1 · SSCI [WD] | 2046 · 2106 (73/yıl) | mean squared prediction error; forecast accuracy comparison; equality testing; forecast evaluation; hypothesis testing | [DOI](https://doi.org/10.1016/s0169-2070(96)00719-4) | **Y** yöntem — DM küçük örneklem düzeltmesi |
+| 132 | On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation | Gavin C. Cawley, Nicola L. C. Talbot | 2010 | Journal of Machine Learning Research 11 | K1 · SCIE [MJL] | — · 1935 (121/yıl) | model selection bias; k-fold cross-validation; bias-variance decomposition; performance bounds | [DOI](https://doi.org/10.5555/1756006.1859921) | **Y** yöntem — R1 — model seçim ölçütüne aşırı uyum ve değerlendirmede seçim yanlılığı (özetten; tam metin okunmalı) |
+| 133 | A Reality Check for Data Snooping | Halbert White | 2000 | Econometrica | K1 · SSCI [MJL] | 1857 · 1890 (73/yıl) | data snooping; data reuse; model selection; specification search; time series forecasting | [DOI](https://doi.org/10.1111/1468-0262.00152) | B bağlam — Veri madenciliği için Reality Check |
+| 134 | A Test for Superior Predictive Ability | Peter Reinhard Hansen | 2005 | Journal of Business and Economic Statistics | K1 · SSCI + SCIE [MJL] | 1277 · 1245 (61/yıl) | superior predictive ability; reality check; data snooping; forecast evaluation; inflation forecasting | [DOI](https://doi.org/10.1198/073500105000000063) · [açık erişim](https://doi.org/10.17615/wehz-da64) | B bağlam — Üstün tahmin yeteneği testi |
+| 135 | Survivorship Bias in Performance Studies | Stephen J. Brown, William N. Goetzmann, Roger G. Ibbotson, Stephen A. Ross | 1992 | Review of Financial Studies | K1 · SSCI [MJL] | 1119 · 1164 (34/yıl) | survivorship bias; performance studies; time series; manager performance evaluation; equity analysis | [DOI](https://doi.org/10.1093/rfs/5.4.553) | **Y** yöntem — Hayatta kalma yanlılığı — D5 |
+| 136 | Robust performance hypothesis testing with the Sharpe ratio | Olivier Ledoit, Michael Wolf | 2008 | Journal of Empirical Finance | K1 · SSCI [WD] | 907 · 997 (55/yıl) | Sharpe ratio; robust inference; heavy-tailed returns; investment strategy comparison; finite sample properties | [DOI](https://doi.org/10.1016/j.jempfin.2008.03.002) · [açık erişim](https://www.zora.uzh.ch/handle/20.500.14742/35335) · [arşiv](../reference/papers/G_evaluation/2008_LedoitWolf_SharpeTest_WP.pdf) | **Y** yöntem — Sharpe farkı testi — A3 |
+| 137 | Comparing Predictive Accuracy, Twenty Years Later: A Personal Perspective on the Use and Abuse of Diebold–Mariano Tests | Francis X. Diebold | 2015 | Journal of Business and Economic Statistics | K1 · SSCI + SCIE [MJL] | 552 · 515 (50/yıl) | Diebold-Mariano test; forecast evaluation; model comparison; prediction accuracy; forecasting model comparison | [DOI](https://doi.org/10.1080/07350015.2014.983236) · [arşiv](../reference/papers/E_forecast-leakage/2015_Diebold_DM-TwentyYearsLater.pdf) | **Y** yöntem — DM'nin doğru kullanımı |
+| 138 | The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality | David H. Bailey, Marcos López de Prado | 2014 | The Journal of Portfolio Management | K1 · SSCI [MJL] | 179 · 120 (15/yıl) | Sharpe ratio; selection bias; backtest overfitting; multiple comparisons; non-normal returns | [DOI](https://doi.org/10.3905/jpm.2014.40.5.094) · [arşiv](../reference/papers/G_evaluation/2014_Bailey_DeflatedSharpe.pdf) | **Y** yöntem — Deflated Sharpe — A1 altın değeri |
+| 139 | The probability of backtest overfitting | David H. Bailey, Jonathan Michael Borwein, Marcos López de Prado, Qiji Jim Zhu | 2017 | Journal of Computational Finance 20(4) | K1 · SSCI [WD] | — · 104 (12/yıl) | backtest overfitting; investment strategy selection; asset allocation; model-free estimation; nonparametric estimation | [DOI](https://doi.org/10.21314/jcf.2016.322) · [açık erişim](https://escholarship.org/uc/item/4w1110bb) · [arşiv](../reference/papers/G_evaluation/2017_Bailey_PBO.pdf) | **Y** yöntem — PBO/CSCV — A6 |
+| 140 | Deep Reinforcement Learning That Matters | Peter B. Henderson, Riashat Islam, Philip Bachman, Joëlle Pineau vd. | 2018 | AAAI 2018 | K2 · konf. CORE A* | 2568 · 1604 (321/yıl) | deep reinforcement learning; reproducibility; benchmark environments; non-determinism; variance | [DOI](https://doi.org/10.1609/aaai.v32i1.11694) · [arXiv](https://arxiv.org/abs/1709.06560) · [arşiv](../reference/papers/G_evaluation/2018_Henderson_DRL-Matters.pdf) | **Y** yöntem — DRL'de tohum varyansı |
+| 141 | Deep Reinforcement Learning at the Edge of the Statistical Precipice | Rishabh Agarwal, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville vd. | 2021 | NeurIPS 2021 | K2 · konf. CORE A* | 1073 · 41 (215/yıl) | statistical uncertainty; interval estimates; performance profiles; Arcade Learning Environment; Procgen | [arXiv](https://arxiv.org/abs/2108.13264) · [arşiv](../reference/papers/G_evaluation/2021_Agarwal_StatisticalPrecipice.pdf) | **Y** yöntem — Tohum protokolü, IQM, katmanlı bootstrap |
+| 142 | Hyperparameters in Reinforcement Learning and How To Tune Them | Theresa Eimer, Marius Lindauer, Roberta Răileanu | 2023 | ICML 2023 (PMLR 202) | K2 · konf. CORE A* | 138 · 42 (46/yıl) | hyperparameter optimization; deep reinforcement learning; reproducibility; sample efficiency; overfitting | [arXiv](https://arxiv.org/abs/2306.01324) | **Y** yöntem — R1 — RL HPO'da ayar ve sınama tohumlarının ayrılması (özetten; tam metin okunmalı) |
 
 ### J. Açıklanabilirlik (2)
 
 | # | Başlık | Yazarlar | Yıl | Yayın yeri | Kademe · indeks | Atıf | Anahtar kelimeler | Erişim | Rol |
 |---|---|---|---|---|---|---|---|---|---|
-| 140 | Attention is not Explanation | Sarthak Jain, Byron Wallace | 2019 | NAACL 2019 | K2 · konf. CORE A | 2113 · 617 (302/yıl) | attention; explanation; interpretability; explainable AI | [DOI](https://doi.org/10.18653/v1/n19-1357) · [arşiv](../reference/papers/H_xai/2019_Jain_AttentionNotExplanation.pdf) | **Y** yöntem — Dikkat yorumlanabilirliği sınırı |
-| 141 | Attention is not not Explanation | Sarah Wiegreffe, Yuval Pinter | 2019 | EMNLP-IJCNLP 2019 | K2 · konf. CORE A* | 1320 · 935 (189/yıl) | attention; explanation; interpretability; neural network interpretability; attention mechanism | [DOI](https://doi.org/10.18653/v1/d19-1002) · [açık erişim](https://www.aclweb.org/anthology/D19-1002.pdf) · [arşiv](../reference/papers/H_xai/2019_Wiegreffe_AttentionNotNotExplanation.pdf) | **Y** yöntem — Dikkat yorumlanabilirliği testleri (M7) |
+| 143 | Attention is not Explanation | Sarthak Jain, Byron Wallace | 2019 | NAACL 2019 | K2 · konf. CORE A | 2113 · 617 (302/yıl) | attention; explanation; interpretability; explainable AI | [DOI](https://doi.org/10.18653/v1/n19-1357) · [arşiv](../reference/papers/H_xai/2019_Jain_AttentionNotExplanation.pdf) | **Y** yöntem — Dikkat yorumlanabilirliği sınırı |
+| 144 | Attention is not not Explanation | Sarah Wiegreffe, Yuval Pinter | 2019 | EMNLP-IJCNLP 2019 | K2 · konf. CORE A* | 1320 · 935 (189/yıl) | attention; explanation; interpretability; neural network interpretability; attention mechanism | [DOI](https://doi.org/10.18653/v1/d19-1002) · [açık erişim](https://www.aclweb.org/anthology/D19-1002.pdf) · [arşiv](../reference/papers/H_xai/2019_Wiegreffe_AttentionNotNotExplanation.pdf) | **Y** yöntem — Dikkat yorumlanabilirliği testleri (M7) |
 
 ### K. BIST, Türkiye ve gelişmekte olan piyasalar (7)
 
 | # | Başlık | Yazarlar | Yıl | Yayın yeri | Kademe · indeks | Atıf | Anahtar kelimeler | Erişim | Rol |
 |---|---|---|---|---|---|---|---|---|---|
-| 142 | Emerging equity market volatility | Geert Bekaert, Campbell R. Harvey | 1997 | Journal of Financial Economics | K1 · SSCI [doğrula] | 1798 · 1726 (62/yıl) | emerging stock markets; market volatility; capital market liberalization; capital market reform; international market integration | [DOI](https://doi.org/10.1016/s0304-405x(96)00889-6) | B bağlam — Gelişen piyasa oynaklığı — EM'e özgü dinamik gerekçesi |
-| 143 | A novel deep reinforcement learning based stock price prediction using knowledge graph and community aware sentiments | Anil Berk Altuner, Zeynep Hilal Kilimci | 2022 | TURKISH JOURNAL OF ELECTRICAL ENGINEERING & COMPUTER SCIENCES | K1 · SCIE [WD] | — · 18 (4/yıl) | stock price prediction; deep reinforcement learning; deep Q-network; knowledge graphs; community sentiment | [DOI](https://doi.org/10.55730/1300-0632.3862) · [açık erişim](https://journals.tubitak.gov.tr/cgi/viewcontent.cgi?article=3862&context=elektrik) | B bağlam — BIST'te derin RL fiyat tahmini |
-| 144 | A Combined Algorithm Approach for Optimizing Portfolio Performance in Automated Trading: A Study of SET50 Stocks | Sukrit Thongkairat, Woraphon Yamaka | 2025 | Mathematics | K1 · SCIE [doğrula] | 7 · 6 (7/yıl) | portfolio optimization; algorithmic trading; deep reinforcement learning; Advantage Actor-Critic; proximal policy optimization | [DOI](https://doi.org/10.3390/math13030461) · [açık erişim](https://www.mdpi.com/2227-7390/13/3/461/pdf?version=1738222014) | B bağlam — Gelişen piyasa (SET50) örneği |
-| 145 | Inferring latent trading motivations in Borsa Istanbul: A comparative inverse reinforcement learning approach | Kubilay Karacam, Mehmet Yasin Ulukuş | 2026 | Borsa Istanbul Review | K1 · SSCI [WD] | 0 · 0 (0/yıl) | inverse reinforcement learning; trading behavior; securities companies; heterogeneous agents; market microstructure | [DOI](https://doi.org/10.1016/j.bir.2026.100834) | B bağlam — Borsa İstanbul'da ters RL |
-| 146 | Inflation surprise and stock returns: Türkiye during a period of high inflation | Faruk TAŞKIRAN | 2026 | Borsa Istanbul Review | K1 · SSCI [WD] | — · 0 (0/yıl) | unexpected inflation; stock returns; Borsa Istanbul; market efficiency; news dissemination | [DOI](https://doi.org/10.1016/j.bir.2026.100917) · [açık erişim](https://www.sciencedirect.com/science/article/pii/S2214845026001377/pdf) | **Z** zorunlu — YENİ — Türkiye'de enflasyon sürprizi: TÜFE açıklanma hizalamasının (S3) gerekçesi |
-| 147 | Equity Portfolio Optimization Using Reinforcement Learning: Emerging Market Case | Mert Candar, Alp Üstündağ | 2022 | LNNS 505 (INFUS 2022); ayrıca İTÜ YL tezi | K3 · konf. (LNNS) | — · 1 (0/yıl) | portfolio optimization; reinforcement learning; stock portfolios; Markov decision process; portfolio weights | [DOI](https://doi.org/10.1007/978-3-031-09176-6_16) | **Z** zorunlu — BIST30 tek-ajan RL öncülü — LNNS bildirisi olarak da yayımlanmış |
-| 148 | Dynamic Portfolio Optimization with Deep Reinforcement Learning: Evidence from Borsa Istanbul | Hidayet Beyhan, Erhan Ergin, Binali Selman EREN | 2026 | Ekonomi Politika ve Finans Arastirmalari Dergisi | K3 · WoS dışı (TR Dizin) [MJL] | 0 · 0 (0/yıl) | dynamic portfolio optimization; deep reinforcement learning; deep deterministic policy gradient; Borsa Istanbul; equally weighted portfolio | [DOI](https://doi.org/10.30784/epfad.1811319) · [açık erişim](https://dergipark.org.tr/en/download/article-file/5364807) | **Z** zorunlu — BIST30 DRL portföy öncülü (G4) |
+| 145 | Emerging equity market volatility | Geert Bekaert, Campbell R. Harvey | 1997 | Journal of Financial Economics | K1 · SSCI [doğrula] | 1798 · 1726 (62/yıl) | emerging stock markets; market volatility; capital market liberalization; capital market reform; international market integration | [DOI](https://doi.org/10.1016/s0304-405x(96)00889-6) | B bağlam — Gelişen piyasa oynaklığı — EM'e özgü dinamik gerekçesi |
+| 146 | A novel deep reinforcement learning based stock price prediction using knowledge graph and community aware sentiments | Anil Berk Altuner, Zeynep Hilal Kilimci | 2022 | TURKISH JOURNAL OF ELECTRICAL ENGINEERING & COMPUTER SCIENCES | K1 · SCIE [WD] | — · 18 (4/yıl) | stock price prediction; deep reinforcement learning; deep Q-network; knowledge graphs; community sentiment | [DOI](https://doi.org/10.55730/1300-0632.3862) · [açık erişim](https://journals.tubitak.gov.tr/cgi/viewcontent.cgi?article=3862&context=elektrik) | B bağlam — BIST'te derin RL fiyat tahmini |
+| 147 | A Combined Algorithm Approach for Optimizing Portfolio Performance in Automated Trading: A Study of SET50 Stocks | Sukrit Thongkairat, Woraphon Yamaka | 2025 | Mathematics | K1 · SCIE [doğrula] | 7 · 6 (7/yıl) | portfolio optimization; algorithmic trading; deep reinforcement learning; Advantage Actor-Critic; proximal policy optimization | [DOI](https://doi.org/10.3390/math13030461) · [açık erişim](https://www.mdpi.com/2227-7390/13/3/461/pdf?version=1738222014) | B bağlam — Gelişen piyasa (SET50) örneği |
+| 148 | Inferring latent trading motivations in Borsa Istanbul: A comparative inverse reinforcement learning approach | Kubilay Karacam, Mehmet Yasin Ulukuş | 2026 | Borsa Istanbul Review | K1 · SSCI [WD] | 0 · 0 (0/yıl) | inverse reinforcement learning; trading behavior; securities companies; heterogeneous agents; market microstructure | [DOI](https://doi.org/10.1016/j.bir.2026.100834) | B bağlam — Borsa İstanbul'da ters RL |
+| 149 | Inflation surprise and stock returns: Türkiye during a period of high inflation | Faruk TAŞKIRAN | 2026 | Borsa Istanbul Review | K1 · SSCI [WD] | — · 0 (0/yıl) | unexpected inflation; stock returns; Borsa Istanbul; market efficiency; news dissemination | [DOI](https://doi.org/10.1016/j.bir.2026.100917) · [açık erişim](https://www.sciencedirect.com/science/article/pii/S2214845026001377/pdf) | **Z** zorunlu — YENİ — Türkiye'de enflasyon sürprizi: TÜFE açıklanma hizalamasının (S3) gerekçesi |
+| 150 | Equity Portfolio Optimization Using Reinforcement Learning: Emerging Market Case | Mert Candar, Alp Üstündağ | 2022 | LNNS 505 (INFUS 2022); ayrıca İTÜ YL tezi | K3 · konf. (LNNS) | — · 1 (0/yıl) | portfolio optimization; reinforcement learning; stock portfolios; Markov decision process; portfolio weights | [DOI](https://doi.org/10.1007/978-3-031-09176-6_16) | **Z** zorunlu — BIST30 tek-ajan RL öncülü — LNNS bildirisi olarak da yayımlanmış |
+| 151 | Dynamic Portfolio Optimization with Deep Reinforcement Learning: Evidence from Borsa Istanbul | Hidayet Beyhan, Erhan Ergin, Binali Selman EREN | 2026 | Ekonomi Politika ve Finans Arastirmalari Dergisi | K3 · WoS dışı (TR Dizin) [MJL] | 0 · 0 (0/yıl) | dynamic portfolio optimization; deep reinforcement learning; deep deterministic policy gradient; Borsa Istanbul; equally weighted portfolio | [DOI](https://doi.org/10.30784/epfad.1811319) · [açık erişim](https://dergipark.org.tr/en/download/article-file/5364807) | **Z** zorunlu — BIST30 DRL portföy öncülü (G4) |
 
 ## 4. İndeks doğrulaması
 
-### 4.1 Clarivate MJL'de elle kontrol edilenler (19) — 2026-10-07
+### 4.1 Clarivate MJL'de elle kontrol edilenler (20) — 2026-10-07
 
 | Dergi | Sonuç |
 |---|---|
@@ -378,6 +382,7 @@ Sütunlar: **Atıf** = Semantic Scholar · OpenAlex (2026-10-07; parantezde yıl
 | JOEEP (DergiPark) | WoS dışı |
 | Journal of Business and Economic Statistics | SSCI + SCIE |
 | Journal of Machine Learning Research | SCIE |
+| Journal of Machine Learning Research 11 | SCIE |
 | Journal of Machine Learning Research 25 | SCIE |
 | Journal of the American Statistical Association | SCIE |
 | Mathematical Modelling and Engineering Problems | WoS dışı |
@@ -392,13 +397,14 @@ Sütunlar: **Atıf** = Semantic Scholar · OpenAlex (2026-10-07; parantezde yıl
 
 > **Koleksiyon satırı:** MJL ESCI dergilerini de listeler. Discover Computing, Patterns ve International Journal of Financial Studies için kayıttaki *Web of Science Core Collection* satırının SCIE/SSCI olduğu teyit edilmeli.
 
-### 4.2 Seçilmiş kaynaklarda hâlâ MJL'de kontrol edilmemiş dergiler (10)
+### 4.2 Seçilmiş kaynaklarda hâlâ MJL'de kontrol edilmemiş dergiler (11)
 
 Wikidata'da SCIE/SSCI kaydı bulunmadığı için durum bilgiye dayalıdır.
 
 | Dergi | Tablodaki durum |
 |---|---|
 | Advances in Adaptive Data Analysis | WoS dışı olabilir |
+| BMC Bioinformatics | SCIE |
 | Bell System Technical Journal | tarihsel (dergi 1983'te kapandı) |
 | Information Sciences | SCIE |
 | Journal of Financial Economics | SSCI |

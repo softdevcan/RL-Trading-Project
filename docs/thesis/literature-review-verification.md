@@ -243,4 +243,17 @@ Sonuç: 169 kayıt değerlendirildi, 148 seçildi, 21 elendi. Kapsam matrisinde 
 - §8.3'teki dört tam metin (Hung & Huang, Yuan vd., CAROC, Xiong vd.).
 - YÖK Tez Merkezi taraması (G4).
 - Aarnio tezinin sonucunun teyidi (§4) — 1/N argümanı DeMiguel vd. (2009) üzerine kurulduğu için artık kritik değil.
-- Seçilmiş kaynaklarda 10 derginin MJL teyidi (literature-table §4.2).
+- Seçilmiş kaynaklarda 11 derginin MJL teyidi (literature-table §4.2; 2026-11-13'te BMC Bioinformatics eklendi).
+- R1 seçim protokolü kaynaklarının üç tam metni (§8.5).
+
+### 8.5 Faz 9 / R1 seçim protokolü kaynakları (2026-11-13)
+
+Künyeler bellekten değil birincil kayıttan doğrulandı. Rol gerekçeleri yalnızca **özetten**; tam metin okunmadı.
+
+| Anahtar | Doğrulama | Seçim kuralı | Dayandırdığı karar |
+|---|---|---|---|
+| Varma2006_CVBias | Crossref `api.crossref.org/works/10.1186/1471-2105-7-91` — *BMC Bioinformatics* 7:91 (2006) | SCIE dergi (MJL teyidi bekliyor, §4.2) · Y | Seçimde kullanılan tahmin seçilen modelin hatası için yanlı → test seçime katılmaz |
+| Cawley2010_SelectionBias | `jmlr.org/papers/v11/cawley10a.html` — *JMLR* 11:2079–2107 (2010) | SCIE dergi [MJL] · Y | Model seçim ölçütüne aşırı uyum ve değerlendirmede seçim yanlılığı |
+| Eimer2023_RLHPO | `proceedings.mlr.press/v202/eimer23a.html` — ICML 2023, PMLR 202:9104–9149; arXiv API 2306.01324 | CORE A* konf. · Y | RL HPO'da ayar ve sınama tohumlarının ayrılması (`hpo_seed_reused`) |
+
+**Hat notu:** `resolve.py` her kaydı yeniden çözüyor. Toptan çözüm 2026-11-13'te diğer kayıtların atıf sayılarını değiştiriyor ve önceden hatalı 4 kaydı (GAT, IPPO, PPO, Transformer) dolduruyordu. Bu yüzden `resolved.json` ve `s2.json`'a yalnızca bu üç kayıt birleştirildi; geri kalanı 2026-10-07 anlık görüntüsünde kaldı. Toptan yenileme ayrı bir iş.
