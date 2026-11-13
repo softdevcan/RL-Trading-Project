@@ -1,697 +1,120 @@
-# 🚀 RL Trading System - BIST-30 Algoritmik Ticaret
+# RL Trading System — BIST-30
 
-Deep Reinforcement Learning kullanarak BIST-30 hisseleri için algoritmik ticaret sistemi. **Ansari et al. (2024) - A Multifaceted Approach to Stock Market Trading Using Reinforcement Learning** makalesine dayanmaktadır.
+BIST-30 hisseleri için derin pekiştirmeli öğrenme (DRL) tabanlı algoritmik işlem sistemi ve tahmin
+destekli gözlem uzayı. Ansari vd. (2024) *A Multifaceted Approach to Stock Market Trading Using
+Reinforcement Learning* metodolojisinin BIST-30'a uyarlanmasıyla başladı; bir yüksek lisans tezi ve
+makale çalışmasının deney altyapısıdır.
 
-## 📋 İçindekiler
+> **Durum (v1.9.0, 2026-11):** Faz 9 — araştırma geçerliliği sürüyor. RL ve tahmin sonuçları
+> **ön sonuçtur**: bilinen ve kayıt altındaki metodolojik açıklar kapatılıyor (aşağıda). Yatırım
+> tavsiyesi değildir.
 
-- [Proje Hakkında](#proje-hakkında)
-- [Kurulum](#kurulum)
-- [Hızlı Başlangıç](#hızlı-başlangıç)
-- [Web Dashboard](#web-dashboard)
-- [API Kullanımı](#api-kullanımı)
-- [Proje Yapısı](#proje-yapısı)
-- [Geliştirme Planı](#geliştirme-planı)
+## Özellikler
 
----
+- **RL ortamı** (Gymnasium): çok hisseli işlem, A2C / PPO / TD3 / SAC (Stable-Baselines3); MACD, RSI,
+  CCI, ADX, türbülans; opsiyonel ATR pozisyon boyutlandırma ve Kelly
+- **Değerlendirme protokolü:** sabit tarihli walk-forward bölme (`wf-v1`, 6 kat), doğrulamada kontrol
+  noktası seçimi, ortak HPO yolu (Optuna); deneme kaydı ve protokol etiketleri
+- **Tahmin sistemi:** XGBoost, LightGBM, CatBoost, BiLSTM, TFT + stacking meta-öğrenici; walk-forward CV
+  (purge/embargo, kat içi özellik seçimi); TATS trend düzeltici (Kazemdehbashi 2026 uyarlaması);
+  ICEEMDAN; SHAP
+- **Veri:** yfinance (OHLCV), TCMB EVDS (politika faizi, TÜFE/ÜFE — nokta-zamanlı, açıklanma gecikmeli),
+  risksiz faiz (TCMB ağırlıklı ortalama fonlama), VIX / US10Y / DXY, altın/döviz; veri bütünlüğü kapısı
+- **İstatistik** (`evaluation/`): PSR/DSR, Diebold-Mariano, Ledoit-Wolf Sharpe farkı, MCS, rliable,
+  PBO/CSCV, BH-FDR; tohum, veri anlık görüntüsü (SHA-256), ortam kaydı
+- **Uygulama:** FastAPI backend + Dash pano (`/dash/`); çerez tabanlı oturum, roller
+  (admin / user / viewer), kullanıcı başına çalışma alanı; kâğıt portföy ve günlük karar; açık/koyu tema
 
-## 🎯 Proje Hakkında
-
-Bu proje, **3 fazlı** bir geliştirme süreciyle BIST-30 endeksi için DRL tabanlı trading sistemi geliştirmeyi hedefler:
-
-- **Faz 1 (POC)**: 5 hisse ile temel sistem (✅ Tamamlandı)
-- **Faz 2**: Advanced Prediction System — Ensemble tahmin + RL entegrasyonu (✅ Tamamlandı)
-- **Faz 3**: Production improvements — Bug fixes, kalite, risk yönetimi, explainability (✅ Tamamlandı)
-
-### Temel Özellikler
-
-✅ **Multi-Stock Trading Environment** (Gymnasium)
-✅ **3 RL Algoritması**: A2C, PPO, TD3 (Stable-Baselines3)
-✅ **5 Teknik İndikatör**: MACD, RSI, CCI, ADX, Turbulence
-✅ **FastAPI Backend**: Model eğitimi ve yönetimi
-✅ **Dash Dashboard**: Plotly Dash + dash-bootstrap-components, /dash/ altında mount
-✅ **Real-time Training**: Background task ile eğitim
-✅ **Ensemble Tahmin Sistemi**: XGBoost + LightGBM + CatBoost + BiLSTM + TFT + Stacking (OOF, 3-way split)
-✅ **Hiperparametre Optimizasyonu**: Optuna + Walk-forward CV + purge/embargo
-✅ **Çoklu Veri Kaynağı**: yfinance (OHLCV), TCMB EVDS (makro), fundamental, altın/döviz, VIX/US10Y/DXY
-✅ **ICEEMDAN Gürültü Filtresi**: EMD tabanlı fiyat serisi temizleme
-✅ **TATS Trend Düzeltici**: XGBoost trend classifier ile tahmin düzeltme
-✅ **ATR Pozisyon Boyutlandırma**: Dinamik risk-bazlı pozisyon + Kelly Criterion
-✅ **SHAP Explainability**: Feature importance açıklamaları (Tree/Linear/Kernel)
-✅ **Gelişmiş Metrikler**: Sortino, Calmar, Deflated Sharpe Ratio, Turnover
-
-### Teknoloji Stack
-
-**Backend:**
-- FastAPI + Uvicorn
-- Stable-Baselines3 (PyTorch)
-- Gymnasium (OpenAI Gym)
-- yfinance (BIST verileri)
-
-**Frontend:**
-- Plotly Dash + dash-bootstrap-components
-- FastAPI üzerinde `/dash/` path'inde mount edilmiş
-
-**Data & ML:**
-- pandas, numpy, scikit-learn
-- pandas-ta (Teknik indikatörler)
-- XGBoost, LightGBM, CatBoost
-- Optuna (Hiperparametre optimizasyonu)
-- evds (TCMB EVDS API — faiz, enflasyon)
-- borsapy (Altın/döviz verisi)
-- shap (Explainability — TreeExplainer/LinearExplainer/KernelExplainer)
-- EMD-signal (ICEEMDAN gürültü filtreleme)
-
----
-
-## 📦 Kurulum
-
-### 1. Repository'yi Klonlayın
+## Kurulum
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/softdevcan/RL-Trading-Project.git
 cd RL-Trading-Project
-```
-
-### 2. Virtual Environment Oluşturun
-
-```bash
 python -m venv venv
-```
-
-### 3. Virtual Environment'ı Aktif Edin
-
-**Windows:**
-```bash
-.\venv\Scripts\activate
-```
-
-**Linux/Mac:**
-```bash
-source venv/bin/activate
-```
-
-### 4. Bağımlılıkları Yükleyin
-
-```bash
+# Windows: .\venv\Scripts\activate   |   Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env        # en az EVDS_API_KEY (TCMB EVDS makro verisi); üretimde .env.production.example
 ```
 
-**Ana Paketler:**
-- fastapi, uvicorn, pydantic
-- stable-baselines3, gymnasium, torch
-- yfinance, pandas-ta, scikit-learn
-- numpy, pandas, matplotlib
+GPU'lu PyTorch için CUDA sürümünüze uygun `torch` paketini ayrıca kurun.
 
----
-
-## 🚀 Hızlı Başlangıç
-
-### Web Dashboard ile Kullanım (Önerilen)
+## Çalıştırma
 
 ```bash
-# Sunucuyu başlat
-python run_server.py
+python scripts/create_admin.py --email admin@ornek.com   # ilk yönetici hesabı (kayıt yok; hesapları admin açar)
+python run_server.py                                      # http://localhost:8000
 ```
 
-Tarayıcınızda açın: **http://localhost:8000/**
+- Pano: **http://localhost:8000/dash/** (giriş `/login`)
+- API belgesi: `/docs` (yalnız admin)
+- Docker: `make up` (ayrıntı `make help`; yönetici `make admin`)
 
-**Dashboard Özellikleri:**
-- 📊 Model eğitimi (A2C/PPO/TD3)
-- ⏱️ Gerçek zamanlı progress tracking
-- 📈 Performans metrikleri (Sharpe, Sortino, Calmar, Drawdown)
-- 🤖 Model karşılaştırma + SHAP feature importance
-- 📉 Plotly interaktif grafikler
-- Dashboard: **http://localhost:8000/dash/**
+Kimlik doğrulama varsayılan olarak açıktır; `AUTH_ENABLED=False` ile sunucu herkese açık hâle gelir,
+yalnız yerel denemede kullanın.
 
-### TensorBoard ile İzleme
+## Testler
 
-Eğitim sürecini gerçek zamanlı izlemek için:
+Testler bağımsız betiklerdir (pytest değil): `python tests/<ad>.py`. Hangi testin neyi denetlediği ve
+beklenen kontrol sayıları: [tests/CLAUDE.md](tests/CLAUDE.md). CPU'da koşmak için
+`CUDA_VISIBLE_DEVICES=-1`.
 
-```bash
-# TensorBoard'u başlatın
-tensorboard --logdir=logs
+Tahmin golden testi (`tests/test_prediction_regression.py`) DL hizalama düzeltmesinden (B11) beri
+**bilinen nedenle kırmızıdır**; Milestone 0' ile bir kez yenilenecektir.
 
-# Tarayıcıda açın: http://localhost:6006
-```
+## Proje yapısı
 
-**TensorBoard'da görüntülenecekler:**
-- 📉 Loss curves (policy loss, value loss, entropy loss)
-- 📊 Reward progression
-- 🎯 Episode statistics
-- 📈 Learning rate schedule
-- 🔍 Gradient norms
+| Dizin | İçerik |
+|---|---|
+| `env/` | RL ortamı (Gymnasium) ve ödül — *sanal ortam `venv/` ile karıştırmayın* |
+| `evaluation/` | İstatistiksel testler, walk-forward bölme, deneme kaydı, tekrar üretilebilirlik |
+| `prediction/` | Özellik mühendisliği, modeller, ensemble, TATS, CV, HPO |
+| `data/` | Veri çekme (yfinance, EVDS), göstergeler, veri bütünlüğü kapısı |
+| `app/` | FastAPI: rotalar, kimlik/yetki, çalışma alanı, servisler |
+| `dashboard/` | Dash pano (sayfalar, bileşenler, tema) |
+| `hyperparameter_optimization/` | RL HPO (Optuna) |
+| `scripts/` | Ölçüm, analiz ve bakım betikleri |
+| `docs/` | Plan, ölçümler, kılavuzlar, tez — indeks [docs/README.md](docs/README.md) |
 
-### Test Scriptleri
+`models/`, `results/`, `logs/`, `workspaces/` git dışındadır (eğitilmiş modeller ve kullanıcı yapıtları).
 
-```bash
-# Environment testi
-python tests/test_env.py
+## Araştırma geçerliliği
 
-# PPO algoritması testi
-python tests/test_ppo.py
+Sonuçların hangi koşulda savunulabildiği planlarda ve ölçüm JSON'larında izlenir:
 
-# Tüm algoritmaları karşılaştır
-python tests/test_all_algorithms.py
+- [Faz 9 planı](docs/development/phase-9-research-validity-plan.md) — iş paketleri ve §9 uygulama
+  durumu (her paketin ölçümü, hakem paneli, açık kalanlar)
+- [Faz 10 planı](docs/development/phase-10-marl-plan.md) — MARL (çok ajanlı) yol haritası
+- [Bilinen metodolojik açıklar](docs/development/roadmap.md) — "Bilinen Metodolojik Açıklar" bölümü
+- Ölçümler: [docs/development/measurements/](docs/development/measurements/) (panel SHA-256 ve commit içerir)
 
-# Benchmark stratejileri
-python scripts/benchmarking/test_benchmarks.py
+Akademik rapor betiği (`scripts/analysis/generate_academic_report.py`) baseline ve raporlama paketi (D5)
+tamamlanana kadar bilerek durur (çıkış 2).
 
-# Akademik rapor oluştur
-python scripts/analysis/generate_academic_report.py
-```
+## Sürümleme
 
----
+Tek kaynak `app/__init__.py` (`__version__`, SemVer). Her birleştirme sonrası tag ve GitHub release;
+tez/makale sonuçları adlandırılmış tag alır. Ayrıntı: [docs/development/versioning.md](docs/development/versioning.md).
 
-## 🎨 Web Dashboard
+## Dokümantasyon
 
-### Sayfalar
+- Kılavuzlar: [algoritmalar](docs/guides/ALGORITHMS.md) · [akademik analiz](docs/guides/ACADEMIC_GUIDE.md) ·
+  [HPO](docs/guides/API_HYPEROPT_GUIDE.md) · [GPU performansı](docs/guides/GPU_PERFORMANCE_GUIDE.md)
+- Geliştirme: [yol haritası](docs/development/roadmap.md) ·
+  [tahmin sistemi](docs/development/prediction-system.md) · [hakem paneli](docs/development/review-panel.md)
+- Referans: [tez (final)](docs/reference/tez-final.pdf) · arşiv [docs/archive/](docs/archive/)
 
-| Sayfa | URL | İçerik |
-|-------|-----|--------|
-| Home | `/dash/` | Sistem durumu, aktif model, metrik kartları |
-| Training | `/dash/training` | A2C/PPO/TD3 eğitimi, real-time progress |
-| Data | `/dash/data` | BIST-30 veri durumu, indikatörler |
-| Models | `/dash/models` | Eğitilmiş model listesi, karşılaştırma |
-| Daily Trading | `/dash/daily-trading` | Günlük sinyal üretimi |
-| Prediction | `/dash/prediction` | Ensemble tahmin, SHAP açıklamaları |
-| Academic | `/dash/academic` | Akademik metrikler, LaTeX tablo |
-| Hyperopt | `/dash/hyperopt` | Optuna optimizasyon sonuçları |
+## Referanslar
 
-### Dashboard Yapısı
+- Ansari vd. (2024). *A Multifaceted Approach to Stock Market Trading Using Reinforcement Learning.* IEEE Access.
+- Kazemdehbashi (2026). *Trend-Adjusted Time Series Models with an Application to Gold Price Forecasting.*
+  arXiv:2601.12706 — TATS uyarlamasının kaynağı (yöntem farkları: Faz 9 planı §9.17).
+- Tezin doğrulanmış kaynakçası: [docs/thesis/](docs/thesis/).
 
-```
-dashboard/
-├── app.py              # Dash factory, PrefixMiddleware, routing callback
-├── theme.py            # Renk teması (BG, CARD, CONTENT_STYLE)
-├── api_client.py       # FastAPI backend'e HTTP çağrıları
-├── components/
-│   ├── sidebar.py      # Sol navigasyon
-│   └── metric_card.py  # Metrik kartı bileşeni
-└── pages/              # home, training, data, models, daily_trading,
-                        # prediction, academic, hyperopt
-```
+## Uyarı
 
----
+Bu proje akademik ve eğitim amaçlıdır. Gerçek parayla işlem için kullanılmamalıdır; **yatırım tavsiyesi
+değildir**.
 
-## 🔌 API Kullanımı
+## Lisans
 
-### API Dokümantasyonu
-
-```
-http://localhost:8000/docs       # Swagger UI
-http://localhost:8000/redoc      # ReDoc
-```
-
-### Eğitim Başlatma
-
-```bash
-curl -X POST "http://localhost:8000/api/trading/train" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "algorithm": "A2C",
-    "phase": 1,
-    "total_timesteps": 50000,
-    "learning_rate": 0.0007,
-    "initial_balance": 1000000
-  }'
-```
-
-### Eğitim Durumu Sorgulama
-
-```bash
-curl "http://localhost:8000/api/trading/train/status"
-```
-
-### Modelleri Listeleme
-
-```bash
-curl "http://localhost:8000/api/trading/models"
-```
-
-### Ana Endpoints
-
-| Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| GET | `/` | Web Dashboard |
-| POST | `/api/trading/train` | Eğitim başlat |
-| GET | `/api/trading/train/status` | Eğitim durumu |
-| GET | `/api/trading/models` | Modelleri listele |
-| GET | `/api/trading/models/{name}/metrics` | Model metrikleri |
-| DELETE | `/api/trading/models/{name}` | Model sil |
-
----
-
-## 📂 Proje Yapısı
-
-```
-RL-Trading-Project/
-│
-├── 📁 app/                      # FastAPI Backend
-│   ├── api/routes/
-│   │   └── trading.py          # Trading API endpoints
-│   ├── schemas/
-│   │   └── trading.py          # Pydantic models
-│   ├── core/config.py          # Konfigürasyon
-│   └── main.py                 # FastAPI app
-│
-├── 📁 dashboard/                # Dash Frontend (/dash/)
-│   ├── app.py                  # Dash factory + PrefixMiddleware
-│   ├── theme.py                # Renk teması
-│   ├── api_client.py           # Backend HTTP client
-│   ├── components/             # sidebar, metric_card
-│   └── pages/                  # 8 sayfa (home, training, data, ...)
-│
-├── 📁 static/                   # Sadece favicon
-│
-├── 📁 data/                     # Veri İşleme
-│   ├── bist30_symbols.py       # Hisse listesi
-│   ├── data_fetcher.py         # OHLCV (yfinance, retry + incremental)
-│   ├── technical_indicators.py # Teknik indikatörler
-│   ├── macro_fetcher.py        # TCMB EVDS (faiz, enflasyon) + yfinance (döviz, BIST100)
-│   ├── fundamental_fetcher.py  # Fundamental oranlar (ROE, ROA, P/E, P/B, ...)
-│   └── gold_fetcher.py         # Altın/döviz (borsapy veya yfinance)
-│
-├── 📁 prediction/               # Gelişmiş Tahmin Sistemi (Faz 2)
-│   ├── feature_engineer.py     # 10 özellik grubu + ICEEMDAN + VIX/US10Y/DXY
-│   ├── feature_selector.py     # MI + permutation importance (3 aşamalı)
-│   ├── iceemdan_processor.py   # ICEEMDAN gürültü filtreleme
-│   ├── tats.py                 # TATS trend-adjusted düzeltici
-│   ├── explainability.py       # SHAP (Tree/Linear/Kernel)
-│   ├── models/                 # Multi-model mimarisi
-│   │   ├── base.py             # BasePredictionModel ABC + _predict_direction_raw()
-│   │   ├── xgboost_model.py
-│   │   ├── lightgbm_model.py
-│   │   ├── catboost_model.py
-│   │   ├── lstm_model.py       # BiLSTM (PyTorch, CUDA) + direction head
-│   │   ├── tft_model.py        # Temporal Fusion Transformer + direction head
-│   │   └── ensemble.py         # Stacking (OOF, 3-way split, Ridge/XGB, TATS)
-│   ├── hyperopt.py             # Optuna HPO
-│   ├── trainer.py              # Walk-forward + purge (5g) + embargo (3g, prev_test_end takibi)
-│   ├── evaluator.py            # Direction acc, Profit Factor, IC, Sortino, Calmar, DSR, Turnover
-│   └── tracker.py              # Experiment tracking (JSON log)
-│
-├── 📁 env/                      # RL Environment
-│   ├── trading_env.py          # Gymnasium env (+4×N prediction, ATR sizing, Kelly)
-│   └── reward_functions.py     # PSR reward function
-│
-├── 📁 scripts/                  # Utility Scripts
-│   ├── training/               # Model eğitimi (train_a2c_phase1.py)
-│   ├── benchmarking/           # Performans testleri (benchmark_strategies, test_benchmarks)
-│   ├── analysis/               # Analiz ve raporlama (generate_academic_report, extract_comparison_table)
-│   ├── optimization/           # Reward ağırlık optimizasyonu + A/B test
-│   └── debug/                  # Debug araçları
-│
-├── 📁 hyperparameter_optimization/ # RL algoritma HPO (Optuna + A2C/PPO/TD3/SAC)
-│                               # Not: prediction/hyperopt.py ise prediction modelleri için ayrı HPO'dur
-│
-├── 📁 docs/                     # Dokümantasyon (indeks: docs/README.md)
-│   ├── guides/                 # Kullanım kılavuzları (algorithms, academic, hyperopt, gpu)
-│   ├── development/            # Mimari + roadmap + phase3 detayları
-│   ├── reference/              # Tez + EVDS kılavuzları
-│   └── archive/                # Tamamlanmış faz/sprint dokümanları
-│
-├── 📁 models/                   # Eğitilmiş modeller (.zip)
-├── 📁 results/                  # Metrikler ve raporlar
-├── 📁 logs/                     # TensorBoard logs
-├── 📁 tests/                    # Unit tests
-│
-├── 📄 run_server.py            # Server launcher
-├── 📄 requirements.txt         # Dependencies
-└── 📄 README.md                # Ana README
-```
-
-### Modül Bağımlılıkları
-
-```
-Web UI (dashboard/ — Plotly Dash, /dash/ altında mount)
-    ↓ API calls (dashboard/api_client.py)
-FastAPI Backend (app/)
-    ↓ Background tasks
-RL Training Pipeline
-    ├─► data_fetcher.py → yfinance (OHLCV, incremental)
-    ├─► technical_indicators.py → pandas-ta
-    ├─► trading_env.py → Gymnasium
-    └─► Stable-Baselines3 → A2C/PPO/TD3
-        └─► Modeller (.zip) + Metrikler (.json)
-
-Tahmin Pipeline (prediction/)
-    ├─► data_fetcher.py      (OHLCV)
-    ├─► macro_fetcher.py     (EVDS faiz/enflasyon + yfinance döviz)
-    ├─► fundamental_fetcher.py (yfinance ROE/ROA/P/E/P/B)
-    ├─► gold_fetcher.py      (borsapy/yfinance altın+döviz)
-    ↓
-    feature_engineer.py → feature_selector.py
-    ↓
-    trainer.py (walk-forward + purge/embargo)
-    ↓
-    XGBoost + LightGBM + CatBoost + BiLSTM + TFT
-    ↓
-    ensemble.py (stacking meta-learner)
-    ↓
-    trading_env.py (RL obs: +predicted_return/direction/confidence/agreement)
-```
-
----
-
-## 🎓 Akademik Analiz ve Raporlama
-
-### Tez ve Makale için Kapsamlı Analiz
-
-Projeye **akademik yayın kalitesinde** analiz ve görselleştirme sistemi eklenmiştir:
-
-```bash
-# Tüm modelleri karşılaştır ve akademik rapor oluştur
-python scripts/analysis/generate_academic_report.py
-```
-
-**Oluşturulan Çıktılar:**
-
-📁 **results/**
-├── **figures/** (Publication-ready, 300 DPI)
-│   ├── portfolio_comparison.pdf
-│   ├── drawdown_comparison.pdf
-│   ├── returns_distribution.pdf
-│   ├── risk_return_scatter.pdf
-│   └── performance_radar.pdf
-│
-├── **latex/** (Tez için hazır tablolar)
-│   └── model_comparison.tex
-│
-├── **data/** (CSV ve JSON)
-│   ├── model_comparison.csv
-│   └── detailed_results.json
-│
-└── **ANALYSIS_REPORT.txt** (Özet rapor)
-
-### Hesaplanan Metrikler (Akademik)
-
-**Return Metrikleri:**
-- Total Return
-- Annualized Return
-- Mean Daily Return
-
-**Risk Metrikleri:**
-- Volatility (std)
-- Annualized Volatility
-- Maximum Drawdown
-- Ulcer Index
-- Value at Risk (VaR 95%)
-- Conditional VaR (CVaR)
-
-**Risk-Adjusted Returns:**
-- Sharpe Ratio
-- Sortino Ratio
-- Calmar Ratio
-- Information Ratio
-- Recovery Factor
-
-**Trading Metrikleri:**
-- Win Rate
-- Profit Factor
-- Average Profit/Loss
-- Total Trades
-
-### İstatistiksel Testler
-
-- **T-test**: Modeller arası getiri karşılaştırması
-- **Wilcoxon test**: Non-parametrik alternatif
-- **p-value < 0.05**: İstatistiksel anlamlılık
-
-### API Endpoints (Akademik Analiz)
-
-```bash
-# Model karşılaştırma verilerini al
-GET /api/trading/analysis/model-comparison
-
-# En iyi modelleri metrik bazında al
-GET /api/trading/analysis/best-models
-
-# Arka planda kapsamlı rapor oluştur
-POST /api/trading/analysis/generate-report
-```
-
-### LaTeX Entegrasyonu
-
-Oluşturulan `.tex` dosyalarını doğrudan tezinize ekleyebilirsiniz:
-
-```latex
-\input{results/latex/model_comparison.tex}
-```
-
----
-
-## 📊 Trading Environment (Ansari et al. Metodolojisi)
-
-### State Space (Faz 1)
-
-```python
-state = [
-    balance,                 # 1 feature
-    shares_owned[N],        # N features (5 hisse)
-    # OHLCV (5*N features)
-    open[N], high[N], low[N], close[N], volume[N],
-    # Technical Indicators (5*N features)
-    macd[N], rsi[N], cci[N], adx[N], turbulence[N]
-]
-# Total: 1 + 5 + 25 + 25 = 56 features
-```
-
-### Action Space
-
-```python
-action = [-100, ..., 0, ..., +100]  # Her hisse için
-# Negative: Sell
-# Positive: Buy
-# Zero: Hold
-```
-
-### Reward Function
-
-`env/reward_functions.py` üzerinden iki reward tipi desteklenir (`reward_type` parametresi):
-
-**1. Simple Reward (opt-in):**
-```python
-reward = (current_portfolio - previous_portfolio) / previous_portfolio
-```
-
-**2. PSR Reward (default — Ansari et al. Eq. 1):**
-```python
-# RewardCalculator: ΔPortfolio + Sharpe + DailyReturn
-# w1-w5 ağırlıkları Optuna ile optimize edilmiş
-reward = w1·ΔPortfolio + w2·Sharpe + w3·DailyReturn + w4·DrawdownPenalty + w5·TradeFrequency
-```
-
-> **Faz 3 düzeltmesi:** `total_trades` sayımındaki bug giderildi ([env/reward_functions.py:119-121](env/reward_functions.py#L119-L121)). Artık `trades_executed` parametresi doğru sayılıyor.
-
----
-
-## 📈 Performans Metrikleri
-
-Dashboard ve API şu metrikleri sağlar:
-
-- **Cumulative Return**: Toplam getiri (%)
-- **Sharpe Ratio**: Risk ayarlı getiri
-- **Max Drawdown**: Maksimum düşüş (%)
-- **Final Portfolio Value**: Son portföy değeri (₺)
-- **Total Trades**: Toplam işlem sayısı
-
-**Hesaplama:**
-```python
-# Sharpe Ratio (annualized)
-sharpe = (mean(returns) / std(returns)) * sqrt(252)
-
-# Max Drawdown
-max_drawdown = min((portfolio - cummax(portfolio)) / cummax(portfolio))
-```
-
----
-
-## 🧪 Test ve Çalıştırma
-
-### Environment Test
-
-```bash
-python -m env.trading_env
-```
-
-### Veri Testi
-
-```bash
-python -m data.data_fetcher
-```
-
-### Tensorboard
-
-```bash
-tensorboard --logdir logs/tensorboard/
-```
-
----
-
-## 🎓 Ansari et al. (2024) Uygulaması
-
-### Faz 1 - Tamamlanan
-
-| Özellik | Ansari et al. | Bizim Uygulama | Durum |
-|---------|---------------|----------------|-------|
-| Multi-Stock | ✅ S&P500 | ✅ BIST-30 (5 hisse) | ✅ |
-| Technical Indicators | MACD, RSI, CCI, ADX, Turbulence | ✅ Aynısı | ✅ |
-| RL Algorithms | A2C, PPO, TD3 | ✅ Aynısı | ✅ |
-| Environment | Custom Gym | Gymnasium | ✅ |
-| Reward | PSR | ✅ PSR (Faz 2'de entegre, Faz 3'te bug fix) | ✅ |
-| Fundamental Data | ✅ 11 ratios | ✅ ROE, ROA, D/E, P/E, P/B, profit margin (Faz 2) | ✅ |
-
-### Faz 2 - Tamamlandı ✅
-
-- [x] Gelişmiş Feature Engineering (10 grup: log return, volatilite, momentum, makro, fundamental, rejim)
-- [x] Multi-model ensemble (XGBoost + LightGBM + CatBoost + BiLSTM + TFT + Stacking)
-- [x] Optuna HPO (walk-forward CV, purge gap 5 gün, embargo 3 gün)
-- [x] Çoklu veri kaynağı (OHLCV + makro EVDS + fundamental + altın/döviz)
-- [x] RL entegrasyonu (observation space'e 4×N tahmin özellikleri eklendi)
-- [x] API endpoints + Dash dashboard (train-all, optimize, ensemble-predict)
-
-### Faz 3 - Tamamlandı ✅
-
-#### 3.1 — Bug Fixes
-- [x] PSR reward: `total_trades` sayım hatası düzeltildi
-- [x] Meta-learner data leakage: 2-split → 3-way split (OOF) ile giderildi
-- [x] Embargo: `prev_test_end` takibi ile her fold'da doğru uygulanıyor
-- [x] TFT VSN: `min(input_size, 50)` cap kaldırıldı, feature selector zaten 80 ile sınırlar
-- [x] Direction head: BiLSTM/TFT çıktısı artık confidence hesabında kullanılıyor
-- [x] Permutation importance: feature_selector'a 3. aşama olarak eklendi
-
-#### 3.2 — Tahmin Kalitesi
-- [x] ICEEMDAN gürültü filtreleme (`prediction/iceemdan_processor.py`)
-- [x] TATS trend-adjusted düzeltici (`prediction/tats.py`)
-- [x] Global makro göstergeler: VIX, US10Y, DXY (macro_fetcher + feature_engineer)
-
-#### 3.3 — Risk Yönetimi
-- [x] ATR tabanlı dinamik pozisyon boyutlandırma (`use_atr_sizing=True`)
-- [x] Kelly Criterion pozisyon boyutlandırma (`use_kelly=True`, quarter-Kelly)
-
-#### 3.4 — Explainability & Monitoring
-- [x] SHAP explainability (`prediction/explainability.py`, `/prediction/explain/{symbol}` API)
-- [x] Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio, Turnover metrikleri
-- [x] `GET /prediction/explain/{symbol}` endpoint (single + global SHAP)
-
----
-
-## 📝 Geliştirme Notları
-
-### Veri Kaynağı
-
-- **BIST-30 Hisseleri**: yfinance (`.IS` suffix)
-- **Periyot**: 2018-2024 (6 yıl)
-- **Split**: 70% train / 15% val / 15% test
-
-### BIST-30 Hisseleri (Faz 1)
-
-1. AKBNK.IS - Akbank (Bankacılık)
-2. THYAO.IS - Türk Hava Yolları (Havacılık)
-3. TUPRS.IS - Tüpraş (Enerji)
-4. BIMAS.IS - BIM (Perakende)
-5. ASELS.IS - Aselsan (Savunma)
-
-### Hyperparameters (Faz 1)
-
-Her algoritma için optimize edilmiş learning rate'ler:
-
-```python
-# PPO (Önerilen)
-learning_rate = 0.0003
-n_steps = 2048
-total_timesteps = 50_000+
-
-# A2C
-learning_rate = 0.0007
-n_steps = 512
-total_timesteps = 50_000+
-
-# TD3
-learning_rate = 0.001
-buffer_size = 100_000
-total_timesteps = 50_000+
-
-# Environment
-initial_balance = 1_000_000 TL
-commission_rate = 0.001 (0.1%)
-max_shares_per_trade = 100
-```
-
----
-
-## 🤝 Katkı
-
-Bu proje akademik bir çalışmadır. Katkılarınız için:
-
-1. Fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit edin (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
----
-
-## 📚 Dokümantasyon
-
-Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın. Dokümantasyon indeksi: [docs/README.md](docs/README.md).
-
-### Kullanım Kılavuzları
-- [**Algoritma Karşılaştırması**](docs/guides/ALGORITHMS.md) — PPO, A2C, TD3, SAC
-- [**Akademik Analiz**](docs/guides/ACADEMIC_GUIDE.md) — Raporlama ve metrikler
-- [**Hyperparameter Optimization**](docs/guides/API_HYPEROPT_GUIDE.md) — Optuna entegrasyonu
-- [**GPU Performans**](docs/guides/GPU_PERFORMANCE_GUIDE.md) — GPU testleri
-
-### Geliştirme
-- [**Roadmap**](docs/development/roadmap.md) — Proje yol haritası (Faz 1 → Faz 3 tamamlandı)
-- [**Tahmin Sistemi Mimarisi**](docs/development/prediction-system.md) — Ensemble, feature engineering, veri katmanı
-- [**Faz 3 Uygulama Detayları**](docs/development/phase-3-implementation.md) — Bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP
-
-### Referans
-- [**Tez (final)**](docs/reference/tez-final.pdf)
-- [**EVDS Python Kılavuzu**](docs/reference/evds-python-kilavuz.pdf) · [**EVDS Web Servis Kılavuzu**](docs/reference/evds-web-servis-kilavuz.pdf)
-
-### Arşiv
-Tamamlanmış faz/sprint dokümanları için: [docs/archive/](docs/archive/)
-
----
-
-## 📚 Referanslar
-
-**Ana Makale:**
-- Ansari et al. (2024) - "A Multifaceted Approach to Stock Market Trading Using Reinforcement Learning"
-
-**Kütüphaneler:**
-- [Stable-Baselines3](https://stable-baselines3.readthedocs.io/)
-- [Gymnasium](https://gymnasium.farama.org/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Plotly Dash](https://dash.plotly.com/)
-- [Optuna](https://optuna.org/)
-- [SHAP](https://shap.readthedocs.io/)
-
----
-
-## ⚠️ Disclaimer
-
-Bu proje **eğitim amaçlıdır**. Gerçek para ile ticaret yapmak için:
-- Risk yönetimi ekleyin
-- Backtesting yapın
-- Profesyonel mali danışmanlık alın
-
-**Yatırım tavsiyesi değildir.**
-
----
-
-## 📄 Lisans
-
-MIT License - Eğitim amaçlı kullanım için serbesttir.
-
----
-
-## 📞 İletişim
-
-Sorularınız için: [docs/development/roadmap.md](docs/development/roadmap.md) dosyasına bakın veya issue açın.
-
----
-
-**Son Güncelleme:** 2026-04-21 — Dokümantasyon yeniden organize edildi. Faz 3 tamamlandı (2026-03-27).
+Lisans dosyası henüz eklenmedi.
