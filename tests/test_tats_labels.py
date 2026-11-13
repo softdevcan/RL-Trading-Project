@@ -169,7 +169,8 @@ def main() -> int:
         tm = res.get("ensemble_test_metrics", {})
         t = tm.get("tats", {})
         check("test metriginde TATS'li ve TATS'siz birlikte raporlandi",
-              {"with_tats", "without_tats", "n_applied", "n_rows"} <= set(t), str(list(t)))
+              {"with_tats", "without_tats", "n_applied", "n_rows"} <= set(t)
+              and "tda" in t.get("with_tats", {}), str(list(t)))
         check("TATS'siz kol = ana test metrigi (ayni satirlar, ayni tahmin)",
               bool(t) and abs(t["without_tats"]["mape"] - tm["mape"]) < 1e-9
               and t["n_rows"] > 0, f"({t.get('without_tats')}, mape={tm.get('mape')})")

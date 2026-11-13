@@ -420,11 +420,22 @@ class StackingEnsemble:
                 n_applied += 1
                 corrected[i] = np.log(new_pc / cur[i]) if self.target_type == 'log_return' else new_pc
         y_t = np.asarray(y_test, dtype=np.float64)[-k:]
-        return {
-            'n_rows': int(k), 'n_applied': int(n_applied),
-            'without_tats': BasePredictionModel.compute_metrics(y_t, base),
-            'with_tats': BasePredictionModel.compute_metrics(y_t, corrected),
-        }
+
+        def tda(pred):
+            # Makaledeki TDA (Kazemdehbashi 2026, Denk. 3.1): tahmin edilen DEGISIMIN isareti.
+            # compute_metrics'in direction_accuracy'si fark tabanli (np.diff) ve TDA degil
+            # (hakem-2 K21 B1). log_return: sign(pred) == sign(y); fiyat: cari kapanisa gore.
+            if self.target_type == 'log_return':
+                pd_, td_ = pred, y_t
+            else:
+                pd_, td_ = pred - cur, y_t - cur
+            return float(np.mean(np.sign(pd_) == np.sign(td_)) * 100)
+
+        m_base = BasePredictionModel.compute_metrics(y_t, base)
+        m_corr = BasePredictionModel.compute_metrics(y_t, corrected)
+        m_base['tda'], m_corr['tda'] = tda(base), tda(corrected)
+        return {'n_rows': int(k), 'n_applied': int(n_applied),
+                'without_tats': m_base, 'with_tats': m_corr}
 
     @staticmethod
     def _tats_inputs(df: pd.DataFrame, feat_df: pd.DataFrame, base_end: int, meta_end: int,

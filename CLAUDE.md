@@ -302,7 +302,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Direction head: BiLSTM/TFT'nin `_predict_direction_raw()` çıktısı confidence hesabında kullanılır
 - TATS (Faz 9 B10 + K21): uyum girdileri HAM `df['close']`'tan (`_tats_inputs`; ICEEMDAN kolunda
   `feat_df['close']` filtreli); test metriginde `ensemble_test_metrics['tats']` (TATS'li/TATS'siz);
-  `<model>_<ufuk>_tats.json` ile kaydedilir/yuklenir. Duzeltme ISARETI KORUR — makaledeki gibi yonu
+  `<model>_<ufuk>_tats.json` ile kaydedilir/yuklenir. Duzeltme ISARETI KORUR (makaledeki TDA degismez; `direction_accuracy` fark tabanli, TDA DEGIL,
+  degisebilir; TATS blogunda `tda` ayri) — makaledeki gibi yonu
   cevirmez (§9.17 yontem farklari); 'TATS' kollari bu uyarlamayi olcer
 - BiLSTM/TFT egitim<->cikarim bir adim kayik (Y22, B11, acik) — DL OOF'u bir ufuk kayik
 
