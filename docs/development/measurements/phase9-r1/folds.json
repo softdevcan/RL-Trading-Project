@@ -1,7 +1,7 @@
 {
- "created_at": "2026-11-13T23:37:50",
- "command": "python scripts/analysis/measure_r1_folds.py --old-panel data/bist/backup_2026-07-27/raw_stock_data.csv --dividends --out docs/development/measurements/phase9-r1/folds.json",
- "git_commit": "ea948ec8524b50a02bbf9e27a982c4397ac1f7c8",
+ "created_at": "2026-11-13T23:40:41",
+ "command": "python scripts/analysis/measure_r1_folds.py --old-panel data/bist/backup_2026-07-27/raw_stock_data.csv --dividends --old-indicator-panel data/bist/backup_2026-07-27/stock_data_with_indicators.csv --out docs/development/measurements/phase9-r1/folds.json",
+ "git_commit": "27c488750a6ff0f6ab6e9eeff5ae0d199681715c",
  "git_dirty": false,
  "indicator_csv": {
   "file_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
@@ -4502,6 +4502,39 @@
    }
   }
  },
+ "gate_same_code": {
+  "old_panel": {
+   "path": "data/bist/backup_2026-07-27/stock_data_with_indicators.csv",
+   "file_sha256": "cd24b59cac08edd96e689d60d87b39a5ad3676c18b06e9fb6fe7eb771100749d",
+   "end": "2026-07-27"
+  },
+  "old": {
+   "rows_after": 98614,
+   "n_dates": 3291,
+   "missing_cell_frac": 0.0011749215030892879,
+   "n_ghost_days": 72,
+   "n_stale_cells_dropped": 39,
+   "indicator_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "n_large_moves": 13,
+   "n_artifacts": 0
+  },
+  "new_cut_to_old_end": {
+   "rows_after": 98614,
+   "n_dates": 3291,
+   "missing_cell_frac": 0.0011749215030892879,
+   "n_ghost_days": 67,
+   "n_stale_cells_dropped": 39,
+   "indicator_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "n_large_moves": 13,
+   "n_artifacts": 0
+  }
+ },
  "panel_refresh": {
   "old": {
    "path": "data/bist/backup_2026-07-27/raw_stock_data.csv",
@@ -4810,7 +4843,7 @@
   },
   "dividends": {
    "source": "yfinance Ticker.dividends",
-   "fetched_at": "2026-11-13T23:38:13",
+   "fetched_at": "2026-11-13T23:41:38",
    "by_symbol": {
     "BIMAS.IS": [
      [
