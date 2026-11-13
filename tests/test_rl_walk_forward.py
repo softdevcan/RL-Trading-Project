@@ -858,11 +858,12 @@ def main():
     win = lambda a, b: types.SimpleNamespace(df=pd.DataFrame(
         {"close": [1.0, 1.0]}, index=pd.MultiIndex.from_tuples(
             [("A", pd.Timestamp(a)), ("A", pd.Timestamp(b))], names=["symbol", "date"])))
-    check("eval_window_unexposed: okunmus pencereyle kesisen -> False, siniri bir gun kacirmayan "
-          "-> True",
-          treg.eval_window_unexposed(win("2026-07-27", "2026-10-30")) is False
-          and treg.eval_window_unexposed(win("2026-07-28", "2026-10-30")) is True
-          and treg.eval_window_unexposed(win("2023-01-02", "2024-08-05")) is True)
+    check("eval_window_unexposed: okunmus pencereyle kesisen -> False, son okunmus gunden "
+          "sonrasi ve 2021 -> True (olculen pencereler: exposure.json)",
+          treg.eval_window_unexposed(win("2026-08-28", "2026-10-30")) is False
+          and treg.eval_window_unexposed(win("2026-08-31", "2026-10-30")) is True
+          and treg.eval_window_unexposed(win("2022-07-18", "2022-12-30")) is False
+          and treg.eval_window_unexposed(win("2021-01-04", "2022-07-15")) is True)
     check("fundamentals_pit: faz 2 + temel oran tablosu -> False; faz 1 -> True",
           treg.fundamentals_pit(types.SimpleNamespace(phase=2, fundamental_df=pd.DataFrame({"x": [1]})))
           is False and treg.fundamentals_pit(types.SimpleNamespace(phase=1, fundamental_df=None)) is True)

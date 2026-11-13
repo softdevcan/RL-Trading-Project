@@ -1729,10 +1729,12 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 + ". Deneme kaydinda acik: dims_in_support (Faz 9 §9.9).")
 
         if rl_protocol.get('eval_window_unexposed') is False:
+            from evaluation.trial_registry import exposed_windows_overlapping
+            tr_ = _range(test_df)
             training_state.setdefault("warnings", []).append(
-                "Test penceresi R1'den once basarim metrikleriyle okunmus bir donemle kesisiyor "
-                "(2024-08-06..2026-07-27, B9): bu kat dogrulayici kanit degildir. Deneme kaydinda "
-                "acik: eval_window_unexposed (Faz 9 §9.11).")
+                "Test penceresi R1'den once basarim metrikleriyle okunmus donem(ler)le kesisiyor: "
+                + "; ".join(exposed_windows_overlapping(*tr_)) + ". Bu kat dogrulayici kanit "
+                "degildir. Deneme kaydinda acik: eval_window_unexposed (Faz 9 §9.11).")
         if rl_protocol.get('fundamentals_pit') is False:
             training_state.setdefault("warnings", []).append(
                 "Faz 2 temel oranlari tek anlik goruntu (nokta-zamanli degil, S4). Deneme "

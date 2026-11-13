@@ -123,12 +123,23 @@ CLEAN_PROTOCOL = {
 }
 # R1'den ONCE basarim metrikleriyle okunmus degerlendirme pencereleri (kapsayici tarih
 # araliklari). Kesisen kayit acik kalir: o donemde verilen tasarim kararlari o donemin
-# sonucunu gormustu. R1 oncesi oranli bolmeyle yapilan egitimler test araligi KAYDETMIYOR
-# (23 metrik dosyasi); olculemedigi icin listede degil, Faz 9 §9.11'de beyan edilir.
+# sonucunu gormustu. Olcum: scripts/analysis/measure_r1_exposure.py ->
+# docs/development/measurements/phase9-r1/exposure.json (metrik dosyalarindaki islem
+# tarihleri + portfoy uzunlugu; oranli bolme eski panelde bagimsiz kontrol).
 EXPOSED_EVAL_WINDOWS = (
+    ('2022-07-18', '2026-07-27',
+     "R1 oncesi rota testi (oranli bolme; 22 egitim, 2026-07-28/29)"),
+    ('2025-02-19', '2026-08-28',
+     "R1 oncesi rota testi (calisma alani; 1 egitim, 2026-08-30)"),
     ('2024-08-06', '2026-07-27',
-     "Faz 9 §9.5 B9 etki olcumu: A2C/PPO x 3 tohum, fazla getiri Sharpe'i, al-tut"),
+     "Faz 9 §9.5 B9 etki olcumu: A2C/PPO x 3 tohum"),
 )
+
+
+def exposed_windows_overlapping(lo, hi) -> list:
+    """[lo, hi] ile kesisen okunmus pencerelerin etiketleri (uyari metni icin)."""
+    return [f"{a}..{b} ({lbl})" for a, b, lbl in EXPOSED_EVAL_WINDOWS
+            if pd.Timestamp(lo) <= pd.Timestamp(b) and pd.Timestamp(hi) >= pd.Timestamp(a)]
 # Ayni maddenin ikinci temiz degeri (K25 b: nedensel fiyat olcegi).
 CLEAN_ALTERNATIVES = {
     'price_stats_source': ('causal',),
