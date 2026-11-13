@@ -1194,6 +1194,53 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 **Panel (B10).** hakem-finans (sonnet) Küçük revizyon, 4 KÜÇÜK (~54 bin token, 10 araç, ~0,8 dk). hakem-2 (opus) birleştirme için Küçük, "B10 kapandı" için Büyük revizyon; 3 BÜYÜK, 3 KÜÇÜK (~90 bin token, 26 araç, ~3,5 dk; testi kendi koştu). İşlenenler: ham kapanış + ICEEMDAN kolu testi (h2 B1, finans #1), B10 "kısmen" + K21 kalemleri (h2 B2), DL kayması yeni bulgu olarak kayda (h2 B3), kısa OOF + iki mutasyon (h2 K1), haftalık ufuk (h2 K2), golden'da TATS meta'sı ölçüldü (h2 K3, finans #4), doğrulananın ayrımı (finans #2).
 
+### 9.17 K21 — TATS test değerlendirmesi, kalıcılık, yöntem farkları; B10 kapanışı (2026-11-14, dal `feat/phase10-k21-tats-eval`)
+
+**Kapsam.** Faz 10 §6 K21 (§8 #6, Kabul): B10'un genişlemesi. §9.16'daki üç açık kalem. Yeni bayrak yok.
+
+- **K21/1 Test değerlendirmesi** (iki kolda `compute_metrics` + makaledeki TDA, `tda`) ([ensemble.py](../../prediction/models/ensemble.py) `_evaluate_tats_on_test`). TATS test bölümünde, test metriğiyle aynı %60 taban modelleri ve aynı satırlarla uygulanır; düzeltme `predict_next` ile aynı yoldan (hedef fiyata çevir → `correct` → hedef birimine geri). Sonuç `ensemble_test_metrics['tats']`: `without_tats`, `with_tats`, `n_applied`, `n_rows`. TATS artık test metriğine girdiği için uyumdan meta bölümünün son `h` satırı atılır (etiketi test dönemindeki kapanışa bakıyordu; hakem-finans B10 #3).
+- **K21/2 Kalıcılık.** Sınıflandırıcı `<model>_<ufuk>_tats.json` (XGBoost) olarak yazılır; meta `use_tats`, `tats_saved`, `tats_params` (düzeltme katsayısı, düz eşik, semantik sınıflar) taşır. `load` TATS'ı geri kurar; dosyası olmayan eski model TATS'sız yüklenir (önceki davranış).
+- **Kabul** (`python tests/test_tats_labels.py` → 22/0; B10'un 16 kontrolü, uyumdan son `h` satır atılacak şekilde güncellendi, + K21'in 6 kontrolü; aynı süreç tek testte):
+  - Test metriğinde iki kol birlikte; TATS'sız kol ana test metriğiyle birebir (aynı satırlar, aynı tahmin).
+  - `correct` zorla uygulanınca `n_applied = n_rows` ve TATS'lı metrik farklı: düzeltme metriğe gerçekten giriyor.
+  - Geçici dizine kaydedip yükleme: yüklenen modelde TATS var ve `predict_next`'in TATS çıktısı (applied, trend, güven) bellektekiyle aynı. Mutasyon: TATS dosyası silinince yüklenen modelde TATS yok.
+  - Sentetik veride TATS hiç uygulanmadı (`n_applied` 0/115): iki kolun eşitliği bu veride bilgi taşımıyor; ayrışma yalnız zorla uygulamayla sınandı.
+- **Golden.** `python tests/test_prediction_regression.py` → "[REGRESYON] GECTI (OK)" (K21 dalı). Golden `ensemble_test_metrics['tats']`'ı karşılaştırmıyor; uyumdan son `h` satırın atılması golden'ın son tahminini %5 toleransın dışına çıkarmadı. B10/K21 kanıtı değil (§9.16).
+- **K21/3 Yöntem farkları** (Kazemdehbashi 2026, arXiv 2601.12706v2; tam metin arXiv HTML sürümünden okundu, 2026-11-14; atıf zorunlu, katkı değil):
+
+| Boyut | Makale | Bu depo |
+|---|---|---|
+| Trend etiketi | İkili, ĉₜ ∈ {−1, 1}, bir adım ileri (§1, Tablo 1, §4.1); eşik tanımlanmamış | Üç sınıf (aşağı / düz / yukarı), düz eşiği 0,005; ufuk h (günlük 1, haftalık 5) |
+| Sınıflandırıcı girdisi | Dış değişkenler: altın fiyatı, FTSE, Dow Jones, S&P 500, USD/EUR, USD/JPY, petrol (§4.1) | Taban modellerin OOF tahminleri (meta özellikler) |
+| Sınıflandırıcı | Yedi sınıflandırıcı denenmiş, 5 katlı CV ile ayarlanmış; XGBoost seçilmiş (Tablo 2) | XGBoost, sabit hiperparametre (100 ağaç, derinlik 3), ayar yok |
+| Düzeltme kuralı | Çatışmada (I = 0) tahmin, önceki değer + ĉ·α ile **değiştirilir** (Denk. 3.2–3.3); yön sınıflandırıcıya döner, α sabit adım | Çatışmada tahmin trende doğru |tahmin − cari| · güven · 0,5 kadar çekilir; **işaret korunur**, büyüklük en fazla yarıya iner (tats.py `correct`). Makaledeki TDA'yı yapısı gereği değiştiremez |
+| Taban tahminci | LSTM ve Bi-LSTM, gecikme 2 (§4.2) | Beş modelli stacking (XGBoost, LightGBM, CatBoost, BiLSTM, TFT) + meta-öğrenici |
+| Bölme | %70 eğitim / %30 test (§4); doğrulama bölümü tanımlanmamış | %60 taban / %20 meta (TATS uyumu burada) / %20 test |
+| Değerlendirme | MSE, MAE, MAPE, TDA; düzeltilmiş ↔ düzeltilmemiş eğitim ve testte (Tablo 3–5); α ∈ {0,1, 1, 2, 5, 10, 20} | MAPE, RMSE, MAE, yön doğruluğu; TATS'lı ↔ TATS'sız testte (K21/1) |
+| Veri | Altın, günlük, 2023, 250 gözlem (§4) | BIST-30 hisseleri ve altın, günlük |
+
+  | Çatışma tanımı | Eşiksiz: (ŷₜ − yₜ₋₁) · ĉₜ < 0 (Denk. 3.3) | ±0,005 düz eşiğiyle; FLAT sınıfında düzeltme yok (tats.py `correct`) |
+
+  **Okuma.** En büyük fark düzeltme kuralı: makalede çatışan tahmin sınıflandırıcının yönüne çevriliyor, burada yalnız küçülüyor. Bu depodaki TATS bu yüzden makaledeki **TDA**'yı (tahmin edilen değişimin işareti, Denk. 3.1) değiştiremez. **Ama depodaki `direction_accuracy` TDA değildir** (hakem-2 K21 B1): `compute_metrics` ardışık tahmin farklarının işaretini karşılaştırıyor (`np.diff`); işaret koruyan küçültme onu değiştirebilir (hakem-2'nin 4 satırlık örneğinde 66,7 → 100). TATS bloğu bu yüzden her iki kola makaledeki TDA'yı ayrıca yazar (`tda`); TATS'lı/TATS'sız karşılaştırmada yön ölçütü `tda`'dır. ICEEMDAN kolunda değerlendirme hedefi filtreli seriden (S1), TATS etiketi ham getiriden; Makale 2'nin K3/K4 kolları "TATS" adıyla makaledeki yöntemi değil bu uyarlamayı ölçer ve böyle beyan edilmeli. Kuralı makaleye yaklaştırmak bir yöntem kararıdır (Makale 2 tasarımı, kullanıcı); bu paket değiştirmedi.
+
+**B10 durumu.** §9.16 + bu bölümle Y20 ve K21'in üç kod/belge kalemi yapıldı; ancak gerçek `correct` kuralı ve hedef birimine geri çeviriş testte **değerle** sınanmıyor (sentetikte 0/115 uygulandı; zorla uygulama taklitle, yalnız "metrik farklı" bakılıyor — hakem-2 K21 B2). B10'un kapanışı Y25'e bağlı; tahmin katmanındaki sonuçlar yine ön sonuçtur (B4, B5 açık; Y22 aşağıda).
+
+**Plana eklenen bulgular (kullanıcı kararı 2026-11-14: "plana bulguları ekle").**
+
+| # | Bulgu | Kanıt | Paket |
+|---|---|---|---|
+| **Y22** | BiLSTM ve TFT'de eğitim ↔ çıkarım bir adım kayık: eğitimde `X[i−L:i]` (son satırı i−1) `y[i]` ile, çıkarımda aynı pencere satır i−1'e hizalanıyor; DL'nin satır r tahmini fiilen `y[r+1]`'in tahmini. Yön başı etiketi `y[i] > y[i−1]`: `log_return` hedefinde "getiri arttı mı" | hakem-2 B10 B3, kod okuması ([lstm_model.py](../../prediction/models/lstm_model.py), [tft_model.py](../../prediction/models/tft_model.py) `_create_sequences` ↔ `_predict_raw`); etkisi ölçülmedi | B (yeni **B11**); golden K1 kapsamında. Makale 2 tahmin katmanından önce |
+| **Y23** | `tests/test_prediction.py` main'de kırık: zincir TEST 2'de `test_ratio` argümanıyla duruyor; CV testinde BiLSTM/TFT katları `'NoneType' object has no attribute 'eval'`, `avg_mape yok`. Gerçek özellik hattıyla uçtan uca CV metriği üretilemiyor | §9.15 (main trainer ile aynı komut, aynı hata) | C (test altyapısı); B11 ile birlikte (DL yolu ortak) |
+| **Y24** | `prediction/trainer.py` `EXPERIMENTS_DIR` çalışma alanına göre çözülmüyor, depo köküne sabit (CLAUDE.md "yol sabitleme" kuralı) | hakem-2 B8 | **Kapandı (bu dal):** `_experiments_dir()` aktif kullanıcının `results/prediction_experiments`'ini çözer (yedek: eski ortak dizin); `test_workspace_isolation` 20 (Alice ↔ Bob dizinleri farklı; düzeltmesiz ImportError) |
+| **Y25** | TATS değerlendirme yolu değerle sınanmıyor: gerçek `correct` kuralı çatışmada hiç tetiklenmedi; geri çeviriş (`log(new/cur)`), işaret koruma, TDA eşitliği ve cari fiyat hizası doğrulanmadı. Ayrıca `load` kurucunun `use_tats`'ını meta ile eziyor (ablasyon kolu sessizce TATS alır); eski modelde `tats` çıktısı "TATS yok" ile "uygulanmadı"yı ayırmıyor | hakem-2 K21 B2, K3, K4 | B10 kapanışı; B11 ile aynı turda (küçük). Makale 2 K3/K4'ten önce |
+| **Y26** | h satırlık arındırma yalnız TATS uyumunda: meta-öğrenici (ve taban → meta sınırı) son h satırın etiketi bir sonraki bölüme bakıyor. Değerlendirilen TATS %60 modellerin girdisiyle, dağıtılan TATS %80'de yeniden eğitilmiş modellerin girdisiyle çalışıyor | hakem-2 K21 K1, K2 | K19 (Faz 10) kapsamına: meta-öğrenici ve TATS birlikte |
+
+**B11 tasarımı (Y22 + Y23; kullanıcı onayı 2026-11-14, uygulama sonraki oturum).**
+- Eğitim penceresi `X[i−L+1:i+1]` (satır i dahil) → `y[i]`; çıkarım değişmez (canlı yol aynı kalır). Satır i'nin özellikleri t kapanışında bilinir: sızıntı yok, bir gün daha fazla bilgi.
+- Yön başı etiketi ham hedeften: `log_return` → `y[i] > 0`; `abs_price` günlükte mevcut `y[i] > y[i−1]` doğru (y[i−1] = bugünkü kapanış), haftalıkta mevcut kapanış X'te olmadığı için beyan. **Uygulama ayrıntısı (okumada bulundu):** `_create_sequences` normalize edilmiş `y` ile çağrılıyor ve DL modelleri `target_type`'ı bilmiyor; ensemble'dan modele hedef türü taşınmalı.
+- Kabul: tek test; eğitim ve çıkarım penceresi aynı satıra hizalı, yön etiketi işaretle tutarlı; mutasyon (eski `X[i−L:i]`) testi kırar. Y23 aynı pakette: `PricePredictor.train` `test_ratio` argümanı ve CV'deki `'NoneType'.eval` kök nedeni.
+- Golden: DL tahminleri değişir → K1 seçenek 1 (bayraksız; golden Milestone 0''a kadar bilinen nedenle kırmızı, beyan).
+
 ---
 
 ## Versiyon geçmişi
@@ -1233,3 +1280,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.14):** B5 maliyet ölçümü: 67.086 ayrıştırma; en pahalı yapılandırma (W 256, trials 100) 14 süreçle ~2,5 sa, tek süreçte ~34 sa. Hesaplama Makale 2 tarihini kaydırmıyor; K5 kullanıcıda.
 - **2026-11-14 (§9.15, B8):** CV'de özellik seçimi her katın yalnız eğitim bölümünde (Y16). Kabul `test_cv_feature_selection` 13: her katın kendi test `y`'si karışınca küme bit-eş; mutasyon kırılıyor. hakem-finans: Kabul (küçük notlar işlendi).
 - **2026-11-14 (§9.16, B10 kısmen):** TATS uyum girdileri meta tarihlerindeki ham kapanıştan ve gerçekleşen getiriden (Y20; ICEEMDAN kolunda da); varsayılan çevrildi (K1). Kabul `test_tats_labels` 16. K21 kalemleri (TATS'lı/TATS'sız test, kalıcılık, yöntem farkları) açık. Yeni bulgu: BiLSTM/TFT bir adım kayık (plan dışı).
+- **2026-11-14 (§9.17, K21; B10 kısmen, Y25'e bağlı):** TATS test bölümünde TATS'lı/TATS'sız birlikte, diske yazılıp yükleniyor, uyumdan son h satır atılıyor; makaleyle yöntem farkları tablosu (en büyük fark: burada düzeltme işareti korur; makaledeki TDA değişmez, depodaki fark tabanlı `direction_accuracy` değişebilir). Kabul `test_tats_labels` 22. Plana eklenen bulgular: Y22 (DL bir adım kayık → B11, tasarım onaylı), Y23 (`test_prediction` kırık), Y24 (`EXPERIMENTS_DIR`, kapandı), Y25 (TATS değer testi; B10 kapanışı buna bağlı), Y26 (h arındırma + dağıtılan TATS → K19). hakem-2 K21: Küçük revizyon (makaledeki TDA eklendi, "değiştiremez" cümlesi düzeltildi).

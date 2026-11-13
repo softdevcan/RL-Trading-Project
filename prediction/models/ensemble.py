@@ -336,8 +336,16 @@ class StackingEnsemble:
             # TATS kollari (K3/K4) tam da o kollar. Hizalama OOF ile ayni (sondan k).
             close_meta, future_meta = self._tats_inputs(df, feat_df, base_end, meta_end, self.horizon)
             close_meta, future_meta = close_meta[-tats_min_len:], future_meta[-tats_min_len:]
-            tats_result = self.tats_corrector.fit(meta_X_for_tats, future_meta, close_meta)
+            # K21: meta bolumunun son h satirinin etiketi test donemindeki kapanisa bakar
+            # (hakem-finans B10 #3) -> TATS test metrigine girdigi icin uyumdan atilir.
+            h = 1 if self.horizon == 'daily' else 5
+            tats_result = self.tats_corrector.fit(
+                meta_X_for_tats[:-h], future_meta[:-h], close_meta[:-h])
             test_metrics['tats_trained'] = tats_result.get('trained', False)
+            # K21: test bolumunde TATS'li ve TATS'siz birlikte (ayni %60 modelleri, ayni satirlar)
+            if test_metrics['tats_trained'] and len(test_preds_per_model) >= 2:
+                test_metrics['tats'] = self._evaluate_tats_on_test(
+                    df, feat_df, meta_end, test_meta_X, ensemble_pred, y_test)
 
         # ------------------------------------------------------------------
         # 2) Deployment: base modelleri %80 veri ile yeniden egit.
@@ -392,6 +400,42 @@ class StackingEnsemble:
         self._save_ensemble_meta(symbol, model_results, test_metrics)
 
         return self._build_result(symbol, model_results, test_metrics, n, split)
+
+    def _evaluate_tats_on_test(self, df, feat_df, meta_end, test_meta_X, ensemble_pred, y_test):
+        """K21: test bolumunde TATS duzeltmesini uygula; TATS'siz ile ayni satirlarda metrik.
+
+        Duzeltme `predict_next` ile ayni yoldan: hedef fiyata cevrilir, `correct` uygulanir,
+        hedef birimine geri cevrilir. Mevcut fiyat ham kapanis (B10).
+        """
+        k = len(test_meta_X)
+        raw = df['close'].sort_index()
+        cur = raw.reindex(feat_df.index[meta_end:][-k:]).to_numpy(dtype=np.float64)
+        base = np.asarray(ensemble_pred, dtype=np.float64)[-k:]
+        corrected = base.copy()
+        n_applied = 0
+        for i in range(k):
+            pc = cur[i] * np.exp(base[i]) if self.target_type == 'log_return' else base[i]
+            new_pc, meta = self.tats_corrector.correct(pc, cur[i], test_meta_X[i])
+            if meta.get('applied'):
+                n_applied += 1
+                corrected[i] = np.log(new_pc / cur[i]) if self.target_type == 'log_return' else new_pc
+        y_t = np.asarray(y_test, dtype=np.float64)[-k:]
+
+        def tda(pred):
+            # Makaledeki TDA (Kazemdehbashi 2026, Denk. 3.1): tahmin edilen DEGISIMIN isareti.
+            # compute_metrics'in direction_accuracy'si fark tabanli (np.diff) ve TDA degil
+            # (hakem-2 K21 B1). log_return: sign(pred) == sign(y); fiyat: cari kapanisa gore.
+            if self.target_type == 'log_return':
+                pd_, td_ = pred, y_t
+            else:
+                pd_, td_ = pred - cur, y_t - cur
+            return float(np.mean(np.sign(pd_) == np.sign(td_)) * 100)
+
+        m_base = BasePredictionModel.compute_metrics(y_t, base)
+        m_corr = BasePredictionModel.compute_metrics(y_t, corrected)
+        m_base['tda'], m_corr['tda'] = tda(base), tda(corrected)
+        return {'n_rows': int(k), 'n_applied': int(n_applied),
+                'without_tats': m_base, 'with_tats': m_corr}
 
     @staticmethod
     def _tats_inputs(df: pd.DataFrame, feat_df: pd.DataFrame, base_end: int, meta_end: int,
@@ -629,6 +673,9 @@ class StackingEnsemble:
         """Once kullanicinin calisma alani, sonra ortak (eski) dizin."""
         return find_model_file(self._ensemble_meta_name(symbol))
 
+    def _tats_path(self, symbol: str) -> str:
+        return os.path.join(models_dir(), f'{self._model_id(symbol)}_{self.horizon}_tats.json')
+
     def _meta_learner_path(self, symbol: str) -> str:
         return os.path.join(models_dir(), f'{self._model_id(symbol)}_{self.horizon}_meta_learner.json')
 
@@ -655,6 +702,18 @@ class StackingEnsemble:
                 # Ridge: katsayilari JSON'a göm (geriye uyumluluk)
                 meta['meta_learner_coefs'] = self.meta_learner.coef_.tolist()
                 meta['meta_learner_intercept'] = float(self.meta_learner.intercept_)
+
+        # K21: TATS diske yazilir (eskiden yuklenen modelde TATS hic calismiyordu)
+        meta['use_tats'] = bool(self.use_tats)
+        tc = self.tats_corrector
+        if self.use_tats and tc is not None and tc.is_fitted():
+            tc.classifier.save_model(self._tats_path(symbol))
+            meta['tats_saved'] = True
+            meta['tats_params'] = {
+                'correction_factor': float(tc.correction_factor),
+                'flat_threshold': float(tc.flat_threshold),
+                'semantic_classes': [int(c) for c in tc._semantic_classes],
+            }
 
         path = self._ensemble_meta_path(symbol)
         with open(path, 'w', encoding='utf-8') as f:
@@ -712,8 +771,25 @@ class StackingEnsemble:
             self.meta_learner.intercept_ = meta['meta_learner_intercept']
             self.meta_learner.n_features_in_ = len(meta['meta_learner_coefs'])
 
+        # K21: TATS geri yuklenir. Dosyasi olmayan eski modelde TATS yok (onceki davranis).
+        self.use_tats = bool(meta.get('use_tats', self.use_tats))
+        self.tats_corrector = None
+        tats_path = os.path.join(
+            os.path.dirname(meta_path), f'{self._model_id(symbol)}_{self.horizon}_tats.json')
+        if meta.get('tats_saved') and _XGBOOST_AVAILABLE and os.path.exists(tats_path):
+            from xgboost import XGBClassifier
+            tp = meta.get('tats_params', {})
+            tc = TATSCorrector(correction_factor=tp.get('correction_factor', 0.5),
+                               flat_threshold=tp.get('flat_threshold', 0.005))
+            tc.classifier = XGBClassifier()
+            tc.classifier.load_model(tats_path)
+            tc._semantic_classes = np.array(tp.get('semantic_classes', [0, 1, 2]))
+            tc._is_fitted = True
+            self.tats_corrector = tc
+
         self._is_trained = True
-        logger.info(f"  Ensemble yuklendi: {len(self.base_models)} model")
+        logger.info(f"  Ensemble yuklendi: {len(self.base_models)} model"
+                    f"{' + TATS' if self.tats_corrector else ''}")
 
     def is_trained(self, symbol: str) -> bool:
         return self._find_ensemble_meta(symbol) is not None

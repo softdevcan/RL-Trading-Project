@@ -88,6 +88,14 @@ def main() -> int:
     with ws.use_workspace(alice_id):
         leaks = [d for d in shared_dirs if alice_id in os.path.abspath(d)]
     check("Ortak veri dizinleri kullaniciya gore degismiyor", not leaks, f"({leaks})")
+    # Faz 9 §9.17 Y24: tahmin CV deney kayitlari kullanicinin alanina yazilir
+    from prediction.trainer import _experiments_dir
+    with ws.use_workspace(alice_id):
+        exp_a = _experiments_dir()
+    with ws.use_workspace(bob_id):
+        exp_b = _experiments_dir()
+    check("CV deney kaydi kullanicinin alaninda (Y24)",
+          alice_id in exp_a and bob_id in exp_b and exp_a != exp_b, f"({exp_a}, {exp_b})")
 
     print("\n3) Eski ortak modeller salt-okunur gorunuyor")
     legacy_models = os.environ["MODELS_DIR"]

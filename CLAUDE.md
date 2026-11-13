@@ -135,7 +135,7 @@ python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni 
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
-python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (19 kontrol)
+python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC + CV deney dizini (20 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
@@ -144,7 +144,8 @@ python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontro
 python tests/test_cv_feature_selection.py  # Faz 9/B8: CV ozellik secimi kat ici; test y karisinca
                                            #          kume bit-es + mutasyon (13, < 1 dk)
 python tests/test_tats_labels.py           # Faz 9/B10: TATS uyum girdileri HAM kapanis + gercek
-                                           #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon (16, ~2 dk)
+                                           #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon; K21: TATS'li/TATS'siz
+                                           #          test + kaydet/yukle (22, ~2 dk)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
                                            #          gecikmesi, bfill yok (kesme
@@ -299,6 +300,12 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Meta-learner: Ridge (default) veya XGBoost (`meta_learner_type='xgboost'`)
 - TATS düzeltici: `use_tats=True` ile trend-adjusted output
 - Direction head: BiLSTM/TFT'nin `_predict_direction_raw()` çıktısı confidence hesabında kullanılır
+- TATS (Faz 9 B10 + K21): uyum girdileri HAM `df['close']`'tan (`_tats_inputs`; ICEEMDAN kolunda
+  `feat_df['close']` filtreli); test metriginde `ensemble_test_metrics['tats']` (TATS'li/TATS'siz);
+  `<model>_<ufuk>_tats.json` ile kaydedilir/yuklenir. Duzeltme ISARETI KORUR (makaledeki TDA degismez; `direction_accuracy` fark tabanli, TDA DEGIL,
+  degisebilir; TATS blogunda `tda` ayri) — makaledeki gibi yonu
+  cevirmez (§9.17 yontem farklari); 'TATS' kollari bu uyarlamayi olcer
+- BiLSTM/TFT egitim<->cikarim bir adim kayik (Y22, B11, acik) — DL OOF'u bir ufuk kayik
 
 ### evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover
