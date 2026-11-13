@@ -673,7 +673,7 @@ def main():
         check(f"{label}: split_data / raw_stock_data yok (bekci '{positive}' cagrisini goruyor)",
               res is not None and not res[0] and positive in res[1],
               str(res[0] if res else "fonksiyon bulunamadi"))
-    # Veri bilgi uclari da (data/info, data/generate) artik oranli bolme raporlamiyor:
+    # Veri bilgi ucu da (data/info; data/generate §9.13'te kaldirildi) oranli bolme raporlamiyor:
     # trading.py'nin TAMAMINDA split_data cagrisi yok ('raw_stock_data' dizesi veri
     # durumu uclarinda mesru oldugu icin burada yalniz cagri aranir).
     res = ast_hits(Path(ROOT, "app/api/routes/trading.py").read_text(encoding="utf-8"))

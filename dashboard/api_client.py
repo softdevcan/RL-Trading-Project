@@ -318,10 +318,6 @@ def get_data_list() -> List[Dict]:
     return []
 
 
-def generate_data(payload: Optional[Dict] = None) -> Dict:
-    return _post("/trading/data/generate", json=payload or {}) or {}
-
-
 def get_data_status() -> Dict:
     return _get("/trading/data/status") or {}
 

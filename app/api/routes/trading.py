@@ -512,66 +512,10 @@ async def get_model_metrics(model_name: str):
     return ModelMetrics(**metrics)
 
 
-@router.post("/data/generate")
-async def generate_data(
-    user: RequireWriter,
-    phase: int = 1,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-):
-    """
-    Generate fresh stock data with indicators
-
-    Args:
-        phase: Trading phase (1, 2, or 3)
-        start_date: Start date in YYYY-MM-DD format (default: 2018-01-01)
-        end_date: End date in YYYY-MM-DD format (default: today)
-    """
-    try:
-        from data.data_fetcher import DataFetcher
-        from data.bist30_symbols import get_symbols
-        from data.technical_indicators import add_indicators_to_multi_symbol_df
-
-        # Get symbols for phase
-        symbols = get_symbols(phase=phase)
-
-        # Create fetcher with date range
-        fetcher = DataFetcher(
-            start_date=start_date or "2018-01-01",
-            end_date=end_date if end_date is not None else None
-        )
-
-        # Fetch data
-        df = fetcher.fetch_stock_data(symbols, save=True)
-
-        # Clean data
-        df = fetcher.clean_data(df)
-
-        # Add technical indicators
-        df = add_indicators_to_multi_symbol_df(df)
-
-        # Save
-        fetcher.save_data(df, 'stock_data_with_indicators.csv')
-
-        # Faz 9 / R1: eskiden `split_data` (70/15/15) satir sayilari donuyordu; egitim o
-        # bolmeyi artik kullanmiyor. Panelin hangi walk-forward katlarini kapsadigi doner.
-        from evaluation.splits import fold_coverage, get_spec
-
-        return {
-            "status": "success",
-            "message": "Data generated successfully",
-            "symbols": symbols,
-            "total_rows": len(df),
-            "split_spec": get_spec().name,
-            "folds": fold_coverage(df),
-            "columns": df.columns.tolist(),
-            "date_range": {
-                "start": str(df.index.get_level_values('date').min().date()),
-                "end": str(df.index.get_level_values('date').max().date())
-            }
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Faz 9 §9.13: eski POST /data/generate kaldirildi. Pano tarihleri JSON govdesinde
+# gonderiyor, uc sorgu parametresi bekliyordu; her cagri faz 1'in 5 sembolluk 2018
+# panelini ham ve gostergeli CSV'nin ustune yaziyordu (wf-v1 katlari kurulamazdi).
+# Paneli tazelemenin yolu POST /data/update (mode='full').
 
 
 @router.get("/data/info")
@@ -586,7 +530,7 @@ async def get_data_info():
         if not os.path.exists(f'{_settings.DATA_DIR}/stock_data_with_indicators.csv'):
             return {
                 "status": "no_data",
-                "message": "No data found. Please generate data first."
+                "message": "No data found. Download data first (Veri sayfasi: Yeniden Indir (tam))."
             }
 
         df = fetcher.load_data('stock_data_with_indicators.csv')

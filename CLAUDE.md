@@ -134,7 +134,7 @@ python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans)
 python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
-python tests/test_auth.py                  # Faz 7: oturum akisi (28 kontrol)
+python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (18 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
@@ -454,8 +454,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
   olcekler, gecmis temettu carpanlari revize edilebilir; 2026-11-11'de SKBNK). Bir sonucu
   yeniden uretirken veriyi yeniden INDIRME; panel SHA-256'si ve anlik goruntu (C3) ile calis.
   Yedekler `data/bist/backup_<tarih>/` (git disi). Paneli tazelemenin yolu Veri sayfasi
-  "Yeniden Indir (tam)"; legacy "veri uret" (`/data/generate`) panelin USTUNE 5 sembollu
-  2018 paneli yazar (Faz 9 §9.11 bulgu 6, kaldirilacak).
+  "Yeniden Indir (tam)". Legacy "veri uret" (`/data/generate`) panelin USTUNE 5 sembollu
+  2018 paneli yaziyordu; dugme + uc kaldirildi (Faz 9 §9.13). Geri getirme.
 - **Tarayici surekli yuksek ama sicramayan seviyeyi YAKALAMAZ** (TUPRS 2000-2003 > 10.000 TL
   satirlari "level_jump" degil). Bu satirlar pencere disinda; pencereyi geri cekme.
 - **`TradingEnv(missing_data_mode=...)`**: `'legacy'` (varsayilan, egitilmis modeller) eksik

@@ -1116,6 +1116,18 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | H2.2 | hakem-2 (2. okuma) | KÜÇÜK | Rota uyarısı pencereyi metne sabit yazıyor | **Kabul, düzeltildi:** uyarı `exposed_windows_overlapping` ile listeden üretiliyor |
 | H2.3 | hakem-2 (2. okuma) | KÜÇÜK | Ölçümler kirli ağaçta (kullanıcının yeniden adlandırması commit'lenmemiş) | **Beyan.** Kod commit'leri değişmedi; yeniden adlandırma kullanıcının işi |
 
+### 9.13 `/data/generate` kaldırıldı (2026-11-14, dal `feat/phase9-remove-data-generate`)
+
+**Kapsam.** §9.11 bulgu 6 (plan dışı, veri kaybı riski); kullanıcı onayı R1 öncesinde verildi. Kod paketi değil, yüzey temizliği: RL ve tahmin hattının davranışı değişmez.
+
+- Kaldırılanlar: Veri sayfasındaki "Veri Üret (eski)" düğmesi ve callback'i ([dashboard/pages/data.py](../../dashboard/pages/data.py)), `api_client.generate_data`, `POST /api/trading/data/generate` ([trading.py](../../app/api/routes/trading.py)). Paneli tazelemenin tek yolu Veri sayfası "Yeniden İndir (tam)" (`POST /data/update`, `mode='full'`).
+- `test_auth` §4 CSRF kontrolü bu ucu kullanıyordu. Middleware CSRF'yi rota eşleşmesinden önce uyguladığı için uç silinince test **içi boş yeşil** kalırdı (var olmayan uç da 403). Kontrol, aynı testte başlıkla 201 alan `POST /api/admin/users`'a taşındı; reddedilen isteğin kullanıcı açmadığı da denetleniyor (28 → 29 kontrol).
+- **Kanıt.**
+  - `python tests/test_auth.py` 29/0; `test_dash_props` 4/0; `test_workspace_isolation` 18/0; `test_theme_contrast` 92/0; `test_topbar` 39/0; `test_rl_walk_forward` 90/0 (CPU).
+  - Uygulama uç tablosunda `data/generate` yok; `POST /api/trading/data/generate` → 404. Veri sayfası düzeninde `data-generate-btn` yok, `data-full-btn` var.
+  - Panel kaldırmadan önce bozulmamıştı: `data/bist/raw_stock_data.csv` `d3f39d9f…` ve `stock_data_with_indicators.csv` `3aec450d…`, `backup_2026-11-11/SHA256SUMS.txt` ile birebir (`sha256sum`).
+- **Plan dışı yan bulgu (açık, düzeltilmedi).** `POST /api/trading/analysis/generate-report` `RequireWriter` taşımıyor: viewer arka planda `generate_academic_report.py` alt süreci başlatabiliyor. Betik D5'e kadar çıkış 2 ile durduğu için bugünkü etkisi sınırlı; CLAUDE.md "yazma ucunda RBAC'ı atlama" kuralına aykırı.
+
 ---
 
 ## Versiyon geçmişi
@@ -1151,3 +1163,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-09 (K26):** kullanıcı kararı (a), yalnız beyan. Eski ortam sadık Ansari replikasyonu olarak kalıyor; ölçeksiz özellik adayları (`tanh(macd/σ_t)`, `tanh(turb/n)`) M2 `obs_spec`'ine taşınıyor. Gerekçe Faz 10 §6 K26.
 - **2026-11-13 (R1):** RL walk-forward bölmesi `wf-v1` (6 kat, test 2021..2026, purge 0 kat sınırında B0 ile ölçüldü), doğrulamada kontrol noktası seçimi (10 nokta, fazla getiri Sharpe'ı) ve HPO'nun rotanın yolunda çalışması (Y21 kapandı) — §9.11. Kabul: `tests/test_rl_walk_forward.py` (75). Kat ölçümü 6 × 2: hiçbir kat/kol temiz değil (türbülans, K26); nedensel kolda erken katlar fiyatta %1,6–2,7 destek dışı. Veri tam yeniden indirildi; aynı kapıyla fark yalnız 5 tatil satırı (hayalet gün 72 → 67). Yeni bulgular: pano HPO penceresi test dönemini içeriyordu ve budama ölüydü (kapandı); HPO sampler tohumsuz (açık); `/data/generate` veri kaybı riski (plan dışı, ayrı iş). Literatür: Varma & Simon 2006, Cawley & Talbot 2010, Eimer vd. 2023.
 - **2026-11-14 (R1 paneli):** hakem-rl ve hakem-finans Küçük revizyon, hakem-2 Büyük revizyon (RED yok) — §9.12. Kullanıcı kararları: seçim metriği korunur, tanı kayda; argmax ↔ son nokta M8'e; okunmuş test pencereleri ölçülen bayrakla (`eval_window_unexposed`; 2024–2026 doğrulayıcı değil). Yeni madde `fundamentals_pit`. Gerçek panelde seçim metriği tanısı (2025'te 10/10 negatif, ayırt edici değil) ve geniş B0 ailesi bit-eş. `test_rl_walk_forward` 90.
+- **2026-11-14 (§9.13):** legacy "veri üret" düğmesi ve `/data/generate` kaldırıldı (§9.11 bulgu 6). `test_auth` CSRF kontrolü içi boş kalmasın diye başlıkla kabul edilen aynı uca taşındı (29). Yan bulgu: `/analysis/generate-report` RBAC'sız (açık).
