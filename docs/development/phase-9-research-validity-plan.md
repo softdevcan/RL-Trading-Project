@@ -904,6 +904,138 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 - **N1:** pencere içinde listelenen sembol, bağlamda satırı olmadığı için seri başı listesine girmiyordu. Hata güvenli yöndeydi; gerçek panelde etkisi yok. Düzeltildi, test C'ye eklendi.
 - **N2:** W=63 ifadeleri düzeltildi.
 
+### 9.11 R1 — RL walk-forward bölmesi, kontrol noktası seçimi, ortak HPO yolu (2026-11-13, dal `feat/phase9-r1-walk-forward`)
+
+**Kapsam.**
+- Faz 10 §8 #8 → K20: RL katları, purge, doğrulamada kontrol noktası kuralı.
+- Y21: HPO göstergesiz bir ortamda arıyordu.
+- §9.6 #14: HPO → rota seçim soyu.
+- Tasarım 2026-11-10'da kullanıcıyla onaylandı. Çıkarım birimi, MDE ve kol budama K20'ye göre M8'de.
+
+**Tasarım kararları.** "Tasarım varsayımı" yazanlar kaynağa değil gerekçeye dayanıyor.
+
+| Karar | Değer | Gerekçe ve kanıt |
+|---|---|---|
+| Bölme | `wf-v1` (özet `33a196c602976de1`): 6 kat, test = takvim yılı 2021..2026 (2026: 2026-11-01'e kadar, hariç), doğrulama = bir önceki yıl, eğitim 2013-06-01'den genişleyen (K17) | Sabit tarihli ve sürümlü ([evaluation/splits.py](../../evaluation/splits.py)). Eskiden 70/15/15 oranla bölünüyordu; panel uzadıkça sınırlar kayıyordu (Y17). Tanım değişmez, uzatma yeni sürümdür (wf-v2). Rota ve HPO pencereyi yalnız buradan alır |
+| 2013-06 öncesi | Alınmadı | Pencereyi geri çekmek panelin en geç başlayan sembollerini düşürür: PGSUS 2013-04-26, ODAS 2013-05-21 (Faz 10 Ek A komut 1). Eski ortam etkin olmayan sembolü maskeleyemiyor. Kullanıcı notu: eski veri performansı iyileştirirse alınabilir. M2 aktiflik maskesiyle denenebilir |
+| Purge | 0 seans | Eski ortamda ödül ufku bir adım; ortam kendi penceresinin son gününde bitiyor. **Varsayılmadı, ölçüldü:** kat sınırında B0 (aşağıda test B). Ufuk büyürse (Faz 10 K12, t+1 açılış) test kırılır ve değer yükseltilir |
+| Kontrol noktası | Bütçe boyunca 10 eşit aralıklı nokta, sonuncusu bütçe sonu. Her noktada doğrulama bloğunda belirlenimci tek geçiş. Seçim: risksiz faiz üstü yıllık Sharpe'ın argmax'ı, eşitlikte en erken adım. Erken durdurma ve yeniden uyum yok | Tasarım varsayımı (N = 10; bir yıllık doğrulamada yıllık Sharpe'ın standart hatası kabaca 1). Kollar eşit ortam adımı alır. Test yalnız seçilen modelle, bir kez okunur. Seçimde kullanılan tahminin seçilen model için yanlı olması: Varma & Simon 2006; Cawley & Talbot 2010 (özetten) |
+| Seçim metriği | `val_excess_sharpe`; risksiz faiz `evaluation/risk_free.py`'den (A8) | Seri yoksa rf = 0 ve kayıt açık (`selection_metric='val_sharpe_rf0'`); sabite sessizce düşülmez |
+| HPO | (a) yalnız ilk katta: 2021 katının doğrulaması (2020) bütün testlerden önce bitiyor. Panel, kat ve ortam rotayla aynı. Amaç = en iyi kontrol noktasının doğrulama metriği. Budama aynı metrikten; bütçenin ilk yarısında budama yok | Y21 kapandı: HPO göstergeli CSV'yi, `wilder` ADX'i, veri kapısını ve nedensel kolu rotayla aynı yoldan alıyor. Ayar tohumu kayda giriyor; rota soyu ölçüyor (`hpo_lineage`). Ayar ve sınama tohumlarının ayrılması: Eimer vd. 2023 (özetten) |
+
+**Deneme kaydı ([evaluation/trial_registry.py](../../evaluation/trial_registry.py)).**
+- Yeni protokol maddeleri:
+  - `split_from_spec`: pencereler kanonik tanımdan mı?
+  - `selection_metric`: R1 öncesi kayıtlar bu maddeleri taşımadığı için açık sayılır.
+- `test_reread` etiketi: aynı yapılandırma × tohum × kat × bölme × veri ikinci kez okununca konur. Kayıt N'ye sayılır ama kanıt sayılmaz; varsayılan okuma dışlar.
+- Farklı katlar ya da bölme tanımları tek N/V'de karışmaz (`sharpe_trial_stats` hata verir). Katlar arası birleştirme kuralı M8'de.
+- `hpo_lineage` maddeleri:
+  - `hpo_window_after_test_start`
+  - `hpo_seed_reused`, `hpo_seed_unknown`
+  - `hpo_universe_mismatch`, `hpo_split_mismatch`, `hpo_obs_mismatch`
+  - Ortam kurulmadan düşen bir HPO denemesinin `price_norm=None`'u soyu açar. Hata güvenli yönde; beyan edilir.
+
+**Kabul.** `python tests/test_rl_walk_forward.py` → 75 kontrol, ~35 sn, CPU. Her grupta testi gerçekten kırdığı gösterilen bir mutasyon var.
+
+| Grup | Ölçüt | Mutasyon |
+|---|---|---|
+| A bölme | wf-v1 sabit (özet). [eğitim başlangıcı, test bitişi) içindeki her seans tam bir blokta: örtüşme ve boşluk yok. Tamamlanmamış test ve eksik eğitim başlangıcı hata verir. `fold_coverage` 2018'de başlayan paneli "tamam" saymaz | Sınır bir gün kayınca özet değişir |
+| B kat sınırı B0 | Sentetik OHLCV → gerçek gösterge hattı → `load_rl_panel` → `build_fold` → `make_fold_env`. Sınırdan sonraki fiyatlar değişince önceki ortamın gözlem + ödül + portföy izi bit-eş (`stats`, `causal`); sonraki ortamın izi değişir | (i) Eğitime doğrulamanın ilk seansı eklenir; (ii) ADX bir gün ileriden okunur. İkisi de yakalanır |
+| C test seçime sızmıyor | Rota uçtan uca: test bloğu değişince seçim (10 noktanın metrikleri) ve seçilen ağırlıklar bit-eş, test metriği değişir. Aynı koşum tekrarı bit-eş ve `test_reread` alır. Seçim son nokta değilse kaydedilen model seçilen noktanınki | Doğrulama ortamı test bloğundan kurulursa seçim değişir |
+| D geri çağrı | Geri çağrı açık/kapalı son ağırlıklar bit-eş (A2C, PPO; PPO'da ölçüm rollout ortasına düşer) | Stokastik ölçüm |
+| E ortak yol | Aynı kat ve kolda HPO'nun eğitim ve doğrulama ortamları rotanınkilerle bit-eş iz üretir (`stats`, `causal`) | HPO ADX'i yeniden hesaplamazsa iz ayrışır |
+| F AST | Rota eğitim fonksiyonu, HPO optimizer'ı ve HPO rotasında `split_data` ve `raw_stock_data` yok; `trading.py`'nin tamamında `split_data` yok | Bekçi öz-testi |
+| G kayıt | Kat karışımı hatası, `test_reread`, `hpo_lineage` maddeleri. wf-v1 rota kaydında `split_from_spec=True`; rf yoksa `selection_metric` açık | Her madde tek değişiklikle tetiklenir |
+| H uçlar | HPO'da eski tarih alanı → 400, bilinmeyen kat → 400. `/train`'de bilinmeyen kat → 400 ve görev başlamaz | — |
+
+Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
+
+**Ölçüm (eğitimsiz).**
+- Komut: `python scripts/analysis/measure_r1_folds.py --old-panel data/bist/backup_2026-07-27/raw_stock_data.csv --dividends --old-indicator-panel data/bist/backup_2026-07-27/stock_data_with_indicators.csv --out docs/development/measurements/phase9-r1/folds.json`
+- Ölçüm commit `27c4887` üzerinde, temiz ağaçta koşuldu.
+- Gösterge CSV'si 2005-01-03..2026-11-09; frame SHA-256 `7a9f5d4d…`, dosya `3aec450d…`. RL paneli `008e3b11…`.
+- Ortam ayarları eğitim isteğinin varsayılanları (faz 1, basit ödül).
+- Model eğitilmediği için `selection_metric` ölçülemez; tablodaki açık maddeler JSON'daki `open_items_env`.
+
+| Kat | Seans (eğitim / doğrulama / test) | `stats`: fiyat destek dışı (doğr. / test) | `causal`: fiyat destek dışı (doğr. / test) | `causal`: açık maddeler (doğr.; test) |
+|---|---|---|---|---|
+| 2021 | 1.651 / 251 / 249 | %20,0 / %51,0 | %1,96 / %2,69 | price, obs, features, dims; price, obs, features, dims |
+| 2022 | 1.902 / 249 / 252 | %35,6 / %81,7 | %2,11 / %2,26 | price, obs, features, dims; price, obs, features, dims |
+| 2023 | 2.151 / 252 / 249 | %57,3 / %96,7 | %1,63 / %0,28 | price, obs, features, dims; obs, features, dims |
+| 2024 | 2.403 / 249 / 249 | %49,1 / %83,9 | %0,01 / %0,00 | obs, features, dims; obs, features, dims |
+| 2025 | 2.652 / 249 / 251 | %60,0 / %71,1 | %0,00 / %0,00 | obs, features, dims; obs, features, dims |
+| 2026 | 2.901 / 251 / 207 | %22,2 / %48,3 | %0,00 / %0,04 | obs, dims; obs, features, dims |
+
+*Kısaltmalar: price = `price_in_support`, obs = `obs_health`, features = `features_in_support`, dims = `dims_in_support`.*
+
+**Okuma.**
+- Her kat ve kolda 30 sembol var. Düşen sembol ve ölçek yedeği yok; 6 katın hepsi panelde tamam (`fold_coverage`).
+- **Hiçbir kat ve kol protokolde temiz değil.**
+  - Türbülans eğitimde ve değerlendirmede %99,6–100 doygun (`obs_health`). K26 = (a) olduğu için bu kalıcı.
+  - MACD (eski tanım) her katta sembol düzeyinde destek dışı; en kötü sembol %15 (EKGYO, 2026 doğrulama) ile %90 (SASA, 2021 test) arasında.
+- **Kollar yalnız fiyatta ayrışıyor.** Hacim, MACD, RSI, CCI, ADX ve türbülansın destek dışılığı her katta iki kolda birebir aynı (JSON). Bu K25/K26 tasarımıyla tutarlı.
+- **`stats` kolu:** test fiyatlarının %48–97'si eğitim desteği dışında (B9'un bedeli, §9.5). Oran kattan kata değişiyor.
+- **`causal` kolu:** destek erken katlarda dar.
+  - 2024–2026'da fiyat destek içinde (≤ %0,04).
+  - 2021–2022'de (doğrulama ve test) ve 2023 doğrulamada %1,6–2,7 destek dışı; `price_in_support` açık.
+  - K18'deki tek bölmede (test 2024-08-06..2026-07-27) bu oran %0,03'tü.
+  - Eğitim penceresi kısaldıkça nedensel z'nin desteği daralıyor. §9.9'daki "destek içinde kalması garanti değil" uyarısı burada kat başına ölçülmüş oldu.
+- **Eşik duyarlılığı.** Havuzlu hacim destek dışılığı kat başına %0,01 (2025 doğrulama) ile %6,6 (2021 doğrulama) arasında. Sembol düzeyinde SASA hacmi 2026 testinde %60,9.
+  - Havuzlu eşik kat seçimine duyarlı. §9.9'daki "eşikler gürültüye yakın" notu kat başına doğrulandı.
+  - Eşik duyarlılığı M8'de.
+- **Nedensel eğitim bağlamı** (2012-05-22..2013-05-31) K18'le birebir aynı: 18 hayalet gün, 12 bayat hücre. Pencere dolmadan geçen eğitim satırı 492, nötr satır 28; seri başı yalnız ODAS ve PGSUS.
+
+**Veri tazelemesi (2026-11-11, kullanıcı: tam yeniden indirme).**
+- **Panel.**
+  - Ham ve göstergeli CSV 2005-01-03..2026-11-09. yfinance 2005 öncesini artık vermiyor; eski panel 2000-05-10'da başlıyordu.
+  - Eski panelin yedeği `data/bist/backup_2026-07-27/`; yenisinin yedeği `data/bist/backup_2026-11-11/` (SHA256SUMS ile).
+  - Fiyatı ≤ 0 satır: eskide 8.155, yenide 0.
+  - Tam panelde (JSON `gate.full_panel`): hayalet gün 117, bayat hücre 585, eksik hücre %5,33, artefakt 10 (8 `ohlc_inconsistent`, 2 `extreme_return`; hepsi pencere dışında), büyük hareket 27.
+- **RL penceresi** (JSON `gate.window`):
+  - 102.900 satırdan 100.834'e; 3.365 tarih.
+  - Hayalet gün 67, bayat hücre 39, eksik hücre %0,115, artefakt 0, büyük hareket 14.
+  - Isınma atımı ODAS 17, PGSUS 24.
+- **Fark veriden mi koddan mı** (JSON `gate_same_code`: aynı güncel kapı, eski panel ↔ yeni panelin 2026-07-27'ye kesilmişi):
+  - Satır (98.614), tarih (3.291), eksik hücre (%0,117), bayat hücre, ısınma atımı ve büyük hareket (13) **birebir aynı**.
+  - Tek fark hayalet gün: 72 ↔ 67. Eksilen beş gün 2026 tatilleri (23 Nisan, 1 Mayıs, 27–29 Mayıs Kurban Bayramı). Eski panelde bu günlere ait 92 düz satır vardı; yfinance bunları artık vermiyor.
+  - Önceki notlardaki "eksik hücre %0,076 → %0,115" farkı **koddan**. %0,076 §9.1'de, gösterge ısınma atımları (B7, K18) eklenmeden önce ölçülmüştü: 116 − (ODAS 17 + PGSUS 24) = 75 hücre = %0,0760.
+- **Fiyatlar** (JSON `panel_refresh`; pencere 2013-06-01..2026-07-27, 100.680 ortak satır):
+  - 26 sembolde kapanış oranı 1 ve getiri farkı ≤ 1,1e-6, yani yuvarlama.
+  - BIMAS (0,99399), TAVHL (0,99354) ve TUPRS (0,98240) sabit çarpanla ölçeklenmiş. Üçü de eski indirmeden sonra temettü almış: 2026-09-16, 09-22, 09-30 (yfinance, JSON `panel_refresh.dividends`).
+  - SKBNK'nin oranı 1,00955'ten 1'e dört basamakta iniyor: 2023-04-10, 2024-05-13, 2025-06-24, 2026-06-08. Bunlar yfinance'teki SKBNK temettü tarihleri; aynı geçmiş temettülere iki indirmede farklı düzeltme çarpanı uygulanmış. Sağlayıcının neden revize ettiği doğrulanamadı.
+  - Günlük log-getiri yalnız bu 4 günde farklı (en fazla 0,0041).
+- **Ders:** auto_adjust edilmiş yfinance paneli değişmez değil; tam indirme geçmişi geriye dönük değiştirebiliyor. Bir sonuç yeniden üretilecekse veri yeniden indirilmez, anlık görüntü (C3) kullanılır. Veri kapısı tek paneldeki bozukluğu yakalar; iki indirme arasındaki farkı panel SHA-256'sı ayırır.
+- B9 ve K18 ölçüm JSON'ları eski panelin SHA'sına ait ve tarihsel kayıt olarak değişmez.
+
+**Bu paketin bulguları.**
+1. Panoda HPO doğrulama penceresi CSV'nin sonuna uzanıyordu; rotanın test dönemini içeriyordu. **Kapandı:** kat seçici.
+2. HPO budaması fiilen ölüydü: rapor adımı 0, 1, 2…, `n_warmup_steps=10000`. **Kapandı:** rapor adımı kontrol noktası sırası, değer doğrulama metriği.
+3. HPO'nun Optuna sampler'ı tohumsuz. API `seed=None` veriyor; ayar tohumu `optimize()`'da üretilip modellere geçiyor, ama sampler kurucuda tohumsuz kuruluyor. Arama tekrar üretilemez. **Açık.**
+4. `/train` bilinmeyen katı arka plan görevinde fark ediyordu. **Kapandı:** 400.
+5. Veri uçlarının kat kapsamı yalnız test bitişine bakıyordu; 2018'de başlayan paneli her katta "tamam" gösterirdi. **Kapandı:** `fold_coverage` eğitim başlangıcını da denetliyor.
+6. **Plan dışı, veri kaybı riski.** Panodaki "legacy veri üret" düğmesi tarihleri JSON gövdesinde gönderiyor, `/data/generate` ise sorgu parametresi bekliyor. Her basış faz 1'in 5 sembolüyle 2018'den başlayan bir panel üretip ham ve göstergeli CSV'nin ikisinin de üzerine yazıyor; sonrasında wf-v1'in hiçbir katı kurulamaz. Yedek alındı. **Öneri (kullanıcı onayı, R1 sonrası ayrı iş):** düğme ve uç kaldırılır; doğru yol Veri sayfası "Yeniden İndir (tam)".
+7. Literatür hattı: `resolve.py` toptan yeniden çözümde tablonun atıf sayılarını değiştiriyor. R1 kaynaklarından yalnız üç kayıt birleştirildi (literature-review-verification §8.5); toptan yenileme ayrı iş.
+
+**Kapanan açıklar.** §9.9 "HPO'da nedensel kol ve göstergeler (R1)"; §9.5 Y21; §9.6 #14 (soy kayıt tarafı: `hpo_lineage`); §9.2 #3 (tek bölme, test yapılandırma başına bir kez: `test_reread`).
+
+**Etkileri.**
+- Rota artık son adımdaki modeli değil, doğrulamada seçileni kaydedip sınıyor. Meta, manifest ve kayıt `split_spec`, `fold`, `selected_step` ve `selection_metric` taşıyor.
+- Varsayılan kat, panelin tamamladığı son kat (bugün 2026).
+- HPO API'si eski tarih alanlarını 400 ile reddediyor. CLI'da evren varsayılanı rotanın evreni (panelin tüm sembolleri).
+- R1 öncesi deneme kayıtları açık sayılıyor (ihtiyatlı).
+- K18 ölçüm betiği (`measure_obs_health.py`) bilerek `split_data`'da kaldı: §9.9 sayılarını yeniden üreten arşiv ölçümü.
+
+**Açık kalanlar.**
+- HPO sampler tohumu (bulgu 3).
+- `/data/generate` (bulgu 6), R1 sonrası.
+- Çıkarım birimi, katlar arası birleştirme, MDE, kol budama (M8, K20).
+- Kat başına HPO yok (karar (a)); maliyeti kat sayısı kadar.
+- Eşik duyarlılığı (M8).
+- GPU belirlenimciliği (§9.6 #5; testler CPU'da).
+- 2013-06 öncesi veri (M2 aktiflik maskesi).
+- Canlı karar paritesi (K13): meta `fold` ve `selected_step` taşıyor, canlı karar okumuyor.
+- Seçim protokolü kaynaklarının tam metni (verification §8.4).
+
 ---
 
 ## Versiyon geçmişi
@@ -937,3 +1069,4 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 - **2026-11-06 (B7):** gösterge ısınma `bfill`'i bayrakla kalktı; RL kapısı bfill bloğunu atıyor (gerçek panelde ODAS 10, PGSUS 17 satır). Protokolde `indicator_bfill` artık ölçülüyor. K18 için bulgu: ADX hesabı tümüyle NaN üretiyor (§9.7). hakem-2 (§9.8): "Büyük revizyon"; dedektör türbülansın nedensel 0 başını blok sanıyordu, düzeltildi. Paketli inceleme ~144 bin token.
 - **2026-11-09 (K18 + K25 b):** K25 kararı (b). ADX'in kök nedeni indeks hizalaması; `wilder` bayrağı rota varsayılanı oldu (iki bağımsız referans). Eski ortama opt-in nedensel fiyat ölçeği eklendi (`price_norm='causal'`, W=252; MACD aynı ölçekle). Yeni ölçülen protokol maddeleri: `obs_health` ve `features_in_support`. Gerçek panelde nedensel kol test fiyatlarının havuzlu destek dışılığını %98,9'dan %0,03'e indiriyor. Doğrulamada sembol düzeyinde aşım sürüyor (`dims_in_support`). Türbülans doygunluğu yüzünden eski ortamın hiçbir kolu `obs_health`'ten geçmiyor; MACD, türbülans ve hacim için karar K26 önerildi. B7 ölçütünün yanlış pozitifi bulunup düzeltildi. Panel (§9.10): hakem-rl iki okuma (Büyük → Küçük revizyon), hakem-2 Büyük revizyon (RED yok). Düzeltmeler: boyut düzeyi kapı, MACD varsayılanı geri alındı, `causal_short_context`, klasik Wilder tohumu, sembol başına bağlam.
 - **2026-11-09 (K26):** kullanıcı kararı (a), yalnız beyan. Eski ortam sadık Ansari replikasyonu olarak kalıyor; ölçeksiz özellik adayları (`tanh(macd/σ_t)`, `tanh(turb/n)`) M2 `obs_spec`'ine taşınıyor. Gerekçe Faz 10 §6 K26.
+- **2026-11-13 (R1):** RL walk-forward bölmesi `wf-v1` (6 kat, test 2021..2026, purge 0 kat sınırında B0 ile ölçüldü), doğrulamada kontrol noktası seçimi (10 nokta, fazla getiri Sharpe'ı) ve HPO'nun rotanın yolunda çalışması (Y21 kapandı) — §9.11. Kabul: `tests/test_rl_walk_forward.py` (75). Kat ölçümü 6 × 2: hiçbir kat/kol temiz değil (türbülans, K26); nedensel kolda erken katlar fiyatta %1,6–2,7 destek dışı. Veri tam yeniden indirildi; aynı kapıyla fark yalnız 5 tatil satırı (hayalet gün 72 → 67). Yeni bulgular: pano HPO penceresi test dönemini içeriyordu ve budama ölüydü (kapandı); HPO sampler tohumsuz (açık); `/data/generate` veri kaybı riski (plan dışı, ayrı iş). Literatür: Varma & Simon 2006, Cawley & Talbot 2010, Eimer vd. 2023.

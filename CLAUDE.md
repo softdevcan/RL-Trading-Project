@@ -160,7 +160,7 @@ python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetim
                                            #          smoke (84 kontrol)
 python tests/test_eval_stats.py            # Faz 9/A: DSR makale ornegi, DM/LW boyut
                                            #          simulasyonu, MCS, rliable, PBO,
-                                           #          BH, risksiz faiz (50 kontrol, ~45 sn)
+                                           #          BH, risksiz faiz (51 kontrol, ~45 sn)
 python tests/test_data_integrity.py        # Faz 10/V: artefakt, hayalet gun, RL
                                            #          penceresi, gercek panel saglik (27)
 python tests/test_env_missing_mode.py      # Faz 10/V: env eksik hucre modu (17)
@@ -170,12 +170,15 @@ python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim 
                                            #          env + rota + HPO uctan uca, mutasyon,
                                            #          main ile bit-es varsayilan (git show, 11
                                            #          yapilandirma), olcek kokeni, destek, AST
-                                           #          bekcisi, sarmalayicili betikler (103)
+                                           #          bekcisi, sarmalayicili betikler (106)
 python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i — B0 kesme
                                            #          degismezligi, RL kapisi, olculen protokol (28)
 python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
                                            #          causal fiyat olcegi B0 + mutasyon, obs_health,
                                            #          main ile bit-es, rota uctan uca (109)
+python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
+                                           #          kaniti), test secime sizmiyor, geri cagri
+                                           #          bit-es, rota<->HPO ayni gozlem, kayit (75, ~35 sn)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -331,17 +334,18 @@ borsapy/yf     → gold_fetcher.py       ─┘
 ### Sembol evreni ve train/test bolmesi (ONEMLI)
 - Gozlem uzayi sembol sayisina bagli: `1 + n + 5n + 5n`. 5 sembol -> 56,
   30 sembol -> 331 ozellik.
-- `DataFetcher.split_data()` **KRONOLOJIK** boler ve sembol uyelugine bakmaz.
-  Sembollerin gecmisleri esit degilse bolumlerin sembol sayisi FARKLI cikar:
-  ```
-  train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
-  test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
-  ```
-  Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict` asamasinda
-  `Unexpected observation shape` ile patliyor ve HICBIR kosum tamamlanamiyordu.
-- Egitim rotasi artik val/test'i **egitim bolumunun sembol evrenine hizaliyor**
-  ve dusen sembolleri `training_state["warnings"]` ile panoya tasiyor. Sessiz
-  hizalama YAPMA: kullanici 30 sembol sandigi modeli 5 sembolle egitmis olur.
+- **RL bolmesi `evaluation/splits.py`'den (Faz 9 R1):** rota ve HPO katlari `WF_V1`'den
+  (`get_spec`, `fold_frames`) ve `evaluation/rl_folds.build_fold` ile alir; oranli
+  `DataFetcher.split_data()` (panel uzadikca kayan sinirlar) RL'de kullanilmaz.
+  Tanim DEGISMEZ (ozet testte sabit): uzatmak yeni surumdur (wf-v2). Secim yalniz
+  dogrulama blogunda (10 kontrol noktasi, fazla getiri Sharpe'i); test secilen modelle
+  bir kez okunur. Purge 0 kat sinirinda B0 ile olculu; odul ufku buyurse (K12)
+  `tests/test_rl_walk_forward.py` kirilir. Ayrinti: Faz 9 §9.11.
+- Sembollerin gecmisleri esit degilse bloklarin sembol sayisi FARKLI cikar (eskiden
+  56 ozellikle egitilen model 331 ile degerlendirilip SB3 `predict`'te patliyordu).
+  `build_fold` val/test'i **egitim blogunun sembol evrenine hizalar** ve dusen sembolu
+  raporlar; rota `training_state["warnings"]` ile panoya tasir. Sessiz hizalama YAPMA:
+  kullanici 30 sembol sandigi modeli 5 sembolle egitmis olur.
 - Kalici cozum veride: eksik sembollerin tam gecmisini indir (Veri sayfasi ->
   "Yeniden Indir (tam)").
 
@@ -420,9 +424,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Test: `python tests/test_panel_freshness.py` (21 kontrol)
 
 ### Veri butunlugu (ONEMLI)
-- **`raw_stock_data.csv` HAM veridir** — 8.155 satirda negatif fiyat var (yfinance'in
-  2005 TL sadelestirmesi oncesi duzeltme artefaktlari, 2000-05-10..2004-08-30, 10 sembol).
-  **Bu dosyayi TradingEnv'e vermeden once mutlaka `DataFetcher.clean_data()` cagir.**
+- **`raw_stock_data.csv` HAM veridir — TradingEnv'e vermeden once mutlaka
+  `DataFetcher.clean_data()` cagir.** 2026-07-27 indirmesinde 8.155 negatif fiyat satiri
+  vardi (2005 TL sadelestirmesi oncesi artefaktlar, 2000-05-10..2004-08-30); 2026-11-11 tam
+  indirmesi 2005-01-03'te basliyor ve 0 satir tasiyor, ama kural kaynaktan bagimsiz.
   Cagirmazsan: negatif fiyat -> BUY'da `cost < 0` -> bakiye artar (yoktan para),
   SELL'de bakiye sinirsiz duser -> gozlemdeki `log()` NaN -> SB3 "Normal(loc: nan)" cokusu.
 - `TradingEnv` artik `fiyat <= 0` veya NaN olan satirlarda **islem yapmaz** ve
@@ -438,12 +443,19 @@ borsapy/yf     → gold_fetcher.py       ─┘
   - hayalet gun (aktif satirlarin >= %90'i duz: volume=0 ve O=H=L=C) atilir; tek sembolun
     duz satiri (bayat hucre) atilir, hucre EKSIK sayilir. "= onceki kapanis" sarti ARANMAZ:
     yfinance kapali gunde duzeltilmis fiyati farkli yazabiliyor (2013-10-15 boyle kaciyordu)
-  - olcum (2026-11-06): tam panelde 251 hayalet gun, 235 artefakt satiri; pencerede
-    0 artefakt, 72 hayalet gun + 39 bayat hucre atiliyor, eksik hucre %0,076
+  - olcum (2026-11-13, panel 2005-01-03..2026-11-09): tam panelde 117 hayalet gun, 10 artefakt
+    satiri (hepsi pencere disi); pencerede 0 artefakt, 67 hayalet gun + 39 bayat hucre atiliyor,
+    eksik hucre %0,115 (`docs/development/measurements/phase9-r1/folds.json` -> `gate`)
   - gosterge isinma `bfill`'i: `prepare_rl_panel(drop_indicator_warmup=True)` bfill imzali bas
     blogu atar (rota + HPO; B7, Faz 9 §9.7). Rotada 'wilder' ADX'in 27 satirlik NaN isinmasi da
     atilir (gercek panelde ODAS 17, PGSUS 24 satir; K18, §9.9). Tahmin hatti `warmup='nan'` +
     `adx='wilder'`'a Milestone 0' golden yenilemesiyle gecer (K1), oncesinde degil.
+- **Tam yeniden indirme GECMISI degistirir** (yfinance auto_adjust: yeni temettu tum gecmisi
+  olcekler, gecmis temettu carpanlari revize edilebilir; 2026-11-11'de SKBNK). Bir sonucu
+  yeniden uretirken veriyi yeniden INDIRME; panel SHA-256'si ve anlik goruntu (C3) ile calis.
+  Yedekler `data/bist/backup_<tarih>/` (git disi). Paneli tazelemenin yolu Veri sayfasi
+  "Yeniden Indir (tam)"; legacy "veri uret" (`/data/generate`) panelin USTUNE 5 sembollu
+  2018 paneli yazar (Faz 9 §9.11 bulgu 6, kaldirilacak).
 - **Tarayici surekli yuksek ama sicramayan seviyeyi YAKALAMAZ** (TUPRS 2000-2003 > 10.000 TL
   satirlari "level_jump" degil). Bu satirlar pencere disinda; pencereyi geri cekme.
 - **`TradingEnv(missing_data_mode=...)`**: `'legacy'` (varsayilan, egitilmis modeller) eksik
@@ -485,9 +497,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
     ile kurulan env cagrisinda (`make_env`, `TradingEnv`, adinda "env" gecen sarmalayicilar)
     `price_stats` arar ve `None` sabitini reddeder; bilerek eski olcekle olcum yapan satira
     `# B9-legacy` yaz. Test: `python tests/test_price_stats_window.py`
-  - **HPO ham OHLCV okuyor** (`raw_stock_data.csv`, gosterge yok -> 5/10 ozellik sabit
-    varsayilan; varsayilan evren 5 sembol; Faz 9 §9.5 Y21). Kayit `indicators_present=False`
-    ile acik; HPO hiperparametresiyle kosan rota kaydi `hyperparams_clean` ile acik. Duzeltme R1.
+  - **HPO rotanin yolunu kullanir (R1; Y21 kapandi):** panel, kat ve ortam `evaluation.rl_folds`'tan;
+    pencere istekten degil `evaluation/splits.py` katindan (varsayilan ilk kat 2021: dogrulamasi
+    butun testlerden once biter). Rota HPO soyunu `hpo_lineage` ile olcer (pencere, tohum, evren,
+    bolme, gozlem). Optuna sampler'i hala tohumsuz (acik, §9.11).
   - `scripts/analysis/generate_academic_report.py` D5'e kadar DURUR (cikis 2; `--allow-invalid`).
   - Olcum betigi: `scripts/analysis/measure_price_scale.py`; JSON'lar
     `docs/development/measurements/phase9-b9/` (panel SHA-256 + commit iceriyor).
@@ -514,13 +527,13 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
   - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans; K26 = a, kalici);
-    'stats' kolunda ayrica `price_in_support`/`features_in_support`. Protokole girmeyen aciklar:
-    tek bolme, dogrulamasiz secim, gostergesiz HPO (R1, Y21). Kol karsilastirmasi Milestone 0'da.
+    'stats' kolunda ayrica `price_in_support`/`features_in_support`. R1 (§9.11) tek bolmeyi,
+    dogrulamasiz secimi ve gostergesiz HPO'yu kapatti. Kol karsilastirmasi Milestone 0'da.
   - **Risksiz faiz** yalnizca `evaluation/risk_free.py`'den (varsayilan `risk_free.csv`
     `funding_rate`); dosya yoksa ya da seri yedek degerliyse acik hata — sabite dusurme.
     Eski 0,15 / 0,02 / 0 sabitleri BILEREK baglanmadi (odul = davranis dondurma; pano/rapor D'de).
   - **RL tohumu**: `TrainingRequest.seed` (yoksa uretilir); meta + manifest + deneme kaydina yazilir.
-    Test: `python tests/test_eval_stats.py` (50), `python tests/test_rl_reproducibility.py` (39)
+    Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (39)
 - Kaynak ekleme: `/kaynak-ekle` skill'i. Metodolojik elestiri: **hakem paneli** —
   `hakem-finans` + `hakem-rl` (sonnet, dar kapsam, yalnizca alanina giren pakette) ve son
   kapi `hakem-2` (opus). Once ~5 bin token'lik inceleme paketi yaz, uzun olcumleri SEN yap
