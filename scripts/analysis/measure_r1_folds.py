@@ -231,11 +231,13 @@ def main():
     from evaluation.splits import fold_coverage, get_spec
 
     settings = get_settings()
-    data_dir = os.path.join(ROOT, settings.DATA_DIR) if not os.path.isabs(settings.DATA_DIR) \
-        else settings.DATA_DIR
+    fetcher = DataFetcher()
+    # rotanin okudugu dosyalar: DataFetcher'in kendi dizini (depo kokune gore 'data/bist')
+    data_dir = fetcher.data_dir if os.path.isabs(fetcher.data_dir) \
+        else os.path.join(ROOT, fetcher.data_dir)
     ind_path = os.path.join(data_dir, "stock_data_with_indicators.csv")
     raw_path = os.path.join(data_dir, "raw_stock_data.csv")
-    csv = DataFetcher().load_data("stock_data_with_indicators.csv")
+    csv = fetcher.load_data("stock_data_with_indicators.csv")
     spec = get_spec()
     commit, dirty = git_state()
     d = csv.index.get_level_values("date")
