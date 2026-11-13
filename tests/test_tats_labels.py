@@ -1,12 +1,13 @@
-"""Faz 9 B10 (Y20) — TATS uyum girdileri: meta bolumunun kendi kapanisi + gercek getiri etiketi.
+"""Faz 9 B10 (Y20) — TATS uyum girdileri: meta satirlarinin HAM kapanisi + gerceklesen getiri.
 
     python tests/test_tats_labels.py
 
 Kabul (Faz 10 §3.1.1): bilinen trendli sentetik veride etiket isabeti ~ 1; uyum girdileri
-meta bolumu tarihleriyle birebir hizali. Eski girdiler (y_meta, y_base) ayni veride etiketi
-bozar. Mutasyon uretim yolundan (abs_price; kapanis bir gun kayik) isabeti dusurur;
-log_return'de kapanis sadelesir (gelecek = c * exp(y)), etiket yalniz y'ye baglidir.
-Gercek StackingEnsemble.train (yalniz XGBoost + LightGBM), diske yazmadan, CPU.
+meta bolumu tarihleriyle birebir hizali. Kapsam (hakem-2 B10): gunluk + haftalik ufuk,
+ICEEMDAN kolu (feat_df['close'] filtreli seriyle uzerine yazilir — taklit), kisa OOF
+donduren taban model (DL gibi; sondan kirpma sinanir). Eski girdiler (y_meta, y_base)
+etiketi bozar; mutasyonlar uretim yolundan: kapanis bir gun kayik, kirpma bastan.
+Gercek StackingEnsemble.train (XGBoost + LightGBM + kisa-OOF sahte model), diske yazmadan, CPU.
 """
 
 from __future__ import annotations
@@ -24,13 +25,13 @@ from prediction.models import ensemble as E  # noqa: E402
 from prediction.tats import TATSCorrector  # noqa: E402
 
 FAILED: list[str] = []
-N_CHECKS = 9
+PASSED: list[str] = []
+SHORT = 29  # kisa OOF modeli bastan bu kadar satir eksik dondurur (lookback gibi)
 
 
 def check(name, ok, detail=""):
     print(f"  [{'OK' if ok else 'FAIL'}]   {name} {'' if ok else detail}")
-    if not ok:
-        FAILED.append(name)
+    (PASSED if ok else FAILED).append(name)
 
 
 def make_df(n=700, seed=3):
@@ -53,64 +54,103 @@ def main() -> int:
     orig_fit = TATSCorrector.fit
 
     def spy(self, X, y_prices, current_prices):
-        captured.update(y=np.asarray(y_prices), cur=np.asarray(current_prices))
+        captured.update(y=np.asarray(y_prices), cur=np.asarray(current_prices), n_x=len(X))
         return orig_fit(self, X, y_prices, current_prices)
 
     TATSCorrector.fit = spy
     BasePredictionModel.save = lambda self, *a, **k: None  # diske yazma
     E.StackingEnsemble._save_ensemble_meta = lambda self, *a, **k: None
 
-    df = make_df()
-    cfg = {m: dict(c, enabled=(m in ("xgboost", "lightgbm"))) for m, c in E.BASE_MODEL_CONFIGS.items()}
+    # Kisa OOF donduren taban model: LightGBM'in tahminini bastan SHORT satir kirpar
+    from prediction.models.lightgbm_model import LightGBMModel
 
-    def train_capture(target_type, shift=False):
+    class ShortOOF(LightGBMModel):
+        def _predict_raw(self, X):
+            return super()._predict_raw(X)[SHORT:]
+
+    orig_get = E.StackingEnsemble._get_model_class
+    E.StackingEnsemble._get_model_class = lambda self, mt: ShortOOF if mt == "short" else orig_get(self, mt)
+    cfg = {m: dict(c, enabled=(m in ("xgboost", "lightgbm"))) for m, c in E.BASE_MODEL_CONFIGS.items()}
+    cfg["short"] = dict(cfg["lightgbm"], enabled=True)
+
+    df = make_df()
+    orig_inputs = E.StackingEnsemble.__dict__["_tats_inputs"]  # staticmethod nesnesi
+
+    def train_capture(horizon, target_type="log_return", iceemdan=False, mutate=None):
         captured.clear()
-        orig_close = E.StackingEnsemble.__dict__["_tats_inputs_close"]  # staticmethod nesnesi
-        if shift:  # uretim yolundan mutasyon: meta kapanisi bir gun geriden okunur
-            E.StackingEnsemble._tats_inputs_close = staticmethod(
-                lambda f, b, m: f["close"].to_numpy(dtype=np.float64)[b - 1:m - 1])
+        if mutate == "shift":  # kapanis bir gun geriden
+            def bad(d, f, b, m, hz):
+                c, fu = orig_inputs.__func__(d, f, b, m, hz)
+                return np.r_[c[:1], c[:-1]], fu
+            E.StackingEnsemble._tats_inputs = staticmethod(bad)
+        elif mutate == "head":  # kirpma bastan: dogru uzunluk, yanlis satirlar
+            def bad(d, f, b, m, hz):
+                c, fu = orig_inputs.__func__(d, f, b, m, hz)
+                k = len(c) - SHORT
+                return np.r_[c[:k], np.full(SHORT, np.nan)], np.r_[fu[:k], np.full(SHORT, np.nan)]
+            E.StackingEnsemble._tats_inputs = staticmethod(bad)
         try:
-            ens = E.StackingEnsemble(horizon="daily", use_tats=True, model_configs=cfg,
+            ens = E.StackingEnsemble(horizon=horizon, use_tats=True, model_configs=cfg,
                                      target_type=target_type)
+            if iceemdan:  # ICEEMDAN kolunu taklit: build_features close'u merkezli (iki yonlu) filtreyle ezer
+                fe_build = ens.feature_engineer.build_features
+
+                def filtered(*a, **k):
+                    f = fe_build(*a, **k)
+                    f["close"] = f["close"].rolling(9, center=True, min_periods=1).mean()
+                    return f
+                ens.feature_engineer.build_features = filtered
             ens.train(df, "SYN")
         finally:
-            E.StackingEnsemble._tats_inputs_close = orig_close
+            E.StackingEnsemble._tats_inputs = orig_inputs
         return ens, dict(captured)
 
-    def truth(ens, target_type, k):
+    def truth(ens, horizon, target_type):
+        h = 1 if horizon == "daily" else 5
         feat = ens.feature_engineer.build_features(df, "SYN", target_type=target_type)
         n = len(feat)
         be, me = int(n * 0.60), int(n * 0.80)
-        close_meta = feat["close"].to_numpy(float)[be:me][-k:]
-        nxt = df["close"].shift(-1).reindex(feat.index[be:me][-k:]).to_numpy(float)
         y = np.nan_to_num(feat["target_price"].to_numpy(np.float32))
-        return close_meta, labels(nxt, close_meta), y, be, me
+        return feat.index[be:me], h, y, be, me
 
-    for tt in ("log_return", "abs_price"):
-        print(f"\nB10 — TATS uyum girdileri (target_type={tt})")
-        ens, cap = train_capture(tt)
-        check(f"[{tt}] TATS uyumu cagrildi", bool(cap))
+    runs = [("daily", "log_return", False), ("weekly", "log_return", False),
+            ("daily", "abs_price", False), ("daily", "log_return", True)]
+    for horizon, tt, ice in runs:
+        tag = f"{horizon}/{tt}" + ("/iceemdan" if ice else "")
+        print(f"\nB10 — {tag}")
+        ens, cap = train_capture(horizon, tt, ice)
         if not cap:
+            check(f"[{tag}] TATS uyumu cagrildi", False)
             continue
         k = len(cap["cur"])
-        close_meta, true_lab, y, be, me = truth(ens, tt, k)
-        check(f"[{tt}] mevcut fiyat = meta satirlarinin kendi kapanisi (birebir)",
-              np.array_equal(cap["cur"], close_meta), f"(k={k})")
+        meta_dates, h, y, be, me = truth(ens, horizon, tt)
+        check(f"[{tag}] kisa OOF sondan kirpildi (k = meta - {SHORT})", k == len(meta_dates) - SHORT,
+              f"(k={k}, meta={len(meta_dates)})")
+        dates = meta_dates[-k:]
+        cur = df["close"].reindex(dates).to_numpy(float)
+        true_lab = labels(df["close"].shift(-h).reindex(dates).to_numpy(float), cur)
+        check(f"[{tag}] mevcut fiyat = meta tarihlerindeki HAM kapanis (birebir)",
+              np.array_equal(cap["cur"], cur), f"(k={k})")
         acc = float(np.mean(true_lab == labels(cap["y"], cap["cur"])))
-        check(f"[{tt}] etiket isabeti ~ 1 (olculen {acc:.4f}, {len(np.unique(true_lab))} sinif)",
-              acc > 0.999 and len(np.unique(true_lab)) == 3)
-        # Eski girdiler (Y20): gelecek = y_meta, mevcut = y_base'in son k'si
-        old_acc = float(np.mean(true_lab == labels(y[be:me][-k:], y[:be][-k:])))
-        check(f"[{tt}] eski girdilerle (Y20) isabet dusuk (olculen {old_acc:.4f})", old_acc < 0.8)
-        if tt == "abs_price":
-            _, cs = train_capture(tt, shift=True)
-            sh = float(np.mean(true_lab == labels(cs["y"], cs["cur"])))
-            check(f"[{tt}] mutasyon (uretim yolu, kapanis 1 gun kayik) isabeti dusurur "
-                  f"(olculen {sh:.4f})", sh < 0.99)
+        check(f"[{tag}] etiket isabeti (gerceklesen getiri) ~ 1 (olculen {acc:.4f}, "
+              f"{len(np.unique(true_lab))} sinif)", acc > 0.999 and len(np.unique(true_lab)) == 3)
+        if not ice and horizon == "daily":
+            old_acc = float(np.mean(true_lab == labels(y[be:me][-k:], y[:be][-k:])))
+            check(f"[{tag}] eski girdilerle (Y20) isabet dusuk (olculen {old_acc:.4f})", old_acc < 0.8)
+
+    print("\nMutasyonlar (uretim yolu, daily/log_return)")
+    _, base = train_capture("daily")
+    _, cs = train_capture("daily", mutate="shift")
+    check("kapanis bir gun kayik -> etiket degisir",
+          not np.array_equal(labels(cs["y"], cs["cur"]), labels(base["y"], base["cur"])))
+    _, ch = train_capture("daily", mutate="head")
+    check("kirpma bastan -> girdiler degisir (NaN kuyruk ya da farkli satirlar)",
+          not np.array_equal(ch["cur"], base["cur"], equal_nan=True))
     TATSCorrector.fit = orig_fit
+    E.StackingEnsemble._get_model_class = orig_get
 
     print("\n" + "=" * 60)
-    print(f"Sonuc: {N_CHECKS - len(FAILED)} gecti, {len(FAILED)} kaldi")
+    print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0
 
 

@@ -330,15 +330,12 @@ class StackingEnsemble:
             self.tats_corrector = TATSCorrector()
             meta_X_for_tats, tats_min_len = self._stack_aligned(meta_predictions)
             # Faz 9 B10 (Y20): "mevcut fiyat" meta satirlarinin KENDI kapanisi (eskiden
-            # taban bolumunun son hedefleri y_base idi) ve etiket gercek getiriden:
-            # log_return hedefinde gelecek fiyat = close * exp(y). Hizalama OOF ile ayni
-            # (sondan tats_min_len). tats.fit fiyat bekler; birim artik fiyat.
-            close_meta = self._tats_inputs_close(feat_df, base_end, meta_end)[-tats_min_len:]
-            y_meta_tail = y_meta[-tats_min_len:].astype(np.float64)
-            if self.target_type == 'log_return':
-                future_meta = close_meta * np.exp(y_meta_tail)
-            else:
-                future_meta = y_meta_tail
+            # taban bolumunun son hedefleri y_base idi) ve etiket gerceklesen getiriden.
+            # Kapanis HAM df'ten alinir, y'den turetilmez (hakem-2 B10 #B1): ICEEMDAN
+            # kolunda feat_df['close'] filtreli seriyle uzerine yaziliyor; Makale 2'nin
+            # TATS kollari (K3/K4) tam da o kollar. Hizalama OOF ile ayni (sondan k).
+            close_meta, future_meta = self._tats_inputs(df, feat_df, base_end, meta_end, self.horizon)
+            close_meta, future_meta = close_meta[-tats_min_len:], future_meta[-tats_min_len:]
             tats_result = self.tats_corrector.fit(meta_X_for_tats, future_meta, close_meta)
             test_metrics['tats_trained'] = tats_result.get('trained', False)
 
@@ -397,9 +394,21 @@ class StackingEnsemble:
         return self._build_result(symbol, model_results, test_metrics, n, split)
 
     @staticmethod
-    def _tats_inputs_close(feat_df: pd.DataFrame, base_end: int, meta_end: int) -> np.ndarray:
-        """Meta bolumunun (X[base_end:meta_end]) satir satir kapanisi (B10)."""
-        return feat_df['close'].to_numpy(dtype=np.float64)[base_end:meta_end]
+    def _tats_inputs(df: pd.DataFrame, feat_df: pd.DataFrame, base_end: int, meta_end: int,
+                     horizon: str):
+        """Meta bolumunun (X[base_end:meta_end]) HAM kapanisi ve h sonraki ham kapanis (B10).
+
+        feat_df['close'] ICEEMDAN acikken filtrelenmis olabilir; burada kullanilmaz.
+        """
+        h = 1 if horizon == 'daily' else 5
+        raw = df['close'].sort_index()
+        idx = feat_df.index[base_end:meta_end]
+        close = raw.reindex(idx).to_numpy(dtype=np.float64)
+        future = raw.shift(-h).reindex(idx).to_numpy(dtype=np.float64)
+        if not (np.isfinite(close).all() and np.isfinite(future).all()):
+            # Sessiz NaN etiket yerine acik hata: feat_df indeksi ham df ile eslesmiyor
+            raise ValueError("TATS: meta satirlarinin ham kapanisi bulunamadi (indeks uyusmazligi)")
+        return close, future
 
     @staticmethod
     def _stack_aligned(predictions: Dict[str, np.ndarray]):
