@@ -117,4 +117,5 @@ değildir**.
 
 ## Lisans
 
-Lisans dosyası henüz eklenmedi.
+[MIT](LICENSE) © 2026 Can Akyıldırım. Piyasa verisi (yfinance, TCMB EVDS) depoda yer almaz ve kendi
+sağlayıcılarının kullanım koşullarına tabidir.
