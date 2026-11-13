@@ -144,7 +144,8 @@ python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontro
 python tests/test_cv_feature_selection.py  # Faz 9/B8: CV ozellik secimi kat ici; test y karisinca
                                            #          kume bit-es + mutasyon (13, < 1 dk)
 python tests/test_tats_labels.py           # Faz 9/B10: TATS uyum girdileri HAM kapanis + gercek
-                                           #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon (16, ~2 dk)
+                                           #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon; K21: TATS'li/TATS'siz
+                                           #          test + kaydet/yukle (22, ~2 dk)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
                                            #          gecikmesi, bfill yok (kesme
@@ -299,6 +300,11 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Meta-learner: Ridge (default) veya XGBoost (`meta_learner_type='xgboost'`)
 - TATS düzeltici: `use_tats=True` ile trend-adjusted output
 - Direction head: BiLSTM/TFT'nin `_predict_direction_raw()` çıktısı confidence hesabında kullanılır
+- TATS (Faz 9 B10 + K21): uyum girdileri HAM `df['close']`'tan (`_tats_inputs`; ICEEMDAN kolunda
+  `feat_df['close']` filtreli); test metriginde `ensemble_test_metrics['tats']` (TATS'li/TATS'siz);
+  `<model>_<ufuk>_tats.json` ile kaydedilir/yuklenir. Duzeltme ISARETI KORUR — makaledeki gibi yonu
+  cevirmez (§9.17 yontem farklari); 'TATS' kollari bu uyarlamayi olcer
+- BiLSTM/TFT egitim<->cikarim bir adim kayik (Y22, B11, acik) — DL OOF'u bir ufuk kayik
 
 ### evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover
