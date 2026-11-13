@@ -135,7 +135,7 @@ python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni 
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
-python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC (19 kontrol)
+python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC + CV deney dizini (20 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)

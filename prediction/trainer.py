@@ -22,7 +22,21 @@ from prediction.seeding import GLOBAL_SEED, seed_everything
 
 logger = logging.getLogger(__name__)
 
+# Eski ortak dizin (kullanici oncesi / auth kapali). Yazma hedefi artik calisma alanindan
+# cozulur (Faz 9 §9.17 Y24): `_experiments_dir()`.
 EXPERIMENTS_DIR = os.path.join('results', 'prediction_experiments')
+
+
+def _experiments_dir() -> str:
+    """CV deney kayitlarinin yazma dizini: aktif kullanicinin results/ alani."""
+    try:
+        from app.auth import workspace as ws
+
+        path = os.path.join(ws.results_dir(), 'prediction_experiments')
+    except Exception:
+        path = EXPERIMENTS_DIR
+    os.makedirs(path, exist_ok=True)
+    return path
 
 
 class WalkForwardTrainer:
@@ -77,7 +91,6 @@ class WalkForwardTrainer:
         self.strict = strict
         self.feature_engineer = PredictionFeatureEngineer(horizon)
 
-        os.makedirs(EXPERIMENTS_DIR, exist_ok=True)
 
     def cross_validate(
         self,
@@ -402,7 +415,7 @@ class WalkForwardTrainer:
         """Deney sonuclarini kaydet."""
         safe = symbol.replace('/', '_').replace('=', '_').replace('.', '_')
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        path = os.path.join(EXPERIMENTS_DIR, f'{safe}_{self.horizon}_{timestamp}.json')
+        path = os.path.join(_experiments_dir(), f'{safe}_{self.horizon}_{timestamp}.json')
 
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(result, f, indent=2, default=str)
