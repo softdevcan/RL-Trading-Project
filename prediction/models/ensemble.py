@@ -165,7 +165,9 @@ class StackingEnsemble:
         cls = self._get_model_class(model_type)
         if cls is None:
             raise ValueError(f"Bilinmeyen model tipi: {model_type}")
-        return cls(horizon=self.horizon, params=params, source=self.source)
+        model = cls(horizon=self.horizon, params=params, source=self.source)
+        model.target_type = self.target_type  # B11: DL yon basi etiketi ham hedeften
+        return model
 
     # ------------------------------------------------------------------
     # Egitim
@@ -596,14 +598,16 @@ class StackingEnsemble:
             predicted_close = raw_pred
 
         # TATS: trend siniflandirici ile tahmin duzelt
+        tats_available = bool(self.use_tats and self.tats_corrector and self.tats_corrector.is_fitted())
         tats_meta: Dict[str, Any] = {'applied': False}
-        if self.use_tats and self.tats_corrector and self.tats_corrector.is_fitted():
+        if tats_available:
             meta_input_for_tats = np.array(
                 [model_predictions[m] for m in sorted(model_predictions.keys())]
             )
             predicted_close, tats_meta = self.tats_corrector.correct(
                 predicted_close, current_close, meta_input_for_tats
             )
+        tats_meta['available'] = tats_available  # Y25: "TATS yok" != "uygulanmadi"
 
         change_pct = (predicted_close - current_close) / current_close * 100
         direction = 'UP' if change_pct > 0 else 'DOWN'
@@ -772,7 +776,8 @@ class StackingEnsemble:
             self.meta_learner.n_features_in_ = len(meta['meta_learner_coefs'])
 
         # K21: TATS geri yuklenir. Dosyasi olmayan eski modelde TATS yok (onceki davranis).
-        self.use_tats = bool(meta.get('use_tats', self.use_tats))
+        # Y25: kurucudaki use_tats=False (ablasyon kolu) meta ile EZILMEZ; ikisi de True olmali
+        self.use_tats = bool(self.use_tats) and bool(meta.get('use_tats', True))
         self.tats_corrector = None
         tats_path = os.path.join(
             os.path.dirname(meta_path), f'{self._model_id(symbol)}_{self.horizon}_tats.json')

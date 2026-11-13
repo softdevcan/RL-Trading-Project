@@ -89,7 +89,8 @@ class PredictionEvaluator:
         rmse = float(np.sqrt(np.mean((pred_arr - actual_arr) ** 2)))
         mae = float(np.mean(np.abs(pred_arr - actual_arr)))
 
-        dir_correct = [r['direction_correct'] for r in recent
+        # Y27: eski kayitlarda yon dogrulugu "True"/"False" metni olarak duruyor
+        dir_correct = [r['direction_correct'] in (True, 'True') for r in recent
                        if r.get('direction_correct') is not None]
         dir_acc = float(np.mean(dir_correct) * 100) if dir_correct else None
 

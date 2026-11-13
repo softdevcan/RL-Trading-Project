@@ -110,17 +110,26 @@ class BiLSTMModel(BasePredictionModel):
         return True
 
     def _create_sequences(
-        self, X: np.ndarray, y: np.ndarray, lookback: int,
+        self, X: np.ndarray, y: np.ndarray, lookback: int, y_raw: np.ndarray = None,
     ):
-        """Zaman serisi verisini LSTM sekansarina donustur."""
+        """Zaman serisi verisini sekanslara donustur (Faz 9 B11, Y22).
+
+        Pencere satir i'yi ICERIR (X[i-L+1:i+1]) ve y[i] ile eslenir: _predict_raw'daki
+        cikarim penceresiyle ayni hizalama (eskiden X[i-L:i] -> y[i]; DL'nin satir r tahmini
+        fiilen y[r+1]'in tahminiydi). Satir i'nin ozellikleri t kapanisinda bilinir.
+        Yon etiketi HAM hedeften: log_return -> y_raw[i] > 0; abs_price -> y_raw[i] > y_raw[i-1]
+        (gunlukte y_raw[i-1] = bugunku kapanis; haftalikta yaklasik, beyanli).
+        """
+        y_raw = y if y_raw is None else y_raw
+        log_ret = getattr(self, 'target_type', 'log_return') == 'log_return'
         sequences_X, sequences_y, sequences_y_dir = [], [], []
-        for i in range(lookback, len(X)):
-            sequences_X.append(X[i - lookback:i])
+        for i in range(lookback - 1, len(X)):
+            sequences_X.append(X[i - lookback + 1:i + 1])
             sequences_y.append(y[i])
-            if i > 0:
-                sequences_y_dir.append(float(y[i] > y[i - 1]))
+            if log_ret:
+                sequences_y_dir.append(float(y_raw[i] > 0))
             else:
-                sequences_y_dir.append(0.5)
+                sequences_y_dir.append(float(y_raw[i] > y_raw[i - 1]) if i > 0 else 0.5)
 
         return (
             np.array(sequences_X),
@@ -163,12 +172,15 @@ class BiLSTMModel(BasePredictionModel):
         y_tr_norm = (y_train - self.target_mean) / self.target_std
         y_va_norm = (y_val - self.target_mean) / self.target_std
 
-        X_tr_seq, y_tr_seq, y_tr_dir = self._create_sequences(X_tr_norm, y_tr_norm, lookback)
-        X_va_seq, y_va_seq, y_va_dir = self._create_sequences(X_va_norm, y_va_norm, lookback)
+        X_tr_seq, y_tr_seq, y_tr_dir = self._create_sequences(X_tr_norm, y_tr_norm, lookback, y_train)
+        X_va_seq, y_va_seq, y_va_dir = self._create_sequences(X_va_norm, y_va_norm, lookback, y_val)
 
         if len(X_tr_seq) == 0 or len(X_va_seq) == 0:
-            logger.warning("Yeterli veri yok (lookback cok buyuk)")
-            return {'mape': 999, 'rmse': 999, 'mae': 999, 'direction_accuracy': 0}
+            # Y23: sessiz donus ag kurulmadan predict'e gidip "'NoneType' object has no
+            # attribute 'eval'" uretiyordu; nedeni acikca soyle (ensemble failed_models'a yazar).
+            raise ValueError(
+                f"Yeterli veri yok: egitim {len(X_train)} / dogrulama {len(X_val)} satir, "
+                f"lookback {lookback} (dogrulama dilimi lookback'ten kisa)")
 
         n_features = X_tr_seq.shape[2]
         self.net = _BiLSTMNet(

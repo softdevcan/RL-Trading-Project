@@ -77,17 +77,17 @@ def test_price_predictor_train():
 
     result = predictor.train(df, 'SYNTHETIC_TEST', test_ratio=0.2)
 
-    assert 'train_metrics' in result, "train_metrics yok"
-    assert 'test_metrics' in result, "test_metrics yok"
+    # Faz 9 Y23: ensemble sonuc semasi (eski tek-model anahtarlari train_metrics/model_path yok)
+    tm = result.get('ensemble_test_metrics', {})
     assert result['n_train'] > 0, "n_train=0"
     assert result['n_test'] > 0, "n_test=0"
-    assert result['test_metrics']['mape'] >= 0, "negatif MAPE"
-    assert 0 <= result['test_metrics']['direction_accuracy'] <= 100, "direction_acc aralık dışı"
+    assert result.get('n_models', 0) >= 1, f"model egitilmedi: {result.get('failed_models')}"
+    assert tm.get('mape', -1) >= 0, "negatif MAPE"
+    assert 0 <= tm.get('direction_accuracy', -1) <= 100, "direction_acc aralık dışı"
 
-    print(f"  Train MAPE: {result['train_metrics']['mape']:.2f}%")
-    print(f"  Test MAPE : {result['test_metrics']['mape']:.2f}%")
-    print(f"  Dir Acc   : {result['test_metrics']['direction_accuracy']:.1f}%")
-    print(f"  Model path: {result['model_path']}")
+    print(f"  Modeller  : {result.get('models_trained')} (hata: {result.get('failed_models')})")
+    print(f"  Test MAPE : {tm['mape']:.2f}%")
+    print(f"  Dir Acc   : {tm['direction_accuracy']:.1f}%")
     print("  OK!")
     return predictor
 
@@ -215,15 +215,28 @@ def test_walk_forward_cv():
     trainer = WalkForwardTrainer(horizon='daily', n_splits=3)
     cv_result = trainer.cross_validate(df, 'SYNTHETIC_TEST')
 
-    assert 'avg_mape' in cv_result, "avg_mape yok"
+    # Faz 9 Y23: guncel ozet semasi (model basina sonuc + en iyi model)
     assert cv_result['n_folds'] == 3, f"fold sayısı: {cv_result['n_folds']}"
+    assert cv_result.get('model_results'), f"model sonucu yok: {cv_result.get('failed_folds')}"
+    assert cv_result.get('feature_selection') == 'per_fold_train', "B8 protokol etiketi yok"
+    best = cv_result['model_results'][cv_result['best_model']]
 
-    print(f"  CV MAPE: {cv_result['avg_mape']:.2f}%")
-    print(f"  CV Dir : {cv_result['avg_direction_accuracy']:.1f}%")
+    print(f"  En iyi   : {cv_result['best_model']} ({len(cv_result['model_results'])} model, "
+          f"basarisiz kat {cv_result['n_failed_folds']})")
+    print(f"  CV MAPE  : {best['avg_mape']:.2f}%")
+    print(f"  CV Dir   : {best['avg_direction_accuracy']:.1f}%")
     print("  OK!")
 
 
 if __name__ == '__main__':
+    # Faz 9 Y23: egitilen sentetik modeller gercek models/prediction dizinine yazilmasin
+    import tempfile
+    from app.auth import workspace as _ws
+    _TMP_MODELS = tempfile.mkdtemp(prefix="rlt_pred_test_")
+    _ws.prediction_models_dir = lambda *a, **k: _TMP_MODELS
+    _ws.read_dirs = lambda kind, *a, **k: [_TMP_MODELS]
+    _ws.results_dir = lambda *a, **k: _TMP_MODELS  # CV deney kaydi da gecici dizine
+
     print("=" * 60)
     print("PREDICTION MODULE TESTLERİ")
     print("=" * 60)
