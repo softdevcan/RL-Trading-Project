@@ -17,6 +17,8 @@ Kullanici hangi dilde yazarsa o dilde yanit ver.
   hizalamasi, Faz 9 §9.18; K1 secenek 1). Milestone 0' ile bir kez yenilenir — o zamana kadar
   `--update` YAPMA ve golden'i baska bir degisikligin kaniti sayma.
 - `env/` = proje kodu (Gymnasium ortami). `venv/` = sanal ortam; okuma, degistirme.
+- **Surum ve yayin:** tek kaynak `app/__init__.py` (`__version__`, SemVer: paket = MINOR). main korumali
+  (yalniz PR). Birlesmeden sonra tag + `gh release --generate-notes`: `docs/development/versioning.md`.
 
 ## Alan kurallari nerede (o dizine dokununca otomatik yuklenir)
 Bir dosyayi duzenlemeden once o alanin dosyasi baglamda degilse oku:

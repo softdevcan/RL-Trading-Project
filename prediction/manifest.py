@@ -89,6 +89,14 @@ def latest_run_id() -> str:
     return os.path.splitext(os.path.basename(newest))[0]
 
 
+def _app_version():
+    try:
+        from app import __version__
+        return __version__
+    except Exception:
+        return None
+
+
 def _git_commit() -> str:
     try:
         return subprocess.check_output(
@@ -227,6 +235,7 @@ class TrainingManifest:
             'finished_at': datetime.now().strftime('%Y%m%d_%H%M%S'),
             'wall_clock_seconds': round(time.perf_counter() - self._t0, 1),
             'git_commit': _git_commit(),
+            'app_version': _app_version(),
             'gpu': _gpu_info(),
             'environment': _environment(),
             **({'seed': self.seed} if self.seed is not None else {}),

@@ -139,7 +139,12 @@ def environment_record() -> dict:
             pkgs[name] = metadata.version(dist)
         except Exception:
             pkgs[name] = None
+    try:
+        from app import __version__ as app_version
+    except Exception:
+        app_version = None
     rec = {
+        'app_version': app_version,  # surum (app/__init__.py); git commit ayrica kayitli
         'python': sys.version.split()[0],
         'platform': platform.platform(),
         'packages': pkgs,

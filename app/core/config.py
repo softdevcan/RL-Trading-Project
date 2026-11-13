@@ -1,7 +1,10 @@
 """Application configuration"""
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from app import __version__
 
 
 class Settings(BaseSettings):
@@ -9,7 +12,9 @@ class Settings(BaseSettings):
 
     # API Settings
     API_TITLE: str = "RL Trading API"
-    API_VERSION: str = "1.0.0"
+    # Surum ortam degiskeniyle EZILMEZ: eski .env dosyalarinda API_VERSION satiri olabilir
+    # (alan kaldirilirsa pydantic bilinmeyen anahtari reddeder); asagidaki dogrulayici sabitler.
+    API_VERSION: str = __version__  # tek kaynak: app/__init__.py
     API_DESCRIPTION: str = "API for Reinforcement Learning Trading System"
 
     # Server Settings
@@ -162,6 +167,11 @@ class Settings(BaseSettings):
     # Eski (kullanici oncesi) models/ ve results/ iceriginin herkese salt-okunur
     # gosterilmesi. False = sadece kendi calisma alanini gorur.
     WORKSPACE_SHOW_LEGACY: bool = True
+
+    @model_validator(mode='after')
+    def _pin_version(self):
+        self.API_VERSION = __version__
+        return self
 
     class Config:
         env_file = ".env"
