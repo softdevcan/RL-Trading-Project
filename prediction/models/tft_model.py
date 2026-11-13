@@ -298,8 +298,9 @@ class TFTModel(BasePredictionModel):
         Pencere satir i'yi ICERIR (X[i-L+1:i+1]) ve y[i] ile eslenir: _predict_raw'daki
         cikarim penceresiyle ayni hizalama (eskiden X[i-L:i] -> y[i]; DL'nin satir r tahmini
         fiilen y[r+1]'in tahminiydi). Satir i'nin ozellikleri t kapanisinda bilinir.
-        Yon etiketi HAM hedeften: log_return -> y_raw[i] > 0; abs_price -> y_raw[i] > y_raw[i-1]
-        (gunlukte y_raw[i-1] = bugunku kapanis; haftalikta yaklasik, beyanli).
+        Yon etiketi HAM hedeften: log_return -> y_raw[i] > 0; abs_price -> y_raw[i] > y_raw[i-h]
+        (y_raw[i-h] = close[t]; satirlarin ardisik oldugu varsayilir). Yeni sizinti eklemez;
+        hattin bilinen aciklari (gosterge bfill K1, statik temel oran, ICEEMDAN kolu) surer.
         """
         y_raw = y if y_raw is None else y_raw
         log_ret = getattr(self, 'target_type', 'log_return') == 'log_return'
@@ -310,7 +311,9 @@ class TFTModel(BasePredictionModel):
             if log_ret:
                 sequences_y_dir.append(float(y_raw[i] > 0))
             else:
-                sequences_y_dir.append(float(y_raw[i] > y_raw[i - 1]) if i > 0 else 0.5)
+                # y_raw[i-h] = close[t] (satirlar ardisik varsayimi; hakem-2 B11 #4)
+                h = 1 if self.horizon == 'daily' else 5
+                sequences_y_dir.append(float(y_raw[i] > y_raw[i - h]) if i >= h else 0.5)
         return np.array(sequences_X), np.array(sequences_y), np.array(sequences_y_dir)
 
     def _fit(
