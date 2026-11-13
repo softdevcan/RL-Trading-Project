@@ -1040,7 +1040,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - Canlı karar paritesi (K13): meta `fold` ve `selected_step` taşıyor, canlı karar okumuyor.
 - Seçim protokolü kaynaklarının tam metni (verification §8.4).
 - Seçim kuralının test karşılaştırması (argmax ↔ son nokta) → M8 ön kaydı (§9.12).
-- Nakit getirisi: ortamda nakit 0 kazanıyor, seçim metriği rf düşüyor → M2 ortam tasarımı (§9.12 F2).
+- Nakit getirisi: ortamda nakit 0 kazanıyor, seçim metriği rf düşüyor → §9.2 #7, G paketi (§9.12 F2).
 
 ### 9.12 Hakem paneli (R1, 2026-11-13/14)
 
@@ -1061,7 +1061,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **Gerçek panel B0** (2026 katı; ham fiyat doğrulama ya da test başından itibaren değiştirildi, CSV'yi üreten gösterge hattı yeniden koşuldu): iki kolda ve iki sınırda sınırdan önceki ortamın izi bit-eş, sonraki ortamın izi değişiyor (JSON `real_b0`).
 
 **Kullanıcı kararları (2026-11-14).**
-- **Seçim metriği korunur** (M8 birincil metriğiyle tutarlı). Her kontrol noktasına yıllık ortalama fazla getiri (`mean_excess`) yazılır; seçim raporu negatif ortalamalı nokta sayısını (`n_negative_mean_excess`) ve son noktanın doğrulama metriğini (`last_metric`) taşır. Nakit getirisi (ortamda 0) M2 ortam tasarımına girer.
+- **Seçim metriği korunur** (M8 birincil metriğiyle tutarlı). Her kontrol noktasına yıllık ortalama fazla getiri (`mean_excess`) yazılır; seçim raporu negatif ortalamalı nokta sayısını (`n_negative_mean_excess`) ve son noktanın doğrulama metriğini (`last_metric`) taşır. Nakit getirisi (ortamda 0) zaten §9.2 #7'de açık iş: G paketinde nakit faiz tahakkuku ya da varsayım beyanı (M2 ortamı aynı kararı devralır).
 - **Son kontrol noktasının test karşılaştırması M8'e.** "Test bir kez" kuralı korunur. "Seçim kuralı: argmax ↔ son nokta" M8 ön kaydında önceden tanımlı bir etken olur; her kural kendi kaydıyla bir kez okunur ve N'ye sayılır. R1'de yalnız doğrulama tarafındaki fark raporlanır.
 
 | # | Kaynak | Cid. | İtiraz | Yanıt |
@@ -1075,7 +1075,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | R7 | hakem-rl | KÜÇÜK | Katlar arasında bütçe/seans oranı sabit değil (1.651 → 2.901 seans) | **Beyan,** M8 (bütçe ölçekleme ya da kol) |
 | R8 | hakem-rl | KÜÇÜK | TD3/SAC bit-eşliği test edilmemiş; `learning_starts` öncesi noktalar eğitilmemiş politikayı ölçüyor | **Kabul.** Test D TD3 ve SAC'ı da kapsıyor, ikisi de bit-eş. `learning_starts` (rota varsayılanı 1000) öncesine düşen noktalar beyan edilir |
 | F1 | hakem-finans | BÜYÜK | Ortalama fazla getiri negatifken Sharpe oynaklığı ödüllendirir | **Ölçüldü:** 2025'te 10/10 negatif, ama seçim değişmedi. Karar: metrik korunur, tanı kayda girer |
-| F2 | hakem-finans | BÜYÜK | Nakit 0 kazanırken metrik rf düşüyor (asimetri) | **Kabul, beyan.** Ortam değişmez (davranış dondurma); `sharpe_rf0` her noktada kayıtlı. Nakit getirisi M2'de |
+| F2 | hakem-finans | BÜYÜK | Nakit 0 kazanırken metrik rf düşüyor (asimetri) | **Kabul, beyan.** Ortam değişmez (davranış dondurma); `sharpe_rf0` her noktada kayıtlı. Nakit faizi §9.2 #7'de zaten açık (G paketi) |
 | F3 | hakem-finans | KÜÇÜK | Düzeltilmiş fiyat türetimi fⱼ'nin sonradan değişmemesine bağlı | **Kabul,** §9.11 metni "bir indirme içinde ve fⱼ sabitken" diye sınırlandı |
 | F4 | hakem-finans | KÜÇÜK | Pay sınırının TL değeri değişken; baseline'larla karşılaştırma kayar | **Kabul, beyan** (§9.11); D1'de |
 | F5 | hakem-finans | KÜÇÜK | Temettü brüt ve gecikmesiz yeniden yatırılıyor | **Kabul, beyan** (§9.11) |
