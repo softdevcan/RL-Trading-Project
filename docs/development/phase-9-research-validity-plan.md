@@ -246,7 +246,8 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Testler:** A3 (ikili Sharpe), A4 (MCS), A1 (DSR, N deneme kaydından), A5 (tohum dağılımı); aile başına BH-FDR (A7) — aile = bir hipotezin tüm karşılaştırmaları.
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
-- **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır.
+- **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır; yüksek faizli doğrulama yıllarında negatif ortalama olağan, `picks_agree` raporlanır.
+- **Doğrulayıcı katlar (R1; kullanıcı kararı 2026-11-14):** 2021–2023. 2024–2026 R1 öncesi başarımla okundu (`eval_window_unexposed`, Faz 9 §9.11). Ön kayıttan sonra gelen veri gerçek sınama olarak ayrılır.
 
 ---
 
@@ -919,7 +920,7 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 |---|---|---|
 | Bölme | `wf-v1` (özet `33a196c602976de1`): 6 kat, test = takvim yılı 2021..2026 (2026: 2026-11-01'e kadar, hariç), doğrulama = bir önceki yıl, eğitim 2013-06-01'den genişleyen (K17) | Sabit tarihli ve sürümlü ([evaluation/splits.py](../../evaluation/splits.py)). Eskiden 70/15/15 oranla bölünüyordu; panel uzadıkça sınırlar kayıyordu (Y17). Tanım değişmez, uzatma yeni sürümdür (wf-v2). Rota ve HPO pencereyi yalnız buradan alır |
 | 2013-06 öncesi | Alınmadı | Pencereyi geri çekmek panelin en geç başlayan sembollerini düşürür: PGSUS 2013-04-26, ODAS 2013-05-21 (Faz 10 Ek A komut 1). Eski ortam etkin olmayan sembolü maskeleyemiyor. Kullanıcı notu: eski veri performansı iyileştirirse alınabilir. M2 aktiflik maskesiyle denenebilir |
-| Purge | 0 seans | Eski ortamda ödül ufku bir adım; ortam kendi penceresinin son gününde bitiyor. **Varsayılmadı, ölçüldü:** kat sınırında B0 (aşağıda test B). Ufuk büyürse (Faz 10 K12, t+1 açılış) test kırılır ve değer yükseltilir |
+| Purge | 0 seans | Eski ortamda ödül ufku bir adım; ortam kendi penceresinin son gününde bitiyor; genişleyen ve yalnız ileri giden walk-forward'da embargo sorusu doğmuyor. **Varsayılmadı, ölçüldü — kapsamıyla:** faz 1, basit ödül, eski ortam, iki kol; fiyat ve hacim kanalları (ortak ve sembol başına farklı sürüklenme); sentetik panel (test B) ve gerçek panelde 2026 katı (`real_b0.json`); düzeltilmiş panel sabit. Etiket örtüşmesi yok. **Ölçülmeyenler:** faz 2 (`fundamentals_pit` ile açık) ve düzeltme çarpanı kanalı (analitik; purge kapatmaz, aşağıda). Ufuk büyürse (Faz 10 K12, t+1 açılış) test kırılır ve değer yükseltilir |
 | Kontrol noktası | Bütçe boyunca 10 eşit aralıklı nokta, sonuncusu bütçe sonu. Her noktada doğrulama bloğunda belirlenimci tek geçiş. Seçim: risksiz faiz üstü yıllık Sharpe'ın argmax'ı, eşitlikte en erken adım. Erken durdurma ve yeniden uyum yok | Tasarım varsayımı (N = 10; bir yıllık doğrulamada yıllık Sharpe'ın standart hatası kabaca 1). Kollar eşit ortam adımı alır. Test yalnız seçilen modelle, bir kez okunur. Seçimde kullanılan tahminin seçilen model için yanlı olması: Varma & Simon 2006; Cawley & Talbot 2010 (özetten) |
 | Seçim metriği | `val_excess_sharpe`; risksiz faiz `evaluation/risk_free.py`'den (A8) | Seri yoksa rf = 0 ve kayıt açık (`selection_metric='val_sharpe_rf0'`); sabite sessizce düşülmez. Ortalama fazla getiri negatifken davranışı ölçüldü; tanı kayda giriyor (§9.12, kullanıcı kararı 2026-11-14) |
 | HPO | (a) yalnız ilk katta: 2021 katının doğrulaması (2020) bütün testlerden önce bitiyor. Panel, kat ve ortam rotayla aynı. Amaç = en iyi kontrol noktasının doğrulama metriği. Budama aynı metrikten; bütçenin ilk yarısında budama yok | Y21 kapandı: HPO göstergeli CSV'yi, `wilder` ADX'i, veri kapısını ve nedensel kolu rotayla aynı yoldan alıyor. Ayar tohumu kayda giriyor; rota soyu ölçüyor (`hpo_lineage`). Ayar ve sınama tohumlarının ayrılması: Eimer vd. 2023 (özetten) |
@@ -928,6 +929,8 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
 - Yeni protokol maddeleri:
   - `split_from_spec`: pencereler kanonik tanımdan mı?
   - `selection_metric`: R1 öncesi kayıtlar bu maddeleri taşımadığı için açık sayılır.
+  - `eval_window_unexposed`: değerlendirme penceresi R1 öncesi okunmuş bir pencereyle kesişmiyor mu (hakem-2 R1 #1).
+  - `fundamentals_pit`: faz 2 temel oranları tek anlık görüntü (S4) → açık; faz 1 temiz (hakem-2 R1 #5, B4'ün RL tarafı).
 - `test_reread` etiketi: aynı yapılandırma × tohum × kat × bölme × veri ikinci kez okununca konur. Kayıt N'ye sayılır ama kanıt sayılmaz; varsayılan okuma dışlar.
 - Farklı katlar ya da bölme tanımları tek N/V'de karışmaz (`sharpe_trial_stats` hata verir). Katlar arası birleştirme kuralı M8'de.
 - `hpo_lineage` maddeleri:
@@ -936,14 +939,14 @@ Hakem bu ölçümleri `python -I` betikleriyle yaptı; çıktıları oturumun ge
   - `hpo_universe_mismatch`, `hpo_split_mismatch`, `hpo_obs_mismatch`
   - Ortam kurulmadan düşen bir HPO denemesinin `price_norm=None`'u soyu açar. Hata güvenli yönde; beyan edilir.
 
-**Kabul.** `python tests/test_rl_walk_forward.py` → 75 kontrol, ~35 sn, CPU. Her grupta testi gerçekten kırdığı gösterilen bir mutasyon var.
+**Kabul.** `python tests/test_rl_walk_forward.py` → 90 kontrol, < 1 dk, CPU. Her grupta testi gerçekten kırdığı gösterilen bir mutasyon var.
 
 | Grup | Ölçüt | Mutasyon |
 |---|---|---|
 | A bölme | wf-v1 sabit (özet). [eğitim başlangıcı, test bitişi) içindeki her seans tam bir blokta: örtüşme ve boşluk yok. Tamamlanmamış test ve eksik eğitim başlangıcı hata verir. `fold_coverage` 2018'de başlayan paneli "tamam" saymaz | Sınır bir gün kayınca özet değişir |
-| B kat sınırı B0 | Sentetik OHLCV → gerçek gösterge hattı → `load_rl_panel` → `build_fold` → `make_fold_env`. Sınırdan sonraki fiyatlar değişince önceki ortamın gözlem + ödül + portföy izi bit-eş (`stats`, `causal`); sonraki ortamın izi değişir | (i) Eğitime doğrulamanın ilk seansı eklenir; (ii) ADX bir gün ileriden okunur. İkisi de yakalanır |
+| B kat sınırı B0 | Sentetik OHLCV → gerçek gösterge hattı → `load_rl_panel` → `build_fold` → `make_fold_env`. Sınırdan sonraki fiyatlar değişince önceki ortamın gözlem + ödül + portföy izi bit-eş (`stats`, `causal`); sonraki ortamın izi değişir. Bozma iki aile: tüm sembollere ortak düzgün sürüklenme (O/H/L/C) ve sembol başına farklı sürüklenme + hacim (hakem-2 R1 #4) | (i) Eğitime doğrulamanın ilk seansı eklenir; (ii) ADX bir gün ileriden okunur. İkisi de yakalanır |
 | C test seçime sızmıyor | Rota uçtan uca: test bloğu değişince seçim (10 noktanın metrikleri) ve seçilen ağırlıklar bit-eş, test metriği değişir. Aynı koşum tekrarı bit-eş ve `test_reread` alır. Seçim son nokta değilse kaydedilen model seçilen noktanınki | Doğrulama ortamı test bloğundan kurulursa seçim değişir |
-| D geri çağrı | Geri çağrı açık/kapalı son ağırlıklar bit-eş (A2C, PPO; PPO'da ölçüm rollout ortasına düşer) | Stokastik ölçüm |
+| D geri çağrı | Geri çağrı açık/kapalı son ağırlıklar bit-eş (A2C, PPO, TD3, SAC; PPO'da ölçüm rollout ortasına düşer) | Stokastik ölçüm |
 | E ortak yol | Aynı kat ve kolda HPO'nun eğitim ve doğrulama ortamları rotanınkilerle bit-eş iz üretir (`stats`, `causal`) | HPO ADX'i yeniden hesaplamazsa iz ayrışır |
 | F AST | Rota eğitim fonksiyonu, HPO optimizer'ı ve HPO rotasında `split_data` ve `raw_stock_data` yok; `trading.py`'nin tamamında `split_data` yok | Bekçi öz-testi |
 | G kayıt | Kat karışımı hatası, `test_reread`, `hpo_lineage` maddeleri. wf-v1 rota kaydında `split_from_spec=True`; rf yoksa `selection_metric` açık | Her madde tek değişiklikle tetiklenir |
@@ -986,6 +989,13 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - Eşik duyarlılığı M8'de.
 - **Nedensel eğitim bağlamı** (2012-05-22..2013-05-31) K18'le birebir aynı: 18 hayalet gün, 12 bayat hücre. Pencere dolmadan geçen eğitim satırı 492, nötr satır 28; seri başı yalnız ODAS ve PGSUS.
 
+**Okunmuş test pencereleri (hakem-2 R1 #1; kullanıcı kararı 2026-11-14).**
+- 2024-08-06..2026-07-27, R1'den önce başarım metrikleriyle okundu: §9.5, B9 etki ölçümü (A2C/PPO × 3 tohum, fazla getiri Sharpe'ı, al-tut). Okunan sonuçlar K25 ve K26 kararlarına girdi.
+- Kayıt bunu ölçüyor: yeni madde `eval_window_unexposed` (`EXPOSED_EVAL_WINDOWS` ile kesişim). 2024, 2025 ve 2026 katlarının test kayıtları bu yüzden açık; 2025 ve 2026 katlarının doğrulama yılları da bu pencerede.
+- R1 öncesi oranlı bölmeyle yapılan eğitimlerin (23 metrik dosyası) test aralığı kayıtlı değil; okunan dönemler ölçülemiyor, büyük olasılıkla panelin son %15'i, yani 2023 sonrası. Bu yüzden 2021–2023 katları "kanıtlanmış okunmamış" değil, "bilinen en az okunmuş" katlar.
+- Okunmadığı kesin tek gerçek veri 2026-07-28 sonrası: eski panel 2026-07-27'de bitiyordu ve R1 ölçümleri bu dönemde başarım okumadı.
+- M8: doğrulayıcı katlar 2021–2023; ön kayıttan sonra gelen veri gerçek sınama olarak ayrılır.
+
 **Veri tazelemesi (2026-11-11, kullanıcı: tam yeniden indirme).**
 - **Panel.**
   - Ham ve göstergeli CSV 2005-01-03..2026-11-09. yfinance 2005 öncesini artık vermiyor; eski panel 2000-05-10'da başlıyordu.
@@ -1008,8 +1018,9 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **Ders:** auto_adjust edilmiş yfinance paneli değişmez değil; tam indirme geçmişi geriye dönük değiştirebiliyor. Bir sonuç yeniden üretilecekse veri yeniden indirilmez, anlık görüntü (C3) kullanılır. Veri kapısı tek paneldeki bozukluğu yakalar; iki indirme arasındaki farkı panel SHA-256'sı ayırır.
 - B9 ve K18 ölçüm JSON'ları eski panelin SHA'sına ait ve tarihsel kayıt olarak değişmez.
 - **Düzeltilmiş fiyat ve nokta-zamanlılık (analitik, ölçülmedi).** `Ticker.history` varsayılanı `auto_adjust=True` ([data_fetcher.py:164](../../data/data_fetcher.py#L164); yfinance 0.2.66). Çarpımsal düzeltmede p̃ₜ = pₜ · Πⱼ﹥ₜ fⱼ = C · TRₜ; burada TRₜ = pₜ / Πⱼ≤ₜ fⱼ, t'ye kadarki bilgiyle kurulan toplam getiri endeksi, C = Πⱼ fⱼ ise indirme tarihine kadarki tüm temettü ve bölünme çarpanları (sembol başına tek sabit). Türetim **bir indirme içinde ve fⱼ'ler sabitken** geçerli: sağlayıcı geçmiş fⱼ'leri sonradan revize edebiliyor (SKBNK, yukarıda; hakem-finans R1 #3). TRₜ temettüyü ex-tarihinde, brüt (stopajsız) ve gecikmesiz yeniden yatırıyor; getiride küçük bir yukarı yanlılık olarak beyan edilir (#5).
-  - Ölçekten bağımsız özellikler (getiri, aynı seriden kurulan `stats` z'si, nedensel kayan z) C'yi taşımaz: gelecek temettü bilgisi sadeleşir.
+  - Fiyatta sıfırıncı dereceden homojen özellikler (getiri, aynı seriden kurulan `stats` z'si, nedensel kayan z, RSI, CCI, ADX) C'yi taşımaz: gelecek temettü bilgisi sadeleşir. MACD birinci dereceden homojen; bu yüzden ayrı.
   - Ölçeğe bağlı olanlar C'yi taşır: TL cinsinden MACD (`tanh(macd/0,1)`), pay adediyle işlem büyüklüğü (`max_shares_per_trade`) ve portföydeki pay sayıları. Bunlar K26'da zaten ölçeğe bağlı diye beyanlı; burada eklenen, ölçeğin gelecekteki temettüleri de içermesi. Pay sınırının TL karşılığı bu yüzden sembole, tarihe ve indirmeye göre değişiyor; D1 baseline'ları (1/N, al-tut) bu sınırla kısıtlanmıyorsa karşılaştırma kayar ve bu D1'de beyan edilir (#4). Ölçeksiz gözlem ve ağırlık tabanlı eylem M2'de (K26, Y6).
+  - **Kat sınırıyla ilişkisi (hakem-2 R1 #6):** C, sınırdan sonra (doğrulama ve test döneminde) ödenen temettüleri de içerir; ölçeğe bağlı kanallar bu bilgiyi eğitim ortamına taşır. B0 düzeltilmiş paneli sabit tuttuğu için bu kanalı kurgu gereği göremez, purge da kapatmaz. Kapanışı M2'nin ölçeksiz gözlemi. Öncülün (yfinance'in geriye dönük çarpımsal çarpanı) ucuz bir ölçümü mümkün; yapılmadı.
 
 **Bu paketin bulguları.**
 1. Panoda HPO doğrulama penceresi CSV'nin sonuna uzanıyordu; rotanın test dönemini içeriyordu. **Kapandı:** kat seçici.
@@ -1040,6 +1051,8 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - Canlı karar paritesi (K13): meta `fold` ve `selected_step` taşıyor, canlı karar okumuyor.
 - Seçim protokolü kaynaklarının tam metni (verification §8.4).
 - Seçim kuralının test karşılaştırması (argmax ↔ son nokta) → M8 ön kaydı (§9.12).
+- Okunmuş pencere listesi R1 öncesi oranlı bölmeleri içermiyor (aralıkları kayıtlı değil, ölçülemiyor).
+- Faz 2 RL `fundamentals_pit` ile açık (B4).
 - Nakit getirisi: ortamda nakit 0 kazanıyor, seçim metriği rf düşüyor → §9.2 #7, G paketi (§9.12 F2).
 
 ### 9.12 Hakem paneli (R1, 2026-11-13/14)
@@ -1048,17 +1061,20 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 |---|---|---|---|---|---|
 | hakem-rl (sonnet) | ilk | Küçük revizyon | ~57 bin | 9 | ~1 dk |
 | hakem-finans (sonnet) | ilk | Küçük revizyon | ~66 bin | 9 | ~2 dk |
+| hakem-2 (opus) | son kapı | Büyük revizyon (RED yok; yeniden tasarım gerekmiyor) | ~123 bin | 33 | ~7,9 dk |
 
 **Paneli izleyen ölçüm.** Komut: `python scripts/analysis/measure_r1_selection.py --folds 2021,2025 --timesteps 50000 --b0-fold 2026 --out docs/development/measurements/phase9-r1/selection.json`. Koşum commit `7ab7a33` üzerinde, temiz ağaçta yapıldı.
 - Kurulum: gerçek panel, rotanın A2C varsayılanları, CPU, tek tohum (7). Deneme kaydına yazılmadı; test bloğu kurulmadı.
 - **Seçim metriği.**
-  - 2021 katında (doğrulama 2020, rf yıllık %10,0) 10 noktanın 0'ının ortalama fazla getirisi negatif.
-  - 2025 katında (doğrulama 2024, rf %40,5) 10 noktanın **10'u** negatif.
-  - 2025'te dört kural da (fazla getiri Sharpe'ı, rf = 0 Sharpe, ortalama fazla getiri, işarete duyarlı Sharpe) aynı noktayı, yani son noktayı seçti. En oynak nokta (4) seçilmedi; noktaların oynaklığı %23–25 aralığında.
-  - 2021'de rf = 0 Sharpe başka bir nokta seçiyor (8 yerine 4).
+  - 2021 katında (doğrulama 2020, rf %10,0) 10 noktanın 0'ının ortalama fazla getirisi negatif. rf burada 252 × seans ortalaması (≈ sürekli bileşik); yıllık basit karşılığı ≈ %10,5.
+  - 2025 katında (doğrulama 2024, rf %40,5; yıllık basit ≈ %49,9) 10 noktanın **10'u** negatif.
+  - 2025'te dört sıralama da (fazla getiri Sharpe'ı, rf = 0 Sharpe, ortalama fazla getiri, işarete duyarlı sıralama) aynı noktayı, yani son noktayı seçti. **Ama bu kat sorunu ayırt edemez:** 10 noktanın 9'unun oynaklığı %22,8–25,4 (nokta 0: %15,4). Oynaklıklar bu kadar yakınken Sharpe ile ortalama sıralaması zaten çakışır (hakem-2 R1 #2).
+  - 2021'de dört sıralama üç farklı nokta seçiyor: fazla getiri Sharpe'ı 8, rf = 0 Sharpe 4, ortalama fazla getiri 0, işarete duyarlı 8. rf = 0 Sharpe'ın seçtiği 4. nokta düşük oynaklıklı (%4,3, büyük ölçüde nakit): F2 asimetrisi bu katta seçimi fiilen değiştiriyor.
+  - Doğrulama tarafında seçilen − son: 2021'de 1,423 − 1,384 = 0,039; en iyi üç nokta (0, 8, 9) 0,07 içinde. 2025'te seçilen nokta son noktanın kendisi (fark 0). Bir yıllık doğrulamada Sharpe'ın standart hatası ~1 iken argmax gürültü düzeyindeki noktalar arasından seçiyor.
+  - İşarete duyarlı sıralama yalnız sıra olarak kullanıldı; değeri yıllıklaştırılmış bir metrik değil.
   - Her katta 10 noktanın ağırlıkları farklı. Callback'in metriği bağımsız yeniden hesapla birebir.
   - Tek tohum ve tek algoritma olduğu için bu bir tanıdır, genelleme değil.
-- **Gerçek panel B0** (2026 katı; ham fiyat doğrulama ya da test başından itibaren değiştirildi, CSV'yi üreten gösterge hattı yeniden koşuldu): iki kolda ve iki sınırda sınırdan önceki ortamın izi bit-eş, sonraki ortamın izi değişiyor (JSON `real_b0`).
+- **Gerçek panel B0** (2026 katı; ham fiyat doğrulama ya da test başından itibaren değiştirildi, CSV'yi üreten gösterge hattı yeniden koşuldu): iki kolda ve iki sınırda sınırdan önceki ortamın izi bit-eş, sonraki ortamın izi değişiyor (JSON `real_b0`). İkinci ölçüm geniş aileyle (sembol başına farklı sürüklenme + hacim): `docs/development/measurements/phase9-r1/real_b0.json`, sonuç aynı. Komut: `python scripts/analysis/measure_r1_selection.py --folds "" --b0-fold 2026 --out docs/development/measurements/phase9-r1/real_b0.json` (kod `4c2b995`). O koşumda ağaçta yalnız iki belgenin yeniden adlandırılması vardı (kullanıcı, kod dışı); JSON bu yüzden `git_dirty=true`.
 
 **Kullanıcı kararları (2026-11-14).**
 - **Seçim metriği korunur** (M8 birincil metriğiyle tutarlı). Her kontrol noktasına yıllık ortalama fazla getiri (`mean_excess`) yazılır; seçim raporu negatif ortalamalı nokta sayısını (`n_negative_mean_excess`) ve son noktanın doğrulama metriğini (`last_metric`) taşır. Nakit getirisi (ortamda 0) zaten §9.2 #7'de açık iş: G paketinde nakit faiz tahakkuku ya da varsayım beyanı (M2 ortamı aynı kararı devralır).
@@ -1068,13 +1084,13 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 |---|---|---|---|---|
 | R1 | hakem-rl | BÜYÜK | Seçimin değeri ölçülmüyor; son nokta referansı yok | **Kısmen.** Test bir kez okunur (Varma & Simon 2006; Cawley & Talbot 2010). Doğrulama tarafındaki fark `last_metric` ile raporlanıyor; test tarafı M8'de (karar yukarıda) |
 | R2 | hakem-rl | BÜYÜK | Pasif referans (al-tut, nakit) yok | **Plan D1** (1/N, al-tut, XU030); R1 kapsamı dışında. Paketin bilinen açıklar listesinde eksikti |
-| R3 | hakem-rl | BÜYÜK | `stats` kolunda seçim destek dışı doğrulama gözlemleriyle yapılıyor | **Kabul, beyan.** Bu seçimi zayıflatır ama testin ölçümünü yanlı kılmaz; `protocol_val` bilgi alanı olarak kalır (K18 #4). `stats` kayıtları zaten `price_in_support` ile açık. Kol karşılaştırmasında referans `causal` (Milestone 0') |
+| R3 | hakem-rl | BÜYÜK | `stats` kolunda seçim destek dışı doğrulama gözlemleriyle yapılıyor | **Kabul, beyan.** Bu seçimi zayıflatır ama testin ölçümünü yanlı kılmaz; `protocol_val` bilgi alanı olarak kalır (K18 #4). `stats` kayıtları zaten `price_in_support` ile açık. Kol karşılaştırmasında referans `causal` (Milestone 0'). Nedensel kol da 2021–2023 doğrulamasında `price_in_support` ile açık (%1,63–2,11); bu referans erken katlarda sınırlı (hakem-2) |
 | R4 | hakem-rl | KÜÇÜK | Güncelleme arasına düşen noktalar aynı modeli ölçüyor | **Kabul, düzeltildi:** `params_sha` + `n_distinct` (test C, I) |
 | R5 | hakem-rl | KÜÇÜK | 2021 katında HPO ve kontrol noktası seçimi aynı doğrulama yılını kullanıyor | **Beyan.** Test dokunulmuyor; doğrulama metriği kanıt olarak kullanılmıyor ve çift seçimle iyimser olduğu biliniyor |
 | R6 | hakem-rl | KÜÇÜK | Tek tohum; seçim kararlılığı ölçülmedi | **Beyan.** R1 performans sayısı üretmiyor; ≥ 10 tohum Milestone 0''da |
 | R7 | hakem-rl | KÜÇÜK | Katlar arasında bütçe/seans oranı sabit değil (1.651 → 2.901 seans) | **Beyan,** M8 (bütçe ölçekleme ya da kol) |
 | R8 | hakem-rl | KÜÇÜK | TD3/SAC bit-eşliği test edilmemiş; `learning_starts` öncesi noktalar eğitilmemiş politikayı ölçüyor | **Kabul.** Test D TD3 ve SAC'ı da kapsıyor, ikisi de bit-eş. `learning_starts` (rota varsayılanı 1000) öncesine düşen noktalar beyan edilir |
-| F1 | hakem-finans | BÜYÜK | Ortalama fazla getiri negatifken Sharpe oynaklığı ödüllendirir | **Ölçüldü:** 2025'te 10/10 negatif, ama seçim değişmedi. Karar: metrik korunur, tanı kayda girer |
+| F1 | hakem-finans | BÜYÜK | Ortalama fazla getiri negatifken Sharpe oynaklığı ödüllendirir | **Ölçüldü, ayırt edici değil** (hakem-2 #2): 2025'te 10/10 negatif ama oynaklıklar dar (%22,8–25,4), kat sorunu ayıramıyor. 2021'de rf = 0 Sharpe başka nokta seçiyor (F2). Karar: metrik korunur; tanı kayda girer (`mean_excess`, `n_negative_mean_excess`, `pick_mean_excess_step`, `picks_agree`) |
 | F2 | hakem-finans | BÜYÜK | Nakit 0 kazanırken metrik rf düşüyor (asimetri) | **Kabul, beyan.** Ortam değişmez (davranış dondurma); `sharpe_rf0` her noktada kayıtlı. Nakit faizi §9.2 #7'de zaten açık (G paketi) |
 | F3 | hakem-finans | KÜÇÜK | Düzeltilmiş fiyat türetimi fⱼ'nin sonradan değişmemesine bağlı | **Kabul,** §9.11 metni "bir indirme içinde ve fⱼ sabitken" diye sınırlandı |
 | F4 | hakem-finans | KÜÇÜK | Pay sınırının TL değeri değişken; baseline'larla karşılaştırma kayar | **Kabul, beyan** (§9.11); D1'de |
@@ -1083,6 +1099,15 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | F7 | hakem-finans | KÜÇÜK | Takvim yılı blokları rejime özgü; arife yarım günleri hacmi yanlı yapar | **Beyan,** M8 raporu. Yarım gün işareti M2 `obs_spec`'inde |
 | FS1 | hakem-finans (soru 1) | — | Kat sınırı B0'ın gerçek panelde de doğrulanması | **Yapıldı:** `real_b0` bit-eş |
 | FS5 | hakem-finans (soru 5) | — | SHA tek başına yetmez; dosyanın kendisi korunmalı | **Kabul.** Yedekler (`data/bist/backup_*`) yerel ve git dışında. Makine dışı kopya kullanıcı işi (açık) |
+| H1 | hakem-2 | BÜYÜK | 2024–2026 katlarının testi R1 öncesi başarımla okundu (B9) ve sonuçlar K25/K26'ya girdi; `test_reread` protokoller arası okumayı yakalamıyor | **Kabul (kullanıcı kararı 2026-11-14: ölçülen bayrak + beyan).** Yeni madde `eval_window_unexposed` (`EXPOSED_EVAL_WINDOWS`); 2024–2026 kayıtları açık; R1 öncesi oranlı okumalar ölçülemiyor, beyan (§9.11). M8: doğrulayıcı katlar 2021–2023 |
+| H2 | hakem-2 | BÜYÜK | F1 yanıtı kanıttan fazlasını söylüyor: 2025'te oynaklıklar dar, oynaklık aralığı yanlış yazılmış, 2021 seçimleri eksik, F2 bağı kurulmamış | **Kabul, düzeltildi.** Metin "ayırt edici değil"; aralık %22,8–25,4 (nokta 0: %15,4); 2021 seçimleri 8/4/0/8; 4. nokta F2'nin gözlenen etkisi. Rapora `pick_mean_excess_step` ve `picks_agree` (test C, I) |
+| H3 | hakem-2 | KÜÇÜK | rf etiketi: 252 × seans ortalaması ≈ sürekli bileşik, yıllık basit değil | **Kabul, düzeltildi** (yıllık basit ≈ %10,5 / %49,9) |
+| H4 | hakem-2 | KÜÇÜK | B0 bozması dar ailede: ortak düzgün sürüklenme, hacim yok | **Kabul, düzeltildi.** Test B ve `real_b0.json`'da sembol başına farklı sürüklenme + hacim; iki kol, iki sınır bit-eş |
+| H5 | hakem-2 | KÜÇÜK | "Purge 0 ölçüldü" yalnız faz 1 / basit ödül için; faz 2'nin tek anlık temel oranları protokolde değil | **Kabul.** Purge iddiasının kapsamı yazıldı; yeni madde `fundamentals_pit` (B4'ün RL tarafı) |
+| H6 | hakem-2 | KÜÇÜK | Düzeltme çarpanı kanalı B0'ın kapsamı dışında; metin sınırla ilişkilendirmiyor | **Kabul.** §9.11'de "etiket örtüşmesi yok (ölçüldü)" ile "düzeltme çarpanı kanalı (analitik; purge kapatmaz; M2)" ayrıldı |
+| H7 | hakem-2 | KÜÇÜK | §9.11 eskimiş (75 kontrol, D grubu yalnız A2C/PPO) | **Kabul, düzeltildi** (90 kontrol; A2C, PPO, TD3, SAC) |
+| H8 | hakem-2 | KÜÇÜK | Doğrulama tarafındaki fark sayı olarak yazılmamış | **Kabul.** 2021: 1,423 − 1,384 = 0,039, en iyi üç nokta 0,07 içinde; 2025: fark 0. Argmax gürültü düzeyinde seçiyor (beyan) |
+| H9 | hakem-2 | KÜÇÜK | İşarete duyarlı Sharpe kaynaksız, yıllıklaştırması tutarsız | **Kabul.** Yalnız sıra olarak raporlanıyor (sıra yıllıklaştırma sabitinden bağımsız); kural değil, tanı. Kaynak eklenmedi |
 
 ---
 
@@ -1118,3 +1143,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-09 (K18 + K25 b):** K25 kararı (b). ADX'in kök nedeni indeks hizalaması; `wilder` bayrağı rota varsayılanı oldu (iki bağımsız referans). Eski ortama opt-in nedensel fiyat ölçeği eklendi (`price_norm='causal'`, W=252; MACD aynı ölçekle). Yeni ölçülen protokol maddeleri: `obs_health` ve `features_in_support`. Gerçek panelde nedensel kol test fiyatlarının havuzlu destek dışılığını %98,9'dan %0,03'e indiriyor. Doğrulamada sembol düzeyinde aşım sürüyor (`dims_in_support`). Türbülans doygunluğu yüzünden eski ortamın hiçbir kolu `obs_health`'ten geçmiyor; MACD, türbülans ve hacim için karar K26 önerildi. B7 ölçütünün yanlış pozitifi bulunup düzeltildi. Panel (§9.10): hakem-rl iki okuma (Büyük → Küçük revizyon), hakem-2 Büyük revizyon (RED yok). Düzeltmeler: boyut düzeyi kapı, MACD varsayılanı geri alındı, `causal_short_context`, klasik Wilder tohumu, sembol başına bağlam.
 - **2026-11-09 (K26):** kullanıcı kararı (a), yalnız beyan. Eski ortam sadık Ansari replikasyonu olarak kalıyor; ölçeksiz özellik adayları (`tanh(macd/σ_t)`, `tanh(turb/n)`) M2 `obs_spec`'ine taşınıyor. Gerekçe Faz 10 §6 K26.
 - **2026-11-13 (R1):** RL walk-forward bölmesi `wf-v1` (6 kat, test 2021..2026, purge 0 kat sınırında B0 ile ölçüldü), doğrulamada kontrol noktası seçimi (10 nokta, fazla getiri Sharpe'ı) ve HPO'nun rotanın yolunda çalışması (Y21 kapandı) — §9.11. Kabul: `tests/test_rl_walk_forward.py` (75). Kat ölçümü 6 × 2: hiçbir kat/kol temiz değil (türbülans, K26); nedensel kolda erken katlar fiyatta %1,6–2,7 destek dışı. Veri tam yeniden indirildi; aynı kapıyla fark yalnız 5 tatil satırı (hayalet gün 72 → 67). Yeni bulgular: pano HPO penceresi test dönemini içeriyordu ve budama ölüydü (kapandı); HPO sampler tohumsuz (açık); `/data/generate` veri kaybı riski (plan dışı, ayrı iş). Literatür: Varma & Simon 2006, Cawley & Talbot 2010, Eimer vd. 2023.
+- **2026-11-14 (R1 paneli):** hakem-rl ve hakem-finans Küçük revizyon, hakem-2 Büyük revizyon (RED yok) — §9.12. Kullanıcı kararları: seçim metriği korunur, tanı kayda; argmax ↔ son nokta M8'e; okunmuş test pencereleri ölçülen bayrakla (`eval_window_unexposed`; 2024–2026 doğrulayıcı değil). Yeni madde `fundamentals_pit`. Gerçek panelde seçim metriği tanısı (2025'te 10/10 negatif, ayırt edici değil) ve geniş B0 ailesi bit-eş. `test_rl_walk_forward` 90.

@@ -178,7 +178,7 @@ python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagims
                                            #          main ile bit-es, rota uctan uca (109)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
-                                           #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (82, ~40 sn)
+                                           #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)
 ```
 
 ### Auth & kullanici bazli calisma (Faz 7)
@@ -526,6 +526,10 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
   - **Deneme kaydi protokol tasir**: bilinen acik madde (test olcegi Y13, gosterge bfill Y15,
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
+    R1 maddeleri: `eval_window_unexposed` (R1 oncesi basarimla okunmus pencere,
+    `EXPOSED_EVAL_WINDOWS`: 2024-08-06..2026-07-27 -> 2024-2026 katlari dogrulayici DEGIL) ve
+    `fundamentals_pit` (faz 2 tek anlik temel oran). Yeni bir pencereyi basarimla okuyan olcum
+    yaparsan o pencereyi listeye ekle.
   - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans; K26 = a, kalici);
     'stats' kolunda ayrica `price_in_support`/`features_in_support`. R1 (§9.11) tek bolmeyi,
     dogrulamasiz secimi ve gostergesiz HPO'yu kapatti. Kol karsilastirmasi Milestone 0'da.
