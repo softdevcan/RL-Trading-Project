@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 # Faz 9 / K18: RL egitiminin ADX surumu (data/technical_indicators.py ADX_MODES).
 # Gunluk karar (canli) hala legacy ADX ile gozlem kuruyor — K13 acik isi.
 RL_ADX_MODE = 'wilder'
+# Faz 9 / R1: RL paneli HPO ile ortak dosyadan ve ortak yoldan (evaluation.rl_folds)
+RL_PANEL_FILE = 'stock_data_with_indicators.csv'
 
 router = APIRouter(prefix="/trading", tags=["Trading"])
 
@@ -245,6 +247,17 @@ async def start_training(
         background_tasks: FastAPI background tasks
         user: Aktif kullanici — egitim onun calisma alanina yazilir (viewer yapamaz)
     """
+    # Faz 9 / R1: bolme tanimi ve kat ADI arka plan gorevinden ONCE dogrulanir (HPO
+    # ucuyla ayni). Eskiden bilinmeyen kat gorevi baslatip ancak orada KeyError veriyordu.
+    # Panelin kati kapsayip kapsamadigi gorevde olculur (SplitCoverageError).
+    from evaluation.splits import get_spec
+    try:
+        _spec = get_spec(request.split_spec)
+        if request.fold:
+            _spec.fold(request.fold)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc).strip('"'))
+
     # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
     _check_training_data_freshness(request.phase)
 
@@ -540,17 +553,17 @@ async def generate_data(
         # Save
         fetcher.save_data(df, 'stock_data_with_indicators.csv')
 
-        # Get train/val/test split info
-        train_df, val_df, test_df = fetcher.split_data(df)
+        # Faz 9 / R1: eskiden `split_data` (70/15/15) satir sayilari donuyordu; egitim o
+        # bolmeyi artik kullanmiyor. Panelin hangi walk-forward katlarini kapsadigi doner.
+        from evaluation.splits import fold_coverage, get_spec
 
         return {
             "status": "success",
             "message": "Data generated successfully",
             "symbols": symbols,
             "total_rows": len(df),
-            "train_rows": len(train_df),
-            "val_rows": len(val_df),
-            "test_rows": len(test_df),
+            "split_spec": get_spec().name,
+            "folds": fold_coverage(df),
             "columns": df.columns.tolist(),
             "date_range": {
                 "start": str(df.index.get_level_values('date').min().date()),
@@ -577,14 +590,14 @@ async def get_data_info():
             }
 
         df = fetcher.load_data('stock_data_with_indicators.csv')
-        train_df, val_df, test_df = fetcher.split_data(df)
+        # Faz 9 / R1: `split_data` satir sayilari yerine walk-forward kat kapsami
+        from evaluation.splits import fold_coverage, get_spec
 
         return {
             "status": "exists",
             "total_rows": len(df),
-            "train_rows": len(train_df),
-            "val_rows": len(val_df),
-            "test_rows": len(test_df),
+            "split_spec": get_spec().name,
+            "folds": fold_coverage(df),
             "columns": df.columns.tolist(),
             "symbols": df.index.get_level_values('symbol').unique().tolist(),
             "date_range": {
@@ -1090,7 +1103,9 @@ def _audit_shared_model_delete(user, model_name: str) -> None:
 
 
 def _rl_protocol(eval_env, train_env, health: Optional[Dict[str, Any]],
-                 hyperparams_source: Dict[str, Any]) -> Dict[str, Any]:
+                 hyperparams_source: Dict[str, Any],
+                 split_from_spec: Optional[bool] = None,
+                 selection_metric: Optional[str] = None) -> Dict[str, Any]:
     """RL test degerlendirmesinin protokol maddeleri (deneme kaydi + manifest + metrik).
 
     Acik bir madde varsa kayit 'protocol_open' etiketi alir. Hesap HPO ile
@@ -1111,7 +1126,9 @@ def _rl_protocol(eval_env, train_env, health: Optional[Dict[str, Any]],
     from evaluation.trial_registry import rl_eval_protocol
     # indicator_bfill artik OLCULUYOR (B7): egitim/test verisinde bfill blogu kaldi mi
     protocol = rl_eval_protocol(eval_env, train_env, health=health,
-                                hyperparams_clean=hyperparams_source.get('clean'))
+                                hyperparams_clean=hyperparams_source.get('clean'),
+                                split_from_spec=split_from_spec,
+                                selection_metric=selection_metric)
     protocol['hyperparams_source'] = hyperparams_source.get('source')
     protocol['hyperparams_open_items'] = hyperparams_source.get('open_items', [])
     return protocol
@@ -1172,70 +1189,67 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         fetcher = DataFetcher()
 
         try:
-            df = fetcher.load_data('stock_data_with_indicators.csv')
+            raw_indicator_df = fetcher.load_data(RL_PANEL_FILE)
         except FileNotFoundError:
-            df = fetcher.fetch_stock_data(symbols, save=True)
-            df = fetcher.clean_data(df)
-            df = add_indicators_to_multi_symbol_df(df)
-            fetcher.save_data(df, 'stock_data_with_indicators.csv')
+            raw_indicator_df = fetcher.fetch_stock_data(symbols, save=True)
+            raw_indicator_df = fetcher.clean_data(raw_indicator_df)
+            raw_indicator_df = add_indicators_to_multi_symbol_df(raw_indicator_df)
+            fetcher.save_data(raw_indicator_df, RL_PANEL_FILE)
 
-        # Faz 9 / K18: CSV'deki ADX legacy hesabin sabit 0'idir (indeks hizalama
-        # hatasi). Yeni egitim ADX'i OHLCV'den 'wilder' ile yeniden hesaplar; CSV'ye
-        # YAZILMAZ (eski modeller ve canli karar ayni dosyayi okuyor). Isinmanin
-        # ilk 2n-1 NaN satiri asagidaki veri kapisinda atilir.
-        from data.technical_indicators import ADX_PERIOD, with_adx
-        df = with_adx(df, mode=RL_ADX_MODE)
-        indicator_spec = {'adx': RL_ADX_MODE, 'adx_period': ADX_PERIOD,
-                          'source': 'stock_data_with_indicators.csv',
-                          'warmup': 'bfill_csv_blocks_dropped_by_gate'}
-
-        # Faz 10 / V + K17: RL penceresi 2013-06'dan baslar; pencerede fiyat
-        # artefakti varsa egitim DURUR (DataIntegrityError), hayalet gunler ve
-        # islem gormemis (bayat) hucreler atilir. Rapor meta dosyasina girer.
-        from data.integrity import prepare_rl_panel, rl_context_before
+        # Faz 9 / R1: panel HPO ile ORTAK yoldan kurulur (evaluation.rl_folds.load_rl_panel):
+        #   K18  ADX 'wilder' ile yeniden hesaplanir; CSV'ye YAZILMAZ (eski modeller ve
+        #        canli karar ayni dosyayi okuyor)
+        #   K25  nedensel kolda pencere ONCESI son 252 seansin kapanisi baglam olur
+        #   V/K17 RL penceresi 2013-06; pencerede fiyat artefakti varsa egitim DURUR,
+        #        hayalet gunler ve bayat hucreler atilir
+        #   B7   gosterge isinma blogu atilir
+        from evaluation import rl_folds
         from evaluation.reproducibility import resolve_seed, snapshot_frame
+        from evaluation.splits import get_spec, is_canonical, latest_complete_fold
 
-        # K25 (b): nedensel kolda egitim ortaminin kayan penceresi de ilk gunden dolu
-        # olsun (hakem-rl K18 #2) — pencere ONCESI son 252 seansin kapanisi baglam olur;
-        # gozleme girmez. Kapanisi etkileyen artefakt varsa durur.
-        train_context, train_context_report = None, None
-        if request.price_norm == 'causal':
-            from env.trading_env import CAUSAL_WINDOW
-            train_context, train_context_report = rl_context_before(
-                df, start=_settings.RL_DATA_START, n_sessions=CAUSAL_WINDOW)
-
-        # B7: gosterge isinma blogu (bfill ile doldurulmus bas satirlar) atilir
-        df, integrity_report = prepare_rl_panel(df, start=_settings.RL_DATA_START,
-                                                drop_indicator_warmup=True)
+        rl_panel = rl_folds.load_rl_panel(price_norm=request.price_norm,
+                                          start=_settings.RL_DATA_START, df=raw_indicator_df,
+                                          adx_mode=RL_ADX_MODE)
+        df, integrity_report = rl_panel.panel, rl_panel.integrity_report
+        train_context, train_context_report = rl_panel.context, rl_panel.context_report
+        indicator_spec = rl_panel.indicator_spec
         # C3: egitimin gordugu panelin SHA-256'si + parquet anlik goruntusu
         data_snapshot = snapshot_frame(df, 'rl_panel')
         # C1: tohum her kosumda kayda girer (istekte yoksa uretilir)
         seed = resolve_seed(request.seed)
         training_state["seed"] = seed
 
-        train_df, val_df, test_df = fetcher.split_data(df)
+        # Faz 9 / R1 (Faz 10 K20, Y17): bolme ORANLA degil sabit tarihli, surumlu
+        # tanimdan (evaluation/splits.py). Eskiden `split_data` 70/15/15 boluyordu:
+        # panel uzadikca sinirlar kayiyor, dogrulama bolumu hic kullanilmiyordu.
+        # Kat istekte yoksa panelin TAMAMEN kapsadigi en son kat; tamamlanmamis
+        # test blogu kabul edilmez (SplitCoverageError).
+        split_spec = get_spec(request.split_spec)
+        fold_def = (split_spec.fold(request.fold) if request.fold
+                    else latest_complete_fold(df, split_spec))
+        fold_data = rl_folds.build_fold(rl_panel, split_spec, fold_def)
+        train_df, val_df, test_df = fold_data.train, fold_data.val, fold_data.test
+        split_info = {'name': split_spec.name, 'digest': split_spec.digest()}
+        training_state["fold"] = fold_data.fold
+        logger.info(f"Kat {split_spec.name}/{fold_data.fold}: {fold_data.report['ranges']} "
+                    f"seans {fold_data.report['n_sessions']}")
 
-        # Gozlem uzayi sembol sayisina bagli (1 + n + 5n + 5n). `split_data`
-        # KRONOLOJIK bolduğu icin, paneldeki sembollerin gecmisleri esit
-        # degilse bolumlerin sembol sayisi FARKLI cikar. Canli ornek:
+        # Gozlem uzayi sembol sayisina bagli (1 + n + 5n + 5n). Paneldeki
+        # sembollerin gecmisleri esit degilse bloklarin sembol sayisi FARKLI cikar.
+        # Canli ornek (oranli bolme, K17 oncesi):
         #   train 2018-01-01..2024-01-16 ->  5 sembol ->  56 ozellik
         #   test  2025-05-14..2026-08-28 -> 30 sembol -> 331 ozellik
         # Model 56 ile egitilip 331 ile degerlendiriliyordu; SB3 `predict`
         # asamasinda patliyordu ve HICBIR kosum tamamlanamiyordu.
         #
-        # Modelin evreni EGITIM bolumunun sembolleridir; degerlendirme ve
-        # dogrulama ona hizalanir. Sessizce yapmak yanlis olur — dusen sembol
+        # Modelin evreni EGITIM blogunun sembolleridir; dogrulama ve test ona
+        # hizalanir (`build_fold`). Sessizce yapmak yanlis olur — dusen sembol
         # varsa durum kaydina yazilir ve panoda gorunur.
-        train_symbols = set(train_df.index.get_level_values('symbol').unique())
+        train_symbols = set(fold_data.symbols)
         panel_symbols = set(df.index.get_level_values('symbol').unique())
-        dropped = sorted(panel_symbols - train_symbols)
+        dropped = list(fold_data.dropped_symbols)
 
         if dropped:
-            def _align(frame):
-                mask = frame.index.get_level_values('symbol').isin(train_symbols)
-                return frame[mask]
-
-            val_df, test_df = _align(val_df), _align(test_df)
             warning = (
                 f"Panelde {len(panel_symbols)} sembol var ama egitim penceresinde "
                 f"yalnizca {len(train_symbols)} tanesinin gecmisi bulunuyor; "
@@ -1283,25 +1297,25 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 logger.error(f"Error loading Phase 2 data: {e}")
                 raise
 
+        # Ortam ayarlari (uc blokta da ayni). Olcek ve nedensel baglam role gore
+        # `rl_folds.make_fold_env` icinde kurulur — HPO da ayni cagriyi yapar (R1).
+        env_settings = dict(
+            initial_balance=request.initial_balance,
+            commission_rate=request.commission_rate,
+            max_shares_per_trade=request.max_shares_per_trade,
+            phase=request.phase,
+            reward_type=reward_type,
+            fundamental_df=fundamental_df,
+            macro_df=macro_df,
+        )
+        norm_settings = dict(
+            # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
+            price_norm=request.price_norm, price_norm_macd=request.price_norm_macd)
+
         # Create environment factory function
         def make_training_env():
-            return make_env(
-                df=train_df,
-                initial_balance=request.initial_balance,
-                commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade,
-                phase=request.phase,
-                reward_type=reward_type,
-                fundamental_df=fundamental_df,
-                macro_df=macro_df,
-                # Faz 10 / V: eksik hucrede komsu sembol kopyalanmaz
-                missing_data_mode='own_last',
-                price_stats=None,
-                # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
-                price_norm=request.price_norm,
-                price_norm_macd=request.price_norm_macd,
-                price_context=train_context,
-            )
+            # egitim: olcek kendi penceresinden (price_stats=None), Faz 10 / V own_last
+            return rl_folds.make_fold_env(fold_data, 'train', **norm_settings, **env_settings)
 
         # Create one instance to get dimensions
         temp_env = make_training_env()
@@ -1339,9 +1353,15 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     hyperparams = study_data.get("best_params", {})
                     logger.info(f"Loaded hyperparameters from {request.hyperparameter_study}")
                     logger.info(f"Best params: {hyperparams}")
-                from evaluation.trial_registry import hpo_study_protocol
+                # R1: soy OLCULUR — HPO'nun gordugu veri bu katin testinden once bitmeli,
+                # tohumu egitim tohumundan farkli, evreni/bolmesi/gozlem tanimi ayni olmali.
+                from evaluation.trial_registry import hpo_lineage
                 study_name = study_data.get('study_name')
-                clean, open_items = hpo_study_protocol(study_name)
+                clean, open_items = hpo_lineage(
+                    study_name, fold_test_start=fold_def.test_start, train_seed=seed,
+                    symbols=list(temp_env.symbols), split_digest=split_info['digest'],
+                    obs_config={'price_norm': temp_env.get_price_norm(),
+                                'indicator_spec': indicator_spec})
                 hyperparams_source = {'source': f"hpo:{study_name or request.hyperparameter_study}",
                                       'clean': clean, 'open_items': open_items}
             else:
@@ -1468,6 +1488,28 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 verbose=1
             )
 
+        # Faz 9 / R1 (Faz 10 K20): kontrol noktasi kurali. Egitim butcesi boyunca esit
+        # aralikli N_CHECKPOINTS noktada model DOGRULAMA blogunda olculur (belirlenimci
+        # tek gecis, risksiz faiz ustu Sharpe); en iyisi secilir ve test YALNIZ onunla,
+        # bir kez okunur. Erken durdurma yok: kollar esit ortam adimi alir.
+        import shutil
+        import tempfile
+        val_dates = sorted(pd.unique(pd.to_datetime(val_df.index.get_level_values('date'))))
+        val_risk_free = rl_folds.load_risk_free(val_dates)
+        if val_risk_free is None:
+            training_state.setdefault("warnings", []).append(
+                "Risksiz faiz serisi yok (data/macro/risk_free.csv): kontrol noktasi rf=0 "
+                "Sharpe ile secildi. Deneme kaydinda acik: selection_metric (Faz 9 §9.11).")
+        checkpoint_dir = tempfile.mkdtemp(prefix=f"{model_name}_ckpt_")
+
+        def make_validation_env():
+            return rl_folds.make_fold_env(fold_data, 'val', train_env=temp_env,
+                                          **norm_settings, **env_settings)
+
+        validation_cb = rl_folds.make_validation_callback(
+            make_validation_env, total_timesteps=request.total_timesteps,
+            checkpoint_dir=checkpoint_dir, risk_free=val_risk_free)
+
         # Train model with logging
         callback = TrainingStateCallback()
         learn_start_time = time.time()
@@ -1475,10 +1517,35 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         training_state["phase_name"] = "training"
         model.learn(
             total_timesteps=request.total_timesteps,
-            callback=callback,
+            callback=[callback, validation_cb],
             tb_log_name=model_name
         )
         learn_end_time = time.time()
+
+        # Secilen kontrol noktasi bundan sonraki HER SEYIN modelidir (kayit, test, meta).
+        selection = rl_folds.select_checkpoint(validation_cb.records)
+        selection_report = {
+            'metric': validation_cb.metric_name, 'rule': 'argmax_validation',
+            'selected_index': selection['index'], 'selected_step': selection['step'],
+            'selected_metric': selection['metric'], 'degenerate': selection['degenerate'],
+            'n_valid': selection['n_valid'], 'n_distinct': selection['n_distinct'],
+            'n_negative_mean_excess': selection['n_negative_mean_excess'],
+            'last_metric': selection['last_metric'],
+            'pick_mean_excess_step': selection['pick_mean_excess_step'],
+            'picks_agree': selection['picks_agree'],
+            'grid': list(validation_cb.grid),
+            'checkpoints': [{k: v for k, v in r.items() if k != 'path'}
+                            for r in validation_cb.records],
+        }
+        if selection['degenerate']:
+            training_state.setdefault("warnings", []).append(
+                "Dogrulamada hicbir kontrol noktasinin metrigi tanimli degil (model hic islem "
+                "yapmadi): son kontrol noktasi secildi.")
+        if not selection['final']:
+            model = model_class.load(selection['path'], device=model.device)
+        logger.info(f"Kontrol noktasi secimi ({validation_cb.metric_name}): adim "
+                    f"{selection['step']} / {request.total_timesteps}, metrik {selection['metric']}")
+        shutil.rmtree(checkpoint_dir, ignore_errors=True)
         training_state["learn_end_ts"] = learn_end_time
         training_state["phase_name"] = "evaluating"
 
@@ -1517,6 +1584,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'data_integrity': integrity_report,
                    'train_range': _range(train_df), 'val_range': _range(val_df),
                    'test_range': _range(test_df), 'missing_data_mode': 'own_last',
+                   'split_spec': split_info, 'fold': fold_data.fold,
+                   'fold_report': fold_data.report, 'selection': selection_report,
                    'indicator_spec': indicator_spec,
                    'price_norm': temp_env.get_price_norm(),
                    'price_norm_train_context': train_context_report,
@@ -1548,6 +1617,11 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "test_range": _range(test_df),
             "rl_data_start": _settings.RL_DATA_START,
             "missing_data_mode": "own_last",
+            # R1: hangi bolme taniminin hangi kati; secilen kontrol noktasi
+            "split_spec": split_info,
+            "fold": fold_data.fold,
+            "selected_step": selection['step'],
+            "selection_metric": validation_cb.metric_name,
             "data_snapshot": data_snapshot,
             "price_stats": temp_env.get_price_stats(),
             # olcegi yedege dusen semboller (std tabani / 50-50; hakem-2 B9 #12)
@@ -1573,30 +1647,16 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # K25 (b): nedensel kolda test fiyat z'si yalniz <= t kapanislariyla; kayan
         # pencerenin basi testten ONCEKI satirlarla (baglam + egitim + dogrulama) dolar.
         # Olcek (price_stats) bu kolda gozleme girmez; meta ve protokol icin tasinir.
-        test_norm = {'price_norm': request.price_norm, 'price_norm_macd': request.price_norm_macd}
-        if request.price_norm == 'causal':
-            # pencere oncesi baglam + egitim + dogrulama: hepsi testten once (<= t). Kisa
-            # panelde egitim + dogrulama tek basina 252 seansi doldurmayabilir (hakem-2 K18 #3).
-            test_norm['price_context'] = pd.concat(
-                [f for f in (train_context, train_df, val_df) if f is not None and len(f)])
-
         def make_test_env():
-            return make_env(
-                df=test_df,
-                initial_balance=request.initial_balance,
-                commission_rate=request.commission_rate,
-                max_shares_per_trade=request.max_shares_per_trade,
-                phase=request.phase,
-                reward_type=reward_type,
-                fundamental_df=fundamental_df,
-                macro_df=macro_df,
-                missing_data_mode='own_last',
-                price_stats=train_price_stats,
-                **test_norm,
-            )
+            # olcek egitim ortamindan; nedensel baglam testin ilk tarihinden ONCEKI
+            # satirlar (pencere oncesi baglam + egitim + dogrulama) — `make_fold_env`
+            return rl_folds.make_fold_env(fold_data, 'test', train_env=temp_env,
+                                          **norm_settings, **env_settings)
 
         # Evaluate directly with raw TradingEnv — no DummyVecEnv workaround (#25)
         from env.trading_env import TradingEnv
+        # dogrulama protokolu icin ortam (testten ONCE kurulur; olcumu asagida)
+        val_probe_env = make_validation_env()
         actual_env: TradingEnv = make_test_env()
 
         obs, _ = actual_env.reset()
@@ -1623,8 +1683,19 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         from evaluation.trial_registry import open_protocol_items
         observation_health = _obs_health(temp_env, actual_env, seen_obs=seen_obs)
         # Protokol test ortaminin GERCEKTEN kullandigi olcegin kokeninden olculur
-        rl_protocol = _rl_protocol(actual_env, temp_env, observation_health, hyperparams_source)
+        rl_protocol = _rl_protocol(actual_env, temp_env, observation_health, hyperparams_source,
+                                   split_from_spec=is_canonical(split_spec),
+                                   selection_metric=validation_cb.metric_name)
         rl_manifest.extra['protocol'] = rl_protocol
+        # R1 (Faz 9 §9.8 #3, §9.9): SECIM ortami (dogrulama) da kat basina olculur. Bilgi
+        # alanidir, kaydi acmaz: destek disi bir dogrulama secimi zayiflatir ama testin
+        # olcumunu yanli kilmaz.
+        val_health = _obs_health(temp_env, val_probe_env)
+        protocol_val = _rl_protocol(val_probe_env, temp_env, val_health, hyperparams_source,
+                                    split_from_spec=is_canonical(split_spec),
+                                    selection_metric=validation_cb.metric_name)
+        rl_manifest.extra['protocol_val'] = protocol_val
+        rl_manifest.extra['protocol_val_open'] = open_protocol_items(protocol_val)
         rl_manifest.extra['observation_health'] = observation_health
         if rl_protocol.get('price_in_support') is False:
             oos = observation_health['eval_out_of_train_support']['price']
@@ -1656,6 +1727,18 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 "Sembol duzeyinde egitim araligi asimi (>%1): " + ", ".join(
                     f"{f} {sym} %{r * 100:.1f}" for f, (sym, r) in sorted(worst.items()))
                 + ". Deneme kaydinda acik: dims_in_support (Faz 9 §9.9).")
+
+        if rl_protocol.get('eval_window_unexposed') is False:
+            from evaluation.trial_registry import exposed_windows_overlapping
+            tr_ = _range(test_df)
+            training_state.setdefault("warnings", []).append(
+                "Test penceresi R1'den once basarim metrikleriyle okunmus donem(ler)le kesisiyor: "
+                + "; ".join(exposed_windows_overlapping(*tr_)) + ". Bu kat dogrulayici kanit "
+                "degildir. Deneme kaydinda acik: eval_window_unexposed (Faz 9 §9.11).")
+        if rl_protocol.get('fundamentals_pit') is False:
+            training_state.setdefault("warnings", []).append(
+                "Faz 2 temel oranlari tek anlik goruntu (nokta-zamanli degil, S4). Deneme "
+                "kaydinda acik: fundamentals_pit.")
 
         metrics = actual_env.get_metrics()
 
@@ -1725,8 +1808,13 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 metrics={k: metrics.get(k) for k in ('cumulative_return', 'sharpe_ratio',
                                                      'max_drawdown', 'total_trades')},
                 returns=test_returns, dates=test_dates, split='test',
+                fold=fold_data.fold, split_spec=split_info,
                 extra={'model_name': model_name, 'run_id': rl_manifest.run_id,
-                       'observation_health': observation_health},
+                       'observation_health': observation_health,
+                       'ranges': fold_data.report['ranges'],
+                       'selection': selection_report,
+                       'protocol_val': protocol_val,
+                       'protocol_val_open': open_protocol_items(protocol_val)},
             )
         except Exception as exc:
             logger.warning(f"Deneme kaydina yazilamadi ({exc})")
@@ -1760,6 +1848,10 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "trial_id": trial_id,
             "run_id": rl_manifest.run_id,
             "test_range": _range(test_df),
+            "split_spec": split_info,
+            "fold": fold_data.fold,
+            "fold_ranges": fold_data.report['ranges'],
+            "selection": selection_report,
             "training_time_seconds": total_training_time,
             "training_time_minutes": total_training_time / 60,
             "training_time_hours": total_training_time / 3600,

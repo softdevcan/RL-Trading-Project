@@ -825,9 +825,11 @@ Bu belge **yaşayan bir dokümandır**:
 - Bailey, D. H., Borwein, J. M., López de Prado, M. & Zhu, Q. J. (2017). The probability of backtest overfitting. *Journal of Computational Finance 20(4)*. DOI 10.21314/jcf.2016.322 `[K1 SCIE/SSCI]`
 - Benjamini, Y. & Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society Series B (Statistical Methodology)*. DOI 10.1111/j.2517-6161.1995.tb02031.x `[K1 SCIE/SSCI]`
 - Brown, S. J., Goetzmann, W. N., Ibbotson, R. G. & Ross, S. A. (1992). Survivorship Bias in Performance Studies. *Review of Financial Studies*. DOI 10.1093/rfs/5.4.553 `[K1 SCIE/SSCI]`
+- Cawley, G. C. & Talbot, N. L. C. (2010). On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation. *Journal of Machine Learning Research 11*. DOI 10.5555/1756006.1859921 `[K1 SCIE/SSCI]`
 - DeMiguel, V., Garlappi, L. & Uppal, R. (2009). Optimal Versus Naive Diversification: How Inefficient is the 1/ N Portfolio Strategy? *Review of Financial Studies 22*. DOI 10.1093/rfs/hhm075 `[K1 SCIE/SSCI]`
 - Diebold, F. X. (2015). Comparing Predictive Accuracy, Twenty Years Later: A Personal Perspective on the Use and Abuse of Diebold–Mariano Tests. *Journal of Business and Economic Statistics*. DOI 10.1080/07350015.2014.983236 `[K1 SCIE/SSCI]`
 - Diebold, F. X. & Mariano, R. S. (1995). Comparing Predictive Accuracy. *Journal of Business and Economic Statistics*. DOI 10.1080/07350015.1995.10524599 `[K1 SCIE/SSCI]`
+- Eimer, T., Lindauer, M. & Răileanu, R. (2023). Hyperparameters in Reinforcement Learning and How To Tune Them. *ICML 2023 (PMLR 202)*. DOI 10.48550/arxiv.2306.01324 `[K2 konf. A*/A]`
 - Hansen, P. R. (2005). A Test for Superior Predictive Ability. *Journal of Business and Economic Statistics*. DOI 10.1198/073500105000000063 `[K1 SCIE/SSCI]`
 - Hansen, P. R., Lunde, A. & Nason, J. M. (2011). The Model Confidence Set. *Econometrica*. DOI 10.3982/ecta5771 `[K1 SCIE/SSCI]`
 - Harvey, C. R., Liu, Y. & Zhu, C. (2016). … and the Cross-Section of Expected Returns. *Review of Financial Studies*. DOI 10.1093/rfs/hhv059 `[K1 SCIE/SSCI]`
@@ -836,6 +838,7 @@ Bu belge **yaşayan bir dokümandır**:
 - Ledoit, O. & Wolf, M. (2008). Robust performance hypothesis testing with the Sharpe ratio. *Journal of Empirical Finance*. DOI 10.1016/j.jempfin.2008.03.002 `[K1 SCIE/SSCI]`
 - Newey, W. K. & West, K. D. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. *Econometrica*. DOI 10.2307/1913610 `[K1 SCIE/SSCI]`
 - Politis, D. N. & Romano, J. P. (1994). The Stationary Bootstrap. *Journal of the American Statistical Association*. DOI 10.1080/01621459.1994.10476870 `[K1 SCIE/SSCI]`
+- Varma, S. & Simon, R. M. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*. DOI 10.1186/1471-2105-7-91 `[K1 SCIE/SSCI]`
 - White, H. (2000). A Reality Check for Data Snooping. *Econometrica*. DOI 10.1111/1468-0262.00152 `[K1 SCIE/SSCI]`
 
 ### J. Açıklanabilirlik

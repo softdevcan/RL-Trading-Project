@@ -99,7 +99,7 @@ Uygulama Kazemdehbashi (2026) yöntemine karşılık gelmiyor; etkinin büyükl�
 
 **Diğer gözlemler (bulgu değil, planı etkileyen durum):**
 - **EVDS anahtarı.** `.env`'de `EVDS_API_KEY` dolu (10 karakter; değer okunmadı, yazılmadı), ama son çekimde üç seri yedeğe düştü. B2'nin sorusu "anahtar var mı" değil, "neden düşüyor" (§6 K2).
-- **Panel güncelliği.** Panelin son tarihi 2026-07-27 (komut 1). Milestone 0' öncesi tazeleme ve anlık görüntü (C3) gerekiyor.
+- **Panel güncelliği.** Panelin son tarihi 2026-07-27 (komut 1). Milestone 0' öncesi tazeleme ve anlık görüntü (C3) gerekiyor. **Güncelleme (2026-11-13):** panel 2026-11-11'de tam yeniden indirildi (2005-01-03..2026-11-09; yfinance 2005 öncesini artık vermiyor). Aynı kapıyla pencerede tek fark 5 tatil satırı; SKBNK'de geçmiş temettü çarpanları revize edilmiş (Faz 9 §9.11). Tam indirme geçmişi değiştirebildiği için sonuçlar panel SHA-256'sına bağlanır, yeniden indirmeyle yeniden üretilmez.
 
 ---
 

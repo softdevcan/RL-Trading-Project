@@ -6,7 +6,7 @@
 
 Bu belge projenin **geçmişini (tamamlanan fazlar)** ve **gelecek yol haritasını (tez milestone'ları)** özetler. Detaylı durum/mimari için:
 - Tahmin sistemi: [prediction-system.md](prediction-system.md)
-- Faz 3 uygulama detayları: [phase3-implementation.md](phase3-implementation.md)
+- Faz 3 uygulama detayları: [phase-3-implementation.md](phase-3-implementation.md)
 - Tez vizyon ve kapsam: [../thesis/vision-and-scope.md](../thesis/vision-and-scope.md)
 
 ---
@@ -106,7 +106,7 @@ Eğitim hızı + "sorunsuz eğitim" (gözlemlenebilir, dayanıklı, tekrar üret
 
 ### ✅ Faz 7 — Auth & Multi-User
 
-Çerez tabanlı JWT oturum, bcrypt, roller (admin/user/viewer), admin-only kayıt, denetim kaydı, hibrit kullanıcı izolasyonu (piyasa verisi ortak; model/sonuç/karar/manifest kullanıcı bazlı). Detay: [phase7-auth.md](phase7-auth.md).
+Çerez tabanlı JWT oturum, bcrypt, roller (admin/user/viewer), admin-only kayıt, denetim kaydı, hibrit kullanıcı izolasyonu (piyasa verisi ortak; model/sonuç/karar/manifest kullanıcı bazlı). Detay: [phase-7-auth.md](phase-7-auth.md).
 
 ### ✅ Faz 8 — UI/UX: Tema, Profil, Üst Çubuk ve Yapıt Yönetimi
 - **Token katmanı:** `dbc.themes.DARKLY` → `BOOTSTRAP`; tüm renkler tek kaynakta (`static/tokens.css`). `dashboard/theme.py` sabitleri artık `var(--token)` döndürüyor → ~550 inline stil çağrı yerine dokunmadan temaya duyarlı oldu. Plotly `var()` kabul etmediği için ayrı hex palet (`plot_palette()` + `apply_theme_template()`), tema çerezden çözülüyor.

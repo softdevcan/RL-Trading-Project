@@ -227,5 +227,5 @@ Yalnızca bu iki değişiklik **davranış değiştirmez** (golden aynı kalmal�
 ## İlgili dokümanlar
 
 - [prediction-system.md](prediction-system.md) — tahmin sistemi mimarisi (ensemble, feature engineering)
-- [phase3-implementation.md](phase3-implementation.md) — ICEEMDAN, TATS, ATR/Kelly, SHAP
+- [phase-3-implementation.md](phase-3-implementation.md) — ICEEMDAN, TATS, ATR/Kelly, SHAP
 - [phase-6-backend-performance.md](phase-6-backend-performance.md) — eğitim throughput'u (§4'teki refit maliyeti tartışması)

@@ -6,7 +6,7 @@
 **Belge amacı:** Danışman değerlendirmesi ve seminer dersi sunumu öncesi projenin bütününü tek belgede özetlemek — bugüne kadar yapılanlar (Faz 1-3) ve tez vizyonu (çoklu-ajan + iletişim + tahmin entegrasyonu).
 **Tarih:** 2026-05
 
-> Detaylı kaynaklar: `docs/thesis/vision-and-scope.md` (vizyon, literatür, kapsam, milestone'lar), `docs/development/roadmap.md` (faz geçmişi), `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`, `docs/guides/ACADEMIC_GUIDE.md`.
+> Detaylı kaynaklar: `docs/thesis/vision-and-scope.md` (vizyon, literatür, kapsam, milestone'lar), `docs/development/roadmap.md` (faz geçmişi), `docs/development/prediction-system.md`, `docs/development/phase-3-implementation.md`, `docs/guides/ACADEMIC_GUIDE.md`.
 
 > **⚠️ Sürüm notu (2026-10-06):** Bu belge Mayıs 2026 seminerinin anlık görüntüsüdür ve kayıt olarak değiştirilmeden korunmuştur. Ekim 2026 literatür doğrulamasından sonra aşağıdaki ifadeler **geçerliliğini yitirdi**; güncel hâlleri [vision-and-scope.md](vision-and-scope.md) v0.2'de:
 > - "Feature engineering ... **leakage yok**" (§3) → geri çekildi; makro `bfill`, TÜFE/ÜFE açıklanma gecikmesi, statik temel oranlar ve seri bütününe ICEEMDAN sızıntı kaynağı ([roadmap.md → Bilinen Metodolojik Açıklar](../development/roadmap.md#bilinen-metodolojik-açıklar-planlanmadı)).

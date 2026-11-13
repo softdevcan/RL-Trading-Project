@@ -168,3 +168,6 @@ White2000_RealityCheck	G-Degerlendirme	doi:10.1111/1468-0262.00152
 Hansen2005_SPA	G-Degerlendirme	doi:10.1198/073500105000000063	
 Brown1992_Survivorship	G-Degerlendirme	doi:10.1093/rfs/5.4.553	
 Bekaert1997_EMVol	I-BIST	doi:10.1016/S0304-405X(96)00889-6	
+Varma2006_CVBias	G-Degerlendirme	doi:10.1186/1471-2105-7-91	R1 secim protokolu (BMC Bioinformatics 7:91)
+Cawley2010_SelectionBias	G-Degerlendirme	title:On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation	JMLR 11 (2010) 2079-2107
+Eimer2023_RLHPO	G-Degerlendirme	arxiv:2306.01324	ICML 2023 (PMLR 202:9104-9149)

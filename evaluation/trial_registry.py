@@ -57,6 +57,19 @@ varsayilan olarak dislar). Maddeler:
   price_stats_source='causal' de TEMIZDIR (K25 b): fiyat z'si yalniz <= t
       kapanislariyla kayan pencereden; egitim ve degerlendirme ortami ayni
       tanimla (mod + pencere) kurulmali, aksi 'mixed_norm' (acik).
+  split_from_spec=False/None — pencereler tek bolme tanimindan (evaluation.splits)
+      gelmiyor (R1; Faz 9 §9.2 #3). R1 oncesi kayitlar oranli `split_data` ile
+      bolundu ve bu maddeyi tasimaz: acik sayilir.
+  selection_metric — model/hiperparametre neyle secildi (R1; Faz 10 K20). Temiz:
+      'val_excess_sharpe' (dogrulama blogunda risksiz faiz ustu Sharpe). Acik:
+      'val_sharpe_rf0' (risksiz faiz serisi yoktu), None (dogrulamada secim yok).
+  hyperparams_clean R1 ile soyu da olcer (`hpo_lineage`): HPO'nun gordugu veri
+      katin TEST baslangicindan once bitmeli, HPO tohumu egitim tohumundan farkli
+      olmali (Eimer vd. 2023), evren ve gozlem tanimi ayni olmali.
+
+Kat (R1): her kayit `fold` ve `split` (bolme adi + ozeti) alanlarini tasir. Ayni
+(yapilandirma, tohum, kat, bolum) ikinci kez kaydedilirse kayit 'test_reread'
+etiketi alir — "test yapilandirma basina bir kez" (Faz 9 §9.2 #3) olculur.
 
 DSR'nin N'si (hakem-2 #2): Bailey & LdP'nin N'si YAPILAN TUM denemelerdir.
 Budanan (pruned) ve basarisiz denemeler de `status` ile kaydedilir ve N'ye
@@ -97,11 +110,41 @@ CLEAN_PROTOCOL = {
     'obs_health': True,
     'features_in_support': True,
     'dims_in_support': True,
+    # R1 (Faz 9 §9.11): pencereler tek bolme tanimindan mi (evaluation/splits.py) ve
+    # model/hiperparametre DOGRULAMADA, risksiz faiz ustu Sharpe ile mi secildi.
+    'split_from_spec': True,
+    'selection_metric': 'val_excess_sharpe',
+    # R1 (hakem-2 R1 #1, kullanici karari 2026-11-14): degerlendirme penceresi R1'den once
+    # basarim metrikleriyle okunmus bir pencereyle kesismiyor mu (EXPOSED_EVAL_WINDOWS).
+    'eval_window_unexposed': True,
+    # R1 (hakem-2 R1 #5; B4'un RL tarafi): faz 2 temel oranlari tek anlik goruntu (S4),
+    # nokta-zamanli degil. Faz 1 (temel oran yok) temiz.
+    'fundamentals_pit': True,
 }
+# R1'den ONCE basarim metrikleriyle okunmus degerlendirme pencereleri (kapsayici tarih
+# araliklari). Kesisen kayit acik kalir: o donemde verilen tasarim kararlari o donemin
+# sonucunu gormustu. Olcum: scripts/analysis/measure_r1_exposure.py ->
+# docs/development/measurements/phase9-r1/exposure.json (metrik dosyalarindaki islem
+# tarihleri + portfoy uzunlugu; oranli bolme eski panelde bagimsiz kontrol).
+EXPOSED_EVAL_WINDOWS = (
+    ('2022-07-18', '2026-07-27',
+     "R1 oncesi rota testi (oranli bolme; 22 egitim, 2026-07-28/29)"),
+    ('2025-02-19', '2026-08-28',
+     "R1 oncesi rota testi (calisma alani; 1 egitim, 2026-08-30)"),
+    ('2024-08-06', '2026-07-27',
+     "Faz 9 §9.5 B9 etki olcumu: A2C/PPO x 3 tohum"),
+)
+
+
+def exposed_windows_overlapping(lo, hi) -> list:
+    """[lo, hi] ile kesisen okunmus pencerelerin etiketleri (uyari metni icin)."""
+    return [f"{a}..{b} ({lbl})" for a, b, lbl in EXPOSED_EVAL_WINDOWS
+            if pd.Timestamp(lo) <= pd.Timestamp(b) and pd.Timestamp(hi) >= pd.Timestamp(a)]
 # Ayni maddenin ikinci temiz degeri (K25 b: nedensel fiyat olcegi).
 CLEAN_ALTERNATIVES = {
     'price_stats_source': ('causal',),
 }
+TEST_REREAD_TAG = 'test_reread'
 
 
 def open_protocol_items(protocol: Optional[dict]) -> List[str]:
@@ -201,7 +244,9 @@ def indicators_present(source) -> bool:
 
 def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None,
                      health: Optional[dict] = None,
-                     hyperparams_clean: Optional[bool] = True) -> dict:
+                     hyperparams_clean: Optional[bool] = True,
+                     split_from_spec: Optional[bool] = None,
+                     selection_metric: Optional[str] = None) -> dict:
     """RL degerlendirme kaydinin protokolu; rota ve HPO ayni hesabi kullanir.
 
     Ortamdan OLCULENLER: price_stats_source (koken), adx_constant (egitim ya da
@@ -265,7 +310,82 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
         'obs_health': obs_health_ok(health),
         'features_in_support': features_in_support(health),
         'dims_in_support': dims_in_support(health),
+        # R1: cagiranin BEYANI degil, cagiranin OLCTUGU deger — rota/HPO pencereyi
+        # `evaluation.splits`'ten aldiysa True; verilmezse (None) acik.
+        'split_from_spec': split_from_spec,
+        'selection_metric': selection_metric,
+        'eval_window_unexposed': eval_window_unexposed(base),
+        'fundamentals_pit': fundamentals_pit(base),
     }
+
+
+def eval_window_unexposed(eval_env) -> Optional[bool]:
+    """Degerlendirme ortaminin tarih araligi EXPOSED_EVAL_WINDOWS'tan biriyle kesismiyorsa True."""
+    base = getattr(eval_env, 'unwrapped', eval_env)
+    df = getattr(base, 'df', None)
+    if df is None or not len(df):
+        return None
+    d = pd.DatetimeIndex(pd.to_datetime(df.index.get_level_values('date')))
+    d = d.tz_localize(None) if d.tz is not None else d
+    lo, hi = d.min(), d.max()
+    return not any(lo <= pd.Timestamp(b) and hi >= pd.Timestamp(a)
+                   for a, b, _ in EXPOSED_EVAL_WINDOWS)
+
+
+def fundamentals_pit(env) -> Optional[bool]:
+    """Faz 2 ortami tek anlik temel oran tablosuyla calisiyorsa False (S4); faz 1 True."""
+    base = getattr(env, 'unwrapped', env)
+    if getattr(base, 'phase', 1) != 2:
+        return True
+    return False if getattr(base, 'fundamental_df', None) is not None else True
+
+
+def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = None,
+                train_seed: Optional[int] = None, symbols: Optional[list] = None,
+                split_digest: Optional[str] = None, obs_config: Optional[dict] = None,
+                directory: Optional[str] = None):
+    """Hiperparametre SOYU (R1; Faz 9 §9.6 #14'un kayit tarafi).
+
+    `hpo_study_protocol`'un bulduklarina ek olarak, HPO calismasinin kayitlarindan
+    OLCULUR (beyan degil):
+      hpo_window_after_test_start — bir HPO denemesinin dogrulama penceresi bu katin
+          test baslangicindan once bitmiyor: ayar, sinav donemini gorerek secildi
+      hpo_seed_reused — egitim tohumu HPO'nun kullandigi tohumlardan biri (ayar
+          tohumlari ile sinama tohumlari ayri olmali; Eimer vd. 2023, arXiv 2306.01324)
+      hpo_seed_unknown — HPO denemesi tohum kaydetmemis: ayrim dogrulanamaz
+      hpo_universe_mismatch — HPO baska bir sembol evreninde (ya da sirasinda) aradi
+      hpo_split_mismatch — HPO baska bir bolme tanimi kullandi
+      hpo_obs_mismatch — HPO baska bir gozlem tanimiyla aradi (price_norm, gostergeler)
+
+    Returns: (temiz_mi, acik_maddeler). Kayit bulunamazsa (None, [neden]).
+    """
+    clean, items = hpo_study_protocol(study_name, directory=directory)
+    if clean is None:
+        return None, items
+    recs = [t for t in load_trials(kind='rl_hpo', exclude_tags=(), directory=directory)
+            if (t.get('extra') or {}).get('study') == study_name]
+    found = set(items)
+    for t in recs:
+        cfg = t.get('config') or {}
+        val = (t.get('extra') or {}).get('val_range') or cfg.get('val')
+        if fold_test_start is not None:
+            if not val or val[1] is None or pd.Timestamp(str(val[1])[:10]) >= pd.Timestamp(fold_test_start):
+                found.add('hpo_window_after_test_start')
+        if train_seed is not None:
+            if t.get('seed') is None:
+                found.add('hpo_seed_unknown')
+            elif int(t['seed']) == int(train_seed):
+                found.add('hpo_seed_reused')
+        if symbols is not None and list(cfg.get('symbols') or []) != list(symbols):
+            found.add('hpo_universe_mismatch')
+        if split_digest is not None and (t.get('split_spec') or {}).get('digest') != split_digest:
+            found.add('hpo_split_mismatch')
+        if obs_config is not None:
+            for key, want in obs_config.items():
+                if cfg.get(key) != want:
+                    found.add('hpo_obs_mismatch')
+    out = sorted(found)
+    return (not out), out
 
 
 def hpo_study_protocol(study_name: Optional[str], directory: Optional[str] = None):
@@ -318,8 +438,15 @@ def register_trial(
     status: str = 'completed',
     protocol: Optional[dict] = None,
     data_sha256: Optional[str] = None,
+    fold: Optional[str] = None,
+    split_spec: Optional[dict] = None,
 ) -> str:
     """Bir denemeyi kaydet, trial_id dondur.
+
+    R1: `fold` katin adi, `split_spec` {'name', 'digest'} (evaluation.splits).
+    Ayni (kind, config_hash, tohum, kat, bolme ozeti, bolum) icin getirili bir
+    kayit zaten varsa yeni kayit 'test_reread' etiketi alir: ayni sinavin ikinci
+    okumasi kanit sayilmaz ama N'ye sayilir.
 
     Args:
         kind: deneme turu ('rl_train', 'rl_hpo', 'spike', ...).
@@ -341,15 +468,27 @@ def register_trial(
     open_items = open_protocol_items(protocol)
     if open_items:
         tag_set.add(PROTOCOL_OPEN_TAG)
+    cfg_hash = config_hash(config)
+    digest = (split_spec or {}).get('digest')
+    if fold is not None and returns is not None and status == 'completed' and seed is not None:
+        for prev in load_trials(kind=kind, split=split, exclude_tags=(), directory=directory):
+            if (prev.get('config_hash') == cfg_hash and prev.get('seed') == seed
+                    and prev.get('fold') == str(fold) and prev.get('returns_path')
+                    and (prev.get('split_spec') or {}).get('digest') == digest
+                    and prev.get('data_sha256') == data_sha256):
+                tag_set.add(TEST_REREAD_TAG)
+                break
     rec = {
         'trial_id': trial_id,
         'kind': kind,
         'status': status,
         'created_at': datetime.now().isoformat(timespec='seconds'),
-        'config_hash': config_hash(config),
+        'config_hash': cfg_hash,
         'config': config,
         'seed': seed,
         'split': split,
+        'fold': None if fold is None else str(fold),
+        'split_spec': split_spec,
         'data_sha256': data_sha256,
         'protocol': protocol or {},
         'protocol_open': open_items,
@@ -384,10 +523,11 @@ def register_trial(
 def load_trials(
     kind: Optional[str] = None,
     split: Optional[str] = None,
-    exclude_tags: Iterable[str] = ('spike', PROTOCOL_OPEN_TAG),
+    exclude_tags: Iterable[str] = ('spike', PROTOCOL_OPEN_TAG, TEST_REREAD_TAG),
     directory: Optional[str] = None,
 ) -> List[dict]:
-    """Kayitlari oku. Varsayilan: spike ve acik-protokol kayitlari DISLANIR.
+    """Kayitlari oku. Varsayilan: spike, acik-protokol ve ayni sinavin ikinci
+    okumasi ('test_reread', R1) kayitlari DISLANIR.
 
     Tum durumlar (completed/pruned/failed) doner — N sayimi icin gerekli.
     Acik-protokol kayitlarini gormek icin `exclude_tags=('spike',)`.
@@ -464,6 +604,11 @@ def sharpe_trial_stats(
     splits = {t.get('split') for t in trials}
     if len(kinds) > 1 or len(splits) > 1:
         raise ValueError(f"Denemeler tek bir kind/split'ten olmali: kind={kinds}, split={splits}")
+    # R1: farkli katlar (ya da farkli bolme tanimlari) tek N/V'de karistirilmaz —
+    # katlar arasi birlestirme kurali (cikarim birimi) M8 on kaydinda sabitlenir.
+    folds = {(t.get('fold'), (t.get('split_spec') or {}).get('digest')) for t in trials}
+    if len(folds) > 1 and not allow_mixed_windows:
+        raise ValueError(f"Denemeler farkli katlardan/bolme tanimlarindan: {sorted(map(str, folds))[:4]}")
 
     keys_all = {t['config_hash'] if by == 'config' else t['trial_id'] for t in trials}
     rows, windows = [], set()

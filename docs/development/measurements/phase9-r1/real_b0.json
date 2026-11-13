@@ -1,0 +1,95 @@
+{
+ "created_at": "2026-11-14T00:21:47",
+ "command": "python scripts/analysis/measure_r1_selection.py --folds  --b0-fold 2026 --out docs/development/measurements/phase9-r1/real_b0.json",
+ "git_commit": "4c2b995c99a21b64640f3980fc18a1f2c9f24086",
+ "git_dirty": true,
+ "indicator_csv_frame_sha256": "7a9f5d4d2265388ec7dfb3c5961723ce41a5ac7323f5210d065abd7bbbcaef5c",
+ "split_spec": {
+  "name": "wf-v1",
+  "digest": "33a196c602976de1"
+ },
+ "env_kwargs": {
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "phase": 1,
+  "reward_type": "simple"
+ },
+ "a2c": {
+  "learning_rate": 0.0007,
+  "n_steps": 256,
+  "gamma": 0.99,
+  "gae_lambda": 0.95,
+  "ent_coef": 0.01,
+  "vf_coef": 0.25,
+  "max_grad_norm": 0.5,
+  "normalize_advantage": true,
+  "use_rms_prop": true,
+  "rms_prop_eps": 1e-05
+ },
+ "device": "cpu",
+ "selection": {},
+ "real_b0": {
+  "fold": "2026",
+  "val_start": "2025-01-01",
+  "test_start": "2026-01-01",
+  "perturbation": "sembol basina 1+U(-0,01; 0,01) seans basina bilesik, hacim x U(0,3; 3)",
+  "pipeline": "clean_data -> add_indicators_to_multi_symbol_df (CSV ureten hat) -> load_rl_panel -> build_fold -> make_fold_env",
+  "stats": {
+   "digests": {
+    "base": {
+     "train": "96fcaa03a716a67d",
+     "val": "8f891c389f2eea93",
+     "test": "6925c8012233e781"
+    },
+    "from_val_start": {
+     "train": "96fcaa03a716a67d",
+     "val": "bae9dd24fd5d28a8",
+     "test": "5f2f541842f4b282"
+    },
+    "from_test_start": {
+     "train": "96fcaa03a716a67d",
+     "val": "8f891c389f2eea93",
+     "test": "626a9fe9dd187a29"
+    }
+   },
+   "val_boundary": {
+    "train_bit_equal": true,
+    "val_changed": true
+   },
+   "test_boundary": {
+    "train_bit_equal": true,
+    "val_bit_equal": true,
+    "test_changed": true
+   }
+  },
+  "causal": {
+   "digests": {
+    "base": {
+     "train": "f8a9a26a43ee1608",
+     "val": "d7eb10c9f9568cd7",
+     "test": "03ade7da7023791d"
+    },
+    "from_val_start": {
+     "train": "f8a9a26a43ee1608",
+     "val": "a0fb5ef20c2a148c",
+     "test": "e4fda4fbb0a4d0d1"
+    },
+    "from_test_start": {
+     "train": "f8a9a26a43ee1608",
+     "val": "d7eb10c9f9568cd7",
+     "test": "7fb2c4ff034946bf"
+    }
+   },
+   "val_boundary": {
+    "train_bit_equal": true,
+    "val_changed": true
+   },
+   "test_boundary": {
+    "train_bit_equal": true,
+    "val_bit_equal": true,
+    "test_changed": true
+   }
+  }
+ }
+}

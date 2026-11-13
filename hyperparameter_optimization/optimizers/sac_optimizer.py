@@ -22,11 +22,8 @@ class SACOptimizer(BaseHyperparameterOptimizer):
     Örnek Kullanım:
         >>> optimizer = SACOptimizer(n_trials=50, n_jobs=1)
         >>> study = optimizer.optimize(
-        ...     stock_symbols=['THYAO.IS', 'SAHOL.IS'],
-        ...     train_start='2018-01-01',
-        ...     train_end='2022-12-31',
-        ...     val_start='2023-01-01',
-        ...     val_end='2023-12-31',
+        ...     stock_symbols=None,   # RL panelinin tum sembolleri (rotanin evreni)
+        ...     fold='2021',          # evaluation/splits.py wf-v1 kati (Faz 9 R1)
         ...     total_timesteps=100_000
         ... )
         >>> optimizer.save_best_params()

@@ -48,16 +48,13 @@ def example_2_quick_optimization():
         seed=42               # Reproducibility
     )
 
-    # Optimize et
+    # Optimize et. Faz 9 / R1: pencereler serbest tarih degil, evaluation/splits.py
+    # katlarindan; fold=None tanimin ilk katidir. 5 sembollu alt evren hiz icin —
+    # rota 30 sembolle egitirse bu calismanin soyu `hpo_universe_mismatch` ile acik kalir.
     study = optimizer.optimize(
         stock_symbols=PHASE1_SYMBOLS,             # PHASE1: AKBNK, THYAO, TUPRS, BIMAS, ASELS
-        train_start='2023-01-01',
-        train_end='2023-06-30',                   # 6 ay training
-        val_start='2023-07-01',
-        val_end='2023-12-31',                     # 6 ay validation
+        fold=None,
         total_timesteps=10_000,                    # Kısa training
-        eval_freq=2_000,
-        n_eval_episodes=3,
         show_progress_bar=True
     )
 
@@ -97,14 +94,9 @@ def example_3_production_optimization():
 
     # Optimize et
     study = optimizer.optimize(
-        stock_symbols=PHASE1_SYMBOLS,  # PHASE1: AKBNK, THYAO, TUPRS, BIMAS, ASELS
-        train_start='2018-01-01',
-        train_end='2022-12-31',   # 3 yıl training
-        val_start='2023-01-01',
-        val_end='2023-12-31',     # 1 yıl validation
+        stock_symbols=None,       # rotanin evreni: RL panelinin tum sembolleri
+        fold=None,                # wf-v1 ilk kati (dogrulamasi butun testlerden once biter)
         total_timesteps=100_000,  # Tam training
-        eval_freq=5_000,
-        n_eval_episodes=5,
         show_progress_bar=True
     )
 
@@ -143,10 +135,7 @@ def example_4_compare_algorithms():
 
         study = optimizer.optimize(
             stock_symbols=PHASE1_SYMBOLS,  # PHASE1: AKBNK, THYAO, TUPRS, BIMAS, ASELS
-            train_start='2023-01-01',
-            train_end='2023-06-30',
-            val_start='2023-07-01',
-            val_end='2023-12-31',
+            fold=None,
             total_timesteps=10_000,
             show_progress_bar=True
         )

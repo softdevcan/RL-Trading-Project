@@ -1,0 +1,5083 @@
+{
+ "created_at": "2026-11-13T23:40:41",
+ "command": "python scripts/analysis/measure_r1_folds.py --old-panel data/bist/backup_2026-07-27/raw_stock_data.csv --dividends --old-indicator-panel data/bist/backup_2026-07-27/stock_data_with_indicators.csv --out docs/development/measurements/phase9-r1/folds.json",
+ "git_commit": "27c488750a6ff0f6ab6e9eeff5ae0d199681715c",
+ "git_dirty": false,
+ "indicator_csv": {
+  "file_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+  "frame_sha256": "7a9f5d4d2265388ec7dfb3c5961723ce41a5ac7323f5210d065abd7bbbcaef5c",
+  "span": [
+   "2005-01-03",
+   "2026-11-09"
+  ],
+  "rows": 158991
+ },
+ "raw_csv": {
+  "file_sha256": "d3f39d9ff55b2786397b12482921ce491b3f49bd4bc44150f6189e1489070363"
+ },
+ "split_spec": {
+  "name": "wf-v1",
+  "digest": "33a196c602976de1"
+ },
+ "rl_data_start": "2013-06-01",
+ "env_kwargs": {
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "phase": 1,
+  "reward_type": "simple"
+ },
+ "fold_coverage": [
+  {
+   "name": "2021",
+   "train": [
+    "2013-06-01",
+    "2020-01-01"
+   ],
+   "val": [
+    "2020-01-01",
+    "2021-01-01"
+   ],
+   "test": [
+    "2021-01-01",
+    "2022-01-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  },
+  {
+   "name": "2022",
+   "train": [
+    "2013-06-01",
+    "2021-01-01"
+   ],
+   "val": [
+    "2021-01-01",
+    "2022-01-01"
+   ],
+   "test": [
+    "2022-01-01",
+    "2023-01-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  },
+  {
+   "name": "2023",
+   "train": [
+    "2013-06-01",
+    "2022-01-01"
+   ],
+   "val": [
+    "2022-01-01",
+    "2023-01-01"
+   ],
+   "test": [
+    "2023-01-01",
+    "2024-01-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  },
+  {
+   "name": "2024",
+   "train": [
+    "2013-06-01",
+    "2023-01-01"
+   ],
+   "val": [
+    "2023-01-01",
+    "2024-01-01"
+   ],
+   "test": [
+    "2024-01-01",
+    "2025-01-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  },
+  {
+   "name": "2025",
+   "train": [
+    "2013-06-01",
+    "2024-01-01"
+   ],
+   "val": [
+    "2024-01-01",
+    "2025-01-01"
+   ],
+   "test": [
+    "2025-01-01",
+    "2026-01-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  },
+  {
+   "name": "2026",
+   "train": [
+    "2013-06-01",
+    "2025-01-01"
+   ],
+   "val": [
+    "2025-01-01",
+    "2026-01-01"
+   ],
+   "test": [
+    "2026-01-01",
+    "2026-11-01"
+   ],
+   "starts_ok": true,
+   "ends_ok": true,
+   "complete": true
+  }
+ ],
+ "gate": {
+  "full_panel": {
+   "rows": 158991,
+   "n_symbols": 30,
+   "start": "2005-01-03",
+   "end": "2026-11-09",
+   "artifacts": {
+    "ohlc_inconsistent": 8,
+    "extreme_return": 2
+   },
+   "n_artifacts": 10,
+   "n_ghost_days": 117,
+   "n_stale_cells": 585,
+   "missing_cell_frac": 0.05328688817434801,
+   "constant_columns": [
+    "adx"
+   ],
+   "n_large_moves": 27
+  },
+  "window": {
+   "window_start": "2013-06-01",
+   "window_end": null,
+   "rows_in_window": 102900,
+   "rows_after": 100834,
+   "n_artifacts": 0,
+   "ghost_threshold": 0.9,
+   "n_ghost_days": 67,
+   "ghost_days": [
+    "2013-08-08",
+    "2013-08-09",
+    "2013-08-30",
+    "2013-10-15",
+    "2013-10-16",
+    "2013-10-17",
+    "2013-10-18",
+    "2013-10-29",
+    "2014-01-01",
+    "2014-04-23",
+    "2014-05-01",
+    "2014-05-19",
+    "2014-07-28",
+    "2014-07-29",
+    "2014-07-30",
+    "2014-10-06",
+    "2014-10-07",
+    "2014-10-29",
+    "2015-01-01",
+    "2015-04-23",
+    "2015-05-01",
+    "2015-05-19",
+    "2015-07-17",
+    "2015-09-24",
+    "2015-09-25",
+    "2015-10-29",
+    "2016-01-01",
+    "2016-01-22",
+    "2016-05-19",
+    "2016-07-05",
+    "2016-07-06",
+    "2016-07-07",
+    "2016-08-30",
+    "2016-09-12",
+    "2016-09-13",
+    "2016-09-14",
+    "2016-09-15",
+    "2017-05-01",
+    "2017-05-19",
+    "2017-06-26",
+    "2017-06-27",
+    "2017-08-30",
+    "2017-09-01",
+    "2017-09-04",
+    "2018-01-01",
+    "2018-04-23",
+    "2018-05-01",
+    "2018-06-15",
+    "2018-08-21",
+    "2018-08-22",
+    "2018-08-23",
+    "2018-08-24",
+    "2018-08-30",
+    "2018-10-29",
+    "2019-01-01",
+    "2019-04-23",
+    "2019-05-01",
+    "2019-06-04",
+    "2019-06-05",
+    "2019-06-06",
+    "2019-07-15",
+    "2019-08-12",
+    "2019-08-13",
+    "2019-08-14",
+    "2019-08-30",
+    "2020-03-11",
+    "2024-04-09"
+   ],
+   "n_stale_cells_dropped": 39,
+   "n_symbols": 30,
+   "n_dates": 3365,
+   "missing_cell_frac": 0.0011490837048043767,
+   "first_active": {
+    "AKBNK.IS": "2013-06-03",
+    "ARCLK.IS": "2013-06-03",
+    "ASELS.IS": "2013-06-03",
+    "BIMAS.IS": "2013-06-03",
+    "EKGYO.IS": "2013-06-10",
+    "ENKAI.IS": "2013-06-03",
+    "EREGL.IS": "2013-06-03",
+    "FROTO.IS": "2013-06-03",
+    "GARAN.IS": "2013-06-03",
+    "HALKB.IS": "2013-06-03",
+    "ISCTR.IS": "2013-06-03",
+    "KCHOL.IS": "2013-06-03",
+    "KRDMD.IS": "2013-06-03",
+    "MGROS.IS": "2013-06-03",
+    "ODAS.IS": "2013-06-27",
+    "PETKM.IS": "2013-06-03",
+    "PGSUS.IS": "2013-08-28",
+    "SAHOL.IS": "2013-06-03",
+    "SASA.IS": "2013-06-03",
+    "SISE.IS": "2013-06-03",
+    "SKBNK.IS": "2013-06-03",
+    "TAVHL.IS": "2013-06-03",
+    "TCELL.IS": "2013-06-03",
+    "THYAO.IS": "2013-06-03",
+    "TKFEN.IS": "2013-06-03",
+    "TOASO.IS": "2013-06-03",
+    "TSKB.IS": "2013-06-03",
+    "TUPRS.IS": "2013-06-03",
+    "VAKBN.IS": "2013-06-03",
+    "YKBNK.IS": "2013-06-03"
+   },
+   "indicator_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "indicator_warmup_blocks": {},
+   "n_large_moves": 14
+  },
+  "panel_sha256": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89",
+  "indicator_spec": {
+   "adx": "wilder",
+   "adx_period": 14,
+   "source": "stock_data_with_indicators.csv",
+   "warmup": "bfill_csv_blocks_dropped_by_gate"
+  }
+ },
+ "norms": {
+  "stats": {
+   "train_context": null,
+   "folds": {
+    "2021": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2021",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2019-12-31"
+       ],
+       "val": [
+        "2020-01-02",
+        "2020-12-31"
+       ],
+       "test": [
+        "2021-01-04",
+        "2021-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 1651,
+       "val": 251,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1651,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9965
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0006,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.1997,
+         "volume": 0.0656,
+         "indicators": 0.03
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.1977,
+         "high": 0.1993,
+         "low": 0.202,
+         "close": 0.1996,
+         "volume": 0.0656,
+         "macd": 0.1199,
+         "rsi": 0.0161,
+         "cci": 0.0021,
+         "adx": 0.012,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 19,
+          "worst": [
+           "BIMAS.IS",
+           0.8446
+          ]
+         },
+         "high": {
+          "n_symbols": 18,
+          "worst": [
+           "BIMAS.IS",
+           0.8725
+          ]
+         },
+         "low": {
+          "n_symbols": 19,
+          "worst": [
+           "BIMAS.IS",
+           0.8606
+          ]
+         },
+         "close": {
+          "n_symbols": 19,
+          "worst": [
+           "BIMAS.IS",
+           0.8526
+          ]
+         },
+         "volume": {
+          "n_symbols": 21,
+          "worst": [
+           "SISE.IS",
+           0.49
+          ]
+         },
+         "macd": {
+          "n_symbols": 25,
+          "worst": [
+           "FROTO.IS",
+           0.5139
+          ]
+         },
+         "rsi": {
+          "n_symbols": 13,
+          "worst": [
+           "TAVHL.IS",
+           0.0717
+          ]
+         },
+         "cci": {
+          "n_symbols": 2,
+          "worst": [
+           "TCELL.IS",
+           0.0239
+          ]
+         },
+         "adx": {
+          "n_symbols": 10,
+          "worst": [
+           "EKGYO.IS",
+           0.1155
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1651,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9965
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0772,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 0.996
+        },
+        "eval_out_of_train_support": {
+         "price": 0.5098,
+         "volume": 0.0653,
+         "indicators": 0.0503
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.5082,
+         "high": 0.5104,
+         "low": 0.5108,
+         "close": 0.5098,
+         "volume": 0.0653,
+         "macd": 0.2003,
+         "rsi": 0.0222,
+         "cci": 0.0021,
+         "adx": 0.0268,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 26,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 26,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 26,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 26,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 18,
+          "worst": [
+           "SISE.IS",
+           0.506
+          ]
+         },
+         "macd": {
+          "n_symbols": 24,
+          "worst": [
+           "SASA.IS",
+           0.8956
+          ]
+         },
+         "rsi": {
+          "n_symbols": 15,
+          "worst": [
+           "TOASO.IS",
+           0.1325
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 12,
+          "worst": [
+           "ENKAI.IS",
+           0.1165
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    },
+    "2022": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2022",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2020-12-31"
+       ],
+       "val": [
+        "2021-01-04",
+        "2021-12-31"
+       ],
+       "test": [
+        "2022-01-03",
+        "2022-12-30"
+       ]
+      },
+      "n_sessions": {
+       "train": 1902,
+       "val": 249,
+       "test": 252
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1902,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.997
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0147,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 0.996
+        },
+        "eval_out_of_train_support": {
+         "price": 0.3562,
+         "volume": 0.0095,
+         "indicators": 0.0305
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.3474,
+         "high": 0.353,
+         "low": 0.3708,
+         "close": 0.3535,
+         "volume": 0.0095,
+         "macd": 0.1079,
+         "rsi": 0.0173,
+         "cci": 0.0021,
+         "adx": 0.0252,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 25,
+          "worst": [
+           "KRDMD.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 25,
+          "worst": [
+           "KRDMD.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 25,
+          "worst": [
+           "FROTO.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 24,
+          "worst": [
+           "KRDMD.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 5,
+          "worst": [
+           "FROTO.IS",
+           0.1124
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "SASA.IS",
+           0.5622
+          ]
+         },
+         "rsi": {
+          "n_symbols": 14,
+          "worst": [
+           "SISE.IS",
+           0.0843
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 12,
+          "worst": [
+           "ENKAI.IS",
+           0.1084
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1902,
+        "n_eval_days": 252,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.997
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.4035,
+          "constant_dims_frac": 0.0333
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.573,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.8165,
+         "volume": 0.0378,
+         "indicators": 0.0749
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.8138,
+         "high": 0.8159,
+         "low": 0.8209,
+         "close": 0.8156,
+         "volume": 0.0378,
+         "macd": 0.3323,
+         "rsi": 0.0135,
+         "cci": 0.0016,
+         "adx": 0.027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 30,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 30,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 30,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 30,
+          "worst": [
+           "ARCLK.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 12,
+          "worst": [
+           "TOASO.IS",
+           0.4325
+          ]
+         },
+         "macd": {
+          "n_symbols": 24,
+          "worst": [
+           "SASA.IS",
+           0.8294
+          ]
+         },
+         "rsi": {
+          "n_symbols": 10,
+          "worst": [
+           "SKBNK.IS",
+           0.0754
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0119
+          ]
+         },
+         "adx": {
+          "n_symbols": 15,
+          "worst": [
+           "GARAN.IS",
+           0.2024
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.price.constant",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    },
+    "2023": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2023",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2021-12-31"
+       ],
+       "val": [
+        "2022-01-03",
+        "2022-12-30"
+       ],
+       "test": [
+        "2023-01-02",
+        "2023-12-29"
+       ]
+      },
+      "n_sessions": {
+       "train": 2151,
+       "val": 252,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2151,
+        "n_eval_days": 252,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9969
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.1636,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.573,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.5729,
+         "volume": 0.0108,
+         "indicators": 0.0358
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.5537,
+         "high": 0.5427,
+         "low": 0.6172,
+         "close": 0.5782,
+         "volume": 0.0108,
+         "macd": 0.1493,
+         "rsi": 0.0081,
+         "cci": 0.0007,
+         "adx": 0.021,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 29,
+          "worst": [
+           "THYAO.IS",
+           0.9563
+          ]
+         },
+         "high": {
+          "n_symbols": 29,
+          "worst": [
+           "THYAO.IS",
+           0.9484
+          ]
+         },
+         "low": {
+          "n_symbols": 29,
+          "worst": [
+           "THYAO.IS",
+           0.9881
+          ]
+         },
+         "close": {
+          "n_symbols": 29,
+          "worst": [
+           "THYAO.IS",
+           0.9802
+          ]
+         },
+         "volume": {
+          "n_symbols": 8,
+          "worst": [
+           "ENKAI.IS",
+           0.0714
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "ODAS.IS",
+           0.4921
+          ]
+         },
+         "rsi": {
+          "n_symbols": 5,
+          "worst": [
+           "SKBNK.IS",
+           0.0675
+          ]
+         },
+         "adx": {
+          "n_symbols": 11,
+          "worst": [
+           "GARAN.IS",
+           0.2024
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2151,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9969
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.7401,
+          "constant_dims_frac": 0.35
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "open": 0.7451,
+         "high": 0.7569,
+         "low": 0.7312,
+         "close": 0.7435,
+         "macd": 0.7165,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.9674,
+         "volume": 0.0115,
+         "indicators": 0.0609
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.9672,
+         "high": 0.9659,
+         "low": 0.9688,
+         "close": 0.9679,
+         "volume": 0.0115,
+         "macd": 0.2914,
+         "rsi": 0.0015,
+         "cci": 0.0005,
+         "adx": 0.0112,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 30,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 30,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 30,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 30,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 5,
+          "worst": [
+           "ENKAI.IS",
+           0.1325
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "SASA.IS",
+           0.7751
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "GARAN.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 5,
+          "worst": [
+           "SASA.IS",
+           0.1205
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.price.constant",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    },
+    "2024": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2024",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2022-12-30"
+       ],
+       "val": [
+        "2023-01-02",
+        "2023-12-29"
+       ],
+       "test": [
+        "2024-01-02",
+        "2024-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 2403,
+       "val": 249,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2403,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9972
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.1462,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7165,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.4911,
+         "volume": 0.0037,
+         "indicators": 0.0207
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.4901,
+         "high": 0.4862,
+         "low": 0.5001,
+         "close": 0.4878,
+         "volume": 0.0037,
+         "macd": 0.0965,
+         "rsi": 0.0004,
+         "cci": 0.0004,
+         "adx": 0.0063,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 29,
+          "worst": [
+           "TUPRS.IS",
+           0.9116
+          ]
+         },
+         "high": {
+          "n_symbols": 29,
+          "worst": [
+           "FROTO.IS",
+           0.9157
+          ]
+         },
+         "low": {
+          "n_symbols": 29,
+          "worst": [
+           "FROTO.IS",
+           0.8876
+          ]
+         },
+         "close": {
+          "n_symbols": 29,
+          "worst": [
+           "FROTO.IS",
+           0.9036
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "EREGL.IS",
+           0.012
+          ]
+         },
+         "macd": {
+          "n_symbols": 17,
+          "worst": [
+           "ODAS.IS",
+           0.3534
+          ]
+         },
+         "adx": {
+          "n_symbols": 2,
+          "worst": [
+           "SASA.IS",
+           0.1205
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2403,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9972
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.5649,
+          "constant_dims_frac": 0.275
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "open": 0.568,
+         "high": 0.5784,
+         "low": 0.5612,
+         "close": 0.5696,
+         "macd": 0.7422,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.8393,
+         "volume": 0.0003,
+         "indicators": 0.0284
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.8328,
+         "high": 0.8307,
+         "low": 0.8523,
+         "close": 0.8415,
+         "volume": 0.0003,
+         "macd": 0.1383,
+         "rsi": 0.0011,
+         "cci": 0.0001,
+         "adx": 0.0027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 28,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 28,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 28,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 28,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "macd": {
+          "n_symbols": 17,
+          "worst": [
+           "YKBNK.IS",
+           0.51
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "TAVHL.IS",
+           0.0241
+          ]
+         },
+         "adx": {
+          "n_symbols": 1,
+          "worst": [
+           "KCHOL.IS",
+           0.0643
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.price.constant",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    },
+    "2025": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2025",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2023-12-29"
+       ],
+       "val": [
+        "2024-01-02",
+        "2024-12-31"
+       ],
+       "test": [
+        "2025-01-02",
+        "2025-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 2652,
+       "val": 249,
+       "test": 251
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2652,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9975
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0222,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7422,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.5995,
+         "volume": 0.0001,
+         "indicators": 0.0076
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.6005,
+         "high": 0.5896,
+         "low": 0.6072,
+         "close": 0.6007,
+         "volume": 0.0001,
+         "macd": 0.0341,
+         "rsi": 0.0009,
+         "cci": 0.0001,
+         "adx": 0.0027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 26,
+          "worst": [
+           "TCELL.IS",
+           0.9839
+          ]
+         },
+         "high": {
+          "n_symbols": 26,
+          "worst": [
+           "TCELL.IS",
+           0.9839
+          ]
+         },
+         "low": {
+          "n_symbols": 26,
+          "worst": [
+           "TCELL.IS",
+           0.988
+          ]
+         },
+         "close": {
+          "n_symbols": 25,
+          "worst": [
+           "TCELL.IS",
+           0.988
+          ]
+         },
+         "macd": {
+          "n_symbols": 6,
+          "worst": [
+           "YKBNK.IS",
+           0.4137
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "TAVHL.IS",
+           0.0241
+          ]
+         },
+         "adx": {
+          "n_symbols": 1,
+          "worst": [
+           "KCHOL.IS",
+           0.0643
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2652,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9975
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0885,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7412,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.7114,
+         "volume": 0.0035,
+         "indicators": 0.0087
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.7135,
+         "high": 0.7054,
+         "low": 0.7146,
+         "close": 0.7118,
+         "volume": 0.0035,
+         "macd": 0.0432,
+         "rsi": 0.0,
+         "cci": 0.0003,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 25,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 25,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 25,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 25,
+          "worst": [
+           "AKBNK.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.0996
+          ]
+         },
+         "macd": {
+          "n_symbols": 6,
+          "worst": [
+           "YKBNK.IS",
+           0.3825
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    },
+    "2026": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2026",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2024-12-31"
+       ],
+       "val": [
+        "2025-01-02",
+        "2025-12-31"
+       ],
+       "test": [
+        "2026-01-02",
+        "2026-10-30"
+       ]
+      },
+      "n_sessions": {
+       "train": 2901,
+       "val": 251,
+       "test": 207
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": true,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2901,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9977
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0101,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7412,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.2216,
+         "volume": 0.0035,
+         "indicators": 0.0017
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.2174,
+         "high": 0.2251,
+         "low": 0.2248,
+         "close": 0.219,
+         "volume": 0.0035,
+         "macd": 0.0084,
+         "rsi": 0.0,
+         "cci": 0.0003,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 17,
+          "worst": [
+           "ASELS.IS",
+           0.992
+          ]
+         },
+         "high": {
+          "n_symbols": 16,
+          "worst": [
+           "ASELS.IS",
+           0.996
+          ]
+         },
+         "low": {
+          "n_symbols": 18,
+          "worst": [
+           "ASELS.IS",
+           0.996
+          ]
+         },
+         "close": {
+          "n_symbols": 17,
+          "worst": [
+           "ASELS.IS",
+           0.996
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.0996
+          ]
+         },
+         "macd": {
+          "n_symbols": 3,
+          "worst": [
+           "EKGYO.IS",
+           0.1514
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "open"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "train_window",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2901,
+        "n_eval_days": 207,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9977
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0551,
+          "constant_dims_frac": 0.0333
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7911,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.4827,
+         "volume": 0.0205,
+         "indicators": 0.0061
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.4773,
+         "high": 0.4849,
+         "low": 0.4902,
+         "close": 0.4784,
+         "volume": 0.0205,
+         "macd": 0.0296,
+         "rsi": 0.0003,
+         "cci": 0.0006,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 24,
+          "worst": [
+           "ASELS.IS",
+           1.0
+          ]
+         },
+         "high": {
+          "n_symbols": 24,
+          "worst": [
+           "ASELS.IS",
+           1.0
+          ]
+         },
+         "low": {
+          "n_symbols": 24,
+          "worst": [
+           "ASELS.IS",
+           1.0
+          ]
+         },
+         "close": {
+          "n_symbols": 24,
+          "worst": [
+           "ASELS.IS",
+           1.0
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.6087
+          ]
+         },
+         "macd": {
+          "n_symbols": 4,
+          "worst": [
+           "SKBNK.IS",
+           0.3043
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.price.clip",
+         "eval.price.constant",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": null,
+         "eval": null
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "causal": {
+   "train_context": {
+    "n_sessions_requested": 252,
+    "lookback_dates": 504,
+    "n_ghost_days": 18,
+    "n_stale_cells_dropped": 12,
+    "n_close_safe_artifacts": 7,
+    "series_start_symbols": [
+     "ODAS.IS",
+     "PGSUS.IS"
+    ],
+    "short_context_symbols": [],
+    "start": "2012-05-22",
+    "end": "2013-05-31",
+    "rows_per_symbol_min": 1
+   },
+   "folds": {
+    "2021": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2021",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2019-12-31"
+       ],
+       "val": [
+        "2020-01-02",
+        "2020-12-31"
+       ],
+       "test": [
+        "2021-01-04",
+        "2021-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 1651,
+       "val": 251,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1651,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9965
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0196,
+         "volume": 0.0656,
+         "indicators": 0.03
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0191,
+         "high": 0.021,
+         "low": 0.0186,
+         "close": 0.0195,
+         "volume": 0.0656,
+         "macd": 0.1199,
+         "rsi": 0.0161,
+         "cci": 0.0021,
+         "adx": 0.012,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 12,
+          "worst": [
+           "EKGYO.IS",
+           0.1116
+          ]
+         },
+         "high": {
+          "n_symbols": 15,
+          "worst": [
+           "EKGYO.IS",
+           0.1036
+          ]
+         },
+         "low": {
+          "n_symbols": 13,
+          "worst": [
+           "EKGYO.IS",
+           0.1036
+          ]
+         },
+         "close": {
+          "n_symbols": 12,
+          "worst": [
+           "EKGYO.IS",
+           0.1155
+          ]
+         },
+         "volume": {
+          "n_symbols": 21,
+          "worst": [
+           "SISE.IS",
+           0.49
+          ]
+         },
+         "macd": {
+          "n_symbols": 25,
+          "worst": [
+           "FROTO.IS",
+           0.5139
+          ]
+         },
+         "rsi": {
+          "n_symbols": 13,
+          "worst": [
+           "TAVHL.IS",
+           0.0717
+          ]
+         },
+         "cci": {
+          "n_symbols": 2,
+          "worst": [
+           "TCELL.IS",
+           0.0239
+          ]
+         },
+         "adx": {
+          "n_symbols": 10,
+          "worst": [
+           "EKGYO.IS",
+           0.1155
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 49414,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7530,
+          "context_rows_min": 1592,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1651,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9965
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 0.996
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0269,
+         "volume": 0.0653,
+         "indicators": 0.0503
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0274,
+         "high": 0.0284,
+         "low": 0.0254,
+         "close": 0.0265,
+         "volume": 0.0653,
+         "macd": 0.2003,
+         "rsi": 0.0222,
+         "cci": 0.0021,
+         "adx": 0.0268,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 17,
+          "worst": [
+           "TCELL.IS",
+           0.1084
+          ]
+         },
+         "high": {
+          "n_symbols": 18,
+          "worst": [
+           "TCELL.IS",
+           0.1165
+          ]
+         },
+         "low": {
+          "n_symbols": 16,
+          "worst": [
+           "SAHOL.IS",
+           0.1044
+          ]
+         },
+         "close": {
+          "n_symbols": 16,
+          "worst": [
+           "TCELL.IS",
+           0.1165
+          ]
+         },
+         "volume": {
+          "n_symbols": 18,
+          "worst": [
+           "SISE.IS",
+           0.506
+          ]
+         },
+         "macd": {
+          "n_symbols": 24,
+          "worst": [
+           "SASA.IS",
+           0.8956
+          ]
+         },
+         "rsi": {
+          "n_symbols": 15,
+          "worst": [
+           "TOASO.IS",
+           0.1325
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 12,
+          "worst": [
+           "ENKAI.IS",
+           0.1165
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 49414,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 1843,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    },
+    "2022": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2022",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2020-12-31"
+       ],
+       "val": [
+        "2021-01-04",
+        "2021-12-31"
+       ],
+       "test": [
+        "2022-01-03",
+        "2022-12-30"
+       ]
+      },
+      "n_sessions": {
+       "train": 1902,
+       "val": 249,
+       "test": 252
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1902,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.997
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "turbulence": 0.996
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0211,
+         "volume": 0.0095,
+         "indicators": 0.0305
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0212,
+         "high": 0.0213,
+         "low": 0.0203,
+         "close": 0.0216,
+         "volume": 0.0095,
+         "macd": 0.1079,
+         "rsi": 0.0173,
+         "cci": 0.0021,
+         "adx": 0.0252,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 14,
+          "worst": [
+           "SISE.IS",
+           0.0843
+          ]
+         },
+         "high": {
+          "n_symbols": 14,
+          "worst": [
+           "SISE.IS",
+           0.0884
+          ]
+         },
+         "low": {
+          "n_symbols": 13,
+          "worst": [
+           "SAHOL.IS",
+           0.0924
+          ]
+         },
+         "close": {
+          "n_symbols": 15,
+          "worst": [
+           "SAHOL.IS",
+           0.0964
+          ]
+         },
+         "volume": {
+          "n_symbols": 5,
+          "worst": [
+           "FROTO.IS",
+           0.1124
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "SASA.IS",
+           0.5622
+          ]
+         },
+         "rsi": {
+          "n_symbols": 14,
+          "worst": [
+           "SISE.IS",
+           0.0843
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 12,
+          "worst": [
+           "ENKAI.IS",
+           0.1084
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 56944,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 1843,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 1902,
+        "n_eval_days": 252,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.997
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.573,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0226,
+         "volume": 0.0378,
+         "indicators": 0.0749
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.02,
+         "high": 0.021,
+         "low": 0.0262,
+         "close": 0.023,
+         "volume": 0.0378,
+         "macd": 0.3323,
+         "rsi": 0.0135,
+         "cci": 0.0016,
+         "adx": 0.027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 13,
+          "worst": [
+           "MGROS.IS",
+           0.0913
+          ]
+         },
+         "high": {
+          "n_symbols": 13,
+          "worst": [
+           "MGROS.IS",
+           0.0992
+          ]
+         },
+         "low": {
+          "n_symbols": 14,
+          "worst": [
+           "MGROS.IS",
+           0.1111
+          ]
+         },
+         "close": {
+          "n_symbols": 13,
+          "worst": [
+           "HALKB.IS",
+           0.0913
+          ]
+         },
+         "volume": {
+          "n_symbols": 12,
+          "worst": [
+           "TOASO.IS",
+           0.4325
+          ]
+         },
+         "macd": {
+          "n_symbols": 24,
+          "worst": [
+           "SASA.IS",
+           0.8294
+          ]
+         },
+         "rsi": {
+          "n_symbols": 10,
+          "worst": [
+           "SKBNK.IS",
+           0.0754
+          ]
+         },
+         "cci": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0119
+          ]
+         },
+         "adx": {
+          "n_symbols": 15,
+          "worst": [
+           "GARAN.IS",
+           0.2024
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "rsi",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 56944,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7560,
+          "context_rows_min": 2092,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    },
+    "2023": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2023",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2021-12-31"
+       ],
+       "val": [
+        "2022-01-03",
+        "2022-12-30"
+       ],
+       "test": [
+        "2023-01-02",
+        "2023-12-29"
+       ]
+      },
+      "n_sessions": {
+       "train": 2151,
+       "val": 252,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": false,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "price_in_support",
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2151,
+        "n_eval_days": 252,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9969
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.573,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0163,
+         "volume": 0.0108,
+         "indicators": 0.0358
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0147,
+         "high": 0.0149,
+         "low": 0.0179,
+         "close": 0.0177,
+         "volume": 0.0108,
+         "macd": 0.1493,
+         "rsi": 0.0081,
+         "cci": 0.0007,
+         "adx": 0.021,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 9,
+          "worst": [
+           "MGROS.IS",
+           0.0913
+          ]
+         },
+         "high": {
+          "n_symbols": 9,
+          "worst": [
+           "MGROS.IS",
+           0.0992
+          ]
+         },
+         "low": {
+          "n_symbols": 9,
+          "worst": [
+           "MGROS.IS",
+           0.1111
+          ]
+         },
+         "close": {
+          "n_symbols": 9,
+          "worst": [
+           "HALKB.IS",
+           0.0913
+          ]
+         },
+         "volume": {
+          "n_symbols": 8,
+          "worst": [
+           "ENKAI.IS",
+           0.0714
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "ODAS.IS",
+           0.4921
+          ]
+         },
+         "rsi": {
+          "n_symbols": 5,
+          "worst": [
+           "SKBNK.IS",
+           0.0675
+          ]
+         },
+         "adx": {
+          "n_symbols": 11,
+          "worst": [
+           "GARAN.IS",
+           0.2024
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "close",
+         "high",
+         "low",
+         "macd",
+         "open",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 64414,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7560,
+          "context_rows_min": 2092,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2151,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9969
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7165,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0028,
+         "volume": 0.0115,
+         "indicators": 0.0609
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0025,
+         "high": 0.0019,
+         "low": 0.0037,
+         "close": 0.0029,
+         "volume": 0.0115,
+         "macd": 0.2914,
+         "rsi": 0.0015,
+         "cci": 0.0005,
+         "adx": 0.0112,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "open": {
+          "n_symbols": 2,
+          "worst": [
+           "GARAN.IS",
+           0.0602
+          ]
+         },
+         "high": {
+          "n_symbols": 1,
+          "worst": [
+           "GARAN.IS",
+           0.0562
+          ]
+         },
+         "low": {
+          "n_symbols": 5,
+          "worst": [
+           "GARAN.IS",
+           0.0522
+          ]
+         },
+         "close": {
+          "n_symbols": 2,
+          "worst": [
+           "GARAN.IS",
+           0.0683
+          ]
+         },
+         "volume": {
+          "n_symbols": 5,
+          "worst": [
+           "ENKAI.IS",
+           0.1325
+          ]
+         },
+         "macd": {
+          "n_symbols": 20,
+          "worst": [
+           "SASA.IS",
+           0.7751
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "GARAN.IS",
+           0.0201
+          ]
+         },
+         "adx": {
+          "n_symbols": 5,
+          "worst": [
+           "SASA.IS",
+           0.1205
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "adx",
+         "macd",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 64414,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 2344,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    },
+    "2024": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2024",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2022-12-30"
+       ],
+       "val": [
+        "2023-01-02",
+        "2023-12-29"
+       ],
+       "test": [
+        "2024-01-02",
+        "2024-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 2403,
+       "val": 249,
+       "test": 249
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2403,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9972
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7165,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0001,
+         "volume": 0.0037,
+         "indicators": 0.0207
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0,
+         "high": 0.0,
+         "low": 0.0005,
+         "close": 0.0,
+         "volume": 0.0037,
+         "macd": 0.0965,
+         "rsi": 0.0004,
+         "cci": 0.0004,
+         "adx": 0.0063,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "low": {
+          "n_symbols": 1,
+          "worst": [
+           "BIMAS.IS",
+           0.012
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "EREGL.IS",
+           0.012
+          ]
+         },
+         "macd": {
+          "n_symbols": 17,
+          "worst": [
+           "ODAS.IS",
+           0.3534
+          ]
+         },
+         "adx": {
+          "n_symbols": 2,
+          "worst": [
+           "SASA.IS",
+           0.1205
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "macd"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 71974,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 2344,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2403,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9972
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7422,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0,
+         "volume": 0.0003,
+         "indicators": 0.0284
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0,
+         "high": 0.0,
+         "low": 0.0,
+         "close": 0.0,
+         "volume": 0.0003,
+         "macd": 0.1383,
+         "rsi": 0.0011,
+         "cci": 0.0001,
+         "adx": 0.0027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "macd": {
+          "n_symbols": 17,
+          "worst": [
+           "YKBNK.IS",
+           0.51
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "TAVHL.IS",
+           0.0241
+          ]
+         },
+         "adx": {
+          "n_symbols": 1,
+          "worst": [
+           "KCHOL.IS",
+           0.0643
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "macd"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 71974,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 2593,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    },
+    "2025": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2025",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2023-12-29"
+       ],
+       "val": [
+        "2024-01-02",
+        "2024-12-31"
+       ],
+       "test": [
+        "2025-01-02",
+        "2025-12-31"
+       ]
+      },
+      "n_sessions": {
+       "train": 2652,
+       "val": 249,
+       "test": 251
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2652,
+        "n_eval_days": 249,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9975
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7422,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0,
+         "volume": 0.0001,
+         "indicators": 0.0076
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0,
+         "high": 0.0,
+         "low": 0.0,
+         "close": 0.0,
+         "volume": 0.0001,
+         "macd": 0.0341,
+         "rsi": 0.0009,
+         "cci": 0.0001,
+         "adx": 0.0027,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "macd": {
+          "n_symbols": 6,
+          "worst": [
+           "YKBNK.IS",
+           0.4137
+          ]
+         },
+         "rsi": {
+          "n_symbols": 1,
+          "worst": [
+           "TAVHL.IS",
+           0.0241
+          ]
+         },
+         "adx": {
+          "n_symbols": 1,
+          "worst": [
+           "KCHOL.IS",
+           0.0643
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "macd"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 79444,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7470,
+          "context_rows_min": 2593,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2652,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9975
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7412,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0,
+         "volume": 0.0035,
+         "indicators": 0.0087
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0,
+         "high": 0.0,
+         "low": 0.0001,
+         "close": 0.0,
+         "volume": 0.0035,
+         "macd": 0.0432,
+         "rsi": 0.0,
+         "cci": 0.0003,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.0996
+          ]
+         },
+         "macd": {
+          "n_symbols": 6,
+          "worst": [
+           "YKBNK.IS",
+           0.3825
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "macd"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 79444,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7530,
+          "context_rows_min": 2842,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    },
+    "2026": {
+     "report": {
+      "spec": "wf-v1",
+      "spec_digest": "33a196c602976de1",
+      "fold": "2026",
+      "purge_sessions": 0,
+      "purged_dates": {},
+      "ranges": {
+       "train": [
+        "2013-06-03",
+        "2024-12-31"
+       ],
+       "val": [
+        "2025-01-02",
+        "2025-12-31"
+       ],
+       "test": [
+        "2026-01-02",
+        "2026-10-30"
+       ]
+      },
+      "n_sessions": {
+       "train": 2901,
+       "val": 251,
+       "test": 207
+      },
+      "n_symbols": 30,
+      "dropped_symbols": []
+     },
+     "n_symbols": 30,
+     "price_stats_fallbacks": {},
+     "roles": {
+      "val": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": true,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2901,
+        "n_eval_days": 251,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9977
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7412,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0,
+         "volume": 0.0035,
+         "indicators": 0.0017
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0,
+         "high": 0.0,
+         "low": 0.0001,
+         "close": 0.0,
+         "volume": 0.0035,
+         "macd": 0.0084,
+         "rsi": 0.0,
+         "cci": 0.0003,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.0996
+          ]
+         },
+         "macd": {
+          "n_symbols": 3,
+          "worst": [
+           "EKGYO.IS",
+           0.1514
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 86914,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 7530,
+          "context_rows_min": 2842,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      },
+      "test": {
+       "protocol": {
+        "price_stats_source": "causal",
+        "indicator_bfill": false,
+        "adx_constant": false,
+        "indicators_present": true,
+        "price_in_support": true,
+        "hyperparams_clean": true,
+        "obs_health": false,
+        "features_in_support": false,
+        "dims_in_support": false,
+        "split_from_spec": true,
+        "selection_metric": null
+       },
+       "open_items": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support",
+        "selection_metric"
+       ],
+       "open_items_env": [
+        "obs_health",
+        "features_in_support",
+        "dims_in_support"
+       ],
+       "health": {
+        "n_train_days": 2901,
+        "n_eval_days": 207,
+        "train": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "train_saturated": {
+         "turbulence": 0.9977
+        },
+        "eval": {
+         "price": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "volume": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         },
+         "indicators": {
+          "clip_frac": 0.0,
+          "constant_dims_frac": 0.0
+         }
+        },
+        "eval_saturated": {
+         "macd": 0.7911,
+         "turbulence": 1.0
+        },
+        "eval_out_of_train_support": {
+         "price": 0.0004,
+         "volume": 0.0205,
+         "indicators": 0.0061
+        },
+        "eval_out_of_train_support_features": {
+         "open": 0.0002,
+         "high": 0.0003,
+         "low": 0.0008,
+         "close": 0.0003,
+         "volume": 0.0205,
+         "macd": 0.0296,
+         "rsi": 0.0003,
+         "cci": 0.0006,
+         "adx": 0.0,
+         "turbulence": 0.0
+        },
+        "dims_over_eps": {
+         "low": {
+          "n_symbols": 1,
+          "worst": [
+           "FROTO.IS",
+           0.0145
+          ]
+         },
+         "volume": {
+          "n_symbols": 1,
+          "worst": [
+           "SASA.IS",
+           0.6087
+          ]
+         },
+         "macd": {
+          "n_symbols": 4,
+          "worst": [
+           "SKBNK.IS",
+           0.3043
+          ]
+         }
+        },
+        "obs_health_failures": [
+         "train.turbulence.saturated",
+         "eval.turbulence.saturated"
+        ],
+        "support_failures": [
+         "macd",
+         "volume"
+        ],
+        "price_norm_warmup": {
+         "train": {
+          "rows_window_not_full": 492,
+          "rows_neutral": 28,
+          "rows_total": 86914,
+          "context_rows_min": 1,
+          "series_start_symbols": [
+           "ODAS.IS",
+           "PGSUS.IS"
+          ],
+          "by_symbol_window_not_full": {
+           "ODAS.IS": 242,
+           "PGSUS.IS": 250
+          }
+         },
+         "eval": {
+          "rows_window_not_full": 0,
+          "rows_neutral": 0,
+          "rows_total": 6210,
+          "context_rows_min": 3093,
+          "series_start_symbols": [],
+          "by_symbol_window_not_full": {}
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "gate_same_code": {
+  "old_panel": {
+   "path": "data/bist/backup_2026-07-27/stock_data_with_indicators.csv",
+   "file_sha256": "cd24b59cac08edd96e689d60d87b39a5ad3676c18b06e9fb6fe7eb771100749d",
+   "end": "2026-07-27"
+  },
+  "old": {
+   "rows_after": 98614,
+   "n_dates": 3291,
+   "missing_cell_frac": 0.0011749215030892879,
+   "n_ghost_days": 72,
+   "n_stale_cells_dropped": 39,
+   "indicator_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "n_large_moves": 13,
+   "n_artifacts": 0
+  },
+  "new_cut_to_old_end": {
+   "rows_after": 98614,
+   "n_dates": 3291,
+   "missing_cell_frac": 0.0011749215030892879,
+   "n_ghost_days": 67,
+   "n_stale_cells_dropped": 39,
+   "indicator_warmup_dropped": {
+    "ODAS.IS": 17,
+    "PGSUS.IS": 24
+   },
+   "n_large_moves": 13,
+   "n_artifacts": 0
+  }
+ },
+ "panel_refresh": {
+  "old": {
+   "path": "data/bist/backup_2026-07-27/raw_stock_data.csv",
+   "file_sha256": "a86f44cad36718b8676ac1df40c68c5442e8b6ae9af16b69d55fde67eff241b5",
+   "rows": 181713,
+   "span": [
+    "2000-05-10",
+    "2026-07-27"
+   ],
+   "nonpositive_price_rows": 8155
+  },
+  "new": {
+   "path": "data/bist/raw_stock_data.csv",
+   "file_sha256": "d3f39d9ff55b2786397b12482921ce491b3f49bd4bc44150f6189e1489070363",
+   "rows": 158991,
+   "span": [
+    "2005-01-03",
+    "2026-11-09"
+   ],
+   "nonpositive_price_rows": 0
+  },
+  "window": [
+   "2013-06-01",
+   "2026-07-27"
+  ],
+  "common_rows_in_window": 100680,
+  "per_symbol": {
+   "AKBNK.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 7e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.569465533206142e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "ARCLK.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 5e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 3.595876072459703e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "ASELS.IS": {
+    "ratio_min": 0.999999,
+    "ratio_max": 1.000001,
+    "spread_pct": 0.00011,
+    "step_dates": [],
+    "max_abs_logret_diff": 1.1080945836461353e-06,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "BIMAS.IS": {
+    "ratio_min": 0.993986,
+    "ratio_max": 0.993987,
+    "spread_pct": 0.00012,
+    "step_dates": [],
+    "max_abs_logret_diff": 9.006435581770944e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "EKGYO.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.994646682383475e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "ENKAI.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 9e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 7.081544709519605e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "EREGL.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.524782974482666e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "FROTO.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.000001,
+    "spread_pct": 0.00011,
+    "step_dates": [],
+    "max_abs_logret_diff": 7.415667645782609e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "GARAN.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 7e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.599870158690123e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "HALKB.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.4157460932225945e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "ISCTR.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.346206429224232e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "KCHOL.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 8e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 6.150334432852844e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "KRDMD.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.021713855093979e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "MGROS.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 5e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.747227202450688e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "ODAS.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 0.0,
+    "step_dates": [],
+    "max_abs_logret_diff": 3.3306690738754696e-16,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "PETKM.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 4e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 2.6275172516909695e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "PGSUS.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 0.0,
+    "step_dates": [],
+    "max_abs_logret_diff": 2.220446049250313e-16,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "SAHOL.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 7e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.6986068991117236e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "SASA.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 2e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 2.3287821449002877e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "SISE.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 8e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 6.275761099683308e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "SKBNK.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.00955,
+    "spread_pct": 0.95503,
+    "step_dates": [
+     "2023-04-10",
+     "2024-05-13",
+     "2025-06-24",
+     "2026-06-08"
+    ],
+    "max_abs_logret_diff": 0.004102951103443608,
+    "n_logret_diff_gt_1e-5": 4
+   },
+   "TAVHL.IS": {
+    "ratio_min": 0.993536,
+    "ratio_max": 0.993537,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.736827738938132e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "TCELL.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 8e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 6.376429859678012e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "THYAO.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 2e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 2.295751282410663e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "TKFEN.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 7e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 6.293695682391132e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "TOASO.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 7e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.376921174971017e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "TSKB.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 3e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 2.5929284824810495e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "TUPRS.IS": {
+    "ratio_min": 0.982395,
+    "ratio_max": 0.982396,
+    "spread_pct": 8e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 5.635991109365079e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "VAKBN.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 6e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.853526001102892e-07,
+    "n_logret_diff_gt_1e-5": 0
+   },
+   "YKBNK.IS": {
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "spread_pct": 5e-05,
+    "step_dates": [],
+    "max_abs_logret_diff": 4.176690092672075e-07,
+    "n_logret_diff_gt_1e-5": 0
+   }
+  },
+  "symbols_ratio_not_one": [
+   "BIMAS.IS",
+   "SKBNK.IS",
+   "TAVHL.IS",
+   "TUPRS.IS"
+  ],
+  "symbols_ratio_not_constant": [
+   "SKBNK.IS"
+  ],
+  "rows_only_old_in_window": {
+   "n": 92,
+   "n_flat": 92,
+   "by_date": {
+    "2026-04-23": 1,
+    "2026-05-01": 1,
+    "2026-05-27": 30,
+    "2026-05-28": 30,
+    "2026-05-29": 30
+   }
+  },
+  "rows_only_new_in_window": 0,
+  "ghost_days": {
+   "old": 72,
+   "new_same_span": 67,
+   "only_old": [
+    "2026-04-23",
+    "2026-05-01",
+    "2026-05-27",
+    "2026-05-28",
+    "2026-05-29"
+   ],
+   "only_new": []
+  },
+  "dividends": {
+   "source": "yfinance Ticker.dividends",
+   "fetched_at": "2026-11-13T23:41:38",
+   "by_symbol": {
+    "BIMAS.IS": [
+     [
+      "2014-05-21",
+      0.125
+     ],
+     [
+      "2014-10-15",
+      0.075
+     ],
+     [
+      "2015-05-20",
+      0.125
+     ],
+     [
+      "2015-10-21",
+      0.1
+     ],
+     [
+      "2016-06-06",
+      0.15
+     ],
+     [
+      "2016-11-07",
+      0.125
+     ],
+     [
+      "2017-06-07",
+      0.225
+     ],
+     [
+      "2017-11-08",
+      0.15
+     ],
+     [
+      "2018-06-06",
+      0.275
+     ],
+     [
+      "2018-11-07",
+      0.2
+     ],
+     [
+      "2019-06-12",
+      0.3
+     ],
+     [
+      "2019-11-18",
+      0.3
+     ],
+     [
+      "2019-12-11",
+      0.2
+     ],
+     [
+      "2020-05-13",
+      0.25
+     ],
+     [
+      "2020-10-14",
+      0.4
+     ],
+     [
+      "2021-01-08",
+      1.0
+     ],
+     [
+      "2021-05-20",
+      1.0
+     ],
+     [
+      "2021-11-17",
+      1.0
+     ],
+     [
+      "2022-06-15",
+      0.75
+     ],
+     [
+      "2022-12-14",
+      0.75
+     ],
+     [
+      "2023-06-14",
+      1.0
+     ],
+     [
+      "2023-12-20",
+      1.5
+     ],
+     [
+      "2024-07-17",
+      1.0
+     ],
+     [
+      "2024-10-02",
+      2.0
+     ],
+     [
+      "2024-12-18",
+      2.0
+     ],
+     [
+      "2025-06-18",
+      2.0
+     ],
+     [
+      "2025-09-17",
+      2.0
+     ],
+     [
+      "2025-12-17",
+      2.5
+     ],
+     [
+      "2026-06-17",
+      2.0
+     ],
+     [
+      "2026-09-16",
+      2.5
+     ]
+    ],
+    "SKBNK.IS": [
+     [
+      "2023-04-10",
+      0.035233
+     ],
+     [
+      "2024-05-13",
+      0.038366
+     ],
+     [
+      "2025-06-24",
+      0.038903
+     ],
+     [
+      "2026-06-08",
+      0.049796
+     ]
+    ],
+    "TAVHL.IS": [
+     [
+      "2014-03-26",
+      0.5478
+     ],
+     [
+      "2015-05-05",
+      0.842468
+     ],
+     [
+      "2016-03-23",
+      0.956724
+     ],
+     [
+      "2017-03-22",
+      0.682534
+     ],
+     [
+      "2018-03-28",
+      1.118614
+     ],
+     [
+      "2019-03-20",
+      2.0854
+     ],
+     [
+      "2020-03-25",
+      1.080405
+     ],
+     [
+      "2026-07-21",
+      1.80499
+     ],
+     [
+      "2026-09-22",
+      1.80499
+     ]
+    ],
+    "TUPRS.IS": [
+     [
+      "2014-04-02",
+      0.226
+     ],
+     [
+      "2016-04-06",
+      0.928571
+     ],
+     [
+      "2017-04-04",
+      0.888286
+     ],
+     [
+      "2018-03-29",
+      1.943286
+     ],
+     [
+      "2019-03-28",
+      2.164286
+     ],
+     [
+      "2023-03-10",
+      6.487455
+     ],
+     [
+      "2023-09-29",
+      15.050896
+     ],
+     [
+      "2024-04-03",
+      10.379928
+     ],
+     [
+      "2024-09-27",
+      11.936917
+     ],
+     [
+      "2025-03-28",
+      7.784946
+     ],
+     [
+      "2025-09-30",
+      7.421649
+     ],
+     [
+      "2026-03-16",
+      10.379928
+     ],
+     [
+      "2026-09-30",
+      6.746953
+     ]
+    ]
+   }
+  }
+ }
+}

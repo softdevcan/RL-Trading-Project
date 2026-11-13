@@ -1320,7 +1320,7 @@ listesi — `test_topbar.py`, bildirim ve kırıntı Do-NOT maddeleri),
 `docs/development/roadmap.md` (Faz G girdisi).
 
 Faz I sonrası güncellendi: `docs/guides/API_HYPEROPT_GUIDE.md` (`DELETE`
-artık siliyor, iptal `POST .../cancel`), `docs/development/phase7-auth.md`
+artık siliyor, iptal `POST .../cancel`), `docs/development/phase-7-auth.md`
 ("kimse ortak dizindeki modeli silemez" maddesi artık yanlıştı).
 
 **Kapanış turu (2026-08-30).** Belge bir plan olmaktan çıkıp akan bir kayda

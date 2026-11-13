@@ -10,7 +10,6 @@ API endpoints used:
 """
 
 import json
-from datetime import date, timedelta
 
 from dash import html, dcc, no_update
 from dash import ALL as _ALL
@@ -59,28 +58,26 @@ def _reward_options():
 # ── Layout ────────────────────────────────────────────────────────────────────
 
 def layout():
-    today = date.today()
-    default_start = today - timedelta(days=365)
-
-    # CSV mevcut ise tarih/sembol sınırlarını oradan dolduralım; yoksa
-    # makul fallback (son 1 yıl, sembol seçici boş).
+    # Faz 9 / R1: pencereler serbest tarih degil, `evaluation/splits.py` katlari.
+    # Uc RL panelinin (egitim rotasiyla ayni dosya) araligini, sembollerini ve
+    # katlari doner.
     data_range = api.get_hyperopt_data_range() or {"available": False, "symbols": []}
     cached_available = bool(data_range.get("available"))
-    csv_min = data_range.get("min_date") or str(default_start)
-    csv_max = data_range.get("max_date") or str(today)
     csv_symbols = data_range.get("symbols", []) or []
-
-    # Default penceresi: train = ilk %80, val = son %20
-    csv_min_d = date.fromisoformat(csv_min)
-    csv_max_d = date.fromisoformat(csv_max)
-    total_days = (csv_max_d - csv_min_d).days
-    split_d = csv_min_d + timedelta(days=int(total_days * 0.8))
+    folds = data_range.get("folds", []) or []
+    fold_options = [{
+        "label": (f"{f['name']} — eğitim {f['train'][0]}→{f['val'][0]}, "
+                  f"doğrulama {f['val'][0]}→{f['val'][1]}"),
+        "value": f["name"],
+    } for f in folds]
+    default_fold = folds[0]["name"] if folds else None
 
     csv_status_msg = (
-        f"CSV: {csv_min} → {csv_max} • {data_range.get('total_rows', 0)} satır • "
-        f"{len(csv_symbols)} sembol"
+        f"RL paneli: {data_range.get('min_date')} → {data_range.get('max_date')} • "
+        f"{data_range.get('total_rows', 0)} satır • {len(csv_symbols)} sembol • "
+        f"bölme {data_range.get('split_spec', '—')}"
         if cached_available
-        else "CSV yok — 'yfinance'tan tazele' otomatik açık."
+        else "RL paneli yok — önce 'Veri' sayfasından veri çekin."
     )
 
     # Sayfa her gezinmede yeniden uretiliyor; calisan study'nin kimligi
@@ -145,15 +142,8 @@ def layout():
                                   min=10_000, max=1_000_000, step=1_000,
                                   className="mb-3"),
 
-                        # Data source
-                        html.Label("Veri Kaynağı", className="section-title"),
-                        dbc.Checklist(
-                            id="hyperopt-refresh-data",
-                            options=[{"label": " yfinance'tan tazele (CSV ezilir)", "value": "refresh"}],
-                            value=[] if cached_available else ["refresh"],
-                            switch=True,
-                            className="mb-2",
-                        ),
+                        # Veri: egitim rotasiyla ayni panel (R1)
+                        html.Label("Veri", className="section-title"),
                         html.Small(csv_status_msg, id="hyperopt-csv-status",
                                    style={"color": TEXT_MUTED, "display": "block", "marginBottom": "12px"}),
 
@@ -164,24 +154,23 @@ def layout():
                             options=[{"label": s, "value": s} for s in csv_symbols],
                             value=csv_symbols,
                             multi=True,
-                            placeholder="Boş = PHASE1_SYMBOLS (default)",
+                            placeholder="Boş = panelin tüm sembolleri (eğitimle aynı evren)",
                             style={"marginBottom": "12px"},
                         ),
 
-                        # Train date range (val = train_end +1 → csv_max)
-                        html.Label("Eğitim Aralığı (val otomatik son %20)", className="section-title"),
-                        dbc.Row([
-                            dbc.Col(dcc.DatePickerSingle(
-                                id="hyperopt-train-start",
-                                date=str(csv_min_d), min_date_allowed=csv_min, max_date_allowed=csv_max,
-                                display_format="YYYY-MM-DD"), width=6),
-                            dbc.Col(dcc.DatePickerSingle(
-                                id="hyperopt-train-end",
-                                date=str(split_d), min_date_allowed=csv_min, max_date_allowed=csv_max,
-                                display_format="YYYY-MM-DD"), width=6),
-                        ], className="mb-2"),
-                        html.Small(id="hyperopt-val-preview",
-                                   style={"color": TEXT_MUTED, "display": "block", "marginBottom": "12px"}),
+                        # Kat (R1): egitim ve dogrulama pencereleri bolme tanimindan
+                        html.Label("Kat (walk-forward)", className="section-title"),
+                        dcc.Dropdown(
+                            id="hyperopt-fold",
+                            options=fold_options,
+                            value=default_fold, clearable=False,
+                            style={"marginBottom": "6px"},
+                        ),
+                        html.Small(
+                            "İlk kat önerilir: doğrulaması bütün katların testinden önce "
+                            "biter, bulunan ayar her katta kullanılabilir. Test dönemi "
+                            "aramada hiç okunmaz.",
+                            style={"color": TEXT_MUTED, "display": "block", "marginBottom": "12px"}),
 
                         # Search space info
                         html.Div(id="hyperopt-space-info", className="mb-3"),
@@ -279,31 +268,6 @@ def register_callbacks(app):
         return html.Small(f"{algo} icin {n} hiper parametre aranacak.", style={"color": TEXT_MUTED})
 
     @app.callback(
-        Output("hyperopt-val-preview", "children"),
-        [Input("hyperopt-train-end", "date"),
-         Input("hyperopt-data-range", "data")],
-    )
-    def update_val_preview(train_end, data_range):
-        """Val = train_end+1 → csv_max. Görsel feedback."""
-        if not train_end:
-            return ""
-        try:
-            te = date.fromisoformat(str(train_end)[:10])
-            csv_max = (data_range or {}).get("max_date")
-            if not csv_max:
-                return f"Val: {te + timedelta(days=1)} → (CSV yok)"
-            vmax = date.fromisoformat(csv_max)
-            vmin = te + timedelta(days=1)
-            if vmin >= vmax:
-                return html.Span(
-                    f"⚠ train_end ({te}) çok geç — val aralığı boş",
-                    style={"color": RED}
-                )
-            return f"Val: {vmin} → {vmax} ({(vmax - vmin).days} gün)"
-        except Exception:
-            return ""
-
-    @app.callback(
         [Output("hyperopt-poll", "disabled"),
          Output("hyperopt-start-result", "children"),
          Output("hyperopt-active-study", "data")],
@@ -314,38 +278,22 @@ def register_callbacks(app):
             State("hyperopt-reward", "value"),
             State("hyperopt-trials", "value"),
             State("hyperopt-timesteps", "value"),
-            State("hyperopt-train-start", "date"),
-            State("hyperopt-train-end", "date"),
-            State("hyperopt-refresh-data", "value"),
+            State("hyperopt-fold", "value"),
             State("hyperopt-symbols", "value"),
             State("hyperopt-data-range", "data"),
         ],
         prevent_initial_call=True,
     )
     def start_optimization(n, algo, phase, reward, trials, timesteps,
-                           train_start, train_end, refresh, symbols, data_range):
+                           fold, symbols, data_range):
         if not n:
             return True, html.Span(), None
 
-        if not train_start or not train_end:
-            return True, dbc.Alert("Eğitim tarihleri eksik.", color="danger", dismissable=True), None
-
-        # val = train_end+1 → csv_max
-        try:
-            te = date.fromisoformat(str(train_end)[:10])
-        except Exception:
-            return True, dbc.Alert("Train end tarihi geçersiz.", color="danger", dismissable=True), None
-        val_start_d = te + timedelta(days=1)
-        csv_max = (data_range or {}).get("max_date") or str(date.today())
-        try:
-            val_end_d = date.fromisoformat(csv_max)
-        except Exception:
-            val_end_d = date.today()
-        if val_start_d >= val_end_d:
-            return True, dbc.Alert(
-                "Val aralığı boş — train_end'i öne çekin veya veri çekin.",
-                color="danger", dismissable=True,
-            ), None
+        folds = {f["name"]: f for f in (data_range or {}).get("folds", []) or []}
+        if not fold or fold not in folds:
+            return True, dbc.Alert("Kat seçilmedi ya da RL paneli yok.",
+                                   color="danger", dismissable=True), None
+        all_symbols = (data_range or {}).get("symbols", []) or []
 
         payload = {
             "algorithm": algo,
@@ -353,20 +301,17 @@ def register_callbacks(app):
             "reward_type": reward or "psr",
             "n_trials": int(trials or 20),
             "total_timesteps": int(timesteps or 10_000),
-            "train_start": str(train_start)[:10],
-            "train_end": str(train_end)[:10],
-            "val_start": str(val_start_d),
-            "val_end": str(val_end_d),
-            "use_cached_data": "refresh" not in (refresh or []),
-            "stock_symbols": symbols or None,
+            "fold": fold,
+            # tum semboller secili = panelin evreni (None): egitim rotasiyla ayni
+            "stock_symbols": (symbols if symbols and set(symbols) != set(all_symbols) else None),
         }
         result = api.start_hyperopt(payload)
         if result and result.get("study_id"):
             sid = result["study_id"]
+            fd = folds[fold]
             info = (
-                f"Train {payload['train_start']}→{payload['train_end']} • "
-                f"Val {payload['val_start']}→{payload['val_end']} • "
-                f"Kaynak: {'CSV' if payload['use_cached_data'] else 'yfinance'}"
+                f"Kat {fold} • eğitim {fd['train'][0]}→{fd['train'][1]} • "
+                f"doğrulama {fd['val'][0]}→{fd['val'][1]} (bitişler hariç)"
             )
             est = result.get("estimated_duration_minutes")
             est_txt = f" • tahmini ~{est:.0f} dk" if isinstance(est, (int, float)) else ""
