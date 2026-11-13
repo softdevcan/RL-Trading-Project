@@ -488,6 +488,12 @@ def main():
     check("test blogu degisince secim (adim + 10 kontrol noktasinin metrikleri) bit-es",
           sel(s_pert) == sel(s_base) and n_ck == rl_folds.N_CHECKPOINTS)
     check("test blogu degisince secilen agirliklar bit-es", w_pert == w_base)
+    sel_b = (s_base.get("metrics") or {}).get("selection") or {}
+    shas = [c.get("params_sha") for c in sel_b.get("checkpoints") or []]
+    check("secim raporu farkli agirlik sayisini tasir (A2C n_steps=256, 1024 adim: guncelleme "
+          "arasina dusen noktalar ayni model; hakem-rl R1 #4)",
+          None not in shas and sel_b.get("n_distinct") == len(set(shas))
+          and 1 < sel_b["n_distinct"] < rl_folds.N_CHECKPOINTS, f"{sel_b.get('n_distinct')} / {shas}")
     cr = lambda s: (s.get("metrics") or {}).get("cumulative_return")
     check("... ve test metrigi degisir (olcut bos degil)", cr(s_pert) != cr(s_base),
           f"{cr(s_base)} / {cr(s_pert)}")
@@ -516,7 +522,8 @@ def main():
         captured["chosen"] = params_digest(_A2C.load(chosen["path"], device="cpu"))
         captured["final"] = params_digest(_A2C.load(final["path"], device="cpu"))
         captured["step"] = chosen["step"]
-        return {**chosen, "degenerate": False, "rank": 1, "n_valid": len(records)}
+        return {**chosen, "degenerate": False, "rank": 1, "n_valid": len(records),
+                "n_distinct": len({r["params_sha"] for r in records})}
 
     with patched(rl_folds, "select_checkpoint", forced_pick):
         s_f, t_f, w_f = run_route(panel)
@@ -539,16 +546,26 @@ def main():
 
     # ------------------------------------------------------------------ D
     print("\nD — dogrulama geri cagrisi egitimi bozmuyor")
-    from stable_baselines3 import A2C, PPO
+    from stable_baselines3 import A2C, PPO, SAC, TD3
+    from stable_baselines3.common.noise import NormalActionNoise
 
     def learn(algo, with_cb, total=320):
         env = rl_folds.make_fold_env(fd, "train", initial_balance=100_000)
         stats_env = rl_folds.make_fold_env(fd, "train", initial_balance=100_000)
         if algo == "A2C":
             model = A2C("MlpPolicy", env, n_steps=32, seed=5, device="cpu", verbose=0)
-        else:
+        elif algo == "PPO":
             model = PPO("MlpPolicy", env, n_steps=64, batch_size=32, n_epochs=2, seed=5,
                         device="cpu", verbose=0)
+        else:
+            # off-policy: olcum collect_rollouts icinde; ilk noktalar learning_starts'tan once
+            # (rotadaki gibi TD3'te global numpy RNG'li eylem gurultusu var)
+            n = env.action_space.shape[0]
+            extra = ({"action_noise": NormalActionNoise(np.zeros(n), 0.2 * np.ones(n))}
+                     if algo == "TD3" else {})
+            cls = TD3 if algo == "TD3" else SAC
+            model = cls("MlpPolicy", env, learning_starts=64, batch_size=32, buffer_size=1000,
+                        seed=5, device="cpu", verbose=0, **extra)
         cb = rl_folds.make_validation_callback(
             lambda: rl_folds.make_fold_env(fd, "val", train_env=stats_env, initial_balance=100_000),
             total_timesteps=total, checkpoint_dir=tempfile.mkdtemp(dir=_TMP),
@@ -556,7 +573,7 @@ def main():
         model.learn(total, callback=cb if with_cb else None)
         return params_digest(model), (len(cb.records) if with_cb else 0)
 
-    for algo in ("A2C", "PPO"):
+    for algo in ("A2C", "PPO", "TD3", "SAC"):
         w_off, _ = learn(algo, False)
         w_on, n_rec = learn(algo, True)
         check(f"[{algo}] geri cagri acik/kapali son agirliklar bit-es (olcum {n_rec} nokta)",
@@ -768,6 +785,11 @@ def main():
     pick = rl_folds.select_checkpoint(recs_ck)
     check("secim: argmax, esitlikte en erken adim, tanimsiz metrik sayilmaz",
           pick["step"] == 20 and pick["n_valid"] == 3 and not pick["degenerate"])
+    dup = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": m, "params_sha": h}
+                                      for i, (s, m, h) in enumerate([(10, 0.1, "a"), (20, 0.1, "a"),
+                                                                     (30, 0.3, "b")])])
+    check("secim: ayni agirlikli noktalar tek aday sayilir (n_distinct)",
+          dup["n_distinct"] == 2 and dup["step"] == 30)
     deg = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": None}
                                       for i, s in enumerate([10, 20])])
     check("hicbir metrik tanimli degilse son nokta + degenerate=True",

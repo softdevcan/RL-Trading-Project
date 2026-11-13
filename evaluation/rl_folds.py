@@ -250,6 +250,16 @@ def run_episode(model, env, collect_obs: bool = False) -> dict:
 # ---------------------------------------------------------------------------
 # Kontrol noktasi kurali
 # ---------------------------------------------------------------------------
+def policy_sha(model) -> str:
+    """Politika agirliklarinin kisa ozeti (ayni agirlikli kontrol noktalarini saymak icin)."""
+    import hashlib
+    h = hashlib.sha256()
+    for k, v in sorted(model.policy.state_dict().items()):
+        h.update(k.encode())
+        h.update(v.detach().cpu().numpy().tobytes())
+    return h.hexdigest()[:12]
+
+
 def checkpoint_grid(total_timesteps: int, n_checkpoints: int = N_CHECKPOINTS) -> List[int]:
     """Esit aralikli adim izgarasi; son nokta egitim butcesinin sonu."""
     k = max(1, min(int(n_checkpoints), int(total_timesteps)))
@@ -265,11 +275,15 @@ def select_checkpoint(records: List[dict]) -> dict:
     if not records:
         raise ValueError("Kontrol noktasi kaydi yok")
     valid = [r for r in records if r.get('metric') is not None and np.isfinite(r['metric'])]
+    # Ayni agirlikli noktalar ayri aday degildir (hakem-rl R1 #4: PPO/A2C'de izgara noktasi
+    # guncellemeler arasina duserse ardisik noktalar ayni modeli olcer).
+    n_distinct = len({r['params_sha'] for r in records if r.get('params_sha')}) or None
     if not valid:
         chosen = max(records, key=lambda r: r['step'])
-        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0}
+        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0, 'n_distinct': n_distinct}
     chosen = sorted(valid, key=lambda r: (-r['metric'], r['step']))[0]
-    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid)}
+    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid),
+            'n_distinct': n_distinct}
 
 
 def make_validation_callback(val_env_factory: Callable[[], object], total_timesteps: int,
@@ -316,6 +330,7 @@ def make_validation_callback(val_env_factory: Callable[[], object], total_timest
                     close()
             rec = {
                 'index': idx, 'step': int(self.num_timesteps),
+                'params_sha': policy_sha(self.model),
                 'grid_step': int(self.grid[-1] if final else self.grid[min(idx, len(self.grid) - 1)]),
                 'final': bool(final), 'path': path + '.zip',
                 'metric': excess_sharpe(ep['returns'], ep['dates'], risk_free),

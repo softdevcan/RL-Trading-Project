@@ -365,6 +365,7 @@ class BaseHyperparameterOptimizer:
                 'metric': metric_name, 'rule': 'argmax_validation',
                 'selected_index': selection['index'], 'selected_step': selection['step'],
                 'selected_metric': selection['metric'], 'degenerate': selection['degenerate'],
+                'n_valid': selection['n_valid'], 'n_distinct': selection['n_distinct'],
                 'checkpoints': [{k: v for k, v in r.items() if k != 'path'}
                                 for r in validation_cb.records],
             }
