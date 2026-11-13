@@ -2,6 +2,8 @@
 
 Kok `CLAUDE.md`'den tasindi; dashboard/ altinda calisirken yuklenir.
 
+UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/test_dash_props.py` calistir.
+
 ### Tema (Faz 8)
 - **Renk degeri yalnizca `static/tokens.css`'te.** Sayfa/bilesen kodunda hex yasak;
   `tests/test_theme_contrast.py` kacaklari yakalar (`dashboard/pages/account.py` muaf —
@@ -73,3 +75,18 @@ Kok `CLAUDE.md`'den tasindi; dashboard/ altinda calisirken yuklenir.
   `dbc.Spinner` → `spinner_class_name`, `dbc.NavLink` → `title` kabul etmiyor.
   `tests/test_dash_props.py` tüm çağrıları gerçek prop listesiyle karşılaştırır
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
+
+### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
+- `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
+  **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat
+  dugmesi acar" kalibi bu yuzden bozuk: baska sayfaya gidip donen kullanici
+  surmekte olan isin ilerlemesini bir daha goremez.
+- Kural: uzun suren bir isin sayfasi **acilista durumu sormali** ve yoklamayi
+  ona gore acmali (`training.py::layout` -> `_status_block`,
+  `hyperopt.py::layout` -> calisan study'yi listeden bulur).
+- Ayrica calisan isin kimligini yalnizca `dcc.Store`'da tutma — store da
+  sifirlanir; kimlik backend'den geri bulunabilmeli. Tahmin egitiminde
+  `/prediction/train/status` SEMBOL istiyor, sayfa donuste neyi soracagini
+  bilmiyordu; `GET /api/prediction/train/active` listeyi backend'den verir.
+- Yoklamayi is bitince KAPAT (`disabled=True`), yoksa sayfa acik kaldigi
+  surece bos yere sorgu atar.
