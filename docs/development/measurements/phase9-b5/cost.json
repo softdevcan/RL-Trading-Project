@@ -1,0 +1,112 @@
+{
+  "what": "B5 nedensel ICEEMDAN maliyet olcumu (plan §4 B5, K5)",
+  "created": "2026-11-13T22:11:58+00:00",
+  "command": "scripts\\analysis\\measure_b5_iceemdan_cost.py --out docs/development/measurements/phase9-b5/cost.json",
+  "git_commit": "d0f0c3aaf62ea995c1c4edbab117bcde7bb24c81",
+  "git_dirty": false,
+  "panel": "data\\bist\\raw_stock_data.csv",
+  "panel_sha256": "d3f39d9ff55b2786397b12482921ce491b3f49bd4bc44150f6189e1489070363",
+  "start": "2018-01-01",
+  "n_symbols": 30,
+  "n_days_per_symbol": {
+    "128": {
+      "min": 2236,
+      "max": 2237,
+      "sum": 67086
+    },
+    "256": {
+      "min": 2236,
+      "max": 2237,
+      "sum": 67086
+    }
+  },
+  "params": {
+    "epsilon": 0.005,
+    "noise_seed": 42,
+    "pyemd_parallel": false,
+    "per_symbol": 4,
+    "processes": 14
+  },
+  "machine": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "cpu_count": 16,
+    "python": "3.12.5"
+  },
+  "self_check_deterministic": true,
+  "configs": [
+    {
+      "W": 128,
+      "trials": 50,
+      "n_tasks": 120,
+      "wall_s": 7.36,
+      "task_s_mean": 0.6393,
+      "task_s_p90": 0.7252,
+      "task_s_max": 0.8626,
+      "throughput_per_s": 16.2975,
+      "n_imfs": {
+        "4": 39,
+        "5": 81
+      },
+      "total_decompositions": 67086,
+      "est_hours_measured_pool": 1.14,
+      "est_hours_single_process": 11.91
+    },
+    {
+      "W": 128,
+      "trials": 100,
+      "n_tasks": 120,
+      "wall_s": 11.2,
+      "task_s_mean": 1.2699,
+      "task_s_p90": 1.4341,
+      "task_s_max": 1.7193,
+      "throughput_per_s": 10.7142,
+      "n_imfs": {
+        "4": 35,
+        "5": 83,
+        "6": 2
+      },
+      "total_decompositions": 67086,
+      "est_hours_measured_pool": 1.74,
+      "est_hours_single_process": 23.66
+    },
+    {
+      "W": 256,
+      "trials": 50,
+      "n_tasks": 120,
+      "wall_s": 8.12,
+      "task_s_mean": 0.9143,
+      "task_s_p90": 1.0142,
+      "task_s_max": 1.4224,
+      "throughput_per_s": 14.7812,
+      "n_imfs": {
+        "5": 58,
+        "6": 61,
+        "7": 1
+      },
+      "total_decompositions": 67086,
+      "est_hours_measured_pool": 1.26,
+      "est_hours_single_process": 17.04
+    },
+    {
+      "W": 256,
+      "trials": 100,
+      "n_tasks": 120,
+      "wall_s": 16.21,
+      "task_s_mean": 1.8352,
+      "task_s_p90": 2.0564,
+      "task_s_max": 2.5497,
+      "throughput_per_s": 7.4009,
+      "n_imfs": {
+        "4": 1,
+        "5": 65,
+        "6": 53,
+        "7": 1
+      },
+      "total_decompositions": 67086,
+      "est_hours_measured_pool": 2.52,
+      "est_hours_single_process": 34.2
+    }
+  ],
+  "note": "Tahmin = toplam ayristirma / olculen havuz verimi. Kenar etkisi (W duyarliligi) ve ozellik kalitesi bu olcumun kapsami DISINDA (B5 uygulamasinda)."
+}

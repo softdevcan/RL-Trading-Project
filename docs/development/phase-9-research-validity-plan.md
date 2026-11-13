@@ -1128,6 +1128,28 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - Panel kaldırmadan önce bozulmamıştı: `data/bist/raw_stock_data.csv` `d3f39d9f…` ve `stock_data_with_indicators.csv` `3aec450d…`, `backup_2026-11-11/SHA256SUMS.txt` ile birebir (`sha256sum`).
 - **Plan dışı yan bulgu (kullanıcı onayıyla bu dalda kapandı).** `POST /api/trading/analysis/generate-report` `RequireWriter` taşımıyordu: viewer arka planda `generate_academic_report.py` alt süreci başlatabiliyordu (düzeltmesiz koşumda alt süreç gerçekten çalıştı, çıkış 2). Uç artık `RequireWriter`; `test_workspace_isolation` §6'da viewer → 403 (18 → 19). Betik kullanıcı alanına değil ortak `results/`'a yazıyor (rapor okuma ucundaki yorum, [trading.py](../../app/api/routes/trading.py)); o ayrı (açık, D'de).
 
+### 9.14 B5 maliyet ölçümü — nedensel ICEEMDAN (2026-11-14, dal `feat/phase9-b5-cost`)
+
+**Kapsam.** §4 B5 "önce maliyet ölçümü"; §7 K5 (Makale 2 tarihi) bu ölçüme bağlıydı. B5'in kendisi (nedensel özellikler, B0, W duyarlılığı) değil.
+
+- **Birim.** Nedensel tasarımda her (sembol, t) için son W ham kapanışın penceresi bir kez ayrıştırılır; filtrelenmiş değer ve IMF özellikleri aynı ayrıştırmadan (Y10). Sonuç (sembol, t, W, parametreler) anahtarıyla önbelleğe girdiği için kollar (K2/K3), katlar, tohumlar ve HPO denemeleri yeniden hesaplamaz. Toplam = ayrıştırma sayısı / havuz verimi.
+- **Komut.** `python scripts/analysis/measure_b5_iceemdan_cost.py --out docs/development/measurements/phase9-b5/cost.json` (commit `d0f0c3a`, temiz ağaç; panel `d3f39d9f…`; 14 süreç, her biri tek iş parçacığı, PyEMD `parallel=False`; AMD 16 mantıksal çekirdek). Yapılandırma başına 30 sembol × 4 pencere = 120 ayrıştırma, 2018 sonrasına yayılmış. Öz-denetim: aynı pencere iki kez ayrıştırılınca bit-eş (`self_check_deterministic=true`).
+- **Gün sayısı.** 2018-01-01 sonrası sembol başına 2.236–2.237 seans, toplam 67.086 ayrıştırma (`n_days_per_symbol`); plandaki "~2000" bunun yuvarlağı.
+
+| W | trials | Ayrıştırma (ort. / p90, sn) | Havuz verimi (/sn) | Tahmini toplam (havuz) | Tek süreç |
+|---|---|---|---|---|---|
+| 128 | 50 | 0,64 / 0,73 | 16,3 | 1,14 sa | 11,9 sa |
+| 128 | 100 | 1,27 / 1,43 | 10,7 | 1,74 sa | 23,7 sa |
+| 256 | 50 | 0,91 / 1,01 | 14,8 | 1,26 sa | 17,0 sa |
+| 256 | 100 | 1,84 / 2,06 | 7,4 | 2,52 sa | 34,2 sa |
+
+*Kaynak: `cost.json` → `configs[*]` (`task_s_mean`, `task_s_p90`, `throughput_per_s`, `est_hours_measured_pool`, `est_hours_single_process`).*
+
+- **Okuma.** En pahalı yapılandırma (W = 256, trials = 100) 14 süreçle ~2,5 saat; W duyarlılığı için iki W (trials = 100) birlikte ~4,3 saat, dört yapılandırmanın tamamı ~6,7 saat. **Hesaplama B5'te darboğaz değil**; bir gecede biter. Paralellik zorunlu: tek süreçte 12–34 saat.
+- **Sınırlar.** Örneklem küçük (yapılandırma başına 120 ayrıştırma, duvar saati 7–16 sn); kuyruk dengesizliği verimi biraz düşük gösterebilir. Özellik çıkarımı ve önbellek yazımı ölçülmedi (ayrıştırmanın yanında küçük olduğu varsayılıyor). IMF sayısı pencereye göre değişiyor (W = 128: 4–6, W = 256: 4–7; `n_imfs`); "son IMF = trend" tanımı pencereden pencereye farklı bir bileşene düşebilir → B5 uygulamasında tasarım sorusu.
+- **Ölçümü etkileyen kod notları (B5 uygulamasına).** PyEMD `CEEMDAN` varsayılanı `parallel=True` ve her çağrıda süreç havuzu kuruyor; pencere başına çağrıda dışarıdan paralellik gerekir. Mevcut hat sembolü iki kez ayrıştırıyor (`filter_noise` + `extract_imf_features`); `max_imf` parametresi kullanılmıyor.
+- **K5.** B5 hesaplama süresi Makale 2 tarihini kaydırmıyor; tarih kalan paketlerin eforuna bağlı. Karar kullanıcıda.
+
 ---
 
 ## Versiyon geçmişi
@@ -1164,3 +1186,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-13 (R1):** RL walk-forward bölmesi `wf-v1` (6 kat, test 2021..2026, purge 0 kat sınırında B0 ile ölçüldü), doğrulamada kontrol noktası seçimi (10 nokta, fazla getiri Sharpe'ı) ve HPO'nun rotanın yolunda çalışması (Y21 kapandı) — §9.11. Kabul: `tests/test_rl_walk_forward.py` (75). Kat ölçümü 6 × 2: hiçbir kat/kol temiz değil (türbülans, K26); nedensel kolda erken katlar fiyatta %1,6–2,7 destek dışı. Veri tam yeniden indirildi; aynı kapıyla fark yalnız 5 tatil satırı (hayalet gün 72 → 67). Yeni bulgular: pano HPO penceresi test dönemini içeriyordu ve budama ölüydü (kapandı); HPO sampler tohumsuz (açık); `/data/generate` veri kaybı riski (plan dışı, ayrı iş). Literatür: Varma & Simon 2006, Cawley & Talbot 2010, Eimer vd. 2023.
 - **2026-11-14 (R1 paneli):** hakem-rl ve hakem-finans Küçük revizyon, hakem-2 Büyük revizyon (RED yok) — §9.12. Kullanıcı kararları: seçim metriği korunur, tanı kayda; argmax ↔ son nokta M8'e; okunmuş test pencereleri ölçülen bayrakla (`eval_window_unexposed`; 2024–2026 doğrulayıcı değil). Yeni madde `fundamentals_pit`. Gerçek panelde seçim metriği tanısı (2025'te 10/10 negatif, ayırt edici değil) ve geniş B0 ailesi bit-eş. `test_rl_walk_forward` 90.
 - **2026-11-14 (§9.13):** legacy "veri üret" düğmesi ve `/data/generate` kaldırıldı (§9.11 bulgu 6). `test_auth` CSRF kontrolü içi boş kalmasın diye başlıkla kabul edilen aynı uca taşındı (29). Yan bulgu `/analysis/generate-report` RBAC'sızdı, `RequireWriter` eklendi (`test_workspace_isolation` 19).
+- **2026-11-14 (§9.14):** B5 maliyet ölçümü: 67.086 ayrıştırma; en pahalı yapılandırma (W 256, trials 100) 14 süreçle ~2,5 sa, tek süreçte ~34 sa. Hesaplama Makale 2 tarihini kaydırmıyor; K5 kullanıcıda.
