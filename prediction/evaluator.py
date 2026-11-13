@@ -24,6 +24,11 @@ from scipy import stats
 logger = logging.getLogger(__name__)
 
 
+def _as_bool(v) -> bool:
+    """Y27: eski kayitlarda yon dogrulugu "True"/"False" METNI olarak duruyor."""
+    return v is True or v == 'True' or (not isinstance(v, str) and bool(v))
+
+
 class PredictionEvaluator:
     """Kapsamli tahmin performans degerlendirici."""
 
@@ -52,7 +57,7 @@ class PredictionEvaluator:
             current = pred.get('current_close', actual)
             pred_dir = predicted > current
             actual_dir = actual > current
-            direction_correct = pred_dir == actual_dir
+            direction_correct = bool(pred_dir == actual_dir)
 
             results.append({
                 **pred,
@@ -89,7 +94,8 @@ class PredictionEvaluator:
         rmse = float(np.sqrt(np.mean((pred_arr - actual_arr) ** 2)))
         mae = float(np.mean(np.abs(pred_arr - actual_arr)))
 
-        dir_correct = [r['direction_correct'] for r in recent
+        # Y27: eski kayitlarda yon dogrulugu "True"/"False" metni olarak duruyor
+        dir_correct = [_as_bool(r['direction_correct']) for r in recent
                        if r.get('direction_correct') is not None]
         dir_acc = float(np.mean(dir_correct) * 100) if dir_correct else None
 
@@ -172,7 +178,7 @@ class PredictionEvaluator:
             return {'bins': [], 'ece': None}
 
         confidences = np.array([p['confidence'] for p in evaluated])
-        accuracies = np.array([float(p['direction_correct']) for p in evaluated])
+        accuracies = np.array([float(_as_bool(p['direction_correct'])) for p in evaluated])
 
         bin_edges = np.linspace(0, 1, n_bins + 1)
         bins = []
@@ -424,7 +430,7 @@ class PredictionEvaluator:
             batch = evaluated[i - window:i]
             errors = [abs(r['error_pct']) for r in batch if r['error_pct'] is not None]
             mape = float(np.mean(errors)) if errors else None
-            dir_vals = [r['direction_correct'] for r in batch
+            dir_vals = [_as_bool(r['direction_correct']) for r in batch
                         if r.get('direction_correct') is not None]
             dir_acc = float(np.mean(dir_vals) * 100) if dir_vals else None
 

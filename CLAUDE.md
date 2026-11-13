@@ -137,6 +137,8 @@ python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontro
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC + CV deney dizini (20 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
+                                           # !! B11'den beri BILINEN NEDENLE KIRMIZI (DL hizalamasi, K1 secenek 1);
+                                           #    Milestone 0' ile bir kez yenilenir — o zamana kadar --update YAPMA
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
@@ -145,7 +147,10 @@ python tests/test_cv_feature_selection.py  # Faz 9/B8: CV ozellik secimi kat ici
                                            #          kume bit-es + mutasyon (13, < 1 dk)
 python tests/test_tats_labels.py           # Faz 9/B10: TATS uyum girdileri HAM kapanis + gercek
                                            #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon; K21: TATS'li/TATS'siz
-                                           #          test + kaydet/yukle (22, ~2 dk)
+                                           #          test + kaydet/yukle; Y25 gercek correct degerle (31, ~2 dk)
+python tests/test_dl_alignment.py          # Faz 9/B11: BiLSTM/TFT egitim<->cikarim penceresi ayni satir,
+                                           #          yon etiketi ham hedeften, mutasyon (12, ~1 dk)
+python tests/test_prediction.py            # Tahmin zinciri (6 test; DL kucuk veride egitilmez, beyan)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
                                            #          gecikmesi, bfill yok (kesme
@@ -305,7 +310,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
   `<model>_<ufuk>_tats.json` ile kaydedilir/yuklenir. Duzeltme ISARETI KORUR (makaledeki TDA degismez; `direction_accuracy` fark tabanli, TDA DEGIL,
   degisebilir; TATS blogunda `tda` ayri) — makaledeki gibi yonu
   cevirmez (§9.17 yontem farklari); 'TATS' kollari bu uyarlamayi olcer
-- BiLSTM/TFT egitim<->cikarim bir adim kayik (Y22, B11, acik) — DL OOF'u bir ufuk kayik
+- BiLSTM/TFT egitim penceresi satir i'yi icerir (B11, Y22 kapandi); yon basi etiketi ham hedeften,
+  model `target_type` ozniteligini ensemble/trainer'dan alir
 
 ### evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover

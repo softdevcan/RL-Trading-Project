@@ -203,9 +203,55 @@ def main() -> int:
         old_model.load("SYN")
         check("mutasyon: TATS dosyasi silinince yuklenen modelde TATS yok (eski davranis)",
               old_model.tats_corrector is None)
+        # Y25: use_tats=False kurulan ablasyon kolu TATS'li modeli yuklese de TATS ALMAZ
+        abl = E.StackingEnsemble(horizon="daily", use_tats=False, model_configs=cfg2)
+        abl.load("SYNF")
+        check("Y25: kurucudaki use_tats=False yuklemede ezilmez", abl.use_tats is False)
+        check("Y25: predict_next 'tats.available' (TATS yok != uygulanmadi)",
+              p_load["tats"].get("available") is True
+              and old_model.predict_next(df, "SYN")["tats"].get("available") is False)
     finally:
         ws.prediction_models_dir, ws.read_dirs = orig_pmd, orig_rd
         shutil.rmtree(tmp, ignore_errors=True)
+
+    # ---- Y25: gercek correct() kurali DEGERLE (siniflandirici sabit DOWN, guven 0,8) ---------
+    print("\nY25 — TATS degerlendirme yolu degerle")
+
+    class _Down:
+        def predict_proba(self, X):
+            return np.array([[0.8, 0.1, 0.1]])
+
+    idx = pd.bdate_range("2024-01-01", periods=12)
+    raw_close = pd.Series(np.linspace(100, 111, 12), index=idx)
+    for tt in ("log_return", "abs_price"):
+        e2 = E.StackingEnsemble(horizon="daily", model_configs=cfg2, target_type=tt)
+        tc = TATSCorrector()
+        tc.classifier, tc._is_fitted, tc._semantic_classes = _Down(), True, np.array([0, 1, 2])
+        e2.tats_corrector = tc
+        cur = raw_close.to_numpy(float)
+        r = np.array([0.02, -0.01, 0.03, 0.001, -0.02, 0.015, 0.0, 0.04, -0.03, 0.01, 0.002, 0.025])
+        base = r if tt == "log_return" else cur * np.exp(r)
+        y_t = r[::-1].copy() if tt == "log_return" else cur * np.exp(r[::-1])
+        pc = cur * np.exp(base) if tt == "log_return" else base
+        conflict = (pc - cur) / cur > tc.flat_threshold          # tahmin UP, trend DOWN
+        new_pc = np.where(conflict, pc - np.abs(pc - cur) * 0.8 * 0.5, pc)
+        exp_corr = np.log(new_pc / cur) if tt == "log_return" else new_pc
+        df_t = pd.DataFrame({"close": raw_close})
+        out = e2._evaluate_tats_on_test(df_t, pd.DataFrame(index=idx), 0, np.zeros((12, 2)), base, y_t)
+        exp_m = BasePredictionModel.compute_metrics(y_t, exp_corr)
+        check(f"[{tt}] n_applied = catisan satir sayisi ({int(conflict.sum())})",
+              out["n_applied"] == int(conflict.sum()) > 0, str(out["n_applied"]))
+        check(f"[{tt}] TATS'li MAE = elle hesaplanan duzeltmenin MAE'si (geri ceviris dogru)",
+              abs(out["with_tats"]["mae"] - exp_m["mae"]) < 1e-9, f"({out['with_tats']['mae']} vs {exp_m['mae']})")
+        dsign = np.sign(new_pc - cur) == np.sign(pc - cur)
+        check(f"[{tt}] isaret korunuyor ve TDA TATS'li = TATS'siz",
+              bool(dsign.all()) and out["with_tats"]["tda"] == out["without_tats"]["tda"])
+        if tt == "abs_price":
+            # Mutasyon: cari fiyat bir gun kayik -> duzeltme degisir (log_return'de cari sadelesir)
+            df_s = pd.DataFrame({"close": raw_close.shift(1).bfill()})
+            out_s = e2._evaluate_tats_on_test(df_s, pd.DataFrame(index=idx), 0, np.zeros((12, 2)), base, y_t)
+            check("[abs_price] mutasyon: cari fiyat kayik -> TATS'li MAE elle hesaplanandan sapar",
+                  abs(out_s["with_tats"]["mae"] - exp_m["mae"]) > 1e-6)
 
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")

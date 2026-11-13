@@ -71,6 +71,10 @@ class BasePredictionModel(ABC):
 
     MODEL_TYPE: str = 'base'
 
+    # Faz 9 B11: hedef turu (yon basi etiketi icin). Varsayilan = hattin varsayilan hedefi;
+    # ensemble ve trainer kurulumdan sonra kendi target_type'ini yazar.
+    target_type: str = 'log_return'
+
     def __init__(
         self,
         horizon: str = 'daily',

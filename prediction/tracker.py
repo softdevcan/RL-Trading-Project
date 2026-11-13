@@ -152,7 +152,8 @@ class PredictionTracker:
         error_pct = (predicted - actual_close) / actual_close * 100 if actual_close != 0 else None
         pred_dir = predicted > current
         actual_dir = actual_close > current
-        direction_correct = pred_dir == actual_dir
+        # Y27: numpy bool JSON'a default=str ile "True"/"False" METNI yaziliyordu -> python bool
+        direction_correct = bool(pred_dir == actual_dir)
 
         entry['actual_close'] = round(float(actual_close), 4)
         entry['error_pct'] = round(float(error_pct), 2) if error_pct is not None else None

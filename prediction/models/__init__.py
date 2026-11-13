@@ -36,7 +36,10 @@ class PricePredictor:
         self.ensemble = StackingEnsemble(horizon=horizon, source=source)
 
     def train(self, df, symbol, test_ratio=0.2, **kwargs):
-        return self.ensemble.train(df, symbol, test_ratio=test_ratio, **kwargs)
+        # Faz 9 Y23: ensemble.train test_ratio almiyor (3'lu 60/20/20 bolme); eskiden iletiliyordu
+        # ve her cagri TypeError veriyordu. Imzada geriye uyumluluk icin duruyor.
+        _ = test_ratio
+        return self.ensemble.train(df, symbol, **kwargs)
 
     def predict_next(self, df, symbol, macro_df=None, fundamental_df=None,
                      cross_asset_df=None, **kwargs):

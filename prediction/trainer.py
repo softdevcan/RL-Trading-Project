@@ -209,6 +209,7 @@ class WalkForwardTrainer:
                 try:
                     model_cls = MODEL_REGISTRY[model_type]
                     model = model_cls(horizon=self.horizon)
+                    model.target_type = self.target_type  # B11
                     model.train(X_tr, y_tr, X_val, y_val, feature_cols=feature_cols)
 
                     test_pred = model._predict_raw(X_test)
