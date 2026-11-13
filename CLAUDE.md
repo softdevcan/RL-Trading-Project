@@ -141,6 +141,8 @@ python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (1
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)
 python tests/test_hpo_resume.py            # Faz 6: HPO sqlite resume (12 kontrol)
+python tests/test_cv_feature_selection.py  # Faz 9/B8: CV ozellik secimi kat ici; test y karisinca
+                                           #          kume bit-es + mutasyon (13, < 1 dk)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
                                            #          gecikmesi, bfill yok (kesme
