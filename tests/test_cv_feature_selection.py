@@ -3,7 +3,8 @@
     python tests/test_cv_feature_selection.py
 
 Kabul (Faz 10 §3.1.1): test katinin y'si karistirildiginda secilen kume DEGISMEZ.
-Mutasyon: eski davranis (secim tum seride) ayni karistirmada kumeyi degistirir.
+Her kat kendi test bolumuyle sinanir (hakem-finans B8 #1). Mutasyon: secim egitim +
+o katin testinde yapilsaydi ayni karistirma kumeyi degistirirdi.
 Sentetik veri + sahte model; gercek FeatureSelector. Ag ve GPU yok, < 1 dk.
 """
 
@@ -42,17 +43,22 @@ class _Mean:
         return np.full(len(X), self.m, dtype=np.float32)
 
 
-N, F, N_SPLITS, MAX_F = 900, 24, 4, 6
+N, N_SPLITS, MAX_F = 900, 4, 6
+F = 6 * (N_SPLITS + 1)
 COLS = [f"f{i}" for i in range(F)]
+FS = N // (N_SPLITS + 1)
 
 
 def make_frame(seed=0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     X = rng.normal(size=(N, F))
-    # Egitim bolgesinde y, f0..f5'e bagli; son blokta (son katin testi) f12..f17'ye.
-    y = X[:, :6].sum(axis=1)
-    tail = N - N // (N_SPLITS + 1)
-    y[tail:] = 3 * X[tail:, 12:18].sum(axis=1)
+    # Blok j'de y yalniz f[6j..6j+5]'e bagli: kat k'nin test bolgesi (blok k+1) egitimin
+    # gormedigi bir rejim tasir; secim onu gorurse kume degisir.
+    y = np.zeros(N)
+    for j in range(N_SPLITS + 1):
+        a, b = j * FS, (N if j == N_SPLITS else (j + 1) * FS)
+        w = 1.0 + j  # sonraki rejim daha guclu: egitim+test'te secimi ele gecirir
+        y[a:b] = w * X[a:b, 6 * j:6 * j + 6].sum(axis=1)
     df = pd.DataFrame(X, columns=COLS)
     df["target_price"] = y + 100.0
     return df
@@ -68,38 +74,42 @@ def run_cv(feat_df: pd.DataFrame) -> list:
     return summary.get("selected_features_per_fold", [])
 
 
-def last_test_region(n=N, k=N_SPLITS, purge=5):
-    fs = n // (k + 1)
-    start = fs * k + purge
-    return start, min(start + fs, n)
+def test_region(k, purge=5):
+    start = FS * (k + 1) + purge
+    return start, min(start + FS, N)
+
+
+def shuffled_at(df, a, b, seed=7):
+    out = df.copy()
+    out.loc[a:b - 1, "target_price"] = np.random.default_rng(seed).permutation(
+        out.loc[a:b - 1, "target_price"].to_numpy())
+    return out
 
 
 def main() -> int:
     pm.MODEL_REGISTRY["_mean"] = _Mean
     base = make_frame()
-    a, b = last_test_region()
-    shuffled = base.copy()
-    rng = np.random.default_rng(7)
-    shuffled.loc[a:b - 1, "target_price"] = rng.permutation(shuffled.loc[a:b - 1, "target_price"].to_numpy())
-
-    print("\nB8 — kat ici secim")
-    s0, s1 = run_cv(base), run_cv(shuffled)
-    check("her kat icin secim raporlandi", len(s0) == N_SPLITS and len(s1) == N_SPLITS, f"({len(s0)}, {len(s1)})")
-    check("secim yalniz egitim bolumunde (train_end <= son test baslangici)",
-          all(r["train_end"] <= a for r in s0), str([r["train_end"] for r in s0]))
-    check("son katin test y'si karisinca HER katin kumesi bit-es",
-          [r["features"] for r in s0] == [r["features"] for r in s1],
-          f"\n{[r['features'] for r in s0]}\n{[r['features'] for r in s1]}")
-
-    print("\nMutasyon — eski davranis (secim tum seride)")
+    s0 = run_cv(base)
+    print("\nB8 — kat ici secim (her kat KENDI test bolumuyle)")
+    check("her kat icin secim raporlandi", len(s0) == N_SPLITS, f"({len(s0)})")
     sel = FeatureSelector(max_features=MAX_F)
-    full0 = sel.fit_select(base[COLS], base["target_price"], COLS)["selected_features"]
-    full1 = sel.fit_select(shuffled[COLS], shuffled["target_price"], COLS)["selected_features"]
-    check("tum seride secim ayni karistirmada kumeyi DEGISTIRIR (test kirilabilir)",
-          sorted(full0) != sorted(full1), f"({full0} vs {full1})")
+    for k in range(N_SPLITS):
+        a, b = test_region(k)
+        r = s0[k]
+        check(f"kat {k + 1}: train_end ({r['train_end']}) < test baslangici ({a})", r["train_end"] < a)
+        sk = run_cv(shuffled_at(base, a, b))
+        check(f"kat {k + 1}: kendi test y'si karisinca kumesi bit-es",
+              sk[k]["features"] == r["features"], f"({r['features']} vs {sk[k]['features']})")
+        # Mutasyon: secim egitim + bu katin testinde yapilsaydi ayni karistirma kumeyi degistirirdi
+        m0 = sel.fit_select(base.loc[:b - 1, COLS], base.loc[:b - 1, "target_price"], COLS)["selected_features"]
+        sh = shuffled_at(base, a, b)
+        m1 = sel.fit_select(sh.loc[:b - 1, COLS], sh.loc[:b - 1, "target_price"], COLS)["selected_features"]
+        check(f"kat {k + 1}: mutasyon (secim test dahil) kumeyi DEGISTIRIR", sorted(m0) != sorted(m1),
+              f"({m0} vs {m1})")
 
+    n = 1 + 3 * N_SPLITS
     print("\n" + "=" * 60)
-    print(f"Sonuc: {4 - len(FAILED)} gecti, {len(FAILED)} kaldi")
+    print(f"Sonuc: {n - len(FAILED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0
 
 

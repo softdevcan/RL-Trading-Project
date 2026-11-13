@@ -226,6 +226,10 @@ class WalkForwardTrainer:
         summary = self._summarize_cv_results(all_results, symbol, failed_folds=failed_folds)
         if selector is not None:
             summary['selected_features_per_fold'] = selected_per_fold
+            # Kararlilik: tum katlarda ortak secilen ozellik sayisi. Not: train_final_models
+            # secim YAPMAZ (tum ozelliklerle egitir) -> CV'deki kume ile final model ayrik.
+            sets = [set(r['features']) for r in selected_per_fold]
+            summary['selected_features_common'] = len(set.intersection(*sets)) if sets else 0
 
         self._save_experiment(summary, symbol)
 
