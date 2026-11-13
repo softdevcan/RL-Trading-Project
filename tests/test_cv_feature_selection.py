@@ -3,8 +3,8 @@
     python tests/test_cv_feature_selection.py
 
 Kabul (Faz 10 §3.1.1): test katinin y'si karistirildiginda secilen kume DEGISMEZ.
-Her kat kendi test bolumuyle sinanir (hakem-finans B8 #1). Mutasyon: secim egitim +
-o katin testinde yapilsaydi ayni karistirma kumeyi degistirirdi.
+Her kat kendi test bolumuyle sinanir (hakem-finans B8 #1). Mutasyon egitim hattindan:
+trainer'in secicisi tum seride secime cevrilince ayni karistirma kumeyi degistirir (hakem-2 #1).
 Sentetik veri + sahte model; gercek FeatureSelector. Ag ve GPU yok, < 1 dk.
 """
 
@@ -64,13 +64,26 @@ def make_frame(seed=0) -> pd.DataFrame:
     return df
 
 
-def run_cv(feat_df: pd.DataFrame) -> list:
-    tr = WalkForwardTrainer(n_splits=N_SPLITS, purge_days=5, embargo_days=3,
-                            select_features=True, max_features=MAX_F)
-    tr.feature_engineer.build_features = lambda df, symbol, **kw: feat_df
-    tr.feature_engineer.get_feature_columns = lambda df: list(COLS)
-    tr._save_experiment = lambda *a, **k: None
-    summary = tr.cross_validate(feat_df, "SYN", model_types=["_mean"])
+def run_cv(feat_df: pd.DataFrame, leaky: pd.DataFrame | None = None) -> list:
+    """leaky verilirse trainer'in FeatureSelector'u eski davranisa (tum seride secim) cevrilir."""
+    import prediction.trainer as T
+
+    class _Leaky(FeatureSelector):
+        def fit_select(self, X, y, cols, **kw):
+            return super().fit_select(leaky[COLS], leaky["target_price"], cols, **kw)
+
+    orig = T.FeatureSelector
+    T.FeatureSelector = _Leaky if leaky is not None else orig
+    try:
+        tr = WalkForwardTrainer(n_splits=N_SPLITS, purge_days=5, embargo_days=3,
+                                select_features=True, max_features=MAX_F)
+        tr.feature_engineer.build_features = lambda df, symbol, **kw: feat_df
+        tr.feature_engineer.get_feature_columns = lambda df: list(COLS)
+        tr._save_experiment = lambda *a, **k: None
+        summary = tr.cross_validate(feat_df, "SYN", model_types=["_mean"])
+    finally:
+        T.FeatureSelector = orig
+    assert summary.get("feature_selection") == "per_fold_train", summary.get("feature_selection")
     return summary.get("selected_features_per_fold", [])
 
 
@@ -92,20 +105,20 @@ def main() -> int:
     s0 = run_cv(base)
     print("\nB8 — kat ici secim (her kat KENDI test bolumuyle)")
     check("her kat icin secim raporlandi", len(s0) == N_SPLITS, f"({len(s0)})")
-    sel = FeatureSelector(max_features=MAX_F)
     for k in range(N_SPLITS):
         a, b = test_region(k)
         r = s0[k]
-        check(f"kat {k + 1}: train_end ({r['train_end']}) < test baslangici ({a})", r["train_end"] < a)
-        sk = run_cv(shuffled_at(base, a, b))
+        check(f"kat {k + 1}: train_end ({r['train_end']}) = test baslangici ({a}) - purge",
+              r["train_end"] == a - 5)
+        sh = shuffled_at(base, a, b)
+        sk = run_cv(sh)
         check(f"kat {k + 1}: kendi test y'si karisinca kumesi bit-es",
               sk[k]["features"] == r["features"], f"({r['features']} vs {sk[k]['features']})")
-        # Mutasyon: secim egitim + bu katin testinde yapilsaydi ayni karistirma kumeyi degistirirdi
-        m0 = sel.fit_select(base.loc[:b - 1, COLS], base.loc[:b - 1, "target_price"], COLS)["selected_features"]
-        sh = shuffled_at(base, a, b)
-        m1 = sel.fit_select(sh.loc[:b - 1, COLS], sh.loc[:b - 1, "target_price"], COLS)["selected_features"]
-        check(f"kat {k + 1}: mutasyon (secim test dahil) kumeyi DEGISTIRIR", sorted(m0) != sorted(m1),
-              f"({m0} vs {m1})")
+        # Mutasyon EGITIM HATTINDAN (hakem-2 B8 #1): trainer'in secicisi eski davranisa
+        # (tum seride secim) dondurulunce ayni karistirma bu katin kumesini degistirir.
+        m0, m1 = run_cv(base, leaky=base), run_cv(sh, leaky=sh)
+        check(f"kat {k + 1}: mutasyon (trainer tum seride seciyor) kumeyi DEGISTIRIR",
+              m0[k]["features"] != m1[k]["features"], f"({m0[k]['features']} vs {m1[k]['features']})")
 
     n = 1 + 3 * N_SPLITS
     print("\n" + "=" * 60)

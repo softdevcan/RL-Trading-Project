@@ -1152,15 +1152,15 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 ### 9.15 B8 — CV'de özellik seçimi katın eğitim bölümünde (2026-11-14, dal `feat/phase9-b8-fold-feature-selection`)
 
-**Kapsam.** Faz 10 §3.1.1 B8, Y16. `WalkForwardTrainer.cross_validate` özellik seçimini katlara bölmeden önce tüm `X, y` üzerinde yapıyordu; her katın CV metriği test hedeflerini görmüş kümeyle hesaplanıyordu.
+**Kapsam.** Faz 10 §3.1.1 B8, Y16. **Kapanan yalnız seçim kanalı**; CV metrikleri B4 (temel oranlar), B5 (ICEEMDAN tüm seri) ve B10 (TATS) kapanana kadar ön sonuçtur (hakem-2 #5). `WalkForwardTrainer.cross_validate` özellik seçimini katlara bölmeden önce tüm `X, y` üzerinde yapıyordu; her katın CV metriği test hedeflerini görmüş kümeyle hesaplanıyordu.
 
-- **Değişiklik** ([trainer.py](../../prediction/trainer.py), tek fonksiyon, yeni bayrak yok). Her kat `FeatureSelector.fit_select`'i yalnız `X[:train_end], y[:train_end]` üzerinde çağırır; eğitim, iç doğrulama ve test sütunları o kümeye indirgenir. Özet kat başına kümeyi (`selected_features_per_fold`: kat, `train_end`, özellikler) ve tüm katlarda ortak seçilen özellik sayısını (`selected_features_common`) taşır.
+- **Değişiklik** ([trainer.py](../../prediction/trainer.py), tek fonksiyon, yeni bayrak yok). Her kat `FeatureSelector.fit_select`'i yalnız `X[:train_end], y[:train_end]` üzerinde çağırır; eğitim, iç doğrulama ve test sütunları o kümeye indirgenir. Özet kat başına kümeyi (`selected_features_per_fold`: kat, `train_end`, özellikler) ve tüm katlarda ortak seçilen özellik sayısını (`selected_features_common`) taşır. Protokol etiketi `feature_selection='per_fold_train'`: bu alanı taşımayan (B8 öncesi) CV deney kayıtları tüm seride, sızıntılı seçimle üretilmiş sayılır (hakem-2 #2).
 - **Önbellek.** Anahtar zaten girdinin içerik hash'i (`FeatureSelector._cache_key`); her katın eğitim dilimi farklı olduğu için kat sınırı anahtara kendiliğinden giriyor. Yeni alan eklenmedi.
 - **Kapsam kontrolü.** `FeatureSelector` yalnız burada kullanılıyor; `train_final_models`, ensemble ve tahmin HPO'su kullanmıyor (grep). CV diske model yazmıyor; tahmin golden'ı CV'yi kapsamıyor.
 - **Kabul.** `python tests/test_cv_feature_selection.py` → 13/0 (sentetik veri, sahte model, gerçek `FeatureSelector`, CPU). Sentetikte blok j'de y yalnız kendi özellik grubuna bağlı; her katın testi eğitimin görmediği bir rejim taşıyor.
-  - Her kat **kendi** test bölümüyle sınanır (hakem-finans #1): o bölümün `y`'si karıştırılınca o katın kümesi bit-eş; `train_end` + 5 = test başlangıcı.
-  - Mutasyon her katta: seçim eğitim + o katın testinde yapılsaydı aynı karıştırma kümeyi değiştirirdi; test kırılabilir.
-- **Gerçek hat.** `tests/test_prediction.py::test_walk_forward_cv` (500 satır sentetik OHLCV, gerçek özellik hattı) her katta "ozellik secimi (yalniz egitim): 127 -> 80" logluyor; ama test **main'de de** kırık (BiLSTM/TFT katlarında `'NoneType' object has no attribute 'eval'`, `avg_mape yok`; zincir ayrıca TEST 2'de `test_ratio` argümanıyla duruyor). Gerçek hatta CV metriği bu yüzden üretilemedi; B8 yalnız sentetik + sahte modelle doğrulandı. Kırık plan dışı ayrı iş (açık).
+  - Her kat **kendi** test bölümüyle sınanır (hakem-finans #1): o bölümün `y`'si karıştırılınca o katın kümesi bit-eş; `train_end` + purge (5) = test başlangıcı (eşitlik sınanıyor).
+  - Mutasyon eğitim hattından, her katta (hakem-2 #1): trainer'ın seçicisi tüm seride seçime çevrilince aynı karıştırma o katın kümesini değiştiriyor; test eski davranışa dönüşü yakalıyor.
+- **Gerçek hat.** `tests/test_prediction.py::test_walk_forward_cv` (500 satır sentetik OHLCV, gerçek özellik hattı) her katta ayrı seçim logluyor (konsol logu, arşivlenmedi); ama test **main'de de** kırık (BiLSTM/TFT katlarında `'NoneType' object has no attribute 'eval'`, `avg_mape yok`; zincir ayrıca TEST 2'de `test_ratio` argümanıyla duruyor). Gerçek hatta CV metriği bu yüzden üretilemedi; B8 yalnız sentetik + sahte modelle doğrulandı. Kırık plan dışı ayrı iş (açık).
 - **Etkisi.** CV metriklerinin değişmesi beklenir ama **ölçülmedi** (yukarıdaki kırık). Seçim bir kez yerine kat sayısı kadar koşar.
 - **Beyan.**
   - Katın içindeki %15'lik iç doğrulama dilimi (erken durdurma) seçime dahil: test metriğini değil yalnız iç doğrulamayı iyimser yapar.
@@ -1168,6 +1168,9 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - Embargo etkisiz: `prev_test_end + embargo` her katta `fold_size·(fold+1)`'den büyük, `min` hiç devreye girmiyor (hakem-finans #2). Genişleyen ve yalnız ileri giden walk-forward'da embargo sorusu doğmuyor (§9.11 purge gerekçesiyle aynı); B8 değiştirmedi.
   - CV'deki küme ile final model ayrık: `train_final_models` seçim yapmıyor, tüm özelliklerle eğitiyor (hakem-finans #4). CV metriği final modelin özellik kümesini değerlendirmiyor.
   - `fold_size = n // (n_splits + 1)` bölmesi değişmedi.
+- **Açık (kapsam dışı).** `EXPERIMENTS_DIR` çalışma alanına göre çözülmüyor, depo köküne sabit ([trainer.py](../../prediction/trainer.py) modül başı; hakem-2). `tests/test_prediction.py` kırığı (yukarıda).
+
+**Panel (B8).** hakem-finans (sonnet) Kabul, 4 KÜÇÜK (~44 bin token, 7 araç, ~0,6 dk); hakem-2 (opus) Kabul, 6 KÜÇÜK (~70 bin token, 19 araç, ~3,1 dk; eğitim hattı mutasyonunu kendi koştu: iki modda 4 katın bit-eş kontrolü kırıldı). İşlenenler: kat başına test ve eşitlik (finans #1, h2 #4), embargo etkisiz beyanı (finans #2), gerçek hat ölçülmedi (finans #3), ortak küme + CV/final ayrık (finans #4), eğitim hattı mutasyonu (h2 #1), protokol etiketi (h2 #2), arşivlenmemiş sayı metinden çıktı (h2 #3), diğer açık kanallar (h2 #5). h2 #6 (§9.6 "Sıradaki" satırı) tarihsel bölüm olduğu için değiştirilmedi.
 
 ---
 

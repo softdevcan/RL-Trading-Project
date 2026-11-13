@@ -225,6 +225,9 @@ class WalkForwardTrainer:
 
         summary = self._summarize_cv_results(all_results, symbol, failed_folds=failed_folds)
         if selector is not None:
+            # Protokol etiketi (hakem-2 B8 #2): B8 oncesi CV kayitlari bu alani tasimaz ->
+            # tum seride (sizintili) secimle uretilmis sayilir.
+            summary['feature_selection'] = 'per_fold_train'
             summary['selected_features_per_fold'] = selected_per_fold
             # Kararlilik: tum katlarda ortak secilen ozellik sayisi. Not: train_final_models
             # secim YAPMAZ (tum ozelliklerle egitir) -> CV'deki kume ile final model ayrik.
