@@ -1,0 +1,523 @@
+{
+ "created_at": "2026-11-14T00:40:03",
+ "command": "python scripts/analysis/measure_r1_exposure.py --out docs/development/measurements/phase9-r1/exposure.json",
+ "git_commit": "2ccdc9755cf135b4a453269ff1e24c7ad3a5d6ce",
+ "git_dirty": true,
+ "n_metrics_files": 23,
+ "n_with_trade_dates": 23,
+ "n_with_performance": 23,
+ "by_training_day": {
+  "2026-07-29": {
+   "n": 19,
+   "first_trade_min": "2022-07-18",
+   "last_trade_max": "2026-07-24",
+   "files": [
+    "results/a2c_phase1_20260729_000036_metrics.json",
+    "results/a2c_phase1_20260729_000049_metrics.json",
+    "results/a2c_phase1_20260729_000923_metrics.json",
+    "results/a2c_phase1_20260729_000939_metrics.json",
+    "results/a2c_phase1_20260729_001234_metrics.json",
+    "results/a2c_phase1_20260729_001308_metrics.json",
+    "results/ppo_phase1_20260728_235959_metrics.json",
+    "results/ppo_phase1_20260729_000013_metrics.json",
+    "results/ppo_phase1_20260729_000840_metrics.json",
+    "results/ppo_phase1_20260729_000854_metrics.json",
+    "results/ppo_phase1_20260729_001040_metrics.json",
+    "results/ppo_phase1_20260729_001115_metrics.json",
+    "results/ppo_phase1_20260729_001819_metrics.json",
+    "results/ppo_phase1_20260729_002630_metrics.json",
+    "results/ppo_phase1_20260729_013401_metrics.json",
+    "results/sac_phase1_20260729_001507_metrics.json",
+    "results/sac_phase1_20260729_001524_metrics.json",
+    "results/td3_phase1_20260729_001423_metrics.json",
+    "results/td3_phase1_20260729_001440_metrics.json"
+   ]
+  },
+  "2026-07-28": {
+   "n": 3,
+   "first_trade_min": "2022-07-18",
+   "last_trade_max": "2026-07-23",
+   "files": [
+    "results/ppo_phase1_20260728_231825_metrics.json",
+    "results/ppo_phase1_20260728_235620_metrics.json",
+    "results/ppo_phase1_20260728_235701_metrics.json"
+   ]
+  },
+  "2026-08-30": {
+   "n": 1,
+   "first_trade_min": "2025-02-25",
+   "last_trade_max": "2026-08-27",
+   "files": [
+    "workspaces/dbe145fbf9624a77831ee7aba2d54854/results/ppo_phase1_20260830_121012_metrics.json"
+   ]
+  }
+ },
+ "files": [
+  {
+   "file": "results/a2c_phase1_20260729_000036_metrics.json",
+   "sha256": "5b1395726cb48b81",
+   "trained_at": "2026-07-29T00:00:46",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 9328,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-22",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7116589150067649,
+    "cumulative_return": 7.700680178428846,
+    "max_drawdown": -0.997104526537831,
+    "total_trades": 9328
+   }
+  },
+  {
+   "file": "results/a2c_phase1_20260729_000049_metrics.json",
+   "sha256": "35ecd143844e0076",
+   "trained_at": "2026-07-29T00:01:10",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 7707,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.8267001055525144,
+    "cumulative_return": 6.029375925460052,
+    "max_drawdown": -0.6874068374676613,
+    "total_trades": 7707
+   }
+  },
+  {
+   "file": "results/a2c_phase1_20260729_000923_metrics.json",
+   "sha256": "ac0c4576cbd79250",
+   "trained_at": "2026-07-29T00:09:36",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 3984,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.9197846801637303,
+    "cumulative_return": 5.387694830464019,
+    "max_drawdown": -0.47225837972497425,
+    "total_trades": 3984
+   }
+  },
+  {
+   "file": "results/a2c_phase1_20260729_000939_metrics.json",
+   "sha256": "b2434e9b018beb36",
+   "trained_at": "2026-07-29T00:10:06",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6955,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7979537960327525,
+    "cumulative_return": 4.709765742314572,
+    "max_drawdown": -0.7418645151376557,
+    "total_trades": 6955
+   }
+  },
+  {
+   "file": "results/a2c_phase1_20260729_001234_metrics.json",
+   "sha256": "8332fcfd470fbfd8",
+   "trained_at": "2026-07-29T00:13:05",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6799,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.5048230707432225,
+    "cumulative_return": 3.716541503495434,
+    "max_drawdown": -0.9999971802813888,
+    "total_trades": 6799
+   }
+  },
+  {
+   "file": "results/a2c_phase1_20260729_001308_metrics.json",
+   "sha256": "2ab0facdd21635b1",
+   "trained_at": "2026-07-29T00:14:20",
+   "algorithm": "a2c",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 7252,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.5439415423973496,
+    "cumulative_return": 4.61291865015517,
+    "max_drawdown": -0.9998928929287054,
+    "total_trades": 7252
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260728_231825_metrics.json",
+   "sha256": "04fb07e6d3d539f1",
+   "trained_at": "2026-07-28T23:19:02",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6947,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6672605383137938,
+    "cumulative_return": 4.551428995345228,
+    "max_drawdown": -0.999930816727248,
+    "total_trades": 6947
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260728_235620_metrics.json",
+   "sha256": "66d2e716f7b1c138",
+   "trained_at": "2026-07-28T23:56:57",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6911,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7883610680903252,
+    "cumulative_return": 4.245266706519232,
+    "max_drawdown": -0.7250048355883881,
+    "total_trades": 6911
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260728_235701_metrics.json",
+   "sha256": "2e69e50afefec37b",
+   "trained_at": "2026-07-28T23:58:06",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 8469,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.5578669094200621,
+    "cumulative_return": 12.461983929008685,
+    "max_drawdown": -0.9999889242368717,
+    "total_trades": 8469
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260728_235959_metrics.json",
+   "sha256": "7936037396f86a25",
+   "trained_at": "2026-07-29T00:00:10",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6044,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-22",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.655011580198484,
+    "cumulative_return": 4.289053951348174,
+    "max_drawdown": -0.9999964209198688,
+    "total_trades": 6044
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_000013_metrics.json",
+   "sha256": "d574bbc261340750",
+   "trained_at": "2026-07-29T00:00:33",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 8895,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6831941147965342,
+    "cumulative_return": 4.054052535423573,
+    "max_drawdown": -0.9983452157421696,
+    "total_trades": 8895
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_000840_metrics.json",
+   "sha256": "dfcf612566a4a969",
+   "trained_at": "2026-07-29T00:08:51",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 10268,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.730982620742012,
+    "cumulative_return": 6.094412405175575,
+    "max_drawdown": -0.9567528129642234,
+    "total_trades": 10268
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_000854_metrics.json",
+   "sha256": "046171912b2c279b",
+   "trained_at": "2026-07-29T00:09:19",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6633,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7518962360431644,
+    "cumulative_return": 7.438567689273677,
+    "max_drawdown": -0.8533103322974785,
+    "total_trades": 6633
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_001040_metrics.json",
+   "sha256": "ad6596948dea636f",
+   "trained_at": "2026-07-29T00:11:11",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 5675,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7116090758884204,
+    "cumulative_return": 8.36532024558923,
+    "max_drawdown": -0.998383040533231,
+    "total_trades": 5675
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_001115_metrics.json",
+   "sha256": "40dad5cbae5ba47d",
+   "trained_at": "2026-07-29T00:12:30",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6186,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.7129265888390838,
+    "cumulative_return": 6.1774705132843435,
+    "max_drawdown": -0.9973030885238685,
+    "total_trades": 6186
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_001819_metrics.json",
+   "sha256": "76be98a727a03100",
+   "trained_at": "2026-07-29T00:18:57",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 6401,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-14",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6986865627486799,
+    "cumulative_return": 7.107086168835798,
+    "max_drawdown": -0.9996153261602523,
+    "total_trades": 6401
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_002630_metrics.json",
+   "sha256": "b22d2fa2e9222b7d",
+   "trained_at": "2026-07-29T00:27:05",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 8319,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.707905420201645,
+    "cumulative_return": 3.7557601711431383,
+    "max_drawdown": -0.9990130025696505,
+    "total_trades": 8319
+   }
+  },
+  {
+   "file": "results/ppo_phase1_20260729_013401_metrics.json",
+   "sha256": "4ac0bbafc965ee0a",
+   "trained_at": "2026-07-29T01:34:14",
+   "algorithm": "PPO",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 9155,
+   "first_trade": "2022-07-19",
+   "last_trade": "2026-07-24",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6376379039713419,
+    "cumulative_return": 3.9431998173718377,
+    "max_drawdown": -0.9988768483004405,
+    "total_trades": 9155
+   }
+  },
+  {
+   "file": "results/sac_phase1_20260729_001507_metrics.json",
+   "sha256": "f17208b8af9dfe78",
+   "trained_at": "2026-07-29T00:15:20",
+   "algorithm": "sac",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 5293,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.710232341051487,
+    "cumulative_return": 3.415789443633873,
+    "max_drawdown": -0.9989763489614134,
+    "total_trades": 5293
+   }
+  },
+  {
+   "file": "results/sac_phase1_20260729_001524_metrics.json",
+   "sha256": "93cdb5958a60319c",
+   "trained_at": "2026-07-29T00:15:47",
+   "algorithm": "sac",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 10899,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6148049124821217,
+    "cumulative_return": 5.6846582137277295,
+    "max_drawdown": -0.9998618977256511,
+    "total_trades": 10899
+   }
+  },
+  {
+   "file": "results/td3_phase1_20260729_001423_metrics.json",
+   "sha256": "ff131a09abedca59",
+   "trained_at": "2026-07-29T00:14:37",
+   "algorithm": "td3",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 5867,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.6078008242704115,
+    "cumulative_return": 4.343476176912163,
+    "max_drawdown": -0.9998933129645666,
+    "total_trades": 5867
+   }
+  },
+  {
+   "file": "results/td3_phase1_20260729_001440_metrics.json",
+   "sha256": "b727a657aba4e3e0",
+   "trained_at": "2026-07-29T00:15:04",
+   "algorithm": "td3",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 7524,
+   "first_trade": "2022-07-18",
+   "last_trade": "2026-07-23",
+   "first_trade_index": 0,
+   "n_portfolio_values": 1012,
+   "performance_recorded": {
+    "sharpe_ratio": 0.5080181913482504,
+    "cumulative_return": 4.7903446006377335,
+    "max_drawdown": -0.999944759662921,
+    "total_trades": 7524
+   }
+  },
+  {
+   "file": "workspaces/dbe145fbf9624a77831ee7aba2d54854/results/ppo_phase1_20260830_121012_metrics.json",
+   "sha256": "77dbfac3d12cd611",
+   "trained_at": "2026-08-30T12:11:07",
+   "algorithm": "ppo",
+   "phase": 1,
+   "test_range_field": null,
+   "n_trades": 1846,
+   "first_trade": "2025-02-25",
+   "last_trade": "2026-08-27",
+   "first_trade_index": 0,
+   "n_portfolio_values": 381,
+   "performance_recorded": {
+    "sharpe_ratio": 1.1500418834173978,
+    "cumulative_return": 0.052939246918549905,
+    "max_drawdown": -0.9961198906351815,
+    "total_trades": 1846
+   }
+  }
+ ],
+ "ratio_split_on_old_panel": {
+  "panel": "data/bist/backup_2026-07-27/stock_data_with_indicators.csv",
+  "train": [
+   "2000-05-10",
+   "2018-07-20"
+  ],
+  "val": [
+   "2018-07-23",
+   "2022-07-18"
+  ],
+  "test": [
+   "2022-07-19",
+   "2026-07-27"
+  ],
+  "test_sessions": 1012
+ },
+ "b9_effect": {
+  "test": [
+   "2024-08-06",
+   "2026-07-27",
+   494
+  ],
+  "val": [
+   "2022-08-12",
+   "2024-08-05",
+   494
+  ],
+  "command": "python scripts/analysis/measure_price_scale.py --mode effect --algos A2C,PPO --seeds 1,2,3 --steps 50000 --out C:/Users/can/AppData/Local/Temp/claude/3a6fdc28095f59b5/f2dccb50-13c6-481e-a9de-7fc3b1f44951/scratchpad/clean_effect.json"
+ }
+}

@@ -247,7 +247,7 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
 - **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır; yüksek faizli doğrulama yıllarında negatif ortalama olağan, `picks_agree` raporlanır.
-- **Doğrulayıcı katlar (R1; kullanıcı kararı 2026-11-14):** 2021–2023. 2024–2026 R1 öncesi başarımla okundu (`eval_window_unexposed`, Faz 9 §9.11). Ön kayıttan sonra gelen veri gerçek sınama olarak ayrılır.
+- **Doğrulayıcı kanıt (R1; açık karar):** R1 öncesi okunmuş pencere 2022-07-18..2026-08-28 (`eval_window_unexposed`, Faz 9 §9.11); okunmamış tek kat 2021. Doğrulayıcı kanıtın tanımı (2021 katı + ön kayıt sonrası ileri veri; yeni ortam karşılaştırmalarının sayılışı) burada, K20 güç analiziyle birlikte karara bağlanır.
 
 ---
 
@@ -992,9 +992,12 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 **Okunmuş test pencereleri (hakem-2 R1 #1; kullanıcı kararı 2026-11-14).**
 - 2024-08-06..2026-07-27, R1'den önce başarım metrikleriyle okundu: §9.5, B9 etki ölçümü (A2C/PPO × 3 tohum, fazla getiri Sharpe'ı, al-tut). Okunan sonuçlar K25 ve K26 kararlarına girdi.
 - Kayıt bunu ölçüyor: yeni madde `eval_window_unexposed` (`EXPOSED_EVAL_WINDOWS` ile kesişim). 2024, 2025 ve 2026 katlarının test kayıtları bu yüzden açık; 2025 ve 2026 katlarının doğrulama yılları da bu pencerede.
-- R1 öncesi oranlı bölmeyle yapılan eğitimlerin (23 metrik dosyası) test aralığı kayıtlı değil; okunan dönemler ölçülemiyor, büyük olasılıkla panelin son %15'i, yani 2023 sonrası. Bu yüzden 2021–2023 katları "kanıtlanmış okunmamış" değil, "bilinen en az okunmuş" katlar.
-- Okunmadığı kesin tek gerçek veri 2026-07-28 sonrası: eski panel 2026-07-27'de bitiyordu ve R1 ölçümleri bu dönemde başarım okumadı.
-- M8: doğrulayıcı katlar 2021–2023; ön kayıttan sonra gelen veri gerçek sınama olarak ayrılır.
+- **R1 öncesi rota testleri de ölçüldü** (hakem-2 ikinci okuma #1; ilk sürümde "ölçülemiyor" yazmıştım, yanlıştı). Komut: `python scripts/analysis/measure_r1_exposure.py --out docs/development/measurements/phase9-r1/exposure.json` (kod `2ccdc97`; ağaçta yalnız kullanıcının iki belge yeniden adlandırması, JSON `git_dirty=true`).
+  - 23 metrik dosyasının 23'ü işlem tarihi ve başarım metriği taşıyor.
+  - 22 eğitim (2026-07-28/29): 2022-07-18..2026-07-27. Bağımsız kontrol: oranlı bölme eski panelde test = 2022-07-19..2026-07-27 (JSON `ratio_split_on_old_panel`).
+  - 1 eğitim (2026-08-30): 2025-02-19..2026-08-28 (portföy uzunluğu takvimle eşlendi).
+- Sonuç: okunmuş birleşik pencere **2022-07-18..2026-08-28**. Okunmamış tek kat **2021** (doğrulama 2020, test 2021); ileri veri 2026-08-31 sonrası. Silinmiş ya da başka makinedeki eski koşumlar (ör. tez-final) ölçülemez; beyan edilir.
+- M8: doğrulayıcı kanıtın tanımı (yalnız 2021 katı + ön kayıt sonrası ileri veri mi; yeni ortamın karşılaştırmaları nasıl sayılır) **öncül değiştiği için M8 ön kaydında yeniden karar** (K20 güç analiziyle birlikte). Kullanıcının 2026-11-14 kararındaki "2021–2023" bu düzeltmeyle geçersiz.
 
 **Veri tazelemesi (2026-11-11, kullanıcı: tam yeniden indirme).**
 - **Panel.**
@@ -1062,6 +1065,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | hakem-rl (sonnet) | ilk | Küçük revizyon | ~57 bin | 9 | ~1 dk |
 | hakem-finans (sonnet) | ilk | Küçük revizyon | ~66 bin | 9 | ~2 dk |
 | hakem-2 (opus) | son kapı | Büyük revizyon (RED yok; yeniden tasarım gerekmiyor) | ~123 bin | 33 | ~7,9 dk |
+| hakem-2 (opus) | ikinci (SendMessage) | Büyük revizyon: H2–H9 kapandı, H1'in olgusu yanlış (düzeltildi, yeniden okutulmadı) | ~153 bin (önceki bağlamla) | 18 | ~2,8 dk |
 
 **Paneli izleyen ölçüm.** Komut: `python scripts/analysis/measure_r1_selection.py --folds 2021,2025 --timesteps 50000 --b0-fold 2026 --out docs/development/measurements/phase9-r1/selection.json`. Koşum commit `7ab7a33` üzerinde, temiz ağaçta yapıldı.
 - Kurulum: gerçek panel, rotanın A2C varsayılanları, CPU, tek tohum (7). Deneme kaydına yazılmadı; test bloğu kurulmadı.
@@ -1099,7 +1103,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | F7 | hakem-finans | KÜÇÜK | Takvim yılı blokları rejime özgü; arife yarım günleri hacmi yanlı yapar | **Beyan,** M8 raporu. Yarım gün işareti M2 `obs_spec`'inde |
 | FS1 | hakem-finans (soru 1) | — | Kat sınırı B0'ın gerçek panelde de doğrulanması | **Yapıldı:** `real_b0` bit-eş |
 | FS5 | hakem-finans (soru 5) | — | SHA tek başına yetmez; dosyanın kendisi korunmalı | **Kabul.** Yedekler (`data/bist/backup_*`) yerel ve git dışında. Makine dışı kopya kullanıcı işi (açık) |
-| H1 | hakem-2 | BÜYÜK | 2024–2026 katlarının testi R1 öncesi başarımla okundu (B9) ve sonuçlar K25/K26'ya girdi; `test_reread` protokoller arası okumayı yakalamıyor | **Kabul (kullanıcı kararı 2026-11-14: ölçülen bayrak + beyan).** Yeni madde `eval_window_unexposed` (`EXPOSED_EVAL_WINDOWS`); 2024–2026 kayıtları açık; R1 öncesi oranlı okumalar ölçülemiyor, beyan (§9.11). M8: doğrulayıcı katlar 2021–2023 |
+| H1 | hakem-2 | BÜYÜK | 2024–2026 katlarının testi R1 öncesi başarımla okundu (B9) ve sonuçlar K25/K26'ya girdi; `test_reread` protokoller arası okumayı yakalamıyor | **Kabul (kullanıcı kararı 2026-11-14: ölçülen bayrak + beyan).** Yeni madde `eval_window_unexposed`. İkinci okumada düzeltildi: R1 öncesi okumalar da ölçüldü (`exposure.json`), birleşik pencere 2022-07-18..2026-08-28; okunmamış tek kat 2021. M8 doğrulayıcı kanıt tanımı yeniden karar |
 | H2 | hakem-2 | BÜYÜK | F1 yanıtı kanıttan fazlasını söylüyor: 2025'te oynaklıklar dar, oynaklık aralığı yanlış yazılmış, 2021 seçimleri eksik, F2 bağı kurulmamış | **Kabul, düzeltildi.** Metin "ayırt edici değil"; aralık %22,8–25,4 (nokta 0: %15,4); 2021 seçimleri 8/4/0/8; 4. nokta F2'nin gözlenen etkisi. Rapora `pick_mean_excess_step` ve `picks_agree` (test C, I) |
 | H3 | hakem-2 | KÜÇÜK | rf etiketi: 252 × seans ortalaması ≈ sürekli bileşik, yıllık basit değil | **Kabul, düzeltildi** (yıllık basit ≈ %10,5 / %49,9) |
 | H4 | hakem-2 | KÜÇÜK | B0 bozması dar ailede: ortak düzgün sürüklenme, hacim yok | **Kabul, düzeltildi.** Test B ve `real_b0.json`'da sembol başına farklı sürüklenme + hacim; iki kol, iki sınır bit-eş |
@@ -1108,6 +1112,9 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 | H7 | hakem-2 | KÜÇÜK | §9.11 eskimiş (75 kontrol, D grubu yalnız A2C/PPO) | **Kabul, düzeltildi** (90 kontrol; A2C, PPO, TD3, SAC) |
 | H8 | hakem-2 | KÜÇÜK | Doğrulama tarafındaki fark sayı olarak yazılmamış | **Kabul.** 2021: 1,423 − 1,384 = 0,039, en iyi üç nokta 0,07 içinde; 2025: fark 0. Argmax gürültü düzeyinde seçiyor (beyan) |
 | H9 | hakem-2 | KÜÇÜK | İşarete duyarlı Sharpe kaynaksız, yıllıklaştırması tutarsız | **Kabul.** Yalnız sıra olarak raporlanıyor (sıra yıllıklaştırma sabitinden bağımsız); kural değil, tanı. Kaynak eklenmedi |
+| H2.1 | hakem-2 (2. okuma) | BÜYÜK | H1 düzeltmesinin olgusu yanlış: 23 dosya işlem tarihi taşıyor, okunan pencere 2022-07-18'de başlıyor | **Kabul, düzeltildi.** Ölçüm betiği + `exposure.json`; `EXPOSED_EVAL_WINDOWS` üç pencere; M8 kararı yeniden açık. **Bu düzeltme hakem-2'ye yeniden okutulmadı** (oturum bütçesi) |
+| H2.2 | hakem-2 (2. okuma) | KÜÇÜK | Rota uyarısı pencereyi metne sabit yazıyor | **Kabul, düzeltildi:** uyarı `exposed_windows_overlapping` ile listeden üretiliyor |
+| H2.3 | hakem-2 (2. okuma) | KÜÇÜK | Ölçümler kirli ağaçta (kullanıcının yeniden adlandırması commit'lenmemiş) | **Beyan.** Kod commit'leri değişmedi; yeniden adlandırma kullanıcının işi |
 
 ---
 

@@ -527,7 +527,7 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
     ADX K18) varsa kayit `protocol_open` etiketi alir ve `load_trials` onu varsayilan DISLAR.
     Budanan/basarisiz denemeler de kaydedilir (N'ye sayilir). Kind/split/pencere karistirma.
     R1 maddeleri: `eval_window_unexposed` (R1 oncesi basarimla okunmus pencere,
-    `EXPOSED_EVAL_WINDOWS`: 2024-08-06..2026-07-27 -> 2024-2026 katlari dogrulayici DEGIL) ve
+    `EXPOSED_EVAL_WINDOWS`: 2022-07-18..2026-08-28, olculdu -> okunmamis tek kat 2021) ve
     `fundamentals_pit` (faz 2 tek anlik temel oran). Yeni bir pencereyi basarimla okuyan olcum
     yaparsan o pencereyi listeye ekle.
   - **RL sonuclari on sonuctur**: eski ortamin her kolunda `obs_health` acik (turbulans; K26 = a, kalici);
