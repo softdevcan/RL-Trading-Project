@@ -645,7 +645,7 @@ Detaylı dokümantasyon için [docs/](docs/) klasörüne bakın. Dokümantasyon 
 ### Geliştirme
 - [**Roadmap**](docs/development/roadmap.md) — Proje yol haritası (Faz 1 → Faz 3 tamamlandı)
 - [**Tahmin Sistemi Mimarisi**](docs/development/prediction-system.md) — Ensemble, feature engineering, veri katmanı
-- [**Faz 3 Uygulama Detayları**](docs/development/phase3-implementation.md) — Bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP
+- [**Faz 3 Uygulama Detayları**](docs/development/phase-3-implementation.md) — Bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP
 
 ### Referans
 - [**Tez (final)**](docs/reference/tez-final.pdf)

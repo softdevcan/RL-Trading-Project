@@ -32,9 +32,9 @@ Proje mimarisi ve roadmap:
 
 - [**roadmap.md**](development/roadmap.md) — Geliştirme planı ve faz takibi (Faz 1-3 + Faz 6 + Faz 7 + Faz 8 tamamlandı)
 - [**prediction-system.md**](development/prediction-system.md) — Gelişmiş tahmin sistemi mimarisi (ensemble, feature engineering, veri katmanı)
-- [**phase3-implementation.md**](development/phase3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
+- [**phase-3-implementation.md**](development/phase-3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
 - [**phase-6-backend-performance.md**](development/phase-6-backend-performance.md) — Faz 6: backend performans & eğitim throughput sprint'i (DL ince ayar, sembol paralelliği, eğitim manifesti, güvenilirlik) + GPU test/kapanış kaydı
-- [**phase7-auth.md**](development/phase7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
+- [**phase-7-auth.md**](development/phase-7-auth.md) — Faz 7: kimlik doğrulama, roller, kullanıcı bazlı çalışma alanları (hibrit izolasyon), kurulum
 - [**phase-8-ui-theming.md**](development/phase-8-ui-theming.md) — Faz 8: aydınlık/koyu/sistem teması ve token katmanı (A–E), profil sayfası (F), üst çubuk + bildirimler (G), dar ekranda ikon rayı (H), model ve optimizasyon kaydı silme (I). Kapsam özeti belgenin sonundaki "Kapanış özeti"nde.
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
 - [**phase-9-research-validity-plan.md**](development/phase-9-research-validity-plan.md) — Faz 9 planı (2026-10-07; **onaylandı 2026-11-06**, ilk kapı V + A + C uygulandı → §9): sızıntı ve değerlendirme açıklarının kapatılması (A–G), Makale 2 deney tasarımı, MARL tasarım kararları (M1–M8); tam metinle doğrulanan 10 yeni bulgu (DSR formül hatası, G2 ≡ DebUnc eşdeğerliği dahil)
@@ -97,7 +97,7 @@ Tamamlanmış faz/sprint dokümanları. Güncel geliştirmede referans için sak
 
 **Tahmin sistemi (Faz 2/3):**
 1. [development/prediction-system.md](development/prediction-system.md) — mimari
-2. [development/phase3-implementation.md](development/phase3-implementation.md) — uygulama detayları
+2. [development/phase-3-implementation.md](development/phase-3-implementation.md) — uygulama detayları
 
 ---
 

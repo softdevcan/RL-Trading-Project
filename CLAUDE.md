@@ -191,7 +191,7 @@ python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat siniri
   `live_trading_dir()`, `training_runs_dir()`, `find_file(kind, name)`, `use_workspace(user_id)`
 - Faz 6 manifest de kullanici bazli: `prediction/manifest.py` → `runs_dir()`/`find_manifest()`;
   `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
-- Detay: `docs/development/phase7-auth.md`, `docs/development/phase-6-backend-performance.md`
+- Detay: `docs/development/phase-7-auth.md`, `docs/development/phase-6-backend-performance.md`
 
 ### Pano / tema / UI kurallari → `dashboard/CLAUDE.md`
 Tema tokenlari, ust cubuk, dar ekran, dbc/Dash prop tuzaklari orada (dashboard/ altinda calisinca otomatik yuklenir).
@@ -581,4 +581,4 @@ Tez/literatur kurallari orada (docs/thesis/ altinda calisinca otomatik yuklenir)
 - Faz 7 (Auth & multi-user): Tamamlandi — cerez tabanli JWT oturum, bcrypt, roller
   (admin/user/viewer), admin-only kayit, denetim kaydi, hibrit kullanici izolasyonu
   (piyasa verisi ortak; model/sonuc/karar/manifest kullanici bazli), kullanici basina egitim durumu
-- Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase3-implementation.md`, `docs/development/phase-6-backend-performance.md`. Dokümantasyon indeksi: `docs/README.md`.
+- Detaylar için: `docs/development/roadmap.md`, `docs/development/prediction-system.md`, `docs/development/phase-3-implementation.md`, `docs/development/phase-6-backend-performance.md`. Dokümantasyon indeksi: `docs/README.md`.
