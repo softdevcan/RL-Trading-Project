@@ -26,3 +26,8 @@
 - **DL perf knob'lari (Faz 6) varsayilan KAPALI (opt-in)**: tam hatta RNG sirasini kaydirip golden'i
   degistiriyorlar (GPU-preload, TFT gruplanmis-VSN, AMP olculup reddedildi). Sifirdan yeniden egitimde
   acilir, golden o donanimda yenilenir. Ayrinti `docs/development/phase-6-backend-performance.md`.
+
+## Canli tahmin bir ufuk bayat (Y28, ACIK)
+`predict_next` son ozellik satiri t-1 (gunluk) / t-5 (haftalik): `build_features` hedefi NaN olan son
+satirlari atiyor, `current_close` ise close[t] (Faz 9 §9.18). Tracker canli dogrulugu ve canli
+tahminden turetilen her sonuc Y28 kapanana kadar KULLANILMAZ.

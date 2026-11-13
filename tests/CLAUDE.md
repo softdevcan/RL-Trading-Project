@@ -41,7 +41,7 @@ python tests/test_tats_labels.py           # Faz 9/B10: TATS uyum girdileri HAM 
                                            #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon; K21: TATS'li/TATS'siz
                                            #          test + kaydet/yukle; Y25 gercek correct degerle (31, ~2 dk)
 python tests/test_dl_alignment.py          # Faz 9/B11: BiLSTM/TFT egitim<->cikarim penceresi ayni satir,
-                                           #          yon etiketi ham hedeften, mutasyon (12, ~1 dk)
+                                           #          yon etiketi ham hedeften (gunluk/haftalik), _fit -> ham y, target_type aktarimi, tohumlu mutasyon (18, ~1 dk)
 python tests/test_prediction.py            # Tahmin zinciri (6 test; DL kucuk veride egitilmez, beyan)
 python tests/test_macro_quality_flag.py    # Faz 6: makro kalite bayragi cache turu (14 kontrol)
 python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, aciklanma
