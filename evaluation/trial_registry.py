@@ -114,7 +114,21 @@ CLEAN_PROTOCOL = {
     # model/hiperparametre DOGRULAMADA, risksiz faiz ustu Sharpe ile mi secildi.
     'split_from_spec': True,
     'selection_metric': 'val_excess_sharpe',
+    # R1 (hakem-2 R1 #1, kullanici karari 2026-11-14): degerlendirme penceresi R1'den once
+    # basarim metrikleriyle okunmus bir pencereyle kesismiyor mu (EXPOSED_EVAL_WINDOWS).
+    'eval_window_unexposed': True,
+    # R1 (hakem-2 R1 #5; B4'un RL tarafi): faz 2 temel oranlari tek anlik goruntu (S4),
+    # nokta-zamanli degil. Faz 1 (temel oran yok) temiz.
+    'fundamentals_pit': True,
 }
+# R1'den ONCE basarim metrikleriyle okunmus degerlendirme pencereleri (kapsayici tarih
+# araliklari). Kesisen kayit acik kalir: o donemde verilen tasarim kararlari o donemin
+# sonucunu gormustu. R1 oncesi oranli bolmeyle yapilan egitimler test araligi KAYDETMIYOR
+# (23 metrik dosyasi); olculemedigi icin listede degil, Faz 9 §9.11'de beyan edilir.
+EXPOSED_EVAL_WINDOWS = (
+    ('2024-08-06', '2026-07-27',
+     "Faz 9 §9.5 B9 etki olcumu: A2C/PPO x 3 tohum, fazla getiri Sharpe'i, al-tut"),
+)
 # Ayni maddenin ikinci temiz degeri (K25 b: nedensel fiyat olcegi).
 CLEAN_ALTERNATIVES = {
     'price_stats_source': ('causal',),
@@ -289,7 +303,30 @@ def rl_eval_protocol(eval_env, train_env, indicator_bfill: Optional[bool] = None
         # `evaluation.splits`'ten aldiysa True; verilmezse (None) acik.
         'split_from_spec': split_from_spec,
         'selection_metric': selection_metric,
+        'eval_window_unexposed': eval_window_unexposed(base),
+        'fundamentals_pit': fundamentals_pit(base),
     }
+
+
+def eval_window_unexposed(eval_env) -> Optional[bool]:
+    """Degerlendirme ortaminin tarih araligi EXPOSED_EVAL_WINDOWS'tan biriyle kesismiyorsa True."""
+    base = getattr(eval_env, 'unwrapped', eval_env)
+    df = getattr(base, 'df', None)
+    if df is None or not len(df):
+        return None
+    d = pd.DatetimeIndex(pd.to_datetime(df.index.get_level_values('date')))
+    d = d.tz_localize(None) if d.tz is not None else d
+    lo, hi = d.min(), d.max()
+    return not any(lo <= pd.Timestamp(b) and hi >= pd.Timestamp(a)
+                   for a, b, _ in EXPOSED_EVAL_WINDOWS)
+
+
+def fundamentals_pit(env) -> Optional[bool]:
+    """Faz 2 ortami tek anlik temel oran tablosuyla calisiyorsa False (S4); faz 1 True."""
+    base = getattr(env, 'unwrapped', env)
+    if getattr(base, 'phase', 1) != 2:
+        return True
+    return False if getattr(base, 'fundamental_df', None) is not None else True
 
 
 def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = None,

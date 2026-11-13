@@ -139,6 +139,24 @@ def perturb_after(raw, t, rate=1.005):
     return out
 
 
+def perturb_after_rich(raw, t, seed=13):
+    """hakem-2 R1 #4: sembol basina FARKLI surukleme (kesit siralamasi degisir) + hacim bozulur."""
+    rng = np.random.default_rng(seed)
+    out = raw.copy()
+    d = pd.to_datetime(out.index.get_level_values("date"))
+    sym = out.index.get_level_values("symbol")
+    later = session_dates(out)[session_dates(out) > pd.Timestamp(t)]
+    rank = pd.Series(np.arange(1, len(later) + 1), index=later)
+    mask = d > pd.Timestamp(t)
+    rates = {s: 1 + rng.uniform(-0.01, 0.01) for s in pd.unique(sym)}
+    factor = np.array([rates[s] for s in sym[mask]]) ** rank.reindex(d[mask]).to_numpy()
+    for c in ("open", "high", "low", "close"):
+        out.loc[mask, c] = out.loc[mask, c].to_numpy() * factor
+    out.loc[mask, "volume"] = np.round(out.loc[mask, "volume"].to_numpy()
+                                       * rng.uniform(0.3, 3.0, int(mask.sum())))
+    return out
+
+
 def env_digest(env, seed=42):
     """Gozlem + odul + portfoy degeri parmak izi (sabit eylem dizisi, tum bolum)."""
     base = getattr(env, "unwrapped", env)
@@ -439,6 +457,19 @@ def main():
         check(f"[{pn}] ... ve test ortaminin izi degisir (olcut bos degil)",
               p2["test"] != base["test"])
 
+    # hakem-2 R1 #4: daha genis bozma ailesi — sembol basina farkli surukleme ve hacim
+    rich1 = indicator_panel(perturb_after_rich(raw, t1))
+    rich2 = indicator_panel(perturb_after_rich(raw, t2))
+    for pn in ("stats", "causal"):
+        base = base_s if pn == "stats" else fold_digests(panel, pn, is_panel=True)[0]
+        q1 = fold_digests(rich1, pn, is_panel=True)[0]
+        q2 = fold_digests(rich2, pn, is_panel=True)[0]
+        check(f"[{pn}] sembol basina surukleme + hacim bozulunca: dogrulama sonrasi -> egitim "
+              f"bit-es, dogrulama degisir; test sonrasi -> egitim + dogrulama bit-es, test degisir",
+              q1["train"] == base["train"] and q1["val"] != base["val"]
+              and q2["train"] == base["train"] and q2["val"] == base["val"]
+              and q2["test"] != base["test"])
+
     orig_ff = rl_folds.fold_frames
     calls = []
 
@@ -502,6 +533,10 @@ def main():
           and sel_b.get("n_negative_mean_excess") == sum(c["mean_excess"] < 0 for c in cks)
           and sel_b.get("last_metric") == last.get("metric"), str({k: sel_b.get(k) for k in
                                                                     ("n_negative_mean_excess", "last_metric")}))
+    best_mx = sorted(cks, key=lambda c: (-c["mean_excess"], c["step"]))[0]["step"] if cks else None
+    check("secim raporu ortalama fazla getiriyle secilecek noktayi ve uyusmayi tasir (hakem-2 R1 #2)",
+          sel_b.get("pick_mean_excess_step") == best_mx
+          and sel_b.get("picks_agree") == (best_mx == sel_b.get("selected_step")))
     cr = lambda s: (s.get("metrics") or {}).get("cumulative_return")
     check("... ve test metrigi degisir (olcut bos degil)", cr(s_pert) != cr(s_base),
           f"{cr(s_base)} / {cr(s_pert)}")
@@ -750,6 +785,15 @@ def main():
           and "selection_metric" in ((t_rf or {}).get("protocol_open") or [])
           and any("Risksiz faiz" in w for w in s_rf.get("warnings") or []),
           str((t_rf or {}).get("protocol_open")))
+    check("wf-v1 2026 kati test penceresi R1 oncesi okunmus pencereyle kesisiyor -> "
+          "eval_window_unexposed=False, kayit acik (hakem-2 R1 #1; karar 2026-11-14)",
+          prot.get("eval_window_unexposed") is False
+          and "eval_window_unexposed" in (t_wf.get("protocol_open") or [])
+          and any("B9" in w for w in s_wf.get("warnings") or []), str(prot.get("eval_window_unexposed")))
+    check("2019 testli sentetik kat okunmamis pencerede: eval_window_unexposed=True; faz 1 "
+          "fundamentals_pit=True",
+          (t_base or {}).get("protocol", {}).get("eval_window_unexposed") is True
+          and (t_base or {}).get("protocol", {}).get("fundamentals_pit") is True)
     check("ratio/test tanimiyla kayit split_from_spec=False (kanonik degil, acik)",
           (t_base or {}).get("protocol", {}).get("split_from_spec") is False
           and "split_from_spec" in ((t_base or {}).get("protocol_open") or []))
@@ -803,6 +847,25 @@ def main():
                                                                      (30, -0.1, -0.05)])])
     check("tani: negatif ortalamali nokta sayisi ve son noktanin metrigi; secim kurali degismez",
           neg["n_negative_mean_excess"] == 2 and neg["last_metric"] == -0.1 and neg["step"] == 20)
+    vs = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": m, "mean_excess": e}
+                                     for i, (s, m, e) in enumerate([(10, -0.2, -0.30), (20, -0.1, -0.40),
+                                                                    (30, -0.3, -0.10)])])
+    check("tani: oynaklik ortalamadan farkli noktayi sectirince picks_agree=False "
+          "(Sharpe 20'yi, ortalama fazla getiri 30'u secer)",
+          vs["step"] == 20 and vs["pick_mean_excess_step"] == 30 and vs["picks_agree"] is False)
+    import types
+    import evaluation.trial_registry as treg
+    win = lambda a, b: types.SimpleNamespace(df=pd.DataFrame(
+        {"close": [1.0, 1.0]}, index=pd.MultiIndex.from_tuples(
+            [("A", pd.Timestamp(a)), ("A", pd.Timestamp(b))], names=["symbol", "date"])))
+    check("eval_window_unexposed: okunmus pencereyle kesisen -> False, siniri bir gun kacirmayan "
+          "-> True",
+          treg.eval_window_unexposed(win("2026-07-27", "2026-10-30")) is False
+          and treg.eval_window_unexposed(win("2026-07-28", "2026-10-30")) is True
+          and treg.eval_window_unexposed(win("2023-01-02", "2024-08-05")) is True)
+    check("fundamentals_pit: faz 2 + temel oran tablosu -> False; faz 1 -> True",
+          treg.fundamentals_pit(types.SimpleNamespace(phase=2, fundamental_df=pd.DataFrame({"x": [1]})))
+          is False and treg.fundamentals_pit(types.SimpleNamespace(phase=1, fundamental_df=None)) is True)
     deg = rl_folds.select_checkpoint([{"index": i, "step": s, "metric": None}
                                       for i, s in enumerate([10, 20])])
     check("hicbir metrik tanimli degilse son nokta + degenerate=True",

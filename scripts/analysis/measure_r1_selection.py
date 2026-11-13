@@ -170,21 +170,30 @@ def real_b0(raw, spec, fold):
     clean = DataFetcher().clean_data(raw.copy())
     d = pd.to_datetime(clean.index.get_level_values("date"))
 
-    def perturbed_from(t):
+    sym = clean.index.get_level_values("symbol")
+
+    def perturbed_from(t, seed=13):
+        # hakem-2 R1 #4: sembol basina FARKLI surukleme (seans basina -%1..+%1; kesit
+        # siralamasi degisir) ve hacim x U(0,3; 3) — duzgun ortak surukleme yalniz fiyat
+        # kanalini sinardi
+        rng = np.random.default_rng(seed)
         pert = clean.copy()
         later = pd.DatetimeIndex(sorted(d[d >= t].unique()))
         rank = pd.Series(np.arange(1, len(later) + 1), index=later)
         mask = d >= t
-        factor = 1.005 ** rank.reindex(d[mask]).to_numpy()
+        rates = {s: 1 + rng.uniform(-0.01, 0.01) for s in pd.unique(sym)}
+        factor = np.array([rates[s] for s in sym[mask]]) ** rank.reindex(d[mask]).to_numpy()
         for c in ("open", "high", "low", "close"):
             pert.loc[mask, c] = pert.loc[mask, c].to_numpy() * factor
+        pert.loc[mask, "volume"] = np.round(pert.loc[mask, "volume"].to_numpy()
+                                            * rng.uniform(0.3, 3.0, int(mask.sum())))
         return add_indicators_to_multi_symbol_df(pert)
 
     tv, tt = pd.Timestamp(f.val_start), pd.Timestamp(f.test_start)
     panels = {"base": add_indicators_to_multi_symbol_df(clean),
               "from_val_start": perturbed_from(tv), "from_test_start": perturbed_from(tt)}
     out = {"fold": str(fold), "val_start": str(tv.date()), "test_start": str(tt.date()),
-           "rate_per_session": 0.005, "pipeline": "clean_data -> add_indicators_to_multi_symbol_df "
+           "perturbation": "sembol basina 1+U(-0,01; 0,01) seans basina bilesik, hacim x U(0,3; 3)", "pipeline": "clean_data -> add_indicators_to_multi_symbol_df "
            "(CSV ureten hat) -> load_rl_panel -> build_fold -> make_fold_env"}
     for pn in ("stats", "causal"):
         dig = {}

@@ -304,11 +304,21 @@ def select_checkpoint(records: List[dict]) -> dict:
             'n_negative_mean_excess': sum(1 for r in records if (r.get('mean_excess') or 0) < 0)
             if any(r.get('mean_excess') is not None for r in records) else None,
             'last_metric': max(records, key=lambda r: r['step']).get('metric')}
+    # hakem-2 R1 #2: ortalama fazla getiriyle secilecek nokta ve kuralla uyusuyor mu. Yuksek
+    # faizli dogrulama yillarinda negatif ortalama olagan; uyusmazlik Sharpe'in oynaklik
+    # tarafinin secimi belirledigini gosterir (yalniz tani).
+    mx = [r for r in records if r.get('mean_excess') is not None]
+    diag['pick_mean_excess_step'] = (sorted(mx, key=lambda r: (-r['mean_excess'], r['step']))[0]['step']
+                                     if mx else None)
     if not valid:
         chosen = max(records, key=lambda r: r['step'])
-        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0, **diag}
+        return {**chosen, 'degenerate': True, 'rank': None, 'n_valid': 0, **diag,
+                'picks_agree': None}
     chosen = sorted(valid, key=lambda r: (-r['metric'], r['step']))[0]
-    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid), **diag}
+    agree = None if diag['pick_mean_excess_step'] is None else \
+        diag['pick_mean_excess_step'] == chosen['step']
+    return {**chosen, 'degenerate': False, 'rank': 1, 'n_valid': len(valid), **diag,
+            'picks_agree': agree}
 
 
 def make_validation_callback(val_env_factory: Callable[[], object], total_timesteps: int,

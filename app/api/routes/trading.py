@@ -1531,6 +1531,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             'n_valid': selection['n_valid'], 'n_distinct': selection['n_distinct'],
             'n_negative_mean_excess': selection['n_negative_mean_excess'],
             'last_metric': selection['last_metric'],
+            'pick_mean_excess_step': selection['pick_mean_excess_step'],
+            'picks_agree': selection['picks_agree'],
             'grid': list(validation_cb.grid),
             'checkpoints': [{k: v for k, v in r.items() if k != 'path'}
                             for r in validation_cb.records],
@@ -1725,6 +1727,16 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 "Sembol duzeyinde egitim araligi asimi (>%1): " + ", ".join(
                     f"{f} {sym} %{r * 100:.1f}" for f, (sym, r) in sorted(worst.items()))
                 + ". Deneme kaydinda acik: dims_in_support (Faz 9 §9.9).")
+
+        if rl_protocol.get('eval_window_unexposed') is False:
+            training_state.setdefault("warnings", []).append(
+                "Test penceresi R1'den once basarim metrikleriyle okunmus bir donemle kesisiyor "
+                "(2024-08-06..2026-07-27, B9): bu kat dogrulayici kanit degildir. Deneme kaydinda "
+                "acik: eval_window_unexposed (Faz 9 §9.11).")
+        if rl_protocol.get('fundamentals_pit') is False:
+            training_state.setdefault("warnings", []).append(
+                "Faz 2 temel oranlari tek anlik goruntu (nokta-zamanli degil, S4). Deneme "
+                "kaydinda acik: fundamentals_pit.")
 
         metrics = actual_env.get_metrics()
 
