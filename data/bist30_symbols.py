@@ -42,35 +42,40 @@ _MEMBERSHIP = None
 
 
 def load_membership() -> list:
-    """E1 (K3): tarihsel BIST 30 uyeligi, [(bas, son_haric | None, frozenset(kod))] tarih sirasiyla.
+    """E1 (K3): tarihsel BIST 30 uyeligi, [(bas, son_haric | None, frozenset(kod), tutarli)] tarih sirasiyla.
 
     Kaynak `data/universe/bist30_membership.csv` (`scripts/build_membership.py chain`): bugunku
     capadan (KAP XU030) geriye, Borsa Istanbul ceyreklik + donem ici duyurulariyla; her segment 30 uye.
-    Kodlar O TARIHTEKI islem kodlaridir.
+    Kodlar O TARIHTEKI islem kodlaridir. `tutarli` False: zincir ihlalinin gerisinde kalan segment
+    (dosya GECICI iken; `bist30_membership_meta.json` -> status/violations).
     """
     global _MEMBERSHIP
     if _MEMBERSHIP is None:
         import csv
-        segs = {}
+        segs, ok = {}, {}
         with open(MEMBERSHIP_FILE, encoding='utf-8', newline='') as f:
             for r in csv.DictReader(f):
-                segs.setdefault((r['start'], r['end'] or None), set()).add(r['symbol'])
-        _MEMBERSHIP = [(s, e, frozenset(k)) for (s, e), k in sorted(segs.items())]
+                key = (r['start'], r['end'] or None)
+                segs.setdefault(key, set()).add(r['symbol'])
+                ok[key] = r.get('consistent', '1') == '1'
+        _MEMBERSHIP = [(s, e, frozenset(k), ok[(s, e)]) for (s, e), k in sorted(segs.items())]
     return _MEMBERSHIP
 
 
-def universe_mask(date) -> frozenset | None:
+def universe_mask(date, include_inconsistent: bool = False) -> frozenset | None:
     """`date` gunu BIST 30'daki kodlar (yururluk ilk gunu dahil, segment sonu haric).
 
-    Kapsam disi (ilk segmentten once) -> None: uyelik BILINMIYOR demektir, bos kume degil.
+    Kapsam disi (ilk segmentten once) ve tutarsiz segment (varsayilan) -> None: uyelik BILINMIYOR
+    demektir, bos kume degil. Tutarli segment de dogruluk kaniti degildir (donem ici takas uye
+    sayisini bozmaz; plan §9.21).
     Maske yalniz sembol CIKARABILIR; panelde olmayan eski uyeleri ekleyemez (hayatta kalma
     yanliligi beyani her durumda kalir, plan §9.21). Ortama uygulanmaz (durum uzayi sabit).
     """
     import pandas as pd
     d = pd.Timestamp(date).strftime('%Y-%m-%d')
-    for s, e, k in load_membership():
+    for s, e, k, ok in load_membership():
         if s <= d and (e is None or d < e):
-            return k
+            return k if (ok or include_inconsistent) else None
     return None
 
 

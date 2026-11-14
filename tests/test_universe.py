@@ -185,12 +185,78 @@ def test_e1_chain_logic():
           not bad3 and 'OLD1' in k3['2020-07-01'] and 'S01' in k3['2020-08-15'], str(bad3))
 
 
+def test_e1_membership():
+    print("\nE1 — uyelik dosyalari, maske, maruziyet (depodaki ciktilar)")
+    import csv
+    import hashlib
+    import subprocess
+    B = _bm()
+    from data import bist30_symbols as S
+    uni = os.path.join(ROOT, 'data', 'universe')
+    with open(os.path.join(uni, 'bist30_anchor.json'), encoding='utf-8') as f:
+        anchor = json.load(f)
+    with open(os.path.join(uni, 'bist30_membership_meta.json'), encoding='utf-8') as f:
+        meta = json.load(f)
+    with open(os.path.join(uni, 'bist30_changes.csv'), encoding='utf-8', newline='') as f:
+        changes = list(csv.DictReader(f))
+    sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    check("meta: girdilerin SHA-256'si depodaki capa/degisiklik dosyalariyla ayni; status final|provisional",
+          meta['inputs_sha256'].get('bist30_anchor.json') == sha(os.path.join(uni, 'bist30_anchor.json'))
+          and meta['inputs_sha256'].get('bist30_changes.csv') == sha(os.path.join(uni, 'bist30_changes.csv'))
+          and meta['status'] in ('final', 'provisional') and (meta['status'] == 'final') == (not meta['violations']))
+    check("54 ceyrek okunmus (2013 Q3-2026 Q4), her satirda kaynak URL + SHA-256",
+          len({r['quarter'] for r in changes}) == 54
+          and all(r['source_url'].startswith('https://borsaistanbul.com/duyuru/') and len(r['source_sha256']) == 64
+                  for r in changes))
+    segs = S.load_membership()
+    check("segmentler kesintisiz (son = sonrakinin basi), son segment = capa, tutarli segment 30 uye",
+          all(a[1] == b[0] for a, b in zip(segs, segs[1:])) and segs[-1][1] is None
+          and segs[-1][2] == frozenset(anchor['codes']) and all(len(k) == 30 for _s, _e, k, ok in segs if ok))
+    cut = meta['consistent_from']
+    check(f"maske: kapsam disi ve tutarsiz segment None; tutarli kisim {cut}..; bugun = capa",
+          S.universe_mask('2013-06-28') is None and S.universe_mask(anchor['as_of']) == frozenset(anchor['codes'])
+          and all((S.universe_mask(s) is not None) == ok for s, _e, _k, ok in segs)
+          and S.universe_mask(segs[0][0], include_inconsistent=True) == segs[0][2])
+    import pandas as pd
+    viol = []
+    for r in changes:
+        if r['action'] in ('add', 'remove') and r['period_start'] >= cut:
+            on = S.universe_mask(r['period_start'])
+            before = S.universe_mask(pd.Timestamp(r['period_start']) - pd.Timedelta(days=1))
+            want = r['action'] == 'add'
+            if (r['code'] in on) != want or (before is not None and (r['code'] in before) == want):
+                viol.append((r['quarter'], r['action'], r['code']))
+    check("tutarli kisimdaki her ceyreklik degisiklik maskede yururluk gununde gorunur", not viol, str(viol))
+    exp = os.path.join(ROOT, 'docs', 'development', 'measurements', 'phase9-e1', 'exposure.json')
+    with open(exp, encoding='utf-8') as f:
+        ex = json.load(f)
+    check("maruziyet JSON'u depodaki uyelik dosyasina bagli (SHA-256) ve kapsam = tutarli kisim",
+          ex['membership_sha256'] == sha(S.MEMBERSHIP_FILE) and ex['covered_from'] == cut
+          and ex['membership_status'] == meta['status'])
+    before = {p: open(p, 'rb').read() for p in (S.MEMBERSHIP_FILE, os.path.join(uni, 'bist30_membership_meta.json'))}
+    args = ['chain'] + (['--provisional'] if meta['status'] == 'provisional' else [])
+    subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_membership.py')] + args,
+                   check=True, capture_output=True)
+    check("zincir depodaki girdilerden bayt bayt ayni uyelik + meta uretir (ag yok)",
+          all(open(p, 'rb').read() == b for p, b in before.items()))
+    if os.path.exists(os.path.join(B.SRC, 'fetched.json')):
+        outs = (os.path.join(uni, 'bist30_changes.csv'), os.path.join(uni, 'bist_name_map.csv'))
+        prev = {p: open(p, 'rb').read() for p in outs}
+        subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_membership.py'), 'parse'],
+                       check=True, capture_output=True)
+        check("saklanan ham duyurulardan bayt bayt ayni degisiklik + ad tablosu",
+              all(open(p, 'rb').read() == b for p, b in prev.items()))
+    else:
+        print("  [ATLA]  yerel ham duyurular yok (sources gitignore); parse yeniden uretimi atlandi")
+
+
 def main() -> int:
     test_e0()
     test_e2()
     test_e1_anchor()
     test_e1_parser()
     test_e1_chain_logic()
+    test_e1_membership()
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0

@@ -1,0 +1,33 @@
+{
+ "status": "provisional",
+ "anchor_as_of": "2026-11-14",
+ "first_start": "2013-07-01",
+ "consistent_from": "2018-04-02",
+ "n_segments": 38,
+ "n_quarterly_changes": 94,
+ "n_events": 0,
+ "violations": [
+  "2018-01-02 alinan SKBNK sonraki kumede uye degil",
+  "2017-10-02..2018-01-02: 31 uye",
+  "2017-10-02 alinan ECILC sonraki kumede uye degil",
+  "2017-07-03..2017-10-02: 32 uye",
+  "2017-04-03..2017-07-03: 32 uye",
+  "2017-01-02..2017-04-03: 32 uye",
+  "2017-01-02 alinan DOHOL sonraki kumede uye degil",
+  "2016-10-03..2017-01-02: 33 uye",
+  "2016-01-04..2016-10-03: 33 uye",
+  "2015-10-01..2016-01-04: 33 uye",
+  "2015-04-01..2015-10-01: 33 uye",
+  "2015-04-01 alinan OTKAR sonraki kumede uye degil",
+  "2015-01-02..2015-04-01: 34 uye",
+  "2014-10-01..2015-01-02: 34 uye",
+  "2014-01-02..2014-10-01: 34 uye",
+  "2013-10-01..2014-01-02: 34 uye",
+  "2013-07-01..2013-10-01: 34 uye"
+ ],
+ "inputs_sha256": {
+  "bist30_anchor.json": "b78b64ebc13fb883a193f0aad07a8fe46904ed1d606c6f9992d5d1955427ca87",
+  "bist30_changes.csv": "13bd6a762e46b3346ace40099c40cecd65f730224c449e0fd016deb19a374ce8"
+ },
+ "note": "GECICI: donem ici olaylar (bist30_events.csv) eklenmedi; consistent=0 segmentler universe_mask tarafindan None dondurulur. Tutarli segment dogruluk kaniti degil."
+}

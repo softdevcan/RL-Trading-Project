@@ -1379,6 +1379,20 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
       `test_trade_universe` 22/0.
     - **Açık:** TRALT bugünkü çapada var ama hiçbir çeyrekte alınmamış. Büyük olasılıkla KOZAL'ın kod değişikliği; kaynak bulunmadı. Zincir şimdilik 2013'e kadar TRALT kodunu taşıyor (panel maskesini etkilemez, TRALT panelde yok).
+  - **Adım 6 — geçici üyelik, maske ve maruziyet (2026-11-15).** Kullanıcı kararı: dönem içi olay listesi (`bist30_events.csv`) E1'in **son** adımına bırakıldı.
+    - `chain --provisional`, ihlal varken [bist30_membership.csv](../../data/universe/bist30_membership.csv)'yi **GEÇİCİ** olarak yazıyor. Her satırda `n_members` ve `consistent` alanları var. Durum, ihlaller ve girdi SHA-256'ları [bist30_membership_meta.json](../../data/universe/bist30_membership_meta.json)'da (`status: provisional`, 17 ihlal, 38 segment).
+    - **Tutarlılık kuralı.** d tarihindeki bir olay ihlali, payın d ile bir sonraki olay arasında (segmentin içinde) dönem içi değiştiğini gösterir. Bu yüzden d'de başlayan segment de bozuk sayılır; tutarlı kısım en geç ihlalden sonraki ilk segment başından başlar: **2018-04-02**. İlk sürüm d'yi tutarlı sayıyordu; SKBNK'nın 2018 Q1'deki üyeliği bu yüzden kayboluyordu. Bulundu ve düzeltildi.
+    - `universe_mask(date)` tutarsız segmentte `None` döner (`include_inconsistent=True` ile ham küme).
+    - **Maruziyet (geçici; tutarlı kısım 2018-04-02..2026-11-09, 2.172 panel seansı).** Panelin 30 hissesinden seans başına ortalama 23,54'ü (%78,45) BIST 30'da. En düşük 21 (ilk tarih 2024-07-01). Yıllık oran %73,3 (2024) ile %81,7 (2019) arasında. 17 hisse bu aralıkta her seans endekste. Hiç endekste olmayan tek panel hissesi SKBNK (0,0); düşük paylar: ODAS 0,17, TSKB 0,23, MGROS 0,33. *Kaynak: [exposure.json](measurements/phase9-e1/exposure.json) → `share_panel_in_index`, `min_panel_in_index`, `share_by_year`, `symbol_share_in_index`; dosya üyelik SHA-256'sına bağlı.*
+    - **Beyan.** "Tutarlı" doğru demek değildir. Halka arz hızlı girişleri (MPARK ve ENJSA 2018-02, SOKM 2018-05) dönem içi olaylardır ve 2018-04-02 sonrası segmentleri de etkileyebilir. Örneğin SOKM, 2018-04-02 segmentinde 2018-05'ten önce üye görünüyor. Oranlar dönem içi olaylar eklenince yeniden ölçülecek.
+    - **Kabul** `test_universe` 28/0 (ağsız). Yeni kontroller:
+      - Meta ve girdi SHA-256'ları eşleşiyor.
+      - 54 çeyreğin her birinde kaynak var.
+      - Segmentler kesintisiz; son segment çapayla aynı.
+      - Maske kapsam dışı ve tutarsız segmentte `None` dönüyor.
+      - Tutarlı kısımdaki her çeyreklik değişiklik, maskede yürürlük gününde görünüyor.
+      - Maruziyet dosyası üyelik SHA-256'sına bağlı.
+      - Depodaki girdilerden üyelik + meta, ham duyurulardan değişiklik + ad tablosu bayt bayt aynı yeniden üretiliyor.
 
 ---
 
@@ -1426,3 +1440,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.21, E0 + E2; E1 açık):** Evren tek dosyada (`data/universe/bist30_panel.json`; Y11 kapandı), KAP sektör sınıflaması ve 8 grup (`sectors.csv`; Y5 kapandı). Kabul `test_universe` 11. E1 tasarımı ve süre (2026-11-28) kayıtta.
 - **2026-11-14 (§9.21, E1 sürüyor):** Bugünkü BIST 30 çapası KAP'tan (`bist30_anchor.json`; panelin 6 hissesi bugün endekste değil). Borsa İstanbul arşivinde 54 çeyreğin 50'sinin duyuru kimliği bulundu. İki biçimi okuyan tablo ayrıştırıcısı hazır. HALKB ön gözlemi düzeltildi: yedek pay. `test_universe` 13.
 - **2026-11-14 (§9.21, E1 oturum 3):** 54/54 çeyrek duyurusu (`/node/<id>` yönlendirmesiyle). Izgara ayrıştırıcı (rowspan, iç içe tablo). `bist30_changes.csv` (94 değişiklik) ve mekanik ad → kod tablosu (10 ad, kullanıcı denetiminde). Zincir 2018-01-02'den bugüne tutarlı ama doğruluk kanıtı değil; 2015–2018'de 4 ihlal (dönem içi olaylar). Borsa İstanbul sitesinde dönem içi kaynak yok, KAP listelemesi izin bekliyor. `universe_mask`. `test_universe` 20.
+- **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.

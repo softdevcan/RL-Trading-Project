@@ -576,23 +576,57 @@ def chain(anchor: dict, changes: list, events: list):
     return segs, bad
 
 
-def cmd_chain() -> None:
+MEMBERSHIP_META = os.path.join(UNI, 'bist30_membership_meta.json')
+
+
+def consistent_from(bad: list, starts: list):
+    """Ihlal mesajlari tarihle baslar. Tarih d'deki bir olay ihlali, payin d ile bir sonraki olay
+    arasinda (segmentin ICINDE) donem ici degistigini gosterir: d'de baslayan segment ve oncekiler
+    bozuk. Tutarli kisim, en gec ihlalden SONRAKI ilk segment basidir. Ihlal yoksa None."""
+    ev_dates = [b[:10] for b in bad if '..' not in b[:12]]
+    size_dates = [b[:10] for b in bad if '..' in b[:12]]
+    if not ev_dates and not size_dates:
+        return None
+    last = max(ev_dates + size_dates)
+    later = sorted(x for x in starts if x > last)
+    return later[0] if later else 'never'
+
+
+def cmd_chain(provisional: bool = False) -> None:
+    """Uyelik: ihlal yoksa KESIN (status final). Ihlal varsa varsayilan olarak yazmaz; `--provisional`
+    ile GECICI yazar: her satirda `consistent` bayragi (segment, en gec olay ihlalinin yururlugunden
+    once basliyorsa ya da 30 uye degilse 0) ve ihlaller `bist30_membership_meta.json`'da. Tutarli
+    segment DOGRU demek degil: donem ici takas uye sayisini bozmaz (plan §9.21)."""
     import csv
     with open(ANCHOR, encoding='utf-8') as f:
         anchor = json.load(f)
     with open(CHANGES, encoding='utf-8', newline='') as f:
         changes = list(csv.DictReader(f))
-    segs, bad = chain(anchor, changes, load_events())
-    if bad:
-        sys.exit('zincir tutarsiz (membership YAZILMADI):\n  ' + '\n  '.join(bad))
+    events = load_events()
+    segs, bad = chain(anchor, changes, events)
+    if bad and not provisional:
+        sys.exit('zincir tutarsiz (membership YAZILMADI; gecici icin --provisional):\n  ' + '\n  '.join(bad))
+    cut = consistent_from(bad, [x[0] for x in segs])
     with open(MEMBERSHIP, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['start', 'end', 'symbol', 'start_event', 'source_url', 'source_sha256'])
+        w.writerow(['start', 'end', 'symbol', 'n_members', 'consistent', 'start_event', 'source_url', 'source_sha256'])
         for s, e, k, evs in sorted(segs, key=lambda x: x[0]):
+            ok = int(len(k) == 30 and (cut is None or s >= cut))
             for c in sorted(k):
-                w.writerow([s, e or '', c, '+'.join(sorted({x['kind'] for x in evs})),
+                w.writerow([s, e or '', c, len(k), ok, '+'.join(sorted({x['kind'] for x in evs})),
                             ' '.join(sorted({x['src'] for x in evs})), ' '.join(sorted({x['sha'] for x in evs}))])
-    print(f'{len(segs)} segment, {segs[-1][0]}..{anchor["as_of"]}; her segment 30 uye', flush=True)
+    sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    meta = {'status': 'provisional' if bad else 'final', 'anchor_as_of': anchor['as_of'],
+            'first_start': min(x[0] for x in segs), 'consistent_from': cut or min(x[0] for x in segs),
+            'n_segments': len(segs), 'n_quarterly_changes': sum(r['action'] in ('add', 'remove') for r in changes),
+            'n_events': len(events), 'violations': bad,
+            'inputs_sha256': {os.path.basename(p): sha(p) for p in (ANCHOR, CHANGES, EVENTS) if os.path.exists(p)},
+            'note': ('GECICI: donem ici olaylar (bist30_events.csv) eklenmedi; consistent=0 segmentler '
+                     'universe_mask tarafindan None dondurulur. Tutarli segment dogruluk kaniti degil.') if bad else ''}
+    with open(MEMBERSHIP_META, 'w', encoding='utf-8') as f:
+        json.dump(meta, f, ensure_ascii=False, indent=1)
+    print(f"{meta['status']}: {len(segs)} segment, tutarli {meta['consistent_from']}..{anchor['as_of']}, "
+          f"{len(bad)} ihlal", flush=True)
 
 
 EXPOSURE = os.path.join(ROOT, 'docs', 'development', 'measurements', 'phase9-e1', 'exposure.json')
@@ -613,9 +647,10 @@ def cmd_exposure() -> None:
     per_day = covered.sum(axis=1)
     segs = load_membership()
     seg_rows = []
-    for s, e, k in segs:
+    for s, e, k, ok in segs:
         panel_codes = {x.split('.')[0] for x in BIST30_SYMBOLS}
-        seg_rows.append({'start': s, 'end': e, 'n_panel_in_index': len(panel_codes & k),
+        seg_rows.append({'start': s, 'end': e, 'consistent': ok, 'n_members': len(k),
+                         'n_panel_in_index': len(panel_codes & k),
                          'panel_not_in_index': sorted(panel_codes - k), 'index_not_in_panel': sorted(k - panel_codes)})
     by_year = {str(y): round(float(g.mean() / 30), 4) for y, g in per_day.groupby(per_day.index.year)}
     doc = {
@@ -624,7 +659,10 @@ def cmd_exposure() -> None:
         'membership_sha256': hashlib.sha256(open(MEMBERSHIP, 'rb').read()).hexdigest(),
         'panel_file': UNIVERSE['panel']['file'], 'panel_sha256': UNIVERSE['panel']['sha256'],
         'sessions_total': int(len(days)), 'sessions_covered': int(len(covered)),
-        'sessions_uncovered_before': str(segs[0][0]),
+        'membership_status': json.load(open(MEMBERSHIP_META, encoding='utf-8'))['status'],
+        'covered_from': next(x[0] for x in segs if x[3]),
+        'note': ('Oranlar yalniz tutarli segmentlerde (universe_mask None olmayan seanslar). Tutarli '
+                 'segment dogruluk kaniti degil; donem ici olaylar eklenince yeniden olculur.'),
         'covered_range': [str(covered.index[0].date()), str(covered.index[-1].date())],
         'mean_panel_in_index': round(float(per_day.mean()), 3),
         'share_panel_in_index': round(float(per_day.mean() / 30), 4),
@@ -648,6 +686,7 @@ def main():
     ap.add_argument('cmd', choices=['index', 'probe', 'nodes', 'anchor', 'fetch', 'parse', 'chain', 'exposure'])
     ap.add_argument('--max-pages', type=int, default=200)
     ap.add_argument('--range', type=int, nargs=2, default=(11000, 15700))
+    ap.add_argument('--provisional', action='store_true', help='chain: ihlal varsa gecici uyelik yaz')
     a = ap.parse_args()
     if a.cmd == 'index':
         cmd_index(a.max_pages)
@@ -662,7 +701,7 @@ def main():
     elif a.cmd == 'parse':
         cmd_parse()
     elif a.cmd == 'chain':
-        cmd_chain()
+        cmd_chain(a.provisional)
     else:
         cmd_exposure()
 

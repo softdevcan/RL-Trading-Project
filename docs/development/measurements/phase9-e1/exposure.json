@@ -1,0 +1,1028 @@
+{
+ "what": "Panelin 30 hissesinin seans basina BIST 30 uyeligi (hayatta kalma maruziyeti), plan §9.21 E1",
+ "membership_file": "data/universe/bist30_membership.csv",
+ "membership_sha256": "0daf3d0b7887c61af2cfc8213c0b97b2f4797ef50a6f9cf0038fd4bd5113e658",
+ "panel_file": "data/bist/stock_data_with_indicators.csv",
+ "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "sessions_total": 5598,
+ "sessions_covered": 2172,
+ "membership_status": "provisional",
+ "covered_from": "2018-04-02",
+ "note": "Oranlar yalniz tutarli segmentlerde (universe_mask None olmayan seanslar). Tutarli segment dogruluk kaniti degil; donem ici olaylar eklenince yeniden olculur.",
+ "covered_range": [
+  "2018-04-02",
+  "2026-11-09"
+ ],
+ "mean_panel_in_index": 23.536,
+ "share_panel_in_index": 0.7845,
+ "min_panel_in_index": {
+  "n": 21,
+  "first_date": "2024-07-01"
+ },
+ "max_panel_in_index": {
+  "n": 25,
+  "first_date": "2019-07-01"
+ },
+ "share_by_year": {
+  "2018": 0.7667,
+  "2019": 0.8167,
+  "2020": 0.8085,
+  "2021": 0.8,
+  "2022": 0.7914,
+  "2023": 0.7913,
+  "2024": 0.7333,
+  "2025": 0.7584,
+  "2026": 0.7903
+ },
+ "symbol_share_in_index": {
+  "AKBNK.IS": 1.0,
+  "ARCLK.IS": 0.7007,
+  "ASELS.IS": 1.0,
+  "BIMAS.IS": 1.0,
+  "EKGYO.IS": 1.0,
+  "ENKAI.IS": 0.4153,
+  "EREGL.IS": 1.0,
+  "FROTO.IS": 0.7657,
+  "GARAN.IS": 1.0,
+  "HALKB.IS": 0.5267,
+  "ISCTR.IS": 1.0,
+  "KCHOL.IS": 1.0,
+  "KRDMD.IS": 1.0,
+  "MGROS.IS": 0.3315,
+  "ODAS.IS": 0.1703,
+  "PETKM.IS": 1.0,
+  "PGSUS.IS": 1.0,
+  "SAHOL.IS": 1.0,
+  "SASA.IS": 0.645,
+  "SISE.IS": 1.0,
+  "SKBNK.IS": 0.0,
+  "TAVHL.IS": 0.8264,
+  "TCELL.IS": 1.0,
+  "THYAO.IS": 1.0,
+  "TKFEN.IS": 0.5847,
+  "TOASO.IS": 0.8264,
+  "TSKB.IS": 0.2334,
+  "TUPRS.IS": 1.0,
+  "VAKBN.IS": 0.5101,
+  "YKBNK.IS": 1.0
+ },
+ "symbols_always_in_index": [
+  "AKBNK.IS",
+  "ASELS.IS",
+  "BIMAS.IS",
+  "EKGYO.IS",
+  "EREGL.IS",
+  "GARAN.IS",
+  "ISCTR.IS",
+  "KCHOL.IS",
+  "KRDMD.IS",
+  "PETKM.IS",
+  "PGSUS.IS",
+  "SAHOL.IS",
+  "SISE.IS",
+  "TCELL.IS",
+  "THYAO.IS",
+  "TUPRS.IS",
+  "YKBNK.IS"
+ ],
+ "segments": [
+  {
+   "start": "2013-07-01",
+   "end": "2013-10-01",
+   "consistent": false,
+   "n_members": 34,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ODAS",
+    "PGSUS",
+    "SASA",
+    "SKBNK",
+    "TKFEN",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "IHLAS",
+    "IPEKE",
+    "KOZAA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2013-10-01",
+   "end": "2014-01-02",
+   "consistent": false,
+   "n_members": 34,
+   "n_panel_in_index": 25,
+   "panel_not_in_index": [
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TKFEN",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "IHLAS",
+    "KOZAA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2014-01-02",
+   "end": "2014-10-01",
+   "consistent": false,
+   "n_members": 34,
+   "n_panel_in_index": 26,
+   "panel_not_in_index": [
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "ENJSA",
+    "KOZAA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2014-10-01",
+   "end": "2015-01-02",
+   "consistent": false,
+   "n_members": 34,
+   "n_panel_in_index": 25,
+   "panel_not_in_index": [
+    "ASELS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "KOZAA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2015-01-02",
+   "end": "2015-04-01",
+   "consistent": false,
+   "n_members": 34,
+   "n_panel_in_index": 25,
+   "panel_not_in_index": [
+    "ASELS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TRKCM",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2015-04-01",
+   "end": "2015-10-01",
+   "consistent": false,
+   "n_members": 33,
+   "n_panel_in_index": 25,
+   "panel_not_in_index": [
+    "ASELS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2015-10-01",
+   "end": "2016-01-04",
+   "consistent": false,
+   "n_members": 33,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ASELS",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOAS",
+    "DOHOL",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2016-01-04",
+   "end": "2016-10-03",
+   "consistent": false,
+   "n_members": 33,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ASELS",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "CCOLA",
+    "DOAS",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2016-10-03",
+   "end": "2017-01-02",
+   "consistent": false,
+   "n_members": 33,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ASELS",
+    "MGROS",
+    "ODAS",
+    "PGSUS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "CCOLA",
+    "DOAS",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SODA",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2017-01-02",
+   "end": "2017-04-03",
+   "consistent": false,
+   "n_members": 32,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ASELS",
+    "MGROS",
+    "ODAS",
+    "PGSUS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "CCOLA",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SODA",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2017-04-03",
+   "end": "2017-07-03",
+   "consistent": false,
+   "n_members": 32,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "MGROS",
+    "ODAS",
+    "PGSUS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SODA",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2017-07-03",
+   "end": "2017-10-02",
+   "consistent": false,
+   "n_members": 32,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "PGSUS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "MAVI",
+    "MPARK",
+    "SODA",
+    "SOKM",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2017-10-02",
+   "end": "2018-01-02",
+   "consistent": false,
+   "n_members": 31,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "KOZAA",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2018-01-02",
+   "end": "2018-04-02",
+   "consistent": false,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "KOZAA",
+    "MPARK",
+    "SOKM",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2018-04-02",
+   "end": "2019-01-02",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "KOZAA",
+    "SODA",
+    "SOKM",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2019-01-02",
+   "end": "2019-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "ENJSA",
+    "KOZAA",
+    "SODA",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2019-07-01",
+   "end": "2020-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 25,
+   "panel_not_in_index": [
+    "ENKAI",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "KOZAA",
+    "SODA",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2020-04-01",
+   "end": "2020-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "SASA",
+    "SKBNK"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "KOZAA",
+    "SODA",
+    "TRALT",
+    "TRKCM",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2020-07-01",
+   "end": "2020-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TOASO"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "KOZAA",
+    "SODA",
+    "TRALT",
+    "TRKCM",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2020-10-01",
+   "end": "2021-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "ODAS",
+    "SASA",
+    "SKBNK",
+    "TOASO"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "GUBRF",
+    "KOZAA",
+    "OYAKC",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2021-04-01",
+   "end": "2021-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "FROTO",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TOASO"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "GUBRF",
+    "KOZAA",
+    "OYAKC",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2021-07-01",
+   "end": "2022-01-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TOASO",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "GUBRF",
+    "KOZAA",
+    "TRALT",
+    "TTKOM",
+    "VESTL"
+   ]
+  },
+  {
+   "start": "2022-01-01",
+   "end": "2022-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "DOHOL",
+    "GUBRF",
+    "KOZAA",
+    "TRALT",
+    "TTKOM",
+    "VESTL"
+   ]
+  },
+  {
+   "start": "2022-04-01",
+   "end": "2022-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "GUBRF",
+    "HEKTS",
+    "KOZAA",
+    "TRALT",
+    "TTKOM",
+    "VESTL"
+   ]
+  },
+  {
+   "start": "2022-10-01",
+   "end": "2023-01-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ENKAI",
+    "HALKB",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AKSEN",
+    "GUBRF",
+    "HEKTS",
+    "KOZAA",
+    "TRALT",
+    "TTKOM",
+    "VESTL"
+   ]
+  },
+  {
+   "start": "2023-01-01",
+   "end": "2023-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ENKAI",
+    "HALKB",
+    "MGROS",
+    "SKBNK",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AKSEN",
+    "ALARK",
+    "GUBRF",
+    "HEKTS",
+    "KOZAA",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2023-04-01",
+   "end": "2023-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "HALKB",
+    "MGROS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AKSEN",
+    "ALARK",
+    "GUBRF",
+    "HEKTS",
+    "KOZAA",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2023-07-01",
+   "end": "2023-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "HALKB",
+    "MGROS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "ALARK",
+    "ASTOR",
+    "GUBRF",
+    "HEKTS",
+    "KOZAA",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2023-10-01",
+   "end": "2024-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "HALKB",
+    "MGROS",
+    "SKBNK",
+    "TAVHL",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "ALARK",
+    "ASTOR",
+    "GUBRF",
+    "HEKTS",
+    "KONTR",
+    "OYAKC",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2024-04-01",
+   "end": "2024-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 22,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "MGROS",
+    "SKBNK",
+    "TAVHL",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "ALARK",
+    "ASTOR",
+    "BRSAN",
+    "GUBRF",
+    "HEKTS",
+    "KONTR",
+    "OYAKC",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2024-07-01",
+   "end": "2024-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 21,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "MGROS",
+    "ODAS",
+    "SKBNK",
+    "TAVHL",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "ALARK",
+    "ASTOR",
+    "BRSAN",
+    "DOAS",
+    "GUBRF",
+    "HEKTS",
+    "KONTR",
+    "OYAKC",
+    "TRALT"
+   ]
+  },
+  {
+   "start": "2024-10-01",
+   "end": "2025-01-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 22,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TAVHL",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "ALARK",
+    "ASTOR",
+    "DOAS",
+    "HEKTS",
+    "KONTR",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2025-01-01",
+   "end": "2025-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 22,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TAVHL",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ALARK",
+    "ASTOR",
+    "HEKTS",
+    "KONTR",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2025-04-01",
+   "end": "2025-07-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ASTOR",
+    "CIMSA",
+    "HEKTS",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2025-07-01",
+   "end": "2025-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ASTOR",
+    "CIMSA",
+    "GUBRF",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2025-10-01",
+   "end": "2026-04-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 23,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB",
+    "VAKBN"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ASTOR",
+    "DSTKF",
+    "GUBRF",
+    "TRALT",
+    "TTKOM",
+    "ULKER"
+   ]
+  },
+  {
+   "start": "2026-04-01",
+   "end": "2026-10-01",
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ASTOR",
+    "DSTKF",
+    "GUBRF",
+    "TRALT",
+    "TTKOM"
+   ]
+  },
+  {
+   "start": "2026-10-01",
+   "end": null,
+   "consistent": true,
+   "n_members": 30,
+   "n_panel_in_index": 24,
+   "panel_not_in_index": [
+    "ARCLK",
+    "HALKB",
+    "ODAS",
+    "SKBNK",
+    "TKFEN",
+    "TSKB"
+   ],
+   "index_not_in_panel": [
+    "AEFES",
+    "ASTOR",
+    "GUBRF",
+    "TRALT",
+    "TRMET",
+    "TTKOM"
+   ]
+  }
+ ],
+ "measured_at": "2026-11-15"
+}
