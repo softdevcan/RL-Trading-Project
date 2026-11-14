@@ -1335,7 +1335,13 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - **Ayrıştırma:** WebFetch tablo çıkarımı güvenilir değil (19.06.2026 duyurusunda "çıkarılacak" sütunu okunamadı). Bu yüzden ham HTML indirilip SHA-256'sıyla yerelde saklanır ve tablo kodla ayrıştırılır (E2'deki gibi).
   - **Çıktı:** `data/universe/bist30_membership.csv` (dönem başı, dönem sonu, sembol, kaynak URL, ilan tarihi, SHA-256). Yöntem: bugünkü listeden geriye doğru değişiklik zinciri; her dönemde tam 30 üye kontrol edilir. Ayrıca `universe_mask(date)` fonksiyonu ve bir ölçüm JSON'u: panelin 30 hissesinin dönem başına endekste olma oranı, yani hayatta kalma maruziyeti.
   - **Kapsam sınırı:** maske ortama uygulanmaz (durum uzayı sabit); kullanımı Milestone 0'/M2'de karar verilir. Maske yalnız sembol çıkarabilir; panelde olmayan eski üyeleri ekleyemez. Bu yüzden hayatta kalma yanlılığı beyanı her durumda kalır.
-  - **Ön gözlem (doğrulanmadı, E1'de kaynakla kontrol edilecek):** 19.06.2026 duyurusunun metninde HALKB, 01.07–30.09.2026 döneminde BIST 30'a alınanlar arasında görünüyor. Panelde ise HALKB 2007'den beri var.
+  - **Düzeltilen ön gözlem.** WebFetch özeti 19.06.2026 duyurusunda (#15483) HALKB'yi BIST 30'a "alınacak" diye okumuştu. Ham tablo ise BIST 30 için alınacak ve çıkarılacak sütunlarını boş ("--") gösteriyor; PASEU, HALKB ve ULKER **yedek** paylar. Ön gözlem yanlıştı. Arama ve WebFetch özetlerinin tablo okuması kanıt sayılmaz; E1 yalnız ham tablodan ayrıştırılır.
+  - **Arşiv bulguları (2026-11-14).**
+    - TR liste sayfası (`/bist-endeksleri/endeks-duyurulari`) statik 334 bağlantı veriyor; sayfalama JavaScript ile yapılıyor ve sunucu `?page`'i yok sayıyor.
+    - Bu sayfada 2013 Q3 (#12189) ile 2025 Q3 arasındaki 54 çeyreğin 45'inin duyurusu var. Eksik çeyrekler: 2024 Q3–2025 Q2, 2025 Q4 ve 2026 Q1–Q4.
+    - Eksikler `scripts/build_membership.py probe` ile aranıyor. Slug zorunlu (yanlış slug 404 döner) ve kimlikler tarihle artıyor; arama penceresi, liste sayfalarındaki komşu duyuruların tarihlerinden kuruluyor.
+    - Tablo biçimi ikiye ayrılıyor. Yeni biçimde sıra numarası, borsa kodu ve unvan ayrı sütunlarda. Eski biçimde (ör. 2013) yalnız kısa ad var, hücre içinde `<br>` ile ayrılmış. Eski biçim ad → kod eşleme tablosu gerektirir (KAP unvanlarından, elle denetimli).
+    - Dönem içi olağanüstü değişiklikler de BIST 30 üyeliğini değiştirebilir: Yakın İzleme Pazarı'na alınma, işlem sırası kapatma ve benzeri durumlarda yedek pay girer. Bunlar ayrı duyurulardır ve taranmaları gerekir.
 
 ---
 
