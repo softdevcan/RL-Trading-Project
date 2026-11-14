@@ -1,6 +1,7 @@
 {
  "command": "python scripts/analysis/measure_y29_tracker_records.py --out docs/development/measurements/phase9-y29/tracker_records.json",
- "git": "1a7d81a",
+ "git": "aff8fed",
+ "prediction_dir_dirty": false,
  "n_files": 1,
  "file_stems": [
   "GOLD_GRAM_TRY__borsapy"
