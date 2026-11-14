@@ -16,6 +16,8 @@ from typing import Dict, Any, Optional, List, Union
 
 import numpy as np
 import pandas as pd
+
+from prediction.tracker_rules import horizon_sessions
 from sklearn.linear_model import Ridge
 try:
     from xgboost import XGBRegressor
@@ -636,10 +638,9 @@ class StackingEnsemble:
             confidence = round(max(agreement, 1 - agreement), 4)
         agreement = round(float(agreement), 4)
 
-        if self.horizon == 'daily':
-            pred_date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
-        else:
-            pred_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+        # Y29: hedef tarih verinin son seansindan (feature_date) h is gunu sonra; duvar saatinden
+        # DEGIL. Resmi BIST tatilleri bilinmiyor -> tahmini tarih; tracker gercek h. seansi kullanir.
+        pred_date = (feature_date + pd.offsets.BDay(horizon_sessions(self.horizon))).strftime('%Y-%m-%d')
 
         return {
             'symbol': symbol,

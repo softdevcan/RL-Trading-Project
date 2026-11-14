@@ -172,6 +172,117 @@ def test_tracker(pred):
         print("  OK!")
 
 
+def test_tracker_target_date(pred, df_last):
+    """Faz 9 Y29: hedef tarih veriden (feature_date + h seans), duvar saatinden degil; tracker
+    gerceklesen kapanisi feature_date'ten sonraki h. GERCEK seanstan alir; gecersiz kayitlar
+    (Y28 oncesi / stale_features) degerlendirilmez ve metriğe girmez. Mutasyon uretim yolundan."""
+    print("\n[TEST 7] Y29 tracker hedef tarihi...")
+    import tempfile
+    from datetime import datetime, timedelta
+    import prediction.tracker as T
+    from prediction.tracker import PredictionTracker
+    from prediction.tracker_rules import horizon_sessions
+
+    # (a) predict_next: veri 2021'de bitiyor, saat 2026 -> hedef veriden
+    if pred is not None:
+        exp = (pd.Timestamp(df_last) + pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        old = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        assert pred['feature_date'] == str(df_last)[:10], pred.get('feature_date')
+        assert pred['prediction_date'] == exp != old, (pred['prediction_date'], exp, old)
+        print(f"  predict_next: feature_date={pred['feature_date']} -> prediction_date={exp} (eski kural {old})")
+    fri = pd.Timestamp('2026-11-06')  # Cuma
+    assert horizon_sessions('weekly') == 5 and (fri + pd.offsets.BDay(5)).strftime('%Y-%m-%d') == '2026-11-13'
+
+    # (b) taslak cubuklar: 12.10 tatil ama yfinance DUZ satir donduruyor (volume 0, O=H=L=C =
+    #     onceki kapanis; hayalet gun), 20.10 seans kapanmamis taslak (NaN)
+    idx = pd.to_datetime(['2026-10-08', '2026-10-09', '2026-10-12', '2026-10-13', '2026-10-14',
+                          '2026-10-15', '2026-10-16', '2026-10-19', '2026-10-20']).tz_localize('Europe/Istanbul')
+    close = [99, 100, 100, 103, 104, 105, 106, 107, np.nan]
+    bars = pd.DataFrame({'Open': close, 'High': close, 'Low': close, 'Close': close,
+                         'Volume': [5e5, 5e5, 0, 5e5, 5e5, 5e5, 5e5, 5e5, 1e5]}, index=idx, dtype=float)
+    bars.loc[bars.index != idx[2], 'High'] = bars['Close'] * 1.01   # gercek seanslar duz degil
+
+    def fake(symbol, start, end):
+        d = bars.index.tz_localize(None)
+        return bars[(d >= pd.Timestamp(start)) & (d < pd.Timestamp(end))]
+
+    base = {'symbol': 'Y29.IS', 'predicted_direction': 'UP', 'predicted_change_pct': 1.0,
+            'confidence': 0.6, 'current_close': 100.0, 'predicted_close': 101.0,
+            'made_at': '2026-10-10T10:00:00'}
+    recs = [
+        dict(base, horizon='daily', prediction_date='2026-10-12', feature_date='2026-10-09', stale_features=False),
+        dict(base, horizon='weekly', prediction_date='2026-10-16', feature_date='2026-10-09', stale_features=False),
+        dict(base, symbol='OLD.IS', horizon='daily', prediction_date='2026-10-05'),            # Y28 oncesi
+        dict(base, symbol='OL2.IS', horizon='daily', prediction_date='2026-10-07'),            # Y28 oncesi, bekleyen
+        dict(base, symbol='STL.IS', horizon='daily', prediction_date='2026-10-06',
+             feature_date='2026-10-02', stale_features=True),
+        dict(base, symbol='PY9.IS', horizon='daily', prediction_date='2026-10-05',            # v1.10.0 kurali
+             feature_date='2026-10-02', stale_features=False),
+        dict(base, symbol='NEA.IS', horizon='daily', prediction_date='2026-10-12',            # hedeften sonra uretilmis
+             feature_date='2026-10-09', stale_features=False, made_at='2026-10-14T10:00:00'),
+    ]
+    big = 100000  # tarih kesmesi kontrolu bosa dusurmesin (hakem-2 Y29 #1)
+
+    def run(mutate=None):
+        orig_fetch, orig_rule = PredictionTracker._fetch_closes, T.actual_after_sessions
+        PredictionTracker._fetch_closes = staticmethod(fake)
+        if mutate == 'calendar':  # eski anlayis: takvimdeki tahmini tarihin (feature_date + h is gunu) kapanisi
+            def calendar_rule(b, fd, h):
+                d = (pd.Timestamp(fd) + pd.offsets.BDay(h)).strftime('%Y-%m-%d')
+                m = b[b.index.tz_localize(None).strftime('%Y-%m-%d') == d]['Close'].dropna()
+                return (d, float(m.iloc[0])) if len(m) else None
+            T.actual_after_sessions = calendar_rule
+        elif mutate == 'no_flat':  # duz satir elemesi yok (yalniz kapanis serisi)
+            T.actual_after_sessions = lambda b, fd, h: orig_rule(b['Close'], fd, h)
+        try:
+            tmp = tempfile.mkdtemp(prefix='rlt_y29_')
+            tr = PredictionTracker(predictions_dir=tmp)
+            for r in recs:
+                tr.store_prediction(r)
+            tr.store_prediction(dict(recs[0], predicted_close=150.0))   # ayni feature_date: ilk tahmin kalir
+            tr.evaluate_prediction('OLD.IS', '2026-10-05', 99.0, 'daily')  # Y28 oncesi, degerlendirilmis
+            tr.evaluate_prediction('PY9.IS', '2026-10-05', 99.0, 'daily')  # actual_date'siz (v1.10.0)
+            n = tr.evaluate_pending()
+            tr.store_prediction(dict(recs[0], predicted_close=150.0, feature_date='2026-10-08'))  # degerlendirilmis: korunur
+            return n, tr, tr.get_prediction_history('Y29.IS')
+        finally:
+            PredictionTracker._fetch_closes, T.actual_after_sessions = orig_fetch, orig_rule
+
+    def perf(tr, syms):
+        return {s: len(tr.get_performance_history(s, 'daily', days=big)) for s in syms}
+
+    n, tr, h = run()
+    d, w = h['2026-10-12']['daily'], h['2026-10-16']['weekly']
+    assert n == 3, n   # Y29 gunluk + haftalik + NEA
+    assert (d.get('actual_date'), d.get('actual_close')) == ('2026-10-13', 103.0), d   # duz tatil satiri atlandi
+    assert (w.get('actual_date'), w.get('actual_close')) == ('2026-10-19', 107.0), w   # 5. gercek seans
+    assert d['predicted_close'] == 101.0, d   # ilk tahmin korundu (ayni feature_date / degerlendirilmis)
+    assert tr.last_skipped_invalid == {'pre_y28_no_feature_date': 1, 'stale_features': 1}, tr.last_skipped_invalid
+    assert tr.get_prediction_history('OL2.IS')['2026-10-07']['daily']['actual_close'] is None
+    assert tr.get_prediction_history('OLD.IS')['2026-10-05']['daily']['actual_close'] is not None  # ham gecmiste duruyor
+    bad = ('OLD.IS', 'PY9.IS', 'NEA.IS', 'STL.IS')
+    assert perf(tr, bad) == dict.fromkeys(bad, 0), perf(tr, bad)                 # metriğe girmiyor
+    assert tr.get_performance_history('Y29.IS', 'daily', days=big)[0]['actual_date'] == '2026-10-13'
+    print("  gunluk 12.10 duz tatil satiri -> 13.10 (103); haftalik 5. seans 19.10 (107); ilk tahmin korundu; "
+          f"atlanan {tr.last_skipped_invalid}; metrikten dusen {list(bad)}")
+
+    # Mutasyonlar (uretim yolu)
+    _, _, hm = run('calendar')
+    dm, wm = hm['2026-10-12']['daily'], hm['2026-10-16']['weekly']
+    assert dm.get('actual_date') != '2026-10-13' and wm.get('actual_date') == '2026-10-16', (dm, wm)
+    _, _, hf = run('no_flat')
+    assert hf['2026-10-12']['daily'].get('actual_date') == '2026-10-12', hf['2026-10-12']['daily']
+    orig_inv = T.invalid_reason
+    T.invalid_reason = lambda e: None   # get_performance_history filtresi kalkar
+    try:
+        leaked = perf(tr, bad)
+    finally:
+        T.invalid_reason = orig_inv
+    assert leaked == dict.fromkeys(bad, 1), leaked
+    print("  mutasyonlar: takvim kurali 13.10 ve 5. seansi kacirir; duz satir elemesi yoksa 12.10 tatili "
+          "seans sayilir; filtre kalkinca gecersiz kayitlar metriğe girer -> kontroller kirilir")
+    print("  OK!")
+
 def test_evaluator():
     """PredictionEvaluator testi"""
     print("\n[TEST 5] PredictionEvaluator...")
@@ -261,6 +372,7 @@ if __name__ == '__main__':
         predictor = test_price_predictor_train()
         pred = test_price_predictor_predict(predictor)
         test_tracker(pred)
+        test_tracker_target_date(pred, _make_synthetic_df(400).index[-1])
         test_evaluator()
         test_walk_forward_cv()
     except Exception as e:

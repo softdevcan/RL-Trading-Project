@@ -1,0 +1,16 @@
+{
+ "command": "python scripts/analysis/measure_y29_tracker_records.py --out docs/development/measurements/phase9-y29/tracker_records.json",
+ "git": "aff8fed",
+ "prediction_dir_dirty": false,
+ "n_files": 1,
+ "file_stems": [
+  "GOLD_GRAM_TRY__borsapy"
+ ],
+ "n_workspaces_with_records": 1,
+ "records_by_horizon_reason": {
+  "daily/pre_y28_no_feature_date": 1
+ },
+ "evaluated_by_horizon_reason": {},
+ "prediction_date_min": "2026-08-31",
+ "prediction_date_max": "2026-08-31"
+}

@@ -1005,6 +1005,7 @@ class PredictionService:
     ) -> Dict[str, Any]:
         """Sembol icin tahmin gecmisi."""
         from prediction.tracker import PredictionTracker
+        from prediction.tracker_rules import invalid_reason
         tracker = PredictionTracker()
         raw = tracker.get_prediction_history(symbol)
 
@@ -1012,7 +1013,9 @@ class PredictionService:
         for pred_date, horizons in sorted(raw.items()):
             entry = horizons.get(horizon)
             if entry:
-                history.append({'prediction_date': pred_date, **entry})
+                # Y29 (hakem-2 #5): ham gecmis de gecersizligi tasir; pano hatasini gostermez
+                history.append({'prediction_date': pred_date, **entry,
+                                'invalid_reason': invalid_reason(entry)})
 
         return {
             'symbol': symbol,
