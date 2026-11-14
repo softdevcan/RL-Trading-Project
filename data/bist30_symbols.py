@@ -23,6 +23,19 @@ UNIVERSE = _load_universe()
 # BIST-30 sembolleri (Yahoo Finance formatı: SEMBOL.IS) — evren dosyasindaki sirayla
 BIST30_SYMBOLS = list(UNIVERSE['symbols'])
 
+SECTORS_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'sectors.csv')
+
+
+def load_sector_groups() -> dict:
+    """E2 (Y5): sembol -> grup (KAP alt sektoru; evrende <2 uyeli alt sektorler 'DIGER').
+
+    Kaynak, erisim tarihi ve ham sayfa SHA-256'si `data/universe/sectors.csv` satirlarinda
+    (`scripts/build_sectors.py`). K6=A altinda yalniz `gat` kolu ve sektor maruziyet siniri kullanir.
+    """
+    import csv
+    with open(SECTORS_FILE, encoding='utf-8', newline='') as f:
+        return {r['symbol']: r['group'] for r in csv.DictReader(f)}
+
 # Faz 1 için başlangıç seti (5 hisse ile test)
 PHASE1_SYMBOLS = [
     'AKBNK.IS',   # Akbank - Banking

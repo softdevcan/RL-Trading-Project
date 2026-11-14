@@ -58,8 +58,46 @@ def test_e0():
     check("eski listelerin panelde olmayan sembolleri (Y11) kalmadi", not (old & set(syms)))
 
 
+def test_e2():
+    print("\nE2 — KAP sektor siniflamasi ve gruplar (Y5)")
+    import csv
+    import glob
+    from collections import Counter
+    from data.bist30_symbols import BIST30_SYMBOLS, SECTORS_FILE, load_sector_groups
+    with open(SECTORS_FILE, encoding='utf-8', newline='') as f:
+        rows = list(csv.DictReader(f))
+    groups = load_sector_groups()
+    size = Counter(groups.values())
+    check("her evren sembolu tam bir satirda/grupta, fazlasi yok",
+          [r['symbol'] for r in rows] == BIST30_SYMBOLS and set(groups) == set(BIST30_SYMBOLS))
+    check(f"grup basina >= 2 sembol, 6-8 grup (olculen {len(size)} grup, en kucuk {min(size.values())})",
+          min(size.values()) >= 2 and 6 <= len(size) <= 8, str(dict(size)))
+    check("her satirda kaynak: KAP URL, erisim tarihi, tek ham sayfa SHA-256",
+          all(r['source_url'] == 'https://kap.org.tr/tr/Sektorler' and r['retrieved_at']
+              and len(r['source_sha256']) == 64 for r in rows)
+          and len({r['source_sha256'] for r in rows}) == 1)
+    sub = Counter(r['kap_sector'] for r in rows)
+    check("grup kurali: grup = KAP alt sektoru; <2 uyeli alt sektor -> DIGER (mekanik)",
+          all(r['group'] == (r['kap_sector'] if sub[r['kap_sector']] >= 2 else 'DIGER') for r in rows))
+    src = sorted(glob.glob(os.path.join(ROOT, 'data', 'universe', 'sources', 'kap_sektorler_*.html.gz')))
+    if src:
+        import gzip
+        import hashlib
+        import subprocess
+        raw = gzip.open(src[-1], 'rb').read()
+        same_sha = hashlib.sha256(raw).hexdigest() == rows[0]['source_sha256']
+        before = open(SECTORS_FILE, 'rb').read()
+        subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_sectors.py'), '--html', src[-1]],
+                       check=True, capture_output=True)
+        check("saklanan ham sayfadan yeniden uretim bayt bayt ayni CSV (SHA-256 eslesir)",
+              same_sha and open(SECTORS_FILE, 'rb').read() == before)
+    else:
+        print("  [ATLA]  yerel KAP kopyasi yok (data/universe/sources gitignore); yeniden uretim atlandi")
+
+
 def main() -> int:
     test_e0()
+    test_e2()
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0

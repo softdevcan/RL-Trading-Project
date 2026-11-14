@@ -24,6 +24,9 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Tek kaynak `data/universe/bist30_panel.json` (RL panelinin 30 hissesi, panel sirasiyla; GERCEK
   BIST-30 uyeligi DEGIL). `BIST30_SYMBOLS`, `STOCK_INFO`, pano listeleri ve egitim rotasinin varsayilan
   cekimi buradan. Elle liste yazma; evren degisirse `scripts/freeze_universe.py` YENI surum adiyla.
+- Sektor (E2, Y5): `data/universe/sectors.csv` — KAP 'Sektorler' gomulu verisinden (`scripts/build_sectors.py`),
+  satir basina URL + erisim tarihi + ham sayfa SHA-256; `load_sector_groups()`. Grup = KAP alt sektoru,
+  evrende <2 uyeli olanlar DIGER (8 grup). Ham KAP/Borsa sayfalari `data/universe/sources/` (gitignore).
 
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)
