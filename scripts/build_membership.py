@@ -628,11 +628,12 @@ def chain(anchor: dict, changes: list, events: list):
 MEMBERSHIP_META = os.path.join(UNI, 'bist30_membership_meta.json')
 
 
-def unknown_intervals(changes: list, events: list, viol: list, segs: list) -> list:
+def unknown_intervals(changes: list, events: list, viol: list, segs: list, as_of: str = None) -> list:
     """hakem-2 E #1. Bir olay ihlali (d, c) yalniz sunu soyler: c'nin uyeligi d ile c'nin BIR SONRAKI
     kayitli olayi (yoksa capa) arasinda kayitsiz degisti — aralik birden cok segmente yayilabilir
     (DOHOL: 2017-01-02 alinir, 21/06/2017 cikar, 2017-07-03 yeniden alinir). Bilinmeyen aralik
-    [d, c'nin sonraki kaydi) -> {'code', 'start', 'end' (None = capaya kadar), 'reason'}.
+    [d, c'nin sonraki kaydi) -> {'code', 'start', 'end', 'reason'}. Sonraki kayit yoksa end = capa
+    gunu (`as_of`, HARIC): capa gunu KAP'tan kesin bilinir (hakem-2 E ikinci okuma #1); as_of yoksa None.
     Uye sayisi 30 olmayan segment de butunuyle bilinmeyen ('*')."""
     rec = {}
     for r in changes:
@@ -645,7 +646,7 @@ def unknown_intervals(changes: list, events: list, viol: list, segs: list) -> li
     out = []
     for v in viol:
         later = sorted(x for x in rec.get(v['code'], ()) if x > v['date'])
-        out.append({'code': v['code'], 'start': v['date'], 'end': later[0] if later else None,
+        out.append({'code': v['code'], 'start': v['date'], 'end': later[0] if later else as_of,
                     'reason': v['msg']})
     for s, e, k, _ in segs:
         if len(k) != 30:
@@ -684,7 +685,7 @@ def cmd_chain(provisional: bool = False) -> None:
     segs, bad, viol = chain(anchor, changes, events)
     if bad and not provisional:
         sys.exit('zincir tutarsiz (membership YAZILMADI; gecici icin --provisional):\n  ' + '\n  '.join(bad))
-    unk = unknown_intervals(changes, events, viol, segs)
+    unk = unknown_intervals(changes, events, viol, segs, anchor['as_of'])
     cc = count_checked_from(viol, segs)
     with open(MEMBERSHIP, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)

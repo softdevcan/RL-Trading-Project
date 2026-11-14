@@ -268,6 +268,9 @@ def test_e1_membership():
           and all((S.universe_mask(s, mode='count_checked') is not None) == cc for s, _e, _k, _st, cc in segs)
           and S.universe_mask(segs[0][0], mode='raw') == segs[0][2]
           and S.universe_mask(anchor['as_of'], mode='count_checked') == frozenset(anchor['codes']))
+    check("capa gunu katı modda bilinir (KAP'tan kesin; acik uclu aralik capada biter)",
+          S.universe_mask(anchor['as_of']) == frozenset(anchor['codes'])
+          and all(u['end'] is not None for u in unk if u['code'] != '*'))
     import pandas as pd
     viol = []
     for r in changes:

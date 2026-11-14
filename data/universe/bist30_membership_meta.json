@@ -66,7 +66,7 @@
   {
    "code": "OTKAR",
    "start": "2015-04-01",
-   "end": null,
+   "end": "2026-11-14",
    "reason": "2015-04-01 alinan OTKAR sonraki kumede uye degil"
   },
   {
@@ -120,13 +120,13 @@
   {
    "code": "ECILC",
    "start": "2017-10-02",
-   "end": null,
+   "end": "2026-11-14",
    "reason": "2017-10-02 alinan ECILC sonraki kumede uye degil"
   },
   {
    "code": "SKBNK",
    "start": "2018-01-02",
-   "end": null,
+   "end": "2026-11-14",
    "reason": "2018-01-02 alinan SKBNK sonraki kumede uye degil"
   }
  ],

@@ -83,7 +83,7 @@ python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagims
 python tests/test_universe.py              # Faz 9/E: evren tek kaynak (E0, Y11) — panel sirasi, kod + pano
                                            #          listeleri; E2 KAP sektor gruplari + ham kopyadan bit-es yeniden uretim; E1 capa (bugunku XU030),
                                            #          duyuru ayristirici (3 bicim), geriye zincir + mutasyon, uyelik/maske/maruziyet SHA bagi,
-                                           #          zincir + parse bit-es yeniden uretim, degismezler, 5 ceyreklik elle referans, dipnot, DOHOL tipi aralik (32, ag yok)
+                                           #          zincir + parse bit-es yeniden uretim, degismezler, 5 ceyreklik elle referans, dipnot, DOHOL tipi aralik, capa gunu (33, ag yok)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)

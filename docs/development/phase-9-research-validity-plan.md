@@ -1405,10 +1405,16 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
     | 6 | KÜÇÜK | `load_membership` docstring'i geçici durumda yanlış iddia ediyordu ("her segment 30", "o tarihteki kod"). | Docstring geçici/kesin ayrımıyla yeniden yazıldı. |
     | 7 | KÜÇÜK | `_period` gövdedeki ilk aralığı alıyor (kırılgan). | 4. maddedeki değişmez testiyle bağlandı. |
 
-    - **Ölçüm (geçici; [exposure.json](measurements/phase9-e1/exposure.json), `measure` = count_checked).** Katı kapsam 0 seans (`strict_sessions_covered`). Sezgisel kesimde (2018-04-02..2026-11-09, 2.172 seans) panelin seans başına ortalama 23,536'sı (0,7845) BIST 30'da (`mean_panel_in_index`, `share_panel_in_index`). SKBNK'nın 2.172 bilinmeyen seansı üye sayılırsa üst sınır 0,8179 (`share_upper_if_unknown_panel_members`, `unknown_panel_sessions`). Kayıtsız takasların etkisi sınırlanamıyor. Teze önerilen ifade (hakem-2): "Yalnız çeyreklik duyurulardan geriye kurulan geçici üyelikte… panelin ortalama 23,5/30'u (%78) BIST 30'daydı; dönem içi olaylar dahil edilmedi, oran kesin değil." Hisse başına nitel cümle yazılmaz.
+    - **Ölçüm (geçici; [exposure.json](measurements/phase9-e1/exposure.json), `measure` = count_checked).** Katı kapsam 0 seans (`strict_sessions_covered`). Sezgisel kesimde (2018-04-02..2026-11-09, 2.172 seans) panelin seans başına ortalama 23,536'sı (0,7845) BIST 30'da (`mean_panel_in_index`, `share_panel_in_index`). SKBNK'nın 2.172 bilinmeyen seansı üye sayılırsa oran 0,8179 olur (`share_upper_if_unknown_panel_members`, `unknown_panel_sessions`). Bu yalnız SKBNK'ya koşullu bir değer, genel bir sınır değil: kayıtsız takaslar oranı iki yönde de oynatabilir ve sınırlanamıyor (hakem-2 ikinci okuma #2). Teze önerilen ifade (hakem-2): "Yalnız çeyreklik duyurulardan geriye kurulan geçici üyelikte… panelin ortalama 23,5/30'u (%78) BIST 30'daydı; dönem içi olaylar dahil edilmedi, oran kesin değil." Hisse başına nitel cümle yazılmaz.
     - **Gözlem (zinciri etkilemez).** 2026 Q4'te alınan TRMET'in unvanı "TR ANADOLU METAL MADENCILIK"; KOZAA'nın (KOZA MADENCİLİK) kod değişikliği olabilir. TRALT ↔ KOZAL ile birlikte kod değişikliği olaylarına yazılacak.
     - **hakem-2'nin 5. yanıtı.** PR'a GEÇİCİ altyapı olarak gidilebilir. E1, K3 sınırlılık beyanıyla kapatılmamalı: süre 2026-11-28 ve olay kaynağı ucuz (#11503 + KAP'ta 2017-06..2018-05 aralığında yaklaşık 4 olay). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı.
-    - **Kabul** `test_universe` 32/0 (ağsız).
+    - **hakem-2 ikinci okuma (SendMessage, ~118 bin token önceki bağlamla, 5 araç, ~1,1 dk): Küçük revizyon; PR'ı engellemez, GEÇİCİ altyapı olarak birleşebilir.** Testi kendi koştu (32/0). İşlenen 3 KÜÇÜK bulgu:
+      1. Katı mod çapa gününü de None döndürüyordu. Açık uçlu aralığın sonu artık çapa günü (hariç); çapa günü katı modda bilinen sayılıyor.
+      2. "Üst sınır" yerine "SKBNK'ya koşullu değer".
+      3. `strict` docstring'i: "tespit edilmiş tutarsızlık yok", doğruluk iddiası yok.
+
+      Ek gözlem: TEKFEN HOLDİNG eşlemesinde `year_gap` 6; kullanıcı denetiminde bu satıra özellikle bakılmalı.
+    - **Kabul** `test_universe` 33/0 (ağsız).
 
 ---
 

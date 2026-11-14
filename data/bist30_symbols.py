@@ -75,7 +75,9 @@ def universe_mask(date, mode: str = 'strict') -> frozenset | None:
 
     mode:
       - 'strict' (varsayilan): segment 30 uye degilse ya da gun bir bilinmeyen araliga dusuyorsa
-        (meta `unknown_intervals`, GUN duzeyinde; hakem-2 E #1) None.
+        (meta `unknown_intervals`, GUN duzeyinde; hakem-2 E #1) None. Capa gunu kesin bilinir.
+        strict = TESPIT EDILMIS tutarsizlik yok; dogruluk degil: kaydi hic olmayan bir uyenin donem
+        ici takasi ne ihlal ne sayi bozulmasi uretir (olaylar eklenmeden gorunmez).
       - 'count_checked': SEZGISEL — yalniz sayi denetiminden gecen segmentler; dogruluk iddiasi tasimaz.
       - 'raw': zincirin ham kumesi (tani icin).
     Kapsam disi (ilk segmentten once) her modda None: BILINMIYOR, bos kume degil. Maske yalniz sembol
