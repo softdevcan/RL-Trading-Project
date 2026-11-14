@@ -34,6 +34,8 @@
 - `predict_next` ciktisi ve tracker kaydi `feature_date` + `stale_features` tasir; `feature_date`'siz kayit Y28 oncesi,
   `stale_features=True` kayit son gun ozelligi NaN (ikisi de bayat, canli dogruluga girmez).
 - **Y30 ACIK:** SHAP ucu `predict_next`'ten farkli matris kuruyor (makro/capraz/temel/feature_groups yok).
+- **Y31 ACIK:** tracker `GOLD_GRAM_TRY` gerceklesen kapanisini `GC=F`'ten (ons, USD) cekiyor; tahmin gram/TRY ->
+  o sembolde hata ve yon dogrulugu anlamsiz (Faz 9 §9.20). Duzeltme: tahmini ureten veri hattindan cek.
 - Tracker kurallari tek yerde: `prediction/tracker_rules.py` (Y29 kapandi, §9.20). `prediction_date` =
   `feature_date` + h is gunu (tahmini; BIST tatilleri bilinmiyor). Gerceklesen kapanis = `feature_date`'ten
   SONRAKI h. GERCEK seans (`actual_date` kaydedilir; NaN taslak satir seans sayilmaz). Gecersiz kayit

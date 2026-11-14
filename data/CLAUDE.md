@@ -27,6 +27,10 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - Sektor (E2, Y5): `data/universe/sectors.csv` — KAP 'Sektorler' gomulu verisinden (`scripts/build_sectors.py`),
   satir basina URL + erisim tarihi + ham sayfa SHA-256; `load_sector_groups()`. Grup = KAP alt sektoru,
   evrende <2 uyeli olanlar DIGER (8 grup). Ham KAP/Borsa sayfalari `data/universe/sources/` (gitignore).
+- Tarihsel uyelik (E1, suruyor): `scripts/build_membership.py` (index/probe/anchor/fetch). Capa
+  `data/universe/bist30_anchor.json` = BUGUNKU BIST 30 (KAP XU030); panelin 6 hissesi bugun endekste degil.
+  **Arama/WebFetch tablo ozetini kanit sayma** (HALKB 'alinan' okundu, ham tabloda yedek); yalniz ham tablodan.
+  Borsa Istanbul duyuru URL'sinde slug zorunlu (yanlis slug 404); TR liste sayfasi statik, sayfalama JS.
 
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)

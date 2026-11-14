@@ -1343,6 +1343,27 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
     - Tablo biçimi ikiye ayrılıyor. Yeni biçimde sıra numarası, borsa kodu ve unvan ayrı sütunlarda. Eski biçimde (ör. 2013) yalnız kısa ad var, hücre içinde `<br>` ile ayrılmış. Eski biçim ad → kod eşleme tablosu gerektirir (KAP unvanlarından, elle denetimli).
     - **Zincirin çapası (ölçüldü).** Bugünkü BIST 30 üyeleri KAP "Endeksler" sayfasının gömülü verisinden alındı (kod XU030; `python scripts/build_membership.py anchor` → [bist30_anchor.json](../../data/universe/bist30_anchor.json), 2026-11-14, ham sayfa SHA-256 kayıtlı). **Panelin 30 hissesinin 6'sı bugün BIST 30'da değil:** ARCLK, HALKB, ODAS, SKBNK, TKFEN, TSKB. 6 güncel üye ise panelde yok: AEFES, ASTOR, GUBRF, TRALT, TRMET, TTKOM. *Kaynak: `bist30_anchor.json` → `panel_not_in_index`, `index_not_in_panel`.* Yani "BIST-30" evreni bugün bile endeksle örtüşmüyor; seçim, son günün üyeliğine bile dayanmıyor. Hayatta kalma ve seçim yanlılığı beyanı buna göre yazılmalı. Kabul `test_universe` 13/0.
     - Dönem içi olağanüstü değişiklikler de BIST 30 üyeliğini değiştirebilir: Yakın İzleme Pazarı'na alınma, işlem sırası kapatma ve benzeri durumlarda yedek pay girer. Bunlar ayrı duyurulardır ve taranmaları gerekir.
+  - **Araç ve durum (2026-11-14 sonu).** `scripts/build_membership.py`. Ham sayfalar ve `index.json` (kimlik, slug, SHA-256, erişim tarihi) `data/universe/sources/bist/` altında (gitignore); depoya giren tek E1 çıktısı şimdilik `bist30_anchor.json`. Komutlar:
+    - `index`: TR liste sayfasından çeyrek → kimlik.
+    - `probe`: eksik çeyrek tarama; pencere ve slug kalıpları betikteki `PROBE` tablosunda.
+    - `anchor`: KAP XU030 çapası.
+    - `fetch`: duyuruları indirir.
+    - `parse`: henüz yazılmadı.
+  - **`probe` sonucu.** Bulunanlar: 2024 Q3 #14682, 2024 Q4 #14707, 2025 Q2 #14784, 2026 Q3 #15483, 2026 Q4 #15598. Bulunamayanlar:
+    - 2025 Q1: eski slug, #14732–14795 penceresi.
+    - 2025 Q4: yeni slug, #15216–15235.
+    - 2026 Q1: kimlik #15293 aramayla biliniyor, ama TR slug'ı tahmin edilen biçimde değil; EN sayfası `/en/announcement/15293/…` biliniyor.
+    - 2026 Q2: 19.03.2026 tarihli duyuru.
+    - Böylece 2013 Q3'ten bugüne 54 çeyreğin 50'sinin kimliği elde. Kalan 4 için sıradaki adım: EN sayfaları ya da TR slug varyantları.
+  - **Ayrıştırıcı (`parse_tables`).** Her endeks başlığı için alınacak, çıkarılacak ve yedek listelerini veriyor. Başlık hücrelerindeki `colspan` açılıyor. Biçim satır genişliğinden tanınıyor: yeni biçim kod okur, eski biçim `<br>` ile ayrılmış adları okur. #12189 (2013 Q3) ve #15483 (2026 Q3) üzerinde ham tabloyla elle karşılaştırılarak denendi; henüz testi yok.
+  - **Kalan (E1).**
+    1. 4 çeyreğin kimliği.
+    2. `fetch`.
+    3. `parse`, ad → kod eşleme tablosu (eski biçim; birleşmiş ya da kotasyondan çıkmış şirketler için elle denetim, kullanıcıya sunulur).
+    4. Dönem içi değişiklik duyuruları.
+    5. Çapadan geriye zincir; her dönemde 30 üye kontrolü.
+    6. `universe_mask(date)` ve maruziyet JSON'u.
+    7. hakem-2, v1.12.0, PR.
 
 ---
 
@@ -1388,3 +1409,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.19, Y28 kapandı; v1.10.0):** Canlı `predict_next` ve SHAP ucu `build_inference_features` ile en son satırı kullanıyor (eğitim yolu değişmedi); `feature_date` köken alanı. Kabul `test_tats_labels` 43 (mutasyon günlük/haftalık, `stale_features` bekçisi); gerçek veride `live_tail.json` `all_ok`. Golden kırmızı, `test_mape` değişmedi. Yeni Y29 (tracker hedef tarihi duvar saatinden), Y30 (SHAP ucu farklı matris). hakem-2 Küçük revizyon, işlendi.
 - **2026-11-14 (§9.20, Y29 kapandı; v1.11.0):** `prediction_date` veriden (`feature_date` + h iş günü); tracker gerçekleşen kapanışı `feature_date`'ten sonraki h. gerçek seanstan alıyor (`actual_date`), Y28 öncesi ve bayat kayıtlar değerlendirilmiyor ve metriklerden düşüyor. Kabul `test_prediction` 7 (TEST 7, mutasyon). Mevcut takipte 1 kayıt (Y28 öncesi). Ortak kurallar `prediction/tracker_rules.py`. Yeni Y31 (altın gerçekleşen kapanışı GC=F, birim farkı).
 - **2026-11-14 (§9.21, E0 + E2; E1 açık):** Evren tek dosyada (`data/universe/bist30_panel.json`; Y11 kapandı), KAP sektör sınıflaması ve 8 grup (`sectors.csv`; Y5 kapandı). Kabul `test_universe` 11. E1 tasarımı ve süre (2026-11-28) kayıtta.
+- **2026-11-14 (§9.21, E1 sürüyor):** Bugünkü BIST 30 çapası KAP'tan (`bist30_anchor.json`; panelin 6 hissesi bugün endekste değil). Borsa İstanbul arşivinde 54 çeyreğin 50'sinin duyuru kimliği bulundu. İki biçimi okuyan tablo ayrıştırıcısı hazır. HALKB ön gözlemi düzeltildi: yedek pay. `test_universe` 13.
