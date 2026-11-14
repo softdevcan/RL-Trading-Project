@@ -1,7 +1,7 @@
 {
  "what": "Panelin 30 hissesinin seans basina BIST 30 uyeligi (hayatta kalma maruziyeti), plan §9.21 E1",
  "membership_file": "data/universe/bist30_membership.csv",
- "membership_sha256": "86f42613e66817880900ac1998e39212894d45c74ebd7dc8c27af013df31b28f",
+ "membership_sha256": "fa11c8adada6dfd21cffb8f659822834d4d4e2c3c1e75e2ed9188b499376d3f2",
  "membership_status": "provisional",
  "panel_file": "data/bist/stock_data_with_indicators.csv",
  "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",

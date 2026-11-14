@@ -56,7 +56,7 @@ def _load_index() -> dict:
 
 def _save_index(ix: dict) -> None:
     os.makedirs(SRC, exist_ok=True)
-    with open(INDEX, 'w', encoding='utf-8') as f:
+    with open(INDEX, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(ix, f, ensure_ascii=False, indent=1)
 
 
@@ -124,7 +124,7 @@ def cmd_fetch() -> None:
             f.write(html)
         done[str(did)] = {'slug': slug, 'url': f'{BASE}/duyuru/{did}/{slug}',
                           'sha256': hashlib.sha256(html).hexdigest(), 'at': str(date.today())}
-        with open(FETCHED, 'w', encoding='utf-8') as f:
+        with open(FETCHED, 'w', encoding='utf-8', newline='\n') as f:
             json.dump(done, f, ensure_ascii=False, indent=1)
         time.sleep(DELAY_S)
     print('bitti', flush=True)
@@ -190,7 +190,7 @@ def cmd_nodes(a: int, b: int, delay: float = 0.5) -> None:
     op = urllib.request.build_opener(_NoRedirect)
 
     def save():
-        with open(shard, 'w', encoding='utf-8') as f:
+        with open(shard, 'w', encoding='utf-8', newline='\n') as f:
             json.dump(nodes, f, ensure_ascii=False, indent=0)
     n_new = 0
     for did in range(a, b + 1):
@@ -416,7 +416,7 @@ def cmd_anchor() -> None:
     doc = {'index': 'BIST 30 (XU030)', 'as_of': today, 'source_url': KAP_INDEX_URL,
            'source_sha256': hashlib.sha256(html).hexdigest(), 'codes': codes,
            'panel_not_in_index': sorted(panel - set(codes)), 'index_not_in_panel': sorted(set(codes) - panel)}
-    with open(ANCHOR, 'w', encoding='utf-8') as f:
+    with open(ANCHOR, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)
     print(json.dumps({k: doc[k] for k in ('as_of', 'panel_not_in_index', 'index_not_in_panel')}), flush=True)
 
@@ -546,11 +546,11 @@ def cmd_parse() -> None:
     if problems:
         sys.exit('parse durdu:\n  ' + '\n  '.join(problems))
     with open(CHANGES, 'w', encoding='utf-8', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator='\n')
         w.writeheader()
         w.writerows(rows)
     with open(NAME_MAP, 'w', encoding='utf-8', newline='') as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator='\n')
         w.writerow(['name', 'code', 'name_quarters', 'nearest_evidence_id', 'nearest_evidence_date',
                     'year_gap', 'evidence_unvan', 'n_evidence', 'evidence_ids', 'evidence_url', 'rule'])
         for n in sorted(names):
@@ -563,7 +563,7 @@ def cmd_parse() -> None:
                         'normalize(unvan) == normalize(ad), tek kod'])
     with open(FOOTNOTES, 'w', encoding='utf-8', newline='') as f:
         cols = ['quarter', 'column', 'item', 'marker', 'footnote', 'source_id', 'source_url', 'source_sha256']
-        w = csv.DictWriter(f, fieldnames=cols)
+        w = csv.DictWriter(f, fieldnames=cols, lineterminator='\n')
         w.writeheader()
         w.writerows(notes)
     print(f'{len(qa)} ceyrek, {sum(r["action"] != "none" for r in rows)} degisiklik, '
@@ -688,7 +688,7 @@ def cmd_chain(provisional: bool = False) -> None:
     unk = unknown_intervals(changes, events, viol, segs, anchor['as_of'])
     cc = count_checked_from(viol, segs)
     with open(MEMBERSHIP, 'w', encoding='utf-8', newline='') as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator='\n')
         w.writerow(['start', 'end', 'symbol', 'n_members', 'consistent', 'count_checked', 'start_event',
                     'source_url', 'source_sha256'])
         for s, e, k, evs in sorted(segs, key=lambda x: x[0]):
@@ -709,7 +709,7 @@ def cmd_chain(provisional: bool = False) -> None:
             'note': ('GECICI: donem ici olaylar (bist30_events.csv) eklenmedi. KATI modda bilinmeyen '
                      'araliklar None doner; count_checked SEZGISELDIR (yalniz sayi denetimi), dogruluk '
                      'kaniti degildir.') if bad else ''}
-    with open(MEMBERSHIP_META, 'w', encoding='utf-8') as f:
+    with open(MEMBERSHIP_META, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(meta, f, ensure_ascii=False, indent=1)
     print(f"{meta['status']}: {len(segs)} segment, kati {len(strict_starts)} segment, sezgisel "
           f"{cc}..{anchor['as_of']}, {len(bad)} ihlal, {len(unk)} bilinmeyen aralik", flush=True)
@@ -790,7 +790,7 @@ def cmd_exposure() -> None:
         'measured_at': str(date.today()),
     }
     os.makedirs(os.path.dirname(EXPOSURE), exist_ok=True)
-    with open(EXPOSURE, 'w', encoding='utf-8') as f:
+    with open(EXPOSURE, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)
     print(json.dumps({k: doc[k] for k in ('strict_sessions_covered', 'covered_range', 'mean_panel_in_index',
                                           'share_panel_in_index', 'share_upper_if_unknown_panel_members',

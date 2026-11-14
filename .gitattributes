@@ -1,0 +1,5 @@
+# Uretilen ve bayt bayt yeniden uretimle denetlenen veri dosyalari: satir sonu donusumu YOK
+# (core.autocrlf=true checkout CRLF yazar, test LF uretir -> temiz klonda ilk kosu kalir).
+data/universe/*.csv -text
+data/universe/*.json -text
+docs/development/measurements/**/*.json -text
