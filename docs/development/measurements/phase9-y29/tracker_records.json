@@ -1,7 +1,10 @@
 {
  "command": "python scripts/analysis/measure_y29_tracker_records.py --out docs/development/measurements/phase9-y29/tracker_records.json",
- "git": "1c171dd",
+ "git": "1a7d81a",
  "n_files": 1,
+ "file_stems": [
+  "GOLD_GRAM_TRY__borsapy"
+ ],
  "n_workspaces_with_records": 1,
  "records_by_horizon_reason": {
   "daily/pre_y28_no_feature_date": 1
