@@ -359,7 +359,7 @@ def parse_tables(html: str) -> dict:
             if colmap is None or current is None:
                 continue
             res = out.setdefault(current, {**{k: [] for k in COLS}, 'kind': 'code' if is_code else 'name',
-                                           'names': {}})
+                                           'names': {}, 'marked': []})
             for k in COLS:
                 cells = [c for j, c in roots if colmap.get(j) == k]
                 if is_code:
@@ -368,10 +368,29 @@ def parse_tables(html: str) -> dict:
                         res[k].append(vals[0])
                         if len(vals) > 1:
                             res['names'][vals[0]] = ' '.join(vals[1:])
+                        mk = MARK.findall(' '.join(vals))
+                        if mk:
+                            res['marked'].append((k, vals[0], mk[0]))
                 else:
-                    res[k] += [_clean(i) for c in cells for i in c['items'] if not re.fullmatch(r'-+', i)
-                               and _clean(i)]
+                    for i in (_clean(i) for c in cells for i in c['items'] if not re.fullmatch(r'-+', i)):
+                        if i:
+                            res[k].append(i)
+                            if MARK.search(i):
+                                res['marked'].append((k, i, MARK.findall(i)[0]))
     return out
+
+
+MARK = re.compile(r'\(\*+\)')
+
+
+def footnotes(html: str) -> list:
+    """Duyuru govdesindeki dipnot TANIMLARI: tablo disi metinde '(*)' ile baslayan parcalar
+    (ör. #11503: '(*) 21/06/2017 tarihinden itibaren endekslerden cikarilacaktir'). Isaretli ogeler
+    `parse_tables(...)['marked']`'ta; dipnot donem ici bir olay olabilir -> `bist30_footnotes.csv` (aday)."""
+    a = html.find('id="printableArea"')
+    p = _Tables()
+    p.feed(html[a:] if a >= 0 else html)
+    return [t for kind, t in p.events if kind == 'text' and MARK.match(t)]
 
 
 KAP_INDEX_URL = 'https://kap.org.tr/tr/Endeksler?indice=QklTVCAzMA'
@@ -405,6 +424,7 @@ def cmd_anchor() -> None:
 UNI = os.path.join(ROOT, 'data', 'universe')
 CHANGES = os.path.join(UNI, 'bist30_changes.csv')
 NAME_MAP = os.path.join(UNI, 'bist_name_map.csv')
+FOOTNOTES = os.path.join(UNI, 'bist30_footnotes.csv')   # isaretli BIST 30 ogeleri + dipnot metni (olay ADAYI)
 EVENTS = os.path.join(UNI, 'bist30_events.csv')          # donem ici + kod degisikligi (elle, alintili)
 MEMBERSHIP = os.path.join(UNI, 'bist30_membership.csv')
 INDEX_NAME = 'BIST 30'
@@ -463,31 +483,36 @@ def quarter_announcements(fetched: dict) -> dict:
 def build_name_map(fetched: dict) -> dict:
     """Eski bicim ad -> kod, MEKANIK: ayni kaynagin yeni bicim tablolarindaki (tum endeksler)
     kod-unvan ciftlerinde normalize unvan BIREBIR esit olmali ve tek koda gitmeli (onek eslesmesi YOK;
-    ör. 'VESTEL' -> VESTL, VESBE degil). Donus: norm(unvan) -> {kod: (ilk kanit kimligi, unvan)}."""
+    ör. 'VESTEL' -> VESTL, VESBE degil). Isaret ('(*)') normalizasyonda duser ama `marked`'ta kalir.
+    Donus: norm(unvan) -> {kod: [(kanit kimligi, unvan, ilan tarihi), ...]} (TUM kanitlar)."""
     pairs = {}
     for did in sorted(fetched, key=int):
-        for r in parse_tables(_read(did)).values():
+        html = _read(did)
+        ann = _ann_date(html)
+        for r in parse_tables(html).values():
             if r['kind'] == 'code':
                 for c, u in r['names'].items():
-                    pairs.setdefault(_norm_name(u), {}).setdefault(c, (did, u))
+                    pairs.setdefault(_norm_name(u), {}).setdefault(c, []).append((did, u, ann))
     return pairs
 
 
-def _row(q, per, ann, action, raw, code, kind, did, fetched, twins):
+def _row(q, per, ann, action, raw, code, kind, did, fetched, twins, marked=''):
     return {'quarter': q, 'period_start': per[0], 'period_end': per[1], 'announced': ann,
-            'action': action, 'raw': raw, 'code': code, 'format': kind, 'source_id': did,
+            'action': action, 'raw': raw, 'code': code, 'format': kind, 'marked': marked, 'source_id': did,
             'source_url': fetched[did]['url'], 'source_sha256': fetched[did]['sha256'],
             'accessed': fetched[did]['at'], 'twins': twins}
 
 
 def cmd_parse() -> None:
-    """Ceyreklik BIST 30 degisiklikleri -> `bist30_changes.csv`; eski bicim adlari -> `bist_name_map.csv`.
+    """Ceyreklik BIST 30 degisiklikleri -> `bist30_changes.csv`; eski bicim adlari -> `bist_name_map.csv`;
+    isaretli ('(*)') BIST 30 ogeleri ve dipnot metinleri -> `bist30_footnotes.csv` (donem ici olay ADAYI;
+    hakem-2 E #2: #11503 DOHOL '21/06/2017 tarihinden itibaren endekslerden cikarilacaktir').
     Degisikliksiz ceyrek de bir satir ('none') olarak yazilir: ceyregin OKUNDUGUNUN kaydi."""
     import csv
     fetched = _load_fetched()
     qa = quarter_announcements(fetched)
     pairs = build_name_map(fetched)
-    rows, names, problems = [], {}, []
+    rows, names, notes, problems = [], {}, [], []
     for q in sorted(qa):
         anns = sorted(qa[q], key=lambda x: int(x[0]))
         sig = {(tuple(t['ALINACAK']), tuple(t['ÇIKARILACAK'])) for _, t, _, _ in anns}
@@ -495,6 +520,15 @@ def cmd_parse() -> None:
             problems.append(f'{q}: ikiz duyurular farkli ({[a[0] for a in anns]})')
         did, t, per, ann = anns[0]
         twins = ' '.join(a[0] for a in anns[1:])
+        marked = {(k, item): m for k, item, m in t['marked']}
+        fn = footnotes(_read(did))
+        for (k, item), m in sorted(marked.items()):
+            notes.append({'quarter': q, 'column': k, 'item': item, 'marker': m,
+                          'footnote': ' | '.join(x for x in fn if x.startswith(m)),
+                          'source_id': did, 'source_url': fetched[did]['url'],
+                          'source_sha256': fetched[did]['sha256']})
+        if marked and not fn:
+            problems.append(f'{q}: isaretli oge var ama dipnot metni bulunamadi {sorted(marked)}')
         for action, col in (('add', 'ALINACAK'), ('remove', 'ÇIKARILACAK')):
             for raw in t[col]:
                 code = raw
@@ -503,9 +537,10 @@ def cmd_parse() -> None:
                     if len(hit) != 1:
                         problems.append(f'{q}: ad eslenemedi {raw!r} -> {sorted(hit)}')
                         continue
-                    code, (ev, unvan) = next(iter(hit.items()))
-                    names[raw] = (code, ev, unvan)
-                rows.append(_row(q, per, ann, action, raw, code, t['kind'], did, fetched, twins))
+                    code, ev = next(iter(hit.items()))
+                    names.setdefault(raw, (code, ev, []))[2].append((q, ann))
+                rows.append(_row(q, per, ann, action, raw, code, t['kind'], did, fetched, twins,
+                                 marked.get((col, raw), '')))
         if not t['ALINACAK'] and not t['ÇIKARILACAK']:
             rows.append(_row(q, per, ann, 'none', '', '', t['kind'], did, fetched, twins))
     if problems:
@@ -516,12 +551,23 @@ def cmd_parse() -> None:
         w.writerows(rows)
     with open(NAME_MAP, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['name', 'code', 'evidence_id', 'evidence_unvan', 'evidence_url', 'rule'])
+        w.writerow(['name', 'code', 'name_quarters', 'nearest_evidence_id', 'nearest_evidence_date',
+                    'year_gap', 'evidence_unvan', 'n_evidence', 'evidence_ids', 'evidence_url', 'rule'])
         for n in sorted(names):
-            c, ev, u = names[n]
-            w.writerow([n, c, ev, u, fetched[ev]['url'], 'normalize(unvan) == normalize(ad), tek kod'])
+            c, ev, used = names[n]
+            first_use = min(d for _q, d in used)
+            near = min(ev, key=lambda x: abs(int(x[2][:4]) - int(first_use[:4])) * 1000 + int(x[0]) % 1000)
+            w.writerow([n, c, ' '.join(q for q, _d in used), near[0], near[2],
+                        abs(int(near[2][:4]) - int(first_use[:4])), near[1], len(ev),
+                        ' '.join(sorted({x[0] for x in ev}, key=int)), fetched[near[0]]['url'],
+                        'normalize(unvan) == normalize(ad), tek kod'])
+    with open(FOOTNOTES, 'w', encoding='utf-8', newline='') as f:
+        cols = ['quarter', 'column', 'item', 'marker', 'footnote', 'source_id', 'source_url', 'source_sha256']
+        w = csv.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        w.writerows(notes)
     print(f'{len(qa)} ceyrek, {sum(r["action"] != "none" for r in rows)} degisiklik, '
-          f'{len(names)} ad eslemesi', flush=True)
+          f'{len(names)} ad eslemesi, {len(notes)} isaretli BIST 30 ogesi (dipnot adayi)', flush=True)
     print('eksik ceyrek:', sorted({f'{y}Q{q}' for y in range(2013, 2027) for q in range(1, 5)
                                   if (2013, 3) <= (y, q) <= (2026, 4)} - set(qa)), flush=True)
 
@@ -539,7 +585,7 @@ def load_events() -> list:
 def chain(anchor: dict, changes: list, events: list):
     """Capadan GERIYE zincir. Olay tarihi = yururluk ilk gunu. Geriye gidiste her olay icin:
     alinan sonraki kumede uye olmali, cikan olmamali; rename'de yeni kod uye, eski kod degil.
-    Donus: (segmentler [(bas, son_haric|None, kume, olaylar)], ihlaller)."""
+    Donus: (segmentler [(bas, son_haric|None, kume, olaylar)], ihlal metinleri, yapili olay ihlalleri)."""
     ev = [{'date': r['period_start'], 'action': r['action'], 'code': r['code'], 'new_code': '',
            'src': r['source_url'], 'sha': r['source_sha256'], 'kind': 'quarterly'}
           for r in changes if r['action'] in ('add', 'remove')]
@@ -550,7 +596,7 @@ def chain(anchor: dict, changes: list, events: list):
         by_date.setdefault(e['date'], []).append(e)
     first = min(r['period_start'] for r in changes)
     by_date.setdefault(first, [])
-    cur, end, segs, bad = set(anchor['codes']), None, [], []
+    cur, end, segs, bad, viol = set(anchor['codes']), None, [], [], []
     for d in sorted(by_date, reverse=True):
         if d > anchor['as_of'] or d < first:
             continue
@@ -562,71 +608,110 @@ def chain(anchor: dict, changes: list, events: list):
             if e['action'] == 'add':
                 if c not in cur:
                     bad.append(f'{d} alinan {c} sonraki kumede uye degil')
+                    viol.append({'date': d, 'code': c, 'msg': bad[-1]})
                 cur.discard(c)
             elif e['action'] == 'remove':
                 if c in cur:
                     bad.append(f'{d} cikan {c} sonraki kumede hala uye')
+                    viol.append({'date': d, 'code': c, 'msg': bad[-1]})
                 cur.add(c)
             elif e['action'] == 'rename':
                 if e['new_code'] not in cur or c in cur:
                     bad.append(f'{d} kod degisikligi {c}->{e["new_code"]} tutarsiz')
+                    viol.append({'date': d, 'code': e['new_code'], 'msg': bad[-1]})
                 cur.discard(e['new_code'])
                 cur.add(c)
         end = d
-    return segs, bad
+    return segs, bad, viol
 
 
 MEMBERSHIP_META = os.path.join(UNI, 'bist30_membership_meta.json')
 
 
-def consistent_from(bad: list, starts: list):
-    """Ihlal mesajlari tarihle baslar. Tarih d'deki bir olay ihlali, payin d ile bir sonraki olay
-    arasinda (segmentin ICINDE) donem ici degistigini gosterir: d'de baslayan segment ve oncekiler
-    bozuk. Tutarli kisim, en gec ihlalden SONRAKI ilk segment basidir. Ihlal yoksa None."""
-    ev_dates = [b[:10] for b in bad if '..' not in b[:12]]
-    size_dates = [b[:10] for b in bad if '..' in b[:12]]
-    if not ev_dates and not size_dates:
-        return None
-    last = max(ev_dates + size_dates)
-    later = sorted(x for x in starts if x > last)
-    return later[0] if later else 'never'
+def unknown_intervals(changes: list, events: list, viol: list, segs: list) -> list:
+    """hakem-2 E #1. Bir olay ihlali (d, c) yalniz sunu soyler: c'nin uyeligi d ile c'nin BIR SONRAKI
+    kayitli olayi (yoksa capa) arasinda kayitsiz degisti — aralik birden cok segmente yayilabilir
+    (DOHOL: 2017-01-02 alinir, 21/06/2017 cikar, 2017-07-03 yeniden alinir). Bilinmeyen aralik
+    [d, c'nin sonraki kaydi) -> {'code', 'start', 'end' (None = capaya kadar), 'reason'}.
+    Uye sayisi 30 olmayan segment de butunuyle bilinmeyen ('*')."""
+    rec = {}
+    for r in changes:
+        if r['action'] in ('add', 'remove'):
+            rec.setdefault(r['code'], set()).add(r['period_start'])
+    for r in events:
+        for c in (r['code'], r.get('new_code', '')):
+            if c:
+                rec.setdefault(c, set()).add(r['date'])
+    out = []
+    for v in viol:
+        later = sorted(x for x in rec.get(v['code'], ()) if x > v['date'])
+        out.append({'code': v['code'], 'start': v['date'], 'end': later[0] if later else None,
+                    'reason': v['msg']})
+    for s, e, k, _ in segs:
+        if len(k) != 30:
+            out.append({'code': '*', 'start': s, 'end': e, 'reason': f'{len(k)} uye'})
+    return sorted(out, key=lambda x: (x['start'], x['code']))
+
+
+def _overlaps(a, b, s, e) -> bool:
+    """[a, b) ile [s, e) kesisiyor mu (None = sonsuz)."""
+    return (e is None or a < e) and (b is None or s < b)
+
+
+def count_checked_from(viol: list, segs: list):
+    """SEZGISEL kesim (eski 'consistent_from'; hakem-2 E #1: ONCULU YANLIS): en gec olay ihlalinden
+    sonraki ilk segment basi ve sonrasinda uye sayisi 30. Yalniz 'cayreklik-yalniz, sayi denetiminden
+    gecen' anlaminda; dogruluk ya da tutarlilik iddiasi tasimaz."""
+    if not viol and all(len(k) == 30 for _s, _e, k, _ in segs):
+        return min(x[0] for x in segs)
+    last = max([v['date'] for v in viol] + [s for s, _e, k, _ in segs if len(k) != 30])
+    later = sorted(x[0] for x in segs if x[0] > last)
+    return later[0] if later else None
 
 
 def cmd_chain(provisional: bool = False) -> None:
     """Uyelik: ihlal yoksa KESIN (status final). Ihlal varsa varsayilan olarak yazmaz; `--provisional`
-    ile GECICI yazar: her satirda `consistent` bayragi (segment, en gec olay ihlalinin yururlugunden
-    once basliyorsa ya da 30 uye degilse 0) ve ihlaller `bist30_membership_meta.json`'da. Tutarli
-    segment DOGRU demek degil: donem ici takas uye sayisini bozmaz (plan §9.21)."""
+    ile GECICI yazar. Satir basina iki bayrak:
+      - `consistent` (KATI): segment 30 uye ve hicbir bilinmeyen araliga (`unknown_intervals`) degmiyor.
+      - `count_checked` (SEZGISEL): `count_checked_from` ve sonrasi; yalniz sayi denetiminden gecen.
+    Bilinmeyen araliklar meta'da (`bist30_membership_meta.json`); `universe_mask` bunlari GUN duzeyinde uygular."""
     import csv
     with open(ANCHOR, encoding='utf-8') as f:
         anchor = json.load(f)
     with open(CHANGES, encoding='utf-8', newline='') as f:
         changes = list(csv.DictReader(f))
     events = load_events()
-    segs, bad = chain(anchor, changes, events)
+    segs, bad, viol = chain(anchor, changes, events)
     if bad and not provisional:
         sys.exit('zincir tutarsiz (membership YAZILMADI; gecici icin --provisional):\n  ' + '\n  '.join(bad))
-    cut = consistent_from(bad, [x[0] for x in segs])
+    unk = unknown_intervals(changes, events, viol, segs)
+    cc = count_checked_from(viol, segs)
     with open(MEMBERSHIP, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['start', 'end', 'symbol', 'n_members', 'consistent', 'start_event', 'source_url', 'source_sha256'])
+        w.writerow(['start', 'end', 'symbol', 'n_members', 'consistent', 'count_checked', 'start_event',
+                    'source_url', 'source_sha256'])
         for s, e, k, evs in sorted(segs, key=lambda x: x[0]):
-            ok = int(len(k) == 30 and (cut is None or s >= cut))
+            strict = int(len(k) == 30 and not any(_overlaps(u['start'], u['end'], s, e) for u in unk))
+            heur = int(cc is not None and s >= cc and len(k) == 30)
             for c in sorted(k):
-                w.writerow([s, e or '', c, len(k), ok, '+'.join(sorted({x['kind'] for x in evs})),
+                w.writerow([s, e or '', c, len(k), strict, heur, '+'.join(sorted({x['kind'] for x in evs})),
                             ' '.join(sorted({x['src'] for x in evs})), ' '.join(sorted({x['sha'] for x in evs}))])
     sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    strict_starts = [s for s, e, k, _ in segs
+                     if len(k) == 30 and not any(_overlaps(u['start'], u['end'], s, e) for u in unk)]
     meta = {'status': 'provisional' if bad else 'final', 'anchor_as_of': anchor['as_of'],
-            'first_start': min(x[0] for x in segs), 'consistent_from': cut or min(x[0] for x in segs),
-            'n_segments': len(segs), 'n_quarterly_changes': sum(r['action'] in ('add', 'remove') for r in changes),
-            'n_events': len(events), 'violations': bad,
+            'first_start': min(x[0] for x in segs), 'n_segments': len(segs),
+            'n_strict_segments': len(strict_starts), 'count_checked_from': cc,
+            'n_quarterly_changes': sum(r['action'] in ('add', 'remove') for r in changes),
+            'n_events': len(events), 'violations': bad, 'unknown_intervals': unk,
             'inputs_sha256': {os.path.basename(p): sha(p) for p in (ANCHOR, CHANGES, EVENTS) if os.path.exists(p)},
-            'note': ('GECICI: donem ici olaylar (bist30_events.csv) eklenmedi; consistent=0 segmentler '
-                     'universe_mask tarafindan None dondurulur. Tutarli segment dogruluk kaniti degil.') if bad else ''}
+            'note': ('GECICI: donem ici olaylar (bist30_events.csv) eklenmedi. KATI modda bilinmeyen '
+                     'araliklar None doner; count_checked SEZGISELDIR (yalniz sayi denetimi), dogruluk '
+                     'kaniti degildir.') if bad else ''}
     with open(MEMBERSHIP_META, 'w', encoding='utf-8') as f:
         json.dump(meta, f, ensure_ascii=False, indent=1)
-    print(f"{meta['status']}: {len(segs)} segment, tutarli {meta['consistent_from']}..{anchor['as_of']}, "
-          f"{len(bad)} ihlal", flush=True)
+    print(f"{meta['status']}: {len(segs)} segment, kati {len(strict_starts)} segment, sezgisel "
+          f"{cc}..{anchor['as_of']}, {len(bad)} ihlal, {len(unk)} bilinmeyen aralik", flush=True)
 
 
 EXPOSURE = os.path.join(ROOT, 'docs', 'development', 'measurements', 'phase9-e1', 'exposure.json')
@@ -634,51 +719,82 @@ EXPOSURE = os.path.join(ROOT, 'docs', 'development', 'measurements', 'phase9-e1'
 
 def cmd_exposure() -> None:
     """Hayatta kalma maruziyeti: panelin 30 hissesinin seans basina BIST 30'da olma orani.
-    Seanslar RL panelinin kendi islem gunleri (yoksa durur). Kapsam disi gunler (ilk segmentten once)
-    ayrica sayilir, orana girmez."""
+    Seanslar RL panelinin kendi islem gunleri (yoksa durur).
+
+    - KATI kapsam (`universe_mask(mode='strict')`): bilinmeyen araliklar disindaki seans sayisi.
+    - SEZGISEL oran (`mode='count_checked'`): yalniz sayi denetiminden gecen segmentler; GECICI zincirde
+      tek olculebilen oran budur ve dogruluk iddiasi tasimaz (hakem-2 E #1, #3).
+    - Duyarlilik: bilinmeyen araliga dusen PANEL hisselerinin (ör. SKBNK) o seanslarda uye oldugu
+      varsayimiyla ust sinir. Kayitsiz takaslarin (tespit edilmemis) etkisi sinirlanamaz.
+    - Mekanik denetim: panel hissesi, paneldeki ilk islem gununden once uye gorunuyor mu (ham zincir).
+    """
     import pandas as pd
     from data.bist30_symbols import BIST30_SYMBOLS, UNIVERSE, load_membership, panel_membership
     panel = os.path.join(ROOT, UNIVERSE['panel']['file'])
     if not os.path.exists(panel):
         sys.exit(f'panel yok: {panel}')
-    days = pd.DatetimeIndex(sorted(pd.to_datetime(pd.read_csv(panel, usecols=['date'])['date']).unique()))
-    m = panel_membership(days)
+    px = pd.read_csv(panel, usecols=['symbol', 'date'])
+    px['date'] = pd.to_datetime(px['date'])
+    days = pd.DatetimeIndex(sorted(px['date'].unique()))
+    meta = json.load(open(MEMBERSHIP_META, encoding='utf-8'))
+    strict = panel_membership(days, mode='strict').dropna(how='all')
+    m = panel_membership(days, mode='count_checked')
     covered = m.dropna(how='all').astype(bool)
     per_day = covered.sum(axis=1)
+    n = len(covered)
+    # duyarlilik: bilinmeyen araliktaki panel hisseleri
+    unk_panel = {}
+    for u in meta['unknown_intervals']:
+        sym = f"{u['code']}.IS"
+        if sym in BIST30_SYMBOLS:
+            sel = covered.index[(covered.index >= u['start'])
+                                & ((covered.index < u['end']) if u['end'] else True)]
+            unk_panel[sym] = unk_panel.get(sym, 0) + int((~covered.loc[sel, sym]).sum())
+    upper = (float(per_day.sum()) + sum(unk_panel.values())) / (30 * n) if n else None
+    # ilk islem gunu denetimi (ham zincir, yalniz panel hisseleri)
+    first = px.groupby('symbol')['date'].min()
+    raw = panel_membership(days, mode='raw').dropna(how='all').astype(bool)
+    listing = {s: str(raw.index[raw[s] & (raw.index < first[s])][0].date())
+               for s in BIST30_SYMBOLS if (raw[s] & (raw.index < first[s])).any()}
     segs = load_membership()
-    seg_rows = []
-    for s, e, k, ok in segs:
-        panel_codes = {x.split('.')[0] for x in BIST30_SYMBOLS}
-        seg_rows.append({'start': s, 'end': e, 'consistent': ok, 'n_members': len(k),
-                         'n_panel_in_index': len(panel_codes & k),
-                         'panel_not_in_index': sorted(panel_codes - k), 'index_not_in_panel': sorted(k - panel_codes)})
+    panel_codes = {x.split('.')[0] for x in BIST30_SYMBOLS}
+    seg_rows = [{'start': s, 'end': e, 'consistent': ok, 'count_checked': cc, 'n_members': len(k),
+                 'n_panel_in_index': len(panel_codes & k), 'panel_not_in_index': sorted(panel_codes - k),
+                 'index_not_in_panel': sorted(k - panel_codes)} for s, e, k, ok, cc in segs]
     by_year = {str(y): round(float(g.mean() / 30), 4) for y, g in per_day.groupby(per_day.index.year)}
     doc = {
         'what': 'Panelin 30 hissesinin seans basina BIST 30 uyeligi (hayatta kalma maruziyeti), plan §9.21 E1',
         'membership_file': os.path.relpath(MEMBERSHIP, ROOT).replace('\\', '/'),
         'membership_sha256': hashlib.sha256(open(MEMBERSHIP, 'rb').read()).hexdigest(),
+        'membership_status': meta['status'],
         'panel_file': UNIVERSE['panel']['file'], 'panel_sha256': UNIVERSE['panel']['sha256'],
-        'sessions_total': int(len(days)), 'sessions_covered': int(len(covered)),
-        'membership_status': json.load(open(MEMBERSHIP_META, encoding='utf-8'))['status'],
-        'covered_from': next(x[0] for x in segs if x[3]),
-        'note': ('Oranlar yalniz tutarli segmentlerde (universe_mask None olmayan seanslar). Tutarli '
-                 'segment dogruluk kaniti degil; donem ici olaylar eklenince yeniden olculur.'),
-        'covered_range': [str(covered.index[0].date()), str(covered.index[-1].date())],
+        'sessions_total': int(len(days)),
+        'strict_sessions_covered': int(len(strict)),
+        'measure': 'count_checked (SEZGISEL: yalniz ceyreklik duyurular, sayi denetiminden gecen segmentler)',
+        'note': ('GECICI. Oranlar count_checked modunda; donem ici olaylar (hizli giris, cikarma) dahil '
+                 'degil, kayitsiz takaslar olculunce degisebilir. Hisse basina nitel iddia icin kullanilmaz.'),
+        'count_checked_from': meta['count_checked_from'],
+        'sessions_covered': int(n),
+        'covered_range': [str(covered.index[0].date()), str(covered.index[-1].date())] if n else None,
         'mean_panel_in_index': round(float(per_day.mean()), 3),
         'share_panel_in_index': round(float(per_day.mean() / 30), 4),
+        'share_upper_if_unknown_panel_members': round(upper, 4) if upper is not None else None,
+        'unknown_panel_sessions': unk_panel,
         'min_panel_in_index': {'n': int(per_day.min()), 'first_date': str(per_day.idxmin().date())},
         'max_panel_in_index': {'n': int(per_day.max()), 'first_date': str(per_day.idxmax().date())},
         'share_by_year': by_year,
         'symbol_share_in_index': {s: round(float(covered[s].mean()), 4) for s in BIST30_SYMBOLS},
-        'symbols_always_in_index': [s for s in BIST30_SYMBOLS if bool(covered[s].all())],
+        'panel_member_before_first_trade': listing,
         'segments': seg_rows,
         'measured_at': str(date.today()),
     }
     os.makedirs(os.path.dirname(EXPOSURE), exist_ok=True)
     with open(EXPOSURE, 'w', encoding='utf-8') as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)
-    print(json.dumps({k: doc[k] for k in ('covered_range', 'mean_panel_in_index', 'share_panel_in_index',
-                                          'min_panel_in_index', 'symbols_always_in_index')}, ensure_ascii=False))
+    print(json.dumps({k: doc[k] for k in ('strict_sessions_covered', 'covered_range', 'mean_panel_in_index',
+                                          'share_panel_in_index', 'share_upper_if_unknown_panel_members',
+                                          'unknown_panel_sessions', 'min_panel_in_index',
+                                          'panel_member_before_first_trade')}, ensure_ascii=False))
 
 
 def main():

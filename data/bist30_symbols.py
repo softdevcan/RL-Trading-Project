@@ -38,56 +38,75 @@ def load_sector_groups() -> dict:
 
 
 MEMBERSHIP_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'bist30_membership.csv')
+MEMBERSHIP_META_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'bist30_membership_meta.json')
 _MEMBERSHIP = None
+_UNKNOWN = None
+MASK_MODES = ('strict', 'count_checked', 'raw')
 
 
 def load_membership() -> list:
-    """E1 (K3): tarihsel BIST 30 uyeligi, [(bas, son_haric | None, frozenset(kod), tutarli)] tarih sirasiyla.
+    """E1 (K3): BIST 30 uyelik zinciri, [(bas, son_haric | None, frozenset(kod), kati, sezgisel)] tarih sirasiyla.
 
-    Kaynak `data/universe/bist30_membership.csv` (`scripts/build_membership.py chain`): bugunku
-    capadan (KAP XU030) geriye, Borsa Istanbul ceyreklik + donem ici duyurulariyla; her segment 30 uye.
-    Kodlar O TARIHTEKI islem kodlaridir. `tutarli` False: zincir ihlalinin gerisinde kalan segment
-    (dosya GECICI iken; `bist30_membership_meta.json` -> status/violations).
+    Kaynak `data/universe/bist30_membership.csv` (`scripts/build_membership.py chain`): bugunku capadan
+    (KAP XU030) geriye Borsa Istanbul ceyreklik duyurulariyla (+ varsa `bist30_events.csv`). Durum
+    `bist30_membership_meta.json` -> `status`. **GECICI** iken (donem ici olaylar yok): segmentler 30'dan
+    farkli uye tasiyabilir, kodlar o donemin kodu olmayabilir (ör. TRALT), `kati` cogunlukla False.
+    Yalniz `final` durumda "her segment 30 uye, kodlar o tarihteki islem kodu" denir.
     """
-    global _MEMBERSHIP
+    global _MEMBERSHIP, _UNKNOWN
     if _MEMBERSHIP is None:
         import csv
-        segs, ok = {}, {}
+        segs, flags = {}, {}
         with open(MEMBERSHIP_FILE, encoding='utf-8', newline='') as f:
             for r in csv.DictReader(f):
                 key = (r['start'], r['end'] or None)
                 segs.setdefault(key, set()).add(r['symbol'])
-                ok[key] = r.get('consistent', '1') == '1'
-        _MEMBERSHIP = [(s, e, frozenset(k), ok[(s, e)]) for (s, e), k in sorted(segs.items())]
+                flags[key] = (r.get('consistent', '1') == '1', r.get('count_checked', '1') == '1')
+        _MEMBERSHIP = [(s, e, frozenset(k), *flags[(s, e)]) for (s, e), k in sorted(segs.items())]
+        _UNKNOWN = []
+        if _os.path.exists(MEMBERSHIP_META_FILE):
+            with open(MEMBERSHIP_META_FILE, encoding='utf-8') as f:
+                _UNKNOWN = _json.load(f).get('unknown_intervals', [])
     return _MEMBERSHIP
 
 
-def universe_mask(date, include_inconsistent: bool = False) -> frozenset | None:
-    """`date` gunu BIST 30'daki kodlar (yururluk ilk gunu dahil, segment sonu haric).
+def universe_mask(date, mode: str = 'strict') -> frozenset | None:
+    """`date` gunu BIST 30'daki kodlar (yururluk ilk gunu dahil, segment sonu haric); bilinmiyorsa None.
 
-    Kapsam disi (ilk segmentten once) ve tutarsiz segment (varsayilan) -> None: uyelik BILINMIYOR
-    demektir, bos kume degil. Tutarli segment de dogruluk kaniti degildir (donem ici takas uye
-    sayisini bozmaz; plan §9.21).
-    Maske yalniz sembol CIKARABILIR; panelde olmayan eski uyeleri ekleyemez (hayatta kalma
-    yanliligi beyani her durumda kalir, plan §9.21). Ortama uygulanmaz (durum uzayi sabit).
+    mode:
+      - 'strict' (varsayilan): segment 30 uye degilse ya da gun bir bilinmeyen araliga dusuyorsa
+        (meta `unknown_intervals`, GUN duzeyinde; hakem-2 E #1) None.
+      - 'count_checked': SEZGISEL — yalniz sayi denetiminden gecen segmentler; dogruluk iddiasi tasimaz.
+      - 'raw': zincirin ham kumesi (tani icin).
+    Kapsam disi (ilk segmentten once) her modda None: BILINMIYOR, bos kume degil. Maske yalniz sembol
+    CIKARABILIR; panelde olmayan eski uyeleri ekleyemez (hayatta kalma yanliligi beyani her durumda
+    kalir, plan §9.21). Ortama uygulanmaz (durum uzayi sabit).
     """
     import pandas as pd
+    if mode not in MASK_MODES:
+        raise ValueError(f'mode {mode!r} not in {MASK_MODES}')
     d = pd.Timestamp(date).strftime('%Y-%m-%d')
-    for s, e, k, ok in load_membership():
+    for s, e, k, strict, heur in load_membership():
         if s <= d and (e is None or d < e):
-            return k if (ok or include_inconsistent) else None
+            if mode == 'raw':
+                return k
+            if mode == 'count_checked':
+                return k if heur else None
+            if len(k) != 30 or any(u['start'] <= d and (u['end'] is None or d < u['end']) for u in _UNKNOWN):
+                return None
+            return k
     return None
 
 
-def panel_membership(dates, symbols=None):
-    """Panel sembolleri (varsayilan evren dosyasi) x tarih -> True/False; kapsam disi tarih NaN."""
+def panel_membership(dates, symbols=None, mode: str = 'strict'):
+    """Panel sembolleri (varsayilan evren dosyasi) x tarih -> True/False; bilinmeyen tarih NaN."""
     import numpy as np
     import pandas as pd
     symbols = list(symbols or BIST30_SYMBOLS)
     idx = pd.DatetimeIndex(dates)
     out = pd.DataFrame(np.nan, index=idx, columns=symbols, dtype=object)
     for t in idx:
-        k = universe_mask(t)
+        k = universe_mask(t, mode=mode)
         if k is not None:
             out.loc[t] = [s.split('.')[0] in k for s in symbols]
     return out

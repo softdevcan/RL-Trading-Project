@@ -29,9 +29,11 @@ borsapy/yf     → gold_fetcher.py       ─┘
   evrende <2 uyeli olanlar DIGER (8 grup). Ham KAP/Borsa sayfalari `data/universe/sources/` (gitignore).
 - Tarihsel uyelik (E1, suruyor): `scripts/build_membership.py` (index/nodes/fetch/parse/chain/exposure). `/node/<id>`
   301 ile kanonik slug'a yonlenir (slug tahmini gereksiz); 54/54 ceyrek -> `bist30_changes.csv`, eski bicim ad->kod
-  `bist_name_map.csv` (birebir unvan esitligi, onek YOK). `chain` ihlalde uyelik YAZMAZ (`--provisional`: GECICI,
-  satir basina `consistent`; meta `bist30_membership_meta.json`). `universe_mask(date)` tutarsiz segmentte None.
-  Tutarlilik dogruluk degil (donem ici takas sayiyi bozmaz). Donem ici olay listesi (`bist30_events.csv`) E1'in SON adimi. Donem ici olaylar sitede yok/bos govde -> KAP (plan §9.21). Capa
+  `bist_name_map.csv` (birebir unvan esitligi, onek YOK). `chain` ihlalde uyelik YAZMAZ (`--provisional`: GECICI;
+  meta `bist30_membership_meta.json` -> `unknown_intervals`: ihlal basina [d, payin SONRAKI kaydi), segment degil). `universe_mask(date, mode=)`:
+  'strict' (varsayilan; bilinmeyen gun None — su an hep None), 'count_checked' (SEZGISEL, yalniz sayi denetimi), 'raw'.
+  Tutarlilik dogruluk degil (donem ici takas sayiyi bozmaz). Duyurudaki `(*)` dipnotu = donem ici olay ADAYI
+  (`bist30_footnotes.csv`; #11503 DOHOL 21/06/2017) — `_norm_name` isareti dusurur, `marked` sutunu tutar. Donem ici olay listesi (`bist30_events.csv`) E1'in SON adimi. Donem ici olaylar sitede yok/bos govde -> KAP (plan §9.21). Capa
   `data/universe/bist30_anchor.json` = BUGUNKU BIST 30 (KAP XU030); panelin 6 hissesi bugun endekste degil.
   **Arama/WebFetch tablo ozetini kanit sayma** (HALKB 'alinan' okundu, ham tabloda yedek); yalniz ham tablodan.
   Borsa Istanbul duyuru URL'sinde slug zorunlu (yanlis slug 404); TR liste sayfasi statik, sayfalama JS.

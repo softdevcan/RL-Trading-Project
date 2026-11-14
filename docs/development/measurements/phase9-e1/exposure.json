@@ -1,20 +1,26 @@
 {
  "what": "Panelin 30 hissesinin seans basina BIST 30 uyeligi (hayatta kalma maruziyeti), plan §9.21 E1",
  "membership_file": "data/universe/bist30_membership.csv",
- "membership_sha256": "0daf3d0b7887c61af2cfc8213c0b97b2f4797ef50a6f9cf0038fd4bd5113e658",
+ "membership_sha256": "86f42613e66817880900ac1998e39212894d45c74ebd7dc8c27af013df31b28f",
+ "membership_status": "provisional",
  "panel_file": "data/bist/stock_data_with_indicators.csv",
  "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
  "sessions_total": 5598,
+ "strict_sessions_covered": 0,
+ "measure": "count_checked (SEZGISEL: yalniz ceyreklik duyurular, sayi denetiminden gecen segmentler)",
+ "note": "GECICI. Oranlar count_checked modunda; donem ici olaylar (hizli giris, cikarma) dahil degil, kayitsiz takaslar olculunce degisebilir. Hisse basina nitel iddia icin kullanilmaz.",
+ "count_checked_from": "2018-04-02",
  "sessions_covered": 2172,
- "membership_status": "provisional",
- "covered_from": "2018-04-02",
- "note": "Oranlar yalniz tutarli segmentlerde (universe_mask None olmayan seanslar). Tutarli segment dogruluk kaniti degil; donem ici olaylar eklenince yeniden olculur.",
  "covered_range": [
   "2018-04-02",
   "2026-11-09"
  ],
  "mean_panel_in_index": 23.536,
  "share_panel_in_index": 0.7845,
+ "share_upper_if_unknown_panel_members": 0.8179,
+ "unknown_panel_sessions": {
+  "SKBNK.IS": 2172
+ },
  "min_panel_in_index": {
   "n": 21,
   "first_date": "2024-07-01"
@@ -66,30 +72,13 @@
   "VAKBN.IS": 0.5101,
   "YKBNK.IS": 1.0
  },
- "symbols_always_in_index": [
-  "AKBNK.IS",
-  "ASELS.IS",
-  "BIMAS.IS",
-  "EKGYO.IS",
-  "EREGL.IS",
-  "GARAN.IS",
-  "ISCTR.IS",
-  "KCHOL.IS",
-  "KRDMD.IS",
-  "PETKM.IS",
-  "PGSUS.IS",
-  "SAHOL.IS",
-  "SISE.IS",
-  "TCELL.IS",
-  "THYAO.IS",
-  "TUPRS.IS",
-  "YKBNK.IS"
- ],
+ "panel_member_before_first_trade": {},
  "segments": [
   {
    "start": "2013-07-01",
    "end": "2013-10-01",
    "consistent": false,
+   "count_checked": false,
    "n_members": 34,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -117,6 +106,7 @@
    "start": "2013-10-01",
    "end": "2014-01-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 34,
    "n_panel_in_index": 25,
    "panel_not_in_index": [
@@ -142,6 +132,7 @@
    "start": "2014-01-02",
    "end": "2014-10-01",
    "consistent": false,
+   "count_checked": false,
    "n_members": 34,
    "n_panel_in_index": 26,
    "panel_not_in_index": [
@@ -165,6 +156,7 @@
    "start": "2014-10-01",
    "end": "2015-01-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 34,
    "n_panel_in_index": 25,
    "panel_not_in_index": [
@@ -190,6 +182,7 @@
    "start": "2015-01-02",
    "end": "2015-04-01",
    "consistent": false,
+   "count_checked": false,
    "n_members": 34,
    "n_panel_in_index": 25,
    "panel_not_in_index": [
@@ -215,6 +208,7 @@
    "start": "2015-04-01",
    "end": "2015-10-01",
    "consistent": false,
+   "count_checked": false,
    "n_members": 33,
    "n_panel_in_index": 25,
    "panel_not_in_index": [
@@ -239,6 +233,7 @@
    "start": "2015-10-01",
    "end": "2016-01-04",
    "consistent": false,
+   "count_checked": false,
    "n_members": 33,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -265,6 +260,7 @@
    "start": "2016-01-04",
    "end": "2016-10-03",
    "consistent": false,
+   "count_checked": false,
    "n_members": 33,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -291,6 +287,7 @@
    "start": "2016-10-03",
    "end": "2017-01-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 33,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -319,6 +316,7 @@
    "start": "2017-01-02",
    "end": "2017-04-03",
    "consistent": false,
+   "count_checked": false,
    "n_members": 32,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -346,6 +344,7 @@
    "start": "2017-04-03",
    "end": "2017-07-03",
    "consistent": false,
+   "count_checked": false,
    "n_members": 32,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -371,6 +370,7 @@
    "start": "2017-07-03",
    "end": "2017-10-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 32,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -398,6 +398,7 @@
    "start": "2017-10-02",
    "end": "2018-01-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 31,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -422,6 +423,7 @@
    "start": "2018-01-02",
    "end": "2018-04-02",
    "consistent": false,
+   "count_checked": false,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -446,7 +448,8 @@
   {
    "start": "2018-04-02",
    "end": "2019-01-02",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -471,7 +474,8 @@
   {
    "start": "2019-01-02",
    "end": "2019-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -494,7 +498,8 @@
   {
    "start": "2019-07-01",
    "end": "2020-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 25,
    "panel_not_in_index": [
@@ -515,7 +520,8 @@
   {
    "start": "2020-04-01",
    "end": "2020-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -538,7 +544,8 @@
   {
    "start": "2020-07-01",
    "end": "2020-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -561,7 +568,8 @@
   {
    "start": "2020-10-01",
    "end": "2021-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -584,7 +592,8 @@
   {
    "start": "2021-04-01",
    "end": "2021-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -607,7 +616,8 @@
   {
    "start": "2021-07-01",
    "end": "2022-01-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -630,7 +640,8 @@
   {
    "start": "2022-01-01",
    "end": "2022-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -653,7 +664,8 @@
   {
    "start": "2022-04-01",
    "end": "2022-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -676,7 +688,8 @@
   {
    "start": "2022-10-01",
    "end": "2023-01-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -701,7 +714,8 @@
   {
    "start": "2023-01-01",
    "end": "2023-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -724,7 +738,8 @@
   {
    "start": "2023-04-01",
    "end": "2023-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -747,7 +762,8 @@
   {
    "start": "2023-07-01",
    "end": "2023-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -770,7 +786,8 @@
   {
    "start": "2023-10-01",
    "end": "2024-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -795,7 +812,8 @@
   {
    "start": "2024-04-01",
    "end": "2024-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 22,
    "panel_not_in_index": [
@@ -822,7 +840,8 @@
   {
    "start": "2024-07-01",
    "end": "2024-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 21,
    "panel_not_in_index": [
@@ -851,7 +870,8 @@
   {
    "start": "2024-10-01",
    "end": "2025-01-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 22,
    "panel_not_in_index": [
@@ -878,7 +898,8 @@
   {
    "start": "2025-01-01",
    "end": "2025-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 22,
    "panel_not_in_index": [
@@ -905,7 +926,8 @@
   {
    "start": "2025-04-01",
    "end": "2025-07-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -930,7 +952,8 @@
   {
    "start": "2025-07-01",
    "end": "2025-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -955,7 +978,8 @@
   {
    "start": "2025-10-01",
    "end": "2026-04-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 23,
    "panel_not_in_index": [
@@ -980,7 +1004,8 @@
   {
    "start": "2026-04-01",
    "end": "2026-10-01",
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [
@@ -1003,7 +1028,8 @@
   {
    "start": "2026-10-01",
    "end": null,
-   "consistent": true,
+   "consistent": false,
+   "count_checked": true,
    "n_members": 30,
    "n_panel_in_index": 24,
    "panel_not_in_index": [

@@ -168,21 +168,38 @@ def test_e1_chain_logic():
     ch = [{'period_start': '2020-10-01', 'action': 'add', 'code': 'S00', 'source_url': 'u', 'source_sha256': 'h'},
           {'period_start': '2020-10-01', 'action': 'remove', 'code': 'X', 'source_url': 'u', 'source_sha256': 'h'},
           {'period_start': '2020-07-01', 'action': 'none', 'code': '', 'source_url': 'u', 'source_sha256': 'h'}]
-    segs, bad = B.chain(anchor, ch, [])
+    segs, bad, _v = B.chain(anchor, ch, [])
     k = {s: set(m) for s, _e, m, _ in segs}
     check("tutarli zincir: ihlal yok, eski donemde S00 yerine X, her segment 30",
           not bad and 'X' in k['2020-07-01'] and 'S00' not in k['2020-07-01'] and k['2020-10-01'] == set(base),
           str(bad))
     mut = [dict(ch[0], code='S99')] + ch[1:]   # alinan pay sonraki kumede yok -> ihlal + 31 uye
-    _s, bad2 = B.chain(anchor, mut, [])
+    _s, bad2, _v2 = B.chain(anchor, mut, [])
     check("mutasyon: sonraki kumede olmayan 'alinan' ve 30 disi uye sayisi yakalanir",
           any('alinan S99' in b for b in bad2) and any('31 uye' in b for b in bad2), str(bad2))
     ev = [{'date': '2020-08-15', 'action': 'rename', 'code': 'OLD1', 'new_code': 'S01', 'source_url': 'v',
            'source_sha256': 'g'}]
-    segs3, bad3 = B.chain(anchor, ch, ev)
+    segs3, bad3, _v3 = B.chain(anchor, ch, ev)
     k3 = {s: set(m) for s, _e, m, _ in segs3}
     check("kod degisikligi: olay tarihinden once eski kod, sonra yeni kod",
           not bad3 and 'OLD1' in k3['2020-07-01'] and 'S01' in k3['2020-08-15'], str(bad3))
+    # hakem-2 E #1 (DOHOL tipi): d1'de alinan C sonraki kumede yok; C'nin sonraki kaydi d3 -> bilinmeyen
+    # aralik [d1, d3) IKI segmente yayilir; d3 sonrasi segment etkilenmez.
+    anc = {'as_of': '2021-12-31', 'codes': base}
+    ch4 = [{'period_start': '2021-07-01', 'action': 'add', 'code': 'S05', 'source_url': 'u', 'source_sha256': 'h'},
+           {'period_start': '2021-07-01', 'action': 'remove', 'code': 'Y', 'source_url': 'u', 'source_sha256': 'h'},
+           {'period_start': '2021-04-01', 'action': 'add', 'code': 'S07', 'source_url': 'u', 'source_sha256': 'h'},
+           {'period_start': '2021-04-01', 'action': 'remove', 'code': 'V', 'source_url': 'u', 'source_sha256': 'h'},
+           {'period_start': '2021-01-01', 'action': 'add', 'code': 'S05', 'source_url': 'u', 'source_sha256': 'h'},
+           {'period_start': '2021-01-01', 'action': 'remove', 'code': 'W', 'source_url': 'u', 'source_sha256': 'h'}]
+    s4, b4, v4 = B.chain(anc, ch4, [])
+    unk = B.unknown_intervals(ch4, [], v4, s4)
+    iv = [(u['code'], u['start'], u['end']) for u in unk if u['code'] == 'S05']
+    strict = {s: not any(B._overlaps(u['start'], u['end'], s, e) for u in unk) and len(k) == 30
+              for s, e, k, _ in s4}
+    check("DOHOL tipi: bilinmeyen aralik [ihlal, payin sonraki kaydi) iki segmente yayilir, sonrasi temiz",
+          iv == [('S05', '2021-01-01', '2021-07-01')] and not strict['2021-01-01'] and not strict['2021-04-01']
+          and strict['2021-07-01'], f"{iv} {strict} {b4}")
 
 
 def test_e1_membership():
@@ -208,31 +225,66 @@ def test_e1_membership():
           len({r['quarter'] for r in changes}) == 54
           and all(r['source_url'].startswith('https://borsaistanbul.com/duyuru/') and len(r['source_sha256']) == 64
                   for r in changes))
+    # Degismezler (hakem-2 E #4, #7): ceyrek basina alinan = cikarilan; donem basi ceyregi = anahtar; ilan < donem basi
+    from collections import Counter
+    cnt = Counter((r['quarter'], r['action']) for r in changes)
+    qs = sorted({r['quarter'] for r in changes})
+    bad_inv = [q for q in qs if cnt[(q, 'add')] != cnt[(q, 'remove')]]
+    bad_inv += [r['quarter'] for r in changes
+                if f"{r['period_start'][:4]}Q{(int(r['period_start'][5:7]) - 1) // 3 + 1}" != r['quarter']
+                or not r['announced'] < r['period_start']]
+    check("degismez: her ceyrekte alinan = cikarilan; donem basinin ceyregi = anahtar; ilan < donem basi",
+          not bad_inv, str(sorted(set(bad_inv))))
+    # Elle dogrulanmis referans (ham BIST 30 bolumu okunarak, 2026-11-15): her bicimden bir ceyrek
+    ref = {  # ceyrek: (alinan, cikan, ham alinti)
+        '2013Q4': ({'PGSUS'}, {'IPEKE'}, "1. PEGASUS 1. İPEK DOĞAL ENERJİ"),                    # eski bicim (ad)
+        '2016Q1': ({'CCOLA'}, {'DOHOL'}, "1. CCOLA COCA COLA İÇECEK 1. DOHOL DOĞAN HOLDİNG"),    # tek tablo
+        '2017Q3': ({'DOHOL'}, {'FROTO'}, "1. DOHOL DOĞAN HOLDİNG (*) 1. FROTO FORD OTOSAN"),     # dipnotlu
+        '2022Q1': ({'TOASO'}, {'VAKBN'}, "1 TOASO TOFAS OTO. FAB. 1 VAKBN VAKIFLAR BANKASI"),     # ic ice tablo
+        '2026Q4': ({'TRMET'}, {'DSTKF'}, "1 TRMET TR ANADOLU METAL MADENCILIK 1 DSTKF DESTEK FINANS"),
+    }
+    got = {q: ({r['code'] for r in changes if r['quarter'] == q and r['action'] == 'add'},
+               {r['code'] for r in changes if r['quarter'] == q and r['action'] == 'remove'}) for q in ref}
+    check("elle dogrulanmis 5 ceyrek (eski ad, tek tablo, dipnot, ic ice, yeni bicim) CSV ile ayni",
+          all(got[q] == (a, r) for q, (a, r, _quote) in ref.items()), str(got))
+    with open(os.path.join(uni, 'bist30_footnotes.csv'), encoding='utf-8', newline='') as f:
+        notes = list(csv.DictReader(f))
+    check("dipnot adayi kayitli: 2017Q3 DOHOL '(*) 21/06/2017 ... endekslerden cikarilacaktir' (#11503); "
+          "CSV'de isaret korunur",
+          any(n['quarter'] == '2017Q3' and n['item'] == 'DOHOL' and '21/06/2017' in n['footnote']
+              and n['source_id'] == '11503' for n in notes)
+          and any(r['quarter'] == '2017Q3' and r['code'] == 'DOHOL' and r['marked'] == '(*)' for r in changes))
     segs = S.load_membership()
-    check("segmentler kesintisiz (son = sonrakinin basi), son segment = capa, tutarli segment 30 uye",
+    check("segmentler kesintisiz (son = sonrakinin basi), son segment = capa, kati/sezgisel segment 30 uye",
           all(a[1] == b[0] for a, b in zip(segs, segs[1:])) and segs[-1][1] is None
-          and segs[-1][2] == frozenset(anchor['codes']) and all(len(k) == 30 for _s, _e, k, ok in segs if ok))
-    cut = meta['consistent_from']
-    check(f"maske: kapsam disi ve tutarsiz segment None; tutarli kisim {cut}..; bugun = capa",
-          S.universe_mask('2013-06-28') is None and S.universe_mask(anchor['as_of']) == frozenset(anchor['codes'])
-          and all((S.universe_mask(s) is not None) == ok for s, _e, _k, ok in segs)
-          and S.universe_mask(segs[0][0], include_inconsistent=True) == segs[0][2])
+          and segs[-1][2] == frozenset(anchor['codes'])
+          and all(len(k) == 30 for _s, _e, k, st, cc in segs if st or cc))
+    unk = meta['unknown_intervals']
+    cut = meta['count_checked_from']
+    in_unk = lambda d: any(u['start'] <= d and (u['end'] is None or d < u['end']) for u in unk)
+    check(f"maske: kapsam disi None; kati mod bilinmeyen gunde None (gun duzeyi); sezgisel {cut}..; ham kume",
+          S.universe_mask('2013-06-28') is None and S.universe_mask('2013-06-28', mode='raw') is None
+          and all((S.universe_mask(s) is None) == (in_unk(s) or len(k) != 30) for s, _e, k, _st, _cc in segs)
+          and all((S.universe_mask(s, mode='count_checked') is not None) == cc for s, _e, _k, _st, cc in segs)
+          and S.universe_mask(segs[0][0], mode='raw') == segs[0][2]
+          and S.universe_mask(anchor['as_of'], mode='count_checked') == frozenset(anchor['codes']))
     import pandas as pd
     viol = []
     for r in changes:
-        if r['action'] in ('add', 'remove') and r['period_start'] >= cut:
-            on = S.universe_mask(r['period_start'])
-            before = S.universe_mask(pd.Timestamp(r['period_start']) - pd.Timedelta(days=1))
+        if r['action'] in ('add', 'remove') and cut and r['period_start'] >= cut:
+            on = S.universe_mask(r['period_start'], mode='count_checked')
+            before = S.universe_mask(pd.Timestamp(r['period_start']) - pd.Timedelta(days=1), mode='count_checked')
             want = r['action'] == 'add'
             if (r['code'] in on) != want or (before is not None and (r['code'] in before) == want):
                 viol.append((r['quarter'], r['action'], r['code']))
-    check("tutarli kisimdaki her ceyreklik degisiklik maskede yururluk gununde gorunur", not viol, str(viol))
+    check("sezgisel kisimdaki her ceyreklik degisiklik maskede yururluk gununde gorunur", not viol, str(viol))
     exp = os.path.join(ROOT, 'docs', 'development', 'measurements', 'phase9-e1', 'exposure.json')
     with open(exp, encoding='utf-8') as f:
         ex = json.load(f)
-    check("maruziyet JSON'u depodaki uyelik dosyasina bagli (SHA-256) ve kapsam = tutarli kisim",
-          ex['membership_sha256'] == sha(S.MEMBERSHIP_FILE) and ex['covered_from'] == cut
-          and ex['membership_status'] == meta['status'])
+    check("maruziyet JSON'u uyelik dosyasina bagli (SHA-256), olcu = count_checked, kati kapsam ayrica",
+          ex['membership_sha256'] == sha(S.MEMBERSHIP_FILE) and ex['count_checked_from'] == cut
+          and ex['membership_status'] == meta['status'] and ex['measure'].startswith('count_checked')
+          and isinstance(ex['strict_sessions_covered'], int))
     before = {p: open(p, 'rb').read() for p in (S.MEMBERSHIP_FILE, os.path.join(uni, 'bist30_membership_meta.json'))}
     args = ['chain'] + (['--provisional'] if meta['status'] == 'provisional' else [])
     subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_membership.py')] + args,
