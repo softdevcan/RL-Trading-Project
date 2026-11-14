@@ -644,6 +644,9 @@ class StackingEnsemble:
             'ensemble_agreement': round(agreement, 4),
             'n_models': total_models,
             'tats': tats_meta,
+            # Y28 kokeni: kullanilan son ozellik satirinin tarihi (= df'in son tarihi).
+            # Bu alani tasimayan tracker kayitlari Y28 oncesidir (bir ufuk bayat), gecersiz.
+            'feature_date': str(aligned.index[-1])[:10],
             'made_at': datetime.now().isoformat(),
         }
 

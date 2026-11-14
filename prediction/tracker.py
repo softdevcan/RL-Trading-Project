@@ -121,6 +121,7 @@ class PredictionTracker:
             'confidence': prediction['confidence'],
             'current_close': prediction['current_close'],
             'source': source,
+            'feature_date': prediction.get('feature_date'),  # Y28: yoksa kayit Y28 oncesi
             'made_at': prediction['made_at'],
             'actual_close': None,
             'error_pct': None,

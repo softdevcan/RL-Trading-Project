@@ -233,13 +233,13 @@ def main() -> int:
             raw = m._predict_raw
             m._predict_raw = lambda X: (seen.__setitem__("X", X), raw(X))[1]
             try:
-                e.predict_next(df, "SYN")
+                seen["feature_date"] = e.predict_next(df, "SYN").get("feature_date")
             finally:
                 for name in ("build_features", "build_inference_features"):
                     fe.__dict__.pop(name, None)
                 m.__dict__.pop("_predict_raw", None)
             j = e.feature_cols.index("return_1d")
-            return seen.get("last"), float(seen["X"][-1, j])
+            return seen.get("last"), float(seen["X"][-1, j]), seen.get("feature_date")
 
         for hz, h in (("daily", 1), ("weekly", 5)):
             print(f"\nY28 — canli tahmin son satir ({hz})")
@@ -254,15 +254,16 @@ def main() -> int:
                   and inf["target_price"].iloc[-h:].isna().all())
             e = E.StackingEnsemble(horizon=hz, use_tats=False, model_configs=cfg2)
             e.train(df, "Y28" + hz)
-            last, r1 = probe(e)
-            check(f"[{hz}] predict_next son ozellik satiri tarihi = df.index[-1]", last == T, f"({last})")
+            last, r1, fdate = probe(e)
+            check(f"[{hz}] predict_next son ozellik satiri tarihi = df.index[-1]; ciktida feature_date ayni",
+                  last == T and fdate == str(T)[:10], f"({last}, {fdate})")
             check(f"[{hz}] taban modele giden son satir return_1d = close[T-1]/close[T-2]-1 (dfden bagimsiz)",
                   abs(r1 - ret1_T) < 1e-5 and abs(ret1_T - ret1_prev) > 1e-4, f"({r1} vs {ret1_T})")
             # Mutasyon (uretim yolu): cikarim yolu eski dropna'li build_features'a doner
             orig_inf = FE.build_inference_features
             FE.build_inference_features = lambda self, *a, **k: self.build_features(*a, **k)
             try:
-                m_last, m_r1 = probe(e)
+                m_last, m_r1, _ = probe(e)
             finally:
                 FE.build_inference_features = orig_inf
             check(f"[{hz}] mutasyon: dropna geri gelince son satir df.index[-{h + 1}] ve return_1d bayat",
