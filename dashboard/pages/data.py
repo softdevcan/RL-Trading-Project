@@ -28,40 +28,9 @@ from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
-# BIST-30 sembolleri ve kısa adlar
-BIST30_SYMBOLS = [
-    ("AKBNK.IS", "Akbank"),
-    ("ARCLK.IS", "Arçelik"),
-    ("ASELS.IS", "Aselsan"),
-    ("BIMAS.IS", "BIM"),
-    ("EKGYO.IS", "Emlak GYO"),
-    ("ENKAI.IS", "Enka İnşaat"),
-    ("EREGL.IS", "Ereğli"),
-    ("FROTO.IS", "Ford Otosan"),
-    ("GARAN.IS", "Garanti"),
-    ("HALKB.IS", "Halkbank"),
-    ("ISCTR.IS", "İş Bankası"),
-    ("KCHOL.IS", "Koç Holding"),
-    ("KOZAL.IS", "Koza Altın"),
-    ("KRDMD.IS", "Kardemir"),
-    ("MGROS.IS", "Migros"),
-    ("ODAS.IS",  "Odaş Elektrik"),
-    ("PETKM.IS", "Petkim"),
-    ("PGSUS.IS", "Pegasus"),
-    ("SAHOL.IS", "Sabancı"),
-    ("SASA.IS",  "Sasa Polyester"),
-    ("SISE.IS",  "Şişe Cam"),
-    ("SKBNK.IS", "Şekerbank"),
-    ("TAVHL.IS", "TAV Havalimanı"),
-    ("TCELL.IS", "Turkcell"),
-    ("THYAO.IS", "Türk Hava Yolları"),
-    ("TKFEN.IS", "Tekfen"),
-    ("TOASO.IS", "Tofaş"),
-    ("TSKB.IS",  "TSKB"),
-    ("TUPRS.IS", "Tüpraş"),
-    ("VAKBN.IS", "Vakıfbank"),
-    ("YKBNK.IS", "Yapı Kredi"),
-]
+# BIST-30 sembolleri ve kısa adlar — tek kaynak data/universe/bist30_panel.json (Faz 9 E0, Y11)
+from data.bist30_symbols import BIST30_SYMBOLS as _UNIVERSE, STOCK_INFO as _INFO
+BIST30_SYMBOLS = [(s, _INFO.get(s, {}).get('name', s)) for s in _UNIVERSE]
 
 PHASE1_SYMBOLS = ["AKBNK.IS", "THYAO.IS", "TUPRS.IS", "BIMAS.IS", "ASELS.IS"]
 ALL_BIST_VALUES = [s for s, _ in BIST30_SYMBOLS]

@@ -1,41 +1,27 @@
 """
 BIST-30 Hisse Senedi Sembolleri
-Türkiye'nin en büyük 30 şirketi
+
+Faz 9 E0 (Y11, K7): sembol evreninin TEK kaynagi `data/universe/bist30_panel.json` — RL egitim
+panelinde 2026-11-14 itibariyla bulunan 30 hisse, panelde gorunme sirasiyla
+(`scripts/freeze_universe.py`). Bu GERCEK/tarihsel BIST-30 uyeligi DEGILDIR (hayatta kalma
+yanliligi; tarihsel uyelik E1). Pano listeleri ve egitim rotasinin varsayilan veri cekimi buradan okur.
 """
 
-# BIST-30 sembolleri (Yahoo Finance formatı: SEMBOL.IS)
-BIST30_SYMBOLS = [
-    'AKBNK.IS',   # Akbank
-    'ALARK.IS',   # Alarko Holding
-    'ARCLK.IS',   # Arçelik
-    'ASELS.IS',   # Aselsan
-    'BIMAS.IS',   # BIM
-    'EKGYO.IS',   # Emlak Konut GYO
-    'ENKAI.IS',   # Enka İnşaat
-    'EREGL.IS',   # Ereğli Demir Çelik
-    'FROTO.IS',   # Ford Otosan
-    'GARAN.IS',   # Garanti Bankası
-    'HEKTS.IS',   # Hektaş
-    'ISCTR.IS',   # İş Bankası (C)
-    'KCHOL.IS',   # Koç Holding
-    'KRDMD.IS',   # Kardemir (D)
-    'KOZAA.IS',   # Koza Altın
-    'KOZAL.IS',   # Koza Anadolu Metal
-    'KOZA.IS',    # Koza Madencilik (Not in BIST30 - placeholder)
-    'PETKM.IS',   # Petkim
-    'PGSUS.IS',   # Pegasus
-    'SAHOL.IS',   # Sabancı Holding
-    'SISE.IS',    # Şişe Cam
-    'TAVHL.IS',   # TAV Havalimanları
-    'TCELL.IS',   # Turkcell
-    'THYAO.IS',   # Türk Hava Yolları
-    'TKFEN.IS',   # Tekfen Holding
-    'TOASO.IS',   # Tofaş
-    'TTKOM.IS',   # Türk Telekom
-    'TUPRS.IS',   # Tüpraş
-    'VAKBN.IS',   # Vakıfbank
-    'YKBNK.IS',   # Yapı Kredi Bankası
-]
+import json as _json
+import os as _os
+
+_UNIVERSE_FILE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'universe', 'bist30_panel.json')
+
+
+def _load_universe():
+    with open(_UNIVERSE_FILE, encoding='utf-8') as f:
+        return _json.load(f)
+
+
+UNIVERSE = _load_universe()
+
+# BIST-30 sembolleri (Yahoo Finance formatı: SEMBOL.IS) — evren dosyasindaki sirayla
+BIST30_SYMBOLS = list(UNIVERSE['symbols'])
 
 # Faz 1 için başlangıç seti (5 hisse ile test)
 PHASE1_SYMBOLS = [
@@ -46,15 +32,39 @@ PHASE1_SYMBOLS = [
     'ASELS.IS',   # Aselsan - Defense
 ]
 
-# Hisse bilgileri
+# Hisse bilgileri (ad). Sektor E2'de kaynakli dosyadan gelir (`data/universe/sectors.csv`);
+# eski 7 sembollu kaynaksiz 'sector' alani kaldirildi (Y5).
 STOCK_INFO = {
-    'AKBNK.IS': {'name': 'Akbank', 'sector': 'Banking'},
-    'ALARK.IS': {'name': 'Alarko Holding', 'sector': 'Construction'},
-    'ARCLK.IS': {'name': 'Arçelik', 'sector': 'Consumer Durables'},
-    'ASELS.IS': {'name': 'Aselsan', 'sector': 'Defense'},
-    'BIMAS.IS': {'name': 'BIM', 'sector': 'Retail'},
-    'THYAO.IS': {'name': 'Turkish Airlines', 'sector': 'Aviation'},
-    'TUPRS.IS': {'name': 'Tüpraş', 'sector': 'Energy'},
+    'AKBNK.IS': {'name': 'Akbank'},
+    'ARCLK.IS': {'name': 'Arçelik'},
+    'ASELS.IS': {'name': 'Aselsan'},
+    'BIMAS.IS': {'name': 'BİM'},
+    'EKGYO.IS': {'name': 'Emlak Konut GYO'},
+    'ENKAI.IS': {'name': 'Enka İnşaat'},
+    'EREGL.IS': {'name': 'Ereğli Demir Çelik'},
+    'FROTO.IS': {'name': 'Ford Otosan'},
+    'GARAN.IS': {'name': 'Garanti BBVA'},
+    'HALKB.IS': {'name': 'Halkbank'},
+    'ISCTR.IS': {'name': 'İş Bankası (C)'},
+    'KCHOL.IS': {'name': 'Koç Holding'},
+    'KRDMD.IS': {'name': 'Kardemir (D)'},
+    'MGROS.IS': {'name': 'Migros'},
+    'ODAS.IS': {'name': 'Odaş Elektrik'},
+    'PETKM.IS': {'name': 'Petkim'},
+    'PGSUS.IS': {'name': 'Pegasus'},
+    'SAHOL.IS': {'name': 'Sabancı Holding'},
+    'SASA.IS': {'name': 'Sasa Polyester'},
+    'SISE.IS': {'name': 'Şişecam'},
+    'SKBNK.IS': {'name': 'Şekerbank'},
+    'TAVHL.IS': {'name': 'TAV Havalimanları'},
+    'TCELL.IS': {'name': 'Turkcell'},
+    'THYAO.IS': {'name': 'Türk Hava Yolları'},
+    'TKFEN.IS': {'name': 'Tekfen Holding'},
+    'TOASO.IS': {'name': 'Tofaş'},
+    'TSKB.IS': {'name': 'TSKB'},
+    'TUPRS.IS': {'name': 'Tüpraş'},
+    'VAKBN.IS': {'name': 'Vakıfbank'},
+    'YKBNK.IS': {'name': 'Yapı Kredi'},
 }
 
 # Altın ve döviz sembolleri
@@ -117,4 +127,4 @@ if __name__ == '__main__':
     print("\nFaz 1 Hisseler:")
     for symbol in PHASE1_SYMBOLS:
         info = STOCK_INFO.get(symbol, {})
-        print(f"  - {symbol}: {info.get('name', 'N/A')} ({info.get('sector', 'N/A')})")
+        print(f"  - {symbol}: {info.get('name', 'N/A')}")

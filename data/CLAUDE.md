@@ -20,6 +20,11 @@ borsapy/yf     → gold_fetcher.py       ─┘
                                          → evaluator.py → trading_env.py (RL obs space)
 ```
 
+## Sembol evreni (Faz 9 E0, Y11/K7)
+- Tek kaynak `data/universe/bist30_panel.json` (RL panelinin 30 hissesi, panel sirasiyla; GERCEK
+  BIST-30 uyeligi DEGIL). `BIST30_SYMBOLS`, `STOCK_INFO`, pano listeleri ve egitim rotasinin varsayilan
+  cekimi buradan. Elle liste yazma; evren degisirse `scripts/freeze_universe.py` YENI surum adiyla.
+
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)
 - `fetch_incremental()`: Sadece eksik günleri çeker, mevcut CSV'ye append eder

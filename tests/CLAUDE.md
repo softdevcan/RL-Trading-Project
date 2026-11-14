@@ -80,6 +80,8 @@ python tests/test_indicator_warmup.py      # Faz 9/B7: gosterge isinma bfill'i â
 python tests/test_k18_obs_health.py        # Faz 9/K18+K25: ADX wilder (2 bagimsiz referans),
                                            #          causal fiyat olcegi B0 + mutasyon, obs_health,
                                            #          main ile bit-es, rota uctan uca (109)
+python tests/test_universe.py              # Faz 9/E: evren tek kaynak (E0, Y11) â€” panel sirasi, kod + pano
+                                           #          listeleri; E2 sektor, E1 uyelik eklenecek (6, ag yok)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)
