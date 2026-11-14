@@ -1306,6 +1306,37 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 **Panel (Y29).** hakem-2 (opus), Y28 bağlamıyla sürdürüldü (SendMessage). Karar Küçük revizyon, 6 KÜÇÜK (~40 bin ek token, 20 araç, ~3,1 dk; testi kendisi koştu). İşlenenler: #1 saatten bağımsız kontrol ve filtre mutasyonu; #2 `pre_y29_evaluation`; #3 kayıt koruma; #4 düz satır elemesi ve mutasyonu; #5 pano işareti; #6 `not_ex_ante`. Ölçüm JSON'una `prediction_dir_dirty` eklendi. Düzeltmeler hakem-2'ye yeniden okutulmadı.
 
+### 9.21 E — evren (E0) ve sektör sınıflaması (E2); E1 tasarımı (2026-11-14, dal `feat/phase9-e-universe`)
+
+**Kararlar (kullanıcı, 2026-11-14; Faz 10 §6'daki öneriler teyit edildi).** K7: evren = RL panelinin bugünkü 30 hissesi, tek dosyada dondurulur. K6: A (hisse başına 30 ajan), yani E2 kritik yolda değil; yalnız `gat` kolunu ve sektör maruziyet sınırını besler. K3: E1 için süre 2026-11-28, tamamlanamazsa ölçülen kapsamla sınırlılık beyanı. E2 kaynağı: KAP. Sıra: E0 → E2 → E1.
+
+- **E0 — Y11 kapandı** ([bist30_symbols.py](../../data/bist30_symbols.py), [bist30_panel.json](../../data/universe/bist30_panel.json), `scripts/freeze_universe.py`). Önceden üç farklı "BIST-30" listesi vardı:
+  - `bist30_symbols.py`: ALARK, HEKTS, KOZA (yorumunda "Not in BIST30 - placeholder"), KOZAA, KOZAL, TTKOM; panelde HALKB, MGROS, ODAS, SASA, SKBNK, TSKB yoktu.
+  - Pano veri sayfası: 31 sembol (KOZAL dahil).
+  - Pano günlük karar sayfası: KOZAL var, ENKAI yok.
+
+  Şimdi tek kaynak `data/universe/bist30_panel.json`. İçeriği: panelde görünme sırasıyla 30 sembol (env durum vektörü bu sırayı kullanır), panel dosyalarının SHA-256'sı, panel tarih aralığı (2005-01-03..2026-11-09) ve dondurma tarihi. `BIST30_SYMBOLS`, `get_symbols(phase=2)` (eğitim rotasının varsayılan veri çekimi), `STOCK_INFO` (30 sembolün adı) ve iki pano listesi bu dosyadan okuyor. Dosya **gerçek BIST-30 üyeliği değil** (hayatta kalma yanlılığı; E1). Evren değişirse betik eski dosyanın üzerine yazmaz, yeni sürüm adı ister.
+  - Etki (beyan): veri sayfası ve rotanın varsayılan çekimi artık panelin 30 hissesini indirir; eski listedeki 6 sembol düştü, 6 sembol eklendi. Eğitilmiş modeller değişmez: evrenleri model dosyasından çözülüyor (`resolve_trade_universe`; `test_trade_universe` 22/0). Kaynaksız 7 sembollük `sector` alanı kaldırıldı (yalnız betik çıktısında kullanılıyordu).
+- **E2 — Y5 kapandı** ([sectors.csv](../../data/universe/sectors.csv), `scripts/build_sectors.py`, `load_sector_groups()`). Kaynak KAP "Sektörler" sayfasının gömülü verisi (`https://kap.org.tr/tr/Sektorler`, erişim 2026-11-14). Her satırda URL, erişim tarihi ve ham sayfanın SHA-256'sı var. Ham sayfa üçüncü taraf içeriği olduğu için depoya girmez; yerelde `data/universe/sources/` altında (gitignore). 30 hissenin her biri KAP'ta tam bir alt sektörde.
+  - **Grup kuralı (mekanik, yargı içermez):** grup = KAP alt sektörü; evrende 2'den az üyesi olan alt sektörlerin hisseleri `DIGER`'de toplanır.
+  - **Sonuç: 8 grup.** BANKALAR 8; HOLDİNGLER VE YATIRIM ŞİRKETLERİ 5 (KCHOL, SAHOL, SISE, TAVHL, TKFEN); METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI 3 (ARCLK, FROTO, TOASO); KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER 3 (PETKM, SASA, TUPRS); ANA METAL SANAYİ 2; ULAŞTIRMA VE DEPOLAMA 2; PERAKENDE TİCARET 2; DIGER 5 (ASELS savunma, EKGYO GYO, ENKAI inşaat, ODAS elektrik, TCELL telekomünikasyon). *Kaynak: `sectors.csv` → `group`, `kap_sector`.*
+  - **Beyan:** `DIGER` ekonomik olarak türdeş değil; sektör maruziyet sınırında bu grup bir sektör gibi davranır. KAP sınıflaması bugünkü hâliyle sabit alınır (nokta-zamanlı değil). SISE ve TAVHL KAP'ta holding alt sektöründe, faaliyet alanına göre değil.
+- **Kabul** `python tests/test_universe.py` → 11/0 (ağ yok). Kontroller:
+  - Evren dosyası RL paneliyle aynı semboller, aynı sıra.
+  - Kod listesi, `get_symbols(phase=2)`, `STOCK_INFO` ve iki pano listesi evren dosyasıyla aynı.
+  - Eski listelerin panelde olmayan sembolleri kalmadı.
+  - Her sembol tam bir grupta; grup başına ≥ 2 sembol; 8 grup.
+  - Kaynak alanları dolu; grup kuralı mekanik.
+  - Saklanan ham sayfadan yeniden üretim, SHA-256 eşleşerek bayt bayt aynı CSV'yi veriyor.
+
+  Diğer testler: `test_trade_universe` 22/0, `test_training_eta` 57/0, `test_dash_props` 4/0.
+- **E1 — tasarım (açık; süre 2026-11-28).**
+  - **Kaynak:** Borsa İstanbul "BIST Pay Endeksleri Dönemsel Değişiklikleri" duyuruları. Endeks dönemleri çeyreklik ve değişiklik en az 10 gün önce ilan ediliyor ([BIST Pay Endeksleri Temel Kuralları](https://borsaistanbul.com/files/bist_pay_endeksleri_temel_kurallari.pdf)). Eski dönemler için KAP bildirimleri denenecek. Duyuru sayfasında görünen en eski kayıt 13.01.2025; 2013'e kadar arşivin derinliği doğrulanmadı.
+  - **Ayrıştırma:** WebFetch tablo çıkarımı güvenilir değil (19.06.2026 duyurusunda "çıkarılacak" sütunu okunamadı). Bu yüzden ham HTML indirilip SHA-256'sıyla yerelde saklanır ve tablo kodla ayrıştırılır (E2'deki gibi).
+  - **Çıktı:** `data/universe/bist30_membership.csv` (dönem başı, dönem sonu, sembol, kaynak URL, ilan tarihi, SHA-256). Yöntem: bugünkü listeden geriye doğru değişiklik zinciri; her dönemde tam 30 üye kontrol edilir. Ayrıca `universe_mask(date)` fonksiyonu ve bir ölçüm JSON'u: panelin 30 hissesinin dönem başına endekste olma oranı, yani hayatta kalma maruziyeti.
+  - **Kapsam sınırı:** maske ortama uygulanmaz (durum uzayı sabit); kullanımı Milestone 0'/M2'de karar verilir. Maske yalnız sembol çıkarabilir; panelde olmayan eski üyeleri ekleyemez. Bu yüzden hayatta kalma yanlılığı beyanı her durumda kalır.
+  - **Ön gözlem (doğrulanmadı, E1'de kaynakla kontrol edilecek):** 19.06.2026 duyurusunun metninde HALKB, 01.07–30.09.2026 döneminde BIST 30'a alınanlar arasında görünüyor. Panelde ise HALKB 2007'den beri var.
+
 ---
 
 ## Versiyon geçmişi
@@ -1349,3 +1380,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.18, B11 + Y25; B10 kapandı):** BiLSTM/TFT eğitim penceresi satır i'yi içeriyor, yön etiketi ham hedeften (Y22; `test_dl_alignment` 12). `test_prediction` 6/6 (Y23: `PricePredictor` `test_ratio`, DL'nin sessiz dönüşü, eski şemalar). TATS değer testi (Y25; `test_tats_labels` 31). Yeni ve kapanan Y27 (tracker yön doğruluğu metin olarak yazılıyordu). Golden bilinen nedenle kırmızı (K1 seçenek 1).
 - **2026-11-14 (§9.19, Y28 kapandı; v1.10.0):** Canlı `predict_next` ve SHAP ucu `build_inference_features` ile en son satırı kullanıyor (eğitim yolu değişmedi); `feature_date` köken alanı. Kabul `test_tats_labels` 43 (mutasyon günlük/haftalık, `stale_features` bekçisi); gerçek veride `live_tail.json` `all_ok`. Golden kırmızı, `test_mape` değişmedi. Yeni Y29 (tracker hedef tarihi duvar saatinden), Y30 (SHAP ucu farklı matris). hakem-2 Küçük revizyon, işlendi.
 - **2026-11-14 (§9.20, Y29 kapandı; v1.11.0):** `prediction_date` veriden (`feature_date` + h iş günü); tracker gerçekleşen kapanışı `feature_date`'ten sonraki h. gerçek seanstan alıyor (`actual_date`), Y28 öncesi ve bayat kayıtlar değerlendirilmiyor ve metriklerden düşüyor. Kabul `test_prediction` 7 (TEST 7, mutasyon). Mevcut takipte 1 kayıt (Y28 öncesi). Ortak kurallar `prediction/tracker_rules.py`. Yeni Y31 (altın gerçekleşen kapanışı GC=F, birim farkı).
+- **2026-11-14 (§9.21, E0 + E2; E1 açık):** Evren tek dosyada (`data/universe/bist30_panel.json`; Y11 kapandı), KAP sektör sınıflaması ve 8 grup (`sectors.csv`; Y5 kapandı). Kabul `test_universe` 11. E1 tasarımı ve süre (2026-11-28) kayıtta.
