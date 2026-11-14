@@ -1,41 +1,117 @@
 """
 BIST-30 Hisse Senedi Sembolleri
-Türkiye'nin en büyük 30 şirketi
+
+Faz 9 E0 (Y11, K7): sembol evreninin TEK kaynagi `data/universe/bist30_panel.json` — RL egitim
+panelinde 2026-11-14 itibariyla bulunan 30 hisse, panelde gorunme sirasiyla
+(`scripts/freeze_universe.py`). Bu GERCEK/tarihsel BIST-30 uyeligi DEGILDIR (hayatta kalma
+yanliligi; tarihsel uyelik E1). Pano listeleri ve egitim rotasinin varsayilan veri cekimi buradan okur.
 """
 
-# BIST-30 sembolleri (Yahoo Finance formatı: SEMBOL.IS)
-BIST30_SYMBOLS = [
-    'AKBNK.IS',   # Akbank
-    'ALARK.IS',   # Alarko Holding
-    'ARCLK.IS',   # Arçelik
-    'ASELS.IS',   # Aselsan
-    'BIMAS.IS',   # BIM
-    'EKGYO.IS',   # Emlak Konut GYO
-    'ENKAI.IS',   # Enka İnşaat
-    'EREGL.IS',   # Ereğli Demir Çelik
-    'FROTO.IS',   # Ford Otosan
-    'GARAN.IS',   # Garanti Bankası
-    'HEKTS.IS',   # Hektaş
-    'ISCTR.IS',   # İş Bankası (C)
-    'KCHOL.IS',   # Koç Holding
-    'KRDMD.IS',   # Kardemir (D)
-    'KOZAA.IS',   # Koza Altın
-    'KOZAL.IS',   # Koza Anadolu Metal
-    'KOZA.IS',    # Koza Madencilik (Not in BIST30 - placeholder)
-    'PETKM.IS',   # Petkim
-    'PGSUS.IS',   # Pegasus
-    'SAHOL.IS',   # Sabancı Holding
-    'SISE.IS',    # Şişe Cam
-    'TAVHL.IS',   # TAV Havalimanları
-    'TCELL.IS',   # Turkcell
-    'THYAO.IS',   # Türk Hava Yolları
-    'TKFEN.IS',   # Tekfen Holding
-    'TOASO.IS',   # Tofaş
-    'TTKOM.IS',   # Türk Telekom
-    'TUPRS.IS',   # Tüpraş
-    'VAKBN.IS',   # Vakıfbank
-    'YKBNK.IS',   # Yapı Kredi Bankası
-]
+import json as _json
+import os as _os
+
+_UNIVERSE_FILE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'universe', 'bist30_panel.json')
+
+
+def _load_universe():
+    with open(_UNIVERSE_FILE, encoding='utf-8') as f:
+        return _json.load(f)
+
+
+UNIVERSE = _load_universe()
+
+# BIST-30 sembolleri (Yahoo Finance formatı: SEMBOL.IS) — evren dosyasindaki sirayla
+BIST30_SYMBOLS = list(UNIVERSE['symbols'])
+
+SECTORS_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'sectors.csv')
+
+
+def load_sector_groups() -> dict:
+    """E2 (Y5): sembol -> grup (KAP alt sektoru; evrende <2 uyeli alt sektorler 'DIGER').
+
+    Kaynak, erisim tarihi ve ham sayfa SHA-256'si `data/universe/sectors.csv` satirlarinda
+    (`scripts/build_sectors.py`). K6=A altinda yalniz `gat` kolu ve sektor maruziyet siniri kullanir.
+    """
+    import csv
+    with open(SECTORS_FILE, encoding='utf-8', newline='') as f:
+        return {r['symbol']: r['group'] for r in csv.DictReader(f)}
+
+
+MEMBERSHIP_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'bist30_membership.csv')
+MEMBERSHIP_META_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'bist30_membership_meta.json')
+_MEMBERSHIP = None
+_UNKNOWN = None
+MASK_MODES = ('strict', 'count_checked', 'raw')
+
+
+def load_membership() -> list:
+    """E1 (K3): BIST 30 uyelik zinciri, [(bas, son_haric | None, frozenset(kod), kati, sezgisel)] tarih sirasiyla.
+
+    Kaynak `data/universe/bist30_membership.csv` (`scripts/build_membership.py chain`): bugunku capadan
+    (KAP XU030) geriye Borsa Istanbul ceyreklik duyurulariyla (+ varsa `bist30_events.csv`). Durum
+    `bist30_membership_meta.json` -> `status`. **GECICI** iken (donem ici olaylar yok): segmentler 30'dan
+    farkli uye tasiyabilir, kodlar o donemin kodu olmayabilir (ör. TRALT), `kati` cogunlukla False.
+    Yalniz `final` durumda "her segment 30 uye, kodlar o tarihteki islem kodu" denir.
+    """
+    global _MEMBERSHIP, _UNKNOWN
+    if _MEMBERSHIP is None:
+        import csv
+        segs, flags = {}, {}
+        with open(MEMBERSHIP_FILE, encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                key = (r['start'], r['end'] or None)
+                segs.setdefault(key, set()).add(r['symbol'])
+                flags[key] = (r.get('consistent', '1') == '1', r.get('count_checked', '1') == '1')
+        _MEMBERSHIP = [(s, e, frozenset(k), *flags[(s, e)]) for (s, e), k in sorted(segs.items())]
+        _UNKNOWN = []
+        if _os.path.exists(MEMBERSHIP_META_FILE):
+            with open(MEMBERSHIP_META_FILE, encoding='utf-8') as f:
+                _UNKNOWN = _json.load(f).get('unknown_intervals', [])
+    return _MEMBERSHIP
+
+
+def universe_mask(date, mode: str = 'strict') -> frozenset | None:
+    """`date` gunu BIST 30'daki kodlar (yururluk ilk gunu dahil, segment sonu haric); bilinmiyorsa None.
+
+    mode:
+      - 'strict' (varsayilan): segment 30 uye degilse ya da gun bir bilinmeyen araliga dusuyorsa
+        (meta `unknown_intervals`, GUN duzeyinde; hakem-2 E #1) None. Capa gunu kesin bilinir.
+        strict = TESPIT EDILMIS tutarsizlik yok; dogruluk degil: kaydi hic olmayan bir uyenin donem
+        ici takasi ne ihlal ne sayi bozulmasi uretir (olaylar eklenmeden gorunmez).
+      - 'count_checked': SEZGISEL — yalniz sayi denetiminden gecen segmentler; dogruluk iddiasi tasimaz.
+      - 'raw': zincirin ham kumesi (tani icin).
+    Kapsam disi (ilk segmentten once) her modda None: BILINMIYOR, bos kume degil. Maske yalniz sembol
+    CIKARABILIR; panelde olmayan eski uyeleri ekleyemez (hayatta kalma yanliligi beyani her durumda
+    kalir, plan §9.21). Ortama uygulanmaz (durum uzayi sabit).
+    """
+    import pandas as pd
+    if mode not in MASK_MODES:
+        raise ValueError(f'mode {mode!r} not in {MASK_MODES}')
+    d = pd.Timestamp(date).strftime('%Y-%m-%d')
+    for s, e, k, strict, heur in load_membership():
+        if s <= d and (e is None or d < e):
+            if mode == 'raw':
+                return k
+            if mode == 'count_checked':
+                return k if heur else None
+            if len(k) != 30 or any(u['start'] <= d and (u['end'] is None or d < u['end']) for u in _UNKNOWN):
+                return None
+            return k
+    return None
+
+
+def panel_membership(dates, symbols=None, mode: str = 'strict'):
+    """Panel sembolleri (varsayilan evren dosyasi) x tarih -> True/False; bilinmeyen tarih NaN."""
+    import numpy as np
+    import pandas as pd
+    symbols = list(symbols or BIST30_SYMBOLS)
+    idx = pd.DatetimeIndex(dates)
+    out = pd.DataFrame(np.nan, index=idx, columns=symbols, dtype=object)
+    for t in idx:
+        k = universe_mask(t, mode=mode)
+        if k is not None:
+            out.loc[t] = [s.split('.')[0] in k for s in symbols]
+    return out
 
 # Faz 1 için başlangıç seti (5 hisse ile test)
 PHASE1_SYMBOLS = [
@@ -46,15 +122,39 @@ PHASE1_SYMBOLS = [
     'ASELS.IS',   # Aselsan - Defense
 ]
 
-# Hisse bilgileri
+# Hisse bilgileri (ad). Sektor E2'de kaynakli dosyadan gelir (`data/universe/sectors.csv`);
+# eski 7 sembollu kaynaksiz 'sector' alani kaldirildi (Y5).
 STOCK_INFO = {
-    'AKBNK.IS': {'name': 'Akbank', 'sector': 'Banking'},
-    'ALARK.IS': {'name': 'Alarko Holding', 'sector': 'Construction'},
-    'ARCLK.IS': {'name': 'Arçelik', 'sector': 'Consumer Durables'},
-    'ASELS.IS': {'name': 'Aselsan', 'sector': 'Defense'},
-    'BIMAS.IS': {'name': 'BIM', 'sector': 'Retail'},
-    'THYAO.IS': {'name': 'Turkish Airlines', 'sector': 'Aviation'},
-    'TUPRS.IS': {'name': 'Tüpraş', 'sector': 'Energy'},
+    'AKBNK.IS': {'name': 'Akbank'},
+    'ARCLK.IS': {'name': 'Arçelik'},
+    'ASELS.IS': {'name': 'Aselsan'},
+    'BIMAS.IS': {'name': 'BİM'},
+    'EKGYO.IS': {'name': 'Emlak Konut GYO'},
+    'ENKAI.IS': {'name': 'Enka İnşaat'},
+    'EREGL.IS': {'name': 'Ereğli Demir Çelik'},
+    'FROTO.IS': {'name': 'Ford Otosan'},
+    'GARAN.IS': {'name': 'Garanti BBVA'},
+    'HALKB.IS': {'name': 'Halkbank'},
+    'ISCTR.IS': {'name': 'İş Bankası (C)'},
+    'KCHOL.IS': {'name': 'Koç Holding'},
+    'KRDMD.IS': {'name': 'Kardemir (D)'},
+    'MGROS.IS': {'name': 'Migros'},
+    'ODAS.IS': {'name': 'Odaş Elektrik'},
+    'PETKM.IS': {'name': 'Petkim'},
+    'PGSUS.IS': {'name': 'Pegasus'},
+    'SAHOL.IS': {'name': 'Sabancı Holding'},
+    'SASA.IS': {'name': 'Sasa Polyester'},
+    'SISE.IS': {'name': 'Şişecam'},
+    'SKBNK.IS': {'name': 'Şekerbank'},
+    'TAVHL.IS': {'name': 'TAV Havalimanları'},
+    'TCELL.IS': {'name': 'Turkcell'},
+    'THYAO.IS': {'name': 'Türk Hava Yolları'},
+    'TKFEN.IS': {'name': 'Tekfen Holding'},
+    'TOASO.IS': {'name': 'Tofaş'},
+    'TSKB.IS': {'name': 'TSKB'},
+    'TUPRS.IS': {'name': 'Tüpraş'},
+    'VAKBN.IS': {'name': 'Vakıfbank'},
+    'YKBNK.IS': {'name': 'Yapı Kredi'},
 }
 
 # Altın ve döviz sembolleri
@@ -117,4 +217,4 @@ if __name__ == '__main__':
     print("\nFaz 1 Hisseler:")
     for symbol in PHASE1_SYMBOLS:
         info = STOCK_INFO.get(symbol, {})
-        print(f"  - {symbol}: {info.get('name', 'N/A')} ({info.get('sector', 'N/A')})")
+        print(f"  - {symbol}: {info.get('name', 'N/A')}")

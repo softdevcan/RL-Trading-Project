@@ -57,6 +57,10 @@ data/raw/
 data/processed/
 data/*.csv
 data/**/*.csv
+# Faz 9 (E): evren/sektor/uyelik tablolari SURUMLU yapilandirma (kucuk, elle denetlenir);
+# ham ucuncu taraf kaynak sayfalari (KAP, Borsa Istanbul) depoya girmez, yalniz SHA-256'lari
+!data/universe/*.csv
+data/universe/sources/
 # Faz 6 (G.2): cekilen verinin kalite bayragi yan dosyasi — CSV ile birlikte
 # uretilir, CSV gibi versiyonlanmaz.
 data/**/*_quality.json

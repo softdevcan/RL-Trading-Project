@@ -1306,6 +1306,116 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 **Panel (Y29).** hakem-2 (opus), Y28 bağlamıyla sürdürüldü (SendMessage). Karar Küçük revizyon, 6 KÜÇÜK (~40 bin ek token, 20 araç, ~3,1 dk; testi kendisi koştu). İşlenenler: #1 saatten bağımsız kontrol ve filtre mutasyonu; #2 `pre_y29_evaluation`; #3 kayıt koruma; #4 düz satır elemesi ve mutasyonu; #5 pano işareti; #6 `not_ex_ante`. Ölçüm JSON'una `prediction_dir_dirty` eklendi. Düzeltmeler hakem-2'ye yeniden okutulmadı.
 
+### 9.21 E — evren (E0) ve sektör sınıflaması (E2); E1 tasarımı (2026-11-14, dal `feat/phase9-e-universe`)
+
+**Kararlar (kullanıcı, 2026-11-14; Faz 10 §6'daki öneriler teyit edildi).** K7: evren = RL panelinin bugünkü 30 hissesi, tek dosyada dondurulur. K6: A (hisse başına 30 ajan), yani E2 kritik yolda değil; yalnız `gat` kolunu ve sektör maruziyet sınırını besler. K3: E1 için süre 2026-11-28, tamamlanamazsa ölçülen kapsamla sınırlılık beyanı. E2 kaynağı: KAP. Sıra: E0 → E2 → E1.
+
+- **E0 — Y11 kapandı** ([bist30_symbols.py](../../data/bist30_symbols.py), [bist30_panel.json](../../data/universe/bist30_panel.json), `scripts/freeze_universe.py`). Önceden üç farklı "BIST-30" listesi vardı:
+  - `bist30_symbols.py`: ALARK, HEKTS, KOZA (yorumunda "Not in BIST30 - placeholder"), KOZAA, KOZAL, TTKOM; panelde HALKB, MGROS, ODAS, SASA, SKBNK, TSKB yoktu.
+  - Pano veri sayfası: 31 sembol (KOZAL dahil).
+  - Pano günlük karar sayfası: KOZAL var, ENKAI yok.
+
+  Şimdi tek kaynak `data/universe/bist30_panel.json`. İçeriği: panelde görünme sırasıyla 30 sembol (env durum vektörü bu sırayı kullanır), panel dosyalarının SHA-256'sı, panel tarih aralığı (2005-01-03..2026-11-09) ve dondurma tarihi. `BIST30_SYMBOLS`, `get_symbols(phase=2)` (eğitim rotasının varsayılan veri çekimi), `STOCK_INFO` (30 sembolün adı) ve iki pano listesi bu dosyadan okuyor. Dosya **gerçek BIST-30 üyeliği değil** (hayatta kalma yanlılığı; E1). Evren değişirse betik eski dosyanın üzerine yazmaz, yeni sürüm adı ister.
+  - Etki (beyan): veri sayfası ve rotanın varsayılan çekimi artık panelin 30 hissesini indirir; eski listedeki 6 sembol düştü, 6 sembol eklendi. Eğitilmiş modeller değişmez: evrenleri model dosyasından çözülüyor (`resolve_trade_universe`; `test_trade_universe` 22/0). Kaynaksız 7 sembollük `sector` alanı kaldırıldı (yalnız betik çıktısında kullanılıyordu).
+- **E2 — Y5 kapandı** ([sectors.csv](../../data/universe/sectors.csv), `scripts/build_sectors.py`, `load_sector_groups()`). Kaynak KAP "Sektörler" sayfasının gömülü verisi (`https://kap.org.tr/tr/Sektorler`, erişim 2026-11-14). Her satırda URL, erişim tarihi ve ham sayfanın SHA-256'sı var. Ham sayfa üçüncü taraf içeriği olduğu için depoya girmez; yerelde `data/universe/sources/` altında (gitignore). 30 hissenin her biri KAP'ta tam bir alt sektörde.
+  - **Grup kuralı (mekanik, yargı içermez):** grup = KAP alt sektörü; evrende 2'den az üyesi olan alt sektörlerin hisseleri `DIGER`'de toplanır.
+  - **Sonuç: 8 grup.** BANKALAR 8; HOLDİNGLER VE YATIRIM ŞİRKETLERİ 5 (KCHOL, SAHOL, SISE, TAVHL, TKFEN); METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI 3 (ARCLK, FROTO, TOASO); KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER 3 (PETKM, SASA, TUPRS); ANA METAL SANAYİ 2; ULAŞTIRMA VE DEPOLAMA 2; PERAKENDE TİCARET 2; DIGER 5 (ASELS savunma, EKGYO GYO, ENKAI inşaat, ODAS elektrik, TCELL telekomünikasyon). *Kaynak: `sectors.csv` → `group`, `kap_sector`.*
+  - **Beyan:** `DIGER` ekonomik olarak türdeş değil; sektör maruziyet sınırında bu grup bir sektör gibi davranır. KAP sınıflaması bugünkü hâliyle sabit alınır (nokta-zamanlı değil). SISE ve TAVHL KAP'ta holding alt sektöründe, faaliyet alanına göre değil.
+- **Kabul** `python tests/test_universe.py` → 11/0 (ağ yok). Kontroller:
+  - Evren dosyası RL paneliyle aynı semboller, aynı sıra.
+  - Kod listesi, `get_symbols(phase=2)`, `STOCK_INFO` ve iki pano listesi evren dosyasıyla aynı.
+  - Eski listelerin panelde olmayan sembolleri kalmadı.
+  - Her sembol tam bir grupta; grup başına ≥ 2 sembol; 8 grup.
+  - Kaynak alanları dolu; grup kuralı mekanik.
+  - Saklanan ham sayfadan yeniden üretim, SHA-256 eşleşerek bayt bayt aynı CSV'yi veriyor.
+
+  Diğer testler: `test_trade_universe` 22/0, `test_training_eta` 57/0, `test_dash_props` 4/0.
+- **E1 — tasarım (açık; süre 2026-11-28).**
+  - **Kaynak:** Borsa İstanbul "BIST Pay Endeksleri Dönemsel Değişiklikleri" duyuruları. Endeks dönemleri çeyreklik ve değişiklik en az 10 gün önce ilan ediliyor ([BIST Pay Endeksleri Temel Kuralları](https://borsaistanbul.com/files/bist_pay_endeksleri_temel_kurallari.pdf)). Eski dönemler için KAP bildirimleri denenecek. Duyuru sayfasında görünen en eski kayıt 13.01.2025; 2013'e kadar arşivin derinliği doğrulanmadı.
+  - **Ayrıştırma:** WebFetch tablo çıkarımı güvenilir değil (19.06.2026 duyurusunda "çıkarılacak" sütunu okunamadı). Bu yüzden ham HTML indirilip SHA-256'sıyla yerelde saklanır ve tablo kodla ayrıştırılır (E2'deki gibi).
+  - **Çıktı:** `data/universe/bist30_membership.csv` (dönem başı, dönem sonu, sembol, kaynak URL, ilan tarihi, SHA-256). Yöntem: bugünkü listeden geriye doğru değişiklik zinciri; her dönemde tam 30 üye kontrol edilir. Ayrıca `universe_mask(date)` fonksiyonu ve bir ölçüm JSON'u: panelin 30 hissesinin dönem başına endekste olma oranı, yani hayatta kalma maruziyeti.
+  - **Kapsam sınırı:** maske ortama uygulanmaz (durum uzayı sabit); kullanımı Milestone 0'/M2'de karar verilir. Maske yalnız sembol çıkarabilir; panelde olmayan eski üyeleri ekleyemez. Bu yüzden hayatta kalma yanlılığı beyanı her durumda kalır.
+  - **Düzeltilen ön gözlem.** WebFetch özeti 19.06.2026 duyurusunda (#15483) HALKB'yi BIST 30'a "alınacak" diye okumuştu. Ham tablo ise BIST 30 için alınacak ve çıkarılacak sütunlarını boş ("--") gösteriyor; PASEU, HALKB ve ULKER **yedek** paylar. Ön gözlem yanlıştı. Arama ve WebFetch özetlerinin tablo okuması kanıt sayılmaz; E1 yalnız ham tablodan ayrıştırılır.
+  - **Arşiv bulguları (2026-11-14).**
+    - TR liste sayfası (`/bist-endeksleri/endeks-duyurulari`) statik 334 bağlantı veriyor; sayfalama JavaScript ile yapılıyor ve sunucu `?page`'i yok sayıyor.
+    - Bu sayfada 2013 Q3 (#12189) ile 2025 Q3 arasındaki 54 çeyreğin 45'inin duyurusu var. Eksik çeyrekler: 2024 Q3–2025 Q2, 2025 Q4 ve 2026 Q1–Q4.
+    - Eksikler `scripts/build_membership.py probe` ile aranıyor. Slug zorunlu (yanlış slug 404 döner) ve kimlikler tarihle artıyor; arama penceresi, liste sayfalarındaki komşu duyuruların tarihlerinden kuruluyor.
+    - Tablo biçimi ikiye ayrılıyor. Yeni biçimde sıra numarası, borsa kodu ve unvan ayrı sütunlarda. Eski biçimde (ör. 2013) yalnız kısa ad var, hücre içinde `<br>` ile ayrılmış. Eski biçim ad → kod eşleme tablosu gerektirir (KAP unvanlarından, elle denetimli).
+    - **Zincirin çapası (ölçüldü).** Bugünkü BIST 30 üyeleri KAP "Endeksler" sayfasının gömülü verisinden alındı (kod XU030; `python scripts/build_membership.py anchor` → [bist30_anchor.json](../../data/universe/bist30_anchor.json), 2026-11-14, ham sayfa SHA-256 kayıtlı). **Panelin 30 hissesinin 6'sı bugün BIST 30'da değil:** ARCLK, HALKB, ODAS, SKBNK, TKFEN, TSKB. 6 güncel üye ise panelde yok: AEFES, ASTOR, GUBRF, TRALT, TRMET, TTKOM. *Kaynak: `bist30_anchor.json` → `panel_not_in_index`, `index_not_in_panel`.* Yani "BIST-30" evreni bugün bile endeksle örtüşmüyor; seçim, son günün üyeliğine bile dayanmıyor. Hayatta kalma ve seçim yanlılığı beyanı buna göre yazılmalı. Kabul `test_universe` 13/0.
+    - Dönem içi olağanüstü değişiklikler de BIST 30 üyeliğini değiştirebilir: Yakın İzleme Pazarı'na alınma, işlem sırası kapatma ve benzeri durumlarda yedek pay girer. Bunlar ayrı duyurulardır ve taranmaları gerekir.
+  - **Araç ve durum (2026-11-14 sonu).** `scripts/build_membership.py`. Ham sayfalar ve `index.json` (kimlik, slug, SHA-256, erişim tarihi) `data/universe/sources/bist/` altında (gitignore); depoya giren tek E1 çıktısı şimdilik `bist30_anchor.json`. Komutlar:
+    - `index`: TR liste sayfasından çeyrek → kimlik.
+    - `probe`: eksik çeyrek tarama; pencere ve slug kalıpları betikteki `PROBE` tablosunda.
+    - `anchor`: KAP XU030 çapası.
+    - `fetch`: duyuruları indirir.
+    - `parse`: henüz yazılmadı.
+  - **`probe` sonucu.** Bulunanlar: 2024 Q3 #14682, 2024 Q4 #14707, 2025 Q2 #14784, 2026 Q3 #15483, 2026 Q4 #15598. Bulunamayanlar:
+    - 2025 Q1: eski slug, #14732–14795 penceresi.
+    - 2025 Q4: yeni slug, #15216–15235.
+    - 2026 Q1: kimlik #15293 aramayla biliniyor, ama TR slug'ı tahmin edilen biçimde değil; EN sayfası `/en/announcement/15293/…` biliniyor.
+    - 2026 Q2: 19.03.2026 tarihli duyuru.
+    - Böylece 2013 Q3'ten bugüne 54 çeyreğin 50'sinin kimliği elde. Kalan 4 için sıradaki adım: EN sayfaları ya da TR slug varyantları.
+  - **Ayrıştırıcı (`parse_tables`).** Her endeks başlığı için alınacak, çıkarılacak ve yedek listelerini veriyor. Başlık hücrelerindeki `colspan` açılıyor. Biçim satır genişliğinden tanınıyor: yeni biçim kod okur, eski biçim `<br>` ile ayrılmış adları okur. #12189 (2013 Q3) ve #15483 (2026 Q3) üzerinde ham tabloyla elle karşılaştırılarak denendi; henüz testi yok.
+  - **Kalan (E1).**
+    1. 4 çeyreğin kimliği.
+    2. `fetch`.
+    3. `parse`, ad → kod eşleme tablosu (eski biçim; birleşmiş ya da kotasyondan çıkmış şirketler için elle denetim, kullanıcıya sunulur).
+    4. Dönem içi değişiklik duyuruları.
+    5. Çapadan geriye zincir; her dönemde 30 üye kontrolü.
+    6. `universe_mask(date)` ve maruziyet JSON'u.
+    7. hakem-2, v1.12.0, PR.
+  - **Durum (2026-11-14, oturum 3): çeyreklik katman tamam, dönem içi katman kaynaksız.**
+    - **Kimlik (adım 1).** `/node/<id>` 301 ile kanonik `/duyuru/<id>/<slug>`'a yönleniyor; slug tahmini gereksiz (`build_membership.py nodes`, paralel parça dosyaları). 11000–15700 tarandı (4701 kimlik). Eksik 4 çeyrek bulundu: 2025 Q1 #13287 (ikizi #14899), 2025 Q4 #15220, 2026 Q1 #15293, 2026 Q2 #15391 (ikizi #15392). Kimlikler tarihle sıralı değil. Bazı ikizlerin gövdesi boş (#15218, #15291); `parse` yalnız BIST 30 tablosu olan sayfayı alır, ikizler farklıysa durur. **54/54 çeyrek** (2013 Q3–2026 Q4).
+    - **Ayrıştırıcı.** Izgara `rowspan`/`colspan`'ı açıyor. Satır içi endeks başlığı (2016 Q1: tüm endeksler tek tabloda) ve iç içe Word tabloları (2022 Q1–Q2) okunuyor. Yeni biçimde kod, sıra hücresinden sonraki ilk hücre; unvan sütunu artık kod sanılmıyor (önceki sürüm VESTEL/HEKTAS/OTOKAR'ı kod okuyordu).
+    - **Çıktı (adım 3).** [bist30_changes.csv](../../data/universe/bist30_changes.csv): 54 çeyrek, 94 değişiklik (alınan/çıkan). Satırda dönem, ilan tarihi, ham okuma, kod, kaynak URL, SHA-256 ve ikiz kimlikler var; değişikliksiz çeyrek `none` satırıyla. [bist_name_map.csv](../../data/universe/bist_name_map.csv): eski biçimin 10 adı. Kural mekanik: aynı kaynağın yeni biçim tablolarındaki unvanla normalize **birebir** eşitlik ve tek kod; önek eşleşmesi yok (VESTEL → VESTL, VESBE değil). KOZA MADENCİLİK → KOZAA (#11473 unvanı). **Eşleme kullanıcı denetimini bekliyor.**
+    - **Zincir (adım 5).** `build_membership.py chain`. İhlalde `bist30_membership.csv` yazılmaz. 2018-01-02 → bugün her segment 30 üye. Daha eskide 4 ihlal var: SKBNK (2018 Q1), ECILC (2017 Q4), DOHOL (2017 Q1) ve OTKAR (2015 Q2) alınmış ama sonraki kümede yok. Küme 2013'e doğru 34'e çıkıyor ve 2017–18 halka arzlarını (MAVI, MPARK, SOKM, ENJSA) 2013'e taşıyor. Neden dönem içi olaylar (hızlı giriş ↔ çıkış). Bir haber kaynağı MAVI'nin BIST 30'a 21.06.2017'de dönem içinde girdiğini yazıyor; bu kanıt değil, yalnız ipucu.
+    - **Ders: tutarlılık doğruluk değil.** Dönem içi bir takas üye sayısını değiştirmiyor; hata, etkilenen payın daha eski bir çeyreklik kaydına çarpınca görünür. 2018-01-02 sonrası "30 üye" bu yüzden doğruluk kanıtı sayılmaz: örneğin SOKM 2018-05'te işlem görmeye başladı, ama zincir onu 2018-04-02 segmentinde üye gösteriyor.
+    - **Dönem içi kaynak (adım 4).** Borsa İstanbul sitesinde 256 dönem içi aday indirildi (pazar değişikliği, YİP, bölünme, sektör değişikliği, halka arz dahil etme). 208'inin gövdesi boş: içerik yok, ek yok, JSON ucu yok (2025+). "BIST 30" geçen 5 sayfa türev ve hesaplama duyurusu. Gong basın duyurularında (311 sayfa) endeks bilgisi yok. ~~2013–2024 için dönem içi endeks duyurusu sitede yok.~~ **Düzeltme (hakem-2 E #2):** çeyreklik duyurunun kendisi bir dönem içi olay taşıyor. #11503'te (2017 Q3) BIST 30 "alınacak" listesindeki DOHOL `(*)` işaretli; dipnot şöyle: "(*) 21/06/2017 tarihinden itibaren endekslerden çıkarılacaktır". Ayrıştırıcı bunu atıyordu. 54 çeyrek ve ikizleri tarandı; BIST 30'da işaretli tek öğe bu. Aday kaynak KAP: Borsa İstanbul'un "Endeks Şirketlerinde Değişiklik" bildirimleri (`/tr/api/BildirimPdf/<id>` PDF'i metin veriyor, ör. 1302173). Ancak bildirimleri listelemek için KAP'ın belgelenmemiş iç sorgu ucu gerekiyor; bu oturumda izin denetimi bunu yetkisiz erişim saydı ve durdurdu. **Karar kullanıcıda.**
+    - **Kod.** `universe_mask(date)`, `panel_membership(dates)` ve `load_membership()` ([bist30_symbols.py](../../data/bist30_symbols.py)) yazıldı. Kapsam dışında `None` döner (bilinmiyor; boş küme değil). Maruziyet JSON'unu `build_membership.py exposure` üretiyor; zincir geçince koşulacak.
+    - **Kabul** `test_universe` 20/0 (ağsız). Yeni kontroller:
+      - Ayrıştırıcı üç biçimde: satır içi başlık + `rowspan`, iç içe tablo, eski ad biçimi.
+      - Ad normalizasyonu; önek eşit değil.
+      - Zincir: tutarlı durum, mutasyon (sonraki kümede olmayan alınan pay → ihlal + 31 üye), kod değişikliği.
+
+      `test_trade_universe` 22/0.
+    - **Açık:** TRALT bugünkü çapada var ama hiçbir çeyrekte alınmamış. Büyük olasılıkla KOZAL'ın kod değişikliği; kaynak bulunmadı. Zincir şimdilik 2013'e kadar TRALT kodunu taşıyor (panel maskesini etkilemez, TRALT panelde yok).
+  - **Adım 6 — geçici üyelik, maske ve maruziyet (2026-11-15).** Kullanıcı kararı: dönem içi olay listesi (`bist30_events.csv`) E1'in **son** adımına bırakıldı.
+    - `chain --provisional`, ihlal varken [bist30_membership.csv](../../data/universe/bist30_membership.csv)'yi **GEÇİCİ** olarak yazıyor. Her satırda `n_members` ve `consistent` alanları var. Durum, ihlaller ve girdi SHA-256'ları [bist30_membership_meta.json](../../data/universe/bist30_membership_meta.json)'da (`status: provisional`, 17 ihlal, 38 segment).
+    - ~~**Tutarlılık kuralı.** d tarihindeki bir olay ihlali, payın d ile bir sonraki olay arasında (segmentin içinde) dönem içi değiştiğini gösterir.~~ **Öncülü yanlış (hakem-2 E #1), aşağıdaki inceleme bloğunda yeniden kuruldu.** Bu kuralla bulunan kesim (2018-04-02) yalnız **sezgisel** `count_checked` modu olarak kalıyor.
+    - `universe_mask(date)` tutarsız segmentte `None` döner (`include_inconsistent=True` ile ham küme).
+    - **Maruziyet:** aşağıdaki inceleme bloğundaki ölçü geçerli. Hisse başına nitel cümleler ("hiç endekste olmayan tek panel hissesi" vb.) geri çekildi (hakem-2 E #3).
+    - **Beyan.** "Tutarlı" doğru demek değildir. Halka arz hızlı girişleri (MPARK ve ENJSA 2018-02, SOKM 2018-05) dönem içi olaylardır ve 2018-04-02 sonrası segmentleri de etkileyebilir. Örneğin SOKM, 2018-04-02 segmentinde 2018-05'ten önce üye görünüyor. Oranlar dönem içi olaylar eklenince yeniden ölçülecek.
+    - **Kabul** `test_universe` 28/0 (ağsız). Yeni kontroller:
+      - Meta ve girdi SHA-256'ları eşleşiyor.
+      - 54 çeyreğin her birinde kaynak var.
+      - Segmentler kesintisiz; son segment çapayla aynı.
+      - Maske kapsam dışı ve tutarsız segmentte `None` dönüyor.
+      - Tutarlı kısımdaki her çeyreklik değişiklik, maskede yürürlük gününde görünüyor.
+      - Maruziyet dosyası üyelik SHA-256'sına bağlı.
+      - Depodaki girdilerden üyelik + meta, ham duyurulardan değişiklik + ad tablosu bayt bayt aynı yeniden üretiliyor.
+  - **hakem-2 incelemesi (2026-11-15; E paketi, GEÇİCİ durum, uç d2408c2): Büyük revizyon (RED yok).** Maliyet ~85 bin token, 18 araç, ~5,7 dk. Hakem 14 çeyreği ham metinle elle karşılaştırdı; hepsi eşleşti. Düzeltmeler:
+
+    | # | Önem | Bulgu | Düzeltme |
+    |---|---|---|---|
+    | 1 | BÜYÜK | `consistent_from`'un öncülü yanlış. d'de alınan c'nin sonraki kümede olmaması yalnız şunu söyler: c'nin üyeliği d ile **c'nin bir sonraki kaydı (ya da çapa)** arasında kayıtsız değişti. Bu aralık birden çok segmente yayılabilir (DOHOL: 2017-01-02 → 21/06/2017 → 2017-07-03). SKBNK, ECILC ve OTKAR'ın sonraki kaydı yok, aralıkları çapaya kadar açık. | `unknown_intervals`: ihlal başına [d, payın sonraki kaydı), uygulama gün düzeyinde (`universe_mask(mode='strict')`). **Katı kapsam: 0 segment, 0 panel seansı.** Eski kural adıyla **sezgisel** `count_checked` modu (2018-04-02..): "yalnız çeyreklik duyurular, sayı denetiminden geçen"; doğruluk iddiası taşımaz. Test: DOHOL tipi iki segmente yayılan aralık. |
+    | 2 | BÜYÜK | #11503 dipnotu ayrıştırıcıda kayboluyordu; "sitede kanıt yok" iddiası yanlıştı. | `parse_tables` işaretli öğeleri (`marked`), `footnotes()` dipnot tanımlarını okuyor. `bist30_changes.csv`'ye `marked` sütunu eklendi. Yeni dosya [bist30_footnotes.csv](../../data/universe/bist30_footnotes.csv): 1 aday (2017 Q3 DOHOL, alıntı + SHA-256). İşaretli öğe var ama dipnot metni yoksa `parse` durur. Aday, dönem içi olay listesine kullanıcının seçtiği zamanda (E1'in son adımı) taşınacak. |
+    | 3 | KÜÇÜK | Hisse başına nitel cümleler (SKBNK 0,0; "17 hisse her seans") geçici zincirin taşıyamayacağı kesinlikte yazılmıştı. | Cümleler geri çekildi. `exposure.json`'a `share_upper_if_unknown_panel_members` duyarlılık sınırı eklendi (SKBNK'nın bilinmeyen seansları üye sayılırsa). |
+    | 4 | KÜÇÜK | Bayt bayt yeniden üretim belirlenimciliği gösterir, doğruluğu değil. | Değişmezler eklendi: her çeyrekte alınan = çıkarılan; dönem başının çeyreği = anahtar; ilan < dönem başı. Elle doğrulanmış 5 çeyreklik referans (eski ad 2013 Q4, tek tablo 2016 Q1, dipnot 2017 Q3, iç içe 2022 Q1, yeni biçim 2026 Q4; ham alıntı testte). |
+    | 5 | KÜÇÜK | Ad eşlemesinde kanıt tarihçe olarak uzak olabilir; unvanı aynı kalan kod değişikliğine karşı koruma yok. | `bist_name_map.csv` artık şunları tutuyor: adın geçtiği çeyrekler, en yakın kanıt kimliği ve tarihi, `year_gap` (1–6 yıl), tüm kanıt kimlikleri. Panel hisseleri için "ilk işlem gününden önce üye" denetimi `exposure.json`'da; ihlal yok. Panel dışı kodlar için ilk işlem tarihi kaynağı açık (SOKM, TRALT bu yüzden henüz yakalanmıyor). |
+    | 6 | KÜÇÜK | `load_membership` docstring'i geçici durumda yanlış iddia ediyordu ("her segment 30", "o tarihteki kod"). | Docstring geçici/kesin ayrımıyla yeniden yazıldı. |
+    | 7 | KÜÇÜK | `_period` gövdedeki ilk aralığı alıyor (kırılgan). | 4. maddedeki değişmez testiyle bağlandı. |
+
+    - **Ölçüm (geçici; [exposure.json](measurements/phase9-e1/exposure.json), `measure` = count_checked).** Katı kapsam 0 seans (`strict_sessions_covered`). Sezgisel kesimde (2018-04-02..2026-11-09, 2.172 seans) panelin seans başına ortalama 23,536'sı (0,7845) BIST 30'da (`mean_panel_in_index`, `share_panel_in_index`). SKBNK'nın 2.172 bilinmeyen seansı üye sayılırsa oran 0,8179 olur (`share_upper_if_unknown_panel_members`, `unknown_panel_sessions`). Bu yalnız SKBNK'ya koşullu bir değer, genel bir sınır değil: kayıtsız takaslar oranı iki yönde de oynatabilir ve sınırlanamıyor (hakem-2 ikinci okuma #2). Teze önerilen ifade (hakem-2): "Yalnız çeyreklik duyurulardan geriye kurulan geçici üyelikte… panelin ortalama 23,5/30'u (%78) BIST 30'daydı; dönem içi olaylar dahil edilmedi, oran kesin değil." Hisse başına nitel cümle yazılmaz.
+    - **Gözlem (zinciri etkilemez).** 2026 Q4'te alınan TRMET'in unvanı "TR ANADOLU METAL MADENCILIK"; KOZAA'nın (KOZA MADENCİLİK) kod değişikliği olabilir. TRALT ↔ KOZAL ile birlikte kod değişikliği olaylarına yazılacak.
+    - **hakem-2'nin 5. yanıtı.** PR'a GEÇİCİ altyapı olarak gidilebilir. E1, K3 sınırlılık beyanıyla kapatılmamalı: süre 2026-11-28 ve olay kaynağı ucuz (#11503 + KAP'ta 2017-06..2018-05 aralığında yaklaşık 4 olay). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı.
+    - **hakem-2 ikinci okuma (SendMessage, ~118 bin token önceki bağlamla, 5 araç, ~1,1 dk): Küçük revizyon; PR'ı engellemez, GEÇİCİ altyapı olarak birleşebilir.** Testi kendi koştu (32/0). İşlenen 3 KÜÇÜK bulgu:
+      1. Katı mod çapa gününü de None döndürüyordu. Açık uçlu aralığın sonu artık çapa günü (hariç); çapa günü katı modda bilinen sayılıyor.
+      2. "Üst sınır" yerine "SKBNK'ya koşullu değer".
+      3. `strict` docstring'i: "tespit edilmiş tutarsızlık yok", doğruluk iddiası yok.
+
+      Ek gözlem: TEKFEN HOLDİNG eşlemesinde `year_gap` 6; kullanıcı denetiminde bu satıra özellikle bakılmalı.
+    - **Kabul** `test_universe` 33/0 (ağsız).
+
 ---
 
 ## Versiyon geçmişi
@@ -1349,3 +1459,8 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.18, B11 + Y25; B10 kapandı):** BiLSTM/TFT eğitim penceresi satır i'yi içeriyor, yön etiketi ham hedeften (Y22; `test_dl_alignment` 12). `test_prediction` 6/6 (Y23: `PricePredictor` `test_ratio`, DL'nin sessiz dönüşü, eski şemalar). TATS değer testi (Y25; `test_tats_labels` 31). Yeni ve kapanan Y27 (tracker yön doğruluğu metin olarak yazılıyordu). Golden bilinen nedenle kırmızı (K1 seçenek 1).
 - **2026-11-14 (§9.19, Y28 kapandı; v1.10.0):** Canlı `predict_next` ve SHAP ucu `build_inference_features` ile en son satırı kullanıyor (eğitim yolu değişmedi); `feature_date` köken alanı. Kabul `test_tats_labels` 43 (mutasyon günlük/haftalık, `stale_features` bekçisi); gerçek veride `live_tail.json` `all_ok`. Golden kırmızı, `test_mape` değişmedi. Yeni Y29 (tracker hedef tarihi duvar saatinden), Y30 (SHAP ucu farklı matris). hakem-2 Küçük revizyon, işlendi.
 - **2026-11-14 (§9.20, Y29 kapandı; v1.11.0):** `prediction_date` veriden (`feature_date` + h iş günü); tracker gerçekleşen kapanışı `feature_date`'ten sonraki h. gerçek seanstan alıyor (`actual_date`), Y28 öncesi ve bayat kayıtlar değerlendirilmiyor ve metriklerden düşüyor. Kabul `test_prediction` 7 (TEST 7, mutasyon). Mevcut takipte 1 kayıt (Y28 öncesi). Ortak kurallar `prediction/tracker_rules.py`. Yeni Y31 (altın gerçekleşen kapanışı GC=F, birim farkı).
+- **2026-11-14 (§9.21, E0 + E2; E1 açık):** Evren tek dosyada (`data/universe/bist30_panel.json`; Y11 kapandı), KAP sektör sınıflaması ve 8 grup (`sectors.csv`; Y5 kapandı). Kabul `test_universe` 11. E1 tasarımı ve süre (2026-11-28) kayıtta.
+- **2026-11-14 (§9.21, E1 sürüyor):** Bugünkü BIST 30 çapası KAP'tan (`bist30_anchor.json`; panelin 6 hissesi bugün endekste değil). Borsa İstanbul arşivinde 54 çeyreğin 50'sinin duyuru kimliği bulundu. İki biçimi okuyan tablo ayrıştırıcısı hazır. HALKB ön gözlemi düzeltildi: yedek pay. `test_universe` 13.
+- **2026-11-14 (§9.21, E1 oturum 3):** 54/54 çeyrek duyurusu (`/node/<id>` yönlendirmesiyle). Izgara ayrıştırıcı (rowspan, iç içe tablo). `bist30_changes.csv` (94 değişiklik) ve mekanik ad → kod tablosu (10 ad, kullanıcı denetiminde). Zincir 2018-01-02'den bugüne tutarlı ama doğruluk kanıtı değil; 2015–2018'de 4 ihlal (dönem içi olaylar). Borsa İstanbul sitesinde dönem içi kaynak yok, KAP listelemesi izin bekliyor. `universe_mask`. `test_universe` 20.
+- **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.
+- **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.

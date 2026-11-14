@@ -27,12 +27,7 @@ from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
-BIST30_SYMBOLS = [
-    "AKBNK.IS","ARCLK.IS","ASELS.IS","BIMAS.IS","EKGYO.IS","EREGL.IS","FROTO.IS","GARAN.IS",
-    "HALKB.IS","ISCTR.IS","KCHOL.IS","KOZAL.IS","KRDMD.IS","MGROS.IS","ODAS.IS","PETKM.IS",
-    "PGSUS.IS","SAHOL.IS","SASA.IS","SISE.IS","SKBNK.IS","TAVHL.IS","TCELL.IS","THYAO.IS",
-    "TKFEN.IS","TOASO.IS","TSKB.IS","TUPRS.IS","VAKBN.IS","YKBNK.IS",
-]
+from data.bist30_symbols import BIST30_SYMBOLS  # tek kaynak: data/universe/bist30_panel.json (E0, Y11)
 DEFAULT_SYMBOLS = BIST30_SYMBOLS[:5]
 
 

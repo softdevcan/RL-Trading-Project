@@ -20,6 +20,24 @@ borsapy/yf     → gold_fetcher.py       ─┘
                                          → evaluator.py → trading_env.py (RL obs space)
 ```
 
+## Sembol evreni (Faz 9 E0, Y11/K7)
+- Tek kaynak `data/universe/bist30_panel.json` (RL panelinin 30 hissesi, panel sirasiyla; GERCEK
+  BIST-30 uyeligi DEGIL). `BIST30_SYMBOLS`, `STOCK_INFO`, pano listeleri ve egitim rotasinin varsayilan
+  cekimi buradan. Elle liste yazma; evren degisirse `scripts/freeze_universe.py` YENI surum adiyla.
+- Sektor (E2, Y5): `data/universe/sectors.csv` — KAP 'Sektorler' gomulu verisinden (`scripts/build_sectors.py`),
+  satir basina URL + erisim tarihi + ham sayfa SHA-256; `load_sector_groups()`. Grup = KAP alt sektoru,
+  evrende <2 uyeli olanlar DIGER (8 grup). Ham KAP/Borsa sayfalari `data/universe/sources/` (gitignore).
+- Tarihsel uyelik (E1, suruyor): `scripts/build_membership.py` (index/nodes/fetch/parse/chain/exposure). `/node/<id>`
+  301 ile kanonik slug'a yonlenir (slug tahmini gereksiz); 54/54 ceyrek -> `bist30_changes.csv`, eski bicim ad->kod
+  `bist_name_map.csv` (birebir unvan esitligi, onek YOK). `chain` ihlalde uyelik YAZMAZ (`--provisional`: GECICI;
+  meta `bist30_membership_meta.json` -> `unknown_intervals`: ihlal basina [d, payin SONRAKI kaydi), segment degil). `universe_mask(date, mode=)`:
+  'strict' (varsayilan; bilinmeyen gun None — su an hep None), 'count_checked' (SEZGISEL, yalniz sayi denetimi), 'raw'.
+  Tutarlilik dogruluk degil (donem ici takas sayiyi bozmaz). Duyurudaki `(*)` dipnotu = donem ici olay ADAYI
+  (`bist30_footnotes.csv`; #11503 DOHOL 21/06/2017) — `_norm_name` isareti dusurur, `marked` sutunu tutar. Donem ici olay listesi (`bist30_events.csv`) E1'in SON adimi. Donem ici olaylar sitede yok/bos govde -> KAP (plan §9.21). Capa
+  `data/universe/bist30_anchor.json` = BUGUNKU BIST 30 (KAP XU030); panelin 6 hissesi bugun endekste degil.
+  **Arama/WebFetch tablo ozetini kanit sayma** (HALKB 'alinan' okundu, ham tabloda yedek); yalniz ham tablodan.
+  Borsa Istanbul duyuru URL'sinde slug zorunlu (yanlis slug 404); TR liste sayfasi statik, sayfalama JS.
+
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)
 - `fetch_incremental()`: Sadece eksik günleri çeker, mevcut CSV'ye append eder
