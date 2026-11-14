@@ -95,9 +95,24 @@ def test_e2():
         print("  [ATLA]  yerel KAP kopyasi yok (data/universe/sources gitignore); yeniden uretim atlandi")
 
 
+def test_e1_anchor():
+    print("\nE1 — zincir capasi: bugunku BIST 30 (KAP XU030)")
+    from data.bist30_symbols import BIST30_SYMBOLS
+    with open(os.path.join(ROOT, 'data', 'universe', 'bist30_anchor.json'), encoding='utf-8') as f:
+        a = json.load(f)
+    codes, panel = set(a['codes']), {s[:-3] for s in BIST30_SYMBOLS}
+    check("capa: 30 benzersiz kod, KAP URL, tarih, ham sayfa SHA-256",
+          len(a['codes']) == 30 == len(codes) and a['source_url'].startswith('https://kap.org.tr/')
+          and a['as_of'] and len(a['source_sha256']) == 64)
+    check(f"panel/endeks farki dosyadaki kayitla tutarli (panelde olup endekste olmayan "
+          f"{len(a['panel_not_in_index'])})",
+          sorted(panel - codes) == a['panel_not_in_index'] and sorted(codes - panel) == a['index_not_in_panel'])
+
+
 def main() -> int:
     test_e0()
     test_e2()
+    test_e1_anchor()
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0

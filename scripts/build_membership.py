@@ -19,7 +19,8 @@ import urllib.request
 from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'data', 'universe', 'sources', 'bist')
+sys.path.insert(0, ROOT)
+SRC =os.path.join(ROOT, 'data', 'universe', 'sources', 'bist')
 INDEX = os.path.join(SRC, 'index.json')
 BASE = 'https://borsaistanbul.com'
 UA = {'User-Agent': 'Mozilla/5.0 (research client)'}
@@ -194,13 +195,43 @@ def parse_tables(html: str) -> dict:
     return out
 
 
+KAP_INDEX_URL = 'https://kap.org.tr/tr/Endeksler?indice=QklTVCAzMA'
+ANCHOR = os.path.join(ROOT, 'data', 'universe', 'bist30_anchor.json')
+
+
+def cmd_anchor() -> None:
+    """Zincirin capasi: BUGUNKU BIST 30 uyeleri (KAP 'Endeksler' gomulu verisi, kod XU030)."""
+    html = _get(KAP_INDEX_URL)
+    today = str(date.today())
+    os.makedirs(SRC, exist_ok=True)
+    import gzip
+    with gzip.open(os.path.join(SRC, f'kap_endeksler_{today}.html.gz'), 'wb') as f:
+        f.write(html)
+    t = html.decode('utf-8').replace('\\"', '"')
+    i = t.find('"code":"XU030"')
+    j = t.find('"code":"', i + 10)
+    codes = re.findall(r'"stockCode":"([^"]+)"', t[i:j])
+    if i < 0 or len(codes) != 30 or len(set(codes)) != 30:
+        sys.exit(f'XU030 bulunamadi ya da 30 degil: {len(codes)}')
+    from data.bist30_symbols import BIST30_SYMBOLS
+    panel = {s[:-3] for s in BIST30_SYMBOLS}
+    doc = {'index': 'BIST 30 (XU030)', 'as_of': today, 'source_url': KAP_INDEX_URL,
+           'source_sha256': hashlib.sha256(html).hexdigest(), 'codes': codes,
+           'panel_not_in_index': sorted(panel - set(codes)), 'index_not_in_panel': sorted(set(codes) - panel)}
+    with open(ANCHOR, 'w', encoding='utf-8') as f:
+        json.dump(doc, f, ensure_ascii=False, indent=1)
+    print(json.dumps({k: doc[k] for k in ('as_of', 'panel_not_in_index', 'index_not_in_panel')}), flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['index', 'probe', 'fetch', 'parse'])
+    ap.add_argument('cmd', choices=['index', 'probe', 'anchor', 'fetch', 'parse'])
     ap.add_argument('--max-pages', type=int, default=200)
     a = ap.parse_args()
     if a.cmd == 'index':
         cmd_index(a.max_pages)
+    elif a.cmd == 'anchor':
+        cmd_anchor()
     elif a.cmd == 'probe':
         cmd_probe()
     elif a.cmd == 'fetch':
