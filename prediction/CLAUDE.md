@@ -27,7 +27,12 @@
   degistiriyorlar (GPU-preload, TFT gruplanmis-VSN, AMP olculup reddedildi). Sifirdan yeniden egitimde
   acilir, golden o donanimda yenilenir. Ayrinti `docs/development/phase-6-backend-performance.md`.
 
-## Canli tahmin bir ufuk bayat (Y28, ACIK)
-`predict_next` son ozellik satiri t-1 (gunluk) / t-5 (haftalik): `build_features` hedefi NaN olan son
-satirlari atiyor, `current_close` ise close[t] (Faz 9 §9.18). Tracker canli dogrulugu ve canli
-tahminden turetilen her sonuc Y28 kapanana kadar KULLANILMAZ.
+## Canli tahmin = son satir (Y28 kapandi, Faz 9 §9.19)
+- Cikarim yolu (`predict_next`, SHAP ucu) `build_inference_features` kullanir: hedefi NaN olan son h
+  satir TUTULUR, son ozellik satiri = df'in son tarihi. Egitim/CV/HPO `build_features` (dropna'li) — yeni
+  bir cikarim yolu yazarken `build_features` KULLANMA, bir ufuk bayat olur. Test: `test_tats_labels` (Y28).
+- `predict_next` ciktisi ve tracker kaydi `feature_date` + `stale_features` tasir; `feature_date`'siz kayit Y28 oncesi,
+  `stale_features=True` kayit son gun ozelligi NaN (ikisi de bayat, canli dogruluga girmez).
+- **Y30 ACIK:** SHAP ucu `predict_next`'ten farkli matris kuruyor (makro/capraz/temel/feature_groups yok).
+- **Y29 ACIK:** `prediction_date` duvar saatinden (now + 1/7 takvim gunu), verinin son seansindan degil;
+  tracker canli dogrulugu Y29 kapanana kadar rapora GIRMEZ.

@@ -39,7 +39,8 @@ python tests/test_cv_feature_selection.py  # Faz 9/B8: CV ozellik secimi kat ici
                                            #          kume bit-es + mutasyon (13, < 1 dk)
 python tests/test_tats_labels.py           # Faz 9/B10: TATS uyum girdileri HAM kapanis + gercek
                                            #          getiri; gunluk/haftalik, ICEEMDAN kolu, kisa OOF, mutasyon; K21: TATS'li/TATS'siz
-                                           #          test + kaydet/yukle; Y25 gercek correct degerle (31, ~2 dk)
+                                           #          test + kaydet/yukle; Y25 gercek correct degerle; Y28 canli predict_next
+                                           #          son satir = df.index[-1] gunluk/haftalik + mutasyon, stale_features bekcisi (43, ~1 dk)
 python tests/test_dl_alignment.py          # Faz 9/B11: BiLSTM/TFT egitim<->cikarim penceresi ayni satir,
                                            #          yon etiketi ham hedeften (gunluk/haftalik), _fit -> ham y, target_type aktarimi, tohumlu mutasyon (18, ~1 dk)
 python tests/test_prediction.py            # Tahmin zinciri (6 test; DL kucuk veride egitilmez, beyan)

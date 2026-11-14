@@ -1,0 +1,68 @@
+{
+ "command": "python scripts/analysis/measure_y28_live_tail.py --out docs/development/measurements/phase9-y28/live_tail.json",
+ "git": "2b2f808",
+ "prediction_dir_dirty": false,
+ "all_ok": true,
+ "rows": {
+  "THYAO.IS/daily": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-11",
+   "extra_rows": 1,
+   "expected_extra_rows": 1,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  },
+  "THYAO.IS/weekly": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-05",
+   "extra_rows": 5,
+   "expected_extra_rows": 5,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  },
+  "GARAN.IS/daily": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-11",
+   "extra_rows": 1,
+   "expected_extra_rows": 1,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  },
+  "GARAN.IS/weekly": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-05",
+   "extra_rows": 5,
+   "expected_extra_rows": 5,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  },
+  "ASELS.IS/daily": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-11",
+   "extra_rows": 1,
+   "expected_extra_rows": 1,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  },
+  "ASELS.IS/weekly": {
+   "df_last": "2026-11-12",
+   "inference_last": "2026-11-12",
+   "train_last": "2026-11-05",
+   "extra_rows": 5,
+   "expected_extra_rows": 5,
+   "same_feature_cols": true,
+   "same_values_on_train_rows": true,
+   "inference_last_is_df_last": true
+  }
+ }
+}
