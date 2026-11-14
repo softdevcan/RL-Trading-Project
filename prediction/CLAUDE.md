@@ -34,5 +34,8 @@
 - `predict_next` ciktisi ve tracker kaydi `feature_date` + `stale_features` tasir; `feature_date`'siz kayit Y28 oncesi,
   `stale_features=True` kayit son gun ozelligi NaN (ikisi de bayat, canli dogruluga girmez).
 - **Y30 ACIK:** SHAP ucu `predict_next`'ten farkli matris kuruyor (makro/capraz/temel/feature_groups yok).
-- **Y29 ACIK:** `prediction_date` duvar saatinden (now + 1/7 takvim gunu), verinin son seansindan degil;
-  tracker canli dogrulugu Y29 kapanana kadar rapora GIRMEZ.
+- Tracker kurallari tek yerde: `prediction/tracker_rules.py` (Y29 kapandi, §9.20). `prediction_date` =
+  `feature_date` + h is gunu (tahmini; BIST tatilleri bilinmiyor). Gerceklesen kapanis = `feature_date`'ten
+  SONRAKI h. GERCEK seans (`actual_date` kaydedilir; NaN taslak satir seans sayilmaz). Gecersiz kayit
+  (`invalid_reason`) degerlendirilmez ve `get_performance_history`'den (kayan metrik, ozet, grafik) duser.
+  `compute_calibration` filtrelenmez (F3'te egitim tahminleri de kullanir).

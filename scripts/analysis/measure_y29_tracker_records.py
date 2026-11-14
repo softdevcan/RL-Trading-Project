@@ -24,10 +24,11 @@ def main():
     a = ap.parse_args()
     files = glob.glob("data/predictions/*_predictions.json") + glob.glob("workspaces/*/data/predictions/*_predictions.json")
     c, ce = Counter(), Counter()
-    dates = []
+    dates, syms = [], set()
     for f in files:
         with open(f, encoding="utf-8") as fh:
             data = json.load(fh)
+        syms.add(os.path.basename(f)[:-len("_predictions.json")])
         for pd_, hz in data.items():
             for h, e in hz.items():
                 r = invalid_reason(e) or "valid"
@@ -37,7 +38,7 @@ def main():
                 dates.append(pd_)
     git = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
     out = {"command": "python scripts/analysis/measure_y29_tracker_records.py " + " ".join(sys.argv[1:]),
-           "git": git, "n_files": len(files),
+           "git": git, "n_files": len(files), "file_stems": sorted(syms),
            "n_workspaces_with_records": len({f.split(os.sep)[1] for f in files if f.startswith("workspaces")}),
            "records_by_horizon_reason": dict(c), "evaluated_by_horizon_reason": dict(ce),
            "prediction_date_min": min(dates) if dates else None, "prediction_date_max": max(dates) if dates else None}
