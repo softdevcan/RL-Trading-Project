@@ -31,6 +31,8 @@
 - Cikarim yolu (`predict_next`, SHAP ucu) `build_inference_features` kullanir: hedefi NaN olan son h
   satir TUTULUR, son ozellik satiri = df'in son tarihi. Egitim/CV/HPO `build_features` (dropna'li) — yeni
   bir cikarim yolu yazarken `build_features` KULLANMA, bir ufuk bayat olur. Test: `test_tats_labels` (Y28).
-- `predict_next` ciktisi ve tracker kaydi `feature_date` tasir; tasimayan tracker kaydi Y28 oncesi (gecersiz).
+- `predict_next` ciktisi ve tracker kaydi `feature_date` + `stale_features` tasir; `feature_date`'siz kayit Y28 oncesi,
+  `stale_features=True` kayit son gun ozelligi NaN (ikisi de bayat, canli dogruluga girmez).
+- **Y30 ACIK:** SHAP ucu `predict_next`'ten farkli matris kuruyor (makro/capraz/temel/feature_groups yok).
 - **Y29 ACIK:** `prediction_date` duvar saatinden (now + 1/7 takvim gunu), verinin son seansindan degil;
   tracker canli dogrulugu Y29 kapanana kadar rapora GIRMEZ.
