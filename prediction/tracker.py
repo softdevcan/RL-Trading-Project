@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from filelock import FileLock
 
 from prediction.evaluator import PredictionEvaluator
+from prediction.tracker_rules import actual_after_sessions, horizon_sessions, invalid_reason
 
 logger = logging.getLogger(__name__)
 
@@ -139,8 +140,12 @@ class PredictionTracker:
     def evaluate_prediction(
         self, symbol: str, pred_date: str, actual_close: float,
         horizon: str = 'daily', source: Optional[str] = None,
+        actual_date: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        """Belirtilen tarih/sembol tahminine gerçek fiyatı yaz ve hata hesapla."""
+        """Belirtilen tarih/sembol tahminine gerçek fiyatı yaz ve hata hesapla.
+
+        actual_date: gerçekleşen kapanışın seans tarihi (Y29: feature_date'ten sonraki h. seans).
+        """
         data = self._load(symbol, source)
 
         if pred_date not in data or horizon not in data[pred_date]:
@@ -160,6 +165,8 @@ class PredictionTracker:
         entry['actual_close'] = round(float(actual_close), 4)
         entry['error_pct'] = round(float(error_pct), 2) if error_pct is not None else None
         entry['direction_correct'] = direction_correct
+        if actual_date is not None:
+            entry['actual_date'] = actual_date
         entry['evaluated_at'] = datetime.now().isoformat()
 
         data[pred_date][horizon] = entry
@@ -173,14 +180,23 @@ class PredictionTracker:
 
         return entry
 
+    @staticmethod
+    def _fetch_closes(symbol: str, start: str, end: str):
+        """yfinance gunluk kapanis serisi [start, end). Testte taslakla degistirilir."""
+        import yfinance as yf
+
+        yf_sym = symbol if symbol not in ('GOLD_GRAM_TRY',) else 'GC=F'
+        hist = yf.Ticker(yf_sym).history(start=start, end=end)
+        return hist['Close'] if not hist.empty else hist
+
     def evaluate_pending(self, symbols: Optional[List[str]] = None):
         """Gerçek fiyatı bilinmeyen bekleyen tahminleri değerlendir.
 
-        Bugünden önceki tarihli tahminler için yfinance'dan fiyat çeker.
-        Her dosya (symbol+source) ayri ayri taranir.
+        Y29: gerçekleşen kapanış, kaydın `feature_date`'inden SONRAKI h. gerçek seansın kapanışıdır
+        (h: günlük 1, haftalık 5); tahmini `prediction_date` (iş günü) yalnız ön filtre.
+        `feature_date`'i olmayan (Y28 öncesi, bir ufuk bayat) ve `stale_features` kayıtlar
+        değerlendirilmez; sayısı `last_skipped_invalid`'de. Her dosya (symbol+source) ayrı taranır.
         """
-        import yfinance as yf
-
         files = self._list_prediction_files()
         if symbols is not None:
             sym_set = set(symbols)
@@ -188,6 +204,7 @@ class PredictionTracker:
 
         today = datetime.now().date()
         evaluated_count = 0
+        self.last_skipped_invalid: Dict[str, int] = {}
 
         for symbol, source, _path in files:
             data = self._load(symbol, source)
@@ -204,17 +221,24 @@ class PredictionTracker:
                 for horizon, entry in horizons.items():
                     if entry.get('actual_close') is not None:
                         continue
+                    reason = invalid_reason(entry)
+                    if reason:
+                        self.last_skipped_invalid[reason] = self.last_skipped_invalid.get(reason, 0) + 1
+                        continue
 
                     try:
-                        yf_sym = symbol if symbol not in ('GOLD_GRAM_TRY',) else 'GC=F'
-                        ticker = yf.Ticker(yf_sym)
-                        end = (pred_dt + timedelta(days=1)).strftime('%Y-%m-%d')
-                        hist = ticker.history(start=pred_date, end=end)
-                        if hist.empty:
+                        h = horizon_sessions(horizon)
+                        fd = entry['feature_date']
+                        end = (datetime.strptime(fd, '%Y-%m-%d') + timedelta(days=7 * h + 14)).strftime('%Y-%m-%d')
+                        closes = self._fetch_closes(symbol, fd, min(end, today.strftime('%Y-%m-%d')))
+                        if len(closes) == 0:
                             continue
-
-                        actual = float(hist['Close'].iloc[-1])
-                        self.evaluate_prediction(symbol, pred_date, actual, horizon, source=source)
+                        got = actual_after_sessions(closes, fd, h)
+                        if got is None:
+                            continue  # h. seans henuz yok
+                        actual_date, actual = got
+                        self.evaluate_prediction(symbol, pred_date, actual, horizon, source=source,
+                                                 actual_date=actual_date)
                         evaluated_count += 1
 
                     except Exception as exc:
@@ -222,6 +246,8 @@ class PredictionTracker:
                             f"  {symbol} src={source} {horizon} {pred_date} değerlendirilemedi: {exc}"
                         )
 
+        if self.last_skipped_invalid:
+            logger.info(f"Gecersiz kayit (degerlendirilmedi): {self.last_skipped_invalid}")
         logger.info(f"Toplam {evaluated_count} tahmin değerlendirildi")
         return evaluated_count
 
@@ -232,7 +258,10 @@ class PredictionTracker:
     def get_performance_history(
         self, symbol: str, horizon: str = 'daily', days: int = 30
     ) -> List[Dict[str, Any]]:
-        """Son N gün için değerlendirilmiş tahmin geçmişini döndür."""
+        """Son N gün için geçerli canlı tahmin geçmişi (kayan metrik, özet, grafik bunu okur).
+
+        Y29: `feature_date`'i olmayan ve `stale_features` kayıtlar dışarıda (tracker_rules.invalid_reason).
+        """
         data = self._load(symbol)
 
         cutoff = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
@@ -242,7 +271,7 @@ class PredictionTracker:
             if pred_date < cutoff:
                 continue
             entry = horizons.get(horizon)
-            if entry is None:
+            if entry is None or invalid_reason(entry):  # Y29: Y28 oncesi / bayat kayit metriğe girmez
                 continue
             history.append({'prediction_date': pred_date, **entry})
 
