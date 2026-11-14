@@ -131,8 +131,8 @@
   }
  ],
  "inputs_sha256": {
-  "bist30_anchor.json": "b78b64ebc13fb883a193f0aad07a8fe46904ed1d606c6f9992d5d1955427ca87",
-  "bist30_changes.csv": "02d1f01604a842a1bb22b25156fcf19e0e6aeeb58aee132d09b4fe653a310f84"
+  "bist30_anchor.json": "a176e9169064d3086c22aee7fb5b9455bc91d2690eef7a55cd917b19279f9e57",
+  "bist30_changes.csv": "d190fa8fcf30cd270dcb071ca71f7af0a6de1f40b56c9e59a69a143364348215"
  },
  "note": "GECICI: donem ici olaylar (bist30_events.csv) eklenmedi. KATI modda bilinmeyen araliklar None doner; count_checked SEZGISELDIR (yalniz sayi denetimi), dogruluk kaniti degildir."
 }
