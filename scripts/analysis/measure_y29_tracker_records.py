@@ -37,8 +37,10 @@ def main():
                     ce[f"{h}/{r}"] += 1
                 dates.append(pd_)
     git = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+    dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", "prediction"],
+                                capture_output=True, text=True).stdout.strip())
     out = {"command": "python scripts/analysis/measure_y29_tracker_records.py " + " ".join(sys.argv[1:]),
-           "git": git, "n_files": len(files), "file_stems": sorted(syms),
+           "git": git, "prediction_dir_dirty": dirty, "n_files": len(files), "file_stems": sorted(syms),
            "n_workspaces_with_records": len({f.split(os.sep)[1] for f in files if f.startswith("workspaces")}),
            "records_by_horizon_reason": dict(c), "evaluated_by_horizon_reason": dict(ce),
            "prediction_date_min": min(dates) if dates else None, "prediction_date_max": max(dates) if dates else None}

@@ -115,6 +115,16 @@ class PredictionTracker:
         if pred_date not in data:
             data[pred_date] = {}
 
+        # Y29 (hakem-2 #3): ex-ante iz korunur — ayni hedefe ait degerlendirilmis kaydin ya da ayni
+        # feature_date ile uretilmis ilk tahminin uzerine YAZILMAZ (ilk tahmin kayitta kalir).
+        old = data[pred_date].get(horizon)
+        if old is not None and (old.get('actual_close') is not None
+                                or (old.get('feature_date')
+                                    and old.get('feature_date') == prediction.get('feature_date'))):
+            logger.info(f"  Tahmin zaten kayitli, korunuyor (ilk tahmin): {symbol} src={source} "
+                        f"{horizon} {pred_date}")
+            return
+
         data[pred_date][horizon] = {
             'predicted_close': prediction['predicted_close'],
             'predicted_direction': prediction['predicted_direction'],
@@ -182,12 +192,11 @@ class PredictionTracker:
 
     @staticmethod
     def _fetch_closes(symbol: str, start: str, end: str):
-        """yfinance gunluk kapanis serisi [start, end). Testte taslakla degistirilir."""
+        """yfinance gunluk cubuk [start, end) (OHLCV; duz satir elemesi icin). Testte taslak."""
         import yfinance as yf
 
-        yf_sym = symbol if symbol not in ('GOLD_GRAM_TRY',) else 'GC=F'
-        hist = yf.Ticker(yf_sym).history(start=start, end=end)
-        return hist['Close'] if not hist.empty else hist
+        yf_sym = symbol if symbol not in ('GOLD_GRAM_TRY',) else 'GC=F'   # Y31: birim farki, acik
+        return yf.Ticker(yf_sym).history(start=start, end=end)
 
     def evaluate_pending(self, symbols: Optional[List[str]] = None):
         """Gerçek fiyatı bilinmeyen bekleyen tahminleri değerlendir.
@@ -230,10 +239,10 @@ class PredictionTracker:
                         h = horizon_sessions(horizon)
                         fd = entry['feature_date']
                         end = (datetime.strptime(fd, '%Y-%m-%d') + timedelta(days=7 * h + 14)).strftime('%Y-%m-%d')
-                        closes = self._fetch_closes(symbol, fd, min(end, today.strftime('%Y-%m-%d')))
-                        if len(closes) == 0:
+                        bars = self._fetch_closes(symbol, fd, min(end, today.strftime('%Y-%m-%d')))
+                        if len(bars) == 0:
                             continue
-                        got = actual_after_sessions(closes, fd, h)
+                        got = actual_after_sessions(bars, fd, h)
                         if got is None:
                             continue  # h. seans henuz yok
                         actual_date, actual = got

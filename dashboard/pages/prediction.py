@@ -1177,13 +1177,16 @@ def _render_history_table(hist):
         pred = r.get("predicted_close", r.get("predicted", 0)) or 0
         actual = r.get("actual_close", r.get("actual", 0)) or 0
         err = abs(pred - actual) / actual * 100 if actual else 0
+        invalid = r.get("invalid_reason")  # Y29: Y28 oncesi / bayat / eski kural / ex-ante degil
         rows.append(dbc.Row([
             dbc.Col(html.Small(str(r.get("prediction_date", r.get("date", "—")))[:10],
                                style={"color": TEXT_MUTED}), width=3),
             dbc.Col(html.Small(f"₺{pred:,.2f}", style={"color": BLUE}), width=3),
             dbc.Col(html.Small(f"₺{actual:,.2f}" if actual else "—",
                                style={"color": TEXT}), width=3),
-            dbc.Col(html.Small(f"{err:.1f}%" if actual else "—",
+            dbc.Col(html.Small("gecersiz", title=f"Canli dogruluga girmez: {invalid}",
+                               style={"color": TEXT_MUTED}) if invalid else
+                    html.Small(f"{err:.1f}%" if actual else "—",
                                style={"color": RED if err > 5 else GREEN}), width=3),
         ], className="py-1 border-bottom"))
     return html.Div(rows)
