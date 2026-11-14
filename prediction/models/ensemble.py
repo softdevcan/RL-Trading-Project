@@ -592,6 +592,16 @@ class StackingEnsemble:
             raise RuntimeError("Hicbir model tahmin uretemedi")
 
         current_close = float(df['close'].iloc[-1])
+        # Y28 degismezi (hakem-2 Y28 #1): son ozellik satiri df'in son tarihi olmali. Son gunde bir
+        # ozellik NaN ise _build o satiri dusurur ve bayatlik sessizce geri gelir -> gorunur yap.
+        feature_date = pd.Timestamp(aligned.index[-1])
+        df_last = pd.Timestamp(pd.to_datetime(df.index).max())
+        stale_features = bool(feature_date != df_last)
+        if stale_features:
+            logger.warning(
+                f"  [{symbol}] son ozellik satiri {feature_date.date()} != son veri {df_last.date()} "
+                f"(son gunde NaN ozellik); tahmin bayat, stale_features=True"
+            )
 
         # log_return hedefi kullanildiysa gercek fiyata cevir
         if self.target_type == 'log_return':
@@ -646,7 +656,8 @@ class StackingEnsemble:
             'tats': tats_meta,
             # Y28 kokeni: kullanilan son ozellik satirinin tarihi (= df'in son tarihi).
             # Bu alani tasimayan tracker kayitlari Y28 oncesidir (bir ufuk bayat), gecersiz.
-            'feature_date': str(aligned.index[-1])[:10],
+            'feature_date': str(feature_date)[:10],
+            'stale_features': stale_features,
             'made_at': datetime.now().isoformat(),
         }
 

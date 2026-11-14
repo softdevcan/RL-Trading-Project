@@ -268,6 +268,15 @@ def main() -> int:
                 FE.build_inference_features = orig_inf
             check(f"[{hz}] mutasyon: dropna geri gelince son satir df.index[-{h + 1}] ve return_1d bayat",
                   m_last == df.index[-1 - h] and abs(m_r1 - ret1_T) > 1e-5, f"({m_last}, {m_r1})")
+            # Degismez bekcisi (hakem-2 Y28 #1): girdideki bir gosterge kolonu son gunde NaN ise
+            # _build son satiri duser -> predict_next bunu stale_features ile gorunur kilar
+            d2 = df.copy()
+            d2["ext_ind"] = 1.0
+            d2.loc[d2.index[-1], "ext_ind"] = np.nan
+            p_ok, p_st = e.predict_next(df, "SYN"), e.predict_next(d2, "SYN")
+            check(f"[{hz}] son gunde NaN ozellik -> stale_features=True, feature_date=T-1 (normalde False)",
+                  p_ok.get("stale_features") is False and p_st.get("stale_features") is True
+                  and p_st.get("feature_date") == str(df.index[-2])[:10], f"({p_st.get('feature_date')})")
     finally:
         ws.prediction_models_dir, ws.read_dirs = orig_pmd, orig_rd
         shutil.rmtree(tmp, ignore_errors=True)

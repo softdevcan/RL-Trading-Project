@@ -4,7 +4,7 @@
 
 Her sembol/ufuk icin: df'in son tarihi, build_inference_features (predict_next yolu) ve
 build_features (egitim yolu) son tarihi, fazla satir sayisi (beklenen h: gunluk 1, haftalik 5),
-ozellik kolonlarinin esitligi. Ag yok (yerel CSV; prediction_service yardimcilari).
+ozellik kolonlarinin ve egitim satirlarindaki degerlerin esitligi. Ag yok (yerel CSV; prediction_service yardimcilari).
 """
 import argparse
 import json
@@ -38,6 +38,9 @@ def main():
                 "train_last": str(tr.index[-1])[:10], "extra_rows": len(inf) - len(tr),
                 "expected_extra_rows": 1 if hz == "daily" else 5,
                 "same_feature_cols": fe.get_feature_columns(inf) == fe.get_feature_columns(tr),
+                # hakem-2 Y28 #5: cakisan (egitim) satirlarda degerler birebir (NaN'lar ayni yerde)
+                "same_values_on_train_rows": bool(inf.loc[tr.index, fe.get_feature_columns(tr)]
+                                                  .equals(tr[fe.get_feature_columns(tr)])),
                 "inference_last_is_df_last": inf.index[-1] == df.index[-1],
             }
     git = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
@@ -45,7 +48,8 @@ def main():
     out = {"command": " ".join(["python", "scripts/analysis/measure_y28_live_tail.py"] + sys.argv[1:]),
            "git": git, "prediction_dir_dirty": dirty,
            "all_ok": all(r["inference_last_is_df_last"] and r["extra_rows"] == r["expected_extra_rows"]
-                         and r["same_feature_cols"] for r in rows.values()),
+                         and r["same_feature_cols"]
+                         and r["same_values_on_train_rows"] for r in rows.values()),
            "rows": rows}
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:
