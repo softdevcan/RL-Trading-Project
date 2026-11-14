@@ -529,7 +529,9 @@ class StackingEnsemble:
         if not self._is_trained:
             self.load(symbol)
 
-        feat_df = self.feature_engineer.build_features(
+        # Y28: son satir = df'in son tarihi (hedefi NaN olan son h satir tutulur); current_close
+        # ile ayni gun. build_features bu satirlari attigi icin tahmin bir ufuk bayattı.
+        feat_df = self.feature_engineer.build_inference_features(
             df, symbol,
             macro_df=macro_df,
             fundamental_df=fundamental_df,

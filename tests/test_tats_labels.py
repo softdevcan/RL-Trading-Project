@@ -210,6 +210,63 @@ def main() -> int:
         check("Y25: predict_next 'tats.available' (TATS yok != uygulanmadi)",
               p_load["tats"].get("available") is True
               and old_model.predict_next(df, "SYN")["tats"].get("available") is False)
+
+        # ---- Y28: canli predict_next en SON satiri kullanir (gunluk + haftalik) ----------
+        from prediction.feature_engineer import PredictionFeatureEngineer as FE
+        T = df.index[-1]
+        ret1_T = float(df["close"].iloc[-2] / df["close"].iloc[-3] - 1)   # return_1d[T] (shift 1)
+        ret1_prev = float(df["close"].iloc[-3] / df["close"].iloc[-4] - 1)
+
+        def probe(e):
+            """predict_next'in gordugu ozellik cercevesinin son tarihi + taban modele giden son satir."""
+            seen = {}
+            fe = e.feature_engineer
+            for name in ("build_features", "build_inference_features"):
+                f = getattr(fe, name)
+
+                def wrap(*a, _f=f, **k):
+                    out = _f(*a, **k)
+                    seen["last"] = out.index[-1]
+                    return out
+                setattr(fe, name, wrap)
+            m = next(iter(e.base_models.values()))
+            raw = m._predict_raw
+            m._predict_raw = lambda X: (seen.__setitem__("X", X), raw(X))[1]
+            try:
+                e.predict_next(df, "SYN")
+            finally:
+                for name in ("build_features", "build_inference_features"):
+                    fe.__dict__.pop(name, None)
+                m.__dict__.pop("_predict_raw", None)
+            j = e.feature_cols.index("return_1d")
+            return seen.get("last"), float(seen["X"][-1, j])
+
+        for hz, h in (("daily", 1), ("weekly", 5)):
+            print(f"\nY28 — canli tahmin son satir ({hz})")
+            fe = FE(hz)
+            tr, inf = fe.build_features(df, "SYN"), fe.build_inference_features(df, "SYN")
+            cols = fe.get_feature_columns(tr)
+            check(f"[{hz}] cikarim matrisi son tarih = df.index[-1]; egitim matrisinden tam h={h} satir fazla",
+                  inf.index[-1] == T and len(inf) - len(tr) == h and tr.index[-1] == df.index[-1 - h],
+                  f"(inf {inf.index[-1]}, fark {len(inf) - len(tr)})")
+            check(f"[{hz}] egitim satirlarinda iki matris birebir (egitim yolu degismedi); fazla satirlarin hedefi NaN",
+                  inf.loc[tr.index, cols].equals(tr[cols])
+                  and inf["target_price"].iloc[-h:].isna().all())
+            e = E.StackingEnsemble(horizon=hz, use_tats=False, model_configs=cfg2)
+            e.train(df, "Y28" + hz)
+            last, r1 = probe(e)
+            check(f"[{hz}] predict_next son ozellik satiri tarihi = df.index[-1]", last == T, f"({last})")
+            check(f"[{hz}] taban modele giden son satir return_1d = close[T-1]/close[T-2]-1 (dfden bagimsiz)",
+                  abs(r1 - ret1_T) < 1e-5 and abs(ret1_T - ret1_prev) > 1e-4, f"({r1} vs {ret1_T})")
+            # Mutasyon (uretim yolu): cikarim yolu eski dropna'li build_features'a doner
+            orig_inf = FE.build_inference_features
+            FE.build_inference_features = lambda self, *a, **k: self.build_features(*a, **k)
+            try:
+                m_last, m_r1 = probe(e)
+            finally:
+                FE.build_inference_features = orig_inf
+            check(f"[{hz}] mutasyon: dropna geri gelince son satir df.index[-{h + 1}] ve return_1d bayat",
+                  m_last == df.index[-1 - h] and abs(m_r1 - ret1_T) > 1e-5, f"({m_last}, {m_r1})")
     finally:
         ws.prediction_models_dir, ws.read_dirs = orig_pmd, orig_rd
         shutil.rmtree(tmp, ignore_errors=True)

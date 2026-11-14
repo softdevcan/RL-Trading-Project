@@ -69,8 +69,34 @@ class PredictionFeatureEngineer:
             target_type: 'log_return' (onerilen) veya 'abs_price'
 
         Returns:
-            Ozellik kolonlari + hedef degisken iceren DataFrame
+            Ozellik kolonlari + hedef degisken iceren DataFrame. Hedefi NaN olan son h satir
+            (gelecegi henuz gerceklesmemis) ATILIR — egitim/CV/HPO matrisi. Canli tahmin icin
+            `build_inference_features` (Faz 9 Y28).
         """
+        return self._build(df, symbol, macro_df, fundamental_df, cross_asset_df,
+                           use_iceemdan, feature_groups, target_type, keep_unlabeled_tail=False)
+
+    def build_inference_features(
+        self,
+        df: pd.DataFrame,
+        symbol: str,
+        macro_df: Optional[pd.DataFrame] = None,
+        fundamental_df: Optional[pd.DataFrame] = None,
+        cross_asset_df: Optional[pd.DataFrame] = None,
+        use_iceemdan: bool = False,
+        feature_groups: Optional[List[str]] = None,
+        target_type: str = 'log_return',
+    ) -> pd.DataFrame:
+        """Cikarim (canli tahmin) ozellik matrisi — `build_features` ile ayni ozellikler,
+        ama hedefi NaN olan son h satir TUTULUR; son satir df'in son tarihidir (Faz 9 Y28).
+
+        Bu satirlarin hedef kolonlari NaN'dir; egitimde KULLANILMAZ.
+        """
+        return self._build(df, symbol, macro_df, fundamental_df, cross_asset_df,
+                           use_iceemdan, feature_groups, target_type, keep_unlabeled_tail=True)
+
+    def _build(self, df, symbol, macro_df, fundamental_df, cross_asset_df,
+               use_iceemdan, feature_groups, target_type, keep_unlabeled_tail) -> pd.DataFrame:
         from prediction.feature_groups import resolve_groups
         active = resolve_groups(feature_groups)
         self._active_groups = active
@@ -123,7 +149,8 @@ class PredictionFeatureEngineer:
         self._build_targets(data, target_type=target_type)
 
         initial_len = len(data)
-        data = data.dropna(subset=['target_price'])
+        if not keep_unlabeled_tail:
+            data = data.dropna(subset=['target_price'])
         feature_cols = self.get_feature_columns(data)
 
         # Tamamen NaN olan feature kolonlarini tani: dropna tum satirlari uçuruyorsa

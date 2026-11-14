@@ -741,7 +741,7 @@ async def explain_prediction(
         from prediction.feature_engineer import PredictionFeatureEngineer
         import numpy as np
         fe = PredictionFeatureEngineer(horizon)
-        feat_df = fe.build_features(df, symbol)
+        feat_df = fe.build_inference_features(df, symbol)  # Y28: son satir = son tarih
         feature_cols = ensemble.feature_cols or fe.get_feature_columns(feat_df)
 
         X = feat_df[feature_cols].values.astype(np.float32)
