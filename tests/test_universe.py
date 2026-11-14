@@ -109,10 +109,88 @@ def test_e1_anchor():
           sorted(panel - codes) == a['panel_not_in_index'] and sorted(codes - panel) == a['index_not_in_panel'])
 
 
+def _bm():
+    sys.path.insert(0, os.path.join(ROOT, 'scripts'))
+    import build_membership
+    return build_membership
+
+
+def test_e1_parser():
+    print("\nE1 — duyuru tablosu ayristirici (sentetik HTML; uc bicim)")
+    B = _bm()
+    # Yeni bicim: tek tabloda iki endeks, satir ici baslik, rowspan'li unvan (2016 Q1 duzeni);
+    # unvan 'VESTEL' kod kalibina uyar ama kod sutunu degildir.
+    new = ('<div id="printableArea"><table><tr><td colspan="9">BIST 100 ENDEKSİ</td></tr>'
+           '<tr><td colspan="3">ALINACAK PAYLAR</td><td colspan="3">ÇIKARILACAK PAYLAR</td>'
+           '<td colspan="3">YEDEK PAYLAR</td></tr>'
+           '<tr><td>1.</td><td>LOGO</td><td>LOGO YAZILIM</td><td>1.</td><td>NTHOL</td><td>NET</td>'
+           '<td>1.</td><td>ASLAN</td><td>ASLAN</td></tr>'
+           '<tr><td colspan="9"><p>BIST 30 ENDEKSİ</p></td></tr>'
+           '<tr><td colspan="3">ALINACAK PAYLAR</td><td colspan="3">ÇIKARILACAK PAYLAR</td>'
+           '<td colspan="3">YEDEK PAYLAR</td></tr>'
+           '<tr><td>1.</td><td>VESTL</td><td rowspan="2">VESTEL</td><td>1.</td><td>TSKB</td>'
+           '<td rowspan="2">T.S.K.B.</td><td>1.</td><td>OTKAR</td><td>OTOKAR</td></tr>'
+           '<tr><td> </td><td> </td><td> </td><td> </td><td>2.</td><td>HEKTS</td><td>HEKTAS</td></tr>'
+           '</table></div>')
+    t = B.parse_tables(new)
+    check("yeni bicim: satir ici endeks basligi, rowspan devami unvan sanilmaz, unvan kod sanilmaz",
+          t['BIST 30']['ALINACAK'] == ['VESTL'] and t['BIST 30']['ÇIKARILACAK'] == ['TSKB']
+          and t['BIST 30']['YEDEK'] == ['OTKAR', 'HEKTS'] and t['BIST 100']['ALINACAK'] == ['LOGO']
+          and t['BIST 30']['names']['VESTL'] == 'VESTEL', str(t.get('BIST 30')))
+    # Word ciktisi: kapsayici tablo yalniz basligi tasir, degisiklik ic tabloda (2022 Q1)
+    word = ('<div id="printableArea"><table><tr><td><p>BIST 30 ENDEKSİ</p><table>'
+            '<tr><td colspan="3">ALINACAK PAYLAR</td><td colspan="3">ÇIKARILACAK PAYLAR</td></tr>'
+            '<tr><td>1</td><td>TOASO</td><td>TOFAS</td><td>1</td><td>VAKBN</td><td>VAKIFBANK</td></tr>'
+            '</table></td></tr></table></div>')
+    w = B.parse_tables(word).get('BIST 30', {})
+    check("ic ice tablo: en icteki tablo okunur, kapsayici hucre basligi endeks adi olur",
+          w.get('ALINACAK') == ['TOASO'] and w.get('ÇIKARILACAK') == ['VAKBN'], str(w))
+    # Eski bicim: tablodan once baslik, hucrede <li>/<br> ile adlar, '1. ' numarasi, '---' bos
+    old = ('<div id="printableArea"><p><strong>BIST 30 ENDEKSİ</strong></p><table>'
+           '<tr><td>ALINACAK PAYLAR</td><td>ÇIKARILACAK PAYLAR</td><td>YEDEK PAYLAR</td></tr>'
+           '<tr><td>1. ÜLKER BİSKÜVİ<br>2. TEKFEN HOLDİNG</td><td><p>---</p></td>'
+           '<td><ol><li>TRAKYA CAM</li></ol></td></tr></table></div>')
+    o = B.parse_tables(old).get('BIST 30', {})
+    check("eski bicim: adlar ayri oge, numara ve '---' atilir",
+          o.get('kind') == 'name' and o.get('ALINACAK') == ['ÜLKER BİSKÜVİ', 'TEKFEN HOLDİNG']
+          and o.get('ÇIKARILACAK') == [] and o.get('YEDEK') == ['TRAKYA CAM'], str(o))
+    check("ad normalizasyonu: Turkce harf/nokta/'(*)' esit, onek esit DEGIL",
+          B._norm_name('İHLAS HOLDİNG') == B._norm_name('IHLAS HOLDING')
+          and B._norm_name('DOĞAN HOLDİNG (*)') == B._norm_name('DOGAN HOLDING')
+          and B._norm_name('VESTEL') != B._norm_name('VESTEL BEYAZ EŞYA'))
+
+
+def test_e1_chain_logic():
+    print("\nE1 — geriye zincir mantigi (sentetik)")
+    B = _bm()
+    base = [f'S{i:02d}' for i in range(30)]
+    anchor = {'as_of': '2020-12-31', 'codes': base}
+    ch = [{'period_start': '2020-10-01', 'action': 'add', 'code': 'S00', 'source_url': 'u', 'source_sha256': 'h'},
+          {'period_start': '2020-10-01', 'action': 'remove', 'code': 'X', 'source_url': 'u', 'source_sha256': 'h'},
+          {'period_start': '2020-07-01', 'action': 'none', 'code': '', 'source_url': 'u', 'source_sha256': 'h'}]
+    segs, bad = B.chain(anchor, ch, [])
+    k = {s: set(m) for s, _e, m, _ in segs}
+    check("tutarli zincir: ihlal yok, eski donemde S00 yerine X, her segment 30",
+          not bad and 'X' in k['2020-07-01'] and 'S00' not in k['2020-07-01'] and k['2020-10-01'] == set(base),
+          str(bad))
+    mut = [dict(ch[0], code='S99')] + ch[1:]   # alinan pay sonraki kumede yok -> ihlal + 31 uye
+    _s, bad2 = B.chain(anchor, mut, [])
+    check("mutasyon: sonraki kumede olmayan 'alinan' ve 30 disi uye sayisi yakalanir",
+          any('alinan S99' in b for b in bad2) and any('31 uye' in b for b in bad2), str(bad2))
+    ev = [{'date': '2020-08-15', 'action': 'rename', 'code': 'OLD1', 'new_code': 'S01', 'source_url': 'v',
+           'source_sha256': 'g'}]
+    segs3, bad3 = B.chain(anchor, ch, ev)
+    k3 = {s: set(m) for s, _e, m, _ in segs3}
+    check("kod degisikligi: olay tarihinden once eski kod, sonra yeni kod",
+          not bad3 and 'OLD1' in k3['2020-07-01'] and 'S01' in k3['2020-08-15'], str(bad3))
+
+
 def main() -> int:
     test_e0()
     test_e2()
     test_e1_anchor()
+    test_e1_parser()
+    test_e1_chain_logic()
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0

@@ -36,6 +36,57 @@ def load_sector_groups() -> dict:
     with open(SECTORS_FILE, encoding='utf-8', newline='') as f:
         return {r['symbol']: r['group'] for r in csv.DictReader(f)}
 
+
+MEMBERSHIP_FILE = _os.path.join(_os.path.dirname(_UNIVERSE_FILE), 'bist30_membership.csv')
+_MEMBERSHIP = None
+
+
+def load_membership() -> list:
+    """E1 (K3): tarihsel BIST 30 uyeligi, [(bas, son_haric | None, frozenset(kod))] tarih sirasiyla.
+
+    Kaynak `data/universe/bist30_membership.csv` (`scripts/build_membership.py chain`): bugunku
+    capadan (KAP XU030) geriye, Borsa Istanbul ceyreklik + donem ici duyurulariyla; her segment 30 uye.
+    Kodlar O TARIHTEKI islem kodlaridir.
+    """
+    global _MEMBERSHIP
+    if _MEMBERSHIP is None:
+        import csv
+        segs = {}
+        with open(MEMBERSHIP_FILE, encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                segs.setdefault((r['start'], r['end'] or None), set()).add(r['symbol'])
+        _MEMBERSHIP = [(s, e, frozenset(k)) for (s, e), k in sorted(segs.items())]
+    return _MEMBERSHIP
+
+
+def universe_mask(date) -> frozenset | None:
+    """`date` gunu BIST 30'daki kodlar (yururluk ilk gunu dahil, segment sonu haric).
+
+    Kapsam disi (ilk segmentten once) -> None: uyelik BILINMIYOR demektir, bos kume degil.
+    Maske yalniz sembol CIKARABILIR; panelde olmayan eski uyeleri ekleyemez (hayatta kalma
+    yanliligi beyani her durumda kalir, plan §9.21). Ortama uygulanmaz (durum uzayi sabit).
+    """
+    import pandas as pd
+    d = pd.Timestamp(date).strftime('%Y-%m-%d')
+    for s, e, k in load_membership():
+        if s <= d and (e is None or d < e):
+            return k
+    return None
+
+
+def panel_membership(dates, symbols=None):
+    """Panel sembolleri (varsayilan evren dosyasi) x tarih -> True/False; kapsam disi tarih NaN."""
+    import numpy as np
+    import pandas as pd
+    symbols = list(symbols or BIST30_SYMBOLS)
+    idx = pd.DatetimeIndex(dates)
+    out = pd.DataFrame(np.nan, index=idx, columns=symbols, dtype=object)
+    for t in idx:
+        k = universe_mask(t)
+        if k is not None:
+            out.loc[t] = [s.split('.')[0] in k for s in symbols]
+    return out
+
 # Faz 1 için başlangıç seti (5 hisse ile test)
 PHASE1_SYMBOLS = [
     'AKBNK.IS',   # Akbank - Banking
