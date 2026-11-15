@@ -92,3 +92,5 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | 2026-11-15 | İ1 (G1 + G3) | hakem-rl (sonnet), ikinci okuma (SendMessage) | ~41 bin (önceki bağlamla) | 3 | ~0,2 dk | Kabul; yalnız git diff + grep. BÜYÜK bulgu olduğu için yapıldı (kademeli kural) |
 | 2026-11-15 | İ2 (F + B6) | hakem-finans (sonnet), ilk okuma | ~37 bin | 7 | ~1,1 dk | Paket ~1,9 bin kelime + 2 JSON. Küçük revizyon: 2 BÜYÜK (ECE tek başına kalibrasyon kanıtı değil; GA'sız karşılaştırma), 3 KÜÇÜK; rejim için USD bazlı tanım önerisi (kullanıcı kabul etti). Test koşmadı |
 | 2026-11-15 | İ2 (F + B6) | hakem-finans (sonnet), ikinci okuma (SendMessage) | ~46 bin (önceki bağlamla) | 3 | ~0,4 dk | Kabul; 2 engelleyici olmayan not (kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir gün kayma) |
+| 2026-11-15 | İ3 (P + D) | hakem-finans (sonnet) | ~51 bin | 10 | ~1,8 dk | Büyük revizyon (çıkarım katmanı): güç/MDE, blok içi AUC, hayatta kalan evren; 5 KÜÇÜK |
+| 2026-11-15 | İ3 (P + D) | hakem-rl (sonnet) | ~41 bin | 10 | ~0,9 dk | Küçük revizyon: 2 BÜYÜK Milestone 0' tasarımına (S-msg boş sonuç beyanı, pozitif kontrol), 3 KÜÇÜK |

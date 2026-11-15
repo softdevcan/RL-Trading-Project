@@ -1745,7 +1745,7 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - Satırların %97,6'sı `meta_ok`, %98,5'i `base_ok`.
 - Tam kapsamın altındakiler: ODAS (%73,2; ilk meta 2017-01-06), PGSUS (%71,3; 2017-04-05) ve EKGYO (%91,9; 2014-07-04). Bu üçü panelde geç başlıyor. Diğerlerinde kayıp ≤ %3,3 (`coverage_rl_window.per_symbol`).
 
-**Bulgular:**
+**Bulgular:** (Bulgu 1 İ3'te revize edildi → §9.30)
 1. **Yön bilgisi yok (30 sembolde).** Geliştirme penceresinde (47.199 satır) kapıyı geçen sembol sayısı 0, BH reddi 0. Havuzlu AUC 0,511, havuzlu BSS −0,0018.
    - Düzeltmesiz tek taraflı p < 0,05 olan 4 sembol var (SASA, BIMAS, AKBNK, YKBNK). Şansla ~0,75 beklenirdi; hiçbiri BH'den geçmiyor.
    - §9.25 ve §9.27'deki üç sembollük "bilgisiz" bulgusu 30 sembolde ve örneklem dışı genişleyen pencerede tekrarlandı.
@@ -1794,6 +1794,48 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - Pencereler: wf-v1 test yılları ve tam RL penceresi. Baseline'larda seçim olmadığı için test pencerelerinin okunması bir seçime girmiyor.
 - Tam pencerede (2013-06-03..2026-10-30, 20 bps) nominal fazla getiri Sharpe'ı: 1/N 0,544, al-tut 0,527, XU030 0,224.
 - 1/N'nin günlük ortalama devri ~0,003. Izgara baseline'ları neredeyse etkilemiyor (1/N: 0 bps'te 0,547, 50 bps'te 0,539); ızgara RL ajanları için anlamlı.
+
+
+### 9.30 İ3 — hakem-finans + hakem-rl (P + D), düzeltmeler (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Kararlar.** hakem-finans: **Büyük revizyon**, yalnız çıkarım ve iddia katmanında; kod ve nokta-zamanlılık düzeneği sağlam bulundu, K19 kapanıyor. hakem-rl: **Küçük revizyon**, RED yok. Maliyet [review-panel.md](review-panel.md)'de.
+
+| # | Hakem | Cid. | Bulgu | Yapılan |
+|---|---|---|---|---|
+| F1 | finans | BÜYÜK | "Yön bilgisi yok" bir reddedememe; güç/MDE ve havuzlu GA yok | `evaluate_gate` v2: sembol başına MDE (tek / aile), tarih bloğu bootstrap'lı havuzlu GA/p. **§9.28 Bulgu 1 bu satırla revize edildi** (aşağıda) |
+| F2 | finans | BÜYÜK | ODAS ters AUC: bloklar arası havuzlama ve eşit kapanış karışabilir | Blok içi AUC (sembol × çapa), `tie_rate`, iki taraflı p |
+| F3 | finans | BÜYÜK | Baseline evreni hayatta kalan, dondurulmuş 30 sembol; XU030 aynı evren değil | `baselines.py` ve `baselines.json` `design.universe`: üstünlük çıkarımı **yapılmaz**; XU030 ayrı referans satırı |
+| F4–F5 | finans | KÜÇÜK | Basamak deflatör ve USD kur kayması günlük Sharpe'ı bozar | Reel/USD Sharpe **aylık** getiriden (`sharpe_rf0_monthly`); giriş maliyeti birimde de sayılıyor |
+| F6 | finans | KÜÇÜK | Düzeltilmiş fiyat vintage'ı B0'da görünmez | Beyan: tam yeniden indirme geçmişi değiştirir; P panel SHA'sıyla bağlı (`pit_v1.json`) |
+| F7–F8 | finans | KÜÇÜK | Maliyet yalnız komisyon; al-tutta çıkış maliyeti yok; 1/N–al-tut farkı test edilmedi | Docstring ve JSON beyanı |
+| R1 | rl | BÜYÜK | Güvende varyans yok; AQ2 "yalnız S-msg" kolu β=0'dan ayırt edilemez | **M8 ön kaydı:** bu kol için "boş sonuç beklenir" beyanı |
+| R2 | rl | BÜYÜK | H3 pozitif kontrolsüz yanlışlanamaz | **M8:** sentetik kehanetli güven kolu (etiketten, AUC 0,55 / 0,60) |
+| R3 | rl | KÜÇÜK | Meta girdisinde dağılım kayması | Ölçüldü ([meta_input_shift.json](measurements/phase9-p/meta_input_shift.json)): yeni bloktaki taban tahmin std'si meta penceresinin medyan ~0,47–0,57 katı, p10–p90 ~0,1–1,7; ortalama kayması medyan ~0,1 std. Logit sıkışıyor, p 0,5'e çekiliyor (beyan) |
+| R4 | rl | KÜÇÜK | `informative_asof` T ve BSS'yi aynı yarıda ölçüyor (iyimser) | Beyan; 0/30 sonucu bundan etkilenmez |
+| R5 | rl | KÜÇÜK | Tek tohum | **M8:** P tablosu ≥ 3 GBM tohumu; P tohumu ile RL tohumu ayrı faktör |
+
+**hakem-rl'nin Milestone 0' önerileri (M8 ön kaydına, protokol dondurmada):**
+- Gözleme `p_cal` yerine `logit` girer (T'den bağımsız). `meta_ok` bayrağı eklenir; maskeli hücrede S-obs sıfır olur ve mesajda gönderici dışlanır.
+- `model_disagreement` yalnız ≤ t veriyle kayan z-skoruyla girer.
+- RL ajanları 20 bps'e ek olarak 0 ve 50 bps komisyonla yeniden eğitilir; ızgara raporlama içindir.
+- Makro/çapraz özellik kolu 2018+ alt deneyi olarak kurulur; ana tasarım P v1 ile kalır.
+
+**Kapı v2** ([gate_v2.json](measurements/phase9-p/gate_v2.json), tablo SHA'sı `pit_v1.json` ile aynı):
+- Havuzlu AUC 0,511, GA [0,504; 0,517], tek taraflı p = 0,004.
+- **Blok içi havuzlu AUC 0,501**, GA [0,496; 0,507], p = 0,29.
+- Sembol başına MDE medyanı: tek test 0,535, 30 sembollük ailede 0,554 (güç 0,8).
+- Eşit kapanış oranı %6,3 (DOWN sayılıyor).
+- ODAS: blok içi AUC 0,460, iki taraflı p = 0,002, taban oranı 0,425.
+
+**Revize iddia (§9.28 Bulgu 1'in yerine):** Bu özellik kümesiyle, sembol ve çapa içinde sıralama bilgisi tespit edilmedi (blok içi havuzlu AUC 0,501). Havuzlu AUC'deki küçük ama anlamlı fark (0,511) çapalar arası taban oranı seviyesinden geliyor; aynı modelin sıralamasından gelmiyor.
+- Sembol başına AUC ≳ 0,55'lik bir sinyal 30 sembollük ailede tespit edilebilirdi ve görülmedi. Daha küçük bir sinyal dışlanamaz.
+- ODAS'ın ters sıralaması blok içinde de duruyor. Tek sembol, açıklaması yok; seçim düzeltmesi yapılmadan yorumlanmaz.
+
+**Kabul:**
+- `test_pit_table` **23/0**: v2 alanları + bir mekanizma testi. Bloklar arası seviye farkı havuzlu AUC'u > 0,6'ya çıkarıyor, blok içi AUC'u 0,5'te bırakıyor.
+- `test_baselines` **22/0**: aylık metrik elle hesapla; reel birimde giriş maliyeti.
+
+**Açık:** hakem-finans ikinci okuması (BÜYÜK bulgu olduğu için gerekli) yeni oturumda.
 
 ---
 
@@ -1852,3 +1894,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.27 devam):** İ2 ikinci okuma Kabul (notlar: kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir günlük kayma beyanı). P3 kaba maliyet: tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa (30 sembol, 63 seansta bir) → K11 teyidi bekleniyor.
 - **2026-11-15 (§9.28, P):** K11 v1 teyit edildi (3 GBM + lojistik meta). Nokta-zamanlı örneklem dışı tablo; meta ve sıcaklık yalnız geçmiş OOF'ta (K19/Y26 kapandı). 30 sembol / 60 çapa, RL penceresinde %97,6 dolu. Geliştirme penceresinde yön bilgisi yok (0/30, BH 0, havuzlu AUC 0,511). `test_pit_table` 21.
 - **2026-11-15 (§9.29, D):** 1/N aylık, al-tut, XU030; nominal / TÜFE-reel / USD; 0–50 bps ızgara. 0,02 sabitleri kaldırıldı; ödülün 0,15'i eski ortamda beyan, G2 yeni ortamda. `test_baselines` 20.
+- **2026-11-15 (§9.30, İ3):** hakem-finans Büyük (çıkarım katmanı), hakem-rl Küçük. Kapı v2: blok içi havuzlu AUC 0,501 (sıralama bilgisi tespit edilmedi), MDE aile 0,554. Reel/USD Sharpe aylık. M8'e: S-msg boş sonuç beyanı, pozitif kontrol kolu, P tohumları. hakem-finans ikinci okuması bekliyor.

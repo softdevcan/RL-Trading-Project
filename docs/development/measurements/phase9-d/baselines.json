@@ -1,5 +1,5 @@
 {
- "commit": "33f3ae0",
+ "commit": "147708a",
  "inputs": {
   "data\\bist\\stock_data_with_indicators.csv": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
   "data\\macro\\cpi_index.csv": "3262298b50f027f8c9bbf82abaa331d0f85b548354345ccb31907e0926d74737",
@@ -25,8 +25,10 @@
   "ew_monthly": "ayin ilk seansi kapanisinda 1/N (o gun fiyati olan semboller)",
   "buy_hold": "ilk seans 1/N, yeniden dengeleme yok",
   "xu030": "yfinance XU030.IS fiyat endeksi, temettu yok, maliyetsiz",
-  "cost": "tek yon bps/2 x devir (sum |dw|); ilk alim devri 1",
-  "units": "reel: ayin TUFE duzeyi (basamak); USD: USDTRY_{t-1}; reel/USD Sharpe rf=0 (sharpe_rf0)"
+  "cost": "yalniz komisyon; spread/lot/limit yok; al-tutta cikis maliyeti yok",
+  "units": "reel: ayin TUFE duzeyi (basamak); USD: USDTRY_{t-1}; reel/USD Sharpe rf=0, AYLIK getiriden (sharpe_rf0_monthly)",
+  "universe": "HAYATTA KALAN dondurulmus panel 30 (E0), tarihsel BIST 30 uyeligi degil (E1 acik); XU030 ayni evren degil + temettusuz -> ustunluk cikarimi YOK",
+  "not_tested": "1/N - al-tut farki test edilmedi"
  },
  "windows": {
   "2021": {
@@ -50,19 +52,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.01770523151298431,
-        "ann_vol": 0.2821437105403339,
+        "n_months": 12,
+        "ann_return": -0.017705231512984976,
+        "ann_vol_monthly": 0.23787665753402532,
         "max_drawdown": -0.21325926054360012,
-        "total_return": -0.017496309767675244,
-        "sharpe_rf0": 0.08044831253866995
+        "total_return": -0.01749630976767591,
+        "sharpe_rf0_monthly": 0.031824304785247635
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.2291031417891538,
-        "ann_vol": 0.4305634391214941,
+        "n_months": 12,
+        "ann_return": -0.2291031417891537,
+        "ann_vol_monthly": 0.2522338909148927,
         "max_drawdown": -0.45994118489611935,
-        "total_return": -0.2267114883427105,
-        "sharpe_rf0": -0.38864810603195277
+        "total_return": -0.22671148834271038,
+        "sharpe_rf0_monthly": -0.8851847984401567
        }
       },
       "10": {
@@ -76,19 +80,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.018068574673085425,
-        "ann_vol": 0.28215548806921326,
-        "max_drawdown": -0.21325926054360034,
-        "total_return": -0.017855404563234423,
-        "sharpe_rf0": 0.07914693329653426
+        "n_months": 12,
+        "ann_return": -0.01856545413842292,
+        "ann_vol_monthly": 0.23790821932431025,
+        "max_drawdown": -0.21325926054360023,
+        "total_return": -0.018346476860952587,
+        "sharpe_rf0_monthly": 0.028214727567397162
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.22938829051391585,
-        "ann_vol": 0.4305541052012576,
-        "max_drawdown": -0.46011975755200274,
-        "total_return": -0.22699411718447737,
-        "sharpe_rf0": -0.3895243459395857
+        "n_months": 12,
+        "ann_return": -0.22977823743313575,
+        "ann_vol_monthly": 0.2521998174558785,
+        "max_drawdown": -0.4601197575520022,
+        "total_return": -0.22738062012588411,
+        "sharpe_rf0_monthly": -0.8886959892012394
        }
       },
       "20": {
@@ -102,19 +108,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.018431796333143513,
-        "ann_vol": 0.28216730920207267,
-        "max_drawdown": -0.21325926054359978,
-        "total_return": -0.018214380860442914,
-        "sharpe_rf0": 0.07784565066265009
+        "n_months": 12,
+        "ann_return": -0.019425184673472762,
+        "ann_vol_monthly": 0.23794067659027304,
+        "max_drawdown": -0.2132592605435999,
+        "total_return": -0.019196166479583998,
+        "sharpe_rf0_monthly": 0.02460601533877818
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.2296733438864439,
-        "ann_vol": 0.4305448011018292,
-        "max_drawdown": -0.4602982775139246,
-        "total_return": -0.2272766527610347,
-        "sharpe_rf0": -0.3904005967994955
+        "n_months": 12,
+        "ann_return": -0.23045294688862716,
+        "ann_vol_monthly": 0.2521666009290373,
+        "max_drawdown": -0.46029827751392427,
+        "total_return": -0.22804937610827314,
+        "sharpe_rf0_monthly": -0.8922050968783383
        }
       },
       "25": {
@@ -128,19 +136,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.018613361612029422,
-        "ann_vol": 0.2821732361182828,
-        "max_drawdown": -0.21325926054360034,
-        "total_return": -0.018393824583094798,
-        "sharpe_rf0": 0.07719504575898135
+        "n_months": 12,
+        "ann_return": -0.01985486547667137,
+        "ann_vol_monthly": 0.23795724091252035,
+        "max_drawdown": -0.21325926054360023,
+        "total_return": -0.019620832302365,
+        "sharpe_rf0_monthly": 0.02280199622798731
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.22981583482454182,
-        "ann_vol": 0.4305401602355221,
+        "n_months": 12,
+        "ann_return": -0.23079015685028592,
+        "ann_vol_monthly": 0.2521503141213553,
         "max_drawdown": -0.4603875177389336,
-        "total_return": -0.2274178855834581,
-        "sharpe_rf0": -0.39083872627932853
+        "total_return": -0.22838361322647904,
+        "sharpe_rf0_monthly": -0.8939588577447098
        }
       },
       "50": {
@@ -154,19 +164,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.019520732676806873,
-        "ann_vol": 0.28220303416963194,
-        "max_drawdown": -0.21325926054360023,
-        "total_return": -0.01929059911151587,
-        "sharpe_rf0": 0.07394238833490675
+        "n_months": 12,
+        "ann_return": -0.02200142596197041,
+        "ann_vol_monthly": 0.238043417528754,
+        "max_drawdown": -0.21325926054360034,
+        "total_return": -0.021742372613739236,
+        "sharpe_rf0_monthly": 0.013785472426965687
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.23052793217608103,
-        "ann_vol": 0.430517067747694,
-        "max_drawdown": -0.46083352137298816,
-        "total_return": -0.2281237001745594,
-        "sharpe_rf0": -0.39302941326146446
+        "n_months": 12,
+        "ann_return": -0.2324747598708492,
+        "ann_vol_monthly": 0.25207209628550437,
+        "max_drawdown": -0.4608335213729887,
+        "total_return": -0.2300533909241239,
+        "sharpe_rf0_monthly": -0.9027195435260893
        }
       }
      }
@@ -185,19 +197,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.024549475911519014,
-        "ann_vol": 0.2889122389385494,
-        "max_drawdown": -0.2250369021019193,
-        "total_return": 0.024253704585514013,
-        "sharpe_rf0": 0.23100721489397327
+        "n_months": 12,
+        "ann_return": 0.024549475911521457,
+        "ann_vol_monthly": 0.2445166846640965,
+        "max_drawdown": -0.2250369021019194,
+        "total_return": 0.024253704585516234,
+        "sharpe_rf0_monthly": 0.204813099060467
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.19594199480641816,
-        "ann_vol": 0.42716360184357133,
-        "max_drawdown": -0.44487180229627676,
-        "total_return": -0.193851757858425,
-        "sharpe_rf0": -0.29598083878637677
+        "n_months": 12,
+        "ann_return": -0.19594199480641783,
+        "ann_vol_monthly": 0.24192335150964844,
+        "max_drawdown": -0.44487180229627643,
+        "total_return": -0.19385175785842468,
+        "sharpe_rf0_monthly": -0.7652011489982049
        }
       },
       "10": {
@@ -211,19 +225,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.0245494759115219,
-        "ann_vol": 0.2889122389385495,
-        "max_drawdown": -0.22503690210191918,
-        "total_return": 0.024253704585516678,
-        "sharpe_rf0": 0.23100721489398018
+        "n_months": 12,
+        "ann_return": 0.02403103075061397,
+        "ann_vol_monthly": 0.24454903744855233,
+        "max_drawdown": -0.2250369021019193,
+        "total_return": 0.02374157773322283,
+        "sharpe_rf0_monthly": 0.20276238895791576
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.19594199480641883,
-        "ann_vol": 0.4271636018435714,
-        "max_drawdown": -0.444871802296277,
-        "total_return": -0.19385175785842568,
-        "sharpe_rf0": -0.2959808387863789
+        "n_months": 12,
+        "ann_return": -0.19634886630621584,
+        "ann_vol_monthly": 0.24189976754855255,
+        "max_drawdown": -0.4448718022962769,
+        "total_return": -0.1942548319794959,
+        "sharpe_rf0_monthly": -0.767333030435583
        }
       },
       "20": {
@@ -237,19 +253,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.0245494759115219,
-        "ann_vol": 0.2889122389385495,
-        "max_drawdown": -0.2250369021019194,
-        "total_return": 0.024253704585516678,
-        "sharpe_rf0": 0.23100721489398368
+        "n_months": 12,
+        "ann_return": 0.02351258871442541,
+        "ann_vol_monthly": 0.24458238725078993,
+        "max_drawdown": -0.2250369021019193,
+        "total_return": 0.023229450880931424,
+        "sharpe_rf0_monthly": 0.20071140319877623
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.1959419948064185,
-        "ann_vol": 0.42716360184357133,
-        "max_drawdown": -0.4448718022962769,
-        "total_return": -0.19385175785842534,
-        "sharpe_rf0": -0.29598083878637943
+        "n_months": 12,
+        "ann_return": -0.19675573535376034,
+        "ann_vol_monthly": 0.24187720520074577,
+        "max_drawdown": -0.4448718022962762,
+        "total_return": -0.19465790610056566,
+        "sharpe_rf0_monthly": -0.7694620776283564
        }
       },
       "25": {
@@ -263,19 +281,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.024549475911523677,
-        "ann_vol": 0.28891223893854956,
-        "max_drawdown": -0.2250369021019195,
-        "total_return": 0.024253704585518454,
-        "sharpe_rf0": 0.23100721489398632
+        "n_months": 12,
+        "ann_return": 0.023253368868581648,
+        "ann_vol_monthly": 0.24459943590661076,
+        "max_drawdown": -0.2250369021019193,
+        "total_return": 0.022973387454784833,
+        "sharpe_rf0_monthly": 0.19968581492417056
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.19594199480641805,
-        "ann_vol": 0.42716360184357133,
-        "max_drawdown": -0.4448718022962773,
-        "total_return": -0.1938517578584249,
-        "sharpe_rf0": -0.29598083878637754
+        "n_months": 12,
+        "ann_return": -0.19695916895755983,
+        "ann_vol_monthly": 0.2418663072216756,
+        "max_drawdown": -0.44487180229627665,
+        "total_return": -0.19485944316110115,
+        "sharpe_rf0_monthly": -0.7705255294153329
        }
       },
       "50": {
@@ -289,19 +309,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.02454947591152168,
-        "ann_vol": 0.28891223893854956,
-        "max_drawdown": -0.22503690210191918,
-        "total_return": 0.024253704585516456,
-        "sharpe_rf0": 0.23100721489397932
+        "n_months": 12,
+        "ann_return": 0.021957281369612947,
+        "ann_vol_monthly": 0.24468841462659635,
+        "max_drawdown": -0.2250369021019194,
+        "total_return": 0.0216930703240521,
+        "sharpe_rf0_monthly": 0.19455704714344776
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.19594199480641905,
-        "ann_vol": 0.42716360184357133,
-        "max_drawdown": -0.44487180229627743,
-        "total_return": -0.1938517578584259,
-        "sharpe_rf0": -0.29598083878637943
+        "n_months": 12,
+        "ann_return": -0.19797632777075436,
+        "ann_vol_monthly": 0.24181565063192953,
+        "max_drawdown": -0.44487180229627676,
+        "total_return": -0.19586712846377885,
+        "sharpe_rf0_monthly": -0.7758319273565489
        }
       }
      }
@@ -320,19 +342,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.08554522887215099,
-        "ann_vol": 0.28176895699910914,
-        "max_drawdown": -0.24071629592945787,
-        "total_return": -0.08457117244989854,
-        "sharpe_rf0": -0.17341381948790138
+        "n_months": 12,
+        "ann_return": -0.08554522887214988,
+        "ann_vol_monthly": 0.23837522027571884,
+        "max_drawdown": -0.24071629592945765,
+        "total_return": -0.08457117244989742,
+        "sharpe_rf0_monthly": -0.26259694942361655
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.2823434139589447,
-        "ann_vol": 0.4221152764359303,
-        "max_drawdown": -0.4605092588278705,
-        "total_return": -0.27950337222956445,
-        "sharpe_rf0": -0.5733855734767149
+        "n_months": 12,
+        "ann_return": -0.2823434139589466,
+        "ann_vol_monthly": 0.26970219755432473,
+        "max_drawdown": -0.4605092588278714,
+        "total_return": -0.2795033722295662,
+        "sharpe_rf0_monthly": -1.0653927505464142
        }
       }
      }
@@ -360,19 +384,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.2531198873300915,
-        "ann_vol": 0.3285468195192491,
-        "max_drawdown": -0.21264318904922797,
-        "total_return": 1.2531198873300915,
-        "sharpe_rf0": 2.6411585337601085
+        "n_months": 12,
+        "ann_return": 1.2531198873300955,
+        "ann_vol_monthly": 0.4471264305693775,
+        "max_drawdown": -0.21264318904922808,
+        "total_return": 1.2531198873300955,
+        "sharpe_rf0_monthly": 2.066804712203809
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.3684156431295564,
-        "ann_vol": 0.3319146631449539,
+        "n_months": 12,
+        "ann_return": 1.3684156431295555,
+        "ann_vol_monthly": 0.4711730540563239,
         "max_drawdown": -0.22136076317810316,
-        "total_return": 1.3684156431295564,
-        "sharpe_rf0": 2.76804495276256
+        "total_return": 1.3684156431295555,
+        "sharpe_rf0_monthly": 2.09211650554852
        }
       },
       "10": {
@@ -386,19 +412,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.2520039206776161,
-        "ann_vol": 0.32857369908233564,
-        "max_drawdown": -0.2126431890492282,
-        "total_return": 1.2520039206776161,
-        "sharpe_rf0": 2.6394577553356555
+        "n_months": 12,
+        "ann_return": 1.2508779187172765,
+        "ann_vol_monthly": 0.44713091765784113,
+        "max_drawdown": -0.21264318904922808,
+        "total_return": 1.2508779187172765,
+        "sharpe_rf0_monthly": 2.064405865774893
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.3672425706748639,
-        "ann_vol": 0.3318905625237489,
-        "max_drawdown": -0.22136076317810327,
-        "total_return": 1.3672425706748639,
-        "sharpe_rf0": 2.766724951956138
+        "n_months": 12,
+        "ann_return": 1.3660589493895263,
+        "ann_vol_monthly": 0.4712101287688028,
+        "max_drawdown": -0.22136076317810305,
+        "total_return": 1.3660589493895263,
+        "sharpe_rf0_monthly": 2.0897160938006545
        }
       },
       "20": {
@@ -412,19 +440,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.2508884496619896,
-        "ann_vol": 0.3286006488794938,
-        "max_drawdown": -0.21264318904922774,
-        "total_return": 1.2508884496619896,
-        "sharpe_rf0": 2.637756691372955
+        "n_months": 12,
+        "ann_return": 1.2486375612123264,
+        "ann_vol_monthly": 0.4471359314950408,
+        "max_drawdown": -0.21264318904922785,
+        "total_return": 1.2486375612123264,
+        "sharpe_rf0_monthly": 2.062004638343139
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.3660700192195576,
-        "ann_vol": 0.33186653678403516,
+        "n_months": 12,
+        "ann_return": 1.363703949200338,
+        "ann_vol_monthly": 0.4712476743103316,
         "max_drawdown": -0.22136076317810283,
-        "total_return": 1.3660700192195576,
-        "sharpe_rf0": 2.76540413545033
+        "total_return": 1.363703949200338,
+        "sharpe_rf0_monthly": 2.0873139742890046
        }
       },
       "25": {
@@ -438,19 +468,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.2503308999568543,
-        "ann_vol": 0.32861415011045153,
-        "max_drawdown": -0.21264318904922774,
-        "total_return": 1.2503308999568543,
-        "sharpe_rf0": 2.636906052720867
+        "n_months": 12,
+        "ann_return": 1.2475179863319044,
+        "ann_vol_monthly": 0.4471386359389513,
+        "max_drawdown": -0.21264318904922763,
+        "total_return": 1.2475179863319044,
+        "sharpe_rf0_monthly": 2.060803134452718
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.3654839388024036,
-        "ann_vol": 0.33185455199982267,
-        "max_drawdown": -0.2213607631781025,
-        "total_return": 1.3654839388024036,
-        "sharpe_rf0": 2.7647434214918065
+        "n_months": 12,
+        "ann_return": 1.362527083878898,
+        "ann_vol_monthly": 0.4712666236068789,
+        "max_drawdown": -0.2213607631781026,
+        "total_return": 1.362527083878898,
+        "sharpe_rf0_monthly": 2.086112276654238
        }
       },
       "50": {
@@ -464,19 +496,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.247545008479889,
-        "ann_vol": 0.3286819195024131,
-        "max_drawdown": -0.21264318904922808,
-        "total_return": 1.247545008479889,
-        "sharpe_rf0": 2.6326517992498872
+        "n_months": 12,
+        "ann_return": 1.2419261459586952,
+        "ann_vol_monthly": 0.4471541333125625,
+        "max_drawdown": -0.21264318904922785,
+        "total_return": 1.2419261459586952,
+        "sharpe_rf0_monthly": 2.0547867566325277
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.3625554887935087,
-        "ann_vol": 0.33179490901626135,
-        "max_drawdown": -0.2213607631781025,
-        "total_return": 1.3625554887935087,
-        "sharpe_rf0": 2.7614367975611707
+        "n_months": 12,
+        "ann_return": 1.3566491000715266,
+        "ann_vol_monthly": 0.47136313477708003,
+        "max_drawdown": -0.22136076317810272,
+        "total_return": 1.3566491000715266,
+        "sharpe_rf0_monthly": 2.080097450281424
        }
       }
      }
@@ -495,19 +529,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.1801166551998143,
-        "ann_vol": 0.33047850569064585,
-        "max_drawdown": -0.238265255671662,
-        "total_return": 1.1801166551998143,
-        "sharpe_rf0": 2.5276042025546106
+        "n_months": 12,
+        "ann_return": 1.1801166551998112,
+        "ann_vol_monthly": 0.4540229381985943,
+        "max_drawdown": -0.23826525567166212,
+        "total_return": 1.1801166551998112,
+        "sharpe_rf0_monthly": 1.9641080607280674
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.2916767186059839,
-        "ann_vol": 0.3346594159334849,
-        "max_drawdown": -0.24669914359625256,
-        "total_return": 1.2916767186059839,
-        "sharpe_rf0": 2.649270738715432
+        "n_months": 12,
+        "ann_return": 1.2916767186059834,
+        "ann_vol_monthly": 0.47766596016501567,
+        "max_drawdown": -0.24669914359625278,
+        "total_return": 1.2916767186059834,
+        "sharpe_rf0_monthly": 1.995276098240571
        }
       },
       "10": {
@@ -521,19 +557,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.1801166551998121,
-        "ann_vol": 0.3304785056906459,
-        "max_drawdown": -0.2382652556716619,
-        "total_return": 1.1801166551998121,
-        "sharpe_rf0": 2.52760420255461
+        "n_months": 12,
+        "ann_return": 1.1790265968722125,
+        "ann_vol_monthly": 0.4540406120875829,
+        "max_drawdown": -0.23826525567166168,
+        "total_return": 1.1790265968722125,
+        "sharpe_rf0_monthly": 1.962863554712251
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.291676718605987,
-        "ann_vol": 0.3346594159334849,
-        "max_drawdown": -0.24669914359625267,
-        "total_return": 1.291676718605987,
-        "sharpe_rf0": 2.6492707387154324
+        "n_months": 12,
+        "ann_return": 1.2905308802466813,
+        "ann_vol_monthly": 0.47771850564348667,
+        "max_drawdown": -0.24669914359625245,
+        "total_return": 1.2905308802466813,
+        "sharpe_rf0_monthly": 1.9939731415688557
        }
       },
       "20": {
@@ -547,19 +585,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.1801166551998166,
-        "ann_vol": 0.3304785056906459,
-        "max_drawdown": -0.23826525567166168,
-        "total_return": 1.1801166551998166,
-        "sharpe_rf0": 2.527604202554614
+        "n_months": 12,
+        "ann_return": 1.177936538544615,
+        "ann_vol_monthly": 0.45405890473188254,
+        "max_drawdown": -0.2382652556716618,
+        "total_return": 1.177936538544615,
+        "sharpe_rf0_monthly": 1.9616164724410867
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.291676718605987,
-        "ann_vol": 0.3346594159334848,
-        "max_drawdown": -0.24669914359625233,
-        "total_return": 1.291676718605987,
-        "sharpe_rf0": 2.6492707387154337
+        "n_months": 12,
+        "ann_return": 1.2893850418873813,
+        "ann_vol_monthly": 0.47777160610009645,
+        "max_drawdown": -0.24669914359625245,
+        "total_return": 1.2893850418873813,
+        "sharpe_rf0_monthly": 1.9926681568163296
        }
       },
       "25": {
@@ -573,19 +613,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.1801166551998108,
-        "ann_vol": 0.33047850569064585,
-        "max_drawdown": -0.23826525567166168,
-        "total_return": 1.1801166551998108,
-        "sharpe_rf0": 2.527604202554608
+        "n_months": 12,
+        "ann_return": 1.1773915093808087,
+        "ann_vol_monthly": 0.4540682830640037,
+        "max_drawdown": -0.2382652556716619,
+        "total_return": 1.1773915093808087,
+        "sharpe_rf0_monthly": 1.9609919669998948
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.2916767186059777,
-        "ann_vol": 0.3346594159334847,
-        "max_drawdown": -0.246699143596253,
-        "total_return": 1.2916767186059777,
-        "sharpe_rf0": 2.6492707387154266
+        "n_months": 12,
+        "ann_return": 1.2888121227077236,
+        "ann_vol_monthly": 0.47779836438745615,
+        "max_drawdown": -0.24669914359625256,
+        "total_return": 1.2888121227077236,
+        "sharpe_rf0_monthly": 1.9920149057823093
        }
       },
       "50": {
@@ -599,19 +641,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 1.180116655199814,
-        "ann_vol": 0.3304785056906457,
-        "max_drawdown": -0.23826525567166168,
-        "total_return": 1.180116655199814,
-        "sharpe_rf0": 2.527604202554614
+        "n_months": 12,
+        "ann_return": 1.174666363561811,
+        "ann_vol_monthly": 0.45411749443626237,
+        "max_drawdown": -0.2382652556716618,
+        "total_return": 1.174666363561811,
+        "sharpe_rf0_monthly": 1.957859825568518
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.2916767186059852,
-        "ann_vol": 0.33465941593348475,
-        "max_drawdown": -0.24669914359625245,
-        "total_return": 1.2916767186059852,
-        "sharpe_rf0": 2.6492707387154315
+        "n_months": 12,
+        "ann_return": 1.2859475268094682,
+        "ann_vol_monthly": 0.47793423547927866,
+        "max_drawdown": -0.24669914359625256,
+        "total_return": 1.2859475268094682,
+        "sharpe_rf0_monthly": 1.9887410941023984
        }
       }
      }
@@ -630,19 +674,21 @@
        },
        "real_try": {
         "n": 252,
-        "ann_return": 0.9060347566521205,
-        "ann_vol": 0.3229751912932519,
-        "max_drawdown": -0.20210959444343846,
-        "total_return": 0.9060347566521205,
-        "sharpe_rf0": 2.161707315488037
+        "n_months": 12,
+        "ann_return": 0.906034756652121,
+        "ann_vol_monthly": 0.3816291967199725,
+        "max_drawdown": -0.20210959444343823,
+        "total_return": 0.906034756652121,
+        "sharpe_rf0_monthly": 1.9005038879981302
        },
        "usd": {
         "n": 252,
-        "ann_return": 1.0035696100276597,
-        "ann_vol": 0.32832327740349343,
-        "max_drawdown": -0.2515149139420453,
-        "total_return": 1.0035696100276597,
-        "sharpe_rf0": 2.2835966564018784
+        "n_months": 12,
+        "ann_return": 1.0035696100276574,
+        "ann_vol_monthly": 0.4146487161655421,
+        "max_drawdown": -0.25151491394204595,
+        "total_return": 1.0035696100276574,
+        "sharpe_rf0_monthly": 1.8997679596311903
        }
       }
      }
@@ -670,19 +716,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11312885530812211,
-        "ann_vol": 0.43516247414513015,
-        "max_drawdown": -0.29643789096966167,
-        "total_return": -0.11186040349575488,
-        "sharpe_rf0": -0.06142315761756993
+        "n_months": 12,
+        "ann_return": -0.11312885530812256,
+        "ann_vol_monthly": 0.32491654605822257,
+        "max_drawdown": -0.2964378909696618,
+        "total_return": -0.11186040349575532,
+        "sharpe_rf0_monthly": -0.21427891822978568
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12814554504738307,
-        "ann_vol": 0.4277136387112219,
-        "max_drawdown": -0.279170930934202,
-        "total_return": -0.1267210513612499,
-        "sharpe_rf0": -0.11100373182019015
+        "n_months": 12,
+        "ann_return": -0.12814554504738362,
+        "ann_vol_monthly": 0.3229291799867773,
+        "max_drawdown": -0.2791709309342022,
+        "total_return": -0.12672105136125045,
+        "sharpe_rf0_monthly": -0.26973417786194626
        }
       },
       "10": {
@@ -696,19 +744,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11349683112279563,
-        "ann_vol": 0.43519503131241016,
-        "max_drawdown": -0.2964695454635804,
-        "total_return": -0.11222451957911017,
-        "sharpe_rf0": -0.06233752720179901
+        "n_months": 12,
+        "ann_return": -0.11394542173636535,
+        "ann_vol_monthly": 0.32508002919892803,
+        "max_drawdown": -0.2964695454635803,
+        "total_return": -0.11266840731931949,
+        "sharpe_rf0_monthly": -0.21677095787318762
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.1285072902177582,
-        "ann_vol": 0.4277160829173589,
-        "max_drawdown": -0.27920336229895315,
-        "total_return": -0.12707907493288884,
-        "sharpe_rf0": -0.1119701949801868
+        "n_months": 12,
+        "ann_return": -0.12894828520021107,
+        "ann_vol_monthly": 0.3230909320790982,
+        "max_drawdown": -0.2792033622989534,
+        "total_return": -0.12751553539542204,
+        "sharpe_rf0_monthly": -0.2722117311110575
        }
       },
       "20": {
@@ -722,19 +772,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11386466827890152,
-        "ann_vol": 0.43522761847338887,
-        "max_drawdown": -0.29650119995749913,
-        "total_return": -0.11258850025657086,
-        "sharpe_rf0": -0.06325175562833427
+        "n_months": 12,
+        "ann_return": -0.11476147453565977,
+        "ann_vol_monthly": 0.3252439165561513,
+        "max_drawdown": -0.296501199957499,
+        "total_return": -0.11347591175631344,
+        "sharpe_rf0_monthly": -0.21926021977774696
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12886889907736154,
-        "ann_vol": 0.4277185623920352,
-        "max_drawdown": -0.27923579366370443,
-        "total_return": -0.1274369653642894,
-        "sharpe_rf0": -0.11293663778198017
+        "n_months": 12,
+        "ann_return": -0.12975052042096413,
+        "ann_vol_monthly": 0.323253087321164,
+        "max_drawdown": -0.27923579366370477,
+        "total_return": -0.12830952839892606,
+        "sharpe_rf0_monthly": -0.2746864622997043
        }
       },
       "25": {
@@ -748,19 +800,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11404853487467637,
-        "ann_vol": 0.43524392329941025,
-        "max_drawdown": -0.2965170272044586,
-        "total_return": -0.11277043983222212,
-        "sharpe_rf0": -0.0637088168586193
+        "n_months": 12,
+        "ann_return": -0.11516930840553008,
+        "ann_vol_monthly": 0.325326011625113,
+        "max_drawdown": -0.2965170272044585,
+        "total_return": -0.11387947678243138,
+        "sharpe_rf0_monthly": -0.22050380761877472
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.1290496524050615,
-        "ann_vol": 0.42771981535488474,
-        "max_drawdown": -0.2792520093460804,
-        "total_return": -0.12761586066629682,
-        "sharpe_rf0": -0.11341985147400237
+        "n_months": 12,
+        "ann_return": -0.13015144876151863,
+        "ann_vol_monthly": 0.3233343159338631,
+        "max_drawdown": -0.27925200934608063,
+        "total_return": -0.12870634084046428,
+        "sharpe_rf0_monthly": -0.27592276821629297
        }
       },
       "50": {
@@ -774,19 +828,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11496734826565191,
-        "ann_vol": 0.43532555985112986,
-        "max_drawdown": -0.29659616343925554,
-        "total_return": -0.11367963030572004,
-        "sharpe_rf0": -0.06599359239960985
+        "n_months": 12,
+        "ann_return": -0.11720655375369693,
+        "ann_vol_monthly": 0.3257379978182426,
+        "max_drawdown": -0.2965961634392552,
+        "total_return": -0.11589543122995427,
+        "sharpe_rf0_monthly": -0.22671129267032852
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12995290825342853,
-        "ann_vol": 0.4277262124211248,
-        "max_drawdown": -0.2793330877579582,
-        "total_return": -0.12850983826163498,
-        "sharpe_rf0": -0.11583584165274025
+        "n_months": 12,
+        "ann_return": -0.13215419904070125,
+        "ann_vol_monthly": 0.32374196588043275,
+        "max_drawdown": -0.2793330877579586,
+        "total_return": -0.13068856366598147,
+        "sharpe_rf0_monthly": -0.2820936788465287
        }
       }
      }
@@ -805,19 +861,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11269985559509377,
-        "ann_vol": 0.4333274249575638,
+        "n_months": 12,
+        "ann_return": -0.11269985559509443,
+        "ann_vol_monthly": 0.3234613859068266,
         "max_drawdown": -0.2953903789290576,
-        "total_return": -0.11143590586979202,
-        "sharpe_rf0": -0.06243798433697046
+        "total_return": -0.11143590586979268,
+        "sharpe_rf0_monthly": -0.21532809858449878
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.1277238092482017,
-        "ann_vol": 0.42611685453101394,
-        "max_drawdown": -0.2780977106465081,
-        "total_return": -0.12630365657110665,
-        "sharpe_rf0": -0.11188907141427505
+        "n_months": 12,
+        "ann_return": -0.12772380924820304,
+        "ann_vol_monthly": 0.31846940922991246,
+        "max_drawdown": -0.27809771064650857,
+        "total_return": -0.12630365657110798,
+        "sharpe_rf0_monthly": -0.27604169727238703
        }
       },
       "10": {
@@ -831,19 +889,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.1126998555950931,
-        "ann_vol": 0.43332742495756404,
-        "max_drawdown": -0.29539037892905784,
-        "total_return": -0.11143590586979135,
-        "sharpe_rf0": -0.06243798433696991
+        "n_months": 12,
+        "ann_return": -0.11314884949627058,
+        "ann_vol_monthly": 0.32364475524711095,
+        "max_drawdown": -0.2953903789290576,
+        "total_return": -0.11188018791685683,
+        "sharpe_rf0_monthly": -0.21654902962737285
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12772380924820315,
-        "ann_vol": 0.4261168545310139,
-        "max_drawdown": -0.27809771064650823,
-        "total_return": -0.1263036565711081,
-        "sharpe_rf0": -0.11188907141427534
+        "n_months": 12,
+        "ann_return": -0.12816520068971038,
+        "ann_vol_monthly": 0.31865899491932037,
+        "max_drawdown": -0.27809771064650857,
+        "total_return": -0.12674050474282128,
+        "sharpe_rf0_monthly": -0.27723447202489604
        }
       },
       "20": {
@@ -857,19 +917,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11269985559509399,
-        "ann_vol": 0.4333274249575639,
-        "max_drawdown": -0.2953903789290576,
-        "total_return": -0.11143590586979224,
-        "sharpe_rf0": -0.06243798433697095
+        "n_months": 12,
+        "ann_return": -0.1135978406913214,
+        "ann_vol_monthly": 0.3238286041040529,
+        "max_drawdown": -0.2953903789290574,
+        "total_return": -0.11232446996392309,
+        "sharpe_rf0_monthly": -0.2177682554874621
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12772380924820226,
-        "ann_vol": 0.42611685453101394,
-        "max_drawdown": -0.27809771064650846,
-        "total_return": -0.1263036565711072,
-        "sharpe_rf0": -0.11188907141427586
+        "n_months": 12,
+        "ann_return": -0.1286065894709133,
+        "ann_vol_monthly": 0.3188490543317243,
+        "max_drawdown": -0.27809771064650834,
+        "total_return": -0.1271773529145369,
+        "sharpe_rf0_monthly": -0.27842541467714815
        }
       },
       "25": {
@@ -883,19 +945,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11269985559509321,
-        "ann_vol": 0.4333274249575639,
-        "max_drawdown": -0.2953903789290576,
-        "total_return": -0.11143590586979146,
-        "sharpe_rf0": -0.062437984336969926
+        "n_months": 12,
+        "ann_return": -0.11382233527362895,
+        "ann_vol_monthly": 0.3239207080962023,
+        "max_drawdown": -0.2953903789290574,
+        "total_return": -0.11254661098745433,
+        "sharpe_rf0_monthly": -0.2183772283605719
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12772380924820093,
-        "ann_vol": 0.42611685453101383,
-        "max_drawdown": -0.27809771064650823,
-        "total_return": -0.12630365657110587,
-        "sharpe_rf0": -0.11188907141427219
+        "n_months": 12,
+        "ann_return": -0.12882728286348666,
+        "ann_vol_monthly": 0.31894426141948373,
+        "max_drawdown": -0.27809771064650834,
+        "total_return": -0.12739577700039273,
+        "sharpe_rf0_monthly": -0.2790201985616633
        }
       },
       "50": {
@@ -909,19 +973,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.11269985559509466,
-        "ann_vol": 0.43332742495756404,
-        "max_drawdown": -0.29539037892905773,
-        "total_return": -0.1114359058697929,
-        "sharpe_rf0": -0.06243798433697302
+        "n_months": 12,
+        "ann_return": -0.11494479802631696,
+        "ann_vol_monthly": 0.324383019610999,
+        "max_drawdown": -0.2953903789290575,
+        "total_return": -0.1136573161051182,
+        "sharpe_rf0_monthly": -0.2214156825428
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.12772380924820137,
-        "ann_vol": 0.4261168545310138,
-        "max_drawdown": -0.2780977106465079,
-        "total_return": -0.12630365657110632,
-        "sharpe_rf0": -0.11188907141427379
+        "n_months": 12,
+        "ann_return": -0.12993073983951609,
+        "ann_vol_monthly": 0.3194220664402751,
+        "max_drawdown": -0.27809771064650834,
+        "total_return": -0.12848789742967992,
+        "sharpe_rf0_monthly": -0.2819872373044697
        }
       }
      }
@@ -940,19 +1006,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.15221278696372065,
-        "ann_vol": 0.40108727845155384,
-        "max_drawdown": -0.26476529371496094,
-        "total_return": -0.1505445838576297,
-        "sharpe_rf0": -0.21124533245814137
+        "n_months": 12,
+        "ann_return": -0.15221278696372087,
+        "ann_vol_monthly": 0.3230049909508412,
+        "max_drawdown": -0.2647652937149618,
+        "total_return": -0.15054458385762992,
+        "sharpe_rf0_monthly": -0.3539041683836324
        },
        "usd": {
         "n": 249,
-        "ann_return": -0.16656769930840165,
-        "ann_vol": 0.396499793060771,
-        "max_drawdown": -0.2500593099018362,
-        "total_return": -0.1647579551186522,
-        "sharpe_rf0": -0.26241190903248546
+        "n_months": 12,
+        "ann_return": -0.16656769930840176,
+        "ann_vol_monthly": 0.3104913804490388,
+        "max_drawdown": -0.25005930990183667,
+        "total_return": -0.16475795511865232,
+        "sharpe_rf0_monthly": -0.43339592891066664
        }
       }
      }
@@ -980,19 +1048,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07813100730759293,
-        "ann_vol": 0.26020415318829304,
+        "n_months": 12,
+        "ann_return": 0.07813100730759448,
+        "ann_vol_monthly": 0.24988252218165735,
         "max_drawdown": -0.2746972484168443,
-        "total_return": 0.07716588347223063,
-        "sharpe_rf0": 0.4193572958540863
+        "total_return": 0.07716588347223219,
+        "sharpe_rf0_monthly": 0.4113843635455493
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20556513075971083,
-        "ann_vol": 0.25091080523290055,
+        "n_months": 12,
+        "ann_return": 0.2055651307597124,
+        "ann_vol_monthly": 0.2429836056074692,
         "max_drawdown": -0.22155288868524192,
-        "total_return": 0.2028850365440491,
-        "sharpe_rf0": 0.8703310745990086
+        "total_return": 0.20288503654405043,
+        "sharpe_rf0_monthly": 0.8761054925129426
        }
       },
       "10": {
@@ -1006,19 +1076,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07773443861839979,
-        "ann_vol": 0.2602362627530582,
-        "max_drawdown": -0.2748421229393052,
-        "total_return": 0.0767743857566674,
-        "sharpe_rf0": 0.41792462239754596
+        "n_months": 12,
+        "ann_return": 0.07718908066587526,
+        "ann_vol_monthly": 0.24956915953891576,
+        "max_drawdown": -0.27484212293930554,
+        "total_return": 0.07623599856379015,
+        "sharpe_rf0_monthly": 0.4081630688610708
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20512168800516561,
-        "ann_vol": 0.2509074455979671,
-        "max_drawdown": -0.22165425691587382,
-        "total_return": 0.20244784599511245,
-        "sharpe_rf0": 0.8688724221250299
+        "n_months": 12,
+        "ann_return": 0.2045118692290695,
+        "ann_vol_monthly": 0.2428074102220424,
+        "max_drawdown": -0.22165425691587337,
+        "total_return": 0.20184662207211468,
+        "sharpe_rf0_monthly": 0.8729792893869268
        }
       },
       "20": {
@@ -1032,19 +1104,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07733800155149417,
-        "ann_vol": 0.2602684151571612,
-        "max_drawdown": -0.27498697350872503,
-        "total_return": 0.0763830162662007,
-        "sharpe_rf0": 0.41649223388838025
+        "n_months": 12,
+        "ann_return": 0.07624769014436716,
+        "ann_vol_monthly": 0.2492565512810623,
+        "max_drawdown": -0.27498697350872436,
+        "total_return": 0.07530663324993658,
+        "sharpe_rf0_monthly": 0.40493244905043757
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.2046783924305462,
-        "ann_vol": 0.25090413701068254,
-        "max_drawdown": -0.2217556152986001,
-        "total_return": 0.20201079863679627,
-        "sharpe_rf0": 0.8674135541085193
+        "n_months": 12,
+        "ann_return": 0.2034592071875685,
+        "ann_vol_monthly": 0.24263215839828195,
+        "max_drawdown": -0.22175561529860077,
+        "total_return": 0.20080878783815814,
+        "sharpe_rf0_monthly": 0.8698451631349412
        }
       },
       "25": {
@@ -1058,19 +1132,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07713983236419586,
-        "ann_vol": 0.2602845074190044,
-        "max_drawdown": -0.27505938981202616,
-        "total_return": 0.07618737959366517,
-        "sharpe_rf0": 0.415776146685029
+        "n_months": 12,
+        "ann_return": 0.07577719585343412,
+        "ann_vol_monthly": 0.2491005309342804,
+        "max_drawdown": -0.27505938981202593,
+        "total_return": 0.074842145369173,
+        "sharpe_rf0_monthly": 0.4033136389798569
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20445679982205545,
-        "ann_vol": 0.250902501860541,
-        "max_drawdown": -0.2218062907971985,
-        "total_return": 0.20179232864103325,
-        "sharpe_rf0": 0.866684039545218
+        "n_months": 12,
+        "ann_return": 0.20293310089109262,
+        "ann_vol_monthly": 0.24254488696162027,
+        "max_drawdown": -0.22180629079719794,
+        "total_return": 0.20029008823023364,
+        "sharpe_rf0_monthly": 0.8682751326032658
        }
       },
       "50": {
@@ -1084,19 +1160,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07614947969396746,
-        "ann_vol": 0.2603651292466857,
-        "max_drawdown": -0.2754213815301947,
-        "total_return": 0.0752096767705237,
-        "sharpe_rf0": 0.41219678430992107
+        "n_months": 12,
+        "ann_return": 0.07342673289342105,
+        "ann_vol_monthly": 0.2483232812727724,
+        "max_drawdown": -0.2754213815301946,
+        "total_return": 0.07252165257859766,
+        "sharpe_rf0_monthly": 0.3951845366813795
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20334938834952765,
-        "ann_vol": 0.2508945175547645,
-        "max_drawdown": -0.22205963136569862,
-        "total_return": 0.2007005152869461,
-        "sharpe_rf0": 0.8630356655556366
+        "n_months": 12,
+        "ann_return": 0.20030481530564193,
+        "ann_vol_monthly": 0.24211208473164017,
+        "max_drawdown": -0.22205963136569828,
+        "total_return": 0.19769876399872932,
+        "sharpe_rf0_monthly": 0.8603953683075447
        }
       }
      }
@@ -1115,19 +1193,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07633864037219729,
-        "ann_vol": 0.2594264000168322,
+        "n_months": 12,
+        "ann_return": 0.07633864037219595,
+        "ann_vol_monthly": 0.25151348104958626,
         "max_drawdown": -0.2777562740227847,
-        "total_return": 0.0753964221128407,
-        "sharpe_rf0": 0.4133669942560045
+        "total_return": 0.07539642211283937,
+        "sharpe_rf0_monthly": 0.4037387514141723
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20356090765120527,
-        "ann_vol": 0.25028052052944433,
-        "max_drawdown": -0.2268938785411666,
-        "total_return": 0.20090905621955657,
-        "sharpe_rf0": 0.8652091471754877
+        "n_months": 12,
+        "ann_return": 0.20356090765120594,
+        "ann_vol_monthly": 0.24491610878454742,
+        "max_drawdown": -0.22689387854116627,
+        "total_return": 0.20090905621955724,
+        "sharpe_rf0_monthly": 0.8642386894314472
        }
       },
       "10": {
@@ -1141,19 +1221,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07633864037219684,
-        "ann_vol": 0.25942640001683237,
-        "max_drawdown": -0.2777562740227846,
-        "total_return": 0.07539642211284026,
-        "sharpe_rf0": 0.4133669942560051
+        "n_months": 12,
+        "ann_return": 0.07579398872508891,
+        "ann_vol_monthly": 0.25120653920054725,
+        "max_drawdown": -0.27775627402278447,
+        "total_return": 0.07485872390178305,
+        "sharpe_rf0_monthly": 0.4019759387732499
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.2035609076512075,
-        "ann_vol": 0.2502805205294446,
-        "max_drawdown": -0.22689387854116572,
-        "total_return": 0.2009090562195588,
-        "sharpe_rf0": 0.8652091471754975
+        "n_months": 12,
+        "ann_return": 0.20295187866519937,
+        "ann_vol_monthly": 0.24475659652533122,
+        "max_drawdown": -0.22689387854116594,
+        "total_return": 0.2003086016914477,
+        "sharpe_rf0_monthly": 0.8625876024894374
        }
       },
       "20": {
@@ -1167,19 +1249,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07633864037219662,
-        "ann_vol": 0.2594264000168324,
-        "max_drawdown": -0.27775627402278535,
-        "total_return": 0.07539642211284003,
-        "sharpe_rf0": 0.4133669942560016
+        "n_months": 12,
+        "ann_return": 0.07524934036064757,
+        "ann_vol_monthly": 0.25090050208321707,
+        "max_drawdown": -0.27775627402278513,
+        "total_return": 0.07432102569072674,
+        "sharpe_rf0_monthly": 0.4002073698766144
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20356090765120705,
-        "ann_vol": 0.2502805205294446,
-        "max_drawdown": -0.22689387854116672,
-        "total_return": 0.20090905621955835,
-        "sharpe_rf0": 0.8652091471754925
+        "n_months": 12,
+        "ann_return": 0.2023428533498659,
+        "ann_vol_monthly": 0.2445981811225936,
+        "max_drawdown": -0.2268938785411666,
+        "total_return": 0.1997081471633375,
+        "sharpe_rf0_monthly": 0.8609305013530261
        }
       },
       "25": {
@@ -1193,19 +1277,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07633864037219573,
-        "ann_vol": 0.25942640001683226,
-        "max_drawdown": -0.2777562740227849,
-        "total_return": 0.07539642211283915,
-        "sharpe_rf0": 0.4133669942560066
+        "n_months": 12,
+        "ann_return": 0.07497701740993334,
+        "ann_vol_monthly": 0.2507478238345327,
+        "max_drawdown": -0.2777562740227846,
+        "total_return": 0.07405217658519825,
+        "sharpe_rf0_monthly": 0.39932092457434065
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.2035609076512066,
-        "ann_vol": 0.25028052052944444,
-        "max_drawdown": -0.22689387854116494,
-        "total_return": 0.2009090562195579,
-        "sharpe_rf0": 0.8652091471754914
+        "n_months": 12,
+        "ann_return": 0.2020383420692693,
+        "ann_vol_monthly": 0.2445193854091792,
+        "max_drawdown": -0.2268938785411656,
+        "total_return": 0.19940791989928286,
+        "sharpe_rf0_monthly": 0.8600996964261332
        }
       },
       "50": {
@@ -1219,19 +1305,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": 0.07633864037219751,
-        "ann_vol": 0.2594264000168322,
-        "max_drawdown": -0.27775627402278424,
-        "total_return": 0.07539642211284092,
-        "sharpe_rf0": 0.4133669942560049
+        "n_months": 12,
+        "ann_return": 0.07361541497955648,
+        "ann_vol_monthly": 0.24998785229975093,
+        "max_drawdown": -0.277756274022785,
+        "total_return": 0.07270793105755713,
+        "sharpe_rf0_monthly": 0.3948670544841687
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.20356090765120705,
-        "ann_vol": 0.2502805205294444,
-        "max_drawdown": -0.22689387854116616,
-        "total_return": 0.20090905621955835,
-        "sharpe_rf0": 0.8652091471754907
+        "n_months": 12,
+        "ann_return": 0.20051579944606845,
+        "ann_vol_monthly": 0.24412953733178636,
+        "max_drawdown": -0.22689387854116605,
+        "total_return": 0.19790678357900826,
+        "sharpe_rf0_monthly": 0.8559231452640179
        }
       }
      }
@@ -1250,19 +1338,21 @@
        },
        "real_try": {
         "n": 249,
-        "ann_return": -0.028866880084359225,
-        "ann_vol": 0.2599785562708341,
-        "max_drawdown": -0.317445524510684,
-        "total_return": -0.028528176226942703,
-        "sharpe_rf0": 0.017078151508379016
+        "n_months": 12,
+        "ann_return": -0.02886688008436078,
+        "ann_vol_monthly": 0.22619970277959453,
+        "max_drawdown": -0.3174455245106844,
+        "total_return": -0.028528176226944257,
+        "sharpe_rf0_monthly": -0.02306196337419125
        },
        "usd": {
         "n": 249,
-        "ann_return": 0.08592018851208216,
-        "ann_vol": 0.251999163567349,
-        "max_drawdown": -0.2536813254653526,
-        "total_return": 0.08485511671971802,
-        "sharpe_rf0": 0.45236171082213544
+        "n_months": 12,
+        "ann_return": 0.08592018851208327,
+        "ann_vol_monthly": 0.21320572925455808,
+        "max_drawdown": -0.2536813254653524,
+        "total_return": 0.0848551167197189,
+        "sharpe_rf0_monthly": 0.4819746449634224
        }
       }
      }
@@ -1290,19 +1380,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05166978504265485,
-        "ann_vol": 0.2634541503507545,
+        "n_months": 12,
+        "ann_return": -0.05166978504265407,
+        "ann_vol_monthly": 0.2099024361549987,
         "max_drawdown": -0.20961499770656788,
-        "total_return": -0.05147011601925877,
-        "sharpe_rf0": -0.06955286108994245
+        "total_return": -0.051470116019257994,
+        "sharpe_rf0_monthly": -0.15624575645932928
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.02811902830033608,
-        "ann_vol": 0.2670060117004365,
-        "max_drawdown": -0.19840861666679022,
-        "total_return": -0.02800902235324132,
-        "sharpe_rf0": 0.027502356102814318
+        "n_months": 12,
+        "ann_return": -0.02811902830033508,
+        "ann_vol_monthly": 0.18930707437506386,
+        "max_drawdown": -0.19840861666678977,
+        "total_return": -0.02800902235324032,
+        "sharpe_rf0_monthly": -0.06522225975011436
        }
       },
       "10": {
@@ -1316,19 +1408,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05205710506083494,
-        "ann_vol": 0.2634802858513807,
-        "max_drawdown": -0.20967152223684105,
-        "total_return": -0.051855980591816286,
-        "sharpe_rf0": -0.07106900783184467
+        "n_months": 12,
+        "ann_return": -0.052532964366721835,
+        "ann_vol_monthly": 0.20988014546323938,
+        "max_drawdown": -0.20967152223684116,
+        "total_return": -0.05233005260152024,
+        "sharpe_rf0_monthly": -0.16058417551670714
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.02851596699288239,
-        "ann_vol": 0.2670017928394249,
-        "max_drawdown": -0.19851786804601845,
-        "total_return": -0.028404430963400285,
-        "sharpe_rf0": 0.025969019973048246
+        "n_months": 12,
+        "ann_return": -0.029003643750728392,
+        "ann_vol_monthly": 0.18932148444079983,
+        "max_drawdown": -0.1985178680460178,
+        "total_return": -0.02889022874791869,
+        "sharpe_rf0_monthly": -0.06998296720897057
        }
       },
       "20": {
@@ -1342,19 +1436,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.052444282636712414,
-        "ann_vol": 0.263506476791513,
-        "max_drawdown": -0.20972804474592988,
-        "total_return": -0.05224170388262339,
-        "sharpe_rf0": -0.07258483854888799
+        "n_months": 12,
+        "ann_return": -0.05339561158074568,
+        "ann_vol_monthly": 0.2098589072932506,
+        "max_drawdown": -0.20972804474593,
+        "total_return": -0.05318946217874165,
+        "sharpe_rf0_monthly": -0.16492268905708418
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.02891275970572793,
-        "ann_vol": 0.26699763379814845,
-        "max_drawdown": -0.19862711026929836,
-        "total_return": -0.028799694797325692,
-        "sharpe_rf0": 0.024435629911737075
+        "n_months": 12,
+        "ann_return": -0.029887713876699418,
+        "ann_vol_monthly": 0.1893370282653764,
+        "max_drawdown": -0.1986271102692979,
+        "total_return": -0.029770895102527062,
+        "sharpe_rf0_monthly": -0.0747425024432361
        }
       },
       "25": {
@@ -1368,19 +1464,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.052637818023401284,
-        "ann_vol": 0.26351959304622985,
-        "max_drawdown": -0.20975630524253042,
-        "total_return": -0.05243451256179388,
-        "sharpe_rf0": -0.07334263512999184
+        "n_months": 12,
+        "ann_return": -0.053826735728336295,
+        "ann_vol_monthly": 0.20984868300440387,
+        "max_drawdown": -0.20975630524253008,
+        "total_return": -0.05361896942109179,
+        "sharpe_rf0_monthly": -0.1670919607871433
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.0291111013347346,
-        "ann_vol": 0.266995576710786,
-        "max_drawdown": -0.1986817279475721,
-        "total_return": -0.028997272437975785,
-        "sharpe_rf0": 0.023668914977956944
+        "n_months": 12,
+        "ann_return": -0.030329544526904395,
+        "ann_vol_monthly": 0.1893452252507697,
+        "max_drawdown": -0.19868172794757233,
+        "total_return": -0.030211025847429074,
+        "sharpe_rf0_monthly": -0.07712180388204994
        }
       },
       "50": {
@@ -1394,19 +1492,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05360496117803848,
-        "ann_vol": 0.2635853820835133,
-        "max_drawdown": -0.2098976001460926,
-        "total_return": -0.053398026525961484,
-        "sharpe_rf0": -0.07713042597875767
+        "n_months": 12,
+        "ann_return": -0.055980363180918924,
+        "ann_vol_monthly": 0.20980151103110187,
+        "max_drawdown": -0.20989760014609227,
+        "total_return": -0.05576453145964688,
+        "sharpe_rf0_monthly": -0.1779381412481056
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.030102262445153904,
-        "ann_vol": 0.26698551562048345,
-        "max_drawdown": -0.19895478200711803,
-        "total_return": -0.029984618114505368,
-        "sharpe_rf0": 0.019835146418451126
+        "n_months": 12,
+        "ann_return": -0.03253665499146885,
+        "ann_vol_monthly": 0.18939045939882088,
+        "max_drawdown": -0.19895478200711825,
+        "total_return": -0.03240965656922001,
+        "sharpe_rf0_monthly": -0.08901322448699193
        }
       }
      }
@@ -1425,19 +1525,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05479886667353473,
-        "ann_vol": 0.2598459997229154,
-        "max_drawdown": -0.1988201264638767,
-        "total_return": -0.0545874572979651,
-        "sharpe_rf0": -0.08672667290890891
+        "n_months": 12,
+        "ann_return": -0.05479886667353595,
+        "ann_vol_monthly": 0.202626792426534,
+        "max_drawdown": -0.19882012646387714,
+        "total_return": -0.054587457297966324,
+        "sharpe_rf0_monthly": -0.18479654608002546
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.03132581729427775,
-        "ann_vol": 0.26329061357243866,
-        "max_drawdown": -0.20413560054171187,
-        "total_return": -0.031203468462237316,
-        "sharpe_rf0": 0.011703045814942862
+        "n_months": 12,
+        "ann_return": -0.03132581729427841,
+        "ann_vol_monthly": 0.18202210652731265,
+        "max_drawdown": -0.2041356005417122,
+        "total_return": -0.031203468462237982,
+        "sharpe_rf0_monthly": -0.09246753229656893
        }
       },
       "10": {
@@ -1451,19 +1553,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05479886667353684,
-        "ann_vol": 0.2598459997229153,
-        "max_drawdown": -0.19882012646387703,
-        "total_return": -0.05458745729796721,
-        "sharpe_rf0": -0.08672667290891496
+        "n_months": 12,
+        "ann_return": -0.05527334963831143,
+        "ann_vol_monthly": 0.2025877669119228,
+        "max_drawdown": -0.19882012646387748,
+        "total_return": -0.05506016356931753,
+        "sharpe_rf0_monthly": -0.18732845327481176
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.0313258172942783,
-        "ann_vol": 0.2632906135724389,
-        "max_drawdown": -0.20413560054171187,
-        "total_return": -0.03120346846223787,
-        "sharpe_rf0": 0.011703045814943275
+        "n_months": 12,
+        "ann_return": -0.0318120835310679,
+        "ann_vol_monthly": 0.18202556414261006,
+        "max_drawdown": -0.2041356005417121,
+        "total_return": -0.031687866728007275,
+        "sharpe_rf0_monthly": -0.09520624119997331
        }
       },
       "20": {
@@ -1477,19 +1581,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05479886667353395,
-        "ann_vol": 0.25984599972291533,
-        "max_drawdown": -0.1988201264638768,
-        "total_return": -0.054587457297964326,
-        "sharpe_rf0": -0.0867266729089085
+        "n_months": 12,
+        "ann_return": -0.05574783165742769,
+        "ann_vol_monthly": 0.20254999655496403,
+        "max_drawdown": -0.1988201264638766,
+        "total_return": -0.05553286984066674,
+        "sharpe_rf0_monthly": -0.1898601595971017
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.031325817294277414,
-        "ann_vol": 0.2632906135724387,
-        "max_drawdown": -0.20413560054171176,
-        "total_return": -0.031203468462236983,
-        "sharpe_rf0": 0.011703045814947516
+        "n_months": 12,
+        "ann_return": -0.032298348798713516,
+        "ann_vol_monthly": 0.1820303887004758,
+        "max_drawdown": -0.2041356005417121,
+        "total_return": -0.032172264993774236,
+        "sharpe_rf0_monthly": -0.09794411055165166
        }
       },
       "25": {
@@ -1503,19 +1609,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05479886667353262,
-        "ann_vol": 0.2598459997229154,
-        "max_drawdown": -0.19882012646387637,
-        "total_return": -0.054587457297962994,
-        "sharpe_rf0": -0.08672667290890504
+        "n_months": 12,
+        "ann_return": -0.055985072312219386,
+        "ann_vol_monthly": 0.20253158228096296,
+        "max_drawdown": -0.19882012646387692,
+        "total_return": -0.05576922297634357,
+        "sharpe_rf0_monthly": -0.19112592247847568
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.03132581729427919,
-        "ann_vol": 0.2632906135724386,
-        "max_drawdown": -0.20413560054171187,
-        "total_return": -0.03120346846223876,
-        "sharpe_rf0": 0.011703045814939477
+        "n_months": 12,
+        "ann_return": -0.0325414810689596,
+        "ann_vol_monthly": 0.1820333135501105,
+        "max_drawdown": -0.2041356005417122,
+        "total_return": -0.03241446412666005,
+        "sharpe_rf0_monthly": -0.09931271115835537
        }
       },
       "50": {
@@ -1529,19 +1637,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.05479886667353728,
-        "ann_vol": 0.2598459997229153,
-        "max_drawdown": -0.19882012646387726,
-        "total_return": -0.054587457297967656,
-        "sharpe_rf0": -0.0867266729089201
+        "n_months": 12,
+        "ann_return": -0.0571712720361256,
+        "ann_vol_monthly": 0.2024442233385885,
+        "max_drawdown": -0.19882012646387737,
+        "total_return": -0.05695098865472259,
+        "sharpe_rf0_monthly": -0.19745359460515693
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.031325817294279856,
-        "ann_vol": 0.26329061357243877,
-        "max_drawdown": -0.20413560054171176,
-        "total_return": -0.031203468462239425,
-        "sharpe_rf0": 0.011703045814937354
+        "n_months": 12,
+        "ann_return": -0.033757138781976614,
+        "ann_vol_monthly": 0.18205306278878414,
+        "max_drawdown": -0.20413560054171231,
+        "total_return": -0.03362545979108378,
+        "sharpe_rf0_monthly": -0.10615206615897665
        }
       }
      }
@@ -1560,19 +1670,21 @@
        },
        "real_try": {
         "n": 251,
-        "ann_return": -0.10536513500434097,
-        "ann_vol": 0.2643642821885387,
-        "max_drawdown": -0.22339860249687205,
-        "total_return": -0.10496977663032137,
-        "sharpe_rf0": -0.2884218500391413
+        "n_months": 12,
+        "ann_return": -0.10536513500434197,
+        "ann_vol_monthly": 0.18537765903183326,
+        "max_drawdown": -0.22339860249687227,
+        "total_return": -0.10496977663032236,
+        "sharpe_rf0_monthly": -0.5112476140335898
        },
        "usd": {
         "n": 251,
-        "ann_return": -0.0831478442902025,
-        "ann_vol": 0.26955557744912556,
-        "max_drawdown": -0.23114666915654758,
-        "total_return": -0.08283195234136331,
-        "sharpe_rf0": -0.18568711842938565
+        "n_months": 12,
+        "ann_return": -0.08314784429020228,
+        "ann_vol_monthly": 0.17123822370984407,
+        "max_drawdown": -0.2311466691565478,
+        "total_return": -0.08283195234136309,
+        "sharpe_rf0_monthly": -0.42570728451091755
        }
       }
      }
@@ -1600,19 +1712,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.23776748687566907,
-        "ann_vol": 0.2860394085567713,
-        "max_drawdown": -0.3356111504012731,
-        "total_return": -0.1999018270293872,
-        "sharpe_rf0": -0.8062640515362961
+        "n_months": 10,
+        "ann_return": -0.2377674868756693,
+        "ann_vol_monthly": 0.30793238161419617,
+        "max_drawdown": -0.3356111504012732,
+        "total_return": -0.1999018270293874,
+        "sharpe_rf0_monthly": -0.7218275721056037
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.192545508342705,
-        "ann_vol": 0.27756566084585654,
-        "max_drawdown": -0.3136321017089857,
-        "total_return": -0.16111174041651166,
-        "sharpe_rf0": -0.6321362129545994
+        "n_months": 10,
+        "ann_return": -0.192545508342702,
+        "ann_vol_monthly": 0.3060503633106677,
+        "max_drawdown": -0.31363210170898403,
+        "total_return": -0.1611117404165091,
+        "sharpe_rf0_monthly": -0.5459431098665153
        }
       },
       "10": {
@@ -1626,19 +1740,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.23807083753490377,
-        "ann_vol": 0.28606703408765277,
-        "max_drawdown": -0.3358096383640643,
-        "total_return": -0.20016339586007648,
-        "sharpe_rf0": -0.8075479514951478
+        "n_months": 10,
+        "ann_return": -0.23853459529447552,
+        "ann_vol_monthly": 0.3075127781832977,
+        "max_drawdown": -0.33580963836406363,
+        "total_return": -0.2005633141621458,
+        "sharpe_rf0_monthly": -0.7262994417216282
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.19286685628854405,
-        "ann_vol": 0.27756693288434264,
-        "max_drawdown": -0.31375278086508995,
-        "total_return": -0.16138599053799574,
-        "sharpe_rf0": -0.633564760861648
+        "n_months": 10,
+        "ann_return": -0.19335812801935992,
+        "ann_vol_monthly": 0.3056708111671015,
+        "max_drawdown": -0.31375278086508895,
+        "total_return": -0.16180529754272566,
+        "sharpe_rf0_monthly": -0.5501136477494419
        }
       },
       "20": {
@@ -1652,19 +1768,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.23837407882742045,
-        "ann_vol": 0.2860947049865393,
-        "max_drawdown": -0.33600807463587623,
-        "total_return": -0.20042488897459,
-        "sharpe_rf0": -0.808831475243172
+        "n_months": 10,
+        "ann_return": -0.23930117479246027,
+        "ann_vol_monthly": 0.30709375487785356,
+        "max_drawdown": -0.3360080746358757,
+        "total_return": -0.20122446408561467,
+        "sharpe_rf0_monthly": -0.7307821512996368
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.19318808837912216,
-        "ann_vol": 0.27756825642572336,
-        "max_drawdown": -0.31387344318715393,
-        "total_return": -0.1616601612724594,
-        "sharpe_rf0": -0.6349931778519784
+        "n_months": 10,
+        "ann_return": -0.19417018739520986,
+        "ann_vol_monthly": 0.30529192076266043,
+        "max_drawdown": -0.3138734431871546,
+        "total_return": -0.1624985011111869,
+        "sharpe_rf0_monthly": -0.5542933541739025
        }
       },
       "25": {
@@ -1678,19 +1796,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.23852565847220875,
-        "ann_vol": 0.2861085574448716,
-        "max_drawdown": -0.336107273391257,
-        "total_return": -0.20055560714424991,
-        "sharpe_rf0": -0.8094730958930598
+        "n_months": 10,
+        "ann_return": -0.23968426628222694,
+        "ann_vol_monthly": 0.30688446151490806,
+        "max_drawdown": -0.33610727339125634,
+        "total_return": -0.20155491263531888,
+        "sharpe_rf0_monthly": -0.7330275752366685
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.1933486609903935,
-        "ann_vol": 0.2775689375097699,
-        "max_drawdown": -0.31393376803596884,
-        "total_return": -0.16179721687581738,
-        "sharpe_rf0": -0.6357073370059887
+        "n_months": 10,
+        "ann_return": -0.194576007061521,
+        "ann_vol_monthly": 0.30510272448319775,
+        "max_drawdown": -0.31393376803596873,
+        "total_return": -0.16284497035472234,
+        "sharpe_rf0_monthly": -0.5563866463641103
        }
       },
       "50": {
@@ -1704,19 +1824,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.2392831468581732,
-        "ann_vol": 0.2861779897595205,
-        "max_drawdown": -0.3366030734203521,
-        "total_return": -0.201208914212062,
-        "sharpe_rf0": -0.8126797845850997
+        "n_months": 10,
+        "ann_return": -0.24159774251533972,
+        "ann_vol_monthly": 0.30584018954216063,
+        "max_drawdown": -0.33660307342035256,
+        "total_return": -0.2032058919265327,
+        "sharpe_rf0_monthly": -0.7442954516594491
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.1941510898937734,
-        "ann_vol": 0.27757253605972215,
-        "max_drawdown": -0.3142353291665744,
-        "total_return": -0.16248219735397185,
-        "sharpe_rf0": -0.6392776354081259
+        "n_months": 10,
+        "ann_return": -0.1966030066351464,
+        "ann_vol_monthly": 0.30415924469230177,
+        "max_drawdown": -0.31423532916657393,
+        "total_return": -0.16457599186058647,
+        "sharpe_rf0_monthly": -0.5668875078787914
        }
       }
      }
@@ -1735,19 +1857,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.22091839101874056,
-        "ann_vol": 0.28408602445949427,
+        "n_months": 10,
+        "ann_return": -0.22091839101874078,
+        "ann_vol_monthly": 0.3102654957793246,
         "max_drawdown": -0.32282156943614504,
-        "total_return": -0.1854023749766509,
-        "sharpe_rf0": -0.7369047646432594
+        "total_return": -0.18540237497665102,
+        "sharpe_rf0_monthly": -0.6462638860641542
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.17469678384487575,
-        "ann_vol": 0.2761153734775799,
-        "max_drawdown": -0.3043568437814608,
-        "total_return": -0.14590933087684677,
-        "sharpe_rf0": -0.5578215529085172
+        "n_months": 10,
+        "ann_return": -0.17469678384487664,
+        "ann_vol_monthly": 0.30943754442442295,
+        "max_drawdown": -0.3043568437814622,
+        "total_return": -0.14590933087684754,
+        "sharpe_rf0_monthly": -0.4685680645675507
        }
       },
       "10": {
@@ -1761,19 +1885,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.2209183910187419,
-        "ann_vol": 0.2840860244594944,
-        "max_drawdown": -0.3228215694361458,
-        "total_return": -0.18540237497665202,
-        "sharpe_rf0": -0.7369047646432693
+        "n_months": 10,
+        "ann_return": -0.221392588830434,
+        "ann_vol_monthly": 0.30983737682826906,
+        "max_drawdown": -0.3228215694361457,
+        "total_return": -0.1858096737891638,
+        "sharpe_rf0_monthly": -0.6493951028059077
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.17469678384487708,
-        "ann_vol": 0.27611537347758,
-        "max_drawdown": -0.3043568437814619,
-        "total_return": -0.14590933087684788,
-        "sharpe_rf0": -0.5578215529085175
+        "n_months": 10,
+        "ann_return": -0.1751991150186235,
+        "ann_vol_monthly": 0.3090541054201757,
+        "max_drawdown": -0.3043568437814623,
+        "total_return": -0.14633637621141027,
+        "sharpe_rf0_monthly": -0.47136978470300056
        }
       },
       "20": {
@@ -1787,19 +1913,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.22091839101874045,
-        "ann_vol": 0.2840860244594943,
-        "max_drawdown": -0.32282156943614426,
-        "total_return": -0.1854023749766508,
-        "sharpe_rf0": -0.7369047646432617
+        "n_months": 10,
+        "ann_return": -0.22186673507590304,
+        "ann_vol_monthly": 0.3094099607901079,
+        "max_drawdown": -0.3228215694361454,
+        "total_return": -0.18621697260167536,
+        "sharpe_rf0_monthly": -0.652533502242371
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.1746967838448762,
-        "ann_vol": 0.27611537347757986,
-        "max_drawdown": -0.30435684378146133,
-        "total_return": -0.1459093308768472,
-        "sharpe_rf0": -0.5578215529085168
+        "n_months": 10,
+        "ann_return": -0.17570139156680853,
+        "ann_vol_monthly": 0.308671461387358,
+        "max_drawdown": -0.30435684378146255,
+        "total_return": -0.14676342154597177,
+        "sharpe_rf0_monthly": -0.47417724435433783
        }
       },
       "25": {
@@ -1813,19 +1941,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.22091839101874133,
-        "ann_vol": 0.28408602445949427,
-        "max_drawdown": -0.3228215694361455,
-        "total_return": -0.18540237497665157,
-        "sharpe_rf0": -0.7369047646432676
+        "n_months": 10,
+        "ann_return": -0.22210378885499327,
+        "ann_vol_monthly": 0.30919651727448877,
+        "max_drawdown": -0.3228215694361457,
+        "total_return": -0.1864206220079313,
+        "sharpe_rf0_monthly": -0.6541053961670861
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.1746967838448783,
-        "ann_vol": 0.27611537347757975,
-        "max_drawdown": -0.304356843781462,
-        "total_return": -0.14590933087684899,
-        "sharpe_rf0": -0.5578215529085195
+        "n_months": 10,
+        "ann_return": -0.17595250934963036,
+        "ann_vol_monthly": 0.30848043840994,
+        "max_drawdown": -0.30435684378146266,
+        "total_return": -0.14697694421325247,
+        "sharpe_rf0_monthly": -0.47558312496794986
        }
       },
       "50": {
@@ -1839,19 +1969,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.22091839101874056,
-        "ann_vol": 0.28408602445949427,
-        "max_drawdown": -0.3228215694361455,
-        "total_return": -0.1854023749766509,
-        "sharpe_rf0": -0.7369047646432575
+        "n_months": 10,
+        "ann_return": -0.22328886421290983,
+        "ann_vol_monthly": 0.3081319593796784,
+        "max_drawdown": -0.32282156943614526,
+        "total_return": -0.18743886903920914,
+        "sharpe_rf0_monthly": -0.6619918175553821
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.1746967838448774,
-        "ann_vol": 0.27611537347757986,
+        "n_months": 10,
+        "ann_return": -0.1772078932439487,
+        "ann_vol_monthly": 0.30752832876110436,
         "max_drawdown": -0.3043568437814629,
-        "total_return": -0.1459093308768482,
-        "sharpe_rf0": -0.5578215529085134
+        "total_return": -0.14804455754965495,
+        "sharpe_rf0_monthly": -0.48263400995741446
        }
       }
      }
@@ -1870,19 +2002,21 @@
        },
        "real_try": {
         "n": 207,
-        "ann_return": -0.142197321742482,
-        "ann_vol": 0.2802106390488703,
-        "max_drawdown": -0.28955814139049496,
-        "total_return": -0.11837782467694458,
-        "sharpe_rf0": -0.4077389427292888
+        "n_months": 10,
+        "ann_return": -0.142197321742483,
+        "ann_vol_monthly": 0.3753742638700262,
+        "max_drawdown": -0.28955814139049485,
+        "total_return": -0.11837782467694546,
+        "sharpe_rf0_monthly": -0.23701792558803012
        },
        "usd": {
         "n": 207,
-        "ann_return": -0.09130532535849256,
-        "ann_vol": 0.27234192242055794,
-        "max_drawdown": -0.29486432310149246,
-        "total_return": -0.07563531919959365,
-        "sharpe_rf0": -0.21606334547503944
+        "n_months": 10,
+        "ann_return": -0.09130532535849267,
+        "ann_vol_monthly": 0.37449790598845456,
+        "max_drawdown": -0.29486432310149224,
+        "total_return": -0.07563531919959376,
+        "sharpe_rf0_monthly": -0.08763064563116225
        }
       }
      }
@@ -1910,19 +2044,21 @@
        },
        "real_try": {
         "n": 3359,
+        "n_months": 161,
         "ann_return": 0.060157474715296866,
-        "ann_vol": 0.2730013223987119,
-        "max_drawdown": -0.4512277119158835,
-        "total_return": 1.1785676652792465,
-        "sharpe_rf0": 0.3509623952244925
+        "ann_vol_monthly": 0.27126026365369443,
+        "max_drawdown": -0.4512277119158832,
+        "total_return": 1.1785676652792483,
+        "sharpe_rf0_monthly": 0.34582626354782586
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.03844252429493333,
-        "ann_vol": 0.30886010690748555,
-        "max_drawdown": -0.5777452298091398,
-        "total_return": 0.6533615985387129,
-        "sharpe_rf0": 0.27715920953809675
+        "n_months": 161,
+        "ann_return": 0.038442524294932445,
+        "ann_vol_monthly": 0.32802990370397506,
+        "max_drawdown": -0.5777452298091399,
+        "total_return": 0.6533615985386974,
+        "sharpe_rf0_monthly": 0.2753592585131599
        }
       },
       "10": {
@@ -1936,19 +2072,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.05975090936531435,
-        "ann_vol": 0.27302163194441087,
-        "max_drawdown": -0.45168197469902327,
-        "total_return": 1.1674576656158027,
-        "sharpe_rf0": 0.3495522875124625
+        "n_months": 161,
+        "ann_return": 0.05971114767962349,
+        "ann_vol_monthly": 0.2712506100387514,
+        "max_drawdown": -0.4516819746990236,
+        "total_return": 1.1663739367830024,
+        "sharpe_rf0_monthly": 0.34428415136180174
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.038044286525171334,
-        "ann_vol": 0.3088548099220938,
-        "max_drawdown": -0.577840164707617,
-        "total_return": 0.6449299821624639,
-        "sharpe_rf0": 0.27591683656112365
+        "n_months": 161,
+        "ann_return": 0.0380053392685189,
+        "ann_vol_monthly": 0.3280184147162102,
+        "max_drawdown": -0.5778401647076169,
+        "total_return": 0.6441075171713804,
+        "sharpe_rf0_monthly": 0.274084468468408
        }
       },
       "20": {
@@ -1962,19 +2100,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.05934448539953774,
-        "ann_vol": 0.27304198661155815,
-        "max_drawdown": -0.4521358770776227,
-        "total_return": 1.1564039291121375,
-        "sharpe_rf0": 0.3481423320430069
+        "n_months": 161,
+        "ann_return": 0.059264974130344816,
+        "ann_vol_monthly": 0.2712410219930932,
+        "max_drawdown": -0.4521358770776237,
+        "total_return": 1.1542475251830333,
+        "sharpe_rf0_monthly": 0.3427418465527585
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.03764618724367663,
-        "ann_vol": 0.3088495557969222,
-        "max_drawdown": -0.5779350815101685,
-        "total_return": 0.6365410651015866,
-        "sharpe_rf0": 0.2746743828514115
+        "n_months": 161,
+        "ann_return": 0.03756830458467553,
+        "ann_vol_monthly": 0.3280069768859014,
+        "max_drawdown": -0.5779350815101681,
+        "total_return": 0.6349045240364881,
+        "sharpe_rf0_monthly": 0.2728095465717558
        }
       },
       "25": {
@@ -1988,19 +2128,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.059141326421896956,
-        "ann_vol": 0.2730521808625224,
-        "max_drawdown": -0.4523626932007423,
-        "total_return": 1.150898071072998,
-        "sharpe_rf0": 0.3474374116110527
+        "n_months": 161,
+        "ann_return": 0.05904194489537984,
+        "ann_vol_monthly": 0.27123625256092077,
+        "max_drawdown": -0.4523626932007414,
+        "total_return": 1.1482094484841774,
+        "sharpe_rf0_monthly": 0.3419706222550065
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.03744718952248416,
-        "ann_vol": 0.3088469448076032,
+        "n_months": 161,
+        "ann_return": 0.03734984360385685,
+        "ann_vol_monthly": 0.32800127715646643,
         "max_drawdown": -0.5779825331263608,
-        "total_return": 0.6323625516709694,
-        "sharpe_rf0": 0.274053125881527
+        "total_return": 0.6303220984813747,
+        "sharpe_rf0_monthly": 0.2721720363596812
        }
       },
       "50": {
@@ -2014,19 +2156,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.05812606136498877,
-        "ann_vol": 0.2731033212406893,
-        "max_drawdown": -0.45349542452165936,
-        "total_return": 1.1235774762746837,
-        "sharpe_rf0": 0.3439133858645915
+        "n_months": 161,
+        "ann_return": 0.05792737383374824,
+        "ann_vol_monthly": 0.2712126513411302,
+        "max_drawdown": -0.4534954245216609,
+        "total_return": 1.1182685325839823,
+        "sharpe_rf0_monthly": 0.33811378728439867
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.03645271989540455,
-        "ann_vol": 0.30883405060451447,
-        "max_drawdown": -0.5782197233707165,
-        "total_return": 0.6116283679186139,
-        "sharpe_rf0": 0.270946542438711
+        "n_months": 161,
+        "ann_return": 0.03625810203305124,
+        "ann_vol_monthly": 0.32797297039311396,
+        "max_drawdown": -0.5782197233707167,
+        "total_return": 0.6075992969988167,
+        "sharpe_rf0_monthly": 0.2689839955551581
        }
       }
      }
@@ -2045,19 +2189,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.07166801123920252,
-        "ann_vol": 0.3396366231797908,
-        "max_drawdown": -0.8570094878457419,
-        "total_return": 1.5158473058107242,
-        "sharpe_rf0": 0.3734479923584335
+        "n_months": 161,
+        "ann_return": 0.0716680112392023,
+        "ann_vol_monthly": 0.34220842529583084,
+        "max_drawdown": -0.857009487845742,
+        "total_return": 1.5158473058107163,
+        "sharpe_rf0_monthly": 0.36060604589541745
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.04971729326930863,
-        "ann_vol": 0.3675536314089667,
-        "max_drawdown": -0.7856479209081296,
-        "total_return": 0.9093303318083021,
-        "sharpe_rf0": 0.3158501332582375
+        "n_months": 161,
+        "ann_return": 0.04971729326930885,
+        "ann_vol_monthly": 0.3790519984662278,
+        "max_drawdown": -0.7856479209081288,
+        "total_return": 0.909330331808309,
+        "sharpe_rf0_monthly": 0.3030489696559226
        }
       },
       "10": {
@@ -2071,19 +2217,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.07166801123920208,
-        "ann_vol": 0.3396366231797908,
-        "max_drawdown": -0.8570094878457423,
-        "total_return": 1.515847305810714,
-        "sharpe_rf0": 0.37344799235843207
+        "n_months": 161,
+        "ann_return": 0.0716278024257424,
+        "ann_vol_monthly": 0.3422096338170943,
+        "max_drawdown": -0.8570094878457424,
+        "total_return": 1.5145893821578,
+        "sharpe_rf0_monthly": 0.3604959257700015
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.049717293269308405,
-        "ann_vol": 0.36755363140896674,
-        "max_drawdown": -0.7856479209081296,
-        "total_return": 0.9093303318082968,
-        "sharpe_rf0": 0.3158501332582363
+        "n_months": 161,
+        "ann_return": 0.049677908043298524,
+        "ann_vol_monthly": 0.3790560698516871,
+        "max_drawdown": -0.7856479209081293,
+        "total_return": 0.9083756666423968,
+        "sharpe_rf0_monthly": 0.30295061740684437
        }
       },
       "20": {
@@ -2097,19 +2245,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.0716680112392023,
-        "ann_vol": 0.3396366231797907,
-        "max_drawdown": -0.8570094878457415,
-        "total_return": 1.5158473058107216,
-        "sharpe_rf0": 0.37344799235843257
+        "n_months": 161,
+        "ann_return": 0.07158757500254631,
+        "ann_vol_monthly": 0.34221089672988375,
+        "max_drawdown": -0.8570094878457418,
+        "total_return": 1.5133314585048958,
+        "sharpe_rf0_monthly": 0.360385749142094
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.04971729326930863,
-        "ann_vol": 0.36755363140896674,
-        "max_drawdown": -0.7856479209081283,
-        "total_return": 0.909330331808305,
-        "sharpe_rf0": 0.3158501332582383
+        "n_months": 161,
+        "ann_return": 0.04963850458873087,
+        "ann_vol_monthly": 0.37906018718509527,
+        "max_drawdown": -0.7856479209081285,
+        "total_return": 0.9074210014764934,
+        "sharpe_rf0_monthly": 0.3028522305601468
        }
       },
       "25": {
@@ -2123,19 +2273,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.07166801123920208,
-        "ann_vol": 0.33963662317979076,
-        "max_drawdown": -0.8570094878457418,
-        "total_return": 1.5158473058107096,
-        "sharpe_rf0": 0.3734479923584324
+        "n_months": 161,
+        "ann_return": 0.07156745430669398,
+        "ann_vol_monthly": 0.34221154858291364,
+        "max_drawdown": -0.8570094878457422,
+        "total_return": 1.5127024966784406,
+        "sharpe_rf0_monthly": 0.3603306396565121
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.04971729326930818,
-        "ann_vol": 0.3675536314089667,
-        "max_drawdown": -0.7856479209081292,
-        "total_return": 0.9093303318082939,
-        "sharpe_rf0": 0.3158501332582366
+        "n_months": 161,
+        "ann_return": 0.049618796020249434,
+        "ann_vol_monthly": 0.3790622630818129,
+        "max_drawdown": -0.7856479209081288,
+        "total_return": 0.9069436688935397,
+        "sharpe_rf0_monthly": 0.30280302417459476
        }
       },
       "50": {
@@ -2149,19 +2301,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": 0.07166801123920163,
-        "ann_vol": 0.3396366231797908,
-        "max_drawdown": -0.8570094878457425,
-        "total_return": 1.5158473058107007,
-        "sharpe_rf0": 0.373447992358431
+        "n_months": 161,
+        "ann_return": 0.07146678089507108,
+        "ann_vol_monthly": 0.3422150118112591,
+        "max_drawdown": -0.8570094878457424,
+        "total_return": 1.5095576875461734,
+        "sharpe_rf0_monthly": 0.3600548807817469
        },
        "usd": {
         "n": 3359,
-        "ann_return": 0.04971729326930818,
-        "ann_vol": 0.3675536314089667,
-        "max_drawdown": -0.7856479209081298,
-        "total_return": 0.9093303318082959,
-        "sharpe_rf0": 0.31585013325823613
+        "n_months": 161,
+        "ann_return": 0.04952018467788899,
+        "ann_vol_monthly": 0.37907281485795935,
+        "max_drawdown": -0.7856479209081294,
+        "total_return": 0.904557005978776,
+        "sharpe_rf0_monthly": 0.3025568628155116
        }
       }
      }
@@ -2180,19 +2334,21 @@
        },
        "real_try": {
         "n": 3359,
-        "ann_return": -0.026370839102912158,
-        "ann_vol": 0.27164580981250486,
-        "max_drawdown": -0.5038724831597416,
-        "total_return": -0.29968456996194426,
-        "sharpe_rf0": 0.03814841816360582
+        "n_months": 161,
+        "ann_return": -0.026370839102912047,
+        "ann_vol_monthly": 0.2605794328734286,
+        "max_drawdown": -0.5038724831597394,
+        "total_return": -0.29968456996194337,
+        "sharpe_rf0_monthly": 0.02580212643910619
        },
        "usd": {
         "n": 3359,
-        "ann_return": -0.046313450894975405,
-        "ann_vol": 0.30804292307985237,
-        "max_drawdown": -0.760845939040059,
-        "total_return": -0.4685156411055893,
-        "sharpe_rf0": 0.0010375348822975181
+        "n_months": 161,
+        "ann_return": -0.046313450894975294,
+        "ann_vol_monthly": 0.3232099078918541,
+        "max_drawdown": -0.7608459390400588,
+        "total_return": -0.4685156411055883,
+        "sharpe_rf0_monthly": 0.014495554219050195
        }
       }
      }
