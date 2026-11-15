@@ -146,7 +146,7 @@ flowchart TB
   end
 
   subgraph F10["Faz 10: MARL"]
-    M1["M1 çerçeve spike'ı"]:::planned
+    M1["M1 çerçeve spike'ı<br/>7/7, §3.2.7"]:::decision
     M2["M2 ortam + K karar katmanı"]:::planned
     M34["M3/M4 MAPPO, iletişim"]:::planned
     M5["M5 güvenli mesaj H2/H3"]:::planned
@@ -189,7 +189,7 @@ flowchart TB
 | Golden yenileme (K1) | bitti (CPU; `v2.0.0`) | plan §9.36; `test_prediction_regression` yeşil | — (yeniden yenileme yalnız bilinçli davranış değişikliğinde) |
 | Milestone 0' koşumları | sürüyor (m0p-v2 **donduruldu**, `m0-protocol-v2`; v1 koşulmadan bırakıldı) | [milestone0-protocol-v2.md](milestone0-protocol-v2.md); plan §9.36 | PPO 90 + A2C 90 eğitim (~2,4 sa, 8 işçi) → hakem-2 sonuç okuması |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
-| Faz 10 M1 çerçeve spike'ı | planlı (K9 kararlı) | Faz 10 plan §4 S1, K9 | BenchMARL/TorchRL önce, ayrı `venv-marl/`; Windows, bütçe |
+| Faz 10 M1 çerçeve spike'ı | **ölçüldü** (7/7; seçim kullanıcı kararı) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | BenchMARL seçimi onayı → M2 ortam |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
 | K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |

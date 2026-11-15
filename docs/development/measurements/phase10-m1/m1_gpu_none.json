@@ -1,0 +1,45 @@
+{
+ "spike": true,
+ "note": "performans sayisi YOK (Faz 10 \u00a74 S1); yalniz sure ve tekrar uretim",
+ "args": {
+  "panel": "panel_spike.npz",
+  "comm": "none",
+  "algo": "mappo",
+  "frames": 18000,
+  "frames_per_batch": 6000,
+  "minibatch_iters": 45,
+  "n_envs": 10,
+  "parallel": false,
+  "episode_len": 252,
+  "n_agents": 30,
+  "alpha": 0.25,
+  "cost": 0.001,
+  "hidden": 64,
+  "sampling_device": "cpu",
+  "train_device": "cuda",
+  "seed": 0,
+  "repro": false,
+  "threads": null,
+  "out": "m1_gpu_none.json"
+ },
+ "runs": [
+  {
+   "seed": 0,
+   "wall_seconds": 60.2,
+   "frames": 18000,
+   "seconds_per_200k": 668.6,
+   "policy_params": 77314,
+   "policy_sha256": "ac882abbcfcb0c08c53a541248cdb8b784c397d047cb376c1f9f410d78042dc1"
+  }
+ ],
+ "repro_equal": null,
+ "env": {
+  "python": "3.12.5",
+  "os": "Windows-11-10.0.26300-SP0",
+  "torch": "2.6.0+cu124",
+  "cuda": true,
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "threads": 8
+ },
+ "panel_sha256": "7e17897adb13f21e0687045506fd4e2c1ea773ac8bb249ad7192689ec22e9b13"
+}

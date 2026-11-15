@@ -539,3 +539,4 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
   - **Kod değişikliği yok.**
 - **2026-11-06 (onay):** Plan Faz 9 ile birlikte onaylandı. K1, K17 ve K23 kararları §6'ya işlendi. İlk kapı V + A + C uygulandı (Faz 9 §9). K18 (gözlem sağlığı) bu kapıda yapılmadı.
 - **2026-11-15 (K27):** Kullanıcı önerisiyle K27 eklendi: panoda ajan türü seçimi (tek ajan / SARL / MARL) ve yalnız aynı ortam-pencere-maliyetteki modelleri yan yana koyan karşılaştırma görünümü; eski ortam ayrı sekmede. M2 + karar katmanından sonra. **Kod değişikliği yok.**
+- **2026-11-16 (§3.2.7, M1 spike):** BenchMARL + TorchRL 7/7 ölçütte geçti (Windows, CPU tekrar üretim, paralel toplama, ajan ekseni). 30 ajan × attn × 200K ≈ 391 sn (RTX 4060 + paralel toplama). Öneri: RLlib denenmeden BenchMARL seçilsin (kullanıcı kararı). M2 girdileri: nakit üst sınırı %83, eksik hücre maskesi, M4 parametre eşitliği. Performans sayısı yok (S1).
