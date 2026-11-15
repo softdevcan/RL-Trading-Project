@@ -30,6 +30,7 @@ Günlük kullanım için başvuru dokümanları:
 
 Proje mimarisi ve roadmap:
 
+- [**system-map.md**](development/system-map.md) — **Sistem akış haritası (canlı):** veri akışı (kaynak → veri → tahmin → RL → değerlendirme → ürün) ve geliştirme aşamaları (Faz 1–10, Milestone 0', Makale 2, tez) durum renkleriyle; durum değiştiren her PR günceller
 - [**roadmap.md**](development/roadmap.md) — Geliştirme planı ve faz takibi (Faz 1-3 + Faz 6 + Faz 7 + Faz 8 tamamlandı)
 - [**prediction-system.md**](development/prediction-system.md) — Gelişmiş tahmin sistemi mimarisi (ensemble, feature engineering, veri katmanı)
 - [**phase-3-implementation.md**](development/phase-3-implementation.md) — Faz 3 uygulama detayları (bug fix'ler, ICEEMDAN, TATS, ATR/Kelly, SHAP)
@@ -38,6 +39,7 @@ Proje mimarisi ve roadmap:
 - [**phase-8-ui-theming.md**](development/phase-8-ui-theming.md) — Faz 8: aydınlık/koyu/sistem teması ve token katmanı (A–E), profil sayfası (F), üst çubuk + bildirimler (G), dar ekranda ikon rayı (H), model ve optimizasyon kaydı silme (I). Kapsam özeti belgenin sonundaki "Kapanış özeti"nde.
 - [**rl-stability-portfolio-analysis.md**](development/rl-stability-portfolio-analysis.md) — RL eğitim stabilite riskleri + arayüz akışı (veri indir → eğit → analiz) + portföy yönetimi hazırlık değerlendirmesi (salt analiz, 2026-05-12)
 - [**phase-9-research-validity-plan.md**](development/phase-9-research-validity-plan.md) — Faz 9 planı (2026-10-07; **onaylandı 2026-11-06**, ilk kapı V + A + C uygulandı → §9): sızıntı ve değerlendirme açıklarının kapatılması (A–G), Makale 2 deney tasarımı, MARL tasarım kararları (M1–M8); tam metinle doğrulanan 10 yeni bulgu (DSR formül hatası, G2 ≡ DebUnc eşdeğerliği dahil)
+- [**milestone0-protocol.md**](development/milestone0-protocol.md) — Milestone 0' protokolü (m0p-v1, taslak): etkenler, aşamalar, budama kuralı, çıkarım, beyan listesi, bütçe; koşum `scripts/run_milestone0.py`
 - [**phase-10-marl-plan.md**](development/phase-10-marl-plan.md) — Faz 10 planı (**onaylandı 2026-11-06**): çoklu-ajan yenileme (hisse başına ajan, CTDE), tahmin → RL sinyal tablosu (P), karar katmanı (K), veri bütünlüğü kapısı (V); hakem-2 itirazları §8, kararlar §6 (K1, K17, K23 işlendi)
 - [**review-panel.md**](development/review-panel.md) — Hakem paneli (2026-11-06): `hakem-finans` + `hakem-rl` (sonnet, dar kapsam) ve son kapı `hakem-2` (opus); paket → panel eşlemesi, inceleme paketi şablonu, token maliyet kaydı (B9: tek hakem-2 ~301 bin token)
 - [**measurements/**](development/measurements/) — Plan §9'daki sayıların kaynağı olan ölçüm JSON'ları (komut, commit, panel SHA-256); ilk: `phase9-b9/`

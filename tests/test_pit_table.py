@@ -271,6 +271,26 @@ obs_n, _, _ = env_pred_obs({k: {s: dict(P.ENV_PRED_NEUTRAL) for s in SYMS} for k
 check("mutasyon: eksik hucrede env varsayilani yon = -1 (DOWN); adaptorun notru 4 alanda 0",
       obs_h[4 * j + 1] == -1.0 and np.allclose(obs_n, 0.0), f"{obs_h[4 * j:4 * j + 4]} {obs_n[:4]}")
 
+print("\n[PC] Milestone 0' DTF pozitif kontrol tablosu (bilerek gelecekten)")
+pcs = {}
+for target in (0.55, 0.60):
+    pc, pinfo = P.positive_control_table(full, labels, target, seed=7)
+    pcs[target] = (pc, pinfo)
+lab = full.merge(labels[['date', 'symbol', 'y_up']], on=['date', 'symbol'], how='left')
+m_pc = full['meta_ok'].to_numpy() & lab['y_up'].notna().to_numpy()
+auc_base = cal.auc(full.loc[m_pc, 'p_up_cal'].to_numpy(), lab.loc[m_pc, 'y_up'].to_numpy())
+a55, a60 = pcs[0.55][1]['achieved_auc_meta_ok'], pcs[0.60][1]['achieved_auc_meta_ok']
+check("pozitif kontrol: olculen AUC hedefe yakin (+-0,03) ve siralama 0,55 < 0,60; maske ve satirlar ayni",
+      abs(a55 - 0.55) < 0.03 and abs(a60 - 0.60) < 0.03 and a55 < a60
+      and pcs[0.55][0]['meta_ok'].equals(full['meta_ok']) and len(pcs[0.55][0]) == len(full),
+      f"taban {auc_base:.3f}, 0,55 -> {a55:.3f}, 0,60 -> {a60:.3f}")
+pf_pc, _ = P.env_prediction_features(pcs[0.60][0], SYMS, env_dates)
+okc = pcs[0.60][0][pcs[0.60][0].meta_ok & pcs[0.60][0]['date'].isin(env_dates)].merge(
+    labels[['date', 'symbol', 'y_up']], on=['date', 'symbol']).dropna(subset=['y_up'])
+dir_acc = np.mean([pf_pc[str(r.date)[:10]][r.symbol]['predicted_direction'] == r.y_up for r in okc.itertuples()])
+check("P4 adaptorunden gecince yon isabeti > 0,55 (AUC 0,60 kontrolu env'e bilgili ulasir)", dir_acc > 0.55,
+      f"yon isabeti {dir_acc:.3f}")
+
 # hakem-finans I3 ikinci okuma #1: capa seviyesi uzun blok boyunca sabitken 20'lik tarih blogu GA'yi daraltir;
 # capa kumesi bootstrap'i bagimsiz birimi (capa) dogru sayar -> daha genis GA
 n_c, L = 12, 60

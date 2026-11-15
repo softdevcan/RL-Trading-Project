@@ -1,6 +1,6 @@
 {
  "protocol_id": "m0p-v1",
- "status": "TASLAK — kapanis kapisi (hakem-2) ve kullanici onayindan sonra dondurulur; dondurulunca bu dosya degismez (kosum betigi SHA'sini deftere baglar)",
+ "status": "TASLAK r2 (hakem-2 kapanis Buyuk revizyonu islendi) — kullanici onayi ve ikinci okumadan sonra dondurulur; dondurulunca bu dosya ve doc degismez (kosum betigi ikisinin SHA'sini deftere baglar)",
  "doc": "docs/development/milestone0-protocol.md",
  "factors": {
   "algorithm": ["PPO", "A2C", "TD3"],
@@ -9,33 +9,83 @@
   "prediction": ["DT", "DTF"]
  },
  "reward_levels": {
-  "simple": {"phase": 1, "source": "Ansari uyarlamasi basit odul (reward-definition.md §3)"},
-  "psr_ema_level": {"phase": 2, "sharpe_term": "ema_level", "source": "K4; eski Sharpe seviyesi"},
-  "psr_differential": {"phase": 2, "sharpe_term": "differential", "source": "K4; Moody & Saffell 2001 D_t (G1)"}
+  "simple": {"phase": 1, "source": "Ansari uyarlamasi basit odul (reward-definition.md §3); durum uzayi faz 1"},
+  "psr_ema_level": {"phase": 2, "sharpe_term": "ema_level", "sharpe_weight": 0.30, "source": "K4; eski Sharpe seviyesi, w2 varsayilan"},
+  "psr_differential": {"phase": 2, "sharpe_term": "differential", "sharpe_weight": 0.049561,
+                       "source": "K4; Moody & Saffell 2001 D_t; w2 = 0,30 * k olcek esitlemesi (k = 0,1652, measurements/phase9-m0/k4_scale.json, 2013-06..2019-12)"}
  },
  "prediction_levels": {
-  "DT": {"table": null},
-  "DTF": {"table": "pit_v1_seed42", "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9", "mapping": "P4 v1 (plan §9.32)"}
+  "DT": {"table": null, "table_sha256": null},
+  "DTF": {"table": "pit_v1_seed42", "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9", "mapping": "P4 v1 (plan §9.32)"},
+  "PC055": {"table": "pc_auc055", "table_sha256": "ace0fcb0310ae60c3e9a08a1d4712a43163311ee5049a0ceefbe83acbdd1c1b1", "positive_control": true, "achieved_auc": 0.5519},
+  "PC060": {"table": "pc_auc060", "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651", "positive_control": true, "achieved_auc": 0.6019}
  },
- "fixed": {
-  "split_spec": "wf-v1",
-  "initial_balance": 1000000,
-  "commission_rate": 0.001,
-  "max_shares_per_trade": 100,
-  "validation_overhead": 0.15
+ "hyperparameters": {
+  "_source": "rota sabitleri (app/api/routes/trading.py; d3d2fce 2025-11-16, R1 oncesi acik pencerelerle secildi — beyan, kullanici karari 2026-11-15: mevcut degerler). Kayitta config.effective_hyperparameters; betik her hucrede karsilastirir",
+  "PPO": {"learning_rate": 0.0003, "n_steps": 2048, "batch_size": 64, "n_epochs": 10, "gamma": 0.99, "gae_lambda": 0.95,
+          "clip_range": 0.2, "ent_coef": 0.15, "vf_coef": 0.5, "max_grad_norm": 0.5},
+  "A2C": {"learning_rate": 0.0007, "n_steps": 256, "gamma": 0.99, "gae_lambda": 0.95, "ent_coef": 0.01, "vf_coef": 0.25,
+          "max_grad_norm": 0.5, "normalize_advantage": true, "use_rms_prop": true, "rms_prop_eps": 1e-05},
+  "TD3": {"learning_rate": 0.001, "buffer_size": 100000, "learning_starts": 1000, "batch_size": 256, "tau": 0.005,
+          "gamma": 0.99, "train_freq": 1, "gradient_steps": 1, "policy_delay": 2, "target_policy_noise": 0.3,
+          "target_noise_clip": 0.5, "action_noise": "NormalActionNoise", "action_noise_sigma": 0.2}
+ },
+ "fixed": {"split_spec": "wf-v1", "initial_balance": 1000000, "commission_rate": 0.001, "max_shares_per_trade": 100,
+           "device": "cpu", "registry_analysis": "load_trials(exclude_tags=('spike',)) — protocol_open DAHIL (eski ortamin her kaydi acik)"},
+ "unexposed_folds": ["2021"],
+ "exposure_note": "2021 test penceresi 2026-11-15'te bir duman kosusuyla BIR KEZ okundu (PPO, 20000 adim, metriklere bakilmadi; kayit 'spike', §9.34). Okunmus pencere 2022-07-18..2026-08-28 (EXPOSED_EVAL_WINDOWS).",
+ "expected": {
+  "panel_sha256": {"stats": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89", "causal": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89"}
  },
  "stages": {
   "prescreen": {
-   "folds": ["2022", "2023", "2024", "2025", "2026"],
+   "folds": ["2023", "2024", "2025", "2026"],
    "seeds": [101, 202, 303],
    "total_timesteps": 200000,
-   "selection": "yalniz dogrulama: secilen kontrol noktasinin dogrulama fazla getiri Sharpe'i, kat x tohum medyani; test metrikleri secime GIRMEZ. 2021 kati (okunmamis tek pencere) on elemede KOSULMAZ"
+   "score": "son kontrol noktasinin DOGRULAMA fazla getiri Sharpe'i (selection.last_metric; argmax yanliligi yok), kat x tohum medyani. Dogrulama yillari 2022-2025: 2021 ne testte ne dogrulamada. Test metrikleri secime GIRMEZ; argmax puani ayrica raporlanir"
+  },
+  "pruning": {
+   "rule": "algoritma basina puan = yapilandirmalarinin puan medyani; en yuksek TEK algoritma nihaiye; esitlikte PPO. Diger etkenler (odul, fiyat olcegi, tahmin) TUMUYLE tasinir",
+   "output": "docs/development/milestone0/protocol-v1-final.json (mekanik; ayrica SHA'lanir)"
   },
   "final": {
    "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
    "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010],
    "total_timesteps": 200000,
-   "factor_override": "on eleme budama kuralinin ciktisi (milestone0-protocol.md §5); ayri dondurulmus dosya protocol-v1-final.json, kural mekanik"
+   "factor_override": "budama ciktisi (protocol-v1-final.json)"
+  },
+  "cost_sensitivity": {
+   "configs": "DT ve DTF icin nihaide en iyi DOGRULAMA puanli yapilandirma (odul x fiyat olcegi ayni)",
+   "commission_rates": [0.0, 0.0025],
+   "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
+   "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010],
+   "total_timesteps": 200000,
+   "factor_override": "budama + nihai ciktisi"
+  },
+  "positive_control": {
+   "configs": "DT'nin nihaide en iyi DOGRULAMA puanli yapilandirmasi; tahmin seviyesi PC055 ve PC060 (ayni P4 esleme)",
+   "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
+   "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010],
+   "total_timesteps": 200000,
+   "family": "dogrulayici aileye GIRMEZ (sinyal etiketten turetildi)",
+   "factor_override": "budama + nihai ciktisi"
   }
- }
+ },
+ "inference": {
+  "primary_metric": "A8 risksiz faiz ustu, maliyet sonrasi nominal TL gunluk getiriden yillik Sharpe",
+  "unit": "yapilandirma x tohum: katlarin orneklem disi gunluk getirileri birlestirilmis seri (K20)",
+  "confirmatory_family": [
+   {"name": "DT_vs_DTF", "contrast": "prediction DT <-> DTF (diger etkenler ve tohum ayni)", "test": "A3 HAC Sharpe farki iki tarafli + esdegerlik TOST (sinir = olculen rho'daki MDE)"},
+   {"name": "stats_vs_causal", "contrast": "price_norm stats <-> causal", "test": "A3 HAC Sharpe farki iki tarafli"}
+  ],
+  "confirmatory_window": "2021 kati + on kayit sonrasi ileri veri; 2021 tek basina dusuk guclu (measurements/phase9-m0/mde.json)",
+  "alpha": 0.05, "multiplicity": "BH-FDR, aile = confirmatory_family",
+  "exploratory": "geri kalan her kiyas (K4 terimi, secim kurali, algoritma, maliyet, rejim, pozitif kontrol) kesifsel"
+ },
+ "smoke": {"fold": "2024", "algorithm": "PPO", "reward": "simple", "price_norm": "stats", "seed": 101},
+ "budget": {"seconds_per_run_measured_ppo_phase1": 307,
+            "seconds_per_200k_run": {"PPO": {"phase1": 307, "phase2": 537}, "A2C": {"phase1": 222, "phase2": 462},
+                                     "TD3": {"phase1": 1378, "phase2": 1941}},
+            "measurement": "2026-11-15 duman kosulari, CPU, 30 sembol, 20000 adim -> 200000'e dogrusal; deneme kaydina yazilmadi; verify_trial bos",
+            "decision": "KARAR (butce, kullanici): TD3 kazanirsa toplam ~649 sa tek surec (PPO ~250, A2C ~226); protokol §10"}
 }

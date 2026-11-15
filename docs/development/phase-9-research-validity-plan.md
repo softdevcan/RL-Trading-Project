@@ -1943,6 +1943,81 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 ---
 
+### 9.34 Kapanış kapısı (hakem-2): Büyük revizyon; protokol r2 (2026-11-15, dal `fix/m0-protocol-h2`)
+
+**Karar: Büyük revizyon.** 8 BÜYÜK, 7 KÜÇÜK bulgu. §9.22'nin 1–7. maddeleri kodla, ölçümle ya da beyanla kapanıyor; 8. madde (protokol) bu hâliyle dondurulamazdı. İddia örneklemesinde 8 iddiadan 6'sı tuttu; tutmayan ikisi "2021 okunmamış" ve "SB3 varsayılanları" (#1, #3). Bulguların ve yapılanların tablosu [milestone0-protocol.md §12](milestone0-protocol.md)'de. Maliyet: [review-panel.md](review-panel.md).
+
+**Kullanıcı kararları (2026-11-15):**
+1. **2021 duman okuması:** beyan + `spike` kaydı. 2021 "bir duman okuması dışında okunmamış, düşük güçlü pencere" olarak etiketlenir. Geçici dizin silindi.
+2. **Hiperparametreler:** mevcut rota değerleri kalır; değerler ve kökeni (d3d2fce, R1 öncesi açık pencereler) beyan edilir.
+3. **K4:** tek seviyeli ölçek eşitlemesi.
+4. **DTF pozitif kontrolü:** eklenir (120 eğitim).
+
+**Beyan: 2021 test penceresi bir kez okundu.**
+- **Ne oldu:** §9.33'teki duman koşusu protokolün ilk taslağıyla yapıldı; o taslakta ilk hücre 2021 katıydı. 2026-11-15 19:33'te PPO, faz 1, `stats`, DT, tohum 101, 20.000 adımla 2021 testi okundu. Kayıt geçici dizindeydi ve N'e sayılmıyordu.
+- **Kim baktı:** ana oturum metriklere bakmadı; çıktıda yalnız uyarılar vardı. Kapanış hakemi kaydı açtı, değerleri rapora yazmadı.
+- **Yapılan:**
+  - Kayıt `spike` etiketiyle ana deneme kaydına taşındı (`results/trial_registry.jsonl`, `20261115_193319_8b21caa8`).
+  - Taşıma betiği metrik yazdırmadı. Geçici dizin silindi.
+  - `EXPOSED_EVAL_WINDOWS` değişmedi (kullanıcı kararı: "okunmamış" değil, "bir duman okuması dışında okunmamış").
+  - Duman artık yalnız `smoke.fold` = 2024'te koşuyor; okunmamış katta koşmayı reddediyor.
+
+**Kod ve ölçüm:**
+- **Kayıt artık gerçek hiperparametreleri taşıyor.** Çalışma verilmeyince `hyperparams = {}` kalıyordu ve kayıtta yalnız öğrenme oranı vardı. Şimdi `config.effective_hyperparameters` ve `config.hyperparams_source` var. Davranış aynı; rota komşu testleri aşağıda.
+- **K4 ölçek eşitlemesi:** `TrainingRequest.sharpe_weight` (yalnız faz 2). [k4_scale.json](measurements/phase9-m0/k4_scale.json): k = σ_ema / σ_diff = 0,1652 → differential kolunda w₂ = 0,0496. Ölçüm 2013-06..2019-12'de, eşit ağırlıklı tam yatırımlı referansla, ödül modülünün kendisinden.
+- **Pozitif kontrol:** `positive_control_table`. İkili normal, d = √2·Φ⁻¹(AUC); gerçek tablonun maskesi ve ölçeği korunuyor; sinyal **bilerek gelecekten**.
+  - `pc_auc055` ölçülen AUC 0,5519; `pc_auc060` 0,6019.
+  - `test_pit_table` **33/0**: AUC hedefe ±0,03 yakın, maske korunuyor, P4'ten geçince yön isabeti 0,55'in üstünde.
+- **MDE** ([mde.json](measurements/phase9-m0/mde.json)), A3 HAC testiyle Monte Carlo, %80 güç, yıllık Sharpe farkı:
+
+  | Pencere | ρ 0,5 | ρ 0,8 | ρ 0,9 | ρ 0,95 |
+  |---|---|---|---|---|
+  | 2021 (248 seans) | 2,9 | 1,8 | 1,4 | 1,0 |
+  | 2023–26 (~1000) | 1,5 | 0,9 | 0,7 | 0,5 |
+  | 6 kat (~1460) | 1,2 | 0,8 | 0,6 | 0,4 |
+
+  Monte Carlo analitik yaklaşıklıkla tutarlı. **2021 tek başına ancak yıllık Sharpe farkı ≳ 1 olan bir etkiyi yakalar.**
+  - Not: MDE betiği 658a723'te commit'lendi; JSON'un `commit` alanı ca822eb, çünkü koşu sürerken kapı betiği commit'lendi. Arada değişen tek dosya `measure_pit_gate.py`; MDE kodu aynı.
+- **Açık pencerede bilgi kapısı** ([gate_v2_exposed.json](measurements/phase9-p/gate_v2_exposed.json); 2022-07-18..2026-08-28, 30.835 satır; 2021 dışarıda):
+  - Not: JSON `commit` alanı be23bd4 (koşu sırasında yapılan harita cherry-pick'i). Kapı betiği ca822eb'de; arada yalnız belge dosyaları değişti.
+  - Havuzlu AUC 0,497, blok içi 0,502. Çapa kümesi bootstrap'ıyla iki taraflı p 0,44 / 0,45.
+  - Eşitler dışarıda 0,496 [0,488; 0,504], tek taraflı p 0,83.
+  - Bilgi kapısı 0/30, BH 0.
+  - ODAS bu pencerede ters değil (blok içi 0,519, p 0,74).
+- **Koşum betiği sertleştirildi (#8, #12, #13):**
+  - Koşumdan önce P tablolarının ve panelin SHA'sı beklenenle karşılaştırılıyor. Panel `008e3b11…9a89`, iki fiyat ölçeğinde aynı; rotayla aynı yoldan hesaplanıyor.
+  - Her hücreden sonra kayıt denetleniyor: panel SHA'sı, gerçek hiperparametreler, w₂, tablo SHA'sı. Uyuşmazlıkta koşum duruyor.
+  - Defter protokol belgesinin SHA'sını da tutuyor; belge `-text`.
+  - GPU görülürse koşmuyor.
+  - Bağlayıcı kurallar JSON'da: budama, maliyet, pozitif kontrol, doğrulayıcı aile, `registry_analysis`.
+- **Bütçe ölçümü** (duman koşumları, 2024 katı, CPU; 200.000 adıma izdüşüm, sn):
+
+  | | Faz 1 | Faz 2 |
+  |---|---|---|
+  | PPO | 307 | 537 |
+  | A2C | 222 | 462 |
+  | TD3 | 1.378 | 1.941 |
+
+  - Her duman koşumunda `verify_trial` boş döndü; protokol denetimi uçtan uca çalışıyor.
+  - Ön eleme ~104 sa tek süreç. Toplam, budamayı A2C kazanırsa ~226 sa, PPO ~250 sa, TD3 ~649 sa. **Bütçe kararı kullanıcıda** (protokol §10).
+
+**Protokol r2'de değişenler:**
+- Ön eleme katları 2023–2026 (doğrulama 2022–2025) ve 432 eğitim. Budama puanı son nokta doğrulaması; argmax yukarı yanlı.
+- Doğrulayıcı aile: DT↔DTF (+TOST) ve `stats`↔`causal`; geri kalan keşifsel.
+- `simple`↔`psr` kıyaslanmaz.
+- DSR'nin N'i `load_trials(exclude_tags=('spike',))` ile.
+- "Kurulamayacak cümleler" bölümü eklendi.
+- hakem-rl İ3 önerileri için karar tablosu.
+- **§9.31 kullanıcı kararının yeri:** "H3/M5 = P v1 + pozitif kontrol + 2018+ makro alt deneyi" kararı MARL hipotezleri (M5/H3) içindi, M8'e aittir. Milestone 0''a giren pozitif kontrol ayrı bir karardır (yukarıda 4).
+
+**Kabul (bu dal):**
+- `test_pit_table` 33/0 · `test_rl_walk_forward` 98/0.
+- Rota komşuları aşağıda yeniden koşuldu.
+
+**Açık:** bütçe kararı (kullanıcı) → hakem-2 ikinci okuma (BÜYÜK bulgu olduğu için, SendMessage) → dondurma (etiket `m0-protocol-v1`).
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -2002,3 +2077,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.31, İ3 ikinci okuma):** hakem-finans Küçük revizyon. Kapı duyarlılıkları (çapa kümesi ve 63 seans bootstrap, eşit kapanış dışı, Bonferroni, MDE dağılımı): havuzlu 0,511'in anlamlılığı eşit kapanış sayımına bağlı (eşitsiz 0,503, p 0,18); blok içi sonuç değişmedi. Ad → kod eşlemesi ve H3/M5 (P v1 + pozitif kontrol + 2018+ makro alt deneyi) kullanıcı kararı. KAP VYK API istemcisi; test geçidi yalnız 2023: dönem içi XU030 olayı 0, çeyreklik duyurular arşivle 4/4 uyumlu (2017–2018 yok). `test_pit_table` 25, `test_universe` 36.
 - **2026-11-15 (§9.32, P4 + E1 kapanışı):** P tablosu → eski `TradingEnv` tahmin arayüzü (kullanıcı kararı; env kodu değişmez, maskeli hücre nötr). Env varsayılanı eksik hücrede yönü −1 yapıyordu (adaptör bunu önlüyor). Gerçek tabloda %97,6 dolu; getiri ve güven gözlemi sıfıra yakın, yön ikili ve tam ölçekli (M8 beyanı). E1 ölçülen geçici kapsamla beyanla kapandı. `test_pit_table` 31.
 - **2026-11-15 (§9.33, Milestone 0' protokolü taslak):** m0p-v1 protokolü ve koşum betiği. Rota P tablosunu alıyor (DTF); M8 son nokta test kaydı eklendi. `.env` KAP anahtarları `Settings`'i bozuyordu (düzeltildi). 2021 katı ön elemede koşulmaz. Bütçe ölçümü ~127 sa tek süreç. `test_rl_walk_forward` 98.
+- **2026-11-15 (§9.34, kapanış kapısı):** hakem-2 Büyük revizyon (8 BÜYÜK). 2021 test penceresi bir duman koşusuyla bir kez okundu (beyan, `spike` kaydı). Protokol r2: ön eleme 2023–2026, son nokta puanı, doğrulayıcı aile, MDE (2021 tek başına ≳ 1 yıllık Sharpe), K4 ölçek eşitlemesi (k 0,165), pozitif kontrol (AUC 0,55 / 0,60), gerçek hiperparametreler kayıtta ve betikte denetleniyor, panel/tablo SHA zorlanıyor. Açık pencerede de bilgi yok (blok içi 0,502). Bütçe ~226–649 sa tek süreç (kullanıcı kararı). `test_pit_table` 33.

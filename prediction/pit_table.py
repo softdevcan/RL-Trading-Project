@@ -648,6 +648,48 @@ ENV_PRED_NEUTRAL = {'predicted_return': 0.0, 'predicted_direction': 0.5, 'confid
                     'ensemble_agreement': 0.5}
 
 
+def positive_control_table(table: pd.DataFrame, labels: pd.DataFrame, target_auc: float,
+                           seed: int = 0) -> Tuple[pd.DataFrame, dict]:
+    """Milestone 0' DTF POZITIF KONTROLU (hakem-2 kapanis; kullanici karari 2026-11-15).
+
+    BILEREK GELECEGI KULLANIR: sinyal gerceklesen yonden (y_up, t -> t+1) turetilir; yalniz "RL bilgili bir
+    sinyali kullanabiliyor mu" sorusu icin. Dogrulayici aileye GIRMEZ, tez sonucu degildir.
+    Ikili normal: z ~ N(+-d/2, 1), d = sqrt(2) * Phi^-1(AUC) -> AUC(z, y) = hedef (beklenen deger).
+    Gercek tablonun maskesi (meta_ok, mask_reason) ve olcegi korunur: p_up_cal = 0,5 + s_p * z/std(z),
+    pred_logret = s_r * z/std(z) (s_p, s_r gercek tablonun meta_ok std'leri), ret_* = pred_logret (uyum 0/1).
+    Etiketi olmayan hucrede z ~ N(0, 1) (bilgisiz).
+    """
+    from scipy.stats import norm
+    from evaluation import calibration as cal
+    if not 0.5 < target_auc < 1:
+        raise ValueError("target_auc (0,5; 1) araliginda olmali")
+    t = table.merge(labels[['date', 'symbol', 'y_up']], on=['date', 'symbol'], how='left')
+    rng = np.random.default_rng(seed)
+    d = np.sqrt(2) * norm.ppf(target_auc)
+    y = t['y_up'].to_numpy()
+    has = np.isfinite(y)
+    z = rng.normal(0.0, 1.0, len(t))
+    z[has] += np.where(y[has] == 1, d / 2, -d / 2)
+    zs = z / z.std()
+    ok = table['meta_ok'].to_numpy()
+    s_p = float(table.loc[ok, 'p_up_cal'].std())
+    s_r = float(table.loc[ok, 'pred_logret'].std())
+    out = table.copy()
+    out['p_up_cal'] = np.clip(0.5 + s_p * zs, 1e-6, 1 - 1e-6)
+    out['p_up_raw'] = out['p_up_cal']
+    out['pred_logret'] = s_r * zs
+    for c in [c for c in out.columns if c.startswith('ret_')]:
+        out[c] = out['pred_logret']
+    out['logit'] = np.log(out['p_up_cal'] / (1 - out['p_up_cal']))
+    out['model_disagreement'] = 0.0   # taban tahminleri ayni (ret_* = pred_logret)
+    m = ok & has
+    info = {'positive_control': True, 'target_auc': target_auc, 'seed': seed, 'd': float(d),
+            'achieved_auc_meta_ok': cal.auc(out.loc[m, 'p_up_cal'].to_numpy(), y[m]),
+            'scale_p': s_p, 'scale_r': s_r, 'n_labeled': int(m.sum()),
+            'warning': 'SINYAL GELECEKTEN (etiketten) TURETILDI; yalniz pozitif kontrol'}
+    return out, info
+
+
 def load_table(run_id: str, directory: Optional[str] = None) -> Tuple[pd.DataFrame, dict]:
     """`results_dir()/predictions_pit/<run_id>.parquet` + kimlik (yol, SHA-256, yan JSON'daki surum).
     run_id yol ayirici tasiyamaz (sema deseni de reddeder)."""
