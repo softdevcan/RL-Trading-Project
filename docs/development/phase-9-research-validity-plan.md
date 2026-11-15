@@ -2216,6 +2216,37 @@ Maliyet: [review-panel.md](review-panel.md).
 - 6 katta açık, ama 2022–2026 pencereleri daha önce okunmuştu.
 - Kural portföyü eski ortamın eylem kısıtlarını taşımıyor.
 
+### 9.39 Pozitif kontrol (b): politika tahmin bloğunu kullanıyor mu — ön kayıt (2026-11-16, dal `feat/m0-pc-upper-bound`)
+
+**Ne için:** §9.38'e göre PC060'ın RL'siz değeri MDE'yi aşıyor, ama RL bu değeri almıyor. Bu ölçüm, eğitilmiş politikaların tahmin bloğunu eylem düzeyinde kullanıp kullanmadığını sınar (hakem-2 sonuç okuması, öneri (b); kullanıcı kararı 2026-11-16). **Ön kayıt sonuç görülmeden yazıldı ve commit'lendi.**
+
+**Plandan iki sapma (beyan):**
+1. **Model:** rota kontrol noktalarını eğitimden sonra siliyor (`app/api/routes/trading.py:1537`). Diskte yalnız argmax kontrol noktası modeli var. M0'ın birincil kaydı `last_checkpoint`; bu ölçüm **argmax modelleri** üzerinde yapılır (aynı eğitimlerin ara noktaları). Sonuç `last_checkpoint` politikalarına doğrudan genellenmez.
+2. **Pencere:** 2021 doğrulayıcı penceresi bir kez daha okunmasın diye yalnız **2022–2026** katları kullanılır (daha önce okunmuş pencereler, `EXPOSED_EVAL_WINDOWS`). Yeniden eğitim yok; deneme kaydına yazılmaz.
+
+**Kurulum:**
+- Test ortamı rotanın yoluyla birebir kurulur: `load_rl_panel('causal')`, `build_fold(wf-v1)`, `env_prediction_features` ve `make_fold_env(test, train_env=…)`. Faz 1, `simple` ödül, komisyon 0,001.
+- **Doğruluk kapısı:** argmax modelinin normal koşusu, deneme kaydında saklanan test getirilerini yeniden üretmeli (en büyük mutlak fark ≤ 1e-9). Üretmezse ölçüm durur.
+- Kapsam: modeller DTF ve PC060 × PPO ve A2C × 5 tohum × 5 kat = 100.
+
+**Açık döngü duyarlılığı** (normal yörüngenin gözlemleri O_t üzerinde, belirlenimci eylem a = π(O_t)):
+- Bloklar:
+  - P = tahmin bloğu, gözlemin son 4·30 = 120 boyutu.
+  - C = piyasa özellik bloğundan sabit tohumla (0) seçilmiş 120 boyut (kontrol bloğu).
+- Bozmalar:
+  - karıştır(X): X boyutları O'nun zamanda permütasyonundan (tohum 0) alınır.
+  - sıfır(P): P boyutları 0'a çekilir; bu P4'ün nötr hücresidir.
+- Duyarlılık S_X = ortalama_t ‖a − a_X‖₁ / ortalama_t ‖a‖₁.
+- **Oran R = S_P,karıştır / S_C,karıştır**, model başına. Rapor: (algoritma, tahmin seviyesi) başına medyan ve çeyrekler.
+
+**Kapalı döngü (yalnız PC060):** Test ortamının tahmin sözlüğü, test tarihleri arasında permütasyonla karıştırılır (tohum 0). ΔSR = SR(karıştırılmış) − SR(normal), A8 fazla getiri, tohum ortalamalı, `sharpe_diff_hac_pooled`.
+
+**Okuma kuralı (önceden; hepsi keşifsel):**
+- Medyan R < 0,1 → "politika tahmin bloğunu eylem düzeyinde pratikte yok sayıyor". M0'daki boşluk öğrenme ya da temsil açıklamasıyla tutarlıdır.
+- Medyan R ≥ 0,1 ve PC060 kapalı döngü ΔSR anlamlı biçimde negatif değil (p ≥ 0,05 ya da ΔSR ≥ 0) → "blok eylemi etkiliyor ama değer üretmiyor".
+- PC060 kapalı döngü ΔSR < 0 ve p < 0,05 → "politika bloktaki bilgiyi kullanıyor". Bu durumda M0'daki boşluk argmax ile last_checkpoint farkından ya da başka bir nedenden gelir.
+- DTF ile PC060'ın R değerleri ayrıca karşılaştırılır (betimsel).
+
 ---
 
 ## Versiyon geçmişi
