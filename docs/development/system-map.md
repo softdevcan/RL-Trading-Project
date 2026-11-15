@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.1.0` · Milestone 0' m0p-v2 **koşuldu** (180/180) ve hakem-2 sonuç okuması Kabul (§9.37, ara karar). Sırada pozitif kontrol ölçümü (a) kararı ve Faz 10 M2.
+**Son güncelleme:** 2026-11-16 · `v2.2.0` · Milestone 0' koşuldu (ara karar, §9.37); Faz 10 M1 spike bitti, **BenchMARL + TorchRL seçildi** (§3.2.7); K27 pano maddesi eklendi. Sırada pozitif kontrol ölçümleri (a)+(b), sonra M2.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -146,13 +146,14 @@ flowchart TB
   end
 
   subgraph F10["Faz 10: MARL"]
-    M1["M1 çerçeve spike'ı"]:::planned
+    M1["M1 spike: BenchMARL seçildi<br/>7/7, §3.2.7"]:::done
     M2["M2 ortam + K karar katmanı"]:::planned
     M34["M3/M4 MAPPO, iletişim"]:::planned
     M5["M5 güvenli mesaj H2/H3"]:::planned
     M67["M6/M7 rejim, yorum"]:::planned
     M8["M8 ön kayıt"]:::planned
     FINAL["Nihai koşumlar"]:::planned
+    K27["K27 pano: ajan türü seçimi<br/>+ karşılaştırma görünümü"]:::planned
   end
 
   subgraph TEZ["Tez"]
@@ -166,6 +167,7 @@ flowchart TB
   B5 --> K0K4
   M1 --> M2
   FIN --> M2 --> M34 --> M5 --> M67 --> M8 --> FINAL
+  M2 --> K27
   T1 --> T4
   FINAL --> T4
   K0K4 --> T4
@@ -187,8 +189,9 @@ flowchart TB
 | Golden yenileme (K1) | bitti (CPU; `v2.0.0`) | plan §9.36; `test_prediction_regression` yeşil | — (yeniden yenileme yalnız bilinçli davranış değişikliğinde) |
 | Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş → boru hattı sinyali aktaramadı; 2021'de eşdeğerlik kurulamaz) | plan §9.37; `measurements/phase10-m0/m0p_v2_results.json` | Önerilen (a) RL'siz üst sınır, (b) blok sıfırlama — kullanıcı kararı; ileri veri |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
-| Faz 10 M1 çerçeve spike'ı | planlı (K9 kararlı) | Faz 10 plan §4 S1, K9 | BenchMARL/TorchRL önce, ayrı `venv-marl/`; Windows, bütçe |
+| Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
+| K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
 | Y30 SHAP ucu, Y31 altın birimi | açık (ürün) | `prediction/CLAUDE.md` | Tez sonucu değil |
 | Tez Milestone 1 (literatür) | kısmen | [roadmap.md](roadmap.md) Milestone 1 | Dört 2026 tam metni, YÖK taraması |

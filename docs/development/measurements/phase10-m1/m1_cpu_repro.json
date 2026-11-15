@@ -1,0 +1,53 @@
+{
+ "spike": true,
+ "note": "performans sayisi YOK (Faz 10 \u00a74 S1); yalniz sure ve tekrar uretim",
+ "args": {
+  "panel": "panel_spike.npz",
+  "comm": "attn",
+  "algo": "mappo",
+  "frames": 6000,
+  "frames_per_batch": 6000,
+  "minibatch_iters": 45,
+  "n_envs": 10,
+  "parallel": false,
+  "episode_len": 252,
+  "n_agents": 30,
+  "alpha": 0.25,
+  "cost": 0.001,
+  "hidden": 64,
+  "sampling_device": "cpu",
+  "train_device": "cpu",
+  "seed": 0,
+  "repro": true,
+  "threads": null,
+  "out": "m1_cpu_repro.json"
+ },
+ "runs": [
+  {
+   "seed": 0,
+   "wall_seconds": 28.7,
+   "frames": 6000,
+   "seconds_per_200k": 956.7,
+   "policy_params": 27906,
+   "policy_sha256": "9b8c9d25889491abcad4d3640effece418e0193936b3d9332de653363858f02e"
+  },
+  {
+   "seed": 0,
+   "wall_seconds": 28.4,
+   "frames": 6000,
+   "seconds_per_200k": 947.6,
+   "policy_params": 27906,
+   "policy_sha256": "9b8c9d25889491abcad4d3640effece418e0193936b3d9332de653363858f02e"
+  }
+ ],
+ "repro_equal": true,
+ "env": {
+  "python": "3.12.5",
+  "os": "Windows-11-10.0.26300-SP0",
+  "torch": "2.6.0+cu124",
+  "cuda": true,
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "threads": 8
+ },
+ "panel_sha256": "7e17897adb13f21e0687045506fd4e2c1ea773ac8bb249ad7192689ec22e9b13"
+}
