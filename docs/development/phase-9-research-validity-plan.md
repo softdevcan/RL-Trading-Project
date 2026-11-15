@@ -2196,6 +2196,26 @@ Maliyet: [review-panel.md](review-panel.md).
 - Sinyal bilerek gelecekten türetildi; bu bir üst sınır ölçümüdür, strateji önerisi değildir.
 - Eski ortamın hisse adedi eylemi ve işlem sınırı (`max_shares_per_trade` 100) burada yok. Kural portföyü RL'nin ulaşabileceğinden daha esnek olabilir.
 
+**Sonuç** (`python scripts/m0_pc_upper_bound.py`; [measurements/phase10-m0/pc_upper_bound.json](measurements/phase10-m0/pc_upper_bound.json); ön kayıttan sonra koşuldu, okuma kuralı değişmedi):
+
+| 2021 (247 gün), yıllık Sharpe | S_yön | S_top10 | 1/N | DT PPO | DT A2C |
+|---|---|---|---|---|---|
+| Net (20 bps) | 1,00 | 1,06 | 0,54 | 0,79 | 0,92 |
+| Brüt | 2,03 | — | 0,55 | — | — |
+
+- **Birincil: ΔSR(S_yön − 1/N) = +0,46** (HAC SE 0,22; p 0,03). Eşik 0,43 → **aşıldı, az farkla** (nokta tahmin eşiğin 0,03 üstünde; SE 0,22).
+- S_top10 − 1/N: +0,52 (SE 0,30; p 0,09). Brüt S_yön − 1/N: +1,49; günlük yeniden dengelemenin maliyeti değerin yarısından fazlasını alıyor.
+- S_yön − DT: PPO +0,21 (SE 0,38), A2C +0,08 (SE 0,54); ikisi de anlamlı değil.
+- Keşifsel, 6 kat (1445 gün; eşik 0,17): S_yön − 1/N **+0,44** (SE 0,09; p < 10⁻⁶); S_top10 − 1/N +0,70 (SE 0,12).
+- Hizalama denetimi: sinyal bir gün kaymış olsaydı brüt S_yön yaklaşık 1/N'e (0,55) düşerdi. 2,03 çıkması, sinyalin t → t+1 getirisine denk geldiğini gösteriyor.
+
+**Ön kayıtlı okuma:** Sinyalin RL'siz ulaşılabilir değeri MDE'yi aşıyor. RL'nin bu değeri almaması **boru hattı ya da öğrenme açıklamasını destekler**; bu kanıt değildir. Neden (b) ile sınanır.
+
+**Sınırlama:**
+- 2021'de eşik aşımı kırılgan: 0,46'ya karşı 0,43, SE 0,22.
+- 6 katta açık, ama 2022–2026 pencereleri daha önce okunmuştu.
+- Kural portföyü eski ortamın eylem kısıtlarını taşımıyor.
+
 ---
 
 ## Versiyon geçmişi
@@ -2261,3 +2281,4 @@ Maliyet: [review-panel.md](review-panel.md).
 - **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
 - **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.
 - **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.
+- **2026-11-16 (§9.38, pozitif kontrol (a)):** Ön kayıt `fe65b0b`, ardından ölçüm. PC060 ile RL'siz kural portföyü 2021'de 1/N'i +0,46 yıllık Sharpe geçiyor (eşik 0,43, az farkla); 6 katta +0,44 (eşik 0,17). Okuma: sinyalin değeri MDE'yi aşıyor; RL'nin almaması boru hattı/öğrenme açıklamasını destekler (kanıt değil). Sıradaki (b).
