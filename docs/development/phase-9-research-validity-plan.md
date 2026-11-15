@@ -1700,7 +1700,7 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 2. USD bazlı etikette XU100_t / USDTRY_{t−1} bir günlük kur kayması taşıyor; M8'de tasarım varsayımı olarak beyan edilir.
 
 **P3 kaba maliyet** ([p3_cost.json](measurements/phase9-p/p3_cost.json); günlük ufuk, ~3.431 satır, GPU, %80 yeniden uyum dahil):
-- Sembol başına tam 5 model 154–197 sn; 3 GBM 1,7–2,3 sn.
+- Sembol başına tam 5 model 146–156 sn (`calibration.json` ikinci koşu; ilk koşu 154–197 sn); 3 GBM 1,7–2,3 sn.
 - 63 seansta bir yeniden eğitimle (~52 kez) × 30 sembol: **tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa** (`p3_cost.json` → `estimate_hours`) (tohum çarpanı ve haftalık ufuk hariç).
 - Faz 10 K11'in "ölçüm ağır çıkarsa v1 = üç GBM + lojistik meta" kuralı uygulanabilir. Paket başında kullanıcı teyidi bekleniyor.
 
