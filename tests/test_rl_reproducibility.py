@@ -245,5 +245,42 @@ with tempfile.TemporaryDirectory() as tmp:
     d2 = json.load(open(m2.finalize(), encoding="utf-8"))
     check("tohum verilmeyen manifest 'seed' alani tasimiyor (uydurulmuyor)", "seed" not in d2)
 
+print("\nHPO sampler tohumu (Faz 9 §9.11 bulgu 3)")
+import optuna  # noqa: E402
+from hyperparameter_optimization.optimizers.a2c_optimizer import A2COptimizer  # noqa: E402
+
+optuna.logging.set_verbosity(optuna.logging.ERROR)
+
+
+def first_suggestions(opt, k=5):
+    st = optuna.create_study(sampler=opt.sampler)
+    out = []
+    for _ in range(k):
+        t = st.ask()
+        out.append(t.suggest_float("x", 0.0, 1.0))
+        st.tell(t, out[-1])
+    return out
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    mk = lambda: A2COptimizer(study_name="s", storage=f"sqlite:///{tmp}/h.db", n_trials=1,
+                              seed=None, phase=1, reward_type="simple")
+    a, b, c = mk(), mk(), mk()
+    check("API gibi seed=None ile kurulunca sampler tohumu henuz yok (optimize() cozer)",
+          a.sampler_seed is None)
+    for o, s_ in ((a, 123), (b, 123), (c, 124)):
+        o._seed_default_sampler(s_)  # optimize(): resolve_seed sonrasi ayni cagri
+    sa, sb, sc = first_suggestions(a), first_suggestions(b), first_suggestions(c)
+    check("ayni ayar tohumu -> ayni TPE onerileri (arama tekrar uretilebilir); farkli tohum -> farkli",
+          sa == sb and sa != sc, f"{sa[:2]} {sb[:2]} {sc[:2]}")
+    u1, u2 = mk(), mk()  # mutasyon: eski davranis (tohumsuz TPE) tekrar uretilmez
+    check("mutasyon: tohumsuz sampler iki kurulumda farkli oneriler (eski Y: tekrar uretilemez)",
+          first_suggestions(u1) != first_suggestions(u2))
+    ext = A2COptimizer(study_name="s2", storage=f"sqlite:///{tmp}/h2.db", n_trials=1, seed=None,
+                       phase=1, reward_type="simple", sampler=optuna.samplers.RandomSampler(seed=1))
+    ext._seed_default_sampler(123)
+    check("disaridan verilen sampler'a dokunulmaz (tohumu bilinmiyor -> None)",
+          isinstance(ext.sampler, optuna.samplers.RandomSampler) and ext.sampler_seed is None)
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

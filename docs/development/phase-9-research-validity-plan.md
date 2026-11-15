@@ -1634,6 +1634,17 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 **İnceleme:** İ2 (B6 ile birlikte, hakem-finans).
 
+### 9.26 HPO sampler tohumu (§9.11 bulgu 3; §9.22 madde 4) (2026-11-15)
+
+**Sorun.** API `seed=None` veriyor. Ayar tohumu `optimize()`'da üretiliyordu, ama varsayılan `TPESampler` kurucuda tohumsuz kurulmuştu. Arama tekrar üretilemiyordu.
+
+**Düzeltme** ([base_optimizer.py](../../hyperparameter_optimization/base_optimizer.py)). Varsayılan TPE, `resolve_seed` sonrasında aynı ayar tohumuyla yeniden kuruluyor (`_seed_default_sampler`). Dışarıdan verilen sampler'a dokunulmuyor; onun tohumu bilinmiyor ve `None` kaydediliyor. Sonuç JSON'unda artık `sampler: {type, seed}` alanı var. Sınır: tekrar üretim `n_jobs=1` koşulunda geçerli (rota 1 kullanıyor).
+
+**Kabul** `test_rl_reproducibility` 39 → **43/0**:
+- Aynı tohum aynı TPE önerilerini, farklı tohum farklı önerileri veriyor.
+- Mutasyon (eski davranış, tohumsuz) iki kurulumda farklı öneriler veriyor.
+- Dış sampler korunuyor.
+
 ---
 
 ## Versiyon geçmişi
@@ -1686,3 +1697,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 22. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu. İ1 hakem-rl Küçük revizyon: nakitte Dₜ tabanı, tam ödül tanımı soyda, K4 koşulları M8'de; varsayılan terim düşük maruziyette −1'de doyuyor (beyan).
 - **2026-11-15 (§9.24, B6):** Y3'ün eski rejim metriği kaldırıldı; nedensel XU100 etiketi (200g trend × 60g vol genişleyen tercil), ayrı uzun endeks serisi (`data/index_fetcher.py`). `test_regimes` 13 (B0 sentetik + gerçek, 2 mutasyon). Açık soru: nominal TL trend enflasyonla bull'a kayıyor (İ2).
 - **2026-11-15 (§9.25, F1–F4):** `confidence_mode='calibrated'` (lojistik p(UP) + sıcaklık, OOF ikiye bölünmüş, arındırmalı; varsayılan `legacy`, fiyat tahmini aynı), `evaluation/calibration.py` (ECE 15 kutu, Brier), her eğitimde iki yolun test kalibrasyonu. `test_calibration` 15. Gerçek veride Y4 %33–62; yön isabeti taban oranında, T 12,8–20 (kalibre güven ≈ 0,5).
+- **2026-11-15 (§9.26):** HPO varsayılan TPE sampler'ı ayar tohumuyla (§9.11 bulgu 3 kapandı). `test_rl_reproducibility` 43.

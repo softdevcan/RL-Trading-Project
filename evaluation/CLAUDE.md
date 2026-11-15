@@ -27,4 +27,4 @@
   tercil, <= t (B0 testli). Gerceklesen getiriye kosullu "rejim" YAZMA (Y3; eski fonksiyon kaldirildi).
   Seri `data/macro/xu100.csv` (`python -m data.index_fetcher`). Etiket NOMINAL TL'de — enflasyon
   trendi 'bull'a iter (acik soru, plan §9.24).
-- Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (39)
+- Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (43)

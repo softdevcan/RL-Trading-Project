@@ -104,7 +104,7 @@ Rota (`app/api/routes/trading.py`), HPO (`hyperparameter_optimization/`) ve `eva
   - **HPO rotanin yolunu kullanir (R1; Y21 kapandi):** panel, kat ve ortam `evaluation.rl_folds`'tan;
     pencere istekten degil `evaluation/splits.py` katindan (varsayilan ilk kat 2021: dogrulamasi
     butun testlerden once biter). Rota HPO soyunu `hpo_lineage` ile olcer (pencere, tohum, evren,
-    bolme, gozlem). Optuna sampler'i hala tohumsuz (acik, §9.11).
+    bolme, gozlem). Varsayilan TPE sampler'i `optimize()`'da cozulen ayar tohumuyla kurulur (§9.26; sonuc JSON'unda `sampler.seed`).
   - `scripts/analysis/generate_academic_report.py` D5'e kadar DURUR (cikis 2; `--allow-invalid`).
   - Olcum betigi: `scripts/analysis/measure_price_scale.py`; JSON'lar
     `docs/development/measurements/phase9-b9/` (panel SHA-256 + commit iceriyor).

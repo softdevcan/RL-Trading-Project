@@ -69,7 +69,7 @@ python tests/test_data_integrity.py        # Faz 10/V: artefakt, hayalet gun, RL
                                            #          penceresi, gercek panel saglik (27)
 python tests/test_env_missing_mode.py      # Faz 10/V: env eksik hucre modu (17)
 python tests/test_rl_reproducibility.py    # Faz 9/C: tohum, deneme kaydi, veri
-                                           #          anlik goruntusu, manifest (39)
+                                           #          anlik goruntusu, manifest, HPO sampler tohumu + mutasyon (43)
 python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim olcegi;
                                            #          env + rota + HPO uctan uca, mutasyon,
                                            #          main ile bit-es varsayilan (git show, 11
