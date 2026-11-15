@@ -1,0 +1,117 @@
+{
+ "preregistration": "plan §9.38, commit fe65b0b (sonuctan once)",
+ "table": "pc_auc060",
+ "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651",
+ "cost_one_way": 0.001,
+ "execution": "t kapanis (eski ortamla ayni)",
+ "confirmatory_2021": {
+  "n_days": 247,
+  "sharpe_annual": {
+   "S_yon": 0.999091954350757,
+   "S_top10": 1.0566469856671703,
+   "EW": 0.5357234369351238,
+   "S_yon_brut": 2.032694914760247,
+   "EW_brut": 0.5480779957125165,
+   "DT_PPO": 0.7933956153251134,
+   "DT_A2C": 0.916044981384743
+  },
+  "tests": {
+   "S_yon - EW": {
+    "delta_sharpe_annual": 0.46430936816592977,
+    "se_annual": 0.2158420334504106,
+    "p_value": 0.03146407769282461
+   },
+   "S_top10 - EW": {
+    "delta_sharpe_annual": 0.5219812626104195,
+    "se_annual": 0.3043505007660182,
+    "p_value": 0.08633308691011432
+   },
+   "S_yon_brut - EW_brut": {
+    "delta_sharpe_annual": 1.4876313727485975,
+    "se_annual": 0.26238883016828196,
+    "p_value": 1.4315784058824664e-08
+   },
+   "S_yon - DT_PPO": {
+    "delta_sharpe_annual": 0.20611399699685148,
+    "se_annual": 0.3840793382409922,
+    "p_value": 0.5915133207735961
+   },
+   "S_yon - DT_A2C": {
+    "delta_sharpe_annual": 0.08321559643499864,
+    "se_annual": 0.5392015041701976,
+    "p_value": 0.8773486253749075
+   },
+   "EW - DT_PPO": {
+    "delta_sharpe_annual": -0.25819537116907826,
+    "se_annual": 0.3654666551536421,
+    "p_value": 0.4798888548175768
+   },
+   "EW - DT_A2C": {
+    "delta_sharpe_annual": -0.3810937717309311,
+    "se_annual": 0.5458663532338692,
+    "p_value": 0.48508662538007463
+   }
+  },
+  "threshold": 0.43,
+  "primary_delta": 0.46430936816592977,
+  "primary_exceeds_threshold": true
+ },
+ "exploratory_all_folds": {
+  "n_days": 1445,
+  "sharpe_annual": {
+   "S_yon": 1.024878299790516,
+   "S_top10": 1.2810703423932996,
+   "EW": 0.5831673452479069,
+   "S_yon_brut": 1.9261425467134907,
+   "EW_brut": 0.5955118931670003,
+   "DT_PPO": 0.640983951402886,
+   "DT_A2C": 0.6263013961700893
+  },
+  "tests": {
+   "S_yon - EW": {
+    "delta_sharpe_annual": 0.44186387507844943,
+    "se_annual": 0.08773034760631453,
+    "p_value": 4.738395708695786e-07
+   },
+   "S_top10 - EW": {
+    "delta_sharpe_annual": 0.698144611484341,
+    "se_annual": 0.1174320884586169,
+    "p_value": 2.763010272212345e-09
+   },
+   "S_yon_brut - EW_brut": {
+    "delta_sharpe_annual": 1.3310913184914135,
+    "se_annual": 0.10468280695085264,
+    "p_value": 4.85170021259441e-37
+   },
+   "S_yon - DT_PPO": {
+    "delta_sharpe_annual": 0.3840272527877988,
+    "se_annual": 0.14821933113979033,
+    "p_value": 0.009571444224999885
+   },
+   "S_yon - DT_A2C": {
+    "delta_sharpe_annual": 0.39871489112797753,
+    "se_annual": 0.18244929766928844,
+    "p_value": 0.0288634676206068
+   },
+   "EW - DT_PPO": {
+    "delta_sharpe_annual": -0.057836622290650626,
+    "se_annual": 0.12390385205291979,
+    "p_value": 0.6406527691012618
+   },
+   "EW - DT_A2C": {
+    "delta_sharpe_annual": -0.0431489839504719,
+    "se_annual": 0.16209846883971263,
+    "p_value": 0.7900929196186679
+   }
+  },
+  "threshold": 0.17,
+  "primary_delta": 0.44186387507844943,
+  "primary_exceeds_threshold": true
+ },
+ "reading_2021": "dSR(S_yon - 1/N) >= 0,43: sinyalin ulasilabilir degeri MDE'yi asiyor; RL'nin bunu almamasi boru hatti ya da ogrenme aciklamasini DESTEKLER (kanit degil; neden (b) ile sinanir).",
+ "limits": [
+  "sinyal bilerek gelecekten; ust sinir, strateji onerisi degil",
+  "eski ortamin hisse adedi eylemi ve max_shares_per_trade siniri burada yok"
+ ],
+ "warning": "tez sonucu degil; RL piyasayi yener / tahmin katki vermez cumlesine donusturulmez"
+}

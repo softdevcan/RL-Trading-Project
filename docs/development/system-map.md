@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.2.0` · Milestone 0' koşuldu (ara karar, §9.37); Faz 10 M1 spike bitti, **BenchMARL + TorchRL seçildi** (§3.2.7); K27 pano maddesi eklendi. Sırada pozitif kontrol ölçümleri (a)+(b), sonra M2.
+**Son güncelleme:** 2026-11-16 · `v2.3.0` · Pozitif kontrol ölçümleri (Faz 9 §9.38–9.39): PC060'ın RL'siz değeri MDE'yi aşıyor, eski ortamın politikaları bloktan değer üretmiyor → Faz 10 S-obs girdisi. Sırada Faz 10 M2.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -187,7 +187,7 @@ flowchart TB
 | Rota DTF + M8 son nokta test kaydı + koşum betiği | bitti | plan §9.33; `test_rl_walk_forward` 98 | — |
 | Faz 9 kapanış 8: Milestone 0' protokolü | **donduruldu** (`m0-protocol-v1`) | [milestone0-protocol.md](milestone0-protocol.md); plan §9.33–9.35 | — (değişiklik = m0p-v2) |
 | Golden yenileme (K1) | bitti (CPU; `v2.0.0`) | plan §9.36; `test_prediction_regression` yeşil | — (yeniden yenileme yalnız bilinçli davranış değişikliğinde) |
-| Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş → boru hattı sinyali aktaramadı; 2021'de eşdeğerlik kurulamaz) | plan §9.37; `measurements/phase10-m0/m0p_v2_results.json` | Önerilen (a) RL'siz üst sınır, (b) blok sıfırlama — kullanıcı kararı; ileri veri |
+| Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş). Pozitif kontrol ölçümleri: (a) RL'siz değer MDE'yi aşıyor, (b) politika bloktan değer üretmiyor | plan §9.37–9.39; `measurements/phase10-m0/` | İleri veri; S-obs girdisi Faz 10 §3.2.7 |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |

@@ -2169,6 +2169,114 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 
 Maliyet: [review-panel.md](review-panel.md).
 
+### 9.38 Pozitif kontrolün geçerliliği — (a) RL'siz üst sınır: ön kayıt (2026-11-16, dal `feat/m0-pc-upper-bound`)
+
+**Ne için:** §9.37'deki boş PC060 sonucunun iki açıklaması ayrılmıyor: (i) boru hattı sinyali aktaramıyor, (ii) AUC 0,60'lık sinyal bu güçte tespit edilebilir bir Sharpe farkı üretmiyor. Bu ölçüm PC060'ın kendi ekonomik değerini RL olmadan ölçer (hakem-2 sonuç okuması #5, öneri (a); kullanıcı kararı 2026-11-16). **Bu ön kayıt sonuç görülmeden yazıldı ve commit'lendi; okuma kuralı sonuçtan sonra değiştirilmez.**
+
+**Veri:** P tablosu `pc_auc060` (SHA `0ceb5c7a…`); panel `data/bist/stock_data_with_indicators.csv`, `prepare_rl_panel` veri kapısından; 30 sembol. Pencereler: M0' DT `last_checkpoint` kayıtlarının test tarihleri (2021 doğrulayıcı; 6 kat keşifsel).
+
+**Yürütme (eski ortamla aynı):** t kapanışında karar, t kapanışından yürütme; portföy getirisi t → t+1 kapanış. Uzun-yalnız, tam yatırımlı. Maliyet tek yön 0,001 × Σ|w_t − w̃_{t−1}| (w̃ = fiyatla kaymış önceki ağırlık; 20 bps gidiş-dönüş, M0' ile aynı). Getiri t+1 tarihine yazılır. Fazla getiri A8 (`risk_free_series`). Her katın ilk günü maliyet nakitten tam yatırıma geçişi içerir.
+
+**Stratejiler:**
+- **S_yön (birincil):** P4'ün ortama aktardığı yön bilgisiyle aynı bilgi: `p_up_cal ≥ 0,5` ve `meta_ok` olan sembollere eşit ağırlık. O gün hiç sembol yoksa 1/N.
+- **S_top10 (ikincil):** `p_up_cal`'ı en yüksek 10 sembole (`meta_ok`) eşit ağırlık.
+- **1/N:** 30 sembol eşit ağırlık, günlük yeniden dengeleme, aynı maliyet modeli.
+- Karşılaştırma ayrıca M0' DT kolunun tohum ortalamalı serisiyle (PPO ve A2C) yapılır.
+
+**Metrik ve test:** ΔSR = SR(S) − SR(1/N), yıllık; HAC (`sharpe_diff_hac`). Brüt (maliyetsiz) değer ayrıca raporlanır.
+
+**Okuma kuralı (önceden):**
+- Eşik = §9.37'deki PC060 havuzlu MDE, **0,43** yıllık Sharpe (2021).
+- 2021'de ΔSR(S_yön − 1/N) **< 0,43** ise: "PC060, bu güçte geçerli bir pozitif kontrol değil. AUC 0,60'lık sinyal RL'siz kural portföyünde bile tespit edilebilir bir fark üretmiyor." Bu durumda §9.37'deki boş sonuç boru hattı hakkında bilgi vermez.
+- ΔSR(S_yön − 1/N) **≥ 0,43** ise: "Sinyalin ulaşılabilir değeri MDE'yi aşıyor. RL'nin bunu almaması boru hattı ya da öğrenme açıklamasını destekler." Bu da kanıt değil, destektir; neden (b) ile sınanır.
+- 6 kat (eşik 0,17) ve S_top10 keşifseldir.
+- Hiçbir sonuç "RL piyasayı yener" ya da "tahmin katkı vermez" cümlesine dönüştürülmez.
+
+**Sınırlamalar (önceden):**
+- Sinyal bilerek gelecekten türetildi; bu bir üst sınır ölçümüdür, strateji önerisi değildir.
+- Eski ortamın hisse adedi eylemi ve işlem sınırı (`max_shares_per_trade` 100) burada yok. Kural portföyü RL'nin ulaşabileceğinden daha esnek olabilir.
+
+**Sonuç** (`python scripts/m0_pc_upper_bound.py`; [measurements/phase10-m0/pc_upper_bound.json](measurements/phase10-m0/pc_upper_bound.json); ön kayıttan sonra koşuldu, okuma kuralı değişmedi):
+
+| 2021 (247 gün), yıllık Sharpe | S_yön | S_top10 | 1/N | DT PPO | DT A2C |
+|---|---|---|---|---|---|
+| Net (20 bps) | 1,00 | 1,06 | 0,54 | 0,79 | 0,92 |
+| Brüt | 2,03 | — | 0,55 | — | — |
+
+- **Birincil: ΔSR(S_yön − 1/N) = +0,46** (HAC SE 0,22; p 0,03). Eşik 0,43 → **aşıldı, az farkla** (nokta tahmin eşiğin 0,03 üstünde; SE 0,22).
+- S_top10 − 1/N: +0,52 (SE 0,30; p 0,09). Brüt S_yön − 1/N: +1,49; günlük yeniden dengelemenin maliyeti değerin yarısından fazlasını alıyor.
+- S_yön − DT: PPO +0,21 (SE 0,38), A2C +0,08 (SE 0,54); ikisi de anlamlı değil.
+- Keşifsel, 6 kat (1445 gün; eşik 0,17): S_yön − 1/N **+0,44** (SE 0,09; p < 10⁻⁶); S_top10 − 1/N +0,70 (SE 0,12).
+- Hizalama denetimi: sinyal bir gün kaymış olsaydı brüt S_yön yaklaşık 1/N'e (0,55) düşerdi. 2,03 çıkması, sinyalin t → t+1 getirisine denk geldiğini gösteriyor.
+
+**Ön kayıtlı okuma:** Sinyalin RL'siz ulaşılabilir değeri MDE'yi aşıyor. RL'nin bu değeri almaması **boru hattı ya da öğrenme açıklamasını destekler**; bu kanıt değildir. Neden (b) ile sınanır.
+
+**Sınırlama:**
+- 2021'de eşik aşımı kırılgan: 0,46'ya karşı 0,43, SE 0,22.
+- 6 katta açık, ama 2022–2026 pencereleri daha önce okunmuştu.
+- Kural portföyü eski ortamın eylem kısıtlarını taşımıyor.
+
+### 9.39 Pozitif kontrol (b): politika tahmin bloğunu kullanıyor mu — ön kayıt (2026-11-16, dal `feat/m0-pc-upper-bound`)
+
+**Ne için:** §9.38'e göre PC060'ın RL'siz değeri MDE'yi aşıyor, ama RL bu değeri almıyor. Bu ölçüm, eğitilmiş politikaların tahmin bloğunu eylem düzeyinde kullanıp kullanmadığını sınar (hakem-2 sonuç okuması, öneri (b); kullanıcı kararı 2026-11-16). **Ön kayıt sonuç görülmeden yazıldı ve commit'lendi.**
+
+**Plandan iki sapma (beyan):**
+1. **Model:** rota kontrol noktalarını eğitimden sonra siliyor (`app/api/routes/trading.py:1537`). Diskte yalnız argmax kontrol noktası modeli var. M0'ın birincil kaydı `last_checkpoint`; bu ölçüm **argmax modelleri** üzerinde yapılır (aynı eğitimlerin ara noktaları). Sonuç `last_checkpoint` politikalarına doğrudan genellenmez.
+2. **Pencere:** 2021 doğrulayıcı penceresi bir kez daha okunmasın diye yalnız **2022–2026** katları kullanılır (daha önce okunmuş pencereler, `EXPOSED_EVAL_WINDOWS`). Yeniden eğitim yok; deneme kaydına yazılmaz.
+
+**Kurulum:**
+- Test ortamı rotanın yoluyla birebir kurulur: `load_rl_panel('causal')`, `build_fold(wf-v1)`, `env_prediction_features` ve `make_fold_env(test, train_env=…)`. Faz 1, `simple` ödül, komisyon 0,001.
+- **Doğruluk kapısı:** argmax modelinin normal koşusu, deneme kaydında saklanan test getirilerini yeniden üretmeli (en büyük mutlak fark ≤ 1e-9). Üretmezse ölçüm durur.
+- Kapsam: modeller DTF ve PC060 × PPO ve A2C × 5 tohum × 5 kat = 100.
+
+**Açık döngü duyarlılığı** (normal yörüngenin gözlemleri O_t üzerinde, belirlenimci eylem a = π(O_t)):
+- Bloklar:
+  - P = tahmin bloğu, gözlemin son 4·30 = 120 boyutu.
+  - C = piyasa özellik bloğundan sabit tohumla (0) seçilmiş 120 boyut (kontrol bloğu).
+- Bozmalar:
+  - karıştır(X): X boyutları O'nun zamanda permütasyonundan (tohum 0) alınır.
+  - sıfır(P): P boyutları 0'a çekilir; bu P4'ün nötr hücresidir.
+- Duyarlılık S_X = ortalama_t ‖a − a_X‖₁ / ortalama_t ‖a‖₁.
+- **Oran R = S_P,karıştır / S_C,karıştır**, model başına. Rapor: (algoritma, tahmin seviyesi) başına medyan ve çeyrekler.
+
+**Kapalı döngü (yalnız PC060):** Test ortamının tahmin sözlüğü, test tarihleri arasında permütasyonla karıştırılır (tohum 0). ΔSR = SR(karıştırılmış) − SR(normal), A8 fazla getiri, tohum ortalamalı, `sharpe_diff_hac_pooled`.
+
+**Okuma kuralı (önceden; hepsi keşifsel):**
+- Medyan R < 0,1 → "politika tahmin bloğunu eylem düzeyinde pratikte yok sayıyor". M0'daki boşluk öğrenme ya da temsil açıklamasıyla tutarlıdır.
+- Medyan R ≥ 0,1 ve PC060 kapalı döngü ΔSR anlamlı biçimde negatif değil (p ≥ 0,05 ya da ΔSR ≥ 0) → "blok eylemi etkiliyor ama değer üretmiyor".
+- PC060 kapalı döngü ΔSR < 0 ve p < 0,05 → "politika bloktaki bilgiyi kullanıyor". Bu durumda M0'daki boşluk argmax ile last_checkpoint farkından ya da başka bir nedenden gelir.
+- DTF ile PC060'ın R değerleri ayrıca karşılaştırılır (betimsel).
+
+**Sonuç** (`CUDA_VISIBLE_DEVICES=-1 python scripts/m0_pred_block_ablation.py`; [measurements/phase10-m0/pred_block_ablation.json](measurements/phase10-m0/pred_block_ablation.json); ön kayıttan sonra koşuldu, kural değişmedi):
+
+**Doğruluk kapısı:** 100/100 model, kayıttaki argmax test getirilerini **sıfır farkla** üretti (en büyük mutlak fark 0,0).
+
+| Grup (25 model; 5 kat × 5 tohum) | Medyan R | Çeyrekler | S_P,karıştır | S_C,karıştır | S_P,sıfır |
+|---|---|---|---|---|---|
+| A2C / DTF | 0,58 | [0,47, 0,67] | 0,024 | 0,042 | 0,019 |
+| A2C / PC060 | 0,50 | [0,43, 0,66] | 0,024 | 0,050 | 0,028 |
+| PPO / DTF | 0,82 | [0,71, 0,87] | 0,303 | 0,350 | 0,234 |
+| PPO / PC060 | 0,77 | [0,69, 0,86] | 0,286 | 0,359 | 0,230 |
+
+**Kapalı döngü** (PC060, tahmin sözlüğü test tarihleri arasında karıştırıldı; 1.198 gün): ΔSR (karıştırılmış − normal)
+- A2C: +0,001 (SE 0,002; p 0,53)
+- PPO: −0,011 (SE 0,019; p 0,57)
+- Havuzlu: −0,005 (SE 0,010; p 0,63)
+
+**Ön kayıtlı okuma:** medyan R ≥ 0,1 ve kapalı döngü ΔSR anlamlı negatif değil → **blok eylemi etkiliyor ama değer üretmiyor.**
+
+**Betimsel (kuralın parçası değil):**
+- Bilgili blok (PC060) ile bilgisiz blok (DTF) aynı duyarlılığı alıyor (R 0,50–0,82). Politika bloğa eşit boyutlu bir teknik blok kadar duyarlı.
+- Gelecek bilgisini karıştırmak Sharpe'ı değiştirmiyor (SE 0,01). Bu, bloğun bilgi olarak değil gürültü gibi işlendiğiyle tutarlı.
+- A2C'nin mutlak duyarlılığı çok düşük (eylem normunun %2–5'i), PPO'nunki %23–36.
+
+**§9.37–9.39 birlikte (keşifsel; neden kanıtlanmadı):**
+- PC060'ın RL'siz ulaşılabilir değeri MDE'yi aşıyor (a).
+- Eski ortamın politikaları bloğa tepki veriyor, ama bloktaki bilgiden değer üretmiyor (b).
+- M0'daki boş Q2/Q3 sonucu, bu boru hattında (P4 eşlemesi, ~420 boyutlu düz gözlem, 200k adım, rota hiperparametreleri) **öğrenmenin bilgiyi ayıklayamamasıyla** tutarlı.
+- Bunlar Faz 10 S-obs tasarım girdisidir: tahmin sinyali ajan başına yerel gözlemde ve normalize edilmiş biçimde verilmeli. Sinyal ödülle hizası (t → t+1) ve öğrenme bütçesi ayrıca sınanmalı.
+- **Sınırlama:** argmax modelleri, yalnız 2022–2026 katları; `last_checkpoint`'e doğrudan genellenmez; tek permütasyon tohumu.
+
 ---
 
 ## Versiyon geçmişi
@@ -2234,3 +2342,5 @@ Maliyet: [review-panel.md](review-panel.md).
 - **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
 - **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.
 - **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.
+- **2026-11-16 (§9.38, pozitif kontrol (a)):** Ön kayıt `fe65b0b`, ardından ölçüm. PC060 ile RL'siz kural portföyü 2021'de 1/N'i +0,46 yıllık Sharpe geçiyor (eşik 0,43, az farkla); 6 katta +0,44 (eşik 0,17). Okuma: sinyalin değeri MDE'yi aşıyor; RL'nin almaması boru hattı/öğrenme açıklamasını destekler (kanıt değil). Sıradaki (b).
+- **2026-11-16 (§9.39, pozitif kontrol (b)):** Ön kayıt `b25012b`, ardından ölçüm. 100 argmax modeli (2022–2026), doğruluk kapısı 100/100. Medyan R 0,50–0,82; PC060 bloğu karıştırılınca ΔSR ≈ 0 (havuzlu −0,005, SE 0,010). Okuma: blok eylemi etkiliyor ama değer üretmiyor. (a) + (b) → S-obs tasarım girdisi.

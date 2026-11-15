@@ -320,6 +320,7 @@ Vision §3.5'in F2 (RLlib) tavsiyesi bu yüzden spike sonucuna bağlanır (§6 K
 - **Eksik hücre:** panelde tüm sembollerin dolu olmadığı 69 gün var (2013-08..2020-12); spike bunları attı, M2 ortamı atmak yerine hücre başına işlem maskesi tutmalı.
 - **Eşit bütçe (M4):** varsayılan ayarlarda politika parametresi `none` (BenchMARL MLP) 77.314, `attn` 27.906; ±%10 kuralı için boyutlar ayarlanmalı.
 - **Sürüm:** TorchRL 0.7.2 PettingZoo 1.24.3 ile test edilmiş; 1.27 uyarı veriyor → 1.24.3 sabit.
+- **S-obs (Faz 9 §9.37–9.39; keşifsel):** eski ortamda PC060'ın RL'siz değeri MDE'yi aşıyor, ama politikalar tahmin bloğundan değer üretmiyor. Bloğa eşit boyutlu bir teknik blok kadar duyarlılar; bilgi karıştırılınca ΔSR ≈ 0. Yeni ortamda sinyal ajan başına yerel gözlemde ve normalize edilmiş biçimde verilmeli. Sinyal ufku ile ödül hizası (t → t+1, K12'de t+1 açılış yürütme sinyali kaydırır) ve öğrenme bütçesi tasarımda ayrıca sınanmalı; pozitif kontrol (PC060) yeni ortamda da kurulmalı.
 
 ### 3.3 Karar mekanizması
 
