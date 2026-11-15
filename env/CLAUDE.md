@@ -109,6 +109,13 @@ Rota (`app/api/routes/trading.py`), HPO (`hyperparameter_optimization/`) ve `eva
   - Olcum betigi: `scripts/analysis/measure_price_scale.py`; JSON'lar
     `docs/development/measurements/phase9-b9/` (panel SHA-256 + commit iceriyor).
   - Testte CPU'ya zorlamak icin `CUDA_VISIBLE_DEVICES=-1`: Windows'ta bos dize degiskeni SILER.
+- **PSR Sharpe terimi (Faz 9 G1):** `TradingEnv(sharpe_term='ema_level'|'differential')`, yalniz
+  `reward_type='psr'`. Varsayilan 'ema_level' = EMA Sharpe DUZEYI (egitilmis modeller; "diferansiyel
+  Sharpe" DEGIL, Y2); 'differential' = Moody & Saffell D_t. Rota/HPO istek alani `sharpe_term`;
+  kayit `config.sharpe_term`, HPO farkli terimle aradiysa `hpo_reward_mismatch`. Tanim metni
+  `docs/thesis/reward-definition.md` (G3) — odulu degistirirsen onu da ayni commit'te guncelle.
+  **Not:** `test_price_stats_window`'un main bit-esligi odul modulunu SINAMAZ (calisma kopyasindan
+  import); odul icin `tests/test_reward_differential.py` [0].
 - **ADX (K18):** `stock_data_with_indicators.csv`'deki ADX legacy hesabin sabit 0'idir (indeks
   hizalama hatasi; eski modeller boyle egitildi). Rota ADX'i `with_adx(df, 'wilder')` ile
   yeniden hesaplar ve meta'ya `indicator_spec` yazar. CSV'yi yeniden URETME: eski modeller ve

@@ -107,6 +107,10 @@ class TradingEnv(gym.Env):
         price_norm_window: Optional[int] = CAUSAL_WINDOW,
         price_context: Optional[pd.DataFrame] = None,
         price_norm_macd: bool = False,
+        # Faz 9 / G1: PSR odulundeki Sharpe terimi (yalniz reward_type='psr').
+        #   'ema_level'    (varsayilan, egitilmis modeller): EMA Sharpe DUZEYI (Y2)
+        #   'differential' : Moody & Saffell (2001) D_t — env/reward_functions.py
+        sharpe_term: str = 'ema_level',
     ):
         """
         Args:
@@ -182,6 +186,12 @@ class TradingEnv(gym.Env):
         # Reward calculator instance
         from env.reward_functions import RewardCalculator, SimpleRewardCalculator
 
+        if sharpe_term not in RewardCalculator.SHARPE_TERMS:
+            raise ValueError(f"sharpe_term {sharpe_term!r} bilinmiyor: {RewardCalculator.SHARPE_TERMS}")
+        if reward_type != 'psr' and sharpe_term != 'ema_level':
+            raise ValueError("sharpe_term yalniz reward_type='psr' ile anlamli")
+        # Kayitlar icin: 'simple' odulde Sharpe terimi yok (None)
+        self.sharpe_term = sharpe_term if reward_type == 'psr' else None
         if reward_type == 'psr':
             if reward_weights:
                 # Convert float values to int where needed for RewardCalculator
@@ -191,9 +201,9 @@ class TradingEnv(gym.Env):
                         int_weights[k] = int(v)
                     else:
                         int_weights[k] = v
-                self.reward_calculator = RewardCalculator(**int_weights)
+                self.reward_calculator = RewardCalculator(**int_weights, sharpe_term=sharpe_term)
             else:
-                self.reward_calculator = RewardCalculator()  # Use defaults
+                self.reward_calculator = RewardCalculator(sharpe_term=sharpe_term)  # Use defaults
             logger.info(f"Using PSR reward with weights: {self.reward_calculator.get_weights()}")
         else:
             self.reward_calculator = SimpleRewardCalculator()

@@ -296,7 +296,9 @@ class BaseHyperparameterOptimizer:
                         # rotanin kaydiyla ayni anahtarlar: soy kiyaslamasi bunlardan (R1)
                         'indicator_spec': self.indicator_spec,
                         'price_norm': base_train.get_price_norm() if base_train is not None else None,
-                        **settings},
+                        **settings,
+                        # G1: ortamdan olculur ('simple' odulde None) — istekten degil
+                        'sharpe_term': getattr(base_train, 'sharpe_term', None)},
                 seed=self.seed,
                 status=status,
                 metrics=metrics or {},

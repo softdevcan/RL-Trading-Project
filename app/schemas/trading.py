@@ -74,6 +74,14 @@ class TrainingRequest(BaseModel):
         description="With price_norm='causal': keep the legacy tanh(macd/0.1) (default) or "
                     "also scale MACD by the causal std (opt-in, decision K26)",
     )
+    # Faz 9 / G1: PSR odulundeki Sharpe terimi (yalniz faz 2 = PSR). 'ema_level' eski
+    # tanim (EMA Sharpe duzeyi; egitilmis modeller), 'differential' Moody & Saffell D_t.
+    # K4: Milestone 0' on elemesinde ikisi de denenir; secim deneme kaydina girer.
+    sharpe_term: Literal["ema_level", "differential"] = Field(
+        default="ema_level",
+        description="Sharpe term of the PSR reward (phase 2 only): 'ema_level' (legacy EMA "
+                    "Sharpe level) or 'differential' (Moody & Saffell 2001 D_t; G1)",
+    )
     # Faz 9 / R1: walk-forward kati. Pencereler oranla degil `evaluation/splits.py`'deki
     # sabit tarihli tanimdan gelir. None = panelin tamamen kapsadigi EN SON kat.
     fold: Optional[str] = Field(

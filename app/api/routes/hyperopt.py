@@ -203,6 +203,7 @@ async def run_optimization_background(
             split_spec=request.split_spec,
             price_norm=request.price_norm,
             price_norm_macd=request.price_norm_macd,
+            env_settings={'sharpe_term': request.sharpe_term},  # G1
             show_progress_bar=False,  # Disable for background
         )
 
@@ -327,6 +328,10 @@ async def start_optimization(
         _resolve_fold(request)
     except KeyError as exc:
         raise HTTPException(status_code=400, detail=str(exc).strip('"'))
+    # Faz 9 / G1: Sharpe terimi yalniz PSR odulunde var; sessizce yok sayilmaz.
+    if request.sharpe_term != "ema_level" and request.reward_type != "psr":
+        raise HTTPException(status_code=400,
+                            detail="sharpe_term yalniz reward_type='psr' ile kullanilabilir")
     try:
         # Create unique study ID
         study_id = str(uuid.uuid4())

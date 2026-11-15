@@ -343,7 +343,7 @@ def fundamentals_pit(env) -> Optional[bool]:
 def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = None,
                 train_seed: Optional[int] = None, symbols: Optional[list] = None,
                 split_digest: Optional[str] = None, obs_config: Optional[dict] = None,
-                directory: Optional[str] = None):
+                reward_config: Optional[dict] = None, directory: Optional[str] = None):
     """Hiperparametre SOYU (R1; Faz 9 §9.6 #14'un kayit tarafi).
 
     `hpo_study_protocol`'un bulduklarina ek olarak, HPO calismasinin kayitlarindan
@@ -356,6 +356,9 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
       hpo_universe_mismatch — HPO baska bir sembol evreninde (ya da sirasinda) aradi
       hpo_split_mismatch — HPO baska bir bolme tanimi kullandi
       hpo_obs_mismatch — HPO baska bir gozlem tanimiyla aradi (price_norm, gostergeler)
+      hpo_reward_mismatch — HPO baska bir odul tanimiyla aradi (reward_type, sharpe_term;
+          Faz 9 G1). `sharpe_term` anahtari olmayan PSR kaydi G1 oncesidir: o zaman tek
+          tanim vardi, 'ema_level' sayilir.
 
     Returns: (temiz_mi, acik_maddeler). Kayit bulunamazsa (None, [neden]).
     """
@@ -384,6 +387,14 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
             for key, want in obs_config.items():
                 if cfg.get(key) != want:
                     found.add('hpo_obs_mismatch')
+        if reward_config is not None:
+            for key, want in reward_config.items():
+                got = cfg.get(key)
+                if (key == 'sharpe_term' and key not in cfg
+                        and cfg.get('reward_type') == 'psr'):
+                    got = 'ema_level'
+                if got != want:
+                    found.add('hpo_reward_mismatch')
     out = sorted(found)
     return (not out), out
 

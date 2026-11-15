@@ -1440,7 +1440,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 
 **Faz 9'un kapanışı** Milestone 0' protokolünün dondurulmasıdır: kod, veri ve ön kayıt maddeleri hazırdır, koşumlar başlayabilir. Milestone 0' koşumları, golden yenilemesi (K1) ve sonuçlarının hakem-2 incelemesi kapanıştan sonra gelir.
 
-**Kapsam: kullanıcı onayı bekliyor (öneri, 2026-11-15).** İnceleme düzeni kullanıcı kararıdır (aşağıda).
+**Kapsam: kullanıcı onayladı (2026-11-15).** İnceleme düzeni de kullanıcı kararıdır (aşağıda).
 
 **(1) Kapanışa kadar yapılacaklar (sırayla)**
 
@@ -1487,6 +1487,52 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - Sonnet uzmanlar dar kapsamda yeterli. K18'de hakem-rl 3 BÜYÜK, R1'de hakem-finans 2 BÜYÜK bulgu buldu.
   - Hakem-2 (opus) uzmanların kaçırdığını buldu: K18'de 4 yeni bulgu, E'de bir kuralın öncülündeki mantık hatası. Bu yüzden paketler arası tutarlılık ve iddia–kanıt denetimi tek seferlik opus incelemesinde kalır.
 - **Beklenen maliyet** (tahmin, ölçüm değil): 4 sonnet koşumu (~60 bin token) ve 1 kapsamlı hakem-2 (~150–200 bin), toplam ~0,4–0,45 milyon token. Eski düzende (her pakette uzman + hakem-2 + ikinci okuma) aynı paketler için ~1,2–1,4 milyon.
+
+### 9.23 G1 + G3 — Moody-Saffell diferansiyel Sharpe, ödül tanımı; nakit faizi kararı (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Kaynak (tam metin okundu).** Moody & Saffell (2001), IEEE TNN 12(4), s.4, denklem 13–16; yazar sürümü Zotero `JV7QAJNU`. PDF'in metin katmanı bozuk; sayfalar görüntü olarak okundu. Formül, planın ikincil kaynaktan aldığı ifadeyle aynı: Dₜ = (Bₜ₋₁ΔAₜ − ½Aₜ₋₁ΔBₜ)/(Bₜ₋₁ − Aₜ₋₁²)^{3/2}. Risksiz faiz fazla getiri olarak girer (R̃ₜ = Rₜ − R^fₜ).
+
+**G1 ([reward_functions.py](../../env/reward_functions.py), [trading_env.py](../../env/trading_env.py)).** `sharpe_term = 'ema_level' | 'differential'`, yalnız `reward_type='psr'`.
+- `'ema_level'` varsayılan ve eski tanım (EMA Sharpe düzeyi, Y2). Eğitilmiş modeller değişmez.
+- `'differential'` için Dₜ fazla getiri üzerinde hesaplanır, aynı tanh(·/2) sıkıştırmasıyla. Ham Dₜ `sharpe_raw` bileşeninde.
+- Tasarım varsayımları:
+  - İlk 1/η adımda Dₜ = 0 (EMA ısınması).
+  - Varyans ≤ 10⁻¹² ya da sonlu olmayan Dₜ durumunda 0.
+  - Sıkıştırma ortak: iki terim yalnız iç büyüklükte ayrışır (K4).
+- Bağlantılar:
+  - Rota: `TrainingRequest.sharpe_term`; faz 2 dışında 400 döner.
+  - HPO: `OptimizationRequest.sharpe_term`; `reward_type≠'psr'` ise 400 döner.
+  - Ortamdan ölçülen `config.sharpe_term` deneme kaydına, manifeste ve meta'ya `reward` olarak yazılır.
+  - `hpo_lineage(reward_config=)`: HPO başka bir terimle aradıysa `hpo_reward_mismatch` döner. Anahtarı olmayan PSR kaydı G1 öncesidir ve `'ema_level'` sayılır.
+- **Davranış etkisi:** yeni `config.sharpe_term` anahtarı yapılandırma özetini değiştirir. G1 öncesi ve sonrası aynı yapılandırma kayıtta ayrı görünür; R1 öncesi kayıtlar zaten açık.
+
+**Kabul** `python tests/test_reward_differential.py` → **19/0**.
+- **[0]** Varsayılan, main'deki `reward_functions.py` ile bit-eş: ödül ve bileşenler, reset dahil, iki yapılandırma. Üretim kodunda geçici mutasyon (`tanh(dsr/2.000001)`) bu kontrolü kırdı, sonra geri alındı.
+- **[1]** Denklem 13 (Sₜ − Sₜ₋₁ = η·Dₜ + O(η²)). Medyan göreli hata: η = 1/30'da 0,0129, η = 1/300'de 0,00136; oran ≈ 9,5, yani η ile doğrusal. Yüksek ortalamalı seride 0,0181 / 0,00160. İki mutasyon kırılıyor:
+  - EMA Sharpe düzeyi (Y2): 5,84;
+  - ½ yerine +½: 0,62, yüksek ortalamalı seride.
+
+  İşaret mutasyonu düşük ortalamalı seride yakalanmıyordu (0,12): Aₜ₋₁ küçükken ½·A·ΔB terimi D'ye katkı vermiyor. Bu yüzden ayrı seri kullanıldı.
+- **[2]** Denklem 16 sonlu farkla (göreli < 10⁻⁵). **[3]** Fazla getiri. **[4]** Isınma ve reset. **[5]** Ortam ve geçersiz değerler. **[6]** Soy.
+
+**Bulgu (tümleyen bekçi).** `test_price_stats_window`'un "main ile bit-eş" kontrolü `trading_env.py`'yi git'ten yüklüyor. Ama o modül `env.reward_functions`'ı çalışma kopyasından içe aktarıyor, yani ödül modülünü sınamıyor. Ödül için bekçi [0] eklendi; `env/CLAUDE.md`'de not var.
+
+**Diğer testler** (CPU):
+- `test_price_stats_window` 106/0. İlk koşu cp1254 konsol kodlamasında emojide düştü; ortam sorunu, `PYTHONIOENCODING=utf-8` ile geçti.
+- `test_rl_walk_forward` 90/0, `test_rl_reproducibility` 39/0, `test_k18_obs_health` 109/0, `test_env_missing_mode` 17/0, `test_psr_integration` geçti.
+- Env bekçileri (hook) geçti.
+
+**G3 ([reward-definition.md](../thesis/reward-definition.md)).** Ödülün kodla aynı terimlerle tek tanım metni. Seminer belgelerindeki "Differential Sharpe (DSR)" adı yanlış; belgeler Mayıs 2026 anlık görüntüsü olduğu için değiştirilmedi, tez kuralına not düşüldü. Koddan okunurken bulunan, beyan edilecek iki nokta:
+1. **Komisyon iki kez sayılıyor.** Vₜ komisyonu içeriyor, cₜ onu bir kez daha düşüyor; paydası da başlangıç bakiyesi. Basit ödülde de aynı.
+2. **Hedef işlem sıklığı** (T = 50 / 100 adım) kaynaksız bir tasarım sabiti.
+
+Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek kez girer (Faz 10 §3.2.1).
+
+**Nakit faizi (kullanıcı kararı, 2026-11-15): yalnız beyan** (§9.2 #7, §9.12 F2). K26 ile aynı gerekçe: eski ortam sadık Ansari replikasyonu kalır; `sharpe_rf0` fazla getiri Sharpe'ıyla birlikte raporlanır. Yeni ortamda nakit A8 serisiyle (t−1) faiz kazanır; Faz 10 §3.2.1'e M2 tasarım maddesi olarak yazıldı.
+
+**G2** (ödülde risksiz faizin A8'e bağlanması) §9.22 madde 6'da, D ile birlikte.
+
+**İnceleme:** İ1 (hakem-rl, sonnet).
 
 ---
 
@@ -1536,4 +1582,5 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.21, E1 oturum 3):** 54/54 çeyrek duyurusu (`/node/<id>` yönlendirmesiyle). Izgara ayrıştırıcı (rowspan, iç içe tablo). `bist30_changes.csv` (94 değişiklik) ve mekanik ad → kod tablosu (10 ad, kullanıcı denetiminde). Zincir 2018-01-02'den bugüne tutarlı ama doğruluk kanıtı değil; 2015–2018'de 4 ihlal (dönem içi olaylar). Borsa İstanbul sitesinde dönem içi kaynak yok, KAP listelemesi izin bekliyor. `universe_mask`. `test_universe` 20.
 - **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.
 - **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.
-- **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (öneri, kullanıcı onayı bekliyor): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
+- **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (kullanıcı onayladı): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
+- **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 19. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu.
