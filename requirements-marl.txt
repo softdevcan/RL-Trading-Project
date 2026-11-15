@@ -1,0 +1,9 @@
+# Faz 10 M1 cerceve spike'i icin AYRI ortam (K9): venv-marl/ (gitignore). Uretim kodu bu paketlere bagimli olmaz.
+# Kurulum (depo kokunde):  py -3.12 -m venv venv-marl
+#   venv-marl\Scripts\python -m pip install -r requirements-marl.txt --extra-index-url https://download.pytorch.org/whl/cu124
+# torch surumu ana venv ile ayni (olcut 7: mevcut torch CUDA kurulumuyla cakismama). Cozumleme 2026-11-15, pip --dry-run.
+torch==2.6.0+cu124
+torchrl==0.7.2
+tensordict==0.7.2
+benchmarl==1.4.0
+pettingzoo==1.24.3  # torchrl 0.7.2 bu surumle test edilmis (pettingzoo.py uyarisi)
