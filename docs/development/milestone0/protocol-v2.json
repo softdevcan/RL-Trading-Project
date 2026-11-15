@@ -1,0 +1,68 @@
+{
+ "protocol_id": "m0p-v2",
+ "status": "TASLAK — hakem-2 kisa okumasi ve kullanici onayiyla dondurulur; dondurulunca bu dosya ve doc DEGISMEZ (kosum betigi SHA'larini deftere baglar)",
+ "doc": "docs/development/milestone0-protocol-v2.md",
+ "supersedes": "m0p-v1 (etiket m0-protocol-v1; HIC kosulmadi, sonuc gorulmedi). Neden: v1 1.512 egitim / ~226-509 sa idi; asil soru (tahmin RL'ye yarar mi) icin orantisiz (kullanici, 2026-11-15)",
+ "questions": [
+  "Q1 baseline: tek ajan (Ansari uyarlamasi) BIST-30'da ne yapiyor (DT kolu, PPO ve A2C)",
+  "Q2 tahmin katkisi: DT <-> DTF (dogrulayici)",
+  "Q3 kontrol: bilgili bir sinyal (PC060) ayni P4 eslemesiyle RL'ye ulasirsa fark cikiyor mu (Q2'deki bos sonucu yorumlamak icin)"
+ ],
+ "factors": {
+  "algorithm": ["PPO", "A2C"],
+  "reward": ["simple"],
+  "price_norm": ["causal"],
+  "prediction": ["DT", "DTF", "PC060"]
+ },
+ "reward_levels": {
+  "simple": {"phase": 1, "source": "Ansari uyarlamasi basit odul (reward-definition.md §3); faz 1 durum uzayi (temel oran/makro yok -> fundamentals_pit acigi yok)"}
+ },
+ "prediction_levels": {
+  "DT": {"table": null, "table_sha256": null},
+  "DTF": {"table": "pit_v1_seed42", "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9", "mapping": "P4 v1 (plan §9.32)"},
+  "PC060": {"table": "pc_auc060", "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651", "positive_control": true, "achieved_auc": 0.6019}
+ },
+ "hyperparameters": {
+  "_source": "rota sabitleri (d3d2fce, R1 oncesi acik pencerelerle secildi; beyan, kullanici karari 2026-11-15); kayitta config.effective_hyperparameters, betik her hucrede karsilastirir",
+  "PPO": {"learning_rate": 0.0003, "n_steps": 2048, "batch_size": 64, "n_epochs": 10, "gamma": 0.99, "gae_lambda": 0.95,
+          "clip_range": 0.2, "ent_coef": 0.15, "vf_coef": 0.5, "max_grad_norm": 0.5},
+  "A2C": {"learning_rate": 0.0007, "n_steps": 256, "gamma": 0.99, "gae_lambda": 0.95, "ent_coef": 0.01, "vf_coef": 0.25,
+          "max_grad_norm": 0.5, "normalize_advantage": true, "use_rms_prop": true, "rms_prop_eps": 1e-05}
+ },
+ "fixed": {"split_spec": "wf-v1", "initial_balance": 1000000, "commission_rate": 0.001, "max_shares_per_trade": 100,
+           "device": "cpu", "parallel_processes": 8, "thread_env": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1",
+           "registry_analysis": "load_trials(exclude_tags=('spike',)) — protocol_open DAHIL (eski ortamin her kaydi acik)"},
+ "unexposed_folds": ["2021"],
+ "exposure_note": "2021 test penceresi 2026-11-15'te bir duman kosusuyla BIR KEZ okundu (PPO, faz 1, stats, DT, 20000 adim; metriklere bakilmadi; kayit 'spike', plan §9.34). Okunmus pencere 2022-07-18..2026-08-28 (EXPOSED_EVAL_WINDOWS).",
+ "expected": {"panel_sha256": {"causal": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89"}},
+ "stages": {
+  "main": {
+   "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
+   "seeds": [1001, 1002, 1003, 1004, 1005],
+   "total_timesteps": 200000,
+   "note": "on eleme ve budama YOK: tum yapilandirmalar (2 x 3 = 6) tek asamada; 6 x 6 kat x 5 tohum = 180 egitim"
+  }
+ },
+ "inference": {
+  "primary_metric": "A8 risksiz faiz ustu, maliyet (20 bps gidis-donus) sonrasi nominal TL gunluk getiriden yillik Sharpe",
+  "unit": "yapilandirma x tohum: katlarin orneklem disi gunluk getirileri birlestirilmis seri (K20)",
+  "selection_rule": "last_checkpoint (argmax_validation kayitlari kesifsel)",
+  "confirmatory_family": [
+   {"name": "DT_vs_DTF", "contrast": "prediction DT <-> DTF, ayni algoritma ve tohum",
+    "test": "A3 HAC Sharpe farki iki tarafli + esdegerlik TOST", "tost_margin_sharpe_annual": 0.5}
+  ],
+  "aggregation": "tek test: her algoritmada (2 eslesik yapilandirma) 5 tohumun gunluk getirisi ortalanir; istatistik iki algoritmanin yillik Sharpe farklarinin esit agirlikli ortalamasi; SE birlesik seriden (iki farkin gunluk ortalamasi) HAC (A3)",
+  "confirmatory_window": "2021 kati + on kayit sonrasi ileri veri; 2021 tek basina dusuk guclu (measurements/phase9-m0/mde.json; ~1 yillik Sharpe farkindan kucugu tespit edilemez)",
+  "alpha": 0.05,
+  "exploratory": "DT_vs_DTF tum 6 katta; PC060 <-> DT (pozitif kontrol; dogrulayici aileye GIRMEZ, sinyal etiketten); PPO <-> A2C; argmax <-> son nokta; rejim (B6 USD birincil); baseline (D; ustunluk cikarimi YOK)",
+  "result_table_footnote": "ZORUNLU: exposure_note; evren hayatta kalan dondurulmus panel 30'u; eski ortam protokolde acik (obs_health, K26=a)",
+  "cannot_claim": "pozitif kontrol olmadan 'tahmin katki vermez'; RL'nin piyasayi/XU030/1N'yi yendigi; BIST-30 bilesenlerine genelleme"
+ },
+ "smoke": {"fold": "2024", "algorithm": "PPO", "reward": "simple", "price_norm": "causal", "seed": 101},
+ "budget": {
+  "measurement": "2026-11-15 duman kosulari, CPU, 30 sembol, 20000 adim, 2024 kati, OMP_NUM_THREADS=1; deneme kaydina yazilmadi",
+  "parallel_8_wall_seconds_per_20k": {"PPO_phase1": 42, "A2C_phase1": 32},
+  "seconds_per_200k_run": {"PPO": {"phase1": 307}, "A2C": {"phase1": 222}},
+  "estimate": "180 egitim, 8 paralel surec: PPO 12 grup x ~420 sn + A2C 12 grup x ~320 sn ~ 2,4 sa duvar suresi"
+ }
+}

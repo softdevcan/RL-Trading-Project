@@ -29,6 +29,7 @@ import io
 import itertools
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -36,7 +37,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
-DEFAULT_PROTOCOL = os.path.join('docs', 'development', 'milestone0', 'protocol-v1.json')
+# m0p-v2 (yalin; 2026-11-15) m0p-v1'in yerine gecti — v1 HIC kosulmadi; v1 dosyalari ve etiketi tarihsel olarak kalir.
+DEFAULT_PROTOCOL = os.path.join('docs', 'development', 'milestone0', 'protocol-v2.json')
 FACTOR_KEYS = ('algorithm', 'reward', 'price_norm', 'prediction')
 
 
@@ -201,10 +203,54 @@ def read_ledger(path: str, header: dict):
     return done
 
 
+def worker_env(wdir: str, protocol: dict) -> dict:
+    """Isci ortami: kendi RESULTS/MODELS/LOGS dizini, CPU, tek is parcacigi; P tablolari isciye kopyalanir
+    (SHA her hucrede yine denetlenir)."""
+    import shutil
+    from app.auth import workspace as ws
+    src = os.path.join(ws.results_dir(), 'predictions_pit')
+    dst = os.path.join(wdir, 'results', 'predictions_pit')
+    os.makedirs(dst, exist_ok=True)
+    for lv in protocol['prediction_levels'].values():
+        if lv.get('table'):
+            for ext in ('.parquet', '.json'):
+                f = os.path.join(src, lv['table'] + ext)
+                if os.path.exists(f) and not os.path.exists(os.path.join(dst, lv['table'] + ext)):
+                    shutil.copy2(f, dst)
+    env = dict(os.environ)
+    for k, sub in (('RESULTS_DIR', 'results'), ('MODELS_DIR', 'models'), ('LOGS_DIR', 'logs'),
+                   ('HYPEROPT_DIR', 'hyperopt')):
+        env[k] = os.path.join(wdir, sub)
+    env.update(CUDA_VISIBLE_DEVICES='-1', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1',
+               PYTHONIOENCODING='utf-8')
+    return env
+
+
+def merge_worker_ledgers(path: str, wroot: str, done: dict) -> dict:
+    """Isci defterlerindeki, ana defterde olmayan kayitlari ana deftere ekler. Doner: eklenen {hucre: kayit}.
+    Analiz icin deneme kayitlari isci dizinlerinde kalir (her kayit `results_dir` tasir); N = birlesim."""
+    import glob
+    new = {}
+    for wl in sorted(glob.glob(os.path.join(wroot, 'w*', 'ledger.jsonl'))):
+        with open(wl, encoding='utf-8') as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                if r['cell'] in done or r['cell'] in new:
+                    continue
+                new[r['cell']] = r
+    if new:
+        with open(path, 'a', encoding='utf-8', newline='\n') as fh:
+            for r in new.values():
+                fh.write(json.dumps(r, default=str) + '\n')
+    return {k: v for k, v in new.items() if v.get('state') == 'completed'} if new else {}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--protocol', default=DEFAULT_PROTOCOL)
-    ap.add_argument('--stage', default='prescreen')
+    ap.add_argument('--stage', default=None, help='varsayilan: protokoldeki ilk asama')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--print-input-shas', action='store_true')
     ap.add_argument('--smoke', action='store_true')
@@ -214,7 +260,24 @@ def main():
     ap.add_argument('--limit', type=int, default=None)
     ap.add_argument('--user', default=None, help='calisma alani (workspaces/<id>); yoksa kok results/')
     ap.add_argument('--allow-gpu', action='store_true')
+    ap.add_argument('--workers', type=int, default=None, help='paralel isci (varsayilan protokol fixed.parallel_processes)')
+    ap.add_argument('--scratch', action='store_true', help='mekanizma denemesi: tum ciktilar gecici dizinde')
+    ap.add_argument('--max-steps', type=int, default=None, help='yalniz --scratch ile: kisa adim')
+    ap.add_argument('--worker-cells', default=None, help=argparse.SUPPRESS)
+    ap.add_argument('--worker-ledger', default=None, help=argparse.SUPPRESS)
     a = ap.parse_args()
+    if a.max_steps is not None and not (a.scratch or a.worker_cells):
+        raise SystemExit('--max-steps yalniz --scratch ile (gercek kayda kisa egitim yazilmaz)')
+    if a.scratch:
+        import shutil
+        import tempfile
+        real_pit = os.path.join(ROOT, 'results', 'predictions_pit')
+        tmp = tempfile.mkdtemp(prefix='m0_scratch_')
+        for k, sub in (('MODELS_DIR', 'models'), ('RESULTS_DIR', 'results'), ('LOGS_DIR', 'logs'),
+                       ('HYPEROPT_DIR', 'hyperopt')):
+            os.environ[k] = os.path.join(tmp, sub)
+        shutil.copytree(real_pit, os.path.join(tmp, 'results', 'predictions_pit'))
+        print(f'scratch: ciktilar {tmp} altina (deneme kaydina girmez)', flush=True)
     if a.smoke:
         # Duman kosusu deneme kaydina (N, DSR) ve model dizinine YAZMAZ: ayarlar yuklenmeden once ciktilar
         # gecici dizine; P tablolari okunabilsin diye kok tablo dizini kopyalanmaz, smoke DT'de kosar.
@@ -226,6 +289,7 @@ def main():
         print(f'duman: ciktilar {tmp} altina (deneme kaydina girmez)', flush=True)
     protocol, sha = load_protocol(a.protocol)
     doc_sha = file_sha(protocol['doc'])
+    a.stage = a.stage or next(iter(protocol['stages']))
     from app.auth import workspace as ws
     with ws.use_workspace(a.user) if a.user else contextlib.nullcontext():
         if a.print_input_shas:
@@ -258,29 +322,68 @@ def main():
             r['verify'] = verify_trial(r['trial_id'], c, protocol) if r['state'] == 'completed' else None
             print(json.dumps({'cell': cell_key(c), 'device': device, 'steps': steps, **r,
                               'seconds_per_step': per_step,
-                              'extrapolated_run_seconds': round(per_step * protocol['stages']['prescreen']['total_timesteps'])},
+                              'extrapolated_run_seconds': round(per_step * protocol['stages'][a.stage]['total_timesteps'])},
                              indent=1, default=str))
             return
         st = protocol['stages'][a.stage]
+        steps = st['total_timesteps'] if a.max_steps is None else a.max_steps
+        if a.worker_cells:
+            # ISCI KIPI: kendi RESULTS/MODELS/LOGS dizininde (ana surec env ile verir), hucreleri sirayla kosar,
+            # kendi defterine yazar; uyusmazlikta durur. Kendi kayitlari ayri: model adi (saniye damgasi), deneme
+            # kaydi ve ETA gecmisi surecler arasi yarismaz.
+            with open(a.worker_cells, encoding='utf-8') as fh:
+                mine = json.load(fh)
+            for i, c in enumerate(mine):
+                r = run_cell(to_request(c, protocol, steps))
+                bad = verify_trial(r['trial_id'], c, protocol) if r['state'] == 'completed' else []
+                if bad:
+                    r['state'] = 'mismatch'
+                rec = {'cell': cell_key(c), **c, 'stage': a.stage, **r, 'mismatch': bad, 'device': device,
+                       'results_dir': os.environ.get('RESULTS_DIR'), 'ts': time.strftime('%Y-%m-%dT%H:%M:%S')}
+                with open(a.worker_ledger, 'a', encoding='utf-8', newline='\n') as fh:
+                    fh.write(json.dumps(rec, default=str) + '\n')
+                print(f"[w {i + 1}/{len(mine)}] {rec['cell']} -> {r['state']} ({r['seconds']} sn)", flush=True)
+                if bad:
+                    raise SystemExit(f'Kayit protokolle uyusmuyor, isci durdu: {bad}')
+            return
         grid = list(cells(protocol, a.stage))
         verify_inputs(protocol)
         path = ledger_path(protocol)
         done = read_ledger(path, {'protocol_sha256': sha, 'protocol_doc_sha256': doc_sha, 'device': device,
-                                  'created': time.strftime('%Y-%m-%dT%H:%M:%S')})
+                                  'created': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                  **({'max_steps_override': a.max_steps} if a.max_steps else {})})
+        wroot = os.path.join(os.path.dirname(path), 'workers')
+        done.update(merge_worker_ledgers(path, wroot, done))
         todo = [c for c in grid if cell_key(c) not in done]
-        print(f'{a.stage}: {len(grid)} hucre, tamamlanmis {len(done)}, kalan {len(todo)} -> {path}')
-        for i, c in enumerate(todo[:a.limit] if a.limit else todo):
-            r = run_cell(to_request(c, protocol, st['total_timesteps']))
-            bad = verify_trial(r['trial_id'], c, protocol) if r['state'] == 'completed' else []
-            if bad:
-                r['state'] = 'mismatch'
-            rec = {'cell': cell_key(c), **c, 'stage': a.stage, **r, 'mismatch': bad, 'device': device,
-                   'ts': time.strftime('%Y-%m-%dT%H:%M:%S')}
-            with open(path, 'a', encoding='utf-8', newline='\n') as fh:
-                fh.write(json.dumps(rec, default=str) + '\n')
-            print(f"[{i + 1}] {rec['cell']} -> {r['state']} ({r['seconds']} sn) trial {r['trial_id']}", flush=True)
-            if bad:
-                raise SystemExit(f'Kayit protokolle uyusmuyor, kosum durdu: {bad}')
+        todo = todo[:a.limit] if a.limit else todo
+        n_w = max(1, min(a.workers or protocol['fixed'].get('parallel_processes', 1), len(todo) or 1))
+        print(f'{a.stage}: {len(grid)} hucre, tamamlanmis {len(done)}, bu cagri {len(todo)}, isci {n_w} -> {path}',
+              flush=True)
+        if not todo:
+            return
+        procs = []
+        for k in range(n_w):
+            part = todo[k::n_w]
+            if not part:
+                continue
+            wdir = os.path.join(wroot, f'w{k}')
+            env = worker_env(wdir, protocol)
+            cfile = os.path.join(wdir, f"cells_{time.strftime('%Y%m%d_%H%M%S')}.json")
+            with open(cfile, 'w', encoding='utf-8', newline='\n') as fh:
+                json.dump(part, fh)
+            cmd = [sys.executable, os.path.abspath(__file__), '--protocol', a.protocol, '--stage', a.stage,
+                   '--worker-cells', cfile, '--worker-ledger', os.path.join(wdir, 'ledger.jsonl')]
+            if a.max_steps:
+                cmd += ['--max-steps', str(a.max_steps)]
+            log = open(os.path.join(wdir, 'worker.log'), 'a', encoding='utf-8')
+            procs.append((k, subprocess.Popen(cmd, env=env, stdout=log, stderr=subprocess.STDOUT), log))
+        for k, p, log in procs:
+            p.wait()
+            log.close()
+            print(f'isci w{k} bitti (kod {p.returncode})', flush=True)
+        new = merge_worker_ledgers(path, wroot, done)
+        bad = [r for r in new.values() if r.get('state') != 'completed']
+        print(f'birlestirildi: {len(new)} yeni kayit, tamamlanmamis {len(bad)}', flush=True)
 
 
 if __name__ == '__main__':
