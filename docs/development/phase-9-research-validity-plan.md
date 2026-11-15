@@ -4,6 +4,24 @@
 **Dayanak:** [vision-and-scope.md v0.2](../thesis/vision-and-scope.md), [literature-review-verification.md](../thesis/literature-review-verification.md), [roadmap.md → Bilinen Metodolojik Açıklar](roadmap.md#bilinen-metodolojik-açıklar-planlanmadı), indirilen tam metinler ([../reference/papers/README.md](../reference/papers/README.md))
 **Kapsam:** Literatür doğrulamasında bulunan açıkların kapatılması, tez deneylerinin istatistiksel altyapısı ve MARL aşamasının (Milestone 2–3) literatüre dayalı tasarım kararları.
 
+**Adlandırma (2026-11-15).** Harf iş paketini, rakam paketteki maddeyi gösterir: **G1** = G paketinin 1. maddesi.
+
+| Ön ek | Anlamı | Nerede |
+|---|---|---|
+| A–G | İş paketleri: A istatistik çekirdeği, B sızıntı kapatma, C tekrar üretim, D baseline ve raporlama, E evren ve sektör, F tahmin güveni ve kalibrasyon, G ödül | §4 |
+| V, R1, P | Sonradan eklenen paketler: V veri bütünlüğü, R1 RL walk-forward ve seçim, P nokta-zamanlı tahmin tablosu | Faz 10 §3.1.3, §6 K17, K20 |
+| Y | Yeni bulgu (Y1–Y31) | §2, Faz 10 §1.2, §9 |
+| K | Faz 10 §6'daki kullanıcı kararı (K1–K26) | Faz 10 §6 |
+| M | MARL tasarım kararı (M1–M8) | §5 |
+| S1–S4 | Bilinen sızıntı kaynakları | roadmap.md |
+| H1–H4 | Ön kayıttaki hipotezler | §5 M8 |
+| İ1–İ3 | Faz 9 kapanışındaki uzman inceleme noktaları | §9.22 |
+
+**Çakışan adlar.**
+- **G1–G5** vision-and-scope §2.5'te özgünlük boşluklarıdır; §2 Y7 ve §5 M4–M5'teki "G1/G2" bu anlamdadır. G paketinin G1'i (Moody-Saffell ödülü) ile karıştırılmamalı.
+- **K** üç yerde geçer: Faz 10 §6'daki kararlar (K1–K26), Faz 10 §3.3'teki karar katmanı bileşenleri (K1–K10) ve bu plandaki Makale 2 kolları (K0–K4).
+- **S1–S3** Faz 10 §4'te plandan sapmalardır, sızıntı kaynakları değil.
+
 ---
 
 ## 0. Özet
@@ -1416,6 +1434,60 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
       Ek gözlem: TEKFEN HOLDİNG eşlemesinde `year_gap` 6; kullanıcı denetiminde bu satıra özellikle bakılmalı.
     - **Kabul** `test_universe` 33/0 (ağsız).
 
+### 9.22 Faz 9 kapanış kapsamı ve inceleme düzeni (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Neden.** Plan 2026-11-06'da onaylandı. 9 günde A, C, V, B1–B3, B7–B11, K18, R1, E0 ve E2 bitti (§9.1–§9.21). Aynı sürede 21 yeni bulgu (Y11–Y31) ve hakem incelemelerinden bir açık iş kuyruğu birikti. Bunların bir kısmı tez iddiasını değiştirmiyor. Kalan her madde tek bir soruyla sınıflandı: **bu madde yapılmazsa H1–H4 (M8) ya da Makale 2'nin bir iddiası savunulamaz hâle gelir mi?**
+
+**Faz 9'un kapanışı** Milestone 0' protokolünün dondurulmasıdır: kod, veri ve ön kayıt maddeleri hazırdır, koşumlar başlayabilir. Milestone 0' koşumları, golden yenilemesi (K1) ve sonuçlarının hakem-2 incelemesi kapanıştan sonra gelir.
+
+**Kapsam: kullanıcı onayı bekliyor (öneri, 2026-11-15).** İnceleme düzeni kullanıcı kararıdır (aşağıda).
+
+**(1) Kapanışa kadar yapılacaklar (sırayla)**
+
+| # | Madde | Neden gerekli | İnceleme |
+|---|---|---|---|
+| 1 | **G1 + G3**, nakit faizi kararıyla (§9.2 #7, §9.12 F2) | Y2: tezdeki "diferansiyel Sharpe" adı kodla uyuşmuyor. K4: Milestone 0' iki terimi de istiyor | İ1 |
+| 2 | **B6** önceden tanımlı rejim etiketi | Y3. H4 ve M6 bunu kullanıyor | İ2 |
+| 3 | **F1–F4** güven, kalibrasyon, ECE/Brier, `p_up_raw` | G2/H3 ("kalibre güven") ve M5'in kalibresiz kolu (F4) | İ2 (P hesaplamasından önce) |
+| 4 | HPO sampler tohumu (§9.11 bulgu 3) | C1/C2 tekrar üretim | Yok (test) |
+| 5 | **P1–P3** ve K19 (Y26) | Y14: Milestone 0' DT/DTF ablasyonu ve M5 girdisi | İ3 |
+| 6 | **D1, D3, D4** ve A8 sabitlerinin bağlanması | Baseline (1/N, al-tut, XU030). Yüksek enflasyonda reel/USD getiri birimi. Maliyet ızgarası. Tek kaynak risksiz faiz | İ3 |
+| 7 | **E1** dönem içi olaylar (`bist30_events.csv`) | K3, süre 2026-11-28. KAP erişimi kullanıcı kararı; erişilemezse ölçülen geçici kapsamla beyan | Kapanış kapısı |
+| 8 | Milestone 0' protokolünün dondurulması | Faz 9'un çıktısı | Kapanış kapısı |
+
+**(2) Faz 9'dan ayrılan:** **B5** (nedensel ICEEMDAN) Milestone 0''ın kritik yolunda değil. Yalnız Makale 2'nin K2/K3 kollarının ön koşulu. Makale 2 deneylerinden önce yapılır, incelemesi de o pakette olur (hakem-finans). Maliyeti ölçüldü (§9.14).
+
+**(3) Beyanla kapanan (sınırlılık).** Kapanış kapısında hakem-2 bu listeyi okur.
+- **A2:** AR(1) kayıp farkında boyut %7,6 (§9.1). DM sonuçları `lag='auto'` ile ve bu boyutla birlikte raporlanır.
+- **B0 tek dosya:** kesme değişmezliği paket başına ölçüldü (§9.7, §9.9, §9.11). Makale 2'nin motivasyon şekli B5'le gelir.
+- **B4 tahmin tarafı:** temel oran grubu tez deneylerinde kapalı. RL tarafında `fundamentals_pit` açık.
+- **§9.4 açıkları:** #4 vintage, #5 aylık politika faizinin ölçüm hatası, #9 TÜİK takvimi, #12 aynı gün FX, #14 `pit_version`. #6 (risksiz faiz serisinin gerekçesi) tez metninde kaynakla yazılır.
+- **C1 GPU belirlenimciliği** (§9.6 #5): Milestone 0' koşum ortamı kayda geçer; bit-eşlik yalnız CPU'da iddia edilir.
+- **V:** \|r\| > %20 olan 13 hücre sınıflandırılmadı.
+
+**(4) Sonraya kalan**
+- **D2** (MinVar/HRP): Milestone 0' sonrası, gerekirse.
+- **D5** (LaTeX): yazım aşaması.
+- **Y30, Y31:** ürün tarafı, tez sonucu değil.
+- **K13** canlı karar paritesi: Faz 10 karar katmanı.
+- R1'in M8'e bağlı maddeleri (çıkarım birimi, MDE, argmax ↔ son nokta): zaten M8'de.
+
+**İnceleme düzeni (kullanıcı kararı, 2026-11-15).** Hakem-2 her pakette değil, bir kez kapanışta çalışır. Uzman hakemler pahalı bir işin girdisini üreten paketlerde çalışır.
+
+| Nokta | Kapsam | Hakem (model) | Ne zaman |
+|---|---|---|---|
+| İ1 | G1 + G3 + nakit faizi | hakem-rl (sonnet) | G birleşmeden önce |
+| İ2 | F1–F4 + B6 | hakem-finans (sonnet) | P hesaplamasından önce |
+| İ3 | P + D1/D3/D4 + A8 sabitleri | hakem-finans + hakem-rl (sonnet, paralel) | Milestone 0' koşumlarından önce |
+| **Kapanış kapısı** | §9.22'nin tamamı, uzman tabloları, beyan listesi, Milestone 0' protokolü | **hakem-2 (opus)**, bir kez | Faz 9 kapanışında |
+
+- **İkinci okuma** (aynı hakem, SendMessage) yalnız BÜYÜK bulgu varsa yapılır. KÜÇÜK bulgular düzeltilir ve kapanış paketinde listelenir.
+- **İncelemesiz maddeler:** testin bozulan üretim koduna karşı kırıldığı gösterilir (mutasyon) ve öz-kontrol yapılır. Kapanış kapısında hakem-2 bunları örnekleyerek okur.
+- **Model gerekçesi** (maliyet kaydı, [review-panel.md](review-panel.md)):
+  - Sonnet uzmanlar dar kapsamda yeterli. K18'de hakem-rl 3 BÜYÜK, R1'de hakem-finans 2 BÜYÜK bulgu buldu.
+  - Hakem-2 (opus) uzmanların kaçırdığını buldu: K18'de 4 yeni bulgu, E'de bir kuralın öncülündeki mantık hatası. Bu yüzden paketler arası tutarlılık ve iddia–kanıt denetimi tek seferlik opus incelemesinde kalır.
+- **Beklenen maliyet** (tahmin, ölçüm değil): 4 sonnet koşumu (~60 bin token) ve 1 kapsamlı hakem-2 (~150–200 bin), toplam ~0,4–0,45 milyon token. Eski düzende (her pakette uzman + hakem-2 + ikinci okuma) aynı paketler için ~1,2–1,4 milyon.
+
 ---
 
 ## Versiyon geçmişi
@@ -1464,3 +1536,4 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.21, E1 oturum 3):** 54/54 çeyrek duyurusu (`/node/<id>` yönlendirmesiyle). Izgara ayrıştırıcı (rowspan, iç içe tablo). `bist30_changes.csv` (94 değişiklik) ve mekanik ad → kod tablosu (10 ad, kullanıcı denetiminde). Zincir 2018-01-02'den bugüne tutarlı ama doğruluk kanıtı değil; 2015–2018'de 4 ihlal (dönem içi olaylar). Borsa İstanbul sitesinde dönem içi kaynak yok, KAP listelemesi izin bekliyor. `universe_mask`. `test_universe` 20.
 - **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.
 - **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.
+- **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (öneri, kullanıcı onayı bekliyor): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.

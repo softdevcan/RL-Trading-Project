@@ -15,9 +15,17 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 |---|---|---|---|
 | `hakem-finans` | sonnet | Nokta-zamanlılık, BIST gerçekliği, maliyet ve yürütme, risksiz faiz ve fazla getiri, Sharpe çıkarımı, baseline | Finansal iddia, metrik ya da veri hattı değişikliği |
 | `hakem-rl` | sonnet | MDP ve ödül, eğitim bütçesi, HPO ↔ nihai eğitim, değerlendirme protokolü, tohum, RL'ye özgü sızıntı, MARL | Env, ödül, eğitim ya da değerlendirme protokolü değişikliği |
-| `hakem-2` | opus | Son kapı. Uzman bulgularını doğrular; iddia–kanıt, iç tutarlılık, özgünlük, rakam izi ve tekrar üretimi denetler | Her paket |
+| `hakem-2` | opus | Son kapı. Uzman bulgularını doğrular; iddia–kanıt, iç tutarlılık, özgünlük, rakam izi ve tekrar üretimi denetler | Faz kapanış kapısı ve teze/makaleye girecek sonuç (2026-11-15'ten beri; önceden her paket) |
 
-**Plan paketlerine önerilen eşleme:**
+**Kademeli düzen (kullanıcı kararı, 2026-11-15; Faz 9 §9.22).** Hakem-2 her pakette çalışmaz. Kurallar:
+- Uzmanlar (sonnet) yalnız **pahalı bir işin girdisini üreten** pakette çağrılır: veri hattı, ödül, kalibrasyon, tahmin tablosu, baseline. Pahalı iş P hesaplaması ya da Milestone 0' koşumlarıdır. Hata o iş başlamadan bulunmalı.
+- **Hakem-2 (opus) fazın kapanışında bir kez** çalışır. Kapanış paketi uzman tablolarını, beyan listesini ve protokolü birlikte verir. Paketler arası tutarlılık ve iddia–kanıt denetimi burada yapılır.
+- **İkinci okuma yalnız BÜYÜK bulguda** yapılır. KÜÇÜK bulgular düzeltilip kapanış paketinde listelenir.
+- **Hakemsiz paket:** testin bozulan üretim koduna karşı kırıldığı gösterilir (mutasyon) ve öz-kontrol yapılır. Kapanışta hakem-2 bunları örnekleyerek okur.
+- **Gerekçe** (aşağıdaki kayıt): sonnet uzmanlar dar kapsamda BÜYÜK bulgular buldu (K18'de 3, R1'de 2). Hakem-2 uzmanların kaçırdığını buldu (K18'de 4 yeni bulgu, E'de bir kuralın öncülü). Opus tek seferlik kapıda tutulur.
+- Faz 9'un kalan noktaları (İ1–İ3 + kapanış) §9.22'de.
+
+**Plan paketlerine eşleme** (2026-11-15'ten önceki düzen; B7–E için tarihsel kayıt):
 
 | Paket | Panel |
 |---|---|
@@ -25,10 +33,11 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | B8, B10 | hakem-finans + hakem-2 |
 | K18 (+ K25) | hakem-rl + hakem-2 |
 | R1 | hakem-rl + hakem-finans + hakem-2 |
-| D, E, F | hakem-finans + hakem-2 |
-| G | hakem-rl + hakem-finans + hakem-2 |
-| P | hakem-finans + hakem-rl + hakem-2 |
-| M (MARL) | hakem-rl + hakem-2 |
+| E | hakem-2 |
+| G (İ1) | hakem-rl → kapanışta hakem-2 |
+| F + B6 (İ2) | hakem-finans → kapanışta hakem-2 |
+| P + D (İ3) | hakem-finans + hakem-rl → kapanışta hakem-2 |
+| M (MARL) | hakem-rl paket başına; hakem-2 Milestone kapılarında |
 
 ## Akış
 
