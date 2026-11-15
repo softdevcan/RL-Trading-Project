@@ -2018,6 +2018,38 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 ---
 
+### 9.35 Faz 9 kapanışı: Milestone 0' protokolü donduruldu (2026-11-15, dal `docs/m0-protocol-freeze`)
+
+**Kapanış kapısı, ikinci okuma (hakem-2):**
+- 15 bulgunun 14'ü kapandı.
+- Kalan BÜYÜK #5 (doğrulayıcı testin tanımı) bu sürümde sabitlendi:
+  - Test kaydı `last_checkpoint`.
+  - Kıyas başına tek test: tohum ortalamalı seri, 6 eşleşik yapılandırmanın Sharpe farklarının eşit ağırlıklı ortalaması, HAC SE.
+  - TOST sınırı sabit ±0,5 yıllık Sharpe.
+- Hakemin kararı: "düzeltilince Kabul, yeni okuma gerekmez".
+- Küçük notlar Y1 (kolların seçimi ön eleme puanıyla), Y2 (zorunlu dipnot `exposure_note`) ve Y3 (anahtar adı) işlendi.
+- Maliyet: [review-panel.md](review-panel.md).
+
+**Kullanıcı kararları (2026-11-15):**
+- Bütçe (b): budamayı TD3 kazanırsa nihai TD3 ile koşar; maliyet duyarlılığı ve pozitif kontrol ikinci sıradaki algoritmayla koşar ve ayrı raporlanır.
+- TOST ±0,5.
+
+**Donduruldu:**
+- [milestone0-protocol.md](milestone0-protocol.md) (r3), SHA-256 `c5f5d3d9…df55b`.
+- [milestone0/protocol-v1.json](milestone0/protocol-v1.json), SHA-256 `9b87b3dc…eeae1`.
+- Araştırma etiketi `m0-protocol-v1`.
+- Koşum betiği iki SHA'yı deftere bağlar; değişirse koşmaz.
+- Dry-run: ön eleme 432 eğitim, ölçülen hızla ~104 sa tek süreç.
+
+**§9.22 kapanış listesi:** 8/8 kapandı (7. madde E1 beyanla). **Faz 9 kapandı.**
+
+**Kapanıştan sonra (Faz 9'a sayılmaz):**
+1. Golden'ın bir kez yenilenmesi (K1, GPU) ve MAJOR sürüm.
+2. Milestone 0' ön elemesi (`CUDA_VISIBLE_DEVICES=-1 python scripts/run_milestone0.py --stage prescreen`), budama, `protocol-v1-final.json`, nihai, maliyet, pozitif kontrol.
+3. Sonuçların hakem-2 incelemesi.
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -2078,3 +2110,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.32, P4 + E1 kapanışı):** P tablosu → eski `TradingEnv` tahmin arayüzü (kullanıcı kararı; env kodu değişmez, maskeli hücre nötr). Env varsayılanı eksik hücrede yönü −1 yapıyordu (adaptör bunu önlüyor). Gerçek tabloda %97,6 dolu; getiri ve güven gözlemi sıfıra yakın, yön ikili ve tam ölçekli (M8 beyanı). E1 ölçülen geçici kapsamla beyanla kapandı. `test_pit_table` 31.
 - **2026-11-15 (§9.33, Milestone 0' protokolü taslak):** m0p-v1 protokolü ve koşum betiği. Rota P tablosunu alıyor (DTF); M8 son nokta test kaydı eklendi. `.env` KAP anahtarları `Settings`'i bozuyordu (düzeltildi). 2021 katı ön elemede koşulmaz. Bütçe ölçümü ~127 sa tek süreç. `test_rl_walk_forward` 98.
 - **2026-11-15 (§9.34, kapanış kapısı):** hakem-2 Büyük revizyon (8 BÜYÜK). 2021 test penceresi bir duman koşusuyla bir kez okundu (beyan, `spike` kaydı). Protokol r2: ön eleme 2023–2026, son nokta puanı, doğrulayıcı aile, MDE (2021 tek başına ≳ 1 yıllık Sharpe), K4 ölçek eşitlemesi (k 0,165), pozitif kontrol (AUC 0,55 / 0,60), gerçek hiperparametreler kayıtta ve betikte denetleniyor, panel/tablo SHA zorlanıyor. Açık pencerede de bilgi yok (blok içi 0,502). Bütçe ~226–649 sa tek süreç (kullanıcı kararı). `test_pit_table` 33.
+- **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
