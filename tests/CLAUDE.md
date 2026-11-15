@@ -100,4 +100,6 @@ python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut ell
 python tests/test_rl_walk_forward.py       # Faz 9/R1 + P4 + M8 secim kurali: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit; rota P tablosuyla (DTF), argmax + son nokta iki test kaydi (98, ~1 dk)
+python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
+                                           #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

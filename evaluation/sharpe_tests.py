@@ -215,3 +215,57 @@ def sharpe_diff_bootstrap(
         'n_boot': int(n_boot),
         'method': 'studentized circular block bootstrap',
     }
+
+
+# ----------------------------------------------------------------------------
+# Birlestirilmis (havuzlu) Sharpe farki — Milestone 0' m0p-v2 dogrulayici testi
+# ----------------------------------------------------------------------------
+
+def sharpe_diff_hac_pooled(pairs, prewhiten: bool = True, margin=None) -> dict:
+    """K eslesik ciftin Sharpe farklarinin ESIT AGIRLIKLI ortalamasi, ortak delta yontemiyle HAC.
+
+    pairs: [(r1_k, r2_k), ...]; her cift ayni tarihlerde (tum ciftler de ayni tarihlerde).
+    Istatistik  D = (1/K) sum_k Delta_k   (donem basi Sharpe farki, Delta_k = SR(r1_k) - SR(r2_k)).
+    Standart hata: y_t = [y_t^(1) ... y_t^(K)] (4K sutun, her cift icin Ledoit-Wolf y'si) ortak HAC
+    (`hac_psi`), gradyan g = (1/K) [g^(1) ... g^(K)];  s(D) = sqrt(g' Psi g / T).
+    Bu, D'nin etki fonksiyonunun (ciftlerin dogrusallastirilmis farklarinin gunluk ortalamasi) HAC
+    varyansidir: m0p-v2 `inference.aggregation`'daki "SE birlesik seriden HAC" kuralinin uygulamasi.
+    K = 1'de `sharpe_diff_hac` ile ayni sonucu verir.
+
+    margin: esdegerlik TOST siniri (donem basi Sharpe; yillik m icin m / sqrt(252)). Verilirse iki tek
+    tarafli test (H0: D <= -margin, H0: D >= margin) ve p_tost = max(p_alt, p_ust) doner.
+    """
+    if not pairs:
+        raise ValueError("En az bir cift gerekli")
+    arrs = [(np.asarray(a, dtype=float), np.asarray(b, dtype=float)) for a, b in pairs]
+    shape = arrs[0][0].shape
+    if any(a.shape != shape or b.shape != shape for a, b in arrs):
+        raise ValueError("Tum ciftler ayni tarihlerde, ayni uzunlukta olmali")
+    m = np.ones(shape, dtype=bool)
+    for a, b in arrs:
+        m &= np.isfinite(a) & np.isfinite(b)
+    if m.sum() < 30:
+        raise ValueError(f"En az 30 eslesmis gozlem gerekli, {int(m.sum())} var")
+    arrs = [(a[m], b[m]) for a, b in arrs]
+    K, T = len(arrs), int(m.sum())
+    deltas, grads, ys = [], [], []
+    for a, b in arrs:
+        u = _u_hat(a, b)
+        deltas.append(_delta(u))
+        grads.append(_grad(u))
+        ys.append(_y(a, b, u))
+    D = float(np.mean(deltas))
+    g = np.concatenate(grads) / K
+    psi = hac_psi(np.column_stack(ys), prewhiten=prewhiten)
+    se = float(np.sqrt(g @ psi @ g / T))
+    z = D / se
+    out = {
+        'delta': D, 'deltas': [float(d) for d in deltas], 'se': se, 'stat': float(z),
+        'p_value': float(2.0 * stats.norm.sf(abs(z))), 'n': T, 'k_pairs': K,
+        'method': ('HAC (prewhitened QS)' if prewhiten else 'HAC (QS)') + ', ortak delta yontemi',
+    }
+    if margin is not None:
+        p_lo = float(stats.norm.sf((D + margin) / se))   # H0: D <= -margin
+        p_hi = float(stats.norm.cdf((D - margin) / se))  # H0: D >= margin
+        out.update(margin=float(margin), p_tost_lower=p_lo, p_tost_upper=p_hi, p_tost=max(p_lo, p_hi))
+    return out
