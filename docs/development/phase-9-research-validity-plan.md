@@ -1881,6 +1881,46 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 ---
 
+### 9.32 P4 — P tablosu → eski RL ortamı (Milestone 0' DTF kolu); E1 kapanış beyanı (2026-11-15, dal `feat/phase9-p4-env-adapter`)
+
+**Neden.** §9.22 madde 8 ("kod hazır") denetlenirken bulundu: P tablosu hiçbir RL akışına bağlı değildi. `prediction_features=` ile `TradingEnv` çağıran kod yok (Y14'ün ortam tarafı). Milestone 0''ın DT/DTF ablasyonu bu yüzden koşamazdı. **Kullanıcı kararı (2026-11-15):** P4 plana eklendi, önerilen eşlemeyle yapıldı.
+
+**Eşleme** (`prediction/pit_table.py::env_prediction_features`, durum uzayı yapısı ve env kodu değişmez):
+
+| Env alanı | P tablosundan | Env dönüşümü (`trading_env.py`) |
+|---|---|---|
+| `predicted_return` | `pred_logret` (3 GBM ortalaması) | `tanh(x·10)` |
+| `predicted_direction` | 1[`p_up_cal` ≥ 0,5] | `2x − 1` |
+| `confidence` | max(`p_up_cal`, 1 − `p_up_cal`) | `2x − 1` |
+| `ensemble_agreement` | GBM'lerden işareti bu yönle aynı olanların payı (0, ⅓, ⅔, 1) | `2x − 1` |
+| `meta_ok` yok / tabloda yok | nötr (0; 0,5; 0,5; 0,5) | 4 alan da 0 |
+
+- **Bulgu (env varsayılanı):** tahmini olmayan hücrede env yönü 0 alıyor ve −1'e (DOWN) çeviriyor. Adaptör her (gün, sembol) hücresini açıkça doldurduğu için bu varsayılana hiç düşmüyor. Env kodu davranış dondurma gereği değişmedi. Mutasyon testi, bir hücre silinince env'in −1 verdiğini gösteriyor.
+
+**Gerçek tabloda ölçüm** ([p4_env_features.json](measurements/phase9-p/p4_env_features.json); tablo SHA'sı `pit_v1.json` ile aynı; 30 sembol, 2013-06-03..2026-11-09):
+- 100.950 hücrenin %97,6'sı dolu. Nötr hücrelerin nedenleri: `insufficient_history` 1.097, `meta_insufficient` 915, `no_features` 356, `no_data` 75. Tabloda olmayan hücre 0.
+- Gözlemdeki dinamik aralık (p01 / medyan / p99): getiri `tanh(10x)` −0,033 / 0,005 / 0,044; güven `2c−1` 0,0001 / 0,007 / 0,094. **İkisi de sıfıra yakın.**
+- **Yön özelliği ikili ve tam ölçekli.** Bilgisiz bir `p_up_cal`'ı (blok içi AUC 0,501, §9.31) 0,5 eşiğinde ±1'e çeviriyor; UP oranı 0,416. Ajan bu gürültüye tam ölçekli bir girdi olarak tepki verebilir.
+- **M8 beyanı:** DTF kolu bilgisiz bir sinyalle koşar. DT ↔ DTF farkı için boş sonuç beklenir; bir fark çıkarsa önce yön özelliğinin gürültü etkisi düşünülür. Pozitif kontrol kolu (§9.30 R2) bu ayrımı sınar. Yön için `p_up_cal`'ı sürekli kullanan bir alternatif eski env'in 4 alan yapısıyla da mümkün (ör. yön = `p_up_cal`). Bu yeni bir karar olur; kapanış kapısında hakem-2'ye soru olarak gider.
+
+**Kabul:** `test_pit_table` **31/0**:
+- Her hücre dolu ve sayımlar toplamla tutuyor.
+- `meta_ok` hücresinde eşleme elle doğrulandı. Maskeli hücre nötr ve nedeni sayılıyor.
+- Adaptör B0: t ve öncesi bit-eş, sonrası farklı.
+- Env uçtan uca: gözlemin tahmin dilimi, adaptör değerinin env dönüşümüne eşit.
+- Mutasyon: eksik hücrede env varsayılanı −1.
+
+**Kapsam sınırı:** adaptör hazır, ama eğitim rotası ve HPO'da P tablosu seçme parametresi yok. Milestone 0' koşum betiği (protokol dondurmasında) adaptörü doğrudan çağıracak. Rota/HPO bağlantısı yalnız pano için gerekirse sonra yapılır.
+
+**E1 — kapanış beyanı (kullanıcı kararı 2026-11-15: üretim KAP erişimi yok, ölçülen geçici kapsamla beyan).** §9.22 madde 7 bu beyanla kapanır.
+- Tarihsel BIST 30 üyeliği **geçici**: `bist30_membership_meta.json` `status`.
+- **Katı kapsam 0:** OTKAR, ECILC, SKBNK aralıkları açık uçlu. `count_checked` (sezgisel, yalnız sayı denetimi) 2018-04-02'den itibaren; panelin %78,45'i endekste (SKBNK'ya koşullu 0,8179; §9.21).
+- **Dönem içi olay denetimi yalnız 2023 için** yapıldı (KAP test geçidi): XU030 olayı 0. Çeyreklik duyurular Borsa İstanbul arşiviyle 4/4 uyumlu (§9.31).
+- 2015–2018 dönem içi olaylar (hakem-2: 2017-06..2018-05'te ~4 olay; #11503 DOHOL dipnot adayı) **doğrulanmadı**.
+- **Sonuç için anlamı:** evren hayatta kalan, dondurulmuş panel 30'u (K7). Tarihsel üyelik maskesi tez sonuçlarında kullanılmaz, yalnız maruziyet beyanında geçer. Baseline üstünlük çıkarımı yapılmaz (§9.30 F3).
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -1938,3 +1978,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.29, D):** 1/N aylık, al-tut, XU030; nominal / TÜFE-reel / USD; 0–50 bps ızgara. 0,02 sabitleri kaldırıldı; ödülün 0,15'i eski ortamda beyan, G2 yeni ortamda. `test_baselines` 20.
 - **2026-11-15 (§9.30, İ3):** hakem-finans Büyük (çıkarım katmanı), hakem-rl Küçük. Kapı v2: blok içi havuzlu AUC 0,501 (sıralama bilgisi tespit edilmedi), MDE aile 0,554. Reel/USD Sharpe aylık. M8'e: S-msg boş sonuç beyanı, pozitif kontrol kolu, P tohumları. hakem-finans ikinci okuması bekliyor.
 - **2026-11-15 (§9.31, İ3 ikinci okuma):** hakem-finans Küçük revizyon. Kapı duyarlılıkları (çapa kümesi ve 63 seans bootstrap, eşit kapanış dışı, Bonferroni, MDE dağılımı): havuzlu 0,511'in anlamlılığı eşit kapanış sayımına bağlı (eşitsiz 0,503, p 0,18); blok içi sonuç değişmedi. Ad → kod eşlemesi ve H3/M5 (P v1 + pozitif kontrol + 2018+ makro alt deneyi) kullanıcı kararı. KAP VYK API istemcisi; test geçidi yalnız 2023: dönem içi XU030 olayı 0, çeyreklik duyurular arşivle 4/4 uyumlu (2017–2018 yok). `test_pit_table` 25, `test_universe` 36.
+- **2026-11-15 (§9.32, P4 + E1 kapanışı):** P tablosu → eski `TradingEnv` tahmin arayüzü (kullanıcı kararı; env kodu değişmez, maskeli hücre nötr). Env varsayılanı eksik hücrede yönü −1 yapıyordu (adaptör bunu önlüyor). Gerçek tabloda %97,6 dolu; getiri ve güven gözlemi sıfıra yakın, yön ikili ve tam ölçekli (M8 beyanı). E1 ölçülen geçici kapsamla beyanla kapandı. `test_pit_table` 31.

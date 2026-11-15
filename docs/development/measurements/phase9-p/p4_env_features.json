@@ -1,0 +1,42 @@
+{
+ "commit": "747387b",
+ "table": "results\\predictions_pit\\pit_v1_seed42.parquet",
+ "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9",
+ "window": [
+  "2013-06-03",
+  "2026-11-09"
+ ],
+ "n_symbols": 30,
+ "report": {
+  "n_cells": 100950,
+  "counts": {
+   "ok": 98507,
+   "not_in_table": 0,
+   "no_data": 75,
+   "meta_insufficient": 915,
+   "no_features": 356,
+   "insufficient_history": 1097
+  },
+  "ok_rate": 0.97579990094106,
+  "env_obs_range": {
+   "predicted_return_tanh10": {
+    "p01": -0.03303611869268018,
+    "median": 0.004618394229526606,
+    "p99": 0.04370811337482493
+   },
+   "confidence_2c_minus_1": {
+    "p01": 0.00010684027932652552,
+    "median": 0.006819347679181131,
+    "p99": 0.09449311292242894
+   },
+   "direction_up_rate": 0.4161024089658603,
+   "agreement_levels": [
+    0.0,
+    0.3333,
+    0.6667,
+    1.0
+   ]
+  },
+  "mapping": "P4 v1 (plan \u00a79.32)"
+ }
+}
