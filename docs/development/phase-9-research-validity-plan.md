@@ -4,6 +4,24 @@
 **Dayanak:** [vision-and-scope.md v0.2](../thesis/vision-and-scope.md), [literature-review-verification.md](../thesis/literature-review-verification.md), [roadmap.md → Bilinen Metodolojik Açıklar](roadmap.md#bilinen-metodolojik-açıklar-planlanmadı), indirilen tam metinler ([../reference/papers/README.md](../reference/papers/README.md))
 **Kapsam:** Literatür doğrulamasında bulunan açıkların kapatılması, tez deneylerinin istatistiksel altyapısı ve MARL aşamasının (Milestone 2–3) literatüre dayalı tasarım kararları.
 
+**Adlandırma (2026-11-15).** Harf iş paketini, rakam paketteki maddeyi gösterir: **G1** = G paketinin 1. maddesi.
+
+| Ön ek | Anlamı | Nerede |
+|---|---|---|
+| A–G | İş paketleri: A istatistik çekirdeği, B sızıntı kapatma, C tekrar üretim, D baseline ve raporlama, E evren ve sektör, F tahmin güveni ve kalibrasyon, G ödül | §4 |
+| V, R1, P | Sonradan eklenen paketler: V veri bütünlüğü, R1 RL walk-forward ve seçim, P nokta-zamanlı tahmin tablosu | Faz 10 §3.1.3, §6 K17, K20 |
+| Y | Yeni bulgu (Y1–Y31) | §2, Faz 10 §1.2, §9 |
+| K | Faz 10 §6'daki kullanıcı kararı (K1–K26) | Faz 10 §6 |
+| M | MARL tasarım kararı (M1–M8) | §5 |
+| S1–S4 | Bilinen sızıntı kaynakları | roadmap.md |
+| H1–H4 | Ön kayıttaki hipotezler | §5 M8 |
+| İ1–İ3 | Faz 9 kapanışındaki uzman inceleme noktaları | §9.22 |
+
+**Çakışan adlar.**
+- **G1–G5** vision-and-scope §2.5'te özgünlük boşluklarıdır; §2 Y7 ve §5 M4–M5'teki "G1/G2" bu anlamdadır. G paketinin G1'i (Moody-Saffell ödülü) ile karıştırılmamalı.
+- **K** üç yerde geçer: Faz 10 §6'daki kararlar (K1–K26), Faz 10 §3.3'teki karar katmanı bileşenleri (K1–K10) ve bu plandaki Makale 2 kolları (K0–K4).
+- **S1–S3** Faz 10 §4'te plandan sapmalardır, sızıntı kaynakları değil.
+
 ---
 
 ## 0. Özet
@@ -247,6 +265,15 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
 - **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır; yüksek faizli doğrulama yıllarında negatif ortalama olağan, `picks_agree` raporlanır.
+- **Rejim etiketi (H4/M6; kullanıcı kararı 2026-11-15, hakem-finans İ2):**
+  - Birincil: USD bazlı XU100 (XU100_t / USDTRY_{t−1}), 200 günlük trend × 60 günlük vol, genişleyen tercil (`evaluation.regimes.load_primary_labels`).
+  - Duyarlılık kolları: nominal TL ve 5 yıllık kayan tercil. Kollar arası uyuşma raporlanır.
+  - Çıkarım katlar birleştirilerek, blok bootstrap ile yapılır. Ardışık bloklar bağımsız dönem sayılmaz (`episodes_min20`).
+- **Güven kolları (M5/H3; hakem-finans İ2):** "kalibre" sıfatı ve M5'in güven kolları yalnız bilgi kapısını geçen sembolde kullanılır. Kapı: T sınırda değil, BSS > 0 (taban oranı test dışından), AUC'nin blok bootstrap GA'sı 0,5'i dışlıyor. Kapı P tablosunda 30 hissede ölçülür; geçmeyen sembol "sıcaklık ölçekli, ayırt edici değil" diye raporlanır.
+- **Ödül terimi kıyası (K4; hakem-rl İ1, 2026-11-15):**
+  - `ema_level` ↔ `differential` aynı w₂ ile tek etkenli değil. Terimin ödüldeki oynaklığı gerçek panelde ~5,6 kat farklı (§9.23). Kol başına küçük bir w₂ ızgarası ya da ölçek eşitlemesi burada sabitlenir; ızgara N'ye sayılır.
+  - Ön eleme "G2 öncesi, r_f sabit" etiketini taşır.
+  - Sonuç tablosunda her kol için işlem sayısı, devir hızı ve komisyon payı yer alır (komisyon ödülde iki kez sayılıyor).
 - **Doğrulayıcı kanıt (R1; açık karar):** R1 öncesi okunmuş pencere 2022-07-18..2026-08-28 (`eval_window_unexposed`, Faz 9 §9.11); okunmamış tek kat 2021. Doğrulayıcı kanıtın tanımı (2021 katı + ön kayıt sonrası ileri veri; yeni ortam karşılaştırmalarının sayılışı) burada, K20 güç analiziyle birlikte karara bağlanır.
 
 ---
@@ -1416,6 +1443,400 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
       Ek gözlem: TEKFEN HOLDİNG eşlemesinde `year_gap` 6; kullanıcı denetiminde bu satıra özellikle bakılmalı.
     - **Kabul** `test_universe` 33/0 (ağsız).
 
+### 9.22 Faz 9 kapanış kapsamı ve inceleme düzeni (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Neden.** Plan 2026-11-06'da onaylandı. 9 günde A, C, V, B1–B3, B7–B11, K18, R1, E0 ve E2 bitti (§9.1–§9.21). Aynı sürede 21 yeni bulgu (Y11–Y31) ve hakem incelemelerinden bir açık iş kuyruğu birikti. Bunların bir kısmı tez iddiasını değiştirmiyor. Kalan her madde tek bir soruyla sınıflandı: **bu madde yapılmazsa H1–H4 (M8) ya da Makale 2'nin bir iddiası savunulamaz hâle gelir mi?**
+
+**Faz 9'un kapanışı** Milestone 0' protokolünün dondurulmasıdır: kod, veri ve ön kayıt maddeleri hazırdır, koşumlar başlayabilir. Milestone 0' koşumları, golden yenilemesi (K1) ve sonuçlarının hakem-2 incelemesi kapanıştan sonra gelir.
+
+**Kapsam: kullanıcı onayladı (2026-11-15).** İnceleme düzeni de kullanıcı kararıdır (aşağıda).
+
+**(1) Kapanışa kadar yapılacaklar (sırayla)**
+
+| # | Madde | Neden gerekli | İnceleme |
+|---|---|---|---|
+| 1 | **G1 + G3**, nakit faizi kararıyla (§9.2 #7, §9.12 F2) | Y2: tezdeki "diferansiyel Sharpe" adı kodla uyuşmuyor. K4: Milestone 0' iki terimi de istiyor | İ1 |
+| 2 | **B6** önceden tanımlı rejim etiketi | Y3. H4 ve M6 bunu kullanıyor | İ2 |
+| 3 | **F1–F4** güven, kalibrasyon, ECE/Brier, `p_up_raw` | G2/H3 ("kalibre güven") ve M5'in kalibresiz kolu (F4) | İ2 (P hesaplamasından önce) |
+| 4 | HPO sampler tohumu (§9.11 bulgu 3) | C1/C2 tekrar üretim | Yok (test) |
+| 5 | **P1–P3** ve K19 (Y26) | Y14: Milestone 0' DT/DTF ablasyonu ve M5 girdisi | İ3 |
+| 6 | **D1, D3, D4** ve A8 sabitlerinin bağlanması | Baseline (1/N, al-tut, XU030). Yüksek enflasyonda reel/USD getiri birimi. Maliyet ızgarası. Tek kaynak risksiz faiz | İ3 |
+| 7 | **E1** dönem içi olaylar (`bist30_events.csv`) | K3, süre 2026-11-28. KAP erişimi kullanıcı kararı; erişilemezse ölçülen geçici kapsamla beyan | Kapanış kapısı |
+| 8 | Milestone 0' protokolünün dondurulması | Faz 9'un çıktısı | Kapanış kapısı |
+
+**(2) Faz 9'dan ayrılan:** **B5** (nedensel ICEEMDAN) Milestone 0''ın kritik yolunda değil. Yalnız Makale 2'nin K2/K3 kollarının ön koşulu. Makale 2 deneylerinden önce yapılır, incelemesi de o pakette olur (hakem-finans). Maliyeti ölçüldü (§9.14).
+
+**(3) Beyanla kapanan (sınırlılık).** Kapanış kapısında hakem-2 bu listeyi okur.
+- **A2:** AR(1) kayıp farkında boyut %7,6 (§9.1). DM sonuçları `lag='auto'` ile ve bu boyutla birlikte raporlanır.
+- **B0 tek dosya:** kesme değişmezliği paket başına ölçüldü (§9.7, §9.9, §9.11). Makale 2'nin motivasyon şekli B5'le gelir.
+- **B4 tahmin tarafı:** temel oran grubu tez deneylerinde kapalı. RL tarafında `fundamentals_pit` açık.
+- **§9.4 açıkları:** #4 vintage, #5 aylık politika faizinin ölçüm hatası, #9 TÜİK takvimi, #12 aynı gün FX, #14 `pit_version`. #6 (risksiz faiz serisinin gerekçesi) tez metninde kaynakla yazılır.
+- **C1 GPU belirlenimciliği** (§9.6 #5): Milestone 0' koşum ortamı kayda geçer; bit-eşlik yalnız CPU'da iddia edilir.
+- **V:** \|r\| > %20 olan 13 hücre sınıflandırılmadı.
+
+**(4) Sonraya kalan**
+- **D2** (MinVar/HRP): Milestone 0' sonrası, gerekirse.
+- **D5** (LaTeX): yazım aşaması.
+- **Y30, Y31:** ürün tarafı, tez sonucu değil.
+- **K13** canlı karar paritesi: Faz 10 karar katmanı.
+- R1'in M8'e bağlı maddeleri (çıkarım birimi, MDE, argmax ↔ son nokta): zaten M8'de.
+
+**İnceleme düzeni (kullanıcı kararı, 2026-11-15).** Hakem-2 her pakette değil, bir kez kapanışta çalışır. Uzman hakemler pahalı bir işin girdisini üreten paketlerde çalışır.
+
+| Nokta | Kapsam | Hakem (model) | Ne zaman |
+|---|---|---|---|
+| İ1 | G1 + G3 + nakit faizi | hakem-rl (sonnet) | G birleşmeden önce |
+| İ2 | F1–F4 + B6 | hakem-finans (sonnet) | P hesaplamasından önce |
+| İ3 | P + D1/D3/D4 + A8 sabitleri | hakem-finans + hakem-rl (sonnet, paralel) | Milestone 0' koşumlarından önce |
+| **Kapanış kapısı** | §9.22'nin tamamı, uzman tabloları, beyan listesi, Milestone 0' protokolü | **hakem-2 (opus)**, bir kez | Faz 9 kapanışında |
+
+- **İkinci okuma** (aynı hakem, SendMessage) yalnız BÜYÜK bulgu varsa yapılır. KÜÇÜK bulgular düzeltilir ve kapanış paketinde listelenir.
+- **İncelemesiz maddeler:** testin bozulan üretim koduna karşı kırıldığı gösterilir (mutasyon) ve öz-kontrol yapılır. Kapanış kapısında hakem-2 bunları örnekleyerek okur.
+- **Model gerekçesi** (maliyet kaydı, [review-panel.md](review-panel.md)):
+  - Sonnet uzmanlar dar kapsamda yeterli. K18'de hakem-rl 3 BÜYÜK, R1'de hakem-finans 2 BÜYÜK bulgu buldu.
+  - Hakem-2 (opus) uzmanların kaçırdığını buldu: K18'de 4 yeni bulgu, E'de bir kuralın öncülündeki mantık hatası. Bu yüzden paketler arası tutarlılık ve iddia–kanıt denetimi tek seferlik opus incelemesinde kalır.
+- **Beklenen maliyet** (tahmin, ölçüm değil): 4 sonnet koşumu (~60 bin token) ve 1 kapsamlı hakem-2 (~150–200 bin), toplam ~0,4–0,45 milyon token. Eski düzende (her pakette uzman + hakem-2 + ikinci okuma) aynı paketler için ~1,2–1,4 milyon.
+
+### 9.23 G1 + G3 — Moody-Saffell diferansiyel Sharpe, ödül tanımı; nakit faizi kararı (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Kaynak (tam metin okundu).** Moody & Saffell (2001), IEEE TNN 12(4), s.4, denklem 13–16; yazar sürümü Zotero `JV7QAJNU`. PDF'in metin katmanı bozuk; sayfalar görüntü olarak okundu. Formül, planın ikincil kaynaktan aldığı ifadeyle aynı: Dₜ = (Bₜ₋₁ΔAₜ − ½Aₜ₋₁ΔBₜ)/(Bₜ₋₁ − Aₜ₋₁²)^{3/2}. Risksiz faiz fazla getiri olarak girer (R̃ₜ = Rₜ − R^fₜ).
+
+**G1 ([reward_functions.py](../../env/reward_functions.py), [trading_env.py](../../env/trading_env.py)).** `sharpe_term = 'ema_level' | 'differential'`, yalnız `reward_type='psr'`.
+- `'ema_level'` varsayılan ve eski tanım (EMA Sharpe düzeyi, Y2). Eğitilmiş modeller değişmez.
+- `'differential'` için Dₜ fazla getiri üzerinde hesaplanır, aynı tanh(·/2) sıkıştırmasıyla. Ham Dₜ `sharpe_raw` bileşeninde.
+- Tasarım varsayımları:
+  - İlk 1/η adımda Dₜ = 0 (EMA ısınması).
+  - Varyans ≤ 10⁻¹² ya da sonlu olmayan Dₜ durumunda 0.
+  - Sıkıştırma ortak: iki terim yalnız iç büyüklükte ayrışır (K4).
+- Bağlantılar:
+  - Rota: `TrainingRequest.sharpe_term`; faz 2 dışında 400 döner.
+  - HPO: `OptimizationRequest.sharpe_term`; `reward_type≠'psr'` ise 400 döner.
+  - Ortamdan ölçülen `config.sharpe_term` deneme kaydına, manifeste ve meta'ya `reward` olarak yazılır.
+  - `hpo_lineage(reward_config=)`: HPO başka bir terimle aradıysa `hpo_reward_mismatch` döner. Anahtarı olmayan PSR kaydı G1 öncesidir ve `'ema_level'` sayılır.
+- **Davranış etkisi:** yeni `config.sharpe_term` anahtarı yapılandırma özetini değiştirir. G1 öncesi ve sonrası aynı yapılandırma kayıtta ayrı görünür; R1 öncesi kayıtlar zaten açık.
+
+**Kabul** `python tests/test_reward_differential.py` → **19/0** (İ1 sonrası 22/0, aşağıda).
+- **[0]** Varsayılan, main'deki `reward_functions.py` ile bit-eş: ödül ve bileşenler, reset dahil, iki yapılandırma. Üretim kodunda geçici mutasyon (`tanh(dsr/2.000001)`) bu kontrolü kırdı, sonra geri alındı.
+- **[1]** Denklem 13 (Sₜ − Sₜ₋₁ = η·Dₜ + O(η²)). Medyan göreli hata: η = 1/30'da 0,0129, η = 1/300'de 0,00136; oran ≈ 9,5, yani η ile doğrusal. Yüksek ortalamalı seride 0,0181 / 0,00160. İki mutasyon kırılıyor:
+  - EMA Sharpe düzeyi (Y2): 5,84;
+  - ½ yerine +½: 0,62, yüksek ortalamalı seride.
+
+  İşaret mutasyonu düşük ortalamalı seride yakalanmıyordu (0,12): Aₜ₋₁ küçükken ½·A·ΔB terimi D'ye katkı vermiyor. Bu yüzden ayrı seri kullanıldı.
+- **[2]** Denklem 16 sonlu farkla (göreli < 10⁻⁵). **[3]** Fazla getiri. **[4]** Isınma ve reset. **[5]** Ortam ve geçersiz değerler. **[6]** Soy.
+
+**Bulgu (tümleyen bekçi).** `test_price_stats_window`'un "main ile bit-eş" kontrolü `trading_env.py`'yi git'ten yüklüyor. Ama o modül `env.reward_functions`'ı çalışma kopyasından içe aktarıyor, yani ödül modülünü sınamıyor. Ödül için bekçi [0] eklendi; `env/CLAUDE.md`'de not var.
+
+**Diğer testler** (CPU):
+- `test_price_stats_window` 106/0. İlk koşu cp1254 konsol kodlamasında emojide düştü; ortam sorunu, `PYTHONIOENCODING=utf-8` ile geçti.
+- `test_rl_walk_forward` 90/0, `test_rl_reproducibility` 39/0, `test_k18_obs_health` 109/0, `test_env_missing_mode` 17/0, `test_psr_integration` geçti.
+- Env bekçileri (hook) geçti.
+
+**G3 ([reward-definition.md](../thesis/reward-definition.md)).** Ödülün kodla aynı terimlerle tek tanım metni. Seminer belgelerindeki "Differential Sharpe (DSR)" adı yanlış; belgeler Mayıs 2026 anlık görüntüsü olduğu için değiştirilmedi, tez kuralına not düşüldü. Koddan okunurken bulunan, beyan edilecek iki nokta:
+1. **Komisyon iki kez sayılıyor.** Vₜ komisyonu içeriyor, cₜ onu bir kez daha düşüyor; paydası da başlangıç bakiyesi. Basit ödülde de aynı.
+2. **Hedef işlem sıklığı** (T = 50 / 100 adım) kaynaksız bir tasarım sabiti.
+
+Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek kez girer (Faz 10 §3.2.1).
+
+**Nakit faizi (kullanıcı kararı, 2026-11-15): yalnız beyan** (§9.2 #7, §9.12 F2). K26 ile aynı gerekçe: eski ortam sadık Ansari replikasyonu kalır; `sharpe_rf0` fazla getiri Sharpe'ıyla birlikte raporlanır. Yeni ortamda nakit A8 serisiyle (t−1) faiz kazanır; Faz 10 §3.2.1'e M2 tasarım maddesi olarak yazıldı.
+
+**G2** (ödülde risksiz faizin A8'e bağlanması) §9.22 madde 6'da, D ile birlikte.
+
+**İ1 — hakem-rl (sonnet): Küçük revizyon** (2 BÜYÜK, 4 KÜÇÜK; ~37 bin token, 6 araç, ~44 sn; test koşmadı, paketteki JSON'u kullandı).
+
+| # | Önem | Bulgu | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK | K4 aynı w₂ ile tek etkenli değil; terimin ödüldeki oynaklığı ~5,6 kat farklı | **Kabul, M8'e.** §5 M8'e yazıldı: kol başına w₂ ızgarası ya da ölçek eşitlemesi, ızgara N'ye sayılır |
+| 2 | BÜYÜK | Nakitte varyans 0'a gidiyor, Dₜ patlıyor ya da kesiliyor (öngörü) | **Ölçüldü, düzeltildi.** Tabansız sürümde tam nakitte max\|Dₜ\| 293, %48'i doymuş. Paydaya `'ema_level'` ile aynı taban (10⁻⁹) eklendi: max\|Dₜ\| 9,4, durağan nakitte Dₜ → 0. Test [4b]. **Yan bulgu:** varsayılan `'ema_level'` düşük maruziyette −1'de doyuyor (%1 maruziyette %84, tam nakitte %100; `sharpe_term_scale.json` → `series`). Mevcut modeller bu terimle eğitildi; reward-definition.md §4'te beyan |
+| 3 | KÜÇÜK | Soy yalnız tür + terim; ağırlık, pencere ve r_f görünmüyor | **Kabul, düzeltildi.** `get_reward_spec()` (ortam ve hesaplayıcı) kayda `config.reward_spec` olarak, meta/manifeste `reward` olarak yazılıyor. `hpo_lineage` tamamını karşılaştırıyor; `reward_spec`'siz eski kayıtta tür + terim. Test [6] (w₂ ya da r_f farkı) |
+| 4 | KÜÇÜK | tanh toplanabilirliği bozuyor; ad | **Kabul.** Ad "tanh ile sıkıştırılmış, ısınmalı Moody-Saffell Dₜ"; doğrulama ham Dₜ üzerinde, ödülde yaklaşık (docstring, reward-definition.md). Isınma payı: rota bölümleri eğitim penceresi kadar uzun (yıllar), 30 adım ihmal edilebilir |
+| 5 | KÜÇÜK | Sabit r_f + nakit 0 kayma yaratıyor | **Kabul, M8'e.** Ön eleme "G2 öncesi, r_f sabit" etiketiyle |
+| 6 | KÜÇÜK | Komisyonun çift sayımı iki kolu farklı etkileyebilir | **Kabul, M8'e.** Kol başına işlem sayısı, devir hızı ve komisyon payı sonuç tablosunda |
+
+**Kabul (düzeltme sonrası)** `test_reward_differential` **22/0**.
+
+**İkinci okuma** (hakem-rl, SendMessage; ~41 bin token önceki bağlamla, 3 araç, ~12 sn): **Kabul**, kapanmayan madde yok. Not: K4 yorumunda "düzey terimi nakitte doyuyor" kalır.
+
+### 9.24 B6 — önceden tanımlı, nedensel rejim etiketi (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Sorun (Y3).** `PredictionEvaluator.compute_regime_metrics` "boğa"yı gerçekleşen getirisi pozitif örnekler diye tanımlıyordu. Bu hedef değişkene koşullu bir alt kümeydi, rejim değil. **Kaldırıldı.** Tek çağıranı kullanılmayan `compute_comprehensive_metrics` idi. O artık rejimi yalnız `dates` + `regime_labels` ile hesaplıyor; verilmezse `regime_metrics` None.
+
+**Veri ([data/index_fetcher.py](../../data/index_fetcher.py)).** XU100 (`XU100.IS`, yfinance, `auto_adjust=False`), 2005-01-03..2026-11-13, 5.480 gün. Dosya `data/macro/xu100.csv` (git dışı) ve `xu100_source.json` (SHA-256 `e4adbef5…`). `macro_data.csv`'deki `bist100_index` B1'den beri 2018'de başladığı için ayrı seri gerekti. Denetimler:
+- |günlük getiri| > %15 olan gün yok. 2020-07-27 endeks sıfır atması seride düzeltilmiş; `check_index_series` her çekimde bunu denetliyor ve sıçrama varsa yazmıyor.
+- `macro_data.csv` ile 2.208 ortak günün 1'inde fark > %0,1 (en büyük %1,3).
+- Pencerede panelde olup endekste olmayan 72 gün var (tatil satırları). Etiket bu günlerde as-of, yani son işlem gününün etiketi.
+
+**Etiket ([evaluation/regimes.py](../../evaluation/regimes.py)).**
+- `trend`: kapanış > SMA₂₀₀ ise 'bull', değilse 'bear'.
+- `vol`: 60 günlük log getiri std'si × √252.
+- `vol_level`: vol'ün **genişleyen** (≤ t, en az 252 gözlem) tercilleri.
+- `regime`: 6 hücre.
+
+Tasarım varsayımları: 200/60 gün (plan B6) ve genişleyen tercil. Sabit tam örneklem tercili ileriye bakar; kayan tercil ayrı bir karar olurdu. İlk etiket 2006-03-29; RL penceresinde etiketsiz gün yok. Yardımcılar: `regime_summary` (gün ve bağımsız dönem sayısı, M6), `by_regime`, `asof_labels`.
+
+**Kabul** `python tests/test_regimes.py` → **13/0** (ağ yok):
+- B0 kesme değişmezliği: sentetik seride 6 kesim, gerçek XU100'de 6 kesim (2013..2026), bütün sütunlar bit-eş.
+- Mutasyonlar B0'ı kırıyor: merkezlenmiş SMA, tam örneklem tercili.
+- Anlam testleri, eski fonksiyonun yokluğu, as-of davranışı, özet.
+
+**Ölçüm** ([regimes.json](measurements/phase9-b6/regimes.json); gün / bağımsız dönem, RL penceresi 2013-06..): bull_low 1.065/44, bull_mid 692/47, bull_high 591/22, bear_mid 460/46, bear_high 330/29, bear_low 226/32. Test katlarında:
+- 2022: 252 günün tamamı bull.
+- 2023: 248 günün 244'ü bull_high.
+
+**Açık tasarım sorusu (İ2'ye).** Etiket **nominal TL** endeksinde. Yüksek enflasyon nominal trendi sistematik olarak 'bull'a itiyor (RL penceresinde bull 2.348, bear 1.016 gün). H4/M6 (rejime koşullu iletişim katkısı) için reel (TÜFE ile düzeltilmiş) ya da USD bazlı trendin gerekip gerekmediği İ2'de hakem-finans'a soruluyor. Değişiklik kullanıcı kararı olur. Kat başına hücreler seyrek; rejim analizi katlar birleştirilerek yapılmalı (M6, M8).
+
+**İnceleme:** İ2 (F ile birlikte, hakem-finans).
+
+### 9.25 F1–F4 — yön olasılığı, kalibrasyon, ham p (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Davranış dondurma.** `StackingEnsemble(confidence_mode='legacy'|'calibrated')`, varsayılan `'legacy'`. Faz 10 §3.1.2'deki "OOF'u ikiye böl" tasarımı varsayılan hatta regresör meta-öğrenicinin verisini, yani fiyat tahminini değiştirirdi. Bu yüzden yeni yol bayrakla geldi ve **fiyat tahmini iki modda da aynı** (testte kanıtlı). Golden bilinen nedenle kırmızı ve sayıları değişmedi (`test_mape` 166,7641, `predicted_change_pct` 0,21). Varsayılanın ne zaman çevrileceği P / Milestone 0' kararı.
+
+**F1** (`calibrated`):
+- p(UP), meta düzeyde lojistik regresyondan gelir. Girdiler: taban modellerin getiri tahminleri (`ret_*`) ve DL yön başlıkları (`dir_*` − 0,5); üç GBM de güvene katılır (Y18).
+- Yön = 1[p_cal ≥ 0,5], güven = max(p_cal, 1 − p_cal).
+- Fiyat yönü ayrı bir alanda (`direction_price`), çelişki ayrı bir bayrakla (`direction_conflict`).
+
+**F2:**
+- Sınıflandırıcı OOF meta bölümünün ilk yarısında, sıcaklık T ikinci yarısında uydurulur. Yarılar arasında ve meta sonunda h satır arındırılır; test bölümünde yalnız değerlendirme yapılır.
+- İzotonik regresyon karşılaştırma kolu olarak raporlanır.
+
+**F3** ([evaluation/calibration.py](../../evaluation/calibration.py)):
+- ECE (Guo vd. 2017, 15 eşit genişlikli kutu, [0, 1]), Brier, NLL, güvenilirlik tablosu.
+- Her eğitimde `ensemble_test_metrics['calibration']` iki yolu da taşır. Eski yolun bloğunda `head_vs_price_conflict_rate` (Y4) var.
+
+**F4:** `predict_next` çıktısında `p_up_raw` ve `p_up_cal` birlikte. Mod model meta'sından yüklenir.
+
+**Kabul** `python tests/test_calibration.py` → **15/0**:
+- ECE ve Brier elle hesapla aynı.
+- Kalibre örnekte ECE 0,0075; aşırı güvenli örnekte (logit × 3) 0,162. `fit_temperature` T = 3,002 buluyor, ECE 0,0074'e iniyor.
+- Ensemble'da iki mod: fiyat aynı, p alanları, kaydet/yükle.
+- **Sızıntı bekçisi:** test bölümü kapanışları bozulunca yön modelinin katsayıları ve T'si bit-eş. Mutasyon (arındırma 0, ilk test kapanışı yönü çevirecek biçimde) modeli değiştiriyor.
+
+Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` geçti, `test_cv_feature_selection` 13/0.
+
+**Ölçüm** ([calibration.json](measurements/phase9-f/calibration.json); `scripts/analysis/measure_calibration.py`): tam 5 model, günlük, TATS kapalı, yalnız fiyat özellikleri, 2013-06.., GPU. Uyum/kalibrasyon 313/313 satır, test 626–628 gün.
+
+| | THYAO | GARAN | ASELS |
+|---|---|---|---|
+| Eski yol ECE / Brier / isabet | 0,125 / 0,265 / 0,516 | 0,060 / 0,254 / 0,494 | 0,022 / 0,250 / 0,522 |
+| **Y4: DL başlığının yönü ≠ fiyat yönü** | **%32,8** | **%53,3** | **%61,5** |
+| Taban oranı (UP) | 0,468 | 0,492 | 0,518 |
+| Lojistik ham ECE / isabet | 0,241 / 0,467 | 0,063 / 0,506 | 0,080 / 0,470 |
+| T | **20,0 (sınırda)** | 16,05 | 12,79 |
+| Sıcaklık sonrası ECE / Brier | 0,047 / 0,254 | 0,004 / 0,250 | 0,034 / 0,250 |
+| İzotonik ECE | 0,120 | 0,024 | 0,050 |
+
+*Kaynak: `calibration.json` → `symbols.<sym>.legacy`, `.calibrated`.*
+
+**Bulgular:**
+1. **Y4 ölçüldü.** Eski yolda raporlanan güven, test günlerinin üçte biri ile yarısından fazlasında tahmin edilen yönün değil, öbür yönün olasılığı.
+2. **Bu üç hissede yön bilgisi yok.** İsabet taban oranı düzeyinde, Brier ≈ 0,25 (yazı-tura). Sıcaklık ECE'yi düşürüyor (F2 ölçütü karşılanıyor), ama bunu p'yi 0,5'e bastırarak yapıyor (T 12,8–20). "Kalibre" güven neredeyse sabit; ayırt edicilik yok. T'nin sınıra dayandığı `temperature_at_bound` ile işaretleniyor.
+3. **G2/H3 için sonuç:** kalibre güvenin iletişime taşıyacağı bilgi bu ölçümde yok denecek kadar az. Bu ölçüm üç hisse, tek kat ve yalnız fiyat özellikleriyle; genelleme değil. P tablosu ve Milestone 0' bunu 30 hissede, makro/çapraz özelliklerle yeniden ölçer. Sonuç ne çıkarsa raporlanır (M5 "karıştırılmış güven" kolu tam bu soruyu sınar).
+4. İzotonik, bu örneklem büyüklüğünde sıcaklıktan kötü.
+
+**Sınırlar:**
+- Yön modeli %60 modellerinin OOF'unda uyduruluyor, dağıtılan modeller ise %80 verisiyle eğitiliyor (K19/Y26). Bunu P çözecek.
+- T sembol başına. Planın havuzlu T'si (Faz 10 §3.1.2) çoklu sembol gerektirdiği için P'de (batch).
+
+**İnceleme:** İ2 (B6 ile birlikte, hakem-finans).
+
+### 9.26 HPO sampler tohumu (§9.11 bulgu 3; §9.22 madde 4) (2026-11-15)
+
+**Sorun.** API `seed=None` veriyor. Ayar tohumu `optimize()`'da üretiliyordu, ama varsayılan `TPESampler` kurucuda tohumsuz kurulmuştu. Arama tekrar üretilemiyordu.
+
+**Düzeltme** ([base_optimizer.py](../../hyperparameter_optimization/base_optimizer.py)). Varsayılan TPE, `resolve_seed` sonrasında aynı ayar tohumuyla yeniden kuruluyor (`_seed_default_sampler`). Dışarıdan verilen sampler'a dokunulmuyor; onun tohumu bilinmiyor ve `None` kaydediliyor. Sonuç JSON'unda artık `sampler: {type, seed}` alanı var. Sınır: tekrar üretim `n_jobs=1` koşulunda geçerli (rota 1 kullanıyor).
+
+**Kabul** `test_rl_reproducibility` 39 → **43/0**:
+- Aynı tohum aynı TPE önerilerini, farklı tohum farklı önerileri veriyor.
+- Mutasyon (eski davranış, tohumsuz) iki kurulumda farklı öneriler veriyor.
+- Dış sampler korunuyor.
+
+### 9.27 İ2 — hakem-finans (F + B6): Küçük revizyon; bilgi kapısı, rejim birincil tanımı (2026-11-15)
+
+**İnceleme:** hakem-finans (sonnet), ~37 bin token, 7 araç, ~67 sn; test koşmadı, paketteki JSON'ları kullandı. **Karar: Küçük revizyon** (2 BÜYÜK, 3 KÜÇÜK).
+
+| # | Önem | Bulgu | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK | ECE tek başına "kalibre" kanıtı değil. Sıcaklık sonrası Brier 0,25 = sabit 0,5 tahmincisi; ayırt edicilik yok | **Kabul, düzeltildi.** `evaluation/calibration.py`'ye AUC, BSS (taban oranı test dışından: meta bölümü, arındırılmış) ve `informative` kapısı eklendi. Kapı: T sınırda değil, BSS > 0, AUC GA'sı 0,5'i dışlıyor. Ensemble bloğunda `informative` ve `label` alanları; geçmezse etiket "sıcaklık ölçekli, ayırt edici değil". M8'e yazıldı |
+| 2 | BÜYÜK | ECE farkları gürültü düzeyinde; isabet ile taban oranı karşılaştırması testsiz | **Kabul, düzeltildi.** ECE, isabet ve AUC için hareketli blok bootstrap GA (blok 20 gün, 1.000 tekrar; tasarım varsayımı) |
+| 3 | KÜÇÜK | "15 kutu" yanıltıcı; etkin kutu ~7–8, çöküşte 1–2 | **Kabul.** `n_nonempty_bins` raporlanıyor (gerçek veride 2–4) |
+| 4 | KÜÇÜK | p ≈ 0,5'e çökmüşken yön gürültüyle çevriliyor | **Kabul, düzeltildi.** Kapıyı geçmeyen modelde `predict_next` yönü fiyat işaretinde bırakıyor (`direction_from`, `confidence_informative`) |
+| 5 | KÜÇÜK | "Bağımsız dönem" ardışık blok sayısı; çırpınma şişiriyor | **Kabul.** `episodes_min20` eklendi (nominal: bear_low 32 → 3, bull_high 22 → 5); M8'de blok bootstrap |
+
+**Soru 1 → kullanıcı kararı:** H4/M6 için birincil rejim etiketi **USD bazlı XU100** (XU100_t / USDTRY_{t−1}; kur t'den kesin önce, §9.4 #12 "aynı gün FX" temkini). Nominal TL ve 5 yıllık kayan tercil duyarlılık kolları. Seri `data/macro/usdtry.csv` (`TRY=X`, 2005..; gerçek günlük hareketler %15'i aştığı için kur eşiği 0,35; en büyükleri 2018-08-13 +%22,8 ve 2021-12-21 −%18,9).
+
+**Ölçüm** ([regimes.json](measurements/phase9-b6/regimes.json) → `arms`; RL penceresi 2013-06..):
+
+| Kol | bull / bear gün | Rejim uyuşması (nominal-genişleyen ile) | 2022 testinde bear günü |
+|---|---|---|---|
+| nominal, genişleyen | 2.348 / 1.016 | 1,00 | 0 |
+| nominal, kayan 5 yıl | 2.348 / 1.016 | 0,71 | 0 |
+| **USD, genişleyen (birincil)** | **1.497 / 1.867** | 0,57 | **116** |
+| USD, kayan 5 yıl | 1.497 / 1.867 | 0,44 | 116 |
+
+**Soru 2–5:** genişleyen tercil birincil, kayan 5 yıl duyarlılık (yukarıda). F etiketi nominal kalır; fazla getiri etiketi ve iki etiketin taban oranları P'de duyarlılık olarak. Y4 beyanı: eski faz 2 gözlemindeki `prediction_confidence` ile `predicted_direction` farklı kaynaklardan geliyor; tez metninde "güven" diye adlandırılmaz.
+
+**F ölçümü yeniden** (kapıyla; [calibration.json](measurements/phase9-f/calibration.json); aynı yapılandırma, ikinci GPU koşusu):
+
+| | THYAO | GARAN | ASELS |
+|---|---|---|---|
+| Eski yol ECE [GA] | 0,083 [0,040, 0,119] | 0,111 [0,073, 0,147] | 0,038 [0,014, 0,084] |
+| Eski yol AUC [GA] | 0,498 [0,461, 0,541] | 0,476 [0,430, 0,532] | 0,506 [0,459, 0,551] |
+| T (sınırda mı) | 20,0 (evet) | 3,62 | 2,19 |
+| Sıcaklık sonrası ECE [GA] | 0,043 [0,008, 0,082] | 0,045 [0,008, 0,084] | 0,025 [0,006, 0,062] |
+| Sıcaklık sonrası AUC [GA] / BSS | 0,497 [0,447, 0,546] / 0,008 | 0,493 [0,457, 0,538] / −0,002 | 0,524 [0,487, 0,564] / −0,001 |
+| Dolu kutu | 4 | 2 | 2 |
+| **Bilgi kapısı** | **geçmedi** | **geçmedi** | **geçmedi** |
+
+**Sonuçlar:**
+1. Üç hissede de yön bilgisi yok. AUC GA'larının hepsi 0,5'i içeriyor; §9.25'teki "kalibre güven ≈ 0,5" bulgusu kapıyla doğrulandı.
+2. **Koşudan koşuya oynaklık.** İlk koşuyla (§9.25) bu koşu aynı tohum ve yapılandırmayla belirgin farklı: GARAN'da T 16,05 → 3,62, THYAO'da eski ECE 0,125 → 0,083. GPU'da DL eğitimi belirlenimci değil (C1 açık maddesi, §9.22 beyan listesi). "Bilgisiz" hükmü iki koşuda aynı, ama tekil ECE/T sayıları tek koşudan raporlanmaz; P ve Milestone 0' çoklu tohum ister. §9.25 tablosu ilk koşunun kaydıdır.
+
+**Kabul:**
+- `test_calibration` **18/0**: AUC uçları, bilgili/sabit tahminci kapısı, BSS = 0 tabanı, ECE GA'sı, kapıya göre yön.
+- `test_regimes` **17/0**: kayan tercil ve USD kolu B0 bit-eş; USD = XU100_t / USDTRY_{t−1}; `episodes_min20`.
+
+**İkinci okuma** (hakem-finans, SendMessage; ~46 bin token önceki bağlamla, 3 araç, ~23 sn): **Kabul**, kapanmayan madde yok. Engelleyici olmayan iki not P ve M8'e taşındı:
+1. Bilgi kapısı test özeti üzerinde hesaplanıyor (hafif test seçimi). Sonuçlar "kapı testle seçildi" notuyla raporlanır. P'de 30 sembolde kapı çoklu karşılaştırmaya göre değerlendirilir: tek taraflı ~%2,5 yanlış pozitifle şans eseri ~1 sembol geçer.
+2. USD bazlı etikette XU100_t / USDTRY_{t−1} bir günlük kur kayması taşıyor; M8'de tasarım varsayımı olarak beyan edilir.
+
+**P3 kaba maliyet** ([p3_cost.json](measurements/phase9-p/p3_cost.json); günlük ufuk, ~3.431 satır, GPU, %80 yeniden uyum dahil):
+- Sembol başına tam 5 model 146–156 sn (`calibration.json` ikinci koşu; ilk koşu 154–197 sn); 3 GBM 1,7–2,3 sn.
+- 63 seansta bir yeniden eğitimle (~52 kez) × 30 sembol: **tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa** (`p3_cost.json` → `estimate_hours`) (tohum çarpanı ve haftalık ufuk hariç).
+- Faz 10 K11'in "ölçüm ağır çıkarsa v1 = üç GBM + lojistik meta" kuralı uygulanabilir. Paket başında kullanıcı teyidi bekleniyor.
+
+### 9.28 P1–P3 + K19 — nokta-zamanlı örneklem dışı tahmin tablosu (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Karar.** K11 v1 = üç GBM + lojistik meta (kullanıcı teyidi 2026-11-15, P3 ölçümüyle; §9.27).
+
+**Kod.** [pit_table.py](../../prediction/pit_table.py), [build_pit_table.py](../../scripts/build_pit_table.py); `evaluation/calibration.py::block_bootstrap_pvalue` (yeni).
+- **Taban:** XGBoost, LightGBM ve CatBoost (varsayılan parametreler, tohum 42). Çapa ortak takvimde 2012-01-02'den itibaren her 63 seansta bir; blok k = [çapa_k, çapa_{k+1}).
+  - Eğitime yalnız etiketi çapadan önce gerçekleşmiş satırlar girer (`label_date < çapa`, h arındırma). Pencere genişleyen, en az 504 satır.
+  - Son %15 erken durdurma doğrulaması; araya h satır arındırma konur.
+- **K19 / Y26:** p(UP) lojistiği, taban modellerin *geçmiş* bloklardaki örneklem dışı tahminleriyle uydurulur. Kullanılan veri, etiketi çapadan önce gerçekleşmiş son 504 satırdır.
+  - İlk yarı lojistiğe gider (sonundan h satır arındırılır), ikinci yarı sıcaklığa.
+  - %80 yeniden uyum ve örneklem içi meta bu yolda yoktur. Her satır `train_end`, `label_end` ve `meta_label_end` tarihlerini taşır.
+- **Sıcaklık** çapa başına 30 sembolde havuzlu tutulur (Faz 10 §3.1.2). Sembol başına T, duyarlılık için rapora yazılır.
+- **`informative_asof`:** çapa anındaki bilgi kapısıdır ve kalibrasyon yarısında ölçülür. Nedensel olduğu için ajan gözlemine girebilir.
+- **Sütunlar:** plandakiler (`date, symbol, p_up_raw, p_up_cal, pred_logret, model_disagreement, model_version, train_end`) + `label_end`, `meta_label_end`, taban getirileri, `logit`, `temperature`, `base_rate_asof`, `informative_asof`, `base_ok`, `meta_ok`, `mask_reason`.
+  - Eksik hücre açık maskeyle işaretlenir: `no_data`, `no_features`, `insufficient_history`, `model_failed`, `meta_insufficient`. p NaN kalır, sessiz 0,5 yoktur.
+- **Çıktı:** `results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + eğitim manifesti (`run_kind='pit_table'`). Tablo git dışıdır, SHA ölçüm JSON'unda.
+
+**Tasarım varsayımları ve plandan sapmalar (M8'de sabitlenir):**
+1. **Yalnız fiyat/hacim özellikleri.** Makro 2018'de başlıyor; RL penceresinin 2013–2017 kısmı maskeli kalırdı. Temel oranlar tek anlık görüntü (`fundamentals_pit`). §9.25 F ölçümüyle aynı küme. §9.25'teki "P tablosu ... makro/çapraz özelliklerle yeniden ölçer" cümlesi bu yüzden tutmadı; makro/çapraz bir Milestone 0' kolu olur.
+2. **Veri 2009-09-01'den başlar.** 2009-08-04 MGROS sıçramasından sonrasıdır; meta böylece RL penceresinin ilk gününde dolar. Pencere içinde tarayıcının bulduğu 9 satır (8 `ohlc_inconsistent` 2012–2013, PGSUS 2013-07-23 `extreme_return`) eğitim girdisinde kalır ve rapora yazılır.
+3. `pred_logret` = üç taban tahmininin eşit ağırlıklı ortalaması; ek uydurulan katman yok. `model_disagreement` = std (ddof=0).
+4. **Tek tohum.** GBM'ler CPU'da belirlenimci (B0 testi bit-eşlikle bunu da gösteriyor), ama tohumlar arası oynaklık ölçülmedi. Çoklu tohum Milestone 0' parametresi.
+5. **Bilgi kapısının değerlendirme penceresi 2013-06-01..2019-12-31.** Bu pencere wf-v1'in ilk doğrulama yılından (2020) öncesidir, yani RL seçim ve test pencereleri okunmadı. 30 sembol tek aile, BH (A7). p-değeri tek taraflı yüzdelik blok bootstrap ile hesaplanır (H0: AUC ≤ 0,5).
+
+**Kabul:** `test_pit_table` **21/0** (~1 dk, gerçek panel).
+- **B0 günlük:** bozulma noktası t = çapa + 20 ve t = çapa − 1 için iki ayrı kontrol; t sonrasında fiyatlar yarıya, hacim 3 katına çıkarılır. B0 haftalık ufukta (h = 5, t = çapa + 1) da tutuyor.
+- **Mutasyon:** arındırmasız taban (`PURGE_BASE=False`) ve arındırmasız meta (`PURGE_META=False`) B0'ı kırıyor.
+- **K19 tarihleri:** her satırda train_end < label_end < çapa ≤ tarih ve meta_label_end < çapa.
+- Havuzlu T; p_up_cal = σ(logit/T).
+- Maske: ODAS 2014-06'ya kadar maskeli kalıyor ve p NaN.
+- P2 kapsam raporu; parquet geri okuması bit-eş.
+- Bootstrap p-değeri ve BH.
+
+**Ölçüm** ([pit_v1.json](measurements/phase9-p/pit_v1.json)):
+- **Koşu:** 30 sembol, 60 çapa (2012-01-02..2026-11-02), 111.690 satır, ~21 dk (`wall_seconds`).
+- **Kayıtlı commit 03aaef3; koşu 2376461'de başladı.** Arada P kodu değişmedi: `git diff 2376461 03aaef3 -- prediction/pit_table.py scripts/build_pit_table.py evaluation/calibration.py ...` boş.
+
+**P2 kapsamı** (RL penceresi 2013-06..):
+- Satırların %97,6'sı `meta_ok`, %98,5'i `base_ok`.
+- Tam kapsamın altındakiler: ODAS (%73,2; ilk meta 2017-01-06), PGSUS (%71,3; 2017-04-05) ve EKGYO (%91,9; 2014-07-04). Bu üçü panelde geç başlıyor. Diğerlerinde kayıp ≤ %3,3 (`coverage_rl_window.per_symbol`).
+
+**Bulgular:** (Bulgu 1 İ3'te revize edildi → §9.30)
+1. **Yön bilgisi yok (30 sembolde).** Geliştirme penceresinde (47.199 satır) kapıyı geçen sembol sayısı 0, BH reddi 0. Havuzlu AUC 0,511, havuzlu BSS −0,0018.
+   - Düzeltmesiz tek taraflı p < 0,05 olan 4 sembol var (SASA, BIMAS, AKBNK, YKBNK). Şansla ~0,75 beklenirdi; hiçbiri BH'den geçmiyor.
+   - §9.25 ve §9.27'deki üç sembollük "bilgisiz" bulgusu 30 sembolde ve örneklem dışı genişleyen pencerede tekrarlandı.
+2. **ODAS ters yönde tahmin ediyor:** AUC 0,416, GA [0,376; 0,461]. Örneklem dışı işaret dönmesi var; tek sembol, açıklama yazılmadı.
+3. **Havuzlu T arama sınırında (20):** T'nin hesaplandığı 55 çapanın 32'sinde. En küçük T 3,43. Kalibre güven çoğu çapada 0,5'e yakın; `informative_asof` en fazla 4 sembolde açık (`n_informative_asof_per_anchor`).
+
+**Sonuç (G2/H3 için).** P tablosu nokta-zamanlı ve örneklem dışı bir sinyal üretiyor, ancak bu özellik kümesiyle sinyalde yön bilgisi yok. M5'in güvenle ağırlıklı iletişim kolu, taşınacak bilginin olmadığı bir koşulda sınanmış olur.
+- Bu, hipotezin yanlışlanması değildir. Çalışmanın ön koşulu (ayırt edici güven) bu kurulumda sağlanmıyor ve bu raporlanır.
+- Kullanıcı kararı gerekiyor: H3/M5 bu sinyalle mi koşulsun, yoksa makro/çapraz özellikli ya da tam ensemble kolu mu Milestone 0''a eklensin? İ3'ten sonra sorulur.
+
+### 9.29 D1 + D3 + D4 ve A8 sabitleri (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Kod.** [baselines.py](../../evaluation/baselines.py), [units.py](../../evaluation/units.py); `MacroDataFetcher.fetch_cpi_index` (TP.TUKFIY2025.GENEL düzeyi, aylık, 2005-01..2026-10); `data/macro/xu030.csv` (yfinance XU030.IS; 2020-07 sıfır atması seride düzeltilmiş, sıçrama denetiminden geçti).
+
+**D1:**
+- 1/N aylık: ayın ilk seansında kapanışta, o gün fiyatı olan sembollere eşit ağırlık; ay içinde ağırlıklar fiyatla kayar.
+- Al-tut: ilk seansta 1/N, yeniden dengeleme yok.
+- XU030 fiyat endeksi maliyetsiz referanstır ve temettü içermez. Panel kapanışları temettü düzeltmeli olduğu için endeks kolu aşağı yanlıdır (beyan). Sentetik yedek yok.
+
+**D3:**
+- TÜFE-reel = V_t / TÜFE(ay(t)), basamak deflatör ve ex post; karar girdisi olmadığı için açıklanma gecikmesi yok.
+- USD = V_t / USDTRY_{t−1}, B6'daki USD kuralıyla aynı.
+- Birincil Sharpe nominal TL'de A8 fazla getirisi üzerinden. Reel ve USD birimlerinde birim-tutarlı bir risksiz faiz serisi olmadığı için `sharpe_rf0` raporlanır.
+
+**D4:**
+- Izgara 0/10/20/25/50 bps gidiş-dönüş, ana değer 20.
+- Tek yön maliyeti bps/2 × devir (Σ|Δw|); ilk alımın devri 1. Sharpe, net getirisi −giriş maliyeti olan ilk günü de içerir.
+- RL ajanları için ex post ızgara bir yaklaşıklıktır; Milestone 0' ortamı `commission` ile yeniden değerlendirir (Faz 10 §8 #13: c tek yön).
+
+**A8 sabitleri:**
+- `ModelAnalyzer.calculate_advanced_metrics(return_dates=)` A8 serisini okur. Tarih verilmezse rf = 0 olur ve `risk_free_source` bunu belirtir.
+- Eski benchmark ve rapor betiklerindeki 0,02 kaldırıldı; tarihsiz oldukları için rf0 etiketiyle çalışıyorlar. Sentetik endeks yedeği `synthetic_index` etiketini taşıyor.
+- `prediction/evaluator.compute_sortino_ratio`'nun 0 varsayılanı rf0 olarak belgelendi.
+- **Ödüldeki 0,15 eski ortamda kalıyor (beyan).** Gerekçe nakit faizi kararıyla aynı: eski ortam sadık Ansari replikasyonu. Yeni ortamda fazla getiri A8'in t−1 oranıyla hesaplanacak (G2, Faz 10 §3.2.1).
+
+**Kabul:** `test_baselines` **20/0**.
+- Elle hesap: 1/N, al-tut ve geç listelenen sembol.
+- Maliyet ızgarası.
+- Reel ve USD dönüşümü; aynı gün kur mutasyonu; eksik deflatörde hata.
+- Dört dosyada 0,02 yok.
+- A8 Sharpe'ı elle hesapla aynı.
+- Gerçek 2021 verisi.
+- Son kontrol ilk sürümdeki bir hatayı yakaladı: al-tut Sharpe'ı maliyetten bağımsız çıkıyordu, çünkü giriş maliyetinin yazıldığı ilk gün Sharpe dışındaydı. Düzeltildi (33f3ae0).
+
+**Ölçüm** ([baselines.json](measurements/phase9-d/baselines.json), commit 33f3ae0; [cost_curve.png](measurements/phase9-d/cost_curve.png)):
+- Pencereler: wf-v1 test yılları ve tam RL penceresi. Baseline'larda seçim olmadığı için test pencerelerinin okunması bir seçime girmiyor.
+- Tam pencerede (2013-06-03..2026-10-30, 20 bps) nominal fazla getiri Sharpe'ı: 1/N 0,544, al-tut 0,527, XU030 0,224.
+- 1/N'nin günlük ortalama devri ~0,003. Izgara baseline'ları neredeyse etkilemiyor (1/N: 0 bps'te 0,547, 50 bps'te 0,539); ızgara RL ajanları için anlamlı.
+
+
+### 9.30 İ3 — hakem-finans + hakem-rl (P + D), düzeltmeler (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Kararlar.** hakem-finans: **Büyük revizyon**, yalnız çıkarım ve iddia katmanında; kod ve nokta-zamanlılık düzeneği sağlam bulundu, K19 kapanıyor. hakem-rl: **Küçük revizyon**, RED yok. Maliyet [review-panel.md](review-panel.md)'de.
+
+| # | Hakem | Cid. | Bulgu | Yapılan |
+|---|---|---|---|---|
+| F1 | finans | BÜYÜK | "Yön bilgisi yok" bir reddedememe; güç/MDE ve havuzlu GA yok | `evaluate_gate` v2: sembol başına MDE (tek / aile), tarih bloğu bootstrap'lı havuzlu GA/p. **§9.28 Bulgu 1 bu satırla revize edildi** (aşağıda) |
+| F2 | finans | BÜYÜK | ODAS ters AUC: bloklar arası havuzlama ve eşit kapanış karışabilir | Blok içi AUC (sembol × çapa), `tie_rate`, iki taraflı p |
+| F3 | finans | BÜYÜK | Baseline evreni hayatta kalan, dondurulmuş 30 sembol; XU030 aynı evren değil | `baselines.py` ve `baselines.json` `design.universe`: üstünlük çıkarımı **yapılmaz**; XU030 ayrı referans satırı |
+| F4–F5 | finans | KÜÇÜK | Basamak deflatör ve USD kur kayması günlük Sharpe'ı bozar | Reel/USD Sharpe **aylık** getiriden (`sharpe_rf0_monthly`); giriş maliyeti birimde de sayılıyor |
+| F6 | finans | KÜÇÜK | Düzeltilmiş fiyat vintage'ı B0'da görünmez | Beyan: tam yeniden indirme geçmişi değiştirir; P panel SHA'sıyla bağlı (`pit_v1.json`) |
+| F7–F8 | finans | KÜÇÜK | Maliyet yalnız komisyon; al-tutta çıkış maliyeti yok; 1/N–al-tut farkı test edilmedi | Docstring ve JSON beyanı |
+| R1 | rl | BÜYÜK | Güvende varyans yok; AQ2 "yalnız S-msg" kolu β=0'dan ayırt edilemez | **M8 ön kaydı:** bu kol için "boş sonuç beklenir" beyanı |
+| R2 | rl | BÜYÜK | H3 pozitif kontrolsüz yanlışlanamaz | **M8:** sentetik kehanetli güven kolu (etiketten, AUC 0,55 / 0,60) |
+| R3 | rl | KÜÇÜK | Meta girdisinde dağılım kayması | Ölçüldü ([meta_input_shift.json](measurements/phase9-p/meta_input_shift.json)): yeni bloktaki taban tahmin std'si meta penceresinin medyan ~0,47–0,57 katı, p10–p90 ~0,1–1,7; ortalama kayması medyan ~0,1 std. Logit sıkışıyor, p 0,5'e çekiliyor (beyan) |
+| R4 | rl | KÜÇÜK | `informative_asof` T ve BSS'yi aynı yarıda ölçüyor (iyimser) | Beyan; 0/30 sonucu bundan etkilenmez |
+| R5 | rl | KÜÇÜK | Tek tohum | **M8:** P tablosu ≥ 3 GBM tohumu; P tohumu ile RL tohumu ayrı faktör |
+
+**hakem-rl'nin Milestone 0' önerileri (M8 ön kaydına, protokol dondurmada):**
+- Gözleme `p_cal` yerine `logit` girer (T'den bağımsız). `meta_ok` bayrağı eklenir; maskeli hücrede S-obs sıfır olur ve mesajda gönderici dışlanır.
+- `model_disagreement` yalnız ≤ t veriyle kayan z-skoruyla girer.
+- RL ajanları 20 bps'e ek olarak 0 ve 50 bps komisyonla yeniden eğitilir; ızgara raporlama içindir.
+- Makro/çapraz özellik kolu 2018+ alt deneyi olarak kurulur; ana tasarım P v1 ile kalır.
+
+**Kapı v2** ([gate_v2.json](measurements/phase9-p/gate_v2.json), tablo SHA'sı `pit_v1.json` ile aynı):
+- Havuzlu AUC 0,511, GA [0,504; 0,517], tek taraflı p = 0,004.
+- **Blok içi havuzlu AUC 0,501**, GA [0,496; 0,507], p = 0,29.
+- Sembol başına MDE medyanı: tek test 0,535, 30 sembollük ailede 0,554 (güç 0,8).
+- Eşit kapanış oranı %6,3 (DOWN sayılıyor).
+- ODAS: blok içi AUC 0,460, iki taraflı p = 0,002, taban oranı 0,425.
+
+**Revize iddia (§9.28 Bulgu 1'in yerine):** Bu özellik kümesiyle, sembol ve çapa içinde sıralama bilgisi tespit edilmedi (blok içi havuzlu AUC 0,501). Havuzlu AUC'deki küçük ama anlamlı fark (0,511) çapalar arası taban oranı seviyesinden geliyor; aynı modelin sıralamasından gelmiyor.
+- Sembol başına AUC ≳ 0,55'lik bir sinyal 30 sembollük ailede tespit edilebilirdi ve görülmedi. Daha küçük bir sinyal dışlanamaz.
+- ODAS'ın ters sıralaması blok içinde de duruyor. Tek sembol, açıklaması yok; seçim düzeltmesi yapılmadan yorumlanmaz.
+
+**Kabul:**
+- `test_pit_table` **23/0**: v2 alanları + bir mekanizma testi. Bloklar arası seviye farkı havuzlu AUC'u > 0,6'ya çıkarıyor, blok içi AUC'u 0,5'te bırakıyor.
+- `test_baselines` **22/0**: aylık metrik elle hesapla; reel birimde giriş maliyeti.
+
+**Açık:** hakem-finans ikinci okuması (BÜYÜK bulgu olduğu için gerekli) yeni oturumda.
+
 ---
 
 ## Versiyon geçmişi
@@ -1464,3 +1885,13 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
 - **2026-11-14 (§9.21, E1 oturum 3):** 54/54 çeyrek duyurusu (`/node/<id>` yönlendirmesiyle). Izgara ayrıştırıcı (rowspan, iç içe tablo). `bist30_changes.csv` (94 değişiklik) ve mekanik ad → kod tablosu (10 ad, kullanıcı denetiminde). Zincir 2018-01-02'den bugüne tutarlı ama doğruluk kanıtı değil; 2015–2018'de 4 ihlal (dönem içi olaylar). Borsa İstanbul sitesinde dönem içi kaynak yok, KAP listelemesi izin bekliyor. `universe_mask`. `test_universe` 20.
 - **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.
 - **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.
+- **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (kullanıcı onayladı): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
+- **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 22. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu. İ1 hakem-rl Küçük revizyon: nakitte Dₜ tabanı, tam ödül tanımı soyda, K4 koşulları M8'de; varsayılan terim düşük maruziyette −1'de doyuyor (beyan).
+- **2026-11-15 (§9.24, B6):** Y3'ün eski rejim metriği kaldırıldı; nedensel XU100 etiketi (200g trend × 60g vol genişleyen tercil), ayrı uzun endeks serisi (`data/index_fetcher.py`). `test_regimes` 13 (B0 sentetik + gerçek, 2 mutasyon). Açık soru: nominal TL trend enflasyonla bull'a kayıyor (İ2).
+- **2026-11-15 (§9.25, F1–F4):** `confidence_mode='calibrated'` (lojistik p(UP) + sıcaklık, OOF ikiye bölünmüş, arındırmalı; varsayılan `legacy`, fiyat tahmini aynı), `evaluation/calibration.py` (ECE 15 kutu, Brier), her eğitimde iki yolun test kalibrasyonu. `test_calibration` 15. Gerçek veride Y4 %33–62; yön isabeti taban oranında, T 12,8–20 (kalibre güven ≈ 0,5).
+- **2026-11-15 (§9.26):** HPO varsayılan TPE sampler'ı ayar tohumuyla (§9.11 bulgu 3 kapandı). `test_rl_reproducibility` 43.
+- **2026-11-15 (§9.27, İ2):** hakem-finans Küçük revizyon. Bilgi kapısı (AUC + BSS + T sınırı), blok bootstrap GA'ları, kapısız modelde yön fiyattan. Rejim birincil = USD bazlı XU100 (kullanıcı kararı; M8). Gerçek veride üç hissede kapı geçilmedi; GPU koşuları arasında sayılar oynak (C1). `test_calibration` 18, `test_regimes` 17.
+- **2026-11-15 (§9.27 devam):** İ2 ikinci okuma Kabul (notlar: kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir günlük kayma beyanı). P3 kaba maliyet: tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa (30 sembol, 63 seansta bir) → K11 teyidi bekleniyor.
+- **2026-11-15 (§9.28, P):** K11 v1 teyit edildi (3 GBM + lojistik meta). Nokta-zamanlı örneklem dışı tablo; meta ve sıcaklık yalnız geçmiş OOF'ta (K19/Y26 kapandı). 30 sembol / 60 çapa, RL penceresinde %97,6 dolu. Geliştirme penceresinde yön bilgisi yok (0/30, BH 0, havuzlu AUC 0,511). `test_pit_table` 21.
+- **2026-11-15 (§9.29, D):** 1/N aylık, al-tut, XU030; nominal / TÜFE-reel / USD; 0–50 bps ızgara. 0,02 sabitleri kaldırıldı; ödülün 0,15'i eski ortamda beyan, G2 yeni ortamda. `test_baselines` 20.
+- **2026-11-15 (§9.30, İ3):** hakem-finans Büyük (çıkarım katmanı), hakem-rl Küçük. Kapı v2: blok içi havuzlu AUC 0,501 (sıralama bilgisi tespit edilmedi), MDE aile 0,554. Reel/USD Sharpe aylık. M8'e: S-msg boş sonuç beyanı, pozitif kontrol kolu, P tohumları. hakem-finans ikinci okuması bekliyor.

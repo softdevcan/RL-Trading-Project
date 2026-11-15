@@ -140,13 +140,14 @@ class BaseHyperparameterOptimizer:
             storage = f"sqlite:///{db_path.as_posix()}"
         self.storage = storage
 
-        # Sampler (Bayesian Optimization)
+        # Sampler (Bayesian Optimization). Faz 9 §9.11 bulgu 3: varsayilan TPE TOHUMLU olmali —
+        # API seed=None verir, ayar tohumu `optimize()`'da uretilir; sampler orada o tohumla
+        # yeniden kurulur (`_seed_default_sampler`). Disaridan verilen sampler'a dokunulmaz.
+        self._default_sampler = sampler is None
+        self.sampler_seed: Optional[int] = None
         if sampler is None:
-            # Don't use seed for better exploration across different algorithms
-            if seed is None:
-                sampler = TPESampler(multivariate=True, warn_independent_sampling=False)
-            else:
-                sampler = TPESampler(seed=seed, multivariate=True, warn_independent_sampling=False)
+            sampler = TPESampler(seed=seed, multivariate=True, warn_independent_sampling=False)
+            self.sampler_seed = seed
         self.sampler = sampler
 
         # Pruner (Early stopping)
@@ -175,6 +176,13 @@ class BaseHyperparameterOptimizer:
         logger.info(f"✅ {self.algorithm_name.upper()} Optimizer initialized")
         logger.info(f"   Study: {self.study_name}")
         logger.info(f"   Trials: {self.n_trials}, Jobs: {self.n_jobs}")
+
+    def _seed_default_sampler(self, seed: int) -> None:
+        """Varsayilan TPE'yi ayar tohumuyla kur (tekrar uretilebilir arama; n_jobs=1 kosulunda)."""
+        if self._default_sampler and self.sampler_seed != seed:
+            self.sampler = TPESampler(seed=int(seed), multivariate=True,
+                                      warn_independent_sampling=False)
+            self.sampler_seed = int(seed)
 
     def create_study(self) -> optuna.Study:
         """Optuna study oluşturur veya yükler."""
@@ -296,7 +304,11 @@ class BaseHyperparameterOptimizer:
                         # rotanin kaydiyla ayni anahtarlar: soy kiyaslamasi bunlardan (R1)
                         'indicator_spec': self.indicator_spec,
                         'price_norm': base_train.get_price_norm() if base_train is not None else None,
-                        **settings},
+                        **settings,
+                        # G1: ortamdan olculur ('simple' odulde None) — istekten degil
+                        'sharpe_term': getattr(base_train, 'sharpe_term', None),
+                        'reward_spec': (base_train.get_reward_spec()
+                                        if base_train is not None else None)},
                 seed=self.seed,
                 status=status,
                 metrics=metrics or {},
@@ -472,6 +484,7 @@ class BaseHyperparameterOptimizer:
         # Ayar tohumu kayda girer; egitim tohumu bundan FARKLI olmali (Eimer vd. 2023) —
         # rota `hpo_lineage` ile olcer. Calismanin butun denemeleri ayni tohumu paylasir.
         self.seed = resolve_seed(self.seed)
+        self._seed_default_sampler(self.seed)
 
         rl_panel = rl_folds.load_rl_panel(price_norm=price_norm, df=panel_df)
         self.indicator_spec = rl_panel.indicator_spec
@@ -589,6 +602,9 @@ class BaseHyperparameterOptimizer:
             # Faz 9 / R1: ayarin hangi kat / bolme / tohumla arandigi
             'fold_report': getattr(self, 'fold_report', None),
             'seed': self.seed,
+            # sampler tohumu (None = disaridan verilmis sampler; tohumu bilinmiyor)
+            'sampler': {'type': type(self.sampler).__name__,
+                        'seed': getattr(self, 'sampler_seed', None)},
             'price_norm': getattr(self, 'price_norm', None),
             'all_trials': trial_details,
         }

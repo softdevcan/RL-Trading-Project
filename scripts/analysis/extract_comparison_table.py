@@ -7,8 +7,11 @@ import json
 import numpy as np
 from pathlib import Path
 
-def calculate_sortino_from_portfolio(portfolio_history, risk_free_rate=0.02):
-    """Calculate Sortino ratio from portfolio history"""
+def calculate_sortino_from_portfolio(portfolio_history, risk_free_rate=0.0):
+    """Calculate Sortino ratio from portfolio history.
+
+    Faz 9 D/A8: eski 0,02 varsayilani kaldirildi; JSON'da tarih yok -> rf = 0 (sortino_rf0).
+    """
     portfolio_values = np.array(portfolio_history)
 
     if len(portfolio_values) < 2:

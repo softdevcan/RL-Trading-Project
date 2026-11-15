@@ -28,6 +28,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+import hashlib
 import json
 import logging
 import os
@@ -230,6 +231,36 @@ class MacroDataFetcher:
         """YoY hesabi icin baslangictan `months` ay once (EVDS bicimi)."""
         start = datetime.strptime(self.start_date_evds, "%d-%m-%Y")
         return (pd.Timestamp(start) - pd.DateOffset(months=months)).strftime("%d-%m-%Y")
+
+    CPI_INDEX_FILE = 'cpi_index.csv'
+
+    def fetch_cpi_index(self, start_date: str = "2005-01-01", save: bool = True) -> pd.Series:
+        """D3 — TUFE genel endeks DUZEYI (TP.TUKFIY2025.GENEL, 2025=100), aylik.
+
+        Yalniz raporlama birimi (TUFE-reel TL) icin; ex post deflasyon oldugundan aciklanma
+        gecikmesi uygulanmaz (karar girdisi DEGIL — gozleme ya da odule girmez). Indeks ay
+        basina (ay ilk gunu) yazilir. Yedek deger YOK.
+        """
+        start_evds = self._convert_date_format(start_date, to_evds=True)
+        s = self._evds_series(self.EVDS_CODES['cpi_index'], start_evds=start_evds)
+        s.index = pd.DatetimeIndex(s.index).to_period('M').to_timestamp()
+        s = s[~s.index.duplicated(keep='last')].sort_index()
+        s.name = 'cpi_index'
+        s.index.name = 'month'
+        if (s <= 0).any():
+            raise ValueError("TUFE endeksinde pozitif olmayan deger")
+        if save:
+            path = os.path.join(self.data_dir, self.CPI_INDEX_FILE)
+            s.to_csv(path, lineterminator='\n')
+            with open(path, 'rb') as fh:
+                sha = hashlib.sha256(fh.read()).hexdigest()
+            with open(os.path.splitext(path)[0] + '_source.json', 'w', encoding='utf-8') as f:
+                json.dump({'fetched_at': datetime.now().isoformat(), 'code': self.EVDS_CODES['cpi_index'],
+                           'base': '2025=100', 'frequency': 'monthly', 'rows': int(len(s)),
+                           'start': str(s.index.min().date()), 'end': str(s.index.max().date()),
+                           'sha256': sha}, f, indent=2)
+            logger.info(f"TUFE endeksi kaydedildi: {path} ({len(s)} ay)")
+        return s
 
     def fetch_risk_free(self, start_date: str = "2011-01-01", save: bool = True) -> pd.DataFrame:
         """A8 — tek kaynak risksiz faiz dosyasi (data/macro/risk_free.csv).

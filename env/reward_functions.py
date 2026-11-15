@@ -19,11 +19,18 @@ class RewardCalculator:
 
     Bileşenler:
     1. Portfolio Return (ana hedef)
-    2. Differential Sharpe Ratio (risk-ayarlı getiri)
+    2. Sharpe terimi (risk-ayarlı getiri) — `sharpe_term` ile seçilir (Faz 9 G1):
+       'ema_level'    (varsayılan, eğitilmiş modeller): EMA Sharpe'ın DÜZEYİ
+                      tanh(((A_t - r_f) / sqrt(B_t - A_t^2)) / 2). Bu bir diferansiyel
+                      Sharpe DEĞİL (Faz 9 Y2); eski adı "Differential Sharpe Ratio" idi.
+       'differential' Moody & Saffell (2001) diferansiyel Sharpe'ı D_t (denklem 14),
+                      fazla getiri üzerinde, aynı tanh(x/2) sıkıştırmasıyla.
     3. MDD Penalty (aşağı yönlü risk)
     4. Volatility Penalty (toplam risk)
     5. Trade Frequency Bonus/Penalty (işlem kalitesi)
     """
+
+    SHARPE_TERMS = ('ema_level', 'differential')
 
     def __init__(
         self,
@@ -35,14 +42,22 @@ class RewardCalculator:
         rolling_window: int = 30,      # Rolling metrics için window
         target_trades_per_100: int = 50,  # Hedef işlem sayısı (100 step başına)
         risk_free_rate: float = 0.15,     # Yıllık risksiz faiz (TCMB ~%15)
+        sharpe_term: str = 'ema_level',   # Faz 9 G1: 'ema_level' | 'differential'
     ):
         """
         Args:
             w1-w5: Reward bileşenlerinin ağırlıkları
             rolling_window: Rolling Sharpe ve volatilite için window
             target_trades_per_100: 100 step başına hedeflenen işlem sayısı
-            risk_free_rate: Yıllık risksiz faiz oranı (0.15 = %15)
+            risk_free_rate: Yıllık risksiz faiz oranı (0.15 = %15). Eski sabit; tek
+                kaynak risksiz faize (A8) bağlanması Faz 9 §9.22 madde 6'da.
+            sharpe_term: 'ema_level' (varsayılan; davranış dondurma) ya da
+                'differential' (Moody & Saffell 2001). Bilinmeyen değer ValueError.
         """
+        if sharpe_term not in self.SHARPE_TERMS:
+            raise ValueError(f"sharpe_term {sharpe_term!r} bilinmiyor; "
+                             f"seçenekler: {self.SHARPE_TERMS}")
+        self.sharpe_term = sharpe_term
         self.w1 = w1
         self.w2 = w2
         self.w3 = w3
@@ -56,15 +71,17 @@ class RewardCalculator:
         self.dsr_a = 0.0  # Exponential moving average of returns
         self.dsr_b = 0.0  # Exponential moving average of squared returns
         self.dsr_eta = 1.0 / rolling_window  # Decay rate
+        self.dsr_n = 0  # 'differential': güncellenen adım sayısı (ısınma)
 
         logger.info(f"RewardCalculator initialized with weights: "
                    f"Return={w1:.2f}, Sharpe={w2:.2f}, MDD={w3:.2f}, "
-                   f"Vol={w4:.2f}, TradeFreq={w5:.2f}")
+                   f"Vol={w4:.2f}, TradeFreq={w5:.2f}, sharpe_term={sharpe_term}")
 
     def reset(self):
         """Episode başında DSR state'i sıfırla"""
         self.dsr_a = 0.0
         self.dsr_b = 0.0
+        self.dsr_n = 0
 
     def calculate_psr_reward(
         self,
@@ -101,10 +118,15 @@ class RewardCalculator:
 
         components['portfolio_return'] = portfolio_return
 
-        # 2. Differential Sharpe Ratio (DSR)
-        dsr = self._calculate_differential_sharpe_ratio(
-            current_return=portfolio_return / 100  # Percentage to decimal
-        )
+        # 2. Sharpe terimi (G1): 'ema_level' eski düzey, 'differential' Moody-Saffell D_t
+        if self.sharpe_term == 'differential':
+            dsr, d_raw = self._calculate_moody_saffell_dt(
+                current_return=portfolio_return / 100)
+            components['sharpe_raw'] = d_raw
+        else:
+            dsr = self._calculate_differential_sharpe_ratio(
+                current_return=portfolio_return / 100  # Percentage to decimal
+            )
         components['sharpe_ratio'] = dsr
 
         # 3. MDD Penalty
@@ -152,12 +174,58 @@ class RewardCalculator:
 
         return total_reward, components
 
+    def _calculate_moody_saffell_dt(self, current_return: float) -> Tuple[float, float]:
+        """Moody & Saffell (2001) diferansiyel Sharpe D_t (Faz 9 G1).
+
+        Kaynak: Moody & Saffell, IEEE TNN 12(4), 2001, s.4, denklem 13–15
+        (yazar sürümü Zotero JV7QAJNU):
+            ΔA_t = R_t − A_{t−1},   ΔB_t = R_t² − B_{t−1}
+            D_t  = (B_{t−1}·ΔA_t − ½·A_{t−1}·ΔB_t) / (B_{t−1} − A_{t−1}²)^{3/2}
+            A_t  = A_{t−1} + η·ΔA_t,  B_t = B_{t−1} + η·ΔB_t
+        ve S_t ≈ S_{t−1} + η·D_t (denklem 13). R_t, makaledeki gibi fazla getiri
+        R̃_t = R_t − r_f (s.4): r_f = risk_free_rate / 252, 'ema_level' ile aynı sabit.
+
+        Tasarım varsayımları (makalede yok):
+          - Isınma: ilk 1/η adımda (EMA'nın etkin penceresi) D_t = 0; A ve B yine
+            güncellenir. Sıfırdan başlayan EMA'da B_{t−1} − A_{t−1}² ilk adımlarda
+            ~η·R² kadar küçük, D_t patlar.
+          - Paydada varyans tabanı max(B_{t−1} − A_{t−1}², 1e-9) ('ema_level' ile aynı
+            taban; hakem-rl İ1 #2). Nakitte fazla getiri sabit (−r_f), varyans 0'a
+            gider; tabansız D_t patlıyordu (ölçüm: tam nakitte max|D| 293), tabanla
+            durağan nakitte D_t → 0 (yeni bilgi yok). Sonlu değilse D_t = 0.
+          - Ödüle tanh(D_t / 2) girer ('ema_level' ile aynı sıkıştırma). Ham D_t
+            `sharpe_raw` bileşeninde. Denklem 13'ün toplanabilirliği (Σ η·D_t ≈ ΔS)
+            HAM D_t için geçerli; sıkıştırılmış terimde yalnız yaklaşık. Ad: "tanh ile
+            sıkıştırılmış, ısınmalı Moody-Saffell D_t".
+
+        Returns:
+            (tanh(D_t / 2), D_t)
+        """
+        r = current_return - self.risk_free_rate / 252
+        a_prev, b_prev = self.dsr_a, self.dsr_b
+        d_a = r - a_prev
+        d_b = r * r - b_prev
+        var_prev = b_prev - a_prev * a_prev
+        self.dsr_a = a_prev + self.dsr_eta * d_a
+        self.dsr_b = b_prev + self.dsr_eta * d_b
+        self.dsr_n += 1
+        warm = self.dsr_n <= int(round(1.0 / self.dsr_eta))
+        if warm or not np.isfinite(var_prev):
+            return 0.0, 0.0
+        d_t = (b_prev * d_a - 0.5 * a_prev * d_b) / max(var_prev, 1e-9) ** 1.5
+        if not np.isfinite(d_t):
+            return 0.0, 0.0
+        return float(np.tanh(d_t / 2)), float(d_t)
+
     def _calculate_differential_sharpe_ratio(self, current_return: float) -> float:
         """
-        Differential Sharpe Ratio (DSR) hesapla
+        EMA Sharpe DÜZEYİ ('ema_level'; tarihsel adı "Differential Sharpe Ratio").
 
-        DSR, Sharpe oranının bir time step'teki birinci dereceden katkısıdır.
-        Online optimization için uygun, toplanabilir (additive) bir metriktir.
+        Faz 9 Y2: bu bir diferansiyel Sharpe DEĞİL — Moody & Saffell'in D_t'si
+        Sharpe'ın η'ya göre türevidir (`_calculate_moody_saffell_dt`). Burada EMA
+        Sharpe'ın kendisi hesaplanıp tanh ile sıkıştırılıyor. Eğitilmiş modeller
+        bu tanımla eğitildi; davranış dondurma gereği değişmez. Metod adı çağıranlar
+        için korunur.
 
         Formula:
         A_t = A_{t-1} + eta * (R_t - A_{t-1})  # EMA of returns
@@ -312,6 +380,14 @@ class RewardCalculator:
             'w4_volatility': self.w4,
             'w5_trade_freq': self.w5
         }
+
+    def get_reward_spec(self) -> Dict[str, object]:
+        """Ödülü belirleyen tüm parametreler (kayıt ve HPO soyu; hakem-rl İ1 #3)."""
+        return {'sharpe_term': self.sharpe_term,
+                'w1': self.w1, 'w2': self.w2, 'w3': self.w3, 'w4': self.w4, 'w5': self.w5,
+                'rolling_window': self.rolling_window,
+                'target_trades_per_100': self.target_trades_per_100,
+                'risk_free_rate': self.risk_free_rate}
 
     def set_weights(self, weights: Dict[str, float]):
         """Ağırlıkları güncelle (Optuna için)"""

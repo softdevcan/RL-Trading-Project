@@ -23,4 +23,17 @@
 - **Yon metrigi**: `BasePredictionModel.compute_metrics`'in `direction_accuracy`'si fark tabanli
   (`np.diff`) ve makaledeki TDA DEGIL; TATS karsilastirmasinda `ensemble_test_metrics['tats'][*]['tda']`
   kullan (Faz 9 §9.17).
-- Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (39)
+- **Rejim etiketi** yalniz `evaluation/regimes.py`'den (B6): XU100 200g trend x 60g vol GENISLEYEN
+  tercil, <= t (B0 testli). Gerceklesen getiriye kosullu "rejim" YAZMA (Y3; eski fonksiyon kaldirildi).
+  **Birincil = `load_primary_labels()` = USD bazli XU100 (XU100 / USDTRY_{t-1}), genisleyen tercil**
+  (kullanici karari 2026-11-15, M8 on kaydi); nominal TL ve 5y kayan tercil duyarlilik kollari. Nominal
+  trend enflasyonla 'bull'a kayar (2022'de hic bear yok). Seriler `data/macro/xu100.csv`, `usdtry.csv`
+  (`python -m data.index_fetcher`). `episodes` bagimsiz donem DEGIL; `episodes_min20` + blok bootstrap.
+- **Kalibrasyon sifati**: `informative` kapisi (T sinirda degil, BSS > 0, AUC GA'si 0,5'i dislar) gecilmeden
+  "kalibre" yazma; "sicaklik olcekli, ayirt edici degil" (F, I2). GPU'da DL tek kosu sayilari oynak (C1).
+- **Baseline ve birimler (D1/D3/D4):** `evaluation/baselines.py` (1/N aylik, al-tut, XU030 fiyat endeksi — temettusuz,
+  maliyetsiz; sentetik yedek YOK), `evaluation/units.py` (nominal / TUFE-reel basamak / USD = USDTRY_{t-1}). Maliyet
+  `COST_GRID_BPS` gidis-donus, ana 20; tek yon bps/2 x devir. Birincil Sharpe nominal TL A8 fazla getiri; reel/USD `sharpe_rf0`.
+  Eski 0,02 sabitleri kaldirildi (`ModelAnalyzer(return_dates=)`; tarihsiz -> `risk_free_source='rf0 ...'`). Odulun 0,15'i
+  eski ortamda BEYAN (Ansari sadakati), G2 yeni ortamda. Test `tests/test_baselines.py` (19).
+- Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (43)

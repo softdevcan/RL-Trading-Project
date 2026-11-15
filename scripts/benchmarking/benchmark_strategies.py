@@ -123,9 +123,10 @@ class BuyAndHoldStrategy:
         std_return = np.std(returns) if len(returns) > 0 else 0
         annualized_return = mean_return * 252
 
-        # Sharpe Ratio
-        risk_free_rate = 0.02
-        excess_returns = returns - (risk_free_rate / 252)
+        # Sharpe Ratio — Faz 9 D/A8: eski 0,02 sabiti kaldirildi. Bu eski betik getiriyi
+        # tarihsiz uretir; rf = 0 ve 'risk_free_source' ile acik. Tez baseline'i (A8 fazla
+        # getiri, maliyet izgarasi, birimler) evaluation/baselines.py.
+        excess_returns = returns
         sharpe_ratio = (np.mean(excess_returns) / (np.std(excess_returns) + 1e-10) * annualization_factor) if len(excess_returns) > 0 else 0
 
         # Sortino Ratio
@@ -142,6 +143,7 @@ class BuyAndHoldStrategy:
             'total_return': float(total_return),
             'annualized_return': float(annualized_return),
             'sharpe_ratio': float(sharpe_ratio),
+            'risk_free_source': 'rf0 (eski betik; A8 icin evaluation/baselines.py)',
             'sortino_ratio': float(sortino_ratio),
             'max_drawdown': float(max_drawdown),
             'total_trades': len(trades),
@@ -194,6 +196,8 @@ class BIST30IndexStrategy:
 
         # Calculate metrics
         metrics = self._calculate_metrics(portfolio_values, returns, trades)
+        # Faz 9 D1: sentetik yedek yalniz ETIKETLI (gercek endeks degil, esit agirlikli sepet)
+        metrics['synthetic_index'] = index_data is None
 
         return portfolio_values, returns, trades, metrics
 
@@ -308,9 +312,10 @@ class BIST30IndexStrategy:
         std_return = np.std(returns) if len(returns) > 0 else 0
         annualized_return = mean_return * 252
 
-        # Sharpe Ratio
-        risk_free_rate = 0.02
-        excess_returns = returns - (risk_free_rate / 252)
+        # Sharpe Ratio — Faz 9 D/A8: eski 0,02 sabiti kaldirildi. Bu eski betik getiriyi
+        # tarihsiz uretir; rf = 0 ve 'risk_free_source' ile acik. Tez baseline'i (A8 fazla
+        # getiri, maliyet izgarasi, birimler) evaluation/baselines.py.
+        excess_returns = returns
         sharpe_ratio = (np.mean(excess_returns) / (np.std(excess_returns) + 1e-10) * annualization_factor) if len(excess_returns) > 0 else 0
 
         # Sortino Ratio
@@ -327,6 +332,7 @@ class BIST30IndexStrategy:
             'total_return': float(total_return),
             'annualized_return': float(annualized_return),
             'sharpe_ratio': float(sharpe_ratio),
+            'risk_free_source': 'rf0 (eski betik; A8 icin evaluation/baselines.py)',
             'sortino_ratio': float(sortino_ratio),
             'max_drawdown': float(max_drawdown),
             'total_trades': 1,  # Index tracking has minimal trading

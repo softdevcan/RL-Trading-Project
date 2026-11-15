@@ -17,6 +17,28 @@
 - BiLSTM/TFT egitim penceresi satir i'yi icerir (B11, Y22 kapandi); yon basi etiketi ham hedeften,
   model `target_type` ozniteligini ensemble/trainer'dan alir
 
+## Yon olasiligi ve kalibrasyon (Faz 9 F1-F4)
+- `StackingEnsemble(confidence_mode='legacy'|'calibrated')`, varsayilan 'legacy' (davranis dondurma):
+  yon fiyat isaretinden, guven DL yon baslarinin ortalamasindan max(p,1-p) — Y4: ikisi ZIT yonu
+  gosterebilir (catisma orani test kalibrasyonunda `head_vs_price_conflict_rate`).
+- 'calibrated': p(UP) meta duzeyde lojistik (girdi: taban getiri tahminleri + DL yon baslari), OOF meta
+  bolumunun ILK yarisinda; sicaklik T IKINCI yarida; yarilar arasinda ve sonda h arindirma; test yalniz
+  degerlendirme. predict_next `calibration`: `p_up_raw`, `p_up_cal` (F4), `direction_price`,
+  `direction_conflict`; yon = 1[p_cal>=0,5]. Fiyat tahmini iki modda AYNI. Mod model meta'sindan yuklenir.
+- Her egitimde `ensemble_test_metrics['calibration']` (iki yol da): ECE 15 kutu, Brier, guvenilirlik
+  (`evaluation/calibration.py`). `compute_calibration` (5 kutu, tracker) bununla KARISTIRILMAZ.
+- Sinir: yon modeli %60 modellerinin OOF'unda uyar, dagitilan modeller %80 (K19/Y26) — tek model egitiminde KALIR;
+  P tablosunda cozuldu (asagida). Sicaklik burada sembol basina, P'de havuzlu. Test: `tests/test_calibration.py`.
+
+## Nokta-zamanli tahmin tablosu (Faz 9 P; K11 v1, K19)
+- `prediction/pit_table.py` — ajanlara giden TEK tahmin kaynagi (S-obs/S-msg). 3 GBM + lojistik meta, yalniz fiyat/hacim
+  ozellikleri, veri 2009-09'dan; capa 2012-01'den her 63 seans; taban egitimi `label_date < capa`; meta + sicaklik
+  yalniz GECMIS bloklarin orneklem disi tahminlerinde (K19: %80 yeniden uyum / orneklem ici meta YOK); T capa basina
+  30 sembolde havuzlu. Eksik hucre `mask_reason` (sessiz 0,5 YOK). `informative_asof` capa anindaki bilgi kapisi.
+- Uretim: `python scripts/build_pit_table.py` -> `results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + manifest;
+  olcum `docs/development/measurements/phase9-p/`. Test `tests/test_pit_table.py`. Ensemble'in 'calibrated' modu
+  (sembol basina T, %60 OOF) tek model egitimi icin kalir; tez/MARL sinyali P tablosundan.
+
 ## evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover
 

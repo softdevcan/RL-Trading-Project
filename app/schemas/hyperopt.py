@@ -85,6 +85,12 @@ class OptimizationRequest(BaseModel):
         description="Yalniz price_norm='causal' ile: MACD de nedensel olcekle (opt-in, K26)"
     )
 
+    sharpe_term: Literal["ema_level", "differential"] = Field(
+        "ema_level",
+        description="PSR odulunde Sharpe terimi (G1); egitim rotasiyla ayni olmali — "
+                    "farkliysa rota kaydi hpo_reward_mismatch ile acik kalir"
+    )
+
     # Eski alanlar (R1 oncesi). Verilirse istek REDDEDILIR: sessizce yok saymak,
     # kullanicinin sectigini sandigi pencerenin kullanilmadigi anlamina gelirdi.
     train_start: Optional[str] = Field(None, description="KALDIRILDI (R1): `fold` kullanin")

@@ -61,12 +61,20 @@ BASE_MODEL_CONFIGS = {
 }
 
 
+CONFIDENCE_MODES = ('legacy', 'calibrated')
+MIN_CALIB_ROWS = 50  # F2: siniflandirici ve sicaklik yarilarinin her biri icin en az satir
+
+
 class StackingEnsemble:
     """Stacking tabanli ensemble tahmin sistemi.
 
     Walk-forward out-of-fold tahminlerle meta-learner egitir.
     Geriye uyumlu PricePredictor arayuzu saglar.
     """
+
+    # F2: yon siniflandiricisi/sicaklik yarilari arasinda ve meta sonunda arindirma (None = h).
+    # Yalniz test mutasyonu icin degistirilir.
+    CALIB_PURGE: Optional[int] = None
 
     def __init__(
         self,
@@ -80,12 +88,22 @@ class StackingEnsemble:
         target_type: str = 'log_return',
         strict: bool = False,
         warm_start: Optional[bool] = None,
+        confidence_mode: str = 'legacy',
     ):
         if horizon not in ('daily', 'weekly'):
             raise ValueError("horizon 'daily' veya 'weekly' olmali")
         if meta_learner_type not in ('ridge', 'xgboost'):
             raise ValueError("meta_learner_type 'ridge' veya 'xgboost' olmali")
 
+        # Faz 9 F1-F4: 'legacy' (varsayilan; davranis dondurma) yon = fiyat tahmininin isareti,
+        # guven = DL yon baslarinin ortalamasindan max(p, 1-p) (Y4: ikisi zit yonu gosterebilir).
+        # 'calibrated': p(UP) meta duzeyde lojistik siniflandiricidan (OOF'un ilk yarisi),
+        # sicaklik olcekleme ikinci yarida; yon = 1[p_cal >= 0,5], guven = max(p_cal, 1-p_cal).
+        # Fiyat tahmini iki modda da AYNI. Her iki modda test kalibrasyonu olculur (F3).
+        if confidence_mode not in CONFIDENCE_MODES:
+            raise ValueError(f"confidence_mode {confidence_mode!r}: {CONFIDENCE_MODES}")
+        self.confidence_mode = confidence_mode
+        self.direction_model: Optional[Dict[str, Any]] = None
         self.horizon = horizon
         self.source = source  # gold icin 'borsapy' / 'yfinance'; hisse icin None
         self.feature_groups = feature_groups  # None = registry default
@@ -351,6 +369,19 @@ class StackingEnsemble:
                 test_metrics['tats'] = self._evaluate_tats_on_test(
                     df, feat_df, meta_end, test_meta_X, ensemble_pred, y_test)
 
+        # Faz 9 F1-F4: test kalibrasyonu (her iki modda) + 'calibrated' modda yon modeli.
+        # %60 modelleri hala self.base_models'ta (asagida %80 ile degisir).
+        if len(test_preds_per_model) >= 2:
+            try:
+                test_metrics['calibration'] = self._direction_calibration(
+                    df, feat_df, base_end, meta_end, n, meta_predictions, test_preds_per_model,
+                    ensemble_pred, X_meta, X_test)
+            except Exception as exc:
+                logger.warning(f"  [KALIBRASYON] olculemedi: {exc}")
+                test_metrics['calibration'] = {'error': str(exc)}
+                if self.confidence_mode == 'calibrated' and self.strict:
+                    raise
+
         # ------------------------------------------------------------------
         # 2) Deployment: base modelleri %80 veri ile yeniden egit.
         #    Sebep: %60-trained modeller non-stationary varliklarda (altin,
@@ -440,6 +471,158 @@ class StackingEnsemble:
         m_base['tda'], m_corr['tda'] = tda(base), tda(corrected)
         return {'n_rows': int(k), 'n_applied': int(n_applied),
                 'without_tats': m_base, 'with_tats': m_corr}
+
+    # ------------------------------------------------------------------
+    # Faz 9 F1-F4: yon olasiligi ve kalibrasyon
+    # ------------------------------------------------------------------
+
+    def _ret_of(self, pred: np.ndarray, close: np.ndarray) -> np.ndarray:
+        """Hedef birimindeki tahmin -> log getiri (log_return hedefinde aynen)."""
+        pred = np.asarray(pred, dtype=np.float64)
+        if self.target_type == 'log_return':
+            return pred
+        return np.log(np.clip(pred, 1e-12, None) / np.clip(close, 1e-12, None))
+
+    def _direction_heads(self, X: np.ndarray) -> Dict[str, np.ndarray]:
+        heads = {}
+        for k, m in self.base_models.items():
+            try:
+                d = m._predict_direction_raw(X)
+            except Exception:
+                d = None
+            if d is not None and len(d) > 0:
+                heads[k] = np.asarray(d, dtype=np.float64)
+        return heads
+
+    def _direction_features(self, preds: Dict[str, np.ndarray], heads: Dict[str, np.ndarray],
+                            close: np.ndarray):
+        """Siniflandirici girdisi: taban getiri tahminleri + (varsa) DL yon baslari - 0,5.
+
+        Hepsi SONDAN ortak uzunluga hizalanir (DL modelleri kisa dondurur). close da sondan.
+        Returns: (anahtarlar, X (L x k), L)
+        """
+        cols = {f'ret_{k}': v for k, v in preds.items()}
+        cols.update({f'dir_{k}': v for k, v in heads.items()})
+        keys = sorted(cols)
+        L = min([len(cols[k]) for k in keys] + [len(close)])
+        c = np.asarray(close, dtype=np.float64)[-L:]
+        X = np.column_stack([
+            self._ret_of(cols[k][-L:], c) if k.startswith('ret_') else np.asarray(cols[k][-L:]) - 0.5
+            for k in keys])
+        return keys, X, L
+
+    def _legacy_p_up(self, preds: Dict[str, np.ndarray], heads: Dict[str, np.ndarray],
+                     ens_pred: np.ndarray, close: np.ndarray):
+        """Eski yolun ima ettigi p(UP) ve yon catismasi (Y4), predict_next ile ayni kural.
+
+        Eski cikti: yon fiyat tahmininden, guven DL yon baslarinin ortalamasindan
+        max(p, 1-p) (bas yoksa fiyat oylamasi). Guven 'tahmin edilen yonun olasiligi' gibi
+        sunuldugu icin ima edilen p(UP) = guven (yon UP) ya da 1 - guven (yon DOWN).
+        """
+        L = min([len(v) for v in list(preds.values()) + list(heads.values())]
+                + [len(ens_pred), len(close)])
+        c = np.asarray(close, dtype=np.float64)[-L:]
+        up_price = self._ret_of(np.asarray(ens_pred)[-L:], c) > 0
+        if heads:
+            p_head = np.mean([v[-L:] for v in heads.values()], axis=0)
+            conf = np.maximum(p_head, 1 - p_head)
+            conflict = (p_head >= 0.5) != up_price
+        else:
+            votes = np.mean([self._ret_of(v[-L:], c) > 0 for v in preds.values()], axis=0)
+            conf = np.maximum(votes, 1 - votes)
+            conflict = np.zeros(L, dtype=bool)
+        p_up = np.where(up_price, conf, 1 - conf)
+        return p_up, conflict, up_price, L
+
+    def _direction_calibration(self, df, feat_df, base_end, meta_end, n, meta_preds,
+                               test_preds, ens_pred_test, X_meta, X_test) -> Dict[str, Any]:
+        """F1-F3: test bolumunde eski ve kalibre yon olasiliginin kalibrasyonu.
+
+        Etiket ham kapanistan: y = 1[kapanis_{t+h} > kapanis_t] (B10 ile ayni girdi).
+        Siniflandirici OOF meta bolumunun ilk yarisinda, sicaklik ikinci yarisinda uydurulur;
+        yarilar arasinda ve meta bolumunun sonunda h satir arindirilir (etiket bir sonraki
+        bolume bakar). Test bolumunde yalniz degerlendirme (Guo vd. 2017 §4).
+        """
+        from sklearn.linear_model import LogisticRegression
+        from evaluation import calibration as cal
+
+        h = 1 if self.horizon == 'daily' else 5
+        h = h if self.CALIB_PURGE is None else int(self.CALIB_PURGE)
+        close_m, fut_m = self._tats_inputs(df, feat_df, base_end, meta_end, self.horizon)
+        close_t, fut_t = self._tats_inputs(df, feat_df, meta_end, n, self.horizon)
+        y_m_all = (fut_m > close_m).astype(np.float64)
+        y_t_all = (fut_t > close_t).astype(np.float64)
+        heads_m, heads_t = self._direction_heads(X_meta), self._direction_heads(X_test)
+
+        # Test: eski yolun kalibrasyonu ve bas-fiyat catisma orani (her iki modda; F3, Y4)
+        p_leg, conflict_leg, _, Lt = self._legacy_p_up(test_preds, heads_t, ens_pred_test, close_t)
+        # BSS referansi: meta bolumunun (testten ONCE) taban orani, arindirilan son h satir haric
+        base_ref = float(y_m_all[:max(len(y_m_all) - h, 1)].mean())
+        out: Dict[str, Any] = {
+            'n_bins': cal.N_BINS, 'horizon_purge': h, 'base_rate_ref': base_ref,
+            'legacy': {**cal.summary(p_leg, y_t_all[-Lt:], base_rate=base_ref),
+                       'head_vs_price_conflict_rate': float(np.mean(conflict_leg)),
+                       'has_direction_heads': bool(heads_t)},
+        }
+
+        keys, Xm, Lm = self._direction_features(meta_preds, heads_m, close_m)
+        ym = y_m_all[-Lm:]
+        half = Lm // 2
+        fit_idx = np.arange(0, max(half - h, 0))
+        cal_idx = np.arange(half, max(Lm - h, half))
+        out.update({'features': keys, 'n_fit': int(len(fit_idx)), 'n_calib': int(len(cal_idx))})
+        if (len(fit_idx) < MIN_CALIB_ROWS or len(cal_idx) < MIN_CALIB_ROWS
+                or len(np.unique(ym[fit_idx])) < 2 or len(np.unique(ym[cal_idx])) < 2):
+            out['calibrated'] = None
+            out['skipped'] = f'yetersiz satir/sinif (fit {len(fit_idx)}, calib {len(cal_idx)})'
+            return out
+        mu = Xm[fit_idx].mean(axis=0)
+        sd = Xm[fit_idx].std(axis=0)
+        sd = np.where(sd > 1e-12, sd, 1.0)
+        clf = LogisticRegression(C=1.0, max_iter=1000)
+        clf.fit((Xm[fit_idx] - mu) / sd, ym[fit_idx])
+        z_cal = clf.decision_function((Xm[cal_idx] - mu) / sd)
+        T = cal.fit_temperature(z_cal, ym[cal_idx])
+        iso = cal.fit_isotonic(cal.sigmoid(z_cal), ym[cal_idx])
+
+        tkeys, Xt, Lt2 = self._direction_features(test_preds, heads_t, close_t)
+        if tkeys != keys:
+            raise ValueError(f"test ozellikleri {tkeys} != uyum ozellikleri {keys}")
+        yt = y_t_all[-Lt2:]
+        z_t = clf.decision_function((Xt - mu) / sd)
+        p_raw = cal.sigmoid(z_t)
+        p_temp = cal.apply_temperature(z_t, T)
+        p_iso = iso.predict(p_raw)
+        up_price_t = self._ret_of(np.asarray(ens_pred_test)[-Lt2:], close_t[-Lt2:]) > 0
+        at_bound = bool(T >= 0.99 * 20.0 or T <= 0.05 / 0.99)
+        s_temp = cal.summary(p_temp, yt, base_rate=base_ref)
+        info = cal.informative(s_temp, at_bound)
+        out['calibrated'] = {
+            'temperature': T,
+            # T arama sinirinda: en iyi NLL p -> 0,5 (bilgisiz) yonunde; "kalibre" guven sabite yakin
+            'temperature_at_bound': at_bound,
+            # hakem-finans I2 #1: 'kalibre' sifati yalniz bu kapi gecilirse (T sinirda degil,
+            # BSS > 0, AUC GA'si 0,5'i dislar); aksi halde "sicaklik olcekli, ayirt edici degil"
+            'informative': info,
+            'label': 'kalibre (ayirt edici)' if info else 'sicaklik olcekli, ayirt edici degil',
+            'raw': cal.summary(p_raw, yt, base_rate=base_ref), 'temperature_scaled': s_temp,
+            'isotonic_compare': cal.summary(p_iso, yt, with_bins=False, base_rate=base_ref,
+                                            ci=False),
+            # F1: fiyat tahmininin yonu ile p'nin yonu catisiyor mu (ayri bayrak)
+            'price_vs_p_conflict_rate': float(np.mean((p_temp >= 0.5) != up_price_t)),
+        }
+        if self.confidence_mode == 'calibrated':
+            self.direction_model = {
+                'features': keys, 'mean': mu.tolist(), 'scale': sd.tolist(),
+                'coef': clf.coef_[0].tolist(), 'intercept': float(clf.intercept_[0]),
+                'temperature': T, 'informative': info,
+                'fit_on': 'OOF meta bolumu ilk yari (%60 modelleri)',
+                'calibrated_on': 'OOF meta bolumu ikinci yari',
+            }
+        logger.info(f"  [KALIBRASYON] T={T:.3f} test ECE ham {out['calibrated']['raw']['ece']:.4f} -> "
+                    f"sicaklik {out['calibrated']['temperature_scaled']['ece']:.4f} "
+                    f"(eski yol {out['legacy']['ece']:.4f})")
+        return out
 
     @staticmethod
     def _tats_inputs(df: pd.DataFrame, feat_df: pd.DataFrame, base_end: int, meta_end: int,
@@ -638,6 +821,42 @@ class StackingEnsemble:
             confidence = round(max(agreement, 1 - agreement), 4)
         agreement = round(float(agreement), 4)
 
+        # Faz 9 F1/F4: kalibre yon olasiligi ('calibrated' mod). Fiyat tahmini degismez.
+        calib_out: Dict[str, Any] = {'confidence_mode': self.confidence_mode}
+        if self.confidence_mode == 'calibrated':
+            dm = self.direction_model
+            feats = {f'ret_{k}': v for k, v in model_predictions.items()}
+            feats.update({f'dir_{k}': v for k, v in direction_probs.items()})
+            if dm is None or sorted(feats) != list(dm['features']):
+                calib_out['calibration_unavailable'] = (
+                    'yon modeli yok' if dm is None else
+                    f"ozellikler {sorted(feats)} != {dm['features']}")
+                logger.warning(f"  [{symbol}] kalibre yon kullanilamadi: "
+                               f"{calib_out['calibration_unavailable']}")
+            else:
+                x = np.array([
+                    float(self._ret_of(np.array([feats[k]]), np.array([current_close]))[0])
+                    if k.startswith('ret_') else feats[k] - 0.5
+                    for k in dm['features']])
+                z = float(np.dot((x - np.array(dm['mean'])) / np.array(dm['scale']), dm['coef'])
+                          + dm['intercept'])
+                p_raw = float(1 / (1 + np.exp(-z)))
+                p_cal = float(1 / (1 + np.exp(-z / dm['temperature'])))
+                direction_price = direction
+                direction_p = 'UP' if p_cal >= 0.5 else 'DOWN'
+                info = bool(dm.get('informative', False))
+                # hakem-finans I2 #4: bilgisiz modelde (kapi gecilmedi) p ~ 0,5 ve yonu gurultuyle
+                # cevirirdi -> yon fiyat isaretinde kalir; guven p'den ama 'bilgisiz' isaretli
+                if info:
+                    direction = direction_p
+                confidence = round(max(p_cal, 1 - p_cal), 4)
+                calib_out.update({'p_up_raw': round(p_raw, 6), 'p_up_cal': round(p_cal, 6),
+                                  'direction_price': direction_price,
+                                  'direction_from': 'p_cal' if info else 'price (bilgisiz yon modeli)',
+                                  'confidence_informative': info,
+                                  'direction_conflict': direction_price != direction_p,
+                                  'temperature': dm['temperature']})
+
         # Y29: hedef tarih verinin son seansindan (feature_date) h is gunu sonra; duvar saatinden
         # DEGIL. Resmi BIST tatilleri bilinmiyor -> tahmini tarih; tracker gercek h. seansi kullanir.
         pred_date = (feature_date + pd.offsets.BDay(horizon_sessions(self.horizon))).strftime('%Y-%m-%d')
@@ -655,6 +874,7 @@ class StackingEnsemble:
             'ensemble_agreement': round(agreement, 4),
             'n_models': total_models,
             'tats': tats_meta,
+            'calibration': calib_out,
             # Y28 kokeni: kullanilan son ozellik satirinin tarihi (= df'in son tarihi).
             # Bu alani tasimayan tracker kayitlari Y28 oncesidir (bir ufuk bayat), gecersiz.
             'feature_date': str(feature_date)[:10],
@@ -723,6 +943,11 @@ class StackingEnsemble:
                 # Ridge: katsayilari JSON'a göm (geriye uyumluluk)
                 meta['meta_learner_coefs'] = self.meta_learner.coef_.tolist()
                 meta['meta_learner_intercept'] = float(self.meta_learner.intercept_)
+
+        # Faz 9 F1-F4: yon modeli JSON'da (lojistik katsayilar + sicaklik)
+        meta['confidence_mode'] = self.confidence_mode
+        if self.direction_model is not None:
+            meta['direction_model'] = self.direction_model
 
         # K21: TATS diske yazilir (eskiden yuklenen modelde TATS hic calismiyordu)
         meta['use_tats'] = bool(self.use_tats)
@@ -808,6 +1033,10 @@ class StackingEnsemble:
             tc._semantic_classes = np.array(tp.get('semantic_classes', [0, 1, 2]))
             tc._is_fitted = True
             self.tats_corrector = tc
+
+        # Faz 9 F1-F4: mod modelin kendisinden (kalibre egitilmis model kalibre tahmin uretir)
+        self.confidence_mode = meta.get('confidence_mode', 'legacy')
+        self.direction_model = meta.get('direction_model')
 
         self._is_trained = True
         logger.info(f"  Ensemble yuklendi: {len(self.base_models)} model"

@@ -257,6 +257,10 @@ async def start_training(
             _spec.fold(request.fold)
     except KeyError as exc:
         raise HTTPException(status_code=400, detail=str(exc).strip('"'))
+    # Faz 9 / G1: Sharpe terimi yalniz PSR odulunde (faz 2) var; sessizce yok sayilmaz.
+    if request.sharpe_term != "ema_level" and request.phase != 2:
+        raise HTTPException(status_code=400,
+                            detail="sharpe_term yalniz faz 2 (PSR odulu) ile kullanilabilir")
 
     # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
     _check_training_data_freshness(request.phase)
@@ -1251,6 +1255,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             reward_type=reward_type,
             fundamental_df=fundamental_df,
             macro_df=macro_df,
+            # G1: 'simple' odulde Sharpe terimi yok (start_training faz 2 disini reddeder)
+            sharpe_term=request.sharpe_term if reward_type == 'psr' else 'ema_level',
         )
         norm_settings = dict(
             # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
@@ -1305,7 +1311,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     study_name, fold_test_start=fold_def.test_start, train_seed=seed,
                     symbols=list(temp_env.symbols), split_digest=split_info['digest'],
                     obs_config={'price_norm': temp_env.get_price_norm(),
-                                'indicator_spec': indicator_spec})
+                                'indicator_spec': indicator_spec},
+                    reward_config=temp_env.get_reward_spec())
                 hyperparams_source = {'source': f"hpo:{study_name or request.hyperparameter_study}",
                                       'clean': clean, 'open_items': open_items}
             else:
@@ -1533,6 +1540,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'indicator_spec': indicator_spec,
                    'price_norm': temp_env.get_price_norm(),
                    'price_norm_train_context': train_context_report,
+                   'reward': temp_env.get_reward_spec(),
                    # 'protocol' test ortami kurulunca eklenir (olcek oradan olculur)
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
@@ -1575,6 +1583,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "indicator_spec": indicator_spec,
             "price_norm": temp_env.get_price_norm(),
             "price_norm_train_context": train_context_report,
+            # G1: odul tanimi (canli karar odulu kullanmaz; kayit ve soy icin)
+            "reward": temp_env.get_reward_spec(),
             "hyperparams_source": hyperparams_source.get('source'),
             "run_id": rl_manifest.run_id,
         })
@@ -1737,6 +1747,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     'commission_rate': request.commission_rate,
                     'max_shares_per_trade': request.max_shares_per_trade,
                     'reward_type': reward_type, 'missing_data_mode': 'own_last',
+                    'sharpe_term': temp_env.sharpe_term,  # G1 ('simple'de None)
+                    'reward_spec': temp_env.get_reward_spec(),  # agirlik, pencere, rf (soy)
                     'rl_data_start': _settings.RL_DATA_START,
                     'symbols': list(temp_env.symbols),
                     # K18 + K25: farkli gozlem tanimi farkli yapilandirmadir

@@ -343,7 +343,7 @@ def fundamentals_pit(env) -> Optional[bool]:
 def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = None,
                 train_seed: Optional[int] = None, symbols: Optional[list] = None,
                 split_digest: Optional[str] = None, obs_config: Optional[dict] = None,
-                directory: Optional[str] = None):
+                reward_config: Optional[dict] = None, directory: Optional[str] = None):
     """Hiperparametre SOYU (R1; Faz 9 §9.6 #14'un kayit tarafi).
 
     `hpo_study_protocol`'un bulduklarina ek olarak, HPO calismasinin kayitlarindan
@@ -356,6 +356,9 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
       hpo_universe_mismatch — HPO baska bir sembol evreninde (ya da sirasinda) aradi
       hpo_split_mismatch — HPO baska bir bolme tanimi kullandi
       hpo_obs_mismatch — HPO baska bir gozlem tanimiyla aradi (price_norm, gostergeler)
+      hpo_reward_mismatch — HPO baska bir odul tanimiyla aradi (Faz 9 G1): kayitta
+          `reward_spec` varsa TUMU (tur, sharpe_term, w1-w5, pencere, hedef islem, rf);
+          yoksa (eski kayit) yalniz tur + sharpe_term, anahtarsiz PSR 'ema_level' sayilir.
 
     Returns: (temiz_mi, acik_maddeler). Kayit bulunamazsa (None, [neden]).
     """
@@ -384,6 +387,19 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
             for key, want in obs_config.items():
                 if cfg.get(key) != want:
                     found.add('hpo_obs_mismatch')
+        if reward_config is not None:
+            spec = cfg.get('reward_spec')
+            if spec is not None:
+                if dict(spec) != dict(reward_config):
+                    found.add('hpo_reward_mismatch')
+            else:
+                # reward_spec'siz eski kayit: yalniz tur + terim (o zaman agirliklar sabit
+                # varsayilandi); anahtarsiz PSR kaydi G1 oncesi -> 'ema_level'
+                got = {'reward_type': cfg.get('reward_type'),
+                       'sharpe_term': cfg.get('sharpe_term', 'ema_level'
+                                              if cfg.get('reward_type') == 'psr' else None)}
+                if got != {k: reward_config.get(k) for k in got}:
+                    found.add('hpo_reward_mismatch')
     out = sorted(found)
     return (not out), out
 

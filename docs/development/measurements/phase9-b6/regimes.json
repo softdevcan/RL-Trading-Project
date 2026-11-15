@@ -1,0 +1,863 @@
+{
+ "commit": "834a30d+worktree",
+ "sources": {
+  "xu100": {
+   "symbol": "XU100.IS",
+   "source": "yfinance",
+   "auto_adjust": false,
+   "yfinance_version": "0.2.66",
+   "fetched_at": "2026-11-15T10:16:19+00:00",
+   "range": [
+    "2005-01-03",
+    "2026-11-13"
+   ],
+   "n": 5480,
+   "sha256": "e4adbef53162df7dff1e6a340377a72d355bf775893365741bece83bcb5a6b37",
+   "jump_limit": 0.15
+  },
+  "usdtry": {
+   "symbol": "TRY=X",
+   "source": "yfinance",
+   "auto_adjust": false,
+   "yfinance_version": "0.2.66",
+   "fetched_at": "2026-11-15T10:40:57+00:00",
+   "range": [
+    "2005-01-03",
+    "2026-11-13"
+   ],
+   "n": 5685,
+   "sha256": "5b87b4a80e4f828011f5f34cc4b8d84015471802e0b68336cbb139d1e6cf9227",
+   "jump_limit": 0.35
+  }
+ },
+ "definition": {
+  "trend_window": 200,
+  "vol_window": 60,
+  "min_vol_history": 252,
+  "min_episode_days": 20,
+  "rolling_window": 1260,
+  "usd": "XU100_t / USDTRY_{t-1} (kesin t oncesi son kur)"
+ },
+ "arms": {
+  "nominal_expanding": {
+   "first_label": "2006-03-29",
+   "rl_window": {
+    "bear_high": {
+     "days": 330,
+     "episodes": 29,
+     "episodes_min20": 5
+    },
+    "bear_low": {
+     "days": 226,
+     "episodes": 32,
+     "episodes_min20": 3
+    },
+    "bear_mid": {
+     "days": 460,
+     "episodes": 46,
+     "episodes_min20": 8
+    },
+    "bull_high": {
+     "days": 591,
+     "episodes": 22,
+     "episodes_min20": 5
+    },
+    "bull_low": {
+     "days": 1065,
+     "episodes": 44,
+     "episodes_min20": 12
+    },
+    "bull_mid": {
+     "days": 692,
+     "episodes": 47,
+     "episodes_min20": 12
+    },
+    "_unlabeled_days": 0,
+    "_total_days": 3364
+   },
+   "folds": {
+    "2021": {
+     "bear_low": {
+      "days": 50,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 71,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 101,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 26,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2022": {
+     "bull_high": {
+      "days": 177,
+      "episodes": 2,
+      "episodes_min20": 2
+     },
+     "bull_low": {
+      "days": 9,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 66,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 252
+    },
+    "2023": {
+     "bear_high": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 244,
+      "episodes": 2,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2024": {
+     "bear_high": {
+      "days": 1,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 48,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 13,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 28,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 159,
+      "episodes": 6,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 249
+    },
+    "2025": {
+     "bear_high": {
+      "days": 56,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 23,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 6,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 6,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 39,
+      "episodes": 5,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 120,
+      "episodes": 3,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 250
+    },
+    "2026": {
+     "bear_high": {
+      "days": 2,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 29,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 45,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 61,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 70,
+      "episodes": 5,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 207
+    }
+   },
+   "agreement_with_nominal_expanding": {
+    "trend": 1.0,
+    "vol_level": 1.0,
+    "regime": 1.0
+   },
+   "bull_days": 2348,
+   "bear_days": 1016
+  },
+  "nominal_rolling5y": {
+   "first_label": "2006-03-29",
+   "rl_window": {
+    "bear_high": {
+     "days": 521,
+     "episodes": 39,
+     "episodes_min20": 8
+    },
+    "bear_low": {
+     "days": 159,
+     "episodes": 21,
+     "episodes_min20": 2
+    },
+    "bear_mid": {
+     "days": 336,
+     "episodes": 33,
+     "episodes_min20": 5
+    },
+    "bull_high": {
+     "days": 709,
+     "episodes": 49,
+     "episodes_min20": 7
+    },
+    "bull_low": {
+     "days": 797,
+     "episodes": 47,
+     "episodes_min20": 10
+    },
+    "bull_mid": {
+     "days": 842,
+     "episodes": 71,
+     "episodes_min20": 17
+    },
+    "_unlabeled_days": 0,
+    "_total_days": 3364
+   },
+   "folds": {
+    "2021": {
+     "bear_low": {
+      "days": 47,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 3,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 79,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 63,
+      "episodes": 9,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 56,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2022": {
+     "bull_high": {
+      "days": 205,
+      "episodes": 6,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 47,
+      "episodes": 5,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 252
+    },
+    "2023": {
+     "bear_high": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 237,
+      "episodes": 4,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 7,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2024": {
+     "bear_low": {
+      "days": 1,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 48,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 12,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 32,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 156,
+      "episodes": 5,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 249
+    },
+    "2025": {
+     "bear_high": {
+      "days": 52,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 28,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 5,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 6,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 95,
+      "episodes": 7,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 64,
+      "episodes": 3,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 250
+    },
+    "2026": {
+     "bear_low": {
+      "days": 8,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 23,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 75,
+      "episodes": 4,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 101,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 207
+    }
+   },
+   "agreement_with_nominal_expanding": {
+    "trend": 1.0,
+    "vol_level": 0.7146254458977408,
+    "regime": 0.7146254458977408
+   },
+   "bull_days": 2348,
+   "bear_days": 1016
+  },
+  "usd_expanding": {
+   "first_label": "2006-03-30",
+   "rl_window": {
+    "bear_high": {
+     "days": 559,
+     "episodes": 30,
+     "episodes_min20": 9
+    },
+    "bear_low": {
+     "days": 595,
+     "episodes": 54,
+     "episodes_min20": 7
+    },
+    "bear_mid": {
+     "days": 713,
+     "episodes": 57,
+     "episodes_min20": 10
+    },
+    "bull_high": {
+     "days": 304,
+     "episodes": 26,
+     "episodes_min20": 5
+    },
+    "bull_low": {
+     "days": 788,
+     "episodes": 43,
+     "episodes_min20": 10
+    },
+    "bull_mid": {
+     "days": 405,
+     "episodes": 44,
+     "episodes_min20": 5
+    },
+    "_unlabeled_days": 0,
+    "_total_days": 3364
+   },
+   "folds": {
+    "2021": {
+     "bear_high": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 3
+     },
+     "bear_low": {
+      "days": 104,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 1,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 23,
+      "episodes": 6,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 18,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 25,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2022": {
+     "bear_high": {
+      "days": 72,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 2,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 42,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 60,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 9,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 67,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 252
+    },
+    "2023": {
+     "bear_high": {
+      "days": 57,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 188,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 3,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2024": {
+     "bear_high": {
+      "days": 8,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_low": {
+      "days": 22,
+      "episodes": 8,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 3,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 49,
+      "episodes": 9,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 90,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 249
+    },
+    "2025": {
+     "bear_high": {
+      "days": 60,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 90,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 21,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 60,
+      "episodes": 5,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 19,
+      "episodes": 6,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 250
+    },
+    "2026": {
+     "bear_low": {
+      "days": 18,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 34,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 79,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 76,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 207
+    }
+   },
+   "agreement_with_nominal_expanding": {
+    "trend": 0.745243757431629,
+    "vol_level": 0.7618906064209274,
+    "regime": 0.566884661117717
+   },
+   "bull_days": 1497,
+   "bear_days": 1867
+  },
+  "usd_rolling5y": {
+   "first_label": "2006-03-30",
+   "rl_window": {
+    "bear_high": {
+     "days": 809,
+     "episodes": 52,
+     "episodes_min20": 12
+    },
+    "bear_low": {
+     "days": 409,
+     "episodes": 49,
+     "episodes_min20": 5
+    },
+    "bear_mid": {
+     "days": 649,
+     "episodes": 74,
+     "episodes_min20": 10
+    },
+    "bull_high": {
+     "days": 336,
+     "episodes": 41,
+     "episodes_min20": 3
+    },
+    "bull_low": {
+     "days": 656,
+     "episodes": 38,
+     "episodes_min20": 11
+    },
+    "bull_mid": {
+     "days": 505,
+     "episodes": 50,
+     "episodes_min20": 9
+    },
+    "_unlabeled_days": 0,
+    "_total_days": 3364
+   },
+   "folds": {
+    "2021": {
+     "bear_high": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 3
+     },
+     "bear_low": {
+      "days": 91,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 14,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 34,
+      "episodes": 8,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 32,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2022": {
+     "bear_high": {
+      "days": 72,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 44,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 67,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 65,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 252
+    },
+    "2023": {
+     "bear_high": {
+      "days": 50,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 7,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 145,
+      "episodes": 13,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 46,
+      "episodes": 10,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 248
+    },
+    "2024": {
+     "bear_high": {
+      "days": 7,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_low": {
+      "days": 34,
+      "episodes": 14,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 66,
+      "episodes": 11,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 98,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 44,
+      "episodes": 8,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 249
+    },
+    "2025": {
+     "bear_high": {
+      "days": 58,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 100,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 13,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 71,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 8,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 250
+    },
+    "2026": {
+     "bear_low": {
+      "days": 27,
+      "episodes": 5,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 25,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 79,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 76,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0,
+     "_total_days": 207
+    }
+   },
+   "agreement_with_nominal_expanding": {
+    "trend": 0.745243757431629,
+    "vol_level": 0.6040428061831153,
+    "regime": 0.4447086801426873
+   },
+   "bull_days": 1497,
+   "bear_days": 1867
+  }
+ }
+}

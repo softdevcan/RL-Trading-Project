@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 import json
 from datetime import datetime
 from scipy import stats
@@ -37,7 +37,8 @@ class ModelAnalyzer:
     def calculate_advanced_metrics(self, portfolio_values: np.ndarray,
                                    returns: np.ndarray,
                                    trades: List[Dict],
-                                   risk_free_rate: float = 0.02) -> Dict:
+                                   risk_free_rate: Optional[float] = None,
+                                   return_dates=None) -> Dict:
         """
         Calculate comprehensive performance metrics for academic analysis
 
@@ -45,11 +46,28 @@ class ModelAnalyzer:
             portfolio_values: Array of portfolio values over time
             returns: Array of daily returns
             trades: List of trade dictionaries
-            risk_free_rate: Annual risk-free rate (default: 2%)
+            risk_free_rate: Yillik sabit (yalniz cagiran acikca verirse). Faz 9 D/A8: eski
+                0,02 varsayilani kaldirildi.
+            return_dates: `returns` ile ayni uzunlukta seans tarihleri -> risksiz faiz A8
+                serisinden (`evaluation.risk_free`; seri yoksa acik hata). Ikisi de yoksa
+                rf = 0 ve `risk_free_source = 'rf0 (tarih yok)'`.
 
         Returns:
             Dictionary with comprehensive metrics
         """
+        returns = np.asarray(returns, dtype=float)
+        if return_dates is not None:
+            from evaluation.risk_free import risk_free_series
+            if len(return_dates) != len(returns):
+                raise ValueError("return_dates ile returns ayni uzunlukta olmali")
+            rf_daily = np.nan_to_num(risk_free_series(return_dates).to_numpy(dtype=float), nan=0.0)
+            rf_source = 'A8 risk_free.csv funding_rate (t-1)'
+        elif risk_free_rate is not None:
+            rf_daily = np.full(len(returns), float(risk_free_rate) / 252)
+            rf_source = f'sabit {risk_free_rate} (cagiran)'
+        else:
+            rf_daily = np.zeros(len(returns))
+            rf_source = 'rf0 (tarih yok)'
 
         # Basic metrics
         total_return = (portfolio_values[-1] - portfolio_values[0]) / portfolio_values[0]
@@ -65,7 +83,7 @@ class ModelAnalyzer:
         annualized_volatility = std_return * annualization_factor
 
         # Sharpe Ratio
-        excess_returns = returns - (risk_free_rate / 252)
+        excess_returns = returns - rf_daily
         sharpe_ratio = np.mean(excess_returns) / (np.std(excess_returns) + 1e-10) * annualization_factor
 
         # Sortino Ratio (only downside deviation)
@@ -126,6 +144,7 @@ class ModelAnalyzer:
 
             # Risk-Adjusted Returns
             "sharpe_ratio": float(sharpe_ratio),
+            "risk_free_source": rf_source,
             "sortino_ratio": float(sortino_ratio),
             "calmar_ratio": float(calmar_ratio),
             "information_ratio": float(information_ratio),

@@ -208,8 +208,7 @@ def main(argv=None):
             portfolio_values=portfolio_values,
             returns=returns,
             trades=trades,
-            risk_free_rate=0.02
-        )
+        )  # Faz 9 D/A8: 0,02 kaldirildi; tarihsiz -> rf0 (risk_free_source)
 
         # Store results
         model_results[benchmark_name] = advanced_metrics
@@ -247,8 +246,7 @@ def main(argv=None):
                 portfolio_values=portfolio_values,
                 returns=returns,
                 trades=trades,
-                risk_free_rate=0.02
-            )
+            )  # Faz 9 D/A8: 0,02 kaldirildi; tarihsiz -> rf0 (risk_free_source)
 
             # Store results
             model_results[model_name] = advanced_metrics

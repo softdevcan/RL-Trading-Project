@@ -69,7 +69,7 @@ python tests/test_data_integrity.py        # Faz 10/V: artefakt, hayalet gun, RL
                                            #          penceresi, gercek panel saglik (27)
 python tests/test_env_missing_mode.py      # Faz 10/V: env eksik hucre modu (17)
 python tests/test_rl_reproducibility.py    # Faz 9/C: tohum, deneme kaydi, veri
-                                           #          anlik goruntusu, manifest (39)
+                                           #          anlik goruntusu, manifest, HPO sampler tohumu + mutasyon (43)
 python tests/test_price_stats_window.py    # Faz 9/B9: val/test olcegi = egitim olcegi;
                                            #          env + rota + HPO uctan uca, mutasyon,
                                            #          main ile bit-es varsayilan (git show, 11
@@ -84,6 +84,20 @@ python tests/test_universe.py              # Faz 9/E: evren tek kaynak (E0, Y11)
                                            #          listeleri; E2 KAP sektor gruplari + ham kopyadan bit-es yeniden uretim; E1 capa (bugunku XU030),
                                            #          duyuru ayristirici (3 bicim), geriye zincir + mutasyon, uyelik/maske/maruziyet SHA bagi,
                                            #          zincir + parse bit-es yeniden uretim, degismezler, 5 ceyreklik elle referans, dipnot, DOHOL tipi aralik, capa gunu (33, ag yok)
+python tests/test_reward_differential.py   # Faz 9/G1: Moody-Saffell D_t — denklem 13 (O(eta^2), eta ile dogrusal),
+                                           #          denklem 16 sonlu fark, fazla getiri, isinma, 2 mutasyon; varsayilan
+                                           #          'ema_level' main'deki reward_functions.py ile bit-es; nakitte taban; env + hpo_reward_mismatch tam odul tanimi (22)
+python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etiketi — B0 kesme degismezligi (sentetik +
+                                           #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet; kayan tercil + USD kolu B0, episodes_min20 (17, ag yok)
+python tests/test_calibration.py           # Faz 9/F1-F4: ECE (15 kutu) ve Brier elle, sicaklik T~3 bulur; ensemble
+                                           #          legacy/calibrated, p_up_raw+p_up_cal, fiyat ayni, kaydet/yukle, test
+                                           #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu; AUC/BSS bilgi kapisi (18, ~1 dk)
+python tests/test_pit_table.py            # Faz 9/P: PIT tahmin tablosu — B0 gunluk + haftalik (t sonrasi bozma), arindirmasiz
+                                           #          taban ve meta mutasyonu B0'i kirar, K19 tarihleri, havuzlu T, acik maske,
+                                           #          P2 kapsam, parquet + manifest, bootstrap p-degeri + BH (21, ~1 dk; gercek panel)
+python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut elle hesap, gec listeleme, maliyet izgarasi,
+                                           #          reel (TUFE basamak) / USD (kur t-1) + ayni gun kur mutasyonu, A8 0,02 yok,
+                                           #          gercek 2021 penceresi (19, ~10 sn)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)

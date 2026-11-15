@@ -211,66 +211,6 @@ class PredictionEvaluator:
         }
 
     @staticmethod
-    def compute_regime_metrics(
-        y_true: np.ndarray,
-        y_pred: np.ndarray,
-        current_prices: np.ndarray,
-        volatility: Optional[np.ndarray] = None,
-    ) -> Dict[str, Dict[str, float]]:
-        """Farkli piyasa rejimlerinde ayri performans degerlendirme.
-
-        Rejimler:
-        - bull: fiyat yukarı trend
-        - bear: fiyat asagi trend
-        - high_vol: yuksek volatilite
-        - low_vol: dusuk volatilite
-        """
-        y_true = np.asarray(y_true)
-        y_pred = np.asarray(y_pred)
-        current_prices = np.asarray(current_prices)
-
-        actual_returns = (y_true - current_prices) / np.where(current_prices != 0, current_prices, 1)
-
-        bull_mask = actual_returns > 0
-        bear_mask = actual_returns < 0
-
-        results = {}
-
-        for regime_name, mask in [('bull', bull_mask), ('bear', bear_mask)]:
-            if mask.sum() < 5:
-                continue
-            regime_metrics = {
-                'n_samples': int(mask.sum()),
-                'mape': round(float(np.mean(np.abs(
-                    (y_true[mask] - y_pred[mask]) / np.where(y_true[mask] != 0, y_true[mask], 1)
-                )) * 100), 4),
-                'direction_accuracy': round(float(np.mean(
-                    (y_pred[mask] > current_prices[mask]) == (y_true[mask] > current_prices[mask])
-                ) * 100), 2),
-            }
-            results[regime_name] = regime_metrics
-
-        if volatility is not None and len(volatility) == len(y_true):
-            vol_median = np.median(volatility)
-            high_vol = volatility > vol_median
-            low_vol = ~high_vol
-
-            for regime_name, mask in [('high_vol', high_vol), ('low_vol', low_vol)]:
-                if mask.sum() < 5:
-                    continue
-                results[regime_name] = {
-                    'n_samples': int(mask.sum()),
-                    'mape': round(float(np.mean(np.abs(
-                        (y_true[mask] - y_pred[mask]) / np.where(y_true[mask] != 0, y_true[mask], 1)
-                    )) * 100), 4),
-                    'direction_accuracy': round(float(np.mean(
-                        (y_pred[mask] > current_prices[mask]) == (y_true[mask] > current_prices[mask])
-                    ) * 100), 2),
-                }
-
-        return results
-
-    @staticmethod
     def diebold_mariano_test(
         y_true: np.ndarray,
         pred_1: np.ndarray,
@@ -454,6 +394,8 @@ class PredictionEvaluator:
 
         Sharpe'dan farklı olarak pozitif volatilite cezalandirilmaz.
         > 1.0 = kabul edilebilir, > 2.0 = iyi.
+        Faz 9 D/A8: getiri tarihsiz geldigi icin varsayilan rf = 0 (sortino_rf0 anlaminda);
+        A8 serisiyle fazla getiri icin evaluation/baselines.metrics ya da risk_free_series.
         """
         r = np.asarray(returns, dtype=float)
         r = r[np.isfinite(r)]
@@ -593,14 +535,34 @@ class PredictionEvaluator:
         current_prices: np.ndarray,
         volatility: Optional[np.ndarray] = None,
         n_trials: int = 1,
+        dates=None,
+        regime_labels=None,
     ) -> Dict[str, Any]:
-        """Tum metrikleri tek seferde hesapla (Faz 3.4.2 ile genisletildi)."""
+        """Tum metrikleri tek seferde hesapla (Faz 3.4.2 ile genisletildi).
+
+        Rejim metrikleri (Faz 9 B6): eski `compute_regime_metrics` "boga"yi GERCEKLESEN
+        getiriye gore tanimliyordu (Y3; hedefe kosullu alt kume) ve KALDIRILDI. Simdi
+        `dates` (ornek basina karar tarihi) ve `regime_labels`
+        (`evaluation.regimes.regime_labels` / `load_xu100_labels`) verilirse onceden tanimli,
+        nedensel etiketle hesaplanir; verilmezse `regime_metrics` None. `volatility` artik
+        kullanilmiyor (imza uyumu icin duruyor).
+        """
         from prediction.models.base import BasePredictionModel
 
         basic = BasePredictionModel.compute_metrics(y_true, y_pred)
         ic = PredictionEvaluator.compute_information_coefficient(y_true, y_pred)
         profit_factor = PredictionEvaluator.compute_profit_factor(y_true, y_pred, current_prices)
-        regime = PredictionEvaluator.compute_regime_metrics(y_true, y_pred, current_prices, volatility)
+        regime = None
+        if dates is not None and regime_labels is not None:
+            from evaluation.regimes import by_regime
+            yt, yp, cp = (np.asarray(a, dtype=float) for a in (y_true, y_pred, current_prices))
+            regime = {
+                'mape': by_regime(dates, regime_labels, lambda t, p: float(np.mean(np.abs(
+                    (t - p) / np.where(t != 0, t, 1))) * 100), yt, yp),
+                'direction_accuracy': by_regime(dates, regime_labels, lambda t, p, c: float(np.mean(
+                    (p > c) == (t > c)) * 100), yt, yp, cp),
+                'label': 'verilen etiket (evaluation/regimes.py, B6; birincil: load_primary_labels = USD bazli XU100)',
+            }
         backtest = PredictionEvaluator.backtest_simulation(y_true, y_pred, current_prices)
 
         # Faz 3.4.2: Gelismis risk metrikleri

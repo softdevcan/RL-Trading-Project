@@ -39,6 +39,9 @@ Kok `CLAUDE.md`'den tasindi; docs/thesis/ altinda calisirken yuklenir.
   raporlanmis bir DSR/DM/t-testi varsa yeniden hesaplanmali. Diger bulgular gecerli:
   oduldeki "Differential Sharpe" turev degil (G); G2'nin log-guven onseli DebUnc dikkat
   olceklemesiyle esdeger.
+- **Odul tanimi tek kaynaktan: `docs/thesis/reward-definition.md`** (G3, 2026-11-15). Varsayilan
+  Sharpe terimi "EMA Sharpe duzeyi"dir, "diferansiyel Sharpe" DENMEZ; gercek Moody & Saffell
+  D_t opt-in `sharpe_term='differential'` (G1). Komisyon odulde iki kez sayiliyor (beyan).
 - **RL sonuclari henuz tez sayisi degil.** Bu kapidan ONCE uretilenler 2000–2018 penceresi,
   komsu sembol kopyasi ve tohumsuz egitimle; SONRA uretilenler de test olcegi test penceresinden
   (Y13/B9 — 2026-11-06'da kapandi, §9.5), gosterge bfill (Y15/B7) ve ADX = 0 (K18) ile uretildi.

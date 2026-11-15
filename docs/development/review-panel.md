@@ -15,9 +15,17 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 |---|---|---|---|
 | `hakem-finans` | sonnet | Nokta-zamanlılık, BIST gerçekliği, maliyet ve yürütme, risksiz faiz ve fazla getiri, Sharpe çıkarımı, baseline | Finansal iddia, metrik ya da veri hattı değişikliği |
 | `hakem-rl` | sonnet | MDP ve ödül, eğitim bütçesi, HPO ↔ nihai eğitim, değerlendirme protokolü, tohum, RL'ye özgü sızıntı, MARL | Env, ödül, eğitim ya da değerlendirme protokolü değişikliği |
-| `hakem-2` | opus | Son kapı. Uzman bulgularını doğrular; iddia–kanıt, iç tutarlılık, özgünlük, rakam izi ve tekrar üretimi denetler | Her paket |
+| `hakem-2` | opus | Son kapı. Uzman bulgularını doğrular; iddia–kanıt, iç tutarlılık, özgünlük, rakam izi ve tekrar üretimi denetler | Faz kapanış kapısı ve teze/makaleye girecek sonuç (2026-11-15'ten beri; önceden her paket) |
 
-**Plan paketlerine önerilen eşleme:**
+**Kademeli düzen (kullanıcı kararı, 2026-11-15; Faz 9 §9.22).** Hakem-2 her pakette çalışmaz. Kurallar:
+- Uzmanlar (sonnet) yalnız **pahalı bir işin girdisini üreten** pakette çağrılır: veri hattı, ödül, kalibrasyon, tahmin tablosu, baseline. Pahalı iş P hesaplaması ya da Milestone 0' koşumlarıdır. Hata o iş başlamadan bulunmalı.
+- **Hakem-2 (opus) fazın kapanışında bir kez** çalışır. Kapanış paketi uzman tablolarını, beyan listesini ve protokolü birlikte verir. Paketler arası tutarlılık ve iddia–kanıt denetimi burada yapılır.
+- **İkinci okuma yalnız BÜYÜK bulguda** yapılır. KÜÇÜK bulgular düzeltilip kapanış paketinde listelenir.
+- **Hakemsiz paket:** testin bozulan üretim koduna karşı kırıldığı gösterilir (mutasyon) ve öz-kontrol yapılır. Kapanışta hakem-2 bunları örnekleyerek okur.
+- **Gerekçe** (aşağıdaki kayıt): sonnet uzmanlar dar kapsamda BÜYÜK bulgular buldu (K18'de 3, R1'de 2). Hakem-2 uzmanların kaçırdığını buldu (K18'de 4 yeni bulgu, E'de bir kuralın öncülü). Opus tek seferlik kapıda tutulur.
+- Faz 9'un kalan noktaları (İ1–İ3 + kapanış) §9.22'de.
+
+**Plan paketlerine eşleme** (2026-11-15'ten önceki düzen; B7–E için tarihsel kayıt):
 
 | Paket | Panel |
 |---|---|
@@ -25,10 +33,11 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | B8, B10 | hakem-finans + hakem-2 |
 | K18 (+ K25) | hakem-rl + hakem-2 |
 | R1 | hakem-rl + hakem-finans + hakem-2 |
-| D, E, F | hakem-finans + hakem-2 |
-| G | hakem-rl + hakem-finans + hakem-2 |
-| P | hakem-finans + hakem-rl + hakem-2 |
-| M (MARL) | hakem-rl + hakem-2 |
+| E | hakem-2 |
+| G (İ1) | hakem-rl → kapanışta hakem-2 |
+| F + B6 (İ2) | hakem-finans → kapanışta hakem-2 |
+| P + D (İ3) | hakem-finans + hakem-rl → kapanışta hakem-2 |
+| M (MARL) | hakem-rl paket başına; hakem-2 Milestone kapılarında |
 
 ## Akış
 
@@ -79,3 +88,9 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | 2026-11-14 | Y29 | hakem-2 (opus), son kapı (Y28 bağlamıyla SendMessage) | ~40 bin ek (toplam ~110 bin) | 20 | ~3,1 dk | Paketle. Küçük revizyon: 6 KÜÇÜK (saate bağlı kontrol, v1.10.0 değerlendirmesi, üzerine yazma, düz yfinance satırı, pano, ex-ante). Testi kendi koştu |
 | 2026-11-15 | E (E1 geçici) | hakem-2 (opus), son kapı | ~85 bin | 18 | ~5,7 dk | Paketle, uzman yok. Büyük revizyon (RED yok): 2 BÜYÜK (tutarlılık kuralının öncülü yanlış; #11503 dipnotu ayrıştırıcıda kayboluyordu, "sitede kanıt yok" iddiası yanlış), 5 KÜÇÜK. 14 çeyreği ham metinle elle karşılaştırdı; test koşmadı |
 | 2026-11-15 | E (E1 geçici) | hakem-2 (opus), ikinci okuma (SendMessage) | ~118 bin (önceki bağlamla) | 5 | ~1,1 dk | Küçük revizyon, PR'ı engellemez: 3 KÜÇÜK (çapa günü katı modda None, "üst sınır" koşullu, strict ≠ doğruluk). Testi kendi koştu (32/0) |
+| 2026-11-15 | İ1 (G1 + G3) | hakem-rl (sonnet), ilk okuma | ~37 bin | 6 | ~0,7 dk | Kademeli düzenin ilk uzman noktası; paket ~1,8 bin kelime + ölçüm JSON'u. Küçük revizyon: 2 BÜYÜK (K4 w₂ ölçeği; nakitte Dₜ — ana oturum ölçtü: max\|D\| 293), 4 KÜÇÜK. Test koşmadı |
+| 2026-11-15 | İ1 (G1 + G3) | hakem-rl (sonnet), ikinci okuma (SendMessage) | ~41 bin (önceki bağlamla) | 3 | ~0,2 dk | Kabul; yalnız git diff + grep. BÜYÜK bulgu olduğu için yapıldı (kademeli kural) |
+| 2026-11-15 | İ2 (F + B6) | hakem-finans (sonnet), ilk okuma | ~37 bin | 7 | ~1,1 dk | Paket ~1,9 bin kelime + 2 JSON. Küçük revizyon: 2 BÜYÜK (ECE tek başına kalibrasyon kanıtı değil; GA'sız karşılaştırma), 3 KÜÇÜK; rejim için USD bazlı tanım önerisi (kullanıcı kabul etti). Test koşmadı |
+| 2026-11-15 | İ2 (F + B6) | hakem-finans (sonnet), ikinci okuma (SendMessage) | ~46 bin (önceki bağlamla) | 3 | ~0,4 dk | Kabul; 2 engelleyici olmayan not (kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir gün kayma) |
+| 2026-11-15 | İ3 (P + D) | hakem-finans (sonnet) | ~51 bin | 10 | ~1,8 dk | Büyük revizyon (çıkarım katmanı): güç/MDE, blok içi AUC, hayatta kalan evren; 5 KÜÇÜK |
+| 2026-11-15 | İ3 (P + D) | hakem-rl (sonnet) | ~41 bin | 10 | ~0,9 dk | Küçük revizyon: 2 BÜYÜK Milestone 0' tasarımına (S-msg boş sonuç beyanı, pozitif kontrol), 3 KÜÇÜK |
