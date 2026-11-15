@@ -198,7 +198,7 @@ def q3_reading(q2: dict, pc: dict, alpha: float, equivalence_allowed: bool) -> s
             f"{q2['mde_annual_at_measured_rho']:.2f})'; 'tahmin katki vermez' YAZILMAZ.")
 
 
-def analyze(protocol_path: str, mroot: str, results_root: str, rf_fn) -> dict:
+def analyze(protocol_path: str, mroot: str, results_root: str, rf_fn, forward_data: bool = False) -> dict:
     p = json.load(open(protocol_path, encoding='utf-8'))
     header, cells, dup = read_ledger(os.path.join(mroot, 'ledger.jsonl'))
     want = {'protocol_sha256': sha(protocol_path), 'protocol_doc_sha256': sha(p['doc'])}
@@ -224,11 +224,13 @@ def analyze(protocol_path: str, mroot: str, results_root: str, rf_fn) -> dict:
     all_folds = list(st['folds'])
     q2 = contrast(per_fold, algos, 'DTF', 'DT', conf_folds, margin)
     pc_conf = contrast(per_fold, algos, 'PC060', 'DT', conf_folds)
-    # On kayit sonrasi ileri veri henuz yok: dogrulayici pencere yalniz 2021 -> esdegerlik kurulamaz (cannot_claim)
-    forward_data = False
+    # Esdegerlik yalniz on kayit sonrasi ileri veri dogrulayici pencereye girdiginde (cannot_claim: '2021'de
+    # esdegerlik'). Ileri veri henuz yok; --forward-data acikca verilmedikce kapali ve ciktiya yazilir.
+    if forward_data:
+        raise SystemExit('--forward-data: ileri veri penceresi bu betikte henuz tanimli degil (yeni protokol surumu)')
     equivalence_allowed = forward_data
     return {
-        'protocol_id': p['protocol_id'], **want, 'ledger_cells': len(cells),
+        'protocol_id': p['protocol_id'], **want, 'ledger_cells': len(cells), 'forward_data': forward_data,
         'duplicate_completed_cells': dup, 'N_trials_registry_union': n_trials, 'registry_dirs': dirs,
         'confirmatory': {'Q2_DTF_vs_DT': q2, 'alpha': inf['alpha'],
                          'decision_two_sided': 'red' if q2['p_value'] < inf['alpha'] else 'red yok',
@@ -317,6 +319,9 @@ def _self_test() -> int:
         'algoritma bazinda + tohum dagilimi': set(q2['per_algorithm']) == {'PPO', 'A2C'}
                                    and len(q2['per_algorithm']['PPO']['per_seed_delta_annual']) == 5,
     }
+    # q3_reading birim: esdegerlik izinliyken (ileri veri) TOST + PC060 tespit -> 'yazilabilir' (hakem-2 2. okuma #3)
+    checks['izinli dalda katki vermez yazilabilir'] = 'yazilabilir' in q3_reading(q2, pc, 0.05, True) \
+        and 'yazilabilir' not in q3_reading(q2, pc, 0.05, False)
     # mutasyon: bir hucrenin last_checkpoint kaydi silinirse betik durmali
     with open(os.path.join(wres, 'trial_registry.jsonl'), 'w', encoding='utf-8') as fh:
         fh.writelines(json.dumps(x) + '\n' for x in lines[:-1])
@@ -339,6 +344,8 @@ def main():
     ap.add_argument('--data-root', default=None, help='results/ ve data/macro iceren depo koku')
     ap.add_argument('--out', default=None)
     ap.add_argument('--self-test', action='store_true')
+    ap.add_argument('--forward-data', action='store_true',
+                    help='on kayit sonrasi ileri veri (henuz tanimli degil; esdegerlik korumasi bununla acilir)')
     a = ap.parse_args()
     if a.self_test:
         os.chdir(ROOT)
@@ -353,7 +360,8 @@ def main():
     results_root = ws.results_dir()
     mroot = os.path.join(results_root, 'milestone0', p['protocol_id'])
     # p['doc'] goreli yol: data-root'taki (ana depo) dondurulmus belge; SHA defter basligiyla karsilastirilir
-    out = analyze(protocol_path, mroot, results_root, lambda idx: risk_free_series(idx).reindex(idx))
+    out = analyze(protocol_path, mroot, results_root, lambda idx: risk_free_series(idx).reindex(idx),
+                  forward_data=a.forward_data)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, 'w', encoding='utf-8') as fh:
         json.dump(out, fh, indent=1, ensure_ascii=False, default=str)

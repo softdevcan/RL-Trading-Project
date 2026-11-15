@@ -2162,6 +2162,11 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 - (b) Eğitilmiş DTF/PC060 modellerinde tahmin bloğunu sıfırlama ya da karıştırma; eylem ve Sharpe değişimi.
 - (c) Plasebo kolu: yeniden eğitim gerektirir, yalnız (b) belirsizse.
 
+**hakem-2 ikinci okuma (SendMessage): Kabul.** 3 KÜÇÜK not işlendi:
+- Özet satırına "bu güçle" niteleyicisi eklendi.
+- `--forward-data` bayrağı eklendi: ileri veri henüz tanımlı değil, değeri çıktıya yazılıyor.
+- İzinli dal için `q3_reading` birim kontrolü eklendi (öz sınama 11/11).
+
 Maliyet: [review-panel.md](review-panel.md).
 
 ---
@@ -2228,4 +2233,4 @@ Maliyet: [review-panel.md](review-panel.md).
 - **2026-11-15 (§9.34, kapanış kapısı):** hakem-2 Büyük revizyon (8 BÜYÜK). 2021 test penceresi bir duman koşusuyla bir kez okundu (beyan, `spike` kaydı). Protokol r2: ön eleme 2023–2026, son nokta puanı, doğrulayıcı aile, MDE (2021 tek başına ≳ 1 yıllık Sharpe), K4 ölçek eşitlemesi (k 0,165), pozitif kontrol (AUC 0,55 / 0,60), gerçek hiperparametreler kayıtta ve betikte denetleniyor, panel/tablo SHA zorlanıyor. Açık pencerede de bilgi yok (blok içi 0,502). Bütçe ~226–649 sa tek süreç (kullanıcı kararı). `test_pit_table` 33.
 - **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
 - **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.
-- **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: boru hattı AUC 0,60'lık sinyali bile aktaramadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.
+- **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.

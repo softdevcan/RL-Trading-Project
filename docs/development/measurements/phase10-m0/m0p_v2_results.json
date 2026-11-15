@@ -3,6 +3,7 @@
  "protocol_sha256": "2fa9f70044cc31ddafc73973ae1dde2d3c6c106f7d295005029f6a6e77fa14ff",
  "protocol_doc_sha256": "6256cc3a6713c8b5873db2af768622ddaf19ea9dc9583e85b185a881dc3ae91d",
  "ledger_cells": 180,
+ "forward_data": false,
  "duplicate_completed_cells": {},
  "N_trials_registry_union": 360,
  "registry_dirs": [
