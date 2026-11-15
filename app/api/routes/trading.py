@@ -1312,8 +1312,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     symbols=list(temp_env.symbols), split_digest=split_info['digest'],
                     obs_config={'price_norm': temp_env.get_price_norm(),
                                 'indicator_spec': indicator_spec},
-                    reward_config={'reward_type': reward_type,
-                                   'sharpe_term': temp_env.sharpe_term})
+                    reward_config=temp_env.get_reward_spec())
                 hyperparams_source = {'source': f"hpo:{study_name or request.hyperparameter_study}",
                                       'clean': clean, 'open_items': open_items}
             else:
@@ -1541,7 +1540,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                    'indicator_spec': indicator_spec,
                    'price_norm': temp_env.get_price_norm(),
                    'price_norm_train_context': train_context_report,
-                   'reward': {'reward_type': reward_type, 'sharpe_term': temp_env.sharpe_term},
+                   'reward': temp_env.get_reward_spec(),
                    # 'protocol' test ortami kurulunca eklenir (olcek oradan olculur)
                    'device': str(getattr(model, 'device', 'unknown'))},
         )
@@ -1585,7 +1584,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "price_norm": temp_env.get_price_norm(),
             "price_norm_train_context": train_context_report,
             # G1: odul tanimi (canli karar odulu kullanmaz; kayit ve soy icin)
-            "reward": {"reward_type": reward_type, "sharpe_term": temp_env.sharpe_term},
+            "reward": temp_env.get_reward_spec(),
             "hyperparams_source": hyperparams_source.get('source'),
             "run_id": rl_manifest.run_id,
         })
@@ -1749,6 +1748,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     'max_shares_per_trade': request.max_shares_per_trade,
                     'reward_type': reward_type, 'missing_data_mode': 'own_last',
                     'sharpe_term': temp_env.sharpe_term,  # G1 ('simple'de None)
+                    'reward_spec': temp_env.get_reward_spec(),  # agirlik, pencere, rf (soy)
                     'rl_data_start': _settings.RL_DATA_START,
                     'symbols': list(temp_env.symbols),
                     # K18 + K25: farkli gozlem tanimi farkli yapilandirmadir

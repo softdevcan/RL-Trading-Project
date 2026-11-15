@@ -199,6 +199,17 @@ check("ilk 30 adimda D_t = 0, sonraki 30 adimin hepsinde != 0",
 c.reset()
 check("reset isinmayi da sifirlar", (c.dsr_a, c.dsr_b, c.dsr_n) == (0.0, 0.0, 0))
 
+print("\n[4b] Nakit (hakem-rl I1 #2): fazla getiri sabit -r_f, varyans -> 0")
+c = RewardCalculator(sharpe_term='differential')  # r_f = 0,15
+cash = [c._calculate_moody_saffell_dt(0.0) for _ in range(600)]
+d_cash = np.array([v[1] for v in cash])
+s_cash = np.array([v[0] for v in cash])
+print(f"    tam nakit: max|D| {np.max(np.abs(d_cash)):.2f}, son 100 adim ort tanh {s_cash[-100:].mean():+.4f}")
+check("tam nakitte D_t sinirli (max|D| < 20; tabansiz surumde 293) ve duragan durumda ~0 "
+      "(son 100 adim |ort| < 0,01)",
+      np.max(np.abs(d_cash)) < 20 and abs(s_cash[-100:].mean()) < 0.01,
+      f"{np.max(np.abs(d_cash)):.2f} {s_cash[-100:].mean():+.4f}")
+
 print("\n[5] Ortam")
 
 
@@ -268,6 +279,8 @@ def put(study, cfg):
                        extra={"study": study, "val_range": ["2020-01-02", "2020-12-31"]})
 
 
+spec_def = {"reward_type": "psr", **RewardCalculator().get_reward_spec()}
+put("s_spec", {**base, "sharpe_term": "ema_level", "reward_spec": spec_def})
 put("s_ema", {**base, "sharpe_term": "ema_level"})
 put("s_diff", {**base, "sharpe_term": "differential"})
 put("s_old", dict(base))  # G1 oncesi: anahtar yok
@@ -278,6 +291,16 @@ check("ayni terim -> temiz", lin("s_ema", "ema_level") == (True, []) and
 check("farkli terim -> yalniz 'hpo_reward_mismatch'",
       lin("s_ema", "differential") == (False, ["hpo_reward_mismatch"]) and
       lin("s_diff", "ema_level") == (False, ["hpo_reward_mismatch"]))
+lin_spec = lambda spec: reg.hpo_lineage("s_spec", reward_config=spec, directory=REG)
+check("reward_spec'li kayit: ayni tanim temiz; yalniz w2 ya da rf farkli -> 'hpo_reward_mismatch' "
+      "(hakem-rl I1 #3)",
+      lin_spec(spec_def) == (True, []) and
+      lin_spec({**spec_def, "w2": 0.1}) == (False, ["hpo_reward_mismatch"]) and
+      lin_spec({**spec_def, "risk_free_rate": 0.45}) == (False, ["hpo_reward_mismatch"]))
+e_spec = TradingEnv(df, reward_type='psr', sharpe_term='differential').get_reward_spec()
+check("env.get_reward_spec: tur + terim + agirliklar; 'simple'de yalniz tur",
+      e_spec["reward_type"] == "psr" and e_spec["sharpe_term"] == "differential"
+      and e_spec["w2"] == 0.30 and TradingEnv(df).get_reward_spec() == {"reward_type": "simple"})
 check("G1 oncesi PSR kaydi 'ema_level' sayilir",
       lin("s_old", "ema_level") == (True, []) and
       lin("s_old", "differential") == (False, ["hpo_reward_mismatch"]))

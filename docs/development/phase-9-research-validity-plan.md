@@ -265,6 +265,10 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
 - **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır; yüksek faizli doğrulama yıllarında negatif ortalama olağan, `picks_agree` raporlanır.
+- **Ödül terimi kıyası (K4; hakem-rl İ1, 2026-11-15):**
+  - `ema_level` ↔ `differential` aynı w₂ ile tek etkenli değil. Terimin ödüldeki oynaklığı gerçek panelde ~5,6 kat farklı (§9.23). Kol başına küçük bir w₂ ızgarası ya da ölçek eşitlemesi burada sabitlenir; ızgara N'ye sayılır.
+  - Ön eleme "G2 öncesi, r_f sabit" etiketini taşır.
+  - Sonuç tablosunda her kol için işlem sayısı, devir hızı ve komisyon payı yer alır (komisyon ödülde iki kez sayılıyor).
 - **Doğrulayıcı kanıt (R1; açık karar):** R1 öncesi okunmuş pencere 2022-07-18..2026-08-28 (`eval_window_unexposed`, Faz 9 §9.11); okunmamış tek kat 2021. Doğrulayıcı kanıtın tanımı (2021 katı + ön kayıt sonrası ileri veri; yeni ortam karşılaştırmalarının sayılışı) burada, K20 güç analiziyle birlikte karara bağlanır.
 
 ---
@@ -1506,7 +1510,7 @@ Faz 9 test seti (12 test) ve `test_auth` aynı sayılarla yeşil.
   - `hpo_lineage(reward_config=)`: HPO başka bir terimle aradıysa `hpo_reward_mismatch` döner. Anahtarı olmayan PSR kaydı G1 öncesidir ve `'ema_level'` sayılır.
 - **Davranış etkisi:** yeni `config.sharpe_term` anahtarı yapılandırma özetini değiştirir. G1 öncesi ve sonrası aynı yapılandırma kayıtta ayrı görünür; R1 öncesi kayıtlar zaten açık.
 
-**Kabul** `python tests/test_reward_differential.py` → **19/0**.
+**Kabul** `python tests/test_reward_differential.py` → **19/0** (İ1 sonrası 22/0, aşağıda).
 - **[0]** Varsayılan, main'deki `reward_functions.py` ile bit-eş: ödül ve bileşenler, reset dahil, iki yapılandırma. Üretim kodunda geçici mutasyon (`tanh(dsr/2.000001)`) bu kontrolü kırdı, sonra geri alındı.
 - **[1]** Denklem 13 (Sₜ − Sₜ₋₁ = η·Dₜ + O(η²)). Medyan göreli hata: η = 1/30'da 0,0129, η = 1/300'de 0,00136; oran ≈ 9,5, yani η ile doğrusal. Yüksek ortalamalı seride 0,0181 / 0,00160. İki mutasyon kırılıyor:
   - EMA Sharpe düzeyi (Y2): 5,84;
@@ -1532,7 +1536,20 @@ Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek
 
 **G2** (ödülde risksiz faizin A8'e bağlanması) §9.22 madde 6'da, D ile birlikte.
 
-**İnceleme:** İ1 (hakem-rl, sonnet).
+**İ1 — hakem-rl (sonnet): Küçük revizyon** (2 BÜYÜK, 4 KÜÇÜK; ~37 bin token, 6 araç, ~44 sn; test koşmadı, paketteki JSON'u kullandı).
+
+| # | Önem | Bulgu | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK | K4 aynı w₂ ile tek etkenli değil; terimin ödüldeki oynaklığı ~5,6 kat farklı | **Kabul, M8'e.** §5 M8'e yazıldı: kol başına w₂ ızgarası ya da ölçek eşitlemesi, ızgara N'ye sayılır |
+| 2 | BÜYÜK | Nakitte varyans 0'a gidiyor, Dₜ patlıyor ya da kesiliyor (öngörü) | **Ölçüldü, düzeltildi.** Tabansız sürümde tam nakitte max\|Dₜ\| 293, %48'i doymuş. Paydaya `'ema_level'` ile aynı taban (10⁻⁹) eklendi: max\|Dₜ\| 9,4, durağan nakitte Dₜ → 0. Test [4b]. **Yan bulgu:** varsayılan `'ema_level'` düşük maruziyette −1'de doyuyor (%1 maruziyette %84, tam nakitte %100; `sharpe_term_scale.json` → `series`). Mevcut modeller bu terimle eğitildi; reward-definition.md §4'te beyan |
+| 3 | KÜÇÜK | Soy yalnız tür + terim; ağırlık, pencere ve r_f görünmüyor | **Kabul, düzeltildi.** `get_reward_spec()` (ortam ve hesaplayıcı) kayda `config.reward_spec` olarak, meta/manifeste `reward` olarak yazılıyor. `hpo_lineage` tamamını karşılaştırıyor; `reward_spec`'siz eski kayıtta tür + terim. Test [6] (w₂ ya da r_f farkı) |
+| 4 | KÜÇÜK | tanh toplanabilirliği bozuyor; ad | **Kabul.** Ad "tanh ile sıkıştırılmış, ısınmalı Moody-Saffell Dₜ"; doğrulama ham Dₜ üzerinde, ödülde yaklaşık (docstring, reward-definition.md). Isınma payı: rota bölümleri eğitim penceresi kadar uzun (yıllar), 30 adım ihmal edilebilir |
+| 5 | KÜÇÜK | Sabit r_f + nakit 0 kayma yaratıyor | **Kabul, M8'e.** Ön eleme "G2 öncesi, r_f sabit" etiketiyle |
+| 6 | KÜÇÜK | Komisyonun çift sayımı iki kolu farklı etkileyebilir | **Kabul, M8'e.** Kol başına işlem sayısı, devir hızı ve komisyon payı sonuç tablosunda |
+
+**Kabul (düzeltme sonrası)** `test_reward_differential` **22/0**.
+
+**İkinci okuma** (hakem-rl, SendMessage; ~41 bin token önceki bağlamla, 3 araç, ~12 sn): **Kabul**, kapanmayan madde yok. Not: K4 yorumunda "düzey terimi nakitte doyuyor" kalır.
 
 ---
 
@@ -1583,4 +1600,4 @@ Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek
 - **2026-11-15 (§9.21, E1 adım 6):** Geçici üyelik (`chain --provisional`, satır başına `consistent`, meta JSON). Tutarlılık kuralı düzeltildi: tutarlı kısım 2018-04-02'den başlıyor. `universe_mask` tutarsız segmentte `None`. Geçici maruziyet: panelin %78,45'i endekste (2018-04..2026-11). Dönem içi olay listesi kullanıcı kararıyla E1'in son adımı. `test_universe` 28.
 - **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.
 - **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (kullanıcı onayladı): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
-- **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 19. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu.
+- **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 22. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu. İ1 hakem-rl Küçük revizyon: nakitte Dₜ tabanı, tam ödül tanımı soyda, K4 koşulları M8'de; varsayılan terim düşük maruziyette −1'de doyuyor (beyan).

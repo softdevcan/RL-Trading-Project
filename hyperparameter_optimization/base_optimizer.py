@@ -298,7 +298,9 @@ class BaseHyperparameterOptimizer:
                         'price_norm': base_train.get_price_norm() if base_train is not None else None,
                         **settings,
                         # G1: ortamdan olculur ('simple' odulde None) — istekten degil
-                        'sharpe_term': getattr(base_train, 'sharpe_term', None)},
+                        'sharpe_term': getattr(base_train, 'sharpe_term', None),
+                        'reward_spec': (base_train.get_reward_spec()
+                                        if base_train is not None else None)},
                 seed=self.seed,
                 status=status,
                 metrics=metrics or {},

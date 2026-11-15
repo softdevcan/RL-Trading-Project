@@ -356,9 +356,9 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
       hpo_universe_mismatch — HPO baska bir sembol evreninde (ya da sirasinda) aradi
       hpo_split_mismatch — HPO baska bir bolme tanimi kullandi
       hpo_obs_mismatch — HPO baska bir gozlem tanimiyla aradi (price_norm, gostergeler)
-      hpo_reward_mismatch — HPO baska bir odul tanimiyla aradi (reward_type, sharpe_term;
-          Faz 9 G1). `sharpe_term` anahtari olmayan PSR kaydi G1 oncesidir: o zaman tek
-          tanim vardi, 'ema_level' sayilir.
+      hpo_reward_mismatch — HPO baska bir odul tanimiyla aradi (Faz 9 G1): kayitta
+          `reward_spec` varsa TUMU (tur, sharpe_term, w1-w5, pencere, hedef islem, rf);
+          yoksa (eski kayit) yalniz tur + sharpe_term, anahtarsiz PSR 'ema_level' sayilir.
 
     Returns: (temiz_mi, acik_maddeler). Kayit bulunamazsa (None, [neden]).
     """
@@ -388,12 +388,17 @@ def hpo_lineage(study_name: Optional[str], *, fold_test_start: Optional[str] = N
                 if cfg.get(key) != want:
                     found.add('hpo_obs_mismatch')
         if reward_config is not None:
-            for key, want in reward_config.items():
-                got = cfg.get(key)
-                if (key == 'sharpe_term' and key not in cfg
-                        and cfg.get('reward_type') == 'psr'):
-                    got = 'ema_level'
-                if got != want:
+            spec = cfg.get('reward_spec')
+            if spec is not None:
+                if dict(spec) != dict(reward_config):
+                    found.add('hpo_reward_mismatch')
+            else:
+                # reward_spec'siz eski kayit: yalniz tur + terim (o zaman agirliklar sabit
+                # varsayilandi); anahtarsiz PSR kaydi G1 oncesi -> 'ema_level'
+                got = {'reward_type': cfg.get('reward_type'),
+                       'sharpe_term': cfg.get('sharpe_term', 'ema_level'
+                                              if cfg.get('reward_type') == 'psr' else None)}
+                if got != {k: reward_config.get(k) for k in got}:
                     found.add('hpo_reward_mismatch')
     out = sorted(found)
     return (not out), out

@@ -189,9 +189,14 @@ class RewardCalculator:
           - Isınma: ilk 1/η adımda (EMA'nın etkin penceresi) D_t = 0; A ve B yine
             güncellenir. Sıfırdan başlayan EMA'da B_{t−1} − A_{t−1}² ilk adımlarda
             ~η·R² kadar küçük, D_t patlar.
-          - Pay ya da payda sonlu değilse ya da varyans ≤ 1e-12 ise D_t = 0.
-          - Ödüle tanh(D_t / 2) girer ('ema_level' ile aynı sıkıştırma: iki terim
-            tek etkenle ayrışsın — K4). Ham D_t `sharpe_raw` bileşeninde.
+          - Paydada varyans tabanı max(B_{t−1} − A_{t−1}², 1e-9) ('ema_level' ile aynı
+            taban; hakem-rl İ1 #2). Nakitte fazla getiri sabit (−r_f), varyans 0'a
+            gider; tabansız D_t patlıyordu (ölçüm: tam nakitte max|D| 293), tabanla
+            durağan nakitte D_t → 0 (yeni bilgi yok). Sonlu değilse D_t = 0.
+          - Ödüle tanh(D_t / 2) girer ('ema_level' ile aynı sıkıştırma). Ham D_t
+            `sharpe_raw` bileşeninde. Denklem 13'ün toplanabilirliği (Σ η·D_t ≈ ΔS)
+            HAM D_t için geçerli; sıkıştırılmış terimde yalnız yaklaşık. Ad: "tanh ile
+            sıkıştırılmış, ısınmalı Moody-Saffell D_t".
 
         Returns:
             (tanh(D_t / 2), D_t)
@@ -205,9 +210,9 @@ class RewardCalculator:
         self.dsr_b = b_prev + self.dsr_eta * d_b
         self.dsr_n += 1
         warm = self.dsr_n <= int(round(1.0 / self.dsr_eta))
-        if warm or not np.isfinite(var_prev) or var_prev <= 1e-12:
+        if warm or not np.isfinite(var_prev):
             return 0.0, 0.0
-        d_t = (b_prev * d_a - 0.5 * a_prev * d_b) / var_prev ** 1.5
+        d_t = (b_prev * d_a - 0.5 * a_prev * d_b) / max(var_prev, 1e-9) ** 1.5
         if not np.isfinite(d_t):
             return 0.0, 0.0
         return float(np.tanh(d_t / 2)), float(d_t)
@@ -375,6 +380,14 @@ class RewardCalculator:
             'w4_volatility': self.w4,
             'w5_trade_freq': self.w5
         }
+
+    def get_reward_spec(self) -> Dict[str, object]:
+        """Ödülü belirleyen tüm parametreler (kayıt ve HPO soyu; hakem-rl İ1 #3)."""
+        return {'sharpe_term': self.sharpe_term,
+                'w1': self.w1, 'w2': self.w2, 'w3': self.w3, 'w4': self.w4, 'w5': self.w5,
+                'rolling_window': self.rolling_window,
+                'target_trades_per_100': self.target_trades_per_100,
+                'risk_free_rate': self.risk_free_rate}
 
     def set_weights(self, weights: Dict[str, float]):
         """Ağırlıkları güncelle (Optuna için)"""

@@ -387,6 +387,12 @@ class TradingEnv(gym.Env):
             return None
         return float(mean), float(std)
 
+    def get_reward_spec(self) -> Dict[str, Optional[object]]:
+        """Odul tanimi: tur + (PSR ise) Sharpe terimi, agirliklar, pencere, rf (G1; kayit ve soy)."""
+        if self.reward_type == 'psr':
+            return {'reward_type': 'psr', **self.reward_calculator.get_reward_spec()}
+        return {'reward_type': self.reward_type}
+
     def get_price_norm(self) -> Dict[str, Optional[object]]:
         """Fiyat z tanimi (model meta dosyasina ve manifeste yazilir; K25)."""
         return {'mode': self.price_norm, 'window': self.price_norm_window,
