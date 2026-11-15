@@ -1551,6 +1551,36 @@ Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek
 
 **İkinci okuma** (hakem-rl, SendMessage; ~41 bin token önceki bağlamla, 3 araç, ~12 sn): **Kabul**, kapanmayan madde yok. Not: K4 yorumunda "düzey terimi nakitte doyuyor" kalır.
 
+### 9.24 B6 — önceden tanımlı, nedensel rejim etiketi (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Sorun (Y3).** `PredictionEvaluator.compute_regime_metrics` "boğa"yı gerçekleşen getirisi pozitif örnekler diye tanımlıyordu. Bu hedef değişkene koşullu bir alt kümeydi, rejim değil. **Kaldırıldı.** Tek çağıranı kullanılmayan `compute_comprehensive_metrics` idi. O artık rejimi yalnız `dates` + `regime_labels` ile hesaplıyor; verilmezse `regime_metrics` None.
+
+**Veri ([data/index_fetcher.py](../../data/index_fetcher.py)).** XU100 (`XU100.IS`, yfinance, `auto_adjust=False`), 2005-01-03..2026-11-13, 5.480 gün. Dosya `data/macro/xu100.csv` (git dışı) ve `xu100_source.json` (SHA-256 `e4adbef5…`). `macro_data.csv`'deki `bist100_index` B1'den beri 2018'de başladığı için ayrı seri gerekti. Denetimler:
+- |günlük getiri| > %15 olan gün yok. 2020-07-27 endeks sıfır atması seride düzeltilmiş; `check_index_series` her çekimde bunu denetliyor ve sıçrama varsa yazmıyor.
+- `macro_data.csv` ile 2.208 ortak günün 1'inde fark > %0,1 (en büyük %1,3).
+- Pencerede panelde olup endekste olmayan 72 gün var (tatil satırları). Etiket bu günlerde as-of, yani son işlem gününün etiketi.
+
+**Etiket ([evaluation/regimes.py](../../evaluation/regimes.py)).**
+- `trend`: kapanış > SMA₂₀₀ ise 'bull', değilse 'bear'.
+- `vol`: 60 günlük log getiri std'si × √252.
+- `vol_level`: vol'ün **genişleyen** (≤ t, en az 252 gözlem) tercilleri.
+- `regime`: 6 hücre.
+
+Tasarım varsayımları: 200/60 gün (plan B6) ve genişleyen tercil. Sabit tam örneklem tercili ileriye bakar; kayan tercil ayrı bir karar olurdu. İlk etiket 2006-03-29; RL penceresinde etiketsiz gün yok. Yardımcılar: `regime_summary` (gün ve bağımsız dönem sayısı, M6), `by_regime`, `asof_labels`.
+
+**Kabul** `python tests/test_regimes.py` → **13/0** (ağ yok):
+- B0 kesme değişmezliği: sentetik seride 6 kesim, gerçek XU100'de 6 kesim (2013..2026), bütün sütunlar bit-eş.
+- Mutasyonlar B0'ı kırıyor: merkezlenmiş SMA, tam örneklem tercili.
+- Anlam testleri, eski fonksiyonun yokluğu, as-of davranışı, özet.
+
+**Ölçüm** ([regimes.json](measurements/phase9-b6/regimes.json); gün / bağımsız dönem, RL penceresi 2013-06..): bull_low 1.065/44, bull_mid 692/47, bull_high 591/22, bear_mid 460/46, bear_high 330/29, bear_low 226/32. Test katlarında:
+- 2022: 252 günün tamamı bull.
+- 2023: 248 günün 244'ü bull_high.
+
+**Açık tasarım sorusu (İ2'ye).** Etiket **nominal TL** endeksinde. Yüksek enflasyon nominal trendi sistematik olarak 'bull'a itiyor (RL penceresinde bull 2.348, bear 1.016 gün). H4/M6 (rejime koşullu iletişim katkısı) için reel (TÜFE ile düzeltilmiş) ya da USD bazlı trendin gerekip gerekmediği İ2'de hakem-finans'a soruluyor. Değişiklik kullanıcı kararı olur. Kat başına hücreler seyrek; rejim analizi katlar birleştirilerek yapılmalı (M6, M8).
+
+**İnceleme:** İ2 (F ile birlikte, hakem-finans).
+
 ---
 
 ## Versiyon geçmişi
@@ -1601,3 +1631,4 @@ Davranış dondurma gereği ikisi de değiştirilmedi. Yeni ortamda komisyon tek
 - **2026-11-15 (§9.21, E hakem-2):** Büyük revizyon (RED yok); 2 BÜYÜK, 5 KÜÇÜK. Tutarlılık kuralı yeniden kuruldu: ihlal başına bilinmeyen aralık, gün düzeyinde; katı kapsam 0, eski kural sezgisel `count_checked`. #11503 dipnotu `bist30_footnotes.csv`'de aday olarak. Değişmezler ve 5 çeyreklik elle referans eklendi. `test_universe` 32.
 - **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (kullanıcı onayladı): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
 - **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 22. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu. İ1 hakem-rl Küçük revizyon: nakitte Dₜ tabanı, tam ödül tanımı soyda, K4 koşulları M8'de; varsayılan terim düşük maruziyette −1'de doyuyor (beyan).
+- **2026-11-15 (§9.24, B6):** Y3'ün eski rejim metriği kaldırıldı; nedensel XU100 etiketi (200g trend × 60g vol genişleyen tercil), ayrı uzun endeks serisi (`data/index_fetcher.py`). `test_regimes` 13 (B0 sentetik + gerçek, 2 mutasyon). Açık soru: nominal TL trend enflasyonla bull'a kayıyor (İ2).

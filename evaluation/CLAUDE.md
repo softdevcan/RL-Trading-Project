@@ -23,4 +23,8 @@
 - **Yon metrigi**: `BasePredictionModel.compute_metrics`'in `direction_accuracy`'si fark tabanli
   (`np.diff`) ve makaledeki TDA DEGIL; TATS karsilastirmasinda `ensemble_test_metrics['tats'][*]['tda']`
   kullan (Faz 9 §9.17).
+- **Rejim etiketi** yalniz `evaluation/regimes.py`'den (B6): XU100 200g trend x 60g vol GENISLEYEN
+  tercil, <= t (B0 testli). Gerceklesen getiriye kosullu "rejim" YAZMA (Y3; eski fonksiyon kaldirildi).
+  Seri `data/macro/xu100.csv` (`python -m data.index_fetcher`). Etiket NOMINAL TL'de — enflasyon
+  trendi 'bull'a iter (acik soru, plan §9.24).
 - Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (39)

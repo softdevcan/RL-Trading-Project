@@ -87,6 +87,8 @@ python tests/test_universe.py              # Faz 9/E: evren tek kaynak (E0, Y11)
 python tests/test_reward_differential.py   # Faz 9/G1: Moody-Saffell D_t — denklem 13 (O(eta^2), eta ile dogrusal),
                                            #          denklem 16 sonlu fark, fazla getiri, isinma, 2 mutasyon; varsayilan
                                            #          'ema_level' main'deki reward_functions.py ile bit-es; nakitte taban; env + hpo_reward_mismatch tam odul tanimi (22)
+python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etiketi — B0 kesme degismezligi (sentetik +
+                                           #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet (13, ag yok)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)

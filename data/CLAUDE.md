@@ -65,5 +65,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
   TCMB ağırlıklı ortalama fonlama maliyeti, iş günü, 2011'den). Veri sayfası makro güncellemesi
   bunu da yeniler. Yedeği yok.
 - yfinance: usd_try, eur_try, bist100_index, **vix**, **us10y**, **dxy** (Faz 3.2'de eklendi)
+- **XU100 uzun seri ayri dosyada (B6):** `data/index_fetcher.py` -> `data/macro/xu100.csv` + `xu100_source.json`
+  (2005..; `macro_data.csv`'deki `bist100_index` 2018'de basliyor). `check_index_series` |r| > %15 sicramada
+  YAZMAZ (2020-07 sifir atma yfinance'te duzeltilmis, olculdu).
 - **Makro 2018'den başlıyor** (varsayılan `start_date`); RL penceresi 2013-06. Faz 2 RL ortamı
   2013–2017'de makro gözlemi 0 görür — bilinen açık.
