@@ -2169,6 +2169,33 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 
 Maliyet: [review-panel.md](review-panel.md).
 
+### 9.38 Pozitif kontrolün geçerliliği — (a) RL'siz üst sınır: ön kayıt (2026-11-16, dal `feat/m0-pc-upper-bound`)
+
+**Ne için:** §9.37'deki boş PC060 sonucunun iki açıklaması ayrılmıyor: (i) boru hattı sinyali aktaramıyor, (ii) AUC 0,60'lık sinyal bu güçte tespit edilebilir bir Sharpe farkı üretmiyor. Bu ölçüm PC060'ın kendi ekonomik değerini RL olmadan ölçer (hakem-2 sonuç okuması #5, öneri (a); kullanıcı kararı 2026-11-16). **Bu ön kayıt sonuç görülmeden yazıldı ve commit'lendi; okuma kuralı sonuçtan sonra değiştirilmez.**
+
+**Veri:** P tablosu `pc_auc060` (SHA `0ceb5c7a…`); panel `data/bist/stock_data_with_indicators.csv`, `prepare_rl_panel` veri kapısından; 30 sembol. Pencereler: M0' DT `last_checkpoint` kayıtlarının test tarihleri (2021 doğrulayıcı; 6 kat keşifsel).
+
+**Yürütme (eski ortamla aynı):** t kapanışında karar, t kapanışından yürütme; portföy getirisi t → t+1 kapanış. Uzun-yalnız, tam yatırımlı. Maliyet tek yön 0,001 × Σ|w_t − w̃_{t−1}| (w̃ = fiyatla kaymış önceki ağırlık; 20 bps gidiş-dönüş, M0' ile aynı). Getiri t+1 tarihine yazılır. Fazla getiri A8 (`risk_free_series`). Her katın ilk günü maliyet nakitten tam yatırıma geçişi içerir.
+
+**Stratejiler:**
+- **S_yön (birincil):** P4'ün ortama aktardığı yön bilgisiyle aynı bilgi: `p_up_cal ≥ 0,5` ve `meta_ok` olan sembollere eşit ağırlık. O gün hiç sembol yoksa 1/N.
+- **S_top10 (ikincil):** `p_up_cal`'ı en yüksek 10 sembole (`meta_ok`) eşit ağırlık.
+- **1/N:** 30 sembol eşit ağırlık, günlük yeniden dengeleme, aynı maliyet modeli.
+- Karşılaştırma ayrıca M0' DT kolunun tohum ortalamalı serisiyle (PPO ve A2C) yapılır.
+
+**Metrik ve test:** ΔSR = SR(S) − SR(1/N), yıllık; HAC (`sharpe_diff_hac`). Brüt (maliyetsiz) değer ayrıca raporlanır.
+
+**Okuma kuralı (önceden):**
+- Eşik = §9.37'deki PC060 havuzlu MDE, **0,43** yıllık Sharpe (2021).
+- 2021'de ΔSR(S_yön − 1/N) **< 0,43** ise: "PC060, bu güçte geçerli bir pozitif kontrol değil. AUC 0,60'lık sinyal RL'siz kural portföyünde bile tespit edilebilir bir fark üretmiyor." Bu durumda §9.37'deki boş sonuç boru hattı hakkında bilgi vermez.
+- ΔSR(S_yön − 1/N) **≥ 0,43** ise: "Sinyalin ulaşılabilir değeri MDE'yi aşıyor. RL'nin bunu almaması boru hattı ya da öğrenme açıklamasını destekler." Bu da kanıt değil, destektir; neden (b) ile sınanır.
+- 6 kat (eşik 0,17) ve S_top10 keşifseldir.
+- Hiçbir sonuç "RL piyasayı yener" ya da "tahmin katkı vermez" cümlesine dönüştürülmez.
+
+**Sınırlamalar (önceden):**
+- Sinyal bilerek gelecekten türetildi; bu bir üst sınır ölçümüdür, strateji önerisi değildir.
+- Eski ortamın hisse adedi eylemi ve işlem sınırı (`max_shares_per_trade` 100) burada yok. Kural portföyü RL'nin ulaşabileceğinden daha esnek olabilir.
+
 ---
 
 ## Versiyon geçmişi
