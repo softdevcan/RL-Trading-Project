@@ -3,3 +3,4 @@
 data/universe/*.csv -text
 data/universe/*.json -text
 docs/development/measurements/**/*.json -text
+docs/development/milestone0/** -text
