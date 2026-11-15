@@ -1,6 +1,6 @@
 {
  "protocol_id": "m0p-v2",
- "status": "TASLAK — hakem-2 kisa okumasi ve kullanici onayiyla dondurulur; dondurulunca bu dosya ve doc DEGISMEZ (kosum betigi SHA'larini deftere baglar)",
+ "status": "DONDURULDU 2026-11-15 (kullanici onayi + hakem-2 kisa okuma: Kucuk revizyon -> ikinci okuma Kabul, 7/7 kapandi); etiket m0-protocol-v2; bu dosya ve doc DEGISMEZ (kosum betigi SHA'larini deftere baglar; degisiklik = yeni protocol_id)",
  "doc": "docs/development/milestone0-protocol-v2.md",
  "supersedes": "m0p-v1 (etiket m0-protocol-v1; HIC kosulmadi, sonuc gorulmedi). Neden: v1 1.512 egitim / ~226-509 sa idi; asil soru (tahmin RL'ye yarar mi) icin orantisiz (kullanici, 2026-11-15)",
  "questions": [

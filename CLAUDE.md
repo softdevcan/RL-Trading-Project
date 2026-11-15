@@ -5,8 +5,8 @@ makale calismasi (Ansari vd. 2024 replikasyonu -> Faz 10 MARL). Tamamlanan fazla
 2 (tahmin sistemi), 3 (uretim iyilestirmeleri), 6 (performans), 7 (kimlik + cok kullanici),
 8 (UI/UX), **9 (arastirma gecerliligi; kapandi 2026-11-15)** — durum ve olcumler
 `docs/development/phase-9-research-validity-plan.md` §9 (son alt bolum en guncel). **Siradaki: Milestone 0'**
-(protokol DONDURULDU `docs/development/milestone0-protocol.md`, etiket `m0-protocol-v1`; golden K1 yenilendi; kosumlar
-`scripts/run_milestone0.py`; protokol JSON/belgesi DEGISTIRILMEZ, yeni surum m0p-v2). Faz 10 plani
+(protokol **m0p-v2** DONDURULDU `docs/development/milestone0-protocol-v2.md`, etiket `m0-protocol-v2`; v1 kosulmadan
+birakildi; golden K1 yenilendi, v2.0.0; kosumlar `scripts/run_milestone0.py`; protokol JSON/belgesi DEGISTIRILMEZ, yeni surum m0p-v3). Faz 10 plani
 `docs/development/phase-10-marl-plan.md`. Dokuman indeksi `docs/README.md`.
 **Sistem haritasi** `docs/development/system-map.md`: bir bilesenin ya da asamanin DURUMUNU degistiren PR
 ayni PR'da haritayi da gunceller (dugum sinifi + durum tablosu + 'Son guncelleme' satiri).

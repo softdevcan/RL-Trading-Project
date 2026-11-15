@@ -1,6 +1,6 @@
 # Milestone 0' protokolü v2 (m0p-v2, yalın)
 
-**Durum: TASLAK, 2026-11-15.** Hakem-2'nin kısa okuması ve kullanıcı onayıyla dondurulur. Bağlayıcı kuralların tümü [milestone0/protocol-v2.json](milestone0/protocol-v2.json)'da. Koşum betiği JSON'un ve bu belgenin SHA-256'sını deftere bağlar; biri değişirse koşmayı reddeder.
+**Durum: DONDURULDU, 2026-11-15.** hakem-2 kısa okuması (yalnız v1 farkları): Küçük revizyon → ikinci okumada Kabul (7/7 kapandı); kullanıcı onayı. Araştırma etiketi `m0-protocol-v2`; değişiklik = yeni `protocol_id`. Bağlayıcı kuralların tümü [milestone0/protocol-v2.json](milestone0/protocol-v2.json)'da. Koşum betiği JSON'un ve bu belgenin SHA-256'sını deftere bağlar; biri değişirse koşmayı reddeder.
 
 ## Neden v2
 

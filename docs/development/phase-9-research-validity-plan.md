@@ -2089,7 +2089,13 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 - İkinci okuma (SendMessage): **Kabul**, 7/7 kapandı. İstenen kanıt: `--scratch --workers 2 --max-steps 2000 --limit 4` → 4/4 hücre `fold=2024` (tohum 1001–1004); dizin silindi.
 - Maliyet: [review-panel.md](review-panel.md).
 
-**Sıradaki:** kullanıcı onayıyla dondurma (`m0-protocol-v2`) → PR + v2.0.0 → koşum (kullanıcı onayıyla; PPO, sonra A2C).
+**5. Donduruldu (kullanıcı onayı, 2026-11-15):**
+- [milestone0-protocol-v2.md](milestone0-protocol-v2.md), SHA-256 `6256cc3a…ae91d`.
+- [milestone0/protocol-v2.json](milestone0/protocol-v2.json), SHA-256 `2fa9f700…a14ff`.
+- Araştırma etiketi `m0-protocol-v2` (birleştirme commit'inde); sürüm **v2.0.0** (MAJOR: golden yenilemesi).
+- Koşum betiği iki SHA'yı deftere bağlar; değişirse koşmaz.
+
+**Sıradaki:** koşum (kullanıcı onayıyla, algoritma başına ayrı): PPO `CUDA_VISIBLE_DEVICES=-1 python scripts/run_milestone0.py --workers 8 --limit 90`, sonra aynı komutla A2C; ardından sonuçların hakem-2 okuması (ölçülen ρ ve MDE dahil).
 
 ---
 
