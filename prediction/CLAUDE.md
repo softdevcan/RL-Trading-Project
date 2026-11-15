@@ -17,6 +17,19 @@
 - BiLSTM/TFT egitim penceresi satir i'yi icerir (B11, Y22 kapandi); yon basi etiketi ham hedeften,
   model `target_type` ozniteligini ensemble/trainer'dan alir
 
+## Yon olasiligi ve kalibrasyon (Faz 9 F1-F4)
+- `StackingEnsemble(confidence_mode='legacy'|'calibrated')`, varsayilan 'legacy' (davranis dondurma):
+  yon fiyat isaretinden, guven DL yon baslarinin ortalamasindan max(p,1-p) — Y4: ikisi ZIT yonu
+  gosterebilir (catisma orani test kalibrasyonunda `head_vs_price_conflict_rate`).
+- 'calibrated': p(UP) meta duzeyde lojistik (girdi: taban getiri tahminleri + DL yon baslari), OOF meta
+  bolumunun ILK yarisinda; sicaklik T IKINCI yarida; yarilar arasinda ve sonda h arindirma; test yalniz
+  degerlendirme. predict_next `calibration`: `p_up_raw`, `p_up_cal` (F4), `direction_price`,
+  `direction_conflict`; yon = 1[p_cal>=0,5]. Fiyat tahmini iki modda AYNI. Mod model meta'sindan yuklenir.
+- Her egitimde `ensemble_test_metrics['calibration']` (iki yol da): ECE 15 kutu, Brier, guvenilirlik
+  (`evaluation/calibration.py`). `compute_calibration` (5 kutu, tracker) bununla KARISTIRILMAZ.
+- Sinir: yon modeli %60 modellerinin OOF'unda uyar, dagitilan modeller %80 (K19/Y26) — P'de cozulur.
+  Sicaklik sembol basina; plandaki havuzlu T (Faz 10 §3.1.2) P'de (batch). Test: `tests/test_calibration.py`.
+
 ## evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover
 

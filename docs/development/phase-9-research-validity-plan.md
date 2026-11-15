@@ -1581,6 +1581,59 @@ Tasarım varsayımları: 200/60 gün (plan B6) ve genişleyen tercil. Sabit tam 
 
 **İnceleme:** İ2 (F ile birlikte, hakem-finans).
 
+### 9.25 F1–F4 — yön olasılığı, kalibrasyon, ham p (2026-11-15, dal `docs/phase9-closure-scope`)
+
+**Davranış dondurma.** `StackingEnsemble(confidence_mode='legacy'|'calibrated')`, varsayılan `'legacy'`. Faz 10 §3.1.2'deki "OOF'u ikiye böl" tasarımı varsayılan hatta regresör meta-öğrenicinin verisini, yani fiyat tahminini değiştirirdi. Bu yüzden yeni yol bayrakla geldi ve **fiyat tahmini iki modda da aynı** (testte kanıtlı). Golden bilinen nedenle kırmızı ve sayıları değişmedi (`test_mape` 166,7641, `predicted_change_pct` 0,21). Varsayılanın ne zaman çevrileceği P / Milestone 0' kararı.
+
+**F1** (`calibrated`):
+- p(UP), meta düzeyde lojistik regresyondan gelir. Girdiler: taban modellerin getiri tahminleri (`ret_*`) ve DL yön başlıkları (`dir_*` − 0,5); üç GBM de güvene katılır (Y18).
+- Yön = 1[p_cal ≥ 0,5], güven = max(p_cal, 1 − p_cal).
+- Fiyat yönü ayrı bir alanda (`direction_price`), çelişki ayrı bir bayrakla (`direction_conflict`).
+
+**F2:**
+- Sınıflandırıcı OOF meta bölümünün ilk yarısında, sıcaklık T ikinci yarısında uydurulur. Yarılar arasında ve meta sonunda h satır arındırılır; test bölümünde yalnız değerlendirme yapılır.
+- İzotonik regresyon karşılaştırma kolu olarak raporlanır.
+
+**F3** ([evaluation/calibration.py](../../evaluation/calibration.py)):
+- ECE (Guo vd. 2017, 15 eşit genişlikli kutu, [0, 1]), Brier, NLL, güvenilirlik tablosu.
+- Her eğitimde `ensemble_test_metrics['calibration']` iki yolu da taşır. Eski yolun bloğunda `head_vs_price_conflict_rate` (Y4) var.
+
+**F4:** `predict_next` çıktısında `p_up_raw` ve `p_up_cal` birlikte. Mod model meta'sından yüklenir.
+
+**Kabul** `python tests/test_calibration.py` → **15/0**:
+- ECE ve Brier elle hesapla aynı.
+- Kalibre örnekte ECE 0,0075; aşırı güvenli örnekte (logit × 3) 0,162. `fit_temperature` T = 3,002 buluyor, ECE 0,0074'e iniyor.
+- Ensemble'da iki mod: fiyat aynı, p alanları, kaydet/yükle.
+- **Sızıntı bekçisi:** test bölümü kapanışları bozulunca yön modelinin katsayıları ve T'si bit-eş. Mutasyon (arındırma 0, ilk test kapanışı yönü çevirecek biçimde) modeli değiştiriyor.
+
+Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` geçti, `test_cv_feature_selection` 13/0.
+
+**Ölçüm** ([calibration.json](measurements/phase9-f/calibration.json); `scripts/analysis/measure_calibration.py`): tam 5 model, günlük, TATS kapalı, yalnız fiyat özellikleri, 2013-06.., GPU. Uyum/kalibrasyon 313/313 satır, test 626–628 gün.
+
+| | THYAO | GARAN | ASELS |
+|---|---|---|---|
+| Eski yol ECE / Brier / isabet | 0,125 / 0,265 / 0,516 | 0,060 / 0,254 / 0,494 | 0,022 / 0,250 / 0,522 |
+| **Y4: DL başlığının yönü ≠ fiyat yönü** | **%32,8** | **%53,3** | **%61,5** |
+| Taban oranı (UP) | 0,468 | 0,492 | 0,518 |
+| Lojistik ham ECE / isabet | 0,241 / 0,467 | 0,063 / 0,506 | 0,080 / 0,470 |
+| T | **20,0 (sınırda)** | 16,05 | 12,79 |
+| Sıcaklık sonrası ECE / Brier | 0,047 / 0,254 | 0,004 / 0,250 | 0,034 / 0,250 |
+| İzotonik ECE | 0,120 | 0,024 | 0,050 |
+
+*Kaynak: `calibration.json` → `symbols.<sym>.legacy`, `.calibrated`.*
+
+**Bulgular:**
+1. **Y4 ölçüldü.** Eski yolda raporlanan güven, test günlerinin üçte biri ile yarısından fazlasında tahmin edilen yönün değil, öbür yönün olasılığı.
+2. **Bu üç hissede yön bilgisi yok.** İsabet taban oranı düzeyinde, Brier ≈ 0,25 (yazı-tura). Sıcaklık ECE'yi düşürüyor (F2 ölçütü karşılanıyor), ama bunu p'yi 0,5'e bastırarak yapıyor (T 12,8–20). "Kalibre" güven neredeyse sabit; ayırt edicilik yok. T'nin sınıra dayandığı `temperature_at_bound` ile işaretleniyor.
+3. **G2/H3 için sonuç:** kalibre güvenin iletişime taşıyacağı bilgi bu ölçümde yok denecek kadar az. Bu ölçüm üç hisse, tek kat ve yalnız fiyat özellikleriyle; genelleme değil. P tablosu ve Milestone 0' bunu 30 hissede, makro/çapraz özelliklerle yeniden ölçer. Sonuç ne çıkarsa raporlanır (M5 "karıştırılmış güven" kolu tam bu soruyu sınar).
+4. İzotonik, bu örneklem büyüklüğünde sıcaklıktan kötü.
+
+**Sınırlar:**
+- Yön modeli %60 modellerinin OOF'unda uyduruluyor, dağıtılan modeller ise %80 verisiyle eğitiliyor (K19/Y26). Bunu P çözecek.
+- T sembol başına. Planın havuzlu T'si (Faz 10 §3.1.2) çoklu sembol gerektirdiği için P'de (batch).
+
+**İnceleme:** İ2 (B6 ile birlikte, hakem-finans).
+
 ---
 
 ## Versiyon geçmişi
@@ -1632,3 +1685,4 @@ Tasarım varsayımları: 200/60 gün (plan B6) ve genişleyen tercil. Sabit tam 
 - **2026-11-15 (§9.22):** Faz 9 kapanış kapsamı (kullanıcı onayladı): 8 maddelik kapanış listesi (G1+G3, B6, F1–F4, sampler tohumu, P, D1/D3/D4 + A8, E1 olayları, Milestone 0' dondurma). B5 Makale 2'ye ayrıldı; beyanla kapananlar ve sonraya kalanlar listelendi. İnceleme düzeni (kullanıcı kararı): 3 uzman noktası (sonnet) + 1 kapanış kapısı (hakem-2, opus); ikinci okuma yalnız BÜYÜK bulguda.
 - **2026-11-15 (§9.23, G1 + G3):** `sharpe_term='differential'` (Moody & Saffell 2001 Dₜ, tam metinden; varsayılan değişmez, main ile bit-eş) ve ödül tanım metni (`docs/thesis/reward-definition.md`; komisyon iki kez sayılıyor, beyan). Nakit faizi: yalnız beyan, yeni ortamda tasarım maddesi (kullanıcı kararı). `test_reward_differential` 22. Main bit-eşlik bekçisinin ödül modülünü sınamadığı bulundu. İ1 hakem-rl Küçük revizyon: nakitte Dₜ tabanı, tam ödül tanımı soyda, K4 koşulları M8'de; varsayılan terim düşük maruziyette −1'de doyuyor (beyan).
 - **2026-11-15 (§9.24, B6):** Y3'ün eski rejim metriği kaldırıldı; nedensel XU100 etiketi (200g trend × 60g vol genişleyen tercil), ayrı uzun endeks serisi (`data/index_fetcher.py`). `test_regimes` 13 (B0 sentetik + gerçek, 2 mutasyon). Açık soru: nominal TL trend enflasyonla bull'a kayıyor (İ2).
+- **2026-11-15 (§9.25, F1–F4):** `confidence_mode='calibrated'` (lojistik p(UP) + sıcaklık, OOF ikiye bölünmüş, arındırmalı; varsayılan `legacy`, fiyat tahmini aynı), `evaluation/calibration.py` (ECE 15 kutu, Brier), her eğitimde iki yolun test kalibrasyonu. `test_calibration` 15. Gerçek veride Y4 %33–62; yön isabeti taban oranında, T 12,8–20 (kalibre güven ≈ 0,5).

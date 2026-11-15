@@ -1,0 +1,158 @@
+{
+ "panel": "data\\bist\\stock_data_with_indicators.csv",
+ "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "horizon": "daily",
+ "start": "2013-06-01",
+ "commit": "5db6f05",
+ "config": "tam ensemble (5 model), use_tats=False, yalniz fiyat ozellikleri, confidence_mode=calibrated",
+ "symbols": {
+  "THYAO.IS": {
+   "n_rows": 3431,
+   "seconds": 189.2,
+   "features": [
+    "dir_bilstm",
+    "dir_tft",
+    "ret_bilstm",
+    "ret_catboost",
+    "ret_lightgbm",
+    "ret_tft",
+    "ret_xgboost"
+   ],
+   "n_fit": 313,
+   "n_calib": 313,
+   "legacy": {
+    "n": 628,
+    "ece": 0.12515744454209587,
+    "brier": 0.2645658108157297,
+    "accuracy": 0.5159235668789809,
+    "base_rate": 0.4681528662420382,
+    "head_vs_price_conflict_rate": 0.32802547770700635,
+    "has_direction_heads": true
+   },
+   "calibrated": {
+    "temperature": 19.99988025665256,
+    "raw": {
+     "n": 628,
+     "ece": 0.24132560381897708,
+     "brier": 0.31676935988551363,
+     "accuracy": 0.46656050955414013
+    },
+    "temperature_scaled": {
+     "n": 628,
+     "ece": 0.04663863484090967,
+     "brier": 0.2534842498121289,
+     "accuracy": 0.46656050955414013
+    },
+    "isotonic_compare": {
+     "n": 628,
+     "ece": 0.12004314203878146,
+     "brier": 0.29321730247519107,
+     "accuracy": 0.4681528662420382
+    },
+    "price_vs_p_conflict_rate": 0.6703821656050956,
+    "temperature_at_bound": true
+   },
+   "skipped": null,
+   "error": null
+  },
+  "GARAN.IS": {
+   "n_rows": 3431,
+   "seconds": 196.8,
+   "features": [
+    "dir_bilstm",
+    "dir_tft",
+    "ret_bilstm",
+    "ret_catboost",
+    "ret_lightgbm",
+    "ret_tft",
+    "ret_xgboost"
+   ],
+   "n_fit": 313,
+   "n_calib": 313,
+   "legacy": {
+    "n": 628,
+    "ece": 0.060203366361226196,
+    "brier": 0.2536769750657597,
+    "accuracy": 0.49363057324840764,
+    "base_rate": 0.49203821656050956,
+    "head_vs_price_conflict_rate": 0.5334394904458599,
+    "has_direction_heads": true
+   },
+   "calibrated": {
+    "temperature": 16.052256263276067,
+    "raw": {
+     "n": 628,
+     "ece": 0.06254982327584907,
+     "brier": 0.2544524568059062,
+     "accuracy": 0.5063694267515924
+    },
+    "temperature_scaled": {
+     "n": 628,
+     "ece": 0.0034588376477947547,
+     "brier": 0.2500764389311641,
+     "accuracy": 0.5063694267515924
+    },
+    "isotonic_compare": {
+     "n": 628,
+     "ece": 0.023496288067457252,
+     "brier": 0.2516203611647242,
+     "accuracy": 0.5238853503184714
+    },
+    "price_vs_p_conflict_rate": 0.39490445859872614,
+    "temperature_at_bound": false
+   },
+   "skipped": null,
+   "error": null
+  },
+  "ASELS.IS": {
+   "n_rows": 3431,
+   "seconds": 154.1,
+   "features": [
+    "dir_bilstm",
+    "dir_tft",
+    "ret_bilstm",
+    "ret_catboost",
+    "ret_lightgbm",
+    "ret_tft",
+    "ret_xgboost"
+   ],
+   "n_fit": 312,
+   "n_calib": 312,
+   "legacy": {
+    "n": 626,
+    "ece": 0.021939391597581806,
+    "brier": 0.24972112927296333,
+    "accuracy": 0.5223642172523961,
+    "base_rate": 0.5175718849840255,
+    "head_vs_price_conflict_rate": 0.6150159744408946,
+    "has_direction_heads": true
+   },
+   "calibrated": {
+    "temperature": 12.792390029230516,
+    "raw": {
+     "n": 626,
+     "ece": 0.08025844744683626,
+     "brier": 0.2542082701492173,
+     "accuracy": 0.4696485623003195
+    },
+    "temperature_scaled": {
+     "n": 626,
+     "ece": 0.03367392517729184,
+     "brier": 0.2501382900998252,
+     "accuracy": 0.4696485623003195
+    },
+    "isotonic_compare": {
+     "n": 626,
+     "ece": 0.04957430192452304,
+     "brier": 0.2520684959272538,
+     "accuracy": 0.48881789137380194
+    },
+    "price_vs_p_conflict_rate": 0.5702875399361023,
+    "temperature_at_bound": false
+   },
+   "skipped": null,
+   "error": null
+  }
+ },
+ "note": "temperature_at_bound sonradan ayni kuralla (T >= 0,99 x 20) eklendi; sinirlar fit_temperature varsayilani (0,05..20)"
+}
