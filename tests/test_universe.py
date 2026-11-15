@@ -305,6 +305,40 @@ def test_e1_membership():
         print("  [ATLA]  yerel ham duyurular yok (sources gitignore); parse yeniden uretimi atlandi")
 
 
+def test_e1_kap():
+    """KAP VYK ayristiricisi (ag yok): 9 hucreli olay satiri (TR 4 + EN 4 + simge), TR/EN tekillestirme,
+    XU030 disi endeks yok sayilir; Java byte[] sarmali; kayitli tarama arsivle uyumlu (2023, 4 ceyrek)."""
+    print("\nE1 — KAP VYK olay ayristiricisi")
+    import importlib.util as u
+    from data import kap_api as K
+    s = u.spec_from_file_location('kap_ev', os.path.join(ROOT, 'scripts', 'build_kap_index_events.py'))
+    b = u.module_from_spec(s)
+    s.loader.exec_module(b)
+
+    def row(name, inc, exc, date):
+        cells = [name, inc, exc, date] * 2 + ['']
+        return '<tr>' + ''.join(f'<td><div>{c}</div></td>' for c in cells) + '</tr>'
+    html = ('<table>' + row('Pay Adı', 'Kapsamına Dahil Edildiği Endeks', 'Kapsamından Çıkarıldığı Endeks',
+                            'Geçerlilik Tarihi')
+            + row('ORNEK A', 'XU030', '', '04/01/2023') + row('ORNEK A', 'XU030', '', '04/01/2023')
+            + row('ORNEK B', '', 'XU030', '05/01/2023') + row('ORNEK C', 'XUTUM', '', '04/01/2023') + '</table>')
+    got = b.xu030_rows(html)
+    check("9 hucreli satir: XU030 giris/cikis, TR/EN ve tekrar tekillestirilir, XUTUM yok sayilir",
+          got == [{'name': 'ORNEK A', 'action': 'in', 'effective_date': '04/01/2023'},
+                  {'name': 'ORNEK B', 'action': 'out', 'effective_date': '05/01/2023'}], str(got))
+    payload = b'%PDF-1.7 ornek'
+    wrapped = b'\xac\xed\x00\x05ur\x00\x02[B\xac\xf3\x17\xf8\x06\x08T\xe0\x02\x00\x00xp' + \
+        len(payload).to_bytes(4, 'big') + payload
+    check("Java byte[] sarmali acilir; sarmalsiz veri aynen doner",
+          K._unwrap_java_bytes(wrapped) == payload and K._unwrap_java_bytes(payload) == payload)
+    with open(os.path.join(ROOT, 'data', 'universe', 'bist30_kap_scan.json'), encoding='utf-8') as fh:
+        scan = json.load(fh)
+    qcs = [x['quarterly_crosscheck'] for x in scan['scan'] if x.get('quarterly_crosscheck')]
+    check("kayitli KAP taramasi: 2023 ceyreklik duyurulari (4) Borsa arsiviyle uyumlu, XU030 donem ici olay 0",
+          len(qcs) == 4 and all(q['agrees_with_archive'] for q in qcs) and scan['n_events'] == 0
+          and sum(x.get('n_xu030', 0) for x in scan['scan']) == 0, str([q.get('quarter') for q in qcs]))
+
+
 def main() -> int:
     test_e0()
     test_e2()
@@ -312,6 +346,7 @@ def main() -> int:
     test_e1_parser()
     test_e1_chain_logic()
     test_e1_membership()
+    test_e1_kap()
     print("\n" + "=" * 60)
     print(f"Sonuc: {len(PASSED)} gecti, {len(FAILED)} kaldi")
     return 1 if FAILED else 0

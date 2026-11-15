@@ -41,6 +41,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
   (test gecidi `apigwdev.mkk.com.tr`'de dogrulandi; `generateToken` uretim icin). Dakikada 6 cagri (`MIN_INTERVAL` 10,5 sn).
   Ham yanit `data/universe/sources/kap_api/` (gitignore). **Test gecidinde veri 2023-01-02'den basliyor** (2017-2018 yok).
   Borsa Istanbul sirket kimligi 49. `/disclosures` 50'lik sayfa, ER005 = o indeksten sonra bildirim yok (hata degil).
+  Test gecidi YALNIZ 2023-01-03..2023-12-29. Olaylar `scripts/build_kap_index_events.py` -> `bist30_kap_events.csv` (2023'te 0)
+  + `bist30_kap_scan.json` (ceyreklik PDF capraz denetimi 4/4). HTML base64 UTF-8; ek Java byte[] sarmali (`_unwrap_java_bytes`).
 
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)

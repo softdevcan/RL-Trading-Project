@@ -170,5 +170,40 @@ def disclosures(from_index: int, company_ids: Optional[List[str]] = None,
     return get('/disclosures', p)
 
 
+def download_attachment(att_id: str, file_name: str) -> str:
+    """Bildirim eki (PDF vb.) -> RAW_DIR/att_<id>_<ad>; onbellekte varsa ag cagrisi yok. Doner: yol."""
+    os.makedirs(RAW_DIR, exist_ok=True)
+    safe = ''.join(c if c.isalnum() or c in '-_.' else '_' for c in file_name)[:80]
+    path = os.path.join(RAW_DIR, f'att_{att_id}_{safe}')
+    if os.path.exists(path):
+        return path
+    mode = os.environ.get('KAP_AUTH', 'basic')
+    req = urllib.request.Request(f'{base_url()}/downloadAttachment/{att_id}',
+                                 headers={**_auth_header(mode), 'User-Agent': 'research-client/1.0'})
+    _throttle()
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = resp.read()
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f'KAP {e.code} downloadAttachment/{att_id}: {e.read()[:300]!r}') from None
+    data = _unwrap_java_bytes(data)
+    with open(path, 'wb') as fh:
+        fh.write(data)
+    return path
+
+
+def _unwrap_java_bytes(data: bytes) -> bytes:
+    """Ek yaniti Java serilestirilmis byte[] olarak geliyor (ACED0005 'ur' '[B' ... 'xp' + 4 bayt uzunluk +
+    yuk; 2026-11-15 test gecidinde goruldu). Sarmal yoksa veri aynen doner."""
+    if not data.startswith(b'\xac\xed\x00\x05'):
+        return data
+    i = data.find(b'xp') + 2
+    n = int.from_bytes(data[i:i + 4], 'big')
+    payload = data[i + 4:i + 4 + n]
+    if len(payload) != n:
+        raise RuntimeError('KAP eki: Java byte[] sarmali beklenen uzunlukta degil')
+    return payload
+
+
 def detail(index: int, file_type: str = 'data') -> dict:
     return get(f'/disclosureDetail/{index}', {'fileType': file_type})
