@@ -117,12 +117,8 @@ def brier_skill(p_up, y_up, base_rate: float) -> float:
     return float(1.0 - brier(p, y) / ref) if ref > 0 else float('nan')
 
 
-def block_bootstrap_ci(fn, p_up, y_up, block: int = 20, n_boot: int = 1000, seed: int = 0,
-                       alpha: float = 0.05):
-    """Hareketli blok bootstrap ile metrigin (1 - alpha) yuzdelik araligi (zaman bagimliligi).
-
-    Blok 20 gun bir tasarim varsayimi (hakem-finans I2 #2). None/NaN donduren tekrarlar atlanir.
-    """
+def _block_bootstrap_vals(fn, p_up, y_up, block: int = 20, n_boot: int = 1000, seed: int = 0):
+    """Hareketli blok bootstrap tekrarlarinda metrik degerleri; yetersizse None."""
     p, y = _as_arrays(p_up, y_up)
     n = len(p)
     if n < 2 * block:
@@ -138,7 +134,33 @@ def block_bootstrap_ci(fn, p_up, y_up, block: int = 20, n_boot: int = 1000, seed
             vals.append(v)
     if len(vals) < n_boot // 2:
         return None
+    return np.asarray(vals, dtype=np.float64)
+
+
+def block_bootstrap_ci(fn, p_up, y_up, block: int = 20, n_boot: int = 1000, seed: int = 0,
+                       alpha: float = 0.05):
+    """Hareketli blok bootstrap ile metrigin (1 - alpha) yuzdelik araligi (zaman bagimliligi).
+
+    Blok 20 gun bir tasarim varsayimi (hakem-finans I2 #2). None/NaN donduren tekrarlar atlanir.
+    """
+    vals = _block_bootstrap_vals(fn, p_up, y_up, block, n_boot, seed)
+    if vals is None:
+        return None
     return [float(np.quantile(vals, alpha / 2)), float(np.quantile(vals, 1 - alpha / 2))]
+
+
+def block_bootstrap_pvalue(fn, p_up, y_up, null: float = 0.5, block: int = 20,
+                           n_boot: int = 1000, seed: int = 0) -> Optional[float]:
+    """Tek tarafli H0: metrik <= null icin yuzdelik bootstrap p-degeri, (1 + #{v <= null}) / (1 + B).
+
+    Faz 9 P (hakem-finans I2 ikinci okuma not 1): 30 sembolde bilgi kapisi coklu karsilastirmaya
+    (BH) gore okunur; GA'nin alt ucu yerine p-degeri gerekir. Yuzdelik yontem bir yaklasiklik
+    (tasarim varsayimi); GA ile ayni tekrarlari kullanir (ayni tohum -> ayni karar).
+    """
+    vals = _block_bootstrap_vals(fn, p_up, y_up, block, n_boot, seed)
+    if vals is None:
+        return None
+    return float((1 + np.sum(vals <= null)) / (1 + len(vals)))
 
 
 def _accuracy(p, y):
