@@ -2157,7 +2157,7 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 - Seçim kuralı `last_checkpoint`.
 - Etiket ufku ile `simple` günlük ödül uyumsuz olabilir.
 
-**Önerilen ölçümler** (hakem-2; plana alınması kullanıcı kararı):
+**Önerilen ölçümler** (hakem-2). **KARAR (2026-11-16, kullanıcı): (a) + (b) plana alındı**, Faz 10 S-obs tasarımından önce yapılır; (c) yalnız (b) belirsiz kalırsa:
 - (a) RL'siz üst sınır: PC060 ile kural tabanlı portföy, 20 bps, 1/N ve DT eşdeğeriyle; dakikalar sürer. Sharpe artışı 0,43'ün altındaysa PC060 bu güçte geçerli bir pozitif kontrol değildir.
 - (b) Eğitilmiş DTF/PC060 modellerinde tahmin bloğunu sıfırlama ya da karıştırma; eylem ve Sharpe değişimi.
 - (c) Plasebo kolu: yeniden eğitim gerektirir, yalnız (b) belirsizse.
