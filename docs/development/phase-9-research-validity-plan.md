@@ -2048,6 +2048,33 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 2. Milestone 0' ön elemesi (`CUDA_VISIBLE_DEVICES=-1 python scripts/run_milestone0.py --stage prescreen`), budama, `protocol-v1-final.json`, nihai, maliyet, pozitif kontrol.
 3. Sonuçların hakem-2 incelemesi.
 
+### 9.36 Kapanış sonrası: golden CPU'da yenilendi; Faz 10 kararları; Milestone 0' m0p-v2 (2026-11-15, dal `feat/phase10-kickoff`)
+
+Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yürütür.
+
+**1. Golden yenilemesi (K1), commit `20740a0`.**
+- §9.35 GPU'da yenilemeyi öngörüyordu. Ölçüm bunu değiştirdi: CPU'da iki koşu bit-eş, GPU kendi içinde sabit ama farklı (`test_mape` CPU 166,7641 / GPU 162,3193). Belirlenimci olan CPU sonucu golden oldu; golden'da `"device": "cpu"`.
+- Yeni değerler (`tests/golden/prediction_regression.json`): `test_mape` 166,7641 (eski 139,4194; §9.18 B11 değeriyle aynı), `test_dir_acc` 57,65, yön UP, `predicted_change_pct` 0,21. Fark B11/Y28 düzeltmelerinden gelir (§9.18–9.19); bilinçli davranış değişikliği.
+- Test kendini CPU'ya sabitler; `--gpu` yalnız kıyas içindir, `--update --gpu` reddedilir. `python tests/test_prediction_regression.py` YEŞİL.
+- Sürüm etkisi: tahmin çıktısının sözleşmesi değişti → **MAJOR (v2.0.0)**.
+
+**2. Faz 10 kararları (kullanıcı, 2026-11-15)**, [phase-10-marl-plan.md](phase-10-marl-plan.md) karar tablosu:
+- K6 = A (hisse başına 30 ajan).
+- K9: BenchMARL/TorchRL önce, ayrı `venv-marl/` (gitignore; üretim kodu ona bağlanmaz).
+- K12: yeni ortamda t kapanışında karar, t+1 açılışında yürütme.
+- K15: iki SARL kontrol kolu (ağırlık + eş mimari).
+- K24: tam parametre paylaşımı + ajan kimliği; sektör başına seçici paylaşım M3 ablasyonu.
+
+**3. Milestone 0' m0p-v2 (TASLAK), commit `ea4d468`.** [milestone0-protocol-v2.md](milestone0-protocol-v2.md) + [milestone0/protocol-v2.json](milestone0/protocol-v2.json).
+- Neden: m0p-v1 (§9.35) 1.512 eğitim / ~226–509 sa tek süreçti; asıl soru (tahmin RL'ye katkı verir mi) için orantısız (kullanıcı kararı). v1 **hiç koşulmadı**, sonuç görülmedi; etiket `m0-protocol-v1` kalır.
+- Izgara: PPO + A2C × {DT, DTF, PC060} × 6 kat × 5 tohum = **180 eğitim**, ödül `simple` (faz 1), `causal` ölçek, tek aşama.
+- Doğrulayıcı tek test DT ↔ DTF (`last_checkpoint`, HAC, TOST ±0,5) — v1 §9.35 tanımıyla aynı, iki algoritma üzerinden.
+- Çıkarılanlar: K4 ödül kıyası, K25 ölçek kıyası, TD3, ön eleme/budama, maliyetli yeniden eğitim, PC055.
+- **Ölçüm** (CPU, 20k adım, 2024 katı, kayda yazılmadı; sayılar JSON `budget` alanında): 8 eşzamanlı PPO 42 sn, A2C 32 sn duvar; tek PPO 31 sn. GPU daha yavaş (PPO 63 sn) → CPU. Tahmin ~2,4 sa duvar (8 işçi).
+- Koşum betiği (`scripts/run_milestone0.py`): `--workers N` paralel işçi kipi (işçi başına ayrı RESULTS/MODELS/LOGS; model adı, kayıt ve ETA yarışmaz; ana defter işçi defterlerini birleştirir), `--scratch` (kayda yazmayan mekanizma denemesi; 4/4 geçti).
+
+**Sıradaki:** hakem-2 kısa okuması (yalnız v1'den farklar) → kullanıcı onayıyla dondurma (`m0-protocol-v2`) → PR + v2.0.0 → koşum (kullanıcı onayıyla; PPO, sonra A2C).
+
 ---
 
 ## Versiyon geçmişi
@@ -2111,3 +2138,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.33, Milestone 0' protokolü taslak):** m0p-v1 protokolü ve koşum betiği. Rota P tablosunu alıyor (DTF); M8 son nokta test kaydı eklendi. `.env` KAP anahtarları `Settings`'i bozuyordu (düzeltildi). 2021 katı ön elemede koşulmaz. Bütçe ölçümü ~127 sa tek süreç. `test_rl_walk_forward` 98.
 - **2026-11-15 (§9.34, kapanış kapısı):** hakem-2 Büyük revizyon (8 BÜYÜK). 2021 test penceresi bir duman koşusuyla bir kez okundu (beyan, `spike` kaydı). Protokol r2: ön eleme 2023–2026, son nokta puanı, doğrulayıcı aile, MDE (2021 tek başına ≳ 1 yıllık Sharpe), K4 ölçek eşitlemesi (k 0,165), pozitif kontrol (AUC 0,55 / 0,60), gerçek hiperparametreler kayıtta ve betikte denetleniyor, panel/tablo SHA zorlanıyor. Açık pencerede de bilgi yok (blok içi 0,502). Bütçe ~226–649 sa tek süreç (kullanıcı kararı). `test_pit_table` 33.
 - **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
+- **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.

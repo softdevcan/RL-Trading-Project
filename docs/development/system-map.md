@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-15 · `v1.18.0` · **Faz 9 kapandı**, Milestone 0' protokolü donduruldu (`m0-protocol-v1`, §9.35). Sırada golden yenileme ve ön eleme.
+**Son güncelleme:** 2026-11-15 · `v2.0.0` · Golden CPU'da yenilendi (K1), Faz 10 kararları K6/K9/K12/K15/K24, Milestone 0' **m0p-v2** (180 eğitim, §9.36). Sırada m0p-v2 koşumu.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -135,9 +135,9 @@ flowchart TB
   end
 
   subgraph M0["Milestone 0' koşumları"]
-    GOLD["Golden yenileme K1<br/>MAJOR sürüm"]:::planned
-    PRE["Ön eleme 432 eğitim<br/>~104 sa"]:::planned
-    FIN["Nihai 720 + maliyet 240<br/>+ pozitif kontrol 120"]:::planned
+    GOLD["Golden yenileme K1, CPU<br/>v2.0.0, §9.36"]:::done
+    PRE["Protokol m0p-v2<br/>PPO+A2C x DT/DTF/PC060<br/>180 eğitim"]:::active
+    FIN["Koşum ~2,4 sa 8 işçi<br/>+ hakem-2 sonuç okuması"]:::planned
   end
 
   subgraph M2P["Makale 2"]
@@ -184,10 +184,10 @@ flowchart TB
 | P4: P tablosu → eski RL ortamı | bitti | plan §9.32; `test_pit_table` 31 | — |
 | Rota DTF + M8 son nokta test kaydı + koşum betiği | bitti | plan §9.33; `test_rl_walk_forward` 98 | — |
 | Faz 9 kapanış 8: Milestone 0' protokolü | **donduruldu** (`m0-protocol-v1`) | [milestone0-protocol.md](milestone0-protocol.md); plan §9.33–9.35 | — (değişiklik = m0p-v2) |
-| Golden yenileme (K1) | planlı | plan §9.18 | Kapanıştan sonra, GPU'da bir kez; MAJOR sürüm |
-| Milestone 0' koşumları | planlı (sıradaki) | protokol §5, §10 | Golden K1 → ön eleme 432 (~104 sa) → budama → nihai 720 + maliyet 240 + pozitif kontrol 120 (toplam ~226–509 sa tek süreç) |
+| Golden yenileme (K1) | bitti (CPU; `v2.0.0`) | plan §9.36; `test_prediction_regression` yeşil | — (yeniden yenileme yalnız bilinçli davranış değişikliğinde) |
+| Milestone 0' koşumları | sürüyor (m0p-v2; v1 koşulmadan bırakıldı) | [milestone0-protocol-v2.md](milestone0-protocol-v2.md); plan §9.36 | PPO 90 + A2C 90 eğitim (~2,4 sa, 8 işçi) → hakem-2 sonuç okuması |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
-| Faz 10 M1 çerçeve spike'ı | planlı | Faz 10 plan §4 S1 | BenchMARL/TorchRL ↔ RLlib, Windows, bütçe |
+| Faz 10 M1 çerçeve spike'ı | planlı (K9 kararlı) | Faz 10 plan §4 S1, K9 | BenchMARL/TorchRL önce, ayrı `venv-marl/`; Windows, bütçe |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
 | Y30 SHAP ucu, Y31 altın birimi | açık (ürün) | `prediction/CLAUDE.md` | Tez sonucu değil |

@@ -230,21 +230,34 @@ def merge_worker_ledgers(path: str, wroot: str, done: dict) -> dict:
     """Isci defterlerindeki, ana defterde olmayan kayitlari ana deftere ekler. Doner: eklenen {hucre: kayit}.
     Analiz icin deneme kayitlari isci dizinlerinde kalir (her kayit `results_dir` tasir); N = birlesim."""
     import glob
-    new = {}
+
+    def rid(r):  # bir kosum denemesinin kimligi (ayni hucre basarisiz + yeniden kosu = iki ayri kayit)
+        return (r.get('cell'), r.get('ts'), r.get('trial_id'))
+
+    with open(path, encoding='utf-8') as fh:
+        seen = {rid(r) for r in (json.loads(x) for x in fh if x.strip()) if not r.get('header')}
+    fresh = []
     for wl in sorted(glob.glob(os.path.join(wroot, 'w*', 'ledger.jsonl'))):
         with open(wl, encoding='utf-8') as fh:
             for line in fh:
                 if not line.strip():
                     continue
                 r = json.loads(line)
-                if r['cell'] in done or r['cell'] in new:
+                if rid(r) in seen or r['cell'] in done:
                     continue
-                new[r['cell']] = r
-    if new:
+                seen.add(rid(r))
+                fresh.append(r)
+    if fresh:
         with open(path, 'a', encoding='utf-8', newline='\n') as fh:
-            for r in new.values():
+            for r in fresh:
                 fh.write(json.dumps(r, default=str) + '\n')
-    return {k: v for k, v in new.items() if v.get('state') == 'completed'} if new else {}
+    # Ana defterin ve read_ledger'in kurali: tamamlanmis bir kayit varsa hucre bitmistir (basarisiz deneme sonra
+    # gelse de once gelse de).
+    completed = {}
+    for r in fresh:
+        if r.get('state') == 'completed':
+            completed.setdefault(r['cell'], r)
+    return completed
 
 
 def main():
@@ -382,8 +395,10 @@ def main():
             log.close()
             print(f'isci w{k} bitti (kod {p.returncode})', flush=True)
         new = merge_worker_ledgers(path, wroot, done)
-        bad = [r for r in new.values() if r.get('state') != 'completed']
-        print(f'birlestirildi: {len(new)} yeni kayit, tamamlanmamis {len(bad)}', flush=True)
+        done.update(new)
+        left = [cell_key(c) for c in todo if cell_key(c) not in done]
+        print(f'birlestirildi: {len(new)} yeni tamamlanan; bu cagrida tamamlanmamis {len(left)}'
+              + (' (ayni komut kaldigi yerden devam eder)' if left else ''), flush=True)
 
 
 if __name__ == '__main__':
