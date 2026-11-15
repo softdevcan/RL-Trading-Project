@@ -2086,6 +2086,7 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
   - #5 İki birleştirme yolu "ilk tamamlanan" kuralını kullanıyor; analiz `trial_id`'yi ana defterden alacak.
   - #6 "Kurulamaz" listesi tamamlandı.
   - #7 Daraltma listesi tamamlandı (10 → 5 tohum, 6 → 2 yapılandırma, BH-FDR).
+- İkinci okuma (SendMessage): **Kabul**, 7/7 kapandı. İstenen kanıt: `--scratch --workers 2 --max-steps 2000 --limit 4` → 4/4 hücre `fold=2024` (tohum 1001–1004); dizin silindi.
 - Maliyet: [review-panel.md](review-panel.md).
 
 **Sıradaki:** kullanıcı onayıyla dondurma (`m0-protocol-v2`) → PR + v2.0.0 → koşum (kullanıcı onayıyla; PPO, sonra A2C).
