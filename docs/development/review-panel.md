@@ -94,3 +94,4 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | 2026-11-15 | İ2 (F + B6) | hakem-finans (sonnet), ikinci okuma (SendMessage) | ~46 bin (önceki bağlamla) | 3 | ~0,4 dk | Kabul; 2 engelleyici olmayan not (kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir gün kayma) |
 | 2026-11-15 | İ3 (P + D) | hakem-finans (sonnet) | ~51 bin | 10 | ~1,8 dk | Büyük revizyon (çıkarım katmanı): güç/MDE, blok içi AUC, hayatta kalan evren; 5 KÜÇÜK |
 | 2026-11-15 | İ3 (P + D) | hakem-rl (sonnet) | ~41 bin | 10 | ~0,9 dk | Küçük revizyon: 2 BÜYÜK Milestone 0' tasarımına (S-msg boş sonuç beyanı, pozitif kontrol), 3 KÜÇÜK |
+| 2026-11-15 | İ3 (P + D) | hakem-finans (sonnet), ikinci okuma (YENİ ajan; ilk bağlam kayboldu) | ~33 bin | 7 | ~0,9 dk | Küçük revizyon: 7 KÜÇÜK. Eşit kapanış duyarlılığı (#4) ana oturumda ölçüldü: havuzlu 0,511'in anlamlılığı eşitlere bağlı. Test koşmadı |

@@ -24,6 +24,9 @@ Beyan (hakem-finans I3 #3, #7, #8):
   * EVREN HAYATTA KALAN, DONDURULMUS panel 30'u (E0); tarihsel BIST 30 uyeligi degil (E1 acik). 1/N ve
     al-tut bu evrende; XU030 ayni evren degil ve temettusuz -> baseline'lar arasi ya da XU030'a karsi
     USTUNLUK cikarimi yapilmaz; XU030 ayri referans satiridir.
+  * Hayatta kalma yanliligi YUKARI yonlu (bugun panelde kalanlar secildi): 1/N ve al-tut Sharpe'i iyimser.
+    Tezde bu tablo yalniz RL ajanlariyla AYNI dondurulmus evrende kiyas icin kullanilir; XU030 satiri
+    "evren/donem ve fiyat tanimi farkli, kiyas degil" dipnotuyla verilir (hakem-finans I3 ikinci okuma #6).
   * Maliyet yalniz komisyon (spread, lot, fiyat limiti yok). Al-tutta cikis maliyeti yok (RL ile
     tutarli: pencere sonunda pozisyon kapatilmaz).
   * 1/N ile al-tut arasindaki fark istatistiksel olarak test EDILMEDI (gerekirse Ledoit-Wolf, A3).
