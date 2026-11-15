@@ -2247,6 +2247,36 @@ Maliyet: [review-panel.md](review-panel.md).
 - PC060 kapalı döngü ΔSR < 0 ve p < 0,05 → "politika bloktaki bilgiyi kullanıyor". Bu durumda M0'daki boşluk argmax ile last_checkpoint farkından ya da başka bir nedenden gelir.
 - DTF ile PC060'ın R değerleri ayrıca karşılaştırılır (betimsel).
 
+**Sonuç** (`CUDA_VISIBLE_DEVICES=-1 python scripts/m0_pred_block_ablation.py`; [measurements/phase10-m0/pred_block_ablation.json](measurements/phase10-m0/pred_block_ablation.json); ön kayıttan sonra koşuldu, kural değişmedi):
+
+**Doğruluk kapısı:** 100/100 model, kayıttaki argmax test getirilerini **sıfır farkla** üretti (en büyük mutlak fark 0,0).
+
+| Grup (25 model; 5 kat × 5 tohum) | Medyan R | Çeyrekler | S_P,karıştır | S_C,karıştır | S_P,sıfır |
+|---|---|---|---|---|---|
+| A2C / DTF | 0,58 | [0,47, 0,67] | 0,024 | 0,042 | 0,019 |
+| A2C / PC060 | 0,50 | [0,43, 0,66] | 0,024 | 0,050 | 0,028 |
+| PPO / DTF | 0,82 | [0,71, 0,87] | 0,303 | 0,350 | 0,234 |
+| PPO / PC060 | 0,77 | [0,69, 0,86] | 0,286 | 0,359 | 0,230 |
+
+**Kapalı döngü** (PC060, tahmin sözlüğü test tarihleri arasında karıştırıldı; 1.198 gün): ΔSR (karıştırılmış − normal)
+- A2C: +0,001 (SE 0,002; p 0,53)
+- PPO: −0,011 (SE 0,019; p 0,57)
+- Havuzlu: −0,005 (SE 0,010; p 0,63)
+
+**Ön kayıtlı okuma:** medyan R ≥ 0,1 ve kapalı döngü ΔSR anlamlı negatif değil → **blok eylemi etkiliyor ama değer üretmiyor.**
+
+**Betimsel (kuralın parçası değil):**
+- Bilgili blok (PC060) ile bilgisiz blok (DTF) aynı duyarlılığı alıyor (R 0,50–0,82). Politika bloğa eşit boyutlu bir teknik blok kadar duyarlı.
+- Gelecek bilgisini karıştırmak Sharpe'ı değiştirmiyor (SE 0,01). Bu, bloğun bilgi olarak değil gürültü gibi işlendiğiyle tutarlı.
+- A2C'nin mutlak duyarlılığı çok düşük (eylem normunun %2–5'i), PPO'nunki %23–36.
+
+**§9.37–9.39 birlikte (keşifsel; neden kanıtlanmadı):**
+- PC060'ın RL'siz ulaşılabilir değeri MDE'yi aşıyor (a).
+- Eski ortamın politikaları bloğa tepki veriyor, ama bloktaki bilgiden değer üretmiyor (b).
+- M0'daki boş Q2/Q3 sonucu, bu boru hattında (P4 eşlemesi, ~420 boyutlu düz gözlem, 200k adım, rota hiperparametreleri) **öğrenmenin bilgiyi ayıklayamamasıyla** tutarlı.
+- Bunlar Faz 10 S-obs tasarım girdisidir: tahmin sinyali ajan başına yerel gözlemde ve normalize edilmiş biçimde verilmeli. Sinyal ödülle hizası (t → t+1) ve öğrenme bütçesi ayrıca sınanmalı.
+- **Sınırlama:** argmax modelleri, yalnız 2022–2026 katları; `last_checkpoint`'e doğrudan genellenmez; tek permütasyon tohumu.
+
 ---
 
 ## Versiyon geçmişi
@@ -2313,3 +2343,4 @@ Maliyet: [review-panel.md](review-panel.md).
 - **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.
 - **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.
 - **2026-11-16 (§9.38, pozitif kontrol (a)):** Ön kayıt `fe65b0b`, ardından ölçüm. PC060 ile RL'siz kural portföyü 2021'de 1/N'i +0,46 yıllık Sharpe geçiyor (eşik 0,43, az farkla); 6 katta +0,44 (eşik 0,17). Okuma: sinyalin değeri MDE'yi aşıyor; RL'nin almaması boru hattı/öğrenme açıklamasını destekler (kanıt değil). Sıradaki (b).
+- **2026-11-16 (§9.39, pozitif kontrol (b)):** Ön kayıt `b25012b`, ardından ölçüm. 100 argmax modeli (2022–2026), doğruluk kapısı 100/100. Medyan R 0,50–0,82; PC060 bloğu karıştırılınca ΔSR ≈ 0 (havuzlu −0,005, SE 0,010). Okuma: blok eylemi etkiliyor ama değer üretmiyor. (a) + (b) → S-obs tasarım girdisi.
