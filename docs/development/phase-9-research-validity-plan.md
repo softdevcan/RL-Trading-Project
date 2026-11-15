@@ -2097,6 +2097,78 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 
 **Sıradaki:** koşum (kullanıcı onayıyla, algoritma başına ayrı): PPO `CUDA_VISIBLE_DEVICES=-1 python scripts/run_milestone0.py --workers 8 --limit 90`, sonra aynı komutla A2C; ardından sonuçların hakem-2 okuması (ölçülen ρ ve MDE dahil).
 
+### 9.37 Milestone 0' m0p-v2 sonuçları ve hakem-2 sonuç okuması (2026-11-16, dal `feat/m0-analysis`)
+
+**Koşum** (main `d4afeff`, `m0-protocol-v2`): PPO 90 + A2C 90 = **180/180 tamamlandı**, protokol uyuşmazlığı 0, başarısız hücre 0. Ortalama eğitim PPO 279 sn, A2C 180 sn (8 CPU işçisi; toplam ~1,5 sa). N = 360 (argmax + last_checkpoint), yinelenen tamamlanmış hücre yok. Kollar doğru tabloya bağlı (60/60/60; analiz artık SHA'yı denetliyor).
+
+**Analiz:** `scripts/analyze_milestone0.py` (öz sınama 10/10), birleştirilmiş test `evaluation.sharpe_tests.sharpe_diff_hac_pooled` (ortak delta yöntemi; K=1'de `sharpe_diff_hac` ile birebir; H0 red 0,06). Arşiv: [measurements/phase10-m0/m0p_v2_results.json](measurements/phase10-m0/m0p_v2_results.json). Nicelik: her algoritmada 5 tohumun eşit ağırlıklı topluluk portföyü; SE zaman örneklemesini kapsar, tohum varyansını içermez.
+
+**Sonuçlar (2021 doğrulayıcı penceresi, 247 gün; yıllık Sharpe):**
+
+| Kıyas | Δ | SE | p | %90 GA | p_TOST (±0,5) | MDE |
+|---|---|---|---|---|---|---|
+| **Q2 DTF − DT (havuzlu)** | −0,17 | 0,148 | 0,25 | [−0,41, 0,07] | 0,013 (gözlendi) | 0,41 |
+| ↳ PPO (keşifsel) | +0,14 | 0,240 | 0,56 | [−0,25, 0,53] | 0,067 | 0,67 |
+| ↳ A2C (keşifsel) | −0,48 | 0,303 | 0,11 | [−0,98, 0,02] | 0,47 | 0,85 |
+| **Q3 PC060 − DT (havuzlu)** | −0,20 | 0,153 | 0,19 | [−0,45, 0,05] | — | 0,43 |
+| Keşifsel 6 kat DTF − DT (1445 gün) | −0,07 | 0,062 | 0,23 | [−0,18, 0,03] | — | 0,17 |
+| Keşifsel 6 kat PC060 − DT | −0,03 | 0,060 | 0,60 | [−0,13, 0,07] | — | 0,17 |
+
+- Ölçülen ρ (tohum ortalamalı DT/DTF): PPO 0,98, A2C 0,97. Tohum başına ρ 0,77–0,96. Ön kayıtlı güç öncülü (mde.json, ρ ≤ 0,95, tohum ortalaması modellenmedi) **karamsar çıktı**.
+- Tohum başına ΔSR (DTF − DT): PPO [−0,34, 0,43, 0,14, −0,09, 0,34]; A2C [−0,28, −0,83, −0,35, −0,76, −0,08] (5/5 negatif).
+- SE duyarlılığı: prewhitening'siz 0,146 (hakem: skaler etki fonksiyonu HAC 0,145, iid 0,130).
+- Dejenerelik denetimi: ajanlar yatırımlı (2021'de 1.700–3.900 işlem, günlük std ~160 bp). Tahmin bloğu faz 1 gözlemine giriyor (`env/trading_env.py:987-1001`). Tablo eğitim, doğrulama ve test ortamlarına aynı ayarla gidiyor (`app/api/routes/trading.py:1276, 1290, 1493, 1648`).
+
+**Ön kayıtlı okuma (`positive_control_rule`):** Q2'de fark tespit edilmedi. Pozitif kontrolde de fark tespit edilmedi. **Okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı.** Bu okuma P tablosu hakkında bir şey söylemez; "tahmin katkı vermez" yazılmaz. 2021'de eşdeğerlik iddiası ön kayıt gereği kurulamaz (`cannot_claim`). p_TOST = 0,013 yalnız gözlenen bir değerdir ve ileri veride sınanır. Sonuç **ara karardır**: yalnız 2021 var, ön kayıt sonrası ileri veri yok.
+
+**Sonuçtan sonra analiz betiğinde yapılan değişiklikler** (`git diff 368bfb3 0d5a75a` ve bu bölümün commit'i):
+1. Kayıt dizini anahtarları normalize edildi.
+2. ρ, testle aynı maskeyle hesaplanıyor; ilk koşuda NaN çıkıyordu.
+3. `notes` alanı eklendi.
+4. **Hata:** Q3 cümlesine "eşdeğerlik TOST ile gösterildi" eklenmişti. Bu `cannot_claim`'i ihlal ediyordu; hakem-2 #1 ile geri alındı.
+5. Hakem bulgularıyla eklenenler: 2021'de eşdeğerlik koruması, algoritma bazında Δ/SE/GA/MDE, tohum başına fark, prewhitening'siz SE, P tablosu SHA denetimi, nicelik ve "tespit" tanımı notları.
+
+İlk koşu ile son koşuda Q2 istatistiği birebir aynı: Δ −0,1701, SE 0,1478, p 0,2495, p_TOST 0,0128.
+
+**hakem-2 sonuç okuması: Büyük revizyon (yalnız okuma katmanı; hesap katmanı kabul, yeniden koşum yok).** 11 bulgu; hepsi işlendi:
+- #1 BÜYÜK: arşivde "eşdeğer" etiketi vardı → `equivalence_claim: kurulamaz`, `status: ARA KARAR`.
+- #2 BÜYÜK: Q3 okuması pencere kısıtını bilmiyordu → `equivalence_allowed` (ileri veri yokken False); öz sınamaya mutasyon eklendi.
+- #3 BÜYÜK: havuzlu TOST algoritma heterojenliğini gizliyor; hiçbir algoritma tek başına eşdeğerlik göstermiyor; örtük korelasyon ≈ −0,43, heterojenlik p 0,18 → algoritma bazında satırlar zorunlu.
+- #4 BÜYÜK (beyan): nicelik topluluk portföyü, SE tohum varyansını içermiyor (kaba iki bileşenli SE ≈ 0,18, p_TOST ≈ 0,03) → not + tohum başına dağılım.
+- #5 BÜYÜK: PC060'ın kendi ekonomik değeri ölçülmedi. "Boru hattı aktaramadı" ile "sinyal bu güçte tespit edilebilir etki üretmiyor" ayrılamıyor → test edilmemiş açıklama; ölçüm önerisi (a) aşağıda.
+- #6 KÜÇÜK: A2C'de DTF ve PC060'ın ikisi de negatif, işlem sayısı ikisinde de düşüyor (2314 → 1704 / 1717). İçerikten bağımsız bir "gözlem bloğu maliyeti" hipotezi → Faz 10 S-obs'a taşındı.
+- #7–#11 KÜÇÜK: sonuç sonrası değişikliklerin kaydı (bu bölüm); yöntem savunulabilir (duyarlılık notu); havuzlu ve tek algoritma MDE'si; SHA assert; "tespit = anlamlı ve pozitif" yorumu.
+
+**Rapora girebilecek cümleler (hakem-2; her biri sınırlamasıyla):**
+1. Ön kayıtlı doğrulayıcı testte (2021, 247 gün; PPO ve A2C, her biri 5 tohum ortalaması) DTF − DT yıllık Sharpe farkı −0,17 (HAC SE 0,15; p = 0,25); fark tespit edilmedi. Sınırlama: ara sonuç; nicelik topluluk; SE eğitim varyansını içermez; zorunlu dipnotlar.
+2. Algoritma bazında farklar zıt yönlü: PPO +0,14 (SE 0,24), A2C −0,48 (SE 0,30). Keşifsel, düzeltmesiz; PPO ↔ A2C üstünlüğü kurulamaz.
+3. TOST (±0,5) p = 0,013 gözlendi. Ön kayıt 2021'de eşdeğerlik iddiasını dışarıda bıraktığı için bu bir eşdeğerlik kanıtı değildir; ileri veride sınanacaktır. Havuzlu ortalamaya aittir.
+4. Pozitif kontrolde (AUC 0,60, sinyal bilerek gelecekten) PC060 − DT farkı da tespit edilmedi (−0,20; SE 0,15; p = 0,19). Ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı. PC060'ın ulaşılabilir ekonomik değeri ölçülmedi.
+5. Ölçülen ρ PPO 0,98, A2C 0,97; havuzlu MDE 0,41 (tek algoritmada 0,67 ve 0,85).
+6. Keşifsel olarak 6 katta DTF − DT −0,07 (SE 0,06), PC060 − DT −0,03 (SE 0,06). 2022–2026 daha önce okunmuş pencereler.
+7. **Yazılmaz:** "tahmin katkı vermez", "2021'de eşdeğer", niteliksiz "±0,5 içinde eşdeğer", RL'nin XU030'u ya da 1/N'yi yendiği, `pit_v1_seed42` dışına genelleme.
+
+**Test edilmemiş açıklamalar** (PC060 neden aktarılamadı):
+- PC060'ın kendi ekonomik değeri bilinmiyor (öncelikli).
+- P4 eşlemesi sinyali kaybediyor olabilir.
+- 420 gözlem boyutunun 120'si bu blok; boyut ya da gürültü maliyeti olabilir.
+- PPO `ent_coef` 0,15.
+- 200k adım yetersiz olabilir.
+- Seçim kuralı `last_checkpoint`.
+- Etiket ufku ile `simple` günlük ödül uyumsuz olabilir.
+
+**Önerilen ölçümler** (hakem-2). **KARAR (2026-11-16, kullanıcı): (a) + (b) plana alındı**, Faz 10 S-obs tasarımından önce yapılır; (c) yalnız (b) belirsiz kalırsa:
+- (a) RL'siz üst sınır: PC060 ile kural tabanlı portföy, 20 bps, 1/N ve DT eşdeğeriyle; dakikalar sürer. Sharpe artışı 0,43'ün altındaysa PC060 bu güçte geçerli bir pozitif kontrol değildir.
+- (b) Eğitilmiş DTF/PC060 modellerinde tahmin bloğunu sıfırlama ya da karıştırma; eylem ve Sharpe değişimi.
+- (c) Plasebo kolu: yeniden eğitim gerektirir, yalnız (b) belirsizse.
+
+**hakem-2 ikinci okuma (SendMessage): Kabul.** 3 KÜÇÜK not işlendi:
+- Özet satırına "bu güçle" niteleyicisi eklendi.
+- `--forward-data` bayrağı eklendi: ileri veri henüz tanımlı değil, değeri çıktıya yazılıyor.
+- İzinli dal için `q3_reading` birim kontrolü eklendi (öz sınama 11/11).
+
+Maliyet: [review-panel.md](review-panel.md).
+
 ---
 
 ## Versiyon geçmişi
@@ -2161,3 +2233,4 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 - **2026-11-15 (§9.34, kapanış kapısı):** hakem-2 Büyük revizyon (8 BÜYÜK). 2021 test penceresi bir duman koşusuyla bir kez okundu (beyan, `spike` kaydı). Protokol r2: ön eleme 2023–2026, son nokta puanı, doğrulayıcı aile, MDE (2021 tek başına ≳ 1 yıllık Sharpe), K4 ölçek eşitlemesi (k 0,165), pozitif kontrol (AUC 0,55 / 0,60), gerçek hiperparametreler kayıtta ve betikte denetleniyor, panel/tablo SHA zorlanıyor. Açık pencerede de bilgi yok (blok içi 0,502). Bütçe ~226–649 sa tek süreç (kullanıcı kararı). `test_pit_table` 33.
 - **2026-11-15 (§9.35, Faz 9 kapanışı):** hakem-2 ikinci okuma 14/15; doğrulayıcı test tanımlandı (last_checkpoint, tek birleşik test, TOST ±0,5); bütçe kuralı (b). Milestone 0' protokolü donduruldu, etiket `m0-protocol-v1`. §9.22 8/8.
 - **2026-11-15 (§9.36, kapanış sonrası):** golden K1 CPU'da bir kez yenilendi (CPU bit-eş, GPU farklı; test CPU'ya sabit). Faz 10 kararları K6/K9/K12/K15/K24. Milestone 0' m0p-v2 taslağı (180 eğitim, ~2,4 sa 8 işçi; v1 koşulmadan bırakıldı); koşum betiğine paralel işçi kipi ve `--scratch`.
+- **2026-11-16 (§9.37, M0' sonuçları):** 180/180. Q2 DTF−DT (2021) −0,17, p 0,25, fark yok; PC060 de boş → ön kayıtlı okuma: bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı; "tahmin katkı vermez" yazılmaz, 2021'de eşdeğerlik kurulamaz (ara karar). hakem-2 Büyük revizyon (okuma katmanı): arşivdeki "eşdeğer" etiketi kaldırıldı, algoritma bazında satırlar, tohum dağılımı, nicelik notu.

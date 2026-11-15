@@ -1,0 +1,356 @@
+{
+ "protocol_id": "m0p-v2",
+ "protocol_sha256": "2fa9f70044cc31ddafc73973ae1dde2d3c6c106f7d295005029f6a6e77fa14ff",
+ "protocol_doc_sha256": "6256cc3a6713c8b5873db2af768622ddaf19ea9dc9583e85b185a881dc3ae91d",
+ "ledger_cells": 180,
+ "forward_data": false,
+ "duplicate_completed_cells": {},
+ "N_trials_registry_union": 360,
+ "registry_dirs": [
+  "results",
+  "results\\milestone0\\m0p-v2\\workers\\w0\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w1\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w2\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w3\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w4\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w5\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w6\\results",
+  "results\\milestone0\\m0p-v2\\workers\\w7\\results"
+ ],
+ "confirmatory": {
+  "Q2_DTF_vs_DT": {
+   "contrast": "DTF - DT",
+   "folds": [
+    "2021"
+   ],
+   "algorithms": [
+    "PPO",
+    "A2C"
+   ],
+   "n_days": 247,
+   "delta_sharpe_annual": -0.1701429291628005,
+   "per_algorithm_delta_annual": {
+    "PPO": 0.1402609443002424,
+    "A2C": -0.4805468026258434
+   },
+   "se_annual": 0.14775928655738657,
+   "z": -1.1514872136088758,
+   "p_value": 0.24953185257285182,
+   "rho": {
+    "PPO": 0.9833613600786303,
+    "A2C": 0.9679297661940974
+   },
+   "mde_annual_at_measured_rho": 0.41396023305809243,
+   "method": "HAC (prewhitened QS), ortak delta yontemi",
+   "ci90_annual": [
+    -0.4131853275724797,
+    0.0728994692468787
+   ],
+   "se_annual_no_prewhiten": 0.14605773852251094,
+   "tost_margin_annual": 0.5,
+   "p_tost": 0.012794438837997118,
+   "per_algorithm": {
+    "PPO": {
+     "delta_sharpe_annual": 0.1402609443002424,
+     "se_annual": 0.23978413987823755,
+     "p_value": 0.5585835478540742,
+     "ci90_annual": [
+      -0.2541488678639158,
+      0.5346707564644005
+     ],
+     "mde_annual": 0.6717757018208026,
+     "p_tost": 0.06677326221144278,
+     "per_seed_delta_annual": {
+      "1001": -0.3381277003544119,
+      "1002": 0.4325927078938959,
+      "1003": 0.1436318033263998,
+      "1004": -0.08873145505839986,
+      "1005": 0.33934668497178455
+     },
+     "per_seed_delta_mean_std": [
+      0.0977424081558537,
+      0.31518186795655107
+     ]
+    },
+    "A2C": {
+     "delta_sharpe_annual": -0.4805468026258434,
+     "se_annual": 0.30325454268539354,
+     "p_value": 0.11305000736680369,
+     "ci90_annual": [
+      -0.979356137051423,
+      0.018262531799736248
+     ],
+     "mde_annual": 0.8495934441130067,
+     "p_tost": 0.47442615824234596,
+     "per_seed_delta_annual": {
+      "1001": -0.28073861577741316,
+      "1002": -0.830262190957769,
+      "1003": -0.34611735683846134,
+      "1004": -0.7642663309736675,
+      "1005": -0.08171482068664504
+     },
+     "per_seed_delta_mean_std": [
+      -0.46061986304679126,
+      0.3232157739966578
+     ]
+    }
+   }
+  },
+  "alpha": 0.05,
+  "decision_two_sided": "red yok",
+  "status": "ARA KARAR: yalniz 2021 kati (on kayit sonrasi ileri veri yok)",
+  "p_tost_observed": 0.012794438837997118,
+  "equivalence_claim": "kurulamaz (2021 penceresi; protocol cannot_claim); ileri veride sinanir"
+ },
+ "positive_control_same_window": {
+  "contrast": "PC060 - DT",
+  "folds": [
+   "2021"
+  ],
+  "algorithms": [
+   "PPO",
+   "A2C"
+  ],
+  "n_days": 247,
+  "delta_sharpe_annual": -0.19918471292087891,
+  "per_algorithm_delta_annual": {
+   "PPO": -0.0011757155775650367,
+   "A2C": -0.3971937102641928
+  },
+  "se_annual": 0.15340907448871305,
+  "z": -1.298389378755647,
+  "p_value": 0.19415356703729103,
+  "rho": {
+   "PPO": 0.9810581388166822,
+   "A2C": 0.9780158974874958
+  },
+  "mde_annual_at_measured_rho": 0.42978859541196973,
+  "method": "HAC (prewhitened QS), ortak delta yontemi",
+  "ci90_annual": [
+   -0.4515201855009071,
+   0.05315075965914928
+  ],
+  "se_annual_no_prewhiten": 0.14756080609882088,
+  "per_algorithm": {
+   "PPO": {
+    "delta_sharpe_annual": -0.0011757155775650367,
+    "se_annual": 0.2476797737495263,
+    "p_value": 0.9962125216361845,
+    "ci90_annual": [
+     -0.4085726897519934,
+     0.40622125859686337
+    ],
+    "mde_annual": 0.6938959929622373,
+    "per_seed_delta_annual": {
+     "1001": 0.008832386507062528,
+     "1002": -0.14174227182559962,
+     "1003": 0.04533498392235924,
+     "1004": -0.1475193627805934,
+     "1005": 0.10672271335870565
+    },
+    "per_seed_delta_mean_std": [
+     -0.025674310163613122,
+     0.11410520624722018
+    ]
+   },
+   "A2C": {
+    "delta_sharpe_annual": -0.3971937102641928,
+    "se_annual": 0.23422499793183071,
+    "p_value": 0.08992783998762299,
+    "ci90_annual": [
+     -0.7824595476350656,
+     -0.01192787289331998
+    ],
+    "mde_annual": 0.6562012919183575,
+    "per_seed_delta_annual": {
+     "1001": 0.03439864028306966,
+     "1002": -0.5374202844086899,
+     "1003": -0.34381485341163043,
+     "1004": -0.7454623102023331,
+     "1005": -0.19369785452750043
+    },
+    "per_seed_delta_mean_std": [
+     -0.35719933245341684,
+     0.30145007100207544
+    ]
+   }
+  }
+ },
+ "Q3_reading": "Q2 bos (fark tespit edilmedi; p_TOST = 0.013 gozlendi; on kayit geregi bu pencerede esdegerlik iddiasi kurulamaz); PC060 farki da tespit edilmedi -> 'bu boru hatti ve bu gucle AUC 0,60'lik bir sinyal bile aktarilamadi'. P tablosu hakkinda bir sey soylenmez; 'tahmin katki vermez' YAZILMAZ (positive_control_rule'un ikinci kosulu yok).",
+ "exploratory": {
+  "DTF_vs_DT_all_folds": {
+   "contrast": "DTF - DT",
+   "folds": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+   ],
+   "algorithms": [
+    "PPO",
+    "A2C"
+   ],
+   "n_days": 1445,
+   "delta_sharpe_annual": -0.07425535700512942,
+   "per_algorithm_delta_annual": {
+    "PPO": -0.045748104756869135,
+    "A2C": -0.1027626092533897
+   },
+   "se_annual": 0.06155655920941356,
+   "z": -1.2062947955312922,
+   "p_value": 0.22770384368874697,
+   "rho": {
+    "PPO": 0.9806373118712117,
+    "A2C": 0.9695546710607806
+   },
+   "mde_annual_at_measured_rho": 0.17245594635898873,
+   "method": "HAC (prewhitened QS), ortak delta yontemi",
+   "ci90_annual": [
+    -0.17550688668338638,
+    0.026996172673127525
+   ],
+   "se_annual_no_prewhiten": 0.061034592232792347,
+   "tost_margin_annual": 0.5,
+   "p_tost": 2.3176916622180115e-12,
+   "per_algorithm": {
+    "PPO": {
+     "delta_sharpe_annual": -0.045748104756869135,
+     "se_annual": 0.0834988333458307,
+     "p_value": 0.5837680199102047,
+     "ci90_annual": [
+      -0.1830914636319753,
+      0.09159525411823702
+     ],
+     "mde_annual": 0.23392909723135752,
+     "p_tost": 2.6607636473170583e-08,
+     "per_seed_delta_annual": {
+      "1001": -0.2689925688229736,
+      "1002": -0.05996171175785958,
+      "1003": -0.018611010257091776,
+      "1004": 0.07218496884956205,
+      "1005": 0.03803606110372465
+     },
+     "per_seed_delta_mean_std": [
+      -0.04746885217692766,
+      0.13387469019462556
+     ]
+    },
+    "A2C": {
+     "delta_sharpe_annual": -0.1027626092533897,
+     "se_annual": 0.10569811134776297,
+     "p_value": 0.3309373886002216,
+     "ci90_annual": [
+      -0.2766205310656782,
+      0.07109531255889878
+     ],
+     "mde_annual": 0.29612226633435135,
+     "p_tost": 8.556114274820565e-05,
+     "per_seed_delta_annual": {
+      "1001": 0.23572539672976833,
+      "1002": 0.1604688056251451,
+      "1003": -0.2824000273527772,
+      "1004": -0.3417712092403111,
+      "1005": -0.2515601135341832
+     },
+     "per_seed_delta_mean_std": [
+      -0.09590742955447162,
+      0.27164561042799984
+     ]
+    }
+   }
+  },
+  "PC060_vs_DT_all_folds": {
+   "contrast": "PC060 - DT",
+   "folds": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+   ],
+   "algorithms": [
+    "PPO",
+    "A2C"
+   ],
+   "n_days": 1445,
+   "delta_sharpe_annual": -0.03140260819763355,
+   "per_algorithm_delta_annual": {
+    "PPO": -0.028369099110475252,
+    "A2C": -0.03443611728479184
+   },
+   "se_annual": 0.06035337566799086,
+   "z": -0.5203123744126925,
+   "p_value": 0.6028458724911779,
+   "rho": {
+    "PPO": 0.9811806640331928,
+    "A2C": 0.972948600527801
+   },
+   "mde_annual_at_measured_rho": 0.1690851251346621,
+   "method": "HAC (prewhitened QS), ortak delta yontemi",
+   "ci90_annual": [
+    -0.13067507706389303,
+    0.06786986066862595
+   ],
+   "se_annual_no_prewhiten": 0.06046916038238556,
+   "per_algorithm": {
+    "PPO": {
+     "delta_sharpe_annual": -0.028369099110475252,
+     "se_annual": 0.08362300459303829,
+     "p_value": 0.7344214524569732,
+     "ci90_annual": [
+      -0.1659167015119139,
+      0.1091785032909634
+     ],
+     "mde_annual": 0.2342769735620489,
+     "per_seed_delta_annual": {
+      "1001": 0.07505718902434011,
+      "1002": -0.2324313753903391,
+      "1003": -0.03283486830598825,
+      "1004": -0.17626969231322415,
+      "1005": 0.19830915727542353
+     },
+     "per_seed_delta_mean_std": [
+      -0.03363391794195757,
+      0.17711393125161523
+     ]
+    },
+    "A2C": {
+     "delta_sharpe_annual": -0.03443611728479184,
+     "se_annual": 0.09475672715226814,
+     "p_value": 0.7162940999028324,
+     "ci90_annual": [
+      -0.19029706361925114,
+      0.12142482904966745
+     ],
+     "mde_annual": 0.2654690461065582,
+     "per_seed_delta_annual": {
+      "1001": 0.1709918637326251,
+      "1002": -0.16184879415243492,
+      "1003": -0.09760587399050424,
+      "1004": -0.07137329668072179,
+      "1005": 0.00513318415646935
+     },
+     "per_seed_delta_mean_std": [
+      -0.0309405833869133,
+      0.12776350694334626
+     ]
+    }
+   }
+  },
+  "note": "kesifsel; dogrulayici aileye girmez, coklu duzeltme yok"
+ },
+ "required_footnotes": {
+  "exposure_note": "2021 test penceresi (1) 2026-11-15'te bir duman kosusuyla BIR KEZ okundu (PPO, faz 1, stats, DT, 20000 adim; metriklere bakilmadi; kayit 'spike', plan §9.34); (2) m0p-v2 tasariminda iki --scratch mekanizma denemesiyle (2026-11-15 21:45 ve 22:05) yeniden hesaplandi: toplam 8 egitim, PPO/simple/causal/DT, tohum 1001-1004 (nihai tohumlar), 2000 adim. Ciktilar gecici dizindeydi, deneme kaydina girmedi; ekrana yalniz durum satiri basildi; ikinci denemenin metriklerine bakilmadi, ilkinde metrik okunduguna dair kayit yok; iki dizin acilmadan silindi (plan §9.36). Betik artik kisa egitimi yalniz duman katinda kosar (hakem-2 m0p-v2 #1). Okunmus pencere 2022-07-18..2026-08-28 (EXPOSED_EVAL_WINDOWS).",
+  "table": "ZORUNLU: exposure_note; evren hayatta kalan dondurulmus panel 30'u; eski ortam protokolde acik (obs_health, K26=a)"
+ },
+ "cannot_claim": "'tahmin katki vermez' (positive_control_rule'un iki kosulu olmadan); RL'nin piyasayi/XU030/1N'yi yendigi; BIST-30 bilesenlerine genelleme; sabit tutulanlar disina genelleme (yalniz simple odul faz 1, causal, PPO/A2C, 20 bps; K4 PSR, stats, TD3, baska maliyet yok); PPO <-> A2C ustunlugu; 2021'de esdegerlik; pit_v1_seed42 disindaki tahmin modelleri",
+ "notes": [
+  "Tahmin edilen nicelik: her algoritmada 5 tohumun gunluk getirisinin esit agirlikli ortalamasi (5 ajanlik topluluk portfoyu); SE yalniz zaman orneklemesini kapsar, egitim (tohum) varyansini icermez; tohum basina farklar per_algorithm.per_seed_delta_annual'da. 'Ajan duzeyinde etki' denmez.",
+  "Pozitif kontrolde 'tespit' = anlamli VE pozitif (PC060 > DT); yonlu yorum, protokolde yon yok (beyan).",
+  "On kayitli guc oncülu (mde.json: rho <= 0,95, tohum ortalamasi modellenmedi) karamsar cikti; olculen rho ve MDE contrast alanlarinda. Havuzlu MDE tek algoritma MDE'sinden kucuktur.",
+  "Her katin ilk seansinda risksiz faiz tanimsiz (evaluation.risk_free.per_period_rate ilk seans NaN); o gun test, rho ve MDE'den ortak maskeyle dusulur (2021: 248 -> 247 gun)."
+ ]
+}
