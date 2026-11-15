@@ -2071,9 +2071,24 @@ Faz 9'a sayılmaz; §9.35 "Kapanıştan sonra" listesinin 1. ve 2. maddesini yü
 - Doğrulayıcı tek test DT ↔ DTF (`last_checkpoint`, HAC, TOST ±0,5) — v1 §9.35 tanımıyla aynı, iki algoritma üzerinden.
 - Çıkarılanlar: K4 ödül kıyası, K25 ölçek kıyası, TD3, ön eleme/budama, maliyetli yeniden eğitim, PC055.
 - **Ölçüm** (CPU, 20k adım, 2024 katı, kayda yazılmadı; sayılar JSON `budget` alanında): 8 eşzamanlı PPO 42 sn, A2C 32 sn duvar; tek PPO 31 sn. GPU daha yavaş (PPO 63 sn) → CPU. Tahmin ~2,4 sa duvar (8 işçi).
-- Koşum betiği (`scripts/run_milestone0.py`): `--workers N` paralel işçi kipi (işçi başına ayrı RESULTS/MODELS/LOGS; model adı, kayıt ve ETA yarışmaz; ana defter işçi defterlerini birleştirir), `--scratch` (kayda yazmayan mekanizma denemesi; 4/4 geçti).
+- Koşum betiği (`scripts/run_milestone0.py`): `--workers N` paralel işçi kipi (işçi başına ayrı RESULTS/MODELS/LOGS; model adı, kayıt ve ETA yarışmaz; ana defter işçi defterlerini birleştirir), `--scratch` (kayda yazmayan mekanizma denemesi; 4/4 geçti — ama 2021 katında, bkz. madde 4 #1). Birleştirme düzeltmesi: başarısız + yeniden koşulan hücrede tamamlanan kayıt kazanır (sentetik deneme 5/5).
 
-**Sıradaki:** hakem-2 kısa okuması (yalnız v1'den farklar) → kullanıcı onayıyla dondurma (`m0-protocol-v2`) → PR + v2.0.0 → koşum (kullanıcı onayıyla; PPO, sonra A2C).
+**4. hakem-2 kısa okuması (yalnız v1 → v2 farkları): Küçük revizyon**, 2 BÜYÜK + 5 KÜÇÜK; hepsi işlendi.
+- **#1 BÜYÜK — 2021 yeniden hesaplandı.** `--scratch --limit 4` ızgaranın ilk dört hücresini, yani PPO/DT/**2021**/tohum 1001–1004'ü koşuyordu. İki deneme yapıldı (21:45 önceki oturum, 22:05 bu oturum): toplam 8 eğitim, 2000 adım, nihai tohumlar.
+  - Çıktılar geçici dizindeydi, deneme kaydına girmedi. Ekrana yalnız durum satırı basıldı. İkinci denemenin metriklerine bakılmadı; ilkinde metrik okunduğuna dair kayıt yok. İki dizin açılmadan silindi.
+  - Beyan JSON `exposure_note`'ta.
+  - Betik artık `--scratch`/`--max-steps`'i yalnız duman katında (2024) koşuyor; işçi kipi okunmamış katta kısa eğitimi reddediyor.
+  - Bu, §9.34'teki kazanın aynısı: korumayı yalnız `--smoke`'a koymak yetmedi.
+- **#2 BÜYÜK — Q3 okuma kuralı.** PC060 ↔ DT, Q2 ile aynı pencerede raporlanacak. "Tahmin katkı vermez" ancak TOST başarılıysa ve PC060 farkı tespit edilmişse yazılacak (`inference.positive_control_rule`).
+- KÜÇÜK düzeltmeler:
+  - #3 MDE: ρ aralığıyla beyan edildi; ölçülen ρ sonuçla raporlanacak.
+  - #4 N kuralı JSON'da tek ve bağlayıcı: kök ∪ işçi kayıtları.
+  - #5 İki birleştirme yolu "ilk tamamlanan" kuralını kullanıyor; analiz `trial_id`'yi ana defterden alacak.
+  - #6 "Kurulamaz" listesi tamamlandı.
+  - #7 Daraltma listesi tamamlandı (10 → 5 tohum, 6 → 2 yapılandırma, BH-FDR).
+- Maliyet: [review-panel.md](review-panel.md).
+
+**Sıradaki:** kullanıcı onayıyla dondurma (`m0-protocol-v2`) → PR + v2.0.0 → koşum (kullanıcı onayıyla; PPO, sonra A2C).
 
 ---
 

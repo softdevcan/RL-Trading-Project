@@ -8,7 +8,11 @@
 
 **v1 neden bırakıldı:** [m0p-v1](milestone0-protocol.md) (etiket `m0-protocol-v1`) plandaki her kararı bir etken yapıp çarpıyordu. Sonuç 1.512 eğitim ve tek süreçte ~226–509 saatti. Bu, ana soru için orantısızdı (kullanıcı, 2026-11-15). Asıl sorunun cevabı da büyük ölçüde başka bir ölçümle zaten verilmişti: P tablosunda yön bilgisi yok (blok içi AUC 0,501; açık pencerede 0,502).
 
-v1 **hiç koşulmadı ve hiçbir sonucu görülmedi.** Bu yüzden v2'ye geçmek bir sonuç görüp tasarımı değiştirmek değildir. v1'in kararları ve hakem-2 bulguları ([milestone0-protocol.md](milestone0-protocol.md) §12) v2'de de geçerlidir; bu belge yalnız farkları ve tasarımı yazar.
+v1 **hiç koşulmadı ve hiçbir M0' sonucu görülmedi.** Bu yüzden v2'ye geçmek bir M0' sonucu görüp tasarımı değiştirmek değildir. İki sınır açıkça yazılır:
+- Gerekçede kullanılan P tablosu AUC'si (0,501 / 0,502) görülmüş bir ölçümdür (plan §9.31, §9.34).
+- 2021 penceresi tasarım sırasında kısa eğitimlerle yeniden hesaplandı; ayrıntı §2 "Zorunlu dipnotlar" ve JSON `exposure_note`.
+
+Daraltma gücü düşürür, boş sonucu olası kılar. Bu yüzden boş sonuç "etki yok" diye yazılmaz (v1 §6 ile aynı kural; okuma kuralı §2). v1'in kararları ve hakem-2 bulguları ([milestone0-protocol.md](milestone0-protocol.md) §12) v2'de de geçerlidir; bu belge yalnız farkları ve tasarımı yazar.
 
 ## 1. Sorular ve kollar
 
@@ -27,7 +31,14 @@ v1 **hiç koşulmadı ve hiçbir sonucu görülmedi.** Bu yüzden v2'ye geçmek 
 
 **Izgara:** 2 algoritma × 3 tahmin seviyesi × 6 kat (wf-v1, 2021–2026) × 5 tohum (1001–1005) = **180 eğitim**. Tek aşama; ön eleme ve budama yok.
 
-**v1'den çıkarılanlar:** ödül terimi kıyası (K4), fiyat ölçeği kıyası (K25), TD3, ön eleme/budama, maliyet duyarlılığıyla yeniden eğitim, PC055. Gerekirse sonradan ayrı küçük deney olarak yapılır ve N'ye sayılır.
+**v1'den çıkarılanlar ve daraltılanlar:**
+- Ödül terimi kıyası (K4), fiyat ölçeği kıyası (K25, doğrulayıcı `stats_vs_causal` testi dahil), TD3.
+- Ön eleme/budama, maliyet duyarlılığıyla yeniden eğitim, PC055.
+- Tohum 10 → **5** (1001–1005).
+- Doğrulayıcı testteki eşleşik yapılandırma 6 → **2** (yalnız algoritma).
+- BH-FDR: doğrulayıcı ailede tek test kaldığı için çoklu düzeltme gerekmez.
+
+Gerekirse bunlar sonradan ayrı küçük deney olarak yapılır ve N'ye sayılır.
 
 ## 2. Çıkarım
 
@@ -39,12 +50,21 @@ v1 **hiç koşulmadı ve hiçbir sonucu görülmedi.** Bu yüzden v2'ye geçmek 
   - Standart hata: birleşik seriden HAC (A3).
   - İki taraflı fark testi ve eşdeğerlik TOST'u. TOST sınırı ±0,5 yıllık Sharpe.
   - α = 0,05.
-- **Pencere:** 2021 katı (bir duman okuması dışında okunmamış; düşük güçlü, ~1 yıllık Sharpe farkından küçüğü tespit edilemez) ve ön kayıt sonrası ileri veri. Tüm 6 kattaki kıyas keşifseldir.
+- **Pencere:** 2021 katı (sonuç tablosuna girmemiş; okunma geçmişi `exposure_note`) ve ön kayıt sonrası ileri veri. Tüm 6 kattaki kıyas keşifseldir.
+- **Güç:** 2021'de MDE yaklaşık 1,0 (ρ 0,95) ile 2,9 (ρ 0,5) yıllık Sharpe arasında ([mde.json](measurements/phase9-m0/mde.json)). Tablo tohum ve yapılandırma sayısını modellemez. 5 tohumla ortalanmış DT/DTF kollarının ölçülen ρ'su ve o ρ'daki MDE sonuçla birlikte raporlanır. TOST sınırı ±0,5 olduğundan 2021'de eşdeğerlik pratikte gösterilemez.
+- **Q3 okuma kuralı (ön kayıt):**
+  - PC060 ↔ DT, Q2 ile **aynı pencerede** (2021 + ileri veri) ve ayrıca 6 katta raporlanır; doğrulayıcı aileye girmez.
+  - PC060 farkı tespit edilmezse Q2'deki boş sonuç şöyle okunur: "bu boru hattı ve bu güçle AUC 0,60'lık bir sinyal bile aktarılamadı". Bu okuma P tablosu hakkında bir şey söylemez.
+  - "Tahmin katkı vermez" ancak Q2'de TOST başarılıysa **ve** aynı pencerede PC060 farkı tespit edilmişse yazılır.
 - **Kurulamaz:**
-  - Pozitif kontrol olmadan "tahmin katkı vermez".
+  - "Tahmin katkı vermez", Q3 okuma kuralının iki koşulu birlikte sağlanmadan.
   - RL'nin piyasayı, XU030'u ya da 1/N'yi yendiği.
   - BIST-30 bileşenlerine genelleme.
-- **Zorunlu dipnotlar:** 2021 duman okuması (JSON `exposure_note`); evren hayatta kalan; eski ortam protokolde açık (`obs_health`, K26 = a).
+  - Sabit tutulanlar dışına genelleme: bulgular yalnız `simple` ödül (faz 1), `causal` ölçek, PPO/A2C ve 20 bps için geçerlidir; K4 PSR ödüllerine, `stats` ölçeğine, TD3'e ve başka maliyet düzeylerine taşınmaz.
+  - PPO ↔ A2C üstünlüğü (keşifsel, düzeltmesiz).
+  - 2021 penceresinde eşdeğerlik (güç yok).
+  - `pit_v1_seed42` dışındaki tahmin modellerine genelleme.
+- **Zorunlu dipnotlar:** 2021 okunma geçmişi (JSON `exposure_note`); evren hayatta kalan; eski ortam protokolde açık (`obs_health`, K26 = a).
 
 ## 3. Bütçe ve koşum
 
@@ -62,5 +82,7 @@ CUDA_VISIBLE_DEVICES=-1 python scripts/run_milestone0.py --workers 8            
 
 **İşçiler:**
 - Her işçinin kendi sonuç, model ve log dizini var: `results/milestone0/m0p-v2/workers/w<k>/`. Model adındaki saniye damgası, deneme kaydı ve ETA geçmişi süreçler arasında yarışmaz.
-- Ana defter işçi defterlerini birleştirir. Analizde N, işçi deneme kayıtlarının birleşimidir.
+- Ana defter işçi defterlerini birleştirir. Bir hücrenin birden çok tamamlanmış kaydı varsa ilk tamamlanan geçerlidir (iki birleştirme yolu aynı kuralı kullanır).
+- **Analiz:** yapılandırma × kat × tohum başına kayıt kimliği yalnız ana defterdeki `trial_id`'den alınır; analiz defterde hücre tekilliğini denetler. **N** (DSR) = kök deneme kaydı ∪ tüm `workers/w*/results` deneme kayıtları, `spike` hariç; yinelenen kayıtlar yalnız N'ye sayılır. Bağlayıcı kural JSON `fixed.registry_analysis`.
 - Koşum kesilirse aynı komut kaldığı yerden devam eder.
+- `--scratch` ve `--max-steps` yalnız duman katında (2024) koşar; okunmamış kat kısa eğitimle koşulmaz (betik reddeder).

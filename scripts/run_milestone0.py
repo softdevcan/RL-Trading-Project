@@ -199,7 +199,7 @@ def read_ledger(path: str, header: dict):
                              'yeni surum = yeni protocol_id.')
     for r in lines[1:]:
         if r.get('state') == 'completed':
-            done[r['cell']] = r
+            done.setdefault(r['cell'], r)  # ilk tamamlanan kazanir (merge_worker_ledgers ile ayni kural)
     return done
 
 
@@ -346,6 +346,8 @@ def main():
             # kaydi ve ETA gecmisi surecler arasi yarismaz.
             with open(a.worker_cells, encoding='utf-8') as fh:
                 mine = json.load(fh)
+            if a.max_steps is not None and any(c['fold'] in protocol.get('unexposed_folds', []) for c in mine):
+                raise SystemExit('kisa egitim okunmamis kati (unexposed_folds) kosamaz')
             for i, c in enumerate(mine):
                 r = run_cell(to_request(c, protocol, steps))
                 bad = verify_trial(r['trial_id'], c, protocol) if r['state'] == 'completed' else []
@@ -368,6 +370,11 @@ def main():
         wroot = os.path.join(os.path.dirname(path), 'workers')
         done.update(merge_worker_ledgers(path, wroot, done))
         todo = [c for c in grid if cell_key(c) not in done]
+        if a.scratch or a.max_steps is not None:
+            # Mekanizma denemesi dogrulayici pencereyi OKUMAZ (hakem-2 m0p-v2 #1: --limit 4 ilk hucreleri, yani 2021'i
+            # aliyordu). Yalniz duman kati kosar; okunmamis kat hicbir kosulda kisa egitimle kosulmaz.
+            todo = [c for c in todo if c['fold'] == protocol['smoke']['fold']
+                    and c['fold'] not in protocol.get('unexposed_folds', [])]
         todo = todo[:a.limit] if a.limit else todo
         n_w = max(1, min(a.workers or protocol['fixed'].get('parallel_processes', 1), len(todo) or 1))
         print(f'{a.stage}: {len(grid)} hucre, tamamlanmis {len(done)}, bu cagri {len(todo)}, isci {n_w} -> {path}',

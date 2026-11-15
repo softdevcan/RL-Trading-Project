@@ -9,36 +9,108 @@
   "Q3 kontrol: bilgili bir sinyal (PC060) ayni P4 eslemesiyle RL'ye ulasirsa fark cikiyor mu (Q2'deki bos sonucu yorumlamak icin)"
  ],
  "factors": {
-  "algorithm": ["PPO", "A2C"],
-  "reward": ["simple"],
-  "price_norm": ["causal"],
-  "prediction": ["DT", "DTF", "PC060"]
+  "algorithm": [
+   "PPO",
+   "A2C"
+  ],
+  "reward": [
+   "simple"
+  ],
+  "price_norm": [
+   "causal"
+  ],
+  "prediction": [
+   "DT",
+   "DTF",
+   "PC060"
+  ]
  },
  "reward_levels": {
-  "simple": {"phase": 1, "source": "Ansari uyarlamasi basit odul (reward-definition.md §3); faz 1 durum uzayi (temel oran/makro yok -> fundamentals_pit acigi yok)"}
+  "simple": {
+   "phase": 1,
+   "source": "Ansari uyarlamasi basit odul (reward-definition.md §3); faz 1 durum uzayi (temel oran/makro yok -> fundamentals_pit acigi yok)"
+  }
  },
  "prediction_levels": {
-  "DT": {"table": null, "table_sha256": null},
-  "DTF": {"table": "pit_v1_seed42", "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9", "mapping": "P4 v1 (plan §9.32)"},
-  "PC060": {"table": "pc_auc060", "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651", "positive_control": true, "achieved_auc": 0.6019}
+  "DT": {
+   "table": null,
+   "table_sha256": null
+  },
+  "DTF": {
+   "table": "pit_v1_seed42",
+   "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9",
+   "mapping": "P4 v1 (plan §9.32)"
+  },
+  "PC060": {
+   "table": "pc_auc060",
+   "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651",
+   "positive_control": true,
+   "achieved_auc": 0.6019
+  }
  },
  "hyperparameters": {
   "_source": "rota sabitleri (d3d2fce, R1 oncesi acik pencerelerle secildi; beyan, kullanici karari 2026-11-15); kayitta config.effective_hyperparameters, betik her hucrede karsilastirir",
-  "PPO": {"learning_rate": 0.0003, "n_steps": 2048, "batch_size": 64, "n_epochs": 10, "gamma": 0.99, "gae_lambda": 0.95,
-          "clip_range": 0.2, "ent_coef": 0.15, "vf_coef": 0.5, "max_grad_norm": 0.5},
-  "A2C": {"learning_rate": 0.0007, "n_steps": 256, "gamma": 0.99, "gae_lambda": 0.95, "ent_coef": 0.01, "vf_coef": 0.25,
-          "max_grad_norm": 0.5, "normalize_advantage": true, "use_rms_prop": true, "rms_prop_eps": 1e-05}
+  "PPO": {
+   "learning_rate": 0.0003,
+   "n_steps": 2048,
+   "batch_size": 64,
+   "n_epochs": 10,
+   "gamma": 0.99,
+   "gae_lambda": 0.95,
+   "clip_range": 0.2,
+   "ent_coef": 0.15,
+   "vf_coef": 0.5,
+   "max_grad_norm": 0.5
+  },
+  "A2C": {
+   "learning_rate": 0.0007,
+   "n_steps": 256,
+   "gamma": 0.99,
+   "gae_lambda": 0.95,
+   "ent_coef": 0.01,
+   "vf_coef": 0.25,
+   "max_grad_norm": 0.5,
+   "normalize_advantage": true,
+   "use_rms_prop": true,
+   "rms_prop_eps": 1e-05
+  }
  },
- "fixed": {"split_spec": "wf-v1", "initial_balance": 1000000, "commission_rate": 0.001, "max_shares_per_trade": 100,
-           "device": "cpu", "parallel_processes": 8, "thread_env": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1",
-           "registry_analysis": "load_trials(exclude_tags=('spike',)) — protocol_open DAHIL (eski ortamin her kaydi acik)"},
- "unexposed_folds": ["2021"],
- "exposure_note": "2021 test penceresi 2026-11-15'te bir duman kosusuyla BIR KEZ okundu (PPO, faz 1, stats, DT, 20000 adim; metriklere bakilmadi; kayit 'spike', plan §9.34). Okunmus pencere 2022-07-18..2026-08-28 (EXPOSED_EVAL_WINDOWS).",
- "expected": {"panel_sha256": {"causal": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89"}},
+ "fixed": {
+  "split_spec": "wf-v1",
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "device": "cpu",
+  "parallel_processes": 8,
+  "thread_env": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1",
+  "registry_analysis": "N (DSR) = load_trials(exclude_tags=('spike',), directory=D) birlesimi; D = kok RESULTS_DIR deneme kaydi + results/milestone0/m0p-v2/workers/w*/results deneme kayitlari; protocol_open DAHIL (eski ortamin her kaydi acik); kok kayittaki m0p-v2 disi eski kayitlar da N'ye dahil (muhafazakar). Yapilandirma x kat x tohum basina kayit kimligi yalniz ana defterdeki trial_id; hucre tekilligi analizde denetlenir; yinelenen kayitlar yalniz N'e sayilir. Ayni hucrenin birden cok tamamlanmis kaydinda ilk tamamlanan gecerli."
+ },
+ "unexposed_folds": [
+  "2021"
+ ],
+ "exposure_note": "2021 test penceresi (1) 2026-11-15'te bir duman kosusuyla BIR KEZ okundu (PPO, faz 1, stats, DT, 20000 adim; metriklere bakilmadi; kayit 'spike', plan §9.34); (2) m0p-v2 tasariminda iki --scratch mekanizma denemesiyle (2026-11-15 21:45 ve 22:05) yeniden hesaplandi: toplam 8 egitim, PPO/simple/causal/DT, tohum 1001-1004 (nihai tohumlar), 2000 adim. Ciktilar gecici dizindeydi, deneme kaydina girmedi; ekrana yalniz durum satiri basildi; ikinci denemenin metriklerine bakilmadi, ilkinde metrik okunduguna dair kayit yok; iki dizin acilmadan silindi (plan §9.36). Betik artik kisa egitimi yalniz duman katinda kosar (hakem-2 m0p-v2 #1). Okunmus pencere 2022-07-18..2026-08-28 (EXPOSED_EVAL_WINDOWS).",
+ "expected": {
+  "panel_sha256": {
+   "causal": "008e3b1119457182d3765c0fe53d757733eed304595b8fe86be8fd0992d09a89"
+  }
+ },
  "stages": {
   "main": {
-   "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
-   "seeds": [1001, 1002, 1003, 1004, 1005],
+   "folds": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+   ],
+   "seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+   ],
    "total_timesteps": 200000,
    "note": "on eleme ve budama YOK: tum yapilandirmalar (2 x 3 = 6) tek asamada; 6 x 6 kat x 5 tohum = 180 egitim"
   }
@@ -48,21 +120,54 @@
   "unit": "yapilandirma x tohum: katlarin orneklem disi gunluk getirileri birlestirilmis seri (K20)",
   "selection_rule": "last_checkpoint (argmax_validation kayitlari kesifsel)",
   "confirmatory_family": [
-   {"name": "DT_vs_DTF", "contrast": "prediction DT <-> DTF, ayni algoritma ve tohum",
-    "test": "A3 HAC Sharpe farki iki tarafli + esdegerlik TOST", "tost_margin_sharpe_annual": 0.5}
+   {
+    "name": "DT_vs_DTF",
+    "contrast": "prediction DT <-> DTF, ayni algoritma ve tohum",
+    "test": "A3 HAC Sharpe farki iki tarafli + esdegerlik TOST",
+    "tost_margin_sharpe_annual": 0.5
+   }
   ],
   "aggregation": "tek test: her algoritmada (2 eslesik yapilandirma) 5 tohumun gunluk getirisi ortalanir; istatistik iki algoritmanin yillik Sharpe farklarinin esit agirlikli ortalamasi; SE birlesik seriden (iki farkin gunluk ortalamasi) HAC (A3)",
-  "confirmatory_window": "2021 kati + on kayit sonrasi ileri veri; 2021 tek basina dusuk guclu (measurements/phase9-m0/mde.json; ~1 yillik Sharpe farkindan kucugu tespit edilemez)",
+  "confirmatory_window": "2021 kati + on kayit sonrasi ileri veri; 2021'de MDE ~1,0 (rho 0,95) - 2,9 (rho 0,5) yillik Sharpe (measurements/phase9-m0/mde.json; tablo tohum/yapilandirma sayisini modellemez); olculen rho ve o rho'daki MDE sonucla raporlanir; TOST +-0,5 2021'de pratikte gosterilemez",
   "alpha": 0.05,
-  "exploratory": "DT_vs_DTF tum 6 katta; PC060 <-> DT (pozitif kontrol; dogrulayici aileye GIRMEZ, sinyal etiketten); PPO <-> A2C; argmax <-> son nokta; rejim (B6 USD birincil); baseline (D; ustunluk cikarimi YOK)",
+  "exploratory": "DT_vs_DTF tum 6 katta; PC060 <-> DT (pozitif kontrol; okuma kurali positive_control_rule); PPO <-> A2C; argmax <-> son nokta; rejim (B6 USD birincil); baseline (D; ustunluk cikarimi YOK)",
   "result_table_footnote": "ZORUNLU: exposure_note; evren hayatta kalan dondurulmus panel 30'u; eski ortam protokolde acik (obs_health, K26=a)",
-  "cannot_claim": "pozitif kontrol olmadan 'tahmin katki vermez'; RL'nin piyasayi/XU030/1N'yi yendigi; BIST-30 bilesenlerine genelleme"
+  "cannot_claim": "'tahmin katki vermez' (positive_control_rule'un iki kosulu olmadan); RL'nin piyasayi/XU030/1N'yi yendigi; BIST-30 bilesenlerine genelleme; sabit tutulanlar disina genelleme (yalniz simple odul faz 1, causal, PPO/A2C, 20 bps; K4 PSR, stats, TD3, baska maliyet yok); PPO <-> A2C ustunlugu; 2021'de esdegerlik; pit_v1_seed42 disindaki tahmin modelleri",
+  "multiplicity": "yok: dogrulayici ailede tek test (v1'deki BH-FDR ailesi stats_vs_causal'in dusmesiyle teke indi)",
+  "positive_control_rule": "PC060 <-> DT Q2 ile AYNI pencerede (2021 + ileri veri) ve ayrica 6 katta raporlanir; dogrulayici aileye girmez. PC060 farki tespit edilmezse Q2'nin bos sonucu 'bu boru hatti ve bu gucle AUC 0,60'lik sinyal bile aktarilamadi' diye okunur (P tablosu hakkinda bir sey soylemez). 'Tahmin katki vermez' ancak Q2 TOST basarili VE ayni pencerede PC060 farki tespit edilmisse yazilir"
  },
- "smoke": {"fold": "2024", "algorithm": "PPO", "reward": "simple", "price_norm": "causal", "seed": 101},
+ "smoke": {
+  "fold": "2024",
+  "algorithm": "PPO",
+  "reward": "simple",
+  "price_norm": "causal",
+  "seed": 101
+ },
  "budget": {
   "measurement": "2026-11-15 duman kosulari, CPU, 30 sembol, 20000 adim, 2024 kati, OMP_NUM_THREADS=1; deneme kaydina yazilmadi",
-  "parallel_8_wall_seconds_per_20k": {"PPO_phase1": 42, "A2C_phase1": 32},
-  "seconds_per_200k_run": {"PPO": {"phase1": 307}, "A2C": {"phase1": 222}},
+  "parallel_8_wall_seconds_per_20k": {
+   "PPO_phase1": 42,
+   "A2C_phase1": 32
+  },
+  "seconds_per_200k_run": {
+   "PPO": {
+    "phase1": 307
+   },
+   "A2C": {
+    "phase1": 222
+   }
+  },
   "estimate": "180 egitim, 8 paralel surec: PPO 12 grup x ~420 sn + A2C 12 grup x ~320 sn ~ 2,4 sa duvar suresi"
- }
+ },
+ "removed_from_v1": [
+  "K4 odul kiyasi",
+  "K25 olcek kiyasi (stats_vs_causal dogrulayici testi dahil)",
+  "TD3",
+  "on eleme/budama",
+  "maliyet duyarliligi yeniden egitimi",
+  "PC055",
+  "tohum 10 -> 5",
+  "dogrulayici birlestirmede eslesik yapilandirma 6 -> 2",
+  "BH-FDR (aile teke indi)"
+ ]
 }
