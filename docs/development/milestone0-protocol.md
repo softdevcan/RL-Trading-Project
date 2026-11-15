@@ -1,6 +1,6 @@
 # Milestone 0' protokolü (m0p-v1)
 
-**Durum: TASLAK r2, 2026-11-15.** Kapanış kapısının (hakem-2) Büyük revizyonu işlendi (§12). Kullanıcı onayı ve hakem-2 ikinci okumasıyla dondurulur. Bağlayıcı kuralların tümü [milestone0/protocol-v1.json](milestone0/protocol-v1.json)'da. Koşum betiği JSON'un ve bu belgenin SHA-256'sını deftere bağlar; biri değişirse koşmayı reddeder ([scripts/run_milestone0.py](../../scripts/run_milestone0.py)). Değişiklik yeni bir sürümdür (m0p-v2).
+**Durum: DONDURULDU, 2026-11-15 (r3).** Kapanış kapısı (hakem-2): Büyük revizyon → ikinci okumada 15 bulgunun 14'ü kapandı; kalan #5 (doğrulayıcı testin tanımı) bu sürümde tanımlandı. Hakemin kararı: "düzeltilince Kabul, yeni okuma gerekmez" (§12). Kullanıcı kararları §10 ve §6'da. Bağlayıcı kuralların tümü [milestone0/protocol-v1.json](milestone0/protocol-v1.json)'da. Koşum betiği JSON'un ve bu belgenin SHA-256'sını deftere bağlar; biri değişirse koşmayı reddeder ([scripts/run_milestone0.py](../../scripts/run_milestone0.py)). Değişiklik yeni bir sürümdür (m0p-v2).
 
 **Dayanak:** Faz 9 planı §4 "Milestone 0'", §5 M8 ve §9.22–§9.34 · Faz 10 planı §6 (K4, K7, K17, K20, K25, K26) · [vision-and-scope.md](../thesis/vision-and-scope.md) §7 Milestone 0.
 
@@ -70,12 +70,14 @@ Milestone 0' eski tek ajanlı ortamda (`env/trading_env.py`) Faz 9 altyapısıyl
 **Nihai:**
 - 1 × 3 × 2 × 2 = 12 yapılandırma × 6 kat × 10 tohum (1001–1010) = **720 eğitim**.
 
+**Kolların yapılandırma seçimi (hakem-2 ikinci okuma Y1):** maliyet duyarlılığı ve pozitif kontrol kolları ön eleme puanıyla seçilir: son nokta doğrulaması, 2023–2026 katları. Nihai aşamanın 2022 katının doğrulaması 2021 olduğu için nihai puan kullanılmaz.
+
 **Maliyet duyarlılığı (hakem-rl İ3):**
-- DT ve DTF'nin nihai doğrulamada en iyi yapılandırması, 0 ve 50 bps ile yeniden eğitilir: 2 × 2 × 6 × 10 = **240 eğitim**.
+- DT ve DTF'nin en iyi yapılandırması (yukarıdaki kural), 0 ve 50 bps ile yeniden eğitilir: 2 × 2 × 6 × 10 = **240 eğitim**.
 - Ex post 0–50 bps ızgarası (D4) yalnız raporlama içindir.
 
 **Pozitif kontrol (kullanıcı kararı 2026-11-15; hakem-2 #7 / soru 2):**
-- DT'nin nihai doğrulamada en iyi yapılandırması, tahmin seviyesi PC055 ve PC060: 2 × 6 × 10 = **120 eğitim**.
+- DT'nin en iyi yapılandırması (yukarıdaki kural), tahmin seviyesi PC055 ve PC060: 2 × 6 × 10 = **120 eğitim**.
 - Sinyal **bilerek gelecekten** (gerçekleşen yön) türetildi. Aynı P4 eşlemesi ve gerçek tablonun ölçeği kullanılıyor (`positive_control_table`, `test_pit_table` 33).
 - Doğrulayıcı aileye girmez. Soruyu ayırır: "sinyal yok" mu, "RL bilgili bir sinyali bu eşlemeyle kullanamıyor" mu?
 
@@ -88,7 +90,15 @@ Milestone 0' eski tek ajanlı ortamda (`env/trading_env.py`) Faz 9 altyapısıyl
 **Doğrulayıcı aile** (hakem-2 #5; JSON `inference.confirmatory_family`):
 1. **DT ↔ DTF:** A3 HAC Sharpe farkı, iki taraflı. Ayrıca eşdeğerlik TOST'u; sınır, ölçülen eşleşik korelasyondaki MDE.
 2. **`stats` ↔ `causal`:** A3 HAC Sharpe farkı, iki taraflı.
-- α = 0,05, aile içinde BH-FDR. **Pencere:** 2021 katı ve ön kayıt sonrası ileri veri.
+- **Test kaydı:** `last_checkpoint` (ön eleme puanıyla tutarlı). `argmax_validation` kayıtları keşifseldir.
+- **Birleştirme:** kıyas başına **tek test**.
+  - Kıyasın dışındaki etkenler 6 eşleşik yapılandırma verir (3 ödül × 2 ikinci etken).
+  - Her yapılandırmada 10 tohumun günlük getirisi ortalanır.
+  - İstatistik: 6 yapılandırmanın yıllık Sharpe farklarının eşit ağırlıklı ortalaması.
+  - Standart hata: birleşik seriden (6 farkın günlük ortalaması) HAC (A3).
+- **TOST sınırı:** sabit ±0,5 yıllık Sharpe (kullanıcı kararı). Sonuç verisinden ölçülmez. 2021 tek başına bu sınıra büyük olasılıkla ulaşamaz (MDE tablosu), beyan.
+- α = 0,05, aile içinde BH-FDR (2 test). **Pencere:** 2021 katı ve ön kayıt sonrası ileri veri.
+- **Zorunlu dipnot:** her sonuç tablosu JSON `exposure_note`'u taşır (2021 bir duman okuması; hakem-2 Y2).
 - Geri kalan her kıyas **keşifseldir**: K4 terimi, seçim kuralı, algoritma, maliyet, rejim, pozitif kontrol.
 
 **Güç (MDE)** ([mde.json](measurements/phase9-m0/mde.json); A3 testiyle Monte Carlo, %80 güç, α 0,05 iki taraflı, iid normal, günlük σ %1,5):
@@ -163,10 +173,11 @@ Milestone 0' eski tek ajanlı ortamda (`env/trading_env.py`) Faz 9 altyapısıyl
 | PPO | ~92 sa | ~54 sa | **~250 sa** | ~63 sa |
 | TD3 | ~351 sa | ~194 sa | **~649 sa** | ~162 sa |
 
-**KARAR (bütçe, kullanıcı):** TD3'ün kazanma olasılığı bütçeyi ~2,6 katına çıkarıyor. Seçenekler:
-- (a) Protokol olduğu gibi kalır.
-- (b) Bir bütçe tavanı önceden yazılır. Örneğin TD3 kazanırsa nihaide ikinci algoritma da koşar ve ikisi ayrı raporlanır, ya da paralellik artırılır.
-- (c) TD3 Milestone 0' etkenlerinden çıkarılır; Faz 9 §4 tanımından sapma olur, beyan edilir.
+**Bütçe kuralı (kullanıcı kararı 2026-11-15, seçenek b; kazanan görülmeden yazıldı):**
+- Budamayı TD3 kazanırsa nihai aşama TD3 ile koşar.
+- Maliyet duyarlılığı ve pozitif kontrol (360 eğitim) ise budama puanında **ikinci sıradaki** algoritmayla koşar ve ayrı raporlanır.
+- TD3 kazanmazsa kural uygulanmaz.
+- Tahmini toplam: A2C ~226 sa, PPO ~250 sa, TD3 ~509 sa (tek süreç).
 
 ## 11. Koşum
 
@@ -203,3 +214,5 @@ Defter: `results_dir()/milestone0/m0p-v1/ledger.jsonl`. İlk satırda protokol J
 | `model_disagreement` kayan z-skoru | Yeni ortam | Eski env bu alanı almıyor (uyum = GBM işaret payı) |
 | 0 ve 50 bps ile yeniden eğitim | **Milestone 0'** (§5 maliyet duyarlılığı) | — |
 | Makro/çapraz kol 2018+ alt deneyi | MARL M8 (§9.34) | Kullanıcı kararı H3/M5 içindi (MARL hipotezleri) |
+
+**İkinci okuma (hakem-2, 2026-11-15):** 14/15 kapandı. Kalan #5'in üç serbestliği (seçim kuralı, birleştirme, TOST sınırı) §6'da sabitlendi. Y1 (kol seçimi) §5'te, Y2 (zorunlu dipnot) §6'da işlendi. Y3: `gate_v2_exposed.json` açık pencereyi tarihsel `gate_dev_window` anahtarı altında tutuyor; pencere dosyanın `window` alanında. Karar: "düzeltilince Kabul, yeni okuma gerekmez".

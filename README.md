@@ -5,8 +5,8 @@ destekli gözlem uzayı. Ansari vd. (2024) *A Multifaceted Approach to Stock Mar
 Reinforcement Learning* metodolojisinin BIST-30'a uyarlanmasıyla başladı; bir yüksek lisans tezi ve
 makale çalışmasının deney altyapısıdır.
 
-> **Durum (v1.17.0, 2026-11):** Faz 9 — araştırma geçerliliği sürüyor. RL ve tahmin sonuçları
-> **ön sonuçtur**: bilinen ve kayıt altındaki metodolojik açıklar kapatılıyor (aşağıda). Yatırım
+> **Durum (v1.18.0, 2026-11):** Faz 9 (araştırma geçerliliği) kapandı; Milestone 0' protokolü donduruldu, koşumlar sırada. RL ve tahmin sonuçları
+> **ön sonuçtur**: bilinen metodolojik açıklar kapatıldı ya da sınırlılık olarak beyan edildi (aşağıda). Yatırım
 > tavsiyesi değildir.
 
 ## Özellikler

@@ -234,11 +234,14 @@ def main():
         if a.dry_run:
             st = protocol['stages'][a.stage]
             grid = list(cells(protocol, a.stage))
+            per = protocol['budget']['seconds_per_200k_run']
+            sec = sum(per[c['algorithm']][f"phase{protocol['reward_levels'][c['reward']]['phase']}"]
+                      * st['total_timesteps'] / 200000 for c in grid)
             print(json.dumps({'protocol_id': protocol['protocol_id'], 'sha256': sha, 'doc_sha256': doc_sha,
                               'stage': a.stage, 'n_cells': len(grid),
-                              'hours_lower_bound_single_process': round(
-                                  len(grid) * protocol['budget']['seconds_per_run_measured_ppo_phase1'] / 3600, 1),
-                              'note': 'PPO faz 1 olcumunden alt sinir; TD3/faz 2 --smoke ile olc'}, indent=1))
+                              'hours_single_process': round(sec / 3600, 1),
+                              'note': 'algoritma x faz basina olculen duman hizindan (budget.seconds_per_200k_run)'},
+                             indent=1))
             return
         device = device_guard(a.allow_gpu)
         if a.smoke:
