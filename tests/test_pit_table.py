@@ -217,5 +217,27 @@ check("seviye farki: havuzlu AUC > 0,6, blok ici AUC = 0,5 (sabit p blok icinde 
       cal.auc(pp, yy) > 0.6 and abs(P._within_block_auc(pp, yy, gg) - 0.5) < 1e-12,
       f"{cal.auc(pp, yy)}, {P._within_block_auc(pp, yy, gg)}")
 
+# hakem-finans I3 ikinci okuma #1: capa seviyesi uzun blok boyunca sabitken 20'lik tarih blogu GA'yi daraltir;
+# capa kumesi bootstrap'i bagimsiz birimi (capa) dogru sayar -> daha genis GA
+n_c, L = 12, 60
+lv = np.repeat(rng.normal(0, 1, n_c), L)
+yc = (rng.random(n_c * L) < 1 / (1 + np.exp(-lv))).astype(float)
+pc = 1 / (1 + np.exp(-lv))
+dc = np.arange(n_c * L)
+cc = np.repeat(np.arange(n_c), L)
+f = lambda i: cal.auc(pc[i], yc[i])
+w20 = np.ptp(np.quantile(P._date_block_bootstrap(dc, f, n_boot=300, block=20), [0.025, 0.975]))
+wcl = np.ptp(np.quantile(P._cluster_bootstrap(cc, f, n_boot=300), [0.025, 0.975]))
+check("capa kumesi bootstrap GA'si 20'lik tarih blogundan genis (seviye capa boyunca sabit)",
+      wcl > 1.2 * w20, f"kume {wcl:.4f}, blok20 {w20:.4f}")
+gs = P.evaluate_gate(full, labels, window=('2013-06-01', '2014-07-01'), n_boot=50, pooled_boot=50,
+                     sensitivity=True)
+se_ = gs['sensitivity']
+check("duyarlilik: ana alanlar degismez; blok63/kume/tie disi/Bonferroni/MDE dagilimi var",
+      gs['pooled']['auc']['value'] == g['pooled']['auc']['value'] and g.get('sensitivity') is None
+      and {'pooled_block63', 'pooled_anchor_cluster', 'ties_excluded', 'p_two_sided_bonferroni',
+           'mde_family_block63', 'auc_within_block_per_symbol'} <= set(se_)
+      and se_['ties_excluded']['n_rows'] <= gs['n_rows'], str(list(se_)))
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)
