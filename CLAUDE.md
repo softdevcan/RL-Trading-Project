@@ -6,6 +6,8 @@ makale calismasi (Ansari vd. 2024 replikasyonu -> Faz 10 MARL). Tamamlanan fazla
 8 (UI/UX). **Suren: Faz 9 (arastirma gecerliligi)** — durum ve olcumler
 `docs/development/phase-9-research-validity-plan.md` §9 (son alt bolum en guncel); Faz 10 plani
 `docs/development/phase-10-marl-plan.md`. Dokuman indeksi `docs/README.md`.
+**Sistem haritasi** `docs/development/system-map.md`: bir bilesenin ya da asamanin DURUMUNU degistiren PR
+ayni PR'da haritayi da gunceller (dugum sinifi + durum tablosu + 'Son guncelleme' satiri).
 
 Kullanici hangi dilde yazarsa o dilde yanit ver.
 
