@@ -187,7 +187,7 @@ flowchart TB
 | Rota DTF + M8 son nokta test kaydı + koşum betiği | bitti | plan §9.33; `test_rl_walk_forward` 98 | — |
 | Faz 9 kapanış 8: Milestone 0' protokolü | **donduruldu** (`m0-protocol-v1`) | [milestone0-protocol.md](milestone0-protocol.md); plan §9.33–9.35 | — (değişiklik = m0p-v2) |
 | Golden yenileme (K1) | bitti (CPU; `v2.0.0`) | plan §9.36; `test_prediction_regression` yeşil | — (yeniden yenileme yalnız bilinçli davranış değişikliğinde) |
-| Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş → boru hattı sinyali aktaramadı; 2021'de eşdeğerlik kurulamaz) | plan §9.37; `measurements/phase10-m0/m0p_v2_results.json` | Önerilen (a) RL'siz üst sınır, (b) blok sıfırlama — kullanıcı kararı; ileri veri |
+| Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş). Pozitif kontrol ölçümleri: (a) RL'siz değer MDE'yi aşıyor, (b) politika bloktan değer üretmiyor | plan §9.37–9.39; `measurements/phase10-m0/` | İleri veri; S-obs girdisi Faz 10 §3.2.7 |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
