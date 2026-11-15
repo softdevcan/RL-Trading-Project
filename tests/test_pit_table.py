@@ -217,6 +217,60 @@ check("seviye farki: havuzlu AUC > 0,6, blok ici AUC = 0,5 (sabit p blok icinde 
       cal.auc(pp, yy) > 0.6 and abs(P._within_block_auc(pp, yy, gg) - 0.5) < 1e-12,
       f"{cal.auc(pp, yy)}, {P._within_block_auc(pp, yy, gg)}")
 
+print("\n[P4] P tablosu -> TradingEnv tahmin arayuzu (Milestone 0' DTF kolu)")
+from env.trading_env import TradingEnv  # noqa: E402
+env_panel = panel[panel.index.get_level_values('symbol').isin(SYMS)]
+env_panel = env_panel[pd.to_datetime(env_panel.index.get_level_values('date')) >= pd.Timestamp('2013-06-03')]
+env_dates = pd.DatetimeIndex(sorted(set(pd.to_datetime(env_panel.index.get_level_values('date')))))
+pf, prep4 = P.env_prediction_features(full, SYMS, env_dates)
+check("adaptor: her (gun, sembol) hucresi dolu; sayim toplami = hucre sayisi",
+      len(pf) == len(env_dates) and all(set(v) == set(SYMS) for v in pf.values())
+      and sum(prep4['counts'].values()) == prep4['n_cells'], str(prep4['counts']))
+okrow = full[full.meta_ok & full['date'].isin(env_dates)].iloc[0]
+cell = pf[str(okrow['date'])[:10]][okrow['symbol']]
+d_up = float(okrow['p_up_cal'] >= 0.5)
+exp_ag = np.mean([(okrow[c] > 0) == bool(d_up) for c in ('ret_xgboost', 'ret_lightgbm', 'ret_catboost')])
+check("adaptor: meta_ok hucresinde esleme elle (getiri, yon, max(p,1-p), GBM isaret uyumu)",
+      cell == {'predicted_return': float(okrow['pred_logret']), 'predicted_direction': d_up,
+               'confidence': float(max(okrow['p_up_cal'], 1 - okrow['p_up_cal'])),
+               'ensemble_agreement': float(exp_ag)}, f"{cell}")
+masked = full.copy()
+mi = masked.index[masked.meta_ok & masked['date'].isin(env_dates)][5]
+masked.loc[mi, ['meta_ok', 'mask_reason']] = [False, 'meta_insufficient']
+pf_m, rep_m = P.env_prediction_features(masked, SYMS, env_dates)
+mr = masked.loc[mi]
+check("adaptor: meta_ok olmayan hucre notr ve nedeni sayiliyor (yon 0,5 -> env'de 0, DOWN degil)",
+      pf_m[str(mr['date'])[:10]][mr['symbol']] == P.ENV_PRED_NEUTRAL
+      and rep_m['counts'].get('meta_insufficient') == 1, str(rep_m['counts']))
+pert_pf, _ = P.env_prediction_features(pert, SYMS, env_dates)
+check(f"adaptor B0: t={t.date()} ve oncesi gunlerde sozluk bit-es (satir t yalniz P satiri t'den)",
+      all(pf[k] == pert_pf[k] for k in pf if pd.Timestamp(k) <= t)
+      and any(pf[k] != pert_pf[k] for k in pf if pd.Timestamp(k) > t))
+
+
+def env_pred_obs(feats, date_key):
+    e = TradingEnv(env_panel, prediction_features=feats)
+    e.reset(seed=0)
+    i = list(e.dates.strftime('%Y-%m-%d')).index(date_key)
+    e.current_step = i
+    return e._get_observation()[-len(SYMS) * 4:], str(e._get_current_date())[:10], e.symbols
+
+
+k_ok = str(okrow['date'])[:10]
+obs, seen, env_syms = env_pred_obs(pf, k_ok)
+j = env_syms.index(okrow['symbol'])   # env sembolleri kendi sirasinda (df'ten)
+expv = [np.tanh(cell['predicted_return'] * 10), cell['predicted_direction'] * 2 - 1,
+        cell['confidence'] * 2 - 1, cell['ensemble_agreement'] * 2 - 1]
+check("env uctan uca: gozlemin tahmin dilimi adaptor degerinin env donusumu (ayni gun)",
+      seen == k_ok and np.allclose(obs[4 * j:4 * j + 4], expv, atol=1e-6), f"{seen} {obs[4 * j:4 * j + 4]} {expv}")
+# mutasyon: adaptorun doldurdugu bir hucreyi silince env kendi varsayilanina duser -> yon -1 (DOWN)
+holed = {k: {s: dict(v) for s, v in day.items()} for k, day in pf.items()}
+del holed[k_ok][okrow['symbol']]
+obs_h, _, _ = env_pred_obs(holed, k_ok)
+obs_n, _, _ = env_pred_obs({k: {s: dict(P.ENV_PRED_NEUTRAL) for s in SYMS} for k in pf}, k_ok)
+check("mutasyon: eksik hucrede env varsayilani yon = -1 (DOWN); adaptorun notru 4 alanda 0",
+      obs_h[4 * j + 1] == -1.0 and np.allclose(obs_n, 0.0), f"{obs_h[4 * j:4 * j + 4]} {obs_n[:4]}")
+
 # hakem-finans I3 ikinci okuma #1: capa seviyesi uzun blok boyunca sabitken 20'lik tarih blogu GA'yi daraltir;
 # capa kumesi bootstrap'i bagimsiz birimi (capa) dogru sayar -> daha genis GA
 n_c, L = 12, 60

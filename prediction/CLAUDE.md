@@ -38,6 +38,10 @@
 - Uretim: `python scripts/build_pit_table.py` -> `results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + manifest;
   olcum `docs/development/measurements/phase9-p/`. Test `tests/test_pit_table.py`. Ensemble'in 'calibrated' modu
   (sembol basina T, %60 OOF) tek model egitimi icin kalir; tez/MARL sinyali P tablosundan.
+- **P4 (eski env, Milestone 0' DTF):** `env_prediction_features(table, symbols, dates)` -> `TradingEnv(prediction_features=)`.
+  Her (gun, sembol) hucresi ACIKCA doldurulur; maskeli hucre notr (env'de 0). Env'in kendi varsayilani eksik hucrede
+  yonu -1 (DOWN) yapar -> P tablosunu env'e elle sozluk kurarak verme, adaptoru kullan. Yon ikili (+-1), getiri/guven
+  gozlemi ~0 (olculdu, §9.32).
 
 ## evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover

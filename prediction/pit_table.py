@@ -643,6 +643,68 @@ def _gate_sensitivity(t, per, grp, dates, pooled_boot, n_boot, z1, zm, z_pow, su
     return out
 
 
+# --- P4: P tablosu -> eski TradingEnv tahmin arayuzu (Milestone 0' DT/DTF kolu; kullanici karari 2026-11-15) ---
+ENV_PRED_NEUTRAL = {'predicted_return': 0.0, 'predicted_direction': 0.5, 'confidence': 0.5,
+                    'ensemble_agreement': 0.5}
+
+
+def env_prediction_features(table: pd.DataFrame, symbols: Sequence[str], dates: Sequence,
+                            models: Sequence[str] = V1_MODELS) -> Tuple[Dict[str, Dict[str, Dict[str, float]]], dict]:
+    """P tablosu -> `TradingEnv(prediction_features=...)` sozlugu {gun: {sembol: 4 alan}}.
+
+    Esleme (durum uzayi yapisi degismez; env donusumu `trading_env.py` tahmin blogunda):
+      predicted_return    = pred_logret (uc taban tahmininin ortalamasi, log getiri)
+      predicted_direction = 1[p_up_cal >= 0,5]
+      confidence          = max(p_up_cal, 1 - p_up_cal)
+      ensemble_agreement  = taban modellerinden isareti (ret > 0) bu yonle ayni olanlarin payi (olceksiz)
+    `meta_ok` olmayan ya da tabloda bulunmayan HER (gun, sembol) hucresi ACIKCA notr doldurulur
+    (env'de 4 alan da 0'a duser). Gerekce: env'in kendi varsayilani eksik hucrede yonu 0 -> -1 (DOWN)
+    yapar; adaptor env'in varsayilanina hic dusmez. Satir t yalniz t'deki P satirindan (B0, P1).
+    Doner: (sozluk, rapor: hucre sayilari, notr nedenleri, olculen dinamik aralik).
+    """
+    rc = _ret_cols(models)
+    keys = [str(pd.Timestamp(d))[:10] for d in dates]
+    t = table.copy()
+    t['key'] = t['date'].astype(str).str[:10]
+    t = t[t['key'].isin(set(keys)) & t['symbol'].isin(set(symbols))]
+    ok = t[t['meta_ok']]
+    up = (ok['p_up_cal'] >= 0.5).to_numpy()
+    agree = np.mean((ok[rc].to_numpy() > 0) == up[:, None], axis=1)
+    vals = pd.DataFrame({'key': ok['key'].to_numpy(), 'symbol': ok['symbol'].to_numpy(),
+                         'predicted_return': ok['pred_logret'].to_numpy(dtype=float),
+                         'predicted_direction': up.astype(float),
+                         'confidence': np.maximum(ok['p_up_cal'], 1 - ok['p_up_cal']).to_numpy(dtype=float),
+                         'ensemble_agreement': agree.astype(float)})
+    lookup = {(k, s): r for k, s, *r in vals.itertuples(index=False, name=None)}
+    reason = {(k, s): m for k, s, m in t[~t['meta_ok']][['key', 'symbol', 'mask_reason']].itertuples(
+        index=False, name=None)}
+    fields = ('predicted_return', 'predicted_direction', 'confidence', 'ensemble_agreement')
+    out, counts = {}, {'ok': 0, 'not_in_table': 0}
+    for k in keys:
+        day = {}
+        for s in symbols:
+            r = lookup.get((k, s))
+            if r is None:
+                day[s] = dict(ENV_PRED_NEUTRAL)
+                why = reason.get((k, s), 'not_in_table')
+                counts[why] = counts.get(why, 0) + 1
+            else:
+                day[s] = dict(zip(fields, map(float, r)))
+                counts['ok'] += 1
+        out[k] = day
+    env_ret = np.tanh(vals['predicted_return'].to_numpy() * 10)   # env'in uyguladigi donusum
+    env_conf = vals['confidence'].to_numpy() * 2 - 1
+    q = lambda x: {'p01': float(np.quantile(x, 0.01)), 'median': float(np.median(x)),
+                   'p99': float(np.quantile(x, 0.99))} if len(x) else None
+    report = {'n_cells': len(keys) * len(symbols), 'counts': counts,
+              'ok_rate': counts['ok'] / max(len(keys) * len(symbols), 1),
+              'env_obs_range': {'predicted_return_tanh10': q(env_ret), 'confidence_2c_minus_1': q(env_conf),
+                                'direction_up_rate': float(up.mean()) if len(up) else None,
+                                'agreement_levels': sorted(set(np.round(agree, 4).tolist()))},
+              'mapping': 'P4 v1 (plan §9.32)'}
+    return out, report
+
+
 def write_table(table: pd.DataFrame, report: dict, run_id: Optional[str] = None,
                 directory: Optional[str] = None, snapshot: Optional[dict] = None) -> Dict[str, str]:
     """`results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + egitim manifesti."""
