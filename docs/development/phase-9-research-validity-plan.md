@@ -1701,7 +1701,7 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 **P3 kaba maliyet** ([p3_cost.json](measurements/phase9-p/p3_cost.json); günlük ufuk, ~3.431 satır, GPU, %80 yeniden uyum dahil):
 - Sembol başına tam 5 model 154–197 sn; 3 GBM 1,7–2,3 sn.
-- 63 seansta bir yeniden eğitimle (~52 kez) × 30 sembol: **tam ensemble ≈ 76 sa, 3 GBM ≈ 0,9 sa** (tohum çarpanı ve haftalık ufuk hariç).
+- 63 seansta bir yeniden eğitimle (~52 kez) × 30 sembol: **tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa** (`p3_cost.json` → `estimate_hours`) (tohum çarpanı ve haftalık ufuk hariç).
 - Faz 10 K11'in "ölçüm ağır çıkarsa v1 = üç GBM + lojistik meta" kuralı uygulanabilir. Paket başında kullanıcı teyidi bekleniyor.
 
 ---
@@ -1758,4 +1758,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.25, F1–F4):** `confidence_mode='calibrated'` (lojistik p(UP) + sıcaklık, OOF ikiye bölünmüş, arındırmalı; varsayılan `legacy`, fiyat tahmini aynı), `evaluation/calibration.py` (ECE 15 kutu, Brier), her eğitimde iki yolun test kalibrasyonu. `test_calibration` 15. Gerçek veride Y4 %33–62; yön isabeti taban oranında, T 12,8–20 (kalibre güven ≈ 0,5).
 - **2026-11-15 (§9.26):** HPO varsayılan TPE sampler'ı ayar tohumuyla (§9.11 bulgu 3 kapandı). `test_rl_reproducibility` 43.
 - **2026-11-15 (§9.27, İ2):** hakem-finans Küçük revizyon. Bilgi kapısı (AUC + BSS + T sınırı), blok bootstrap GA'ları, kapısız modelde yön fiyattan. Rejim birincil = USD bazlı XU100 (kullanıcı kararı; M8). Gerçek veride üç hissede kapı geçilmedi; GPU koşuları arasında sayılar oynak (C1). `test_calibration` 18, `test_regimes` 17.
-- **2026-11-15 (§9.27 devam):** İ2 ikinci okuma Kabul (notlar: kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir günlük kayma beyanı). P3 kaba maliyet: tam ensemble ≈ 76 sa, 3 GBM ≈ 0,9 sa (30 sembol, 63 seansta bir) → K11 teyidi bekleniyor.
+- **2026-11-15 (§9.27 devam):** İ2 ikinci okuma Kabul (notlar: kapı testte seçiliyor → P'de çoklu karşılaştırma; USD bir günlük kayma beyanı). P3 kaba maliyet: tam ensemble ≈ 66 sa, 3 GBM ≈ 0,9 sa (30 sembol, 63 seansta bir) → K11 teyidi bekleniyor.
