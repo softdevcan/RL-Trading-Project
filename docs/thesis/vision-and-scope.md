@@ -402,6 +402,8 @@ FinRL-Meta finans odaklı ama MARL desteği sınırlı.
 
 **Tavsiye:** **F2 (PettingZoo + RLlib)**. Mevcut SB3 kodu baseline olarak kalır; yeni MARL mimarisi RLlib üzerine kurulur. Milestone 2'nin ilk haftası bu geçişe ayrılır.
 
+> **Güncelleme (2026-11-16, kullanıcı kararı; Faz 10 K9):** M1 spike'ında **PettingZoo + BenchMARL/TorchRL** yedi ölçütün yedisini geçti: Windows, tohumla tekrar üretim, paralel toplama, ajan ekseninin tensör boyutu olması ve diğerleri. 30 ajan × `attn` × 200K adım ≈ 391 sn (RTX 4060). RLlib denenmeden bu çerçeve seçildi, tavsiye F2 yerine budur. Ayrıntı ve ölçümler: [phase-10-marl-plan.md §3.2.7](../development/phase-10-marl-plan.md). Aşağıdaki RLlib süre ve geçiş notları tarihseldir.
+
 ---
 
 ## 4. Kesin Kapsam (Scope) ve Kapsam Dışı
