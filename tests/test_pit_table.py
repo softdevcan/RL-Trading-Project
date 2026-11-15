@@ -205,5 +205,17 @@ check("evaluate_gate: BH ailesi = degerlendirilen sembol sayisi; beklenen yanlis
       g['bh'] is not None and g['bh']['family_size'] == len(SYMS)
       and g['expected_false_pass_one_sided_2_5pct'] == round(0.025 * len(SYMS), 2), str(g.get('bh')))
 
+check("evaluate_gate v2: sembol basina MDE (aile > tek > 0,5), iki tarafli p, havuzlu tarih blogu GA",
+      all(v['mde_auc_family'] > v['mde_auc_single'] > 0.5 and v['p_two_sided'] is not None
+          for v in g['per_symbol'].values() if 'auc' in v)
+      and g['pooled']['auc']['ci'][0] < g['pooled']['auc']['value'] < g['pooled']['auc']['ci'][1])
+# hakem-finans I3 #2: bloklar arasi p seviyesi farki havuzlu AUC'u sisirir, blok ici AUC'u sisirmez
+pp = np.r_[np.full(200, 0.4), np.full(200, 0.6)]
+yy = np.r_[(rng.random(200) < 0.3), (rng.random(200) < 0.7)].astype(float)
+gg = np.r_[np.zeros(200), np.ones(200)]
+check("seviye farki: havuzlu AUC > 0,6, blok ici AUC = 0,5 (sabit p blok icinde siralama tasimaz)",
+      cal.auc(pp, yy) > 0.6 and abs(P._within_block_auc(pp, yy, gg) - 0.5) < 1e-12,
+      f"{cal.auc(pp, yy)}, {P._within_block_auc(pp, yy, gg)}")
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

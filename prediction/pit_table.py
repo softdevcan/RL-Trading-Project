@@ -418,42 +418,108 @@ def coverage_report(table: pd.DataFrame, window_start: str = '2013-06-01',
 
 
 def realized_labels(panel: pd.DataFrame, horizon: str = 'daily') -> pd.DataFrame:
-    """(date, symbol) -> y_up (sembolun kendi h. sonraki seansi). Yalniz degerlendirme icin."""
+    """(date, symbol) -> y_up (sembolun kendi h. sonraki seansi) + tie (esit kapanis). Yalniz degerlendirme icin.
+
+    y_up = 1[kapanis_{t+h} > kapanis_t]: esit kapanis 0 sayilir (DOWN tarafina; hakem-finans I3 #2 ->
+    `tie_rate` raporlanir).
+    """
     h = horizon_steps(horizon)
     out = []
     for s in sorted(set(panel.index.get_level_values('symbol'))):
         c = _symbol_ohlcv(panel, s)['close']
         fut = c.shift(-h)
         out.append(pd.DataFrame({'date': c.index, 'symbol': s,
-                                 'y_up': (fut > c).astype(float).where(fut.notna()).to_numpy()}))
+                                 'y_up': (fut > c).astype(float).where(fut.notna()).to_numpy(),
+                                 'tie': (fut == c).to_numpy()}))
     return pd.concat(out, ignore_index=True)
 
 
+def _within_block_auc(p, y, groups) -> Optional[float]:
+    """Blok (sembol x capa) icinde AUC'larin n agirlikli ortalamasi; tek sinifli blok atlanir.
+
+    Capa basina p seviyesi (uyum yarisi taban orani, T) degisir; bloklar arasi havuzlanan AUC bu seviye
+    farkini siralama sanabilir (hakem-finans I3 #2). Blok ici AUC yalniz ayni modelin siralamasini olcer.
+    """
+    from evaluation import calibration as cal
+    num = den = 0.0
+    for gid in np.unique(groups):
+        m = groups == gid
+        a = cal.auc(p[m], y[m])
+        if a is not None:
+            num += a * m.sum()
+            den += m.sum()
+    return float(num / den) if den else None
+
+
+def _date_block_bootstrap(dates: np.ndarray, fn, n_boot: int = 500, block: int = 20, seed: int = 0):
+    """Tarih bloklarini yeniden ornekleyen bootstrap: ayni gunun tum sembolleri birlikte (kesitsel
+    bagimlilik korunur). fn(satir indeksleri) -> metrik. Doner: tekrar degerleri."""
+    ud, inv = np.unique(dates, return_inverse=True)
+    order = np.argsort(inv, kind='stable')
+    bounds = np.searchsorted(inv[order], np.arange(len(ud) + 1))
+    rows_of = [order[bounds[i]:bounds[i + 1]] for i in range(len(ud))]
+    n = len(ud)
+    k = int(np.ceil(n / block))
+    rng = np.random.default_rng(seed)
+    vals = []
+    for _ in range(n_boot):
+        starts = rng.integers(0, n - block + 1, size=k)
+        di = (starts[:, None] + np.arange(block)[None, :]).ravel()[:n]
+        idx = np.concatenate([rows_of[i] for i in di])
+        v = fn(idx)
+        if v is not None and np.isfinite(v):
+            vals.append(v)
+    return np.asarray(vals, dtype=np.float64)
+
+
+def _p_one_two(vals: np.ndarray, null: float = 0.5):
+    """(tek tarafli H0: metrik <= null, iki tarafli) yuzdelik bootstrap p-degerleri."""
+    p_gt = float((1 + np.sum(vals <= null)) / (1 + len(vals)))
+    p_lt = float((1 + np.sum(vals >= null)) / (1 + len(vals)))
+    return p_gt, min(1.0, 2 * min(p_gt, p_lt))
+
+
 def evaluate_gate(table: pd.DataFrame, labels: pd.DataFrame, window=DEV_WINDOW,
-                  alpha: float = 0.05, n_boot: int = 1000) -> dict:
-    """Bilgi kapisi (sembol basina) + BH (30 sembol tek aile; hakem-finans I2 not 1).
+                  alpha: float = 0.05, n_boot: int = 1000, power: float = 0.8,
+                  pooled_boot: int = 500) -> dict:
+    """Bilgi kapisi (sembol basina) + BH (30 sembol tek aile; hakem-finans I2 not 1) + guc (I3 #1-#2).
 
     BSS referansi satir basina `base_rate_asof` (capa anindaki uyum yarisi taban orani; test disi).
-    p-degeri: tek tarafli H0 AUC <= 0,5, yuzdelik blok bootstrap.
+    p-degeri: tek tarafli H0 AUC <= 0,5, yuzdelik blok bootstrap; iki tarafli p ayrica.
+    MDE (en kucuk tespit edilebilir AUC): 0,5 + (z_{1-a} + z_guc) * SE_boot; a = alpha (tek test) ve
+    alpha/m (BH'de ilk reddin Bonferroni siniri). Havuzlu AUC icin tarih blogu bootstrap GA/p (ayni
+    gunun sembolleri birlikte yeniden orneklenir). Blok ici AUC (sembol x capa) ayrica.
     """
+    from scipy.stats import norm
     from evaluation import calibration as cal
     from evaluation.multiple_testing import benjamini_hochberg
 
     t = table[(table['date'] >= pd.Timestamp(window[0])) & (table['date'] < pd.Timestamp(window[1]))
               & table['meta_ok']].merge(labels, on=['date', 'symbol'], how='left')
-    t = t[t['y_up'].notna()]
+    t = t[t['y_up'].notna()].reset_index(drop=True)
+    n_sym = t['symbol'].nunique()
+    z_pow = norm.ppf(power)
+    z1, zm = norm.ppf(1 - alpha), norm.ppf(1 - alpha / max(n_sym, 1))
     per, pvals = {}, {}
     for s, g in t.groupby('symbol'):
         p, y, b = g['p_up_cal'].to_numpy(), g['y_up'].to_numpy(), g['base_rate_asof'].to_numpy()
         if len(g) < 2 * 20 or len(np.unique(y)) < 2:
             per[s] = {'n': int(len(g)), 'skipped': 'yetersiz satir'}
             continue
-        ci = cal.block_bootstrap_ci(cal.auc, p, y, n_boot=n_boot)
-        pv = cal.block_bootstrap_pvalue(cal.auc, p, y, n_boot=n_boot)
+        vals = cal._block_bootstrap_vals(cal.auc, p, y, n_boot=n_boot)
+        ci = [float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))] if vals is not None else None
+        pv, pv2 = _p_one_two(vals) if vals is not None else (None, None)
+        se = float(vals.std(ddof=1)) if vals is not None else None
         bss = cal.brier_skill(p, y, b)
         at_bound = bool(g['temperature'].ge(0.99 * T_BOUNDS[1]).any())
         per[s] = {'n': int(len(g)), 'auc': cal.auc(p, y), 'auc_ci': ci, 'p_auc_gt_half': pv,
-                  'brier_skill': bss, 'ece': cal.ece(p, y), 'accuracy': float(np.mean((p >= 0.5) == (y == 1))),
+                  'p_two_sided': pv2, 'auc_se_boot': se,
+                  'mde_auc_single': None if se is None else float(0.5 + (z1 + z_pow) * se),
+                  'mde_auc_family': None if se is None else float(0.5 + (zm + z_pow) * se),
+                  'auc_within_block': _within_block_auc(p, y, g['model_version'].to_numpy()),
+                  'tie_rate': float(g['tie'].mean()) if 'tie' in g else None,
+                  'brier_skill': bss, 'ece': cal.ece(p, y),
+                  'accuracy': float(np.mean((p >= 0.5) == (y == 1))),
                   'base_rate': float(y.mean()), 'T_at_bound_any': at_bound,
                   'informative': bool(not at_bound and np.isfinite(bss) and bss > 0
                                       and ci is not None and ci[0] > 0.5)}
@@ -461,13 +527,33 @@ def evaluate_gate(table: pd.DataFrame, labels: pd.DataFrame, window=DEV_WINDOW,
             pvals[s] = pv
     bh = benjamini_hochberg(pvals, alpha=alpha) if pvals else None
     pool_p, pool_y = t['p_up_cal'].to_numpy(), t['y_up'].to_numpy()
+    grp = (t['symbol'] + '|' + t['model_version'].astype(str)).to_numpy()
+    dates = t['date'].to_numpy()
+    b_auc = _date_block_bootstrap(dates, lambda i: cal.auc(pool_p[i], pool_y[i]), n_boot=pooled_boot)
+    b_wb = _date_block_bootstrap(dates, lambda i: _within_block_auc(pool_p[i], pool_y[i], grp[i]),
+                                 n_boot=pooled_boot)
+
+    def summ(point, vals):
+        p1, p2 = _p_one_two(vals)
+        return {'value': point, 'ci': [float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))],
+                'se_boot': float(vals.std(ddof=1)), 'p_gt_half': p1, 'p_two_sided': p2,
+                'n_boot': int(len(vals))}
+
+    ses = [v['auc_se_boot'] for v in per.values() if v.get('auc_se_boot') is not None]
     return {'window': list(window), 'n_rows': int(len(t)), 'per_symbol': per, 'bh': bh,
             'n_informative': int(sum(v.get('informative', False) for v in per.values())),
             'n_bh_reject': int(sum(r['reject'] for r in bh['results'].values())) if bh else 0,
             'expected_false_pass_one_sided_2_5pct': round(0.025 * len(pvals), 2),
-            'pooled': {'auc': cal.auc(pool_p, pool_y), 'ece': cal.ece(pool_p, pool_y),
-                       'brier_skill': cal.brier_skill(pool_p, pool_y, t['base_rate_asof'].to_numpy())},
-            'note': 'havuzlu AUC sembol arasi bagimliligi yok sayar (GA verilmez)'}
+            'power': power,
+            'mde_auc_family_median': float(np.median([0.5 + (zm + z_pow) * x for x in ses])) if ses else None,
+            'mde_auc_single_median': float(np.median([0.5 + (z1 + z_pow) * x for x in ses])) if ses else None,
+            'pooled': {'auc': summ(cal.auc(pool_p, pool_y), b_auc),
+                       'auc_within_block': summ(_within_block_auc(pool_p, pool_y, grp), b_wb),
+                       'ece': cal.ece(pool_p, pool_y),
+                       'brier_skill': cal.brier_skill(pool_p, pool_y, t['base_rate_asof'].to_numpy()),
+                       'tie_rate': float(t['tie'].mean()) if 'tie' in t else None},
+            'note': ('havuzlu GA tarih blogu bootstrap (20 seans, ayni gunun sembolleri birlikte); '
+                     'MDE = 0,5 + (z_{1-a} + z_guc) * SE_boot, a = alpha ya da alpha/m')}
 
 
 def write_table(table: pd.DataFrame, report: dict, run_id: Optional[str] = None,

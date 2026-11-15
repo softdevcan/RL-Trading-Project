@@ -94,7 +94,11 @@ def main():
                    'xu030': 'yfinance XU030.IS fiyat endeksi, temettu yok, maliyetsiz',
                    'cost': 'tek yon bps/2 x devir (sum |dw|); ilk alim devri 1',
                    'units': 'reel: ayin TUFE duzeyi (basamak); USD: USDTRY_{t-1}; '
-                            'reel/USD Sharpe rf=0 (sharpe_rf0)'},
+                            'reel/USD Sharpe rf=0, AYLIK getiriden (sharpe_rf0_monthly)',
+                   'universe': ('HAYATTA KALAN dondurulmus panel 30 (E0), tarihsel BIST 30 uyeligi degil '
+                                '(E1 acik); XU030 ayni evren degil + temettusuz -> ustunluk cikarimi YOK'),
+                   'not_tested': '1/N - al-tut farki test edilmedi',
+                   'cost': 'yalniz komisyon; spread/lot/limit yok; al-tutta cikis maliyeti yok'},
         'windows': res,
     }
     os.makedirs(OUT, exist_ok=True)

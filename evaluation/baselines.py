@@ -15,9 +15,18 @@ D4: maliyet = gidis-donus bps (`COST_GRID_BPS`, ana 20); tek yon bps/2, islem go
     Milestone 0' ortami `commission` ile yeniden degerlendirir (beyan).
 
 Girdi: veri kapisindan gecmis RL paneli (`prepare_rl_panel`); eksik hucre (bayat/atilan) sembolun
-son kapanisiyla tasinir (o gun getiri 0), listelenmeden once NaN (yatirilamaz).
-Metrikler: nominal TL'de A8 fazla getiri Sharpe'i (birincil); reel TL ve USD'de `sharpe_rf0`
-(evaluation/units.py).
+son kapanisiyla tasinir (o gun getiri 0; islem gormeyen gun ayrica isaretlenmez), listelenmeden once
+NaN (yatirilamaz).
+Metrikler: nominal TL'de A8 fazla getiri Sharpe'i (birincil, gunluk); reel TL ve USD'de AYLIK getiriden
+`sharpe_rf0_monthly` (`monthly_metrics`; hakem-finans I3 #4-#5).
+
+Beyan (hakem-finans I3 #3, #7, #8):
+  * EVREN HAYATTA KALAN, DONDURULMUS panel 30'u (E0); tarihsel BIST 30 uyeligi degil (E1 acik). 1/N ve
+    al-tut bu evrende; XU030 ayni evren degil ve temettusuz -> baseline'lar arasi ya da XU030'a karsi
+    USTUNLUK cikarimi yapilmaz; XU030 ayri referans satiridir.
+  * Maliyet yalniz komisyon (spread, lot, fiyat limiti yok). Al-tutta cikis maliyeti yok (RL ile
+    tutarli: pencere sonunda pozisyon kapatilmaz).
+  * 1/N ile al-tut arasindaki fark istatistiksel olarak test EDILMEDI (gerekirse Ledoit-Wolf, A3).
 """
 
 from __future__ import annotations
@@ -125,6 +134,27 @@ def metrics(returns: pd.Series, risk_free: Optional[pd.Series] = None) -> Dict[s
     return out
 
 
+def monthly_metrics(values: pd.Series) -> Dict[str, Optional[float]]:
+    """Reel TL ve USD birimi icin AYLIK getiriden metrik (hakem-finans I3 #4-#5).
+
+    Gunluk reel getiri basamak deflatorle ay basinda yapay sicrama, gunluk USD getirisi bir gunluk kur
+    kaymasi tasir; ikisi de gunluk Sharpe'in paydasini bozar. `values`: islem ONCESI sermaye = 1 olacak
+    bicimde olceklenmis birim degeri (ilk gun giris maliyeti dahil). Aylik getiri: [1 (baslangic),
+    ay sonu degerleri]; Sharpe rf = 0, yillik x sqrt(12). MDD ve toplam getiri gunluk degerden.
+    """
+    from evaluation.rl_folds import excess_sharpe
+    v = pd.Series(values, dtype=float)
+    start = pd.Series([1.0], index=[v.index[0] - pd.Timedelta(days=1)])
+    rm = pd.concat([start, v.resample('ME').last()]).pct_change().dropna()
+    n_days = len(v)
+    return {'n': int(n_days), 'n_months': int(len(rm)),
+            'ann_return': float(v.iloc[-1] ** (PERIODS / n_days) - 1.0),
+            'ann_vol_monthly': float(rm.std(ddof=1) * np.sqrt(12)) if len(rm) > 2 else None,
+            'max_drawdown': float(np.minimum((v / v.cummax() - 1.0).min(), v.iloc[0] - 1.0)),
+            'total_return': float(v.iloc[-1] - 1.0),
+            'sharpe_rf0_monthly': excess_sharpe(rm.to_numpy(), periods=12) if len(rm) >= 3 else None}
+
+
 def baseline_table(close: pd.DataFrame, start, end=None, xu030: Optional[pd.Series] = None,
                    grid: Sequence[float] = COST_GRID_BPS, cpi: Optional[pd.Series] = None,
                    fx: Optional[pd.Series] = None, risk_free: Optional[pd.Series] = None) -> dict:
@@ -145,8 +175,8 @@ def baseline_table(close: pd.DataFrame, start, end=None, xu030: Optional[pd.Seri
         res = {'nominal_try': metrics(r, rf)}
         for unit in ('real_try', 'usd'):
             vu = U.convert_values(vals, unit, cpi=cpi, fx=fx)
-            ru = vu.pct_change().fillna(0.0)
-            res[unit] = metrics(ru)
+            # islem oncesi sermaye 1: ilk gun degeri nominaldeki gibi (1 - giris maliyeti)
+            res[unit] = monthly_metrics(vu * (vals.iloc[0] / vu.iloc[0]))
         return res
 
     for name, df in strat.items():

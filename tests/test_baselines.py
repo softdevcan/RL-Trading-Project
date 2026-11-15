@@ -112,6 +112,11 @@ try:
 except U.UnitUnavailable:
     check("ilk gunden once kur yok -> UnitUnavailable", True)
 
+mv = B.monthly_metrics(pd.Series([0.999, 1.05, 1.10, 1.21],
+                                 index=pd.DatetimeIndex(['2021-01-28', '2021-01-29', '2021-02-26', '2021-03-31'])))
+check("monthly_metrics: aylik getiri [1 -> Oca sonu 1,05 -> Sub 1,10 -> Mar 1,21]; toplam = son - 1",
+      mv['n_months'] == 3 and abs(mv['total_return'] - 0.21) < 1e-12)
+
 print("\n[6] A8 sabitleri")
 files = ['app/services/model_analysis.py', 'scripts/benchmarking/benchmark_strategies.py',
          'scripts/analysis/generate_academic_report.py', 'scripts/analysis/extract_comparison_table.py']
@@ -158,6 +163,11 @@ if all(os.path.exists(p) for p in need):
     bs = [st['buy_hold']['costs'][str(b)]['nominal_try']['sharpe_excess'] for b in B.COST_GRID_BPS]
     check("al-tut Sharpe'i de maliyetle azalir (ilk gun giris maliyeti Sharpe'a dahil)",
           all(x > y for x, y in zip(bs, bs[1:])), str(bs))
+    bh_real = [st['buy_hold']['costs'][str(b)]['real_try']['total_return'] for b in B.COST_GRID_BPS]
+    check("reel/USD: aylik Sharpe (sharpe_rf0_monthly, ~12 ay) ve giris maliyeti birimde de sayiliyor",
+          all(st['ew_monthly']['costs']['20'][u].get('sharpe_rf0_monthly') is not None
+              and 11 <= st['ew_monthly']['costs']['20'][u]['n_months'] <= 13 for u in ('real_try', 'usd'))
+          and all(x > y for x, y in zip(bh_real, bh_real[1:])), str(bh_real))
     ew_ = st['ew_monthly']['costs']['20']
     check("2021 USD ve reel yillik getiri nominalden dusuk (TL degerkaybi, enflasyon)",
           ew_['usd']['ann_return'] < ew_['nominal_try']['ann_return']

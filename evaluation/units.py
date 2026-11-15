@@ -12,7 +12,9 @@ Tasarim varsayimlari:
   * USD: V_usd_t = V_t / USDTRY_{t-1} (t'den kesin once biten son kur; B6 USD etiketiyle ayni
     kural, `evaluation.regimes.usd_index`). Bir gunluk kur kaymasi beyan edilir (hakem-finans I2).
   * Birincil metrik nominal TL'de A8 risksiz faiz uzeri Sharpe (plan §5 M8). Reel ve USD
-    birimlerinde birim-tutarli risksiz faiz serisi yok: Sharpe rf = 0 ile ve `sharpe_rf0` adiyla.
+    birimlerinde birim-tutarli risksiz faiz serisi yok: Sharpe rf = 0 ile, AYLIK getiriden
+    (`evaluation.baselines.monthly_metrics`): gunluk reel getiri ay basinda yapay sicrama, gunluk USD
+    getirisi bir gunluk kur kaymasi tasir (hakem-finans I3 #4-#5).
 Deflator ya da kur istenen gunlerden birinde yoksa `UnitUnavailable` (sessiz atlama yok).
 """
 
