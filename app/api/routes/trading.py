@@ -1339,14 +1339,15 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
         # Algorithm-specific hyperparameters optimized for trading
         # Each algorithm has its own optimal learning rate
         actual_learning_rate = None  # Track actual LR used
+        # Milestone 0' (hakem-2 kapanis #3): modele GERCEKTEN verilen hiperparametreler kayda girer
+        # (calisma yoksa `hyperparams` bos kalir ve kayit degerleri tasimiyordu). SAC/yedek dal: None.
+        effective_hp = None
 
         if request.algorithm == "PPO":
             # PPO: Most stable for single-threaded training
             # Use hyperparameters from study or defaults
             actual_learning_rate = hyperparams.get('learning_rate', 0.0003)
-            model = model_class(
-                'MlpPolicy',
-                env,
+            effective_hp = dict(
                 learning_rate=actual_learning_rate,
                 n_steps=hyperparams.get('n_steps', 2048),
                 batch_size=hyperparams.get('batch_size', 64),
@@ -1357,6 +1358,11 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 ent_coef=hyperparams.get('ent_coef', 0.15),
                 vf_coef=hyperparams.get('vf_coef', 0.5),
                 max_grad_norm=hyperparams.get('max_grad_norm', 0.5),
+            )
+            model = model_class(
+                'MlpPolicy',
+                env,
+                **effective_hp,
                 tensorboard_log=ws.logs_dir(),
                 seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
@@ -1368,9 +1374,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
 
             # Use hyperparameters from study or trading-optimized defaults
             actual_learning_rate = hyperparams.get('learning_rate', 0.0007)
-            model = model_class(
-                'MlpPolicy',
-                env,
+            effective_hp = dict(
                 learning_rate=actual_learning_rate,
                 n_steps=hyperparams.get('n_steps', 256),
                 gamma=hyperparams.get('gamma', 0.99),
@@ -1381,6 +1385,11 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 normalize_advantage=True,
                 use_rms_prop=True,
                 rms_prop_eps=hyperparams.get('rms_prop_eps', 1e-5),
+            )
+            model = model_class(
+                'MlpPolicy',
+                env,
+                **effective_hp,
                 tensorboard_log=ws.logs_dir(),
                 seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
@@ -1398,9 +1407,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 sigma=0.2 * np.ones(action_dim)
             )
 
-            model = model_class(
-                'MlpPolicy',
-                env,
+            effective_hp = dict(
                 learning_rate=actual_learning_rate,
                 buffer_size=hyperparams.get('buffer_size', 100000),
                 learning_starts=hyperparams.get('learning_starts', 1000),
@@ -1409,14 +1416,20 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                 gamma=hyperparams.get('gamma', 0.99),
                 train_freq=hyperparams.get('train_freq', 1),
                 gradient_steps=hyperparams.get('gradient_steps', 1),
-                action_noise=action_noise,
                 policy_delay=hyperparams.get('policy_delay', 2),
                 target_policy_noise=hyperparams.get('target_policy_noise', 0.3),
                 target_noise_clip=hyperparams.get('target_noise_clip', 0.5),
+            )
+            model = model_class(
+                'MlpPolicy',
+                env,
+                **effective_hp,
+                action_noise=action_noise,
                 tensorboard_log=ws.logs_dir(),
                 seed=seed,  # C1: SB3 set_random_seed + eylem uzayi + VecEnv.seed
                 verbose=1
             )
+            effective_hp = {**effective_hp, 'action_noise': 'NormalActionNoise', 'action_noise_sigma': 0.2}
         elif request.algorithm == "SAC":
             # SAC: Soft Actor-Critic - State of the art for continuous control
             # Use hyperparameters from study or trading-optimized defaults
@@ -1779,6 +1792,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                                          if prediction_info else None),
                     # M8 secim kurali etkeni: ayni egitimin iki test okumasi ayri yapilandirmadir
                     'selection_rule': 'argmax_validation',
+                    'effective_hyperparameters': effective_hp,
+                    'hyperparams_source': (hyperparams_source or {}).get('source'),
             }
             trial_id = register_trial(
                 kind='rl_train',
