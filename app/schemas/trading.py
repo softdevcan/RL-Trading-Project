@@ -93,6 +93,13 @@ class TrainingRequest(BaseModel):
         default=None,
         description="Split definition name (default 'wf-v1', evaluation/splits.py)",
     )
+    # Faz 9 / P4: Milestone 0' DTF kolu. Nokta-zamanli tahmin tablosunun kosum kimligi
+    # (results_dir()/predictions_pit/<id>.parquet); None = tahminsiz (DT, varsayilan, eski davranis).
+    prediction_table: Optional[str] = Field(
+        default=None,
+        description="PIT prediction table run id (Faz 9 P); None = no prediction features (DT)",
+        pattern=r"^[A-Za-z0-9_.-]{1,120}$",
+    )
 
     class Config:
         json_schema_extra = {

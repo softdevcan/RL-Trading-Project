@@ -98,7 +98,7 @@ python tests/test_pit_table.py            # Faz 9/P: PIT tahmin tablosu — B0 g
 python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut elle hesap, gec listeleme, maliyet izgarasi,
                                            #          reel (TUFE basamak) / USD (kur t-1) + ayni gun kur mutasyonu, A8 0,02 yok,
                                            #          gercek 2021 penceresi (19, ~10 sn)
-python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
+python tests/test_rl_walk_forward.py       # Faz 9/R1 + P4 + M8 secim kurali: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
-                                           #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)
+                                           #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit; rota P tablosuyla (DTF), argmax + son nokta iki test kaydi (98, ~1 dk)
 ```

@@ -648,6 +648,29 @@ ENV_PRED_NEUTRAL = {'predicted_return': 0.0, 'predicted_direction': 0.5, 'confid
                     'ensemble_agreement': 0.5}
 
 
+def load_table(run_id: str, directory: Optional[str] = None) -> Tuple[pd.DataFrame, dict]:
+    """`results_dir()/predictions_pit/<run_id>.parquet` + kimlik (yol, SHA-256, yan JSON'daki surum).
+    run_id yol ayirici tasiyamaz (sema deseni de reddeder)."""
+    if not run_id or os.path.basename(run_id) != run_id:
+        raise ValueError(f"gecersiz P tablosu kimligi: {run_id!r}")
+    if directory is None:
+        from app.auth import workspace as ws
+        directory = os.path.join(ws.results_dir(), 'predictions_pit')
+    path = os.path.join(directory, f'{run_id}.parquet')
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"P tablosu yok: {path} (python scripts/build_pit_table.py)")
+    with open(path, 'rb') as fh:
+        sha = hashlib.sha256(fh.read()).hexdigest()
+    side = {}
+    sp = os.path.join(directory, f'{run_id}.json')
+    if os.path.exists(sp):
+        with open(sp, encoding='utf-8') as fh:
+            side = json.load(fh)
+    return pd.read_parquet(path), {'run_id': run_id, 'sha256': sha,
+                                   'table_version': side.get('table_version', TABLE_VERSION),
+                                   'seed': side.get('seed'), 'models': side.get('models')}
+
+
 def env_prediction_features(table: pd.DataFrame, symbols: Sequence[str], dates: Sequence,
                             models: Sequence[str] = V1_MODELS) -> Tuple[Dict[str, Dict[str, Dict[str, float]]], dict]:
     """P tablosu -> `TradingEnv(prediction_features=...)` sozlugu {gun: {sembol: 4 alan}}.

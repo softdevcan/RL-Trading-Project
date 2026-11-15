@@ -1258,6 +1258,22 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             # G1: 'simple' odulde Sharpe terimi yok (start_training faz 2 disini reddeder)
             sharpe_term=request.sharpe_term if reward_type == 'psr' else 'ema_level',
         )
+        # Faz 9 / P4 (Milestone 0' DTF): nokta-zamanli tahmin tablosu -> env tahmin arayuzu.
+        # Uc blogun her (gun, sembol) hucresi adaptorle ACIKCA doldurulur (env varsayilani eksik
+        # hucrede yonu -1 yapar). Tablo verilmezse env tahminsiz (DT; eski davranis).
+        prediction_info = None
+        if request.prediction_table:
+            from prediction import pit_table as _pit
+            _ptab, prediction_info = _pit.load_table(request.prediction_table)
+            _pdates = sorted(set().union(*(pd.to_datetime(fold_data.frame(r).index.get_level_values('date'))
+                                           for r in ('train', 'val', 'test'))))
+            env_settings['prediction_features'], _prep = _pit.env_prediction_features(
+                _ptab, list(fold_data.symbols), _pdates)
+            prediction_info.update(ok_rate=_prep['ok_rate'], counts=_prep['counts'],
+                                   mapping=_prep['mapping'])
+            training_state["prediction_table"] = prediction_info
+            logger.info(f"P4: tahmin tablosu {request.prediction_table} "
+                        f"(dolu %{100 * _prep['ok_rate']:.1f}, {_prep['counts']})")
         norm_settings = dict(
             # Faz 9 / K25 (b): 'stats' (B9, varsayilan) | 'causal' (kayan z)
             price_norm=request.price_norm, price_norm_macd=request.price_norm_macd)
@@ -1492,6 +1508,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             training_state.setdefault("warnings", []).append(
                 "Dogrulamada hicbir kontrol noktasinin metrigi tanimli degil (model hic islem "
                 "yapmadi): son kontrol noktasi secildi.")
+        # M8 secim kurali etkeni (R1; kullanici karari 2026-11-14): son nokta da testte BIR KEZ
+        # okunur ve kendi kaydiyla N'ye sayilir (asagida, ana kayittan sonra).
+        last_model = model
         if not selection['final']:
             model = model_class.load(selection['path'], device=model.device)
         logger.info(f"Kontrol noktasi secimi ({validation_cb.metric_name}): adim "
@@ -1569,6 +1588,8 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             "test_range": _range(test_df),
             "rl_data_start": _settings.RL_DATA_START,
             "missing_data_mode": "own_last",
+            # P4: DTF modeli tahmin gozlemi bekler (+4n); canli karar bunu uretmez (K13)
+            "prediction_table": (prediction_info or {}).get("run_id"),
             # R1: hangi bolme taniminin hangi kati; secilen kontrol noktasi
             "split_spec": split_info,
             "fold": fold_data.fold,
@@ -1737,9 +1758,7 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             test_returns = pv[1:] / pv[:-1] - 1.0
             start = actual_env.frame_bound[0]
             test_dates = actual_env._dates_list[start + 1: start + 1 + len(test_returns)]
-            trial_id = register_trial(
-                kind='rl_train',
-                config={
+            trial_config = {
                     'algorithm': request.algorithm, 'phase': request.phase,
                     'total_timesteps': request.total_timesteps,
                     'hyperparameters': hyperparams or {}, 'learning_rate': actual_learning_rate,
@@ -1754,7 +1773,16 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
                     # K18 + K25: farkli gozlem tanimi farkli yapilandirmadir
                     'indicator_spec': indicator_spec,
                     'price_norm': temp_env.get_price_norm(),
-                },
+                    # P4: DT (None) <-> DTF (tablo kimligi + SHA); farkli gozlem = farkli yapilandirma
+                    'prediction_table': ({k: prediction_info.get(k) for k in
+                                          ('run_id', 'sha256', 'table_version', 'seed', 'mapping')}
+                                         if prediction_info else None),
+                    # M8 secim kurali etkeni: ayni egitimin iki test okumasi ayri yapilandirmadir
+                    'selection_rule': 'argmax_validation',
+            }
+            trial_id = register_trial(
+                kind='rl_train',
+                config=trial_config,
                 seed=seed,
                 data_sha256=data_snapshot['sha256'],
                 # Bilinen acik protokol maddeleri (hakem-2 #1): acik madde varsa
@@ -1776,6 +1804,39 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             logger.warning(f"Deneme kaydina yazilamadi ({exc})")
             training_state.setdefault("warnings", []).append(
                 f"Deneme kaydina yazilamadi: {exc}")
+        # M8 secim kurali etkeni (argmax <-> son nokta): son kontrol noktasi ayni test ortaminda bir
+        # kez okunur, kendi kaydiyla (selection_rule='last_checkpoint') N'ye sayilir. Secilen nokta
+        # zaten sonsa ayni politika yeniden kosulmaz; kayit ana kaydin getirisini tasir (same_policy).
+        last_trial_id = None
+        if trial_id is not None:
+            try:
+                same = bool(selection.get('final'))
+                keys = ('cumulative_return', 'sharpe_ratio', 'max_drawdown', 'total_trades')
+                if same:
+                    l_returns, l_dates = test_returns, test_dates
+                    l_metrics = {k: metrics.get(k) for k in keys}
+                else:
+                    l_env = make_test_env()
+                    ep = rl_folds.run_episode(last_model, l_env)
+                    l_returns, l_dates = ep['returns'], ep['dates']
+                    lm = l_env.get_metrics()   # ana kayitla AYNI tanim (env metrikleri)
+                    l_metrics = {k: (None if isinstance(lm.get(k), float) and np.isnan(lm.get(k))
+                                     else (float(lm[k]) if isinstance(lm.get(k), (np.floating, np.integer))
+                                           else lm.get(k))) for k in keys}
+                last_trial_id = register_trial(
+                    kind='rl_train', config={**trial_config, 'selection_rule': 'last_checkpoint'},
+                    seed=seed, data_sha256=data_snapshot['sha256'], protocol=rl_protocol,
+                    metrics=l_metrics, returns=l_returns, dates=l_dates, split='test',
+                    fold=fold_data.fold, split_spec=split_info,
+                    extra={'model_name': model_name, 'run_id': rl_manifest.run_id,
+                           'paired_trial_id': trial_id, 'same_policy': same,
+                           'selection': {'rule': 'last_checkpoint', 'step': request.total_timesteps},
+                           'ranges': fold_data.report['ranges']})
+            except Exception as exc:
+                logger.warning(f"Son nokta test kaydi yazilamadi ({exc})")
+                training_state.setdefault("warnings", []).append(
+                    f"Son nokta (M8 secim kurali) test kaydi yazilamadi: {exc}")
+        rl_manifest.extra['last_checkpoint_trial_id'] = last_trial_id
         rl_manifest.extra['trial_id'] = trial_id
         rl_manifest.extra['test_metrics'] = {k: metrics.get(k) for k in (
             'cumulative_return', 'sharpe_ratio', 'max_drawdown', 'total_trades')}
