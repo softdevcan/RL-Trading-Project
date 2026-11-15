@@ -230,6 +230,7 @@ Tüm MARL işleri **yeni** bir ortamda yapılır (`env/marl_trading_env.py`, Pet
 - **G1–G3** Faz 9'daki gibi: `sharpe_term='ema_level'|'differential'`, gerçek Moody-Saffell Dₜ; risksiz faiz A8'den; metin-kod denetimi. Yeni ortamda risksiz faiz serisi **zorunlu girdi**. Eski ortamdaki 0,15 sabiti ([reward_functions.py:37](../../env/reward_functions.py#L37)) davranış dondurma gereği varsayılan olarak kalır.
 - **Nakit faizi (kullanıcı kararı 2026-11-15; Faz 9 §9.2 #7, §9.12 F2, §9.23):** eski ortamda nakit 0 kazanır; bu yalnız beyan edilir (K26 ile aynı gerekçe). **Yeni ortamda nakit, risksiz faiz serisiyle (A8, t−1 oranı) faiz kazanır.** Bu bir M2 tasarım maddesidir. Böylece seçim metriğinin fazla getirisi ile ortamın nakit getirisi tutarlı olur.
 - Ödül tanımı ve komisyonun eski ortamda iki kez sayılması: [reward-definition.md](../thesis/reward-definition.md) (G3). Yeni ortamda komisyon yalnız bir kez girer.
+- **G2 — ödülde risksiz faiz (Faz 9 §9.29):** eski ortamın `risk_free_rate=0,15` sabiti eğitilmiş modellerin ödülüdür ve nakit faizi kararıyla aynı gerekçeyle kalır (beyan). **Yeni ortamda fazla getiri terimi A8 serisinin t−1 oranını kullanır** (`evaluation.risk_free.per_period_rate`, nakitle aynı seri). M2 tasarım maddesi.
 - **MARL ödülü** (vision §3.3 γ; öncül Hao vd. 2025):
   - rᵢ,ₜ = α·kᵢ,ₜ + (1−α)·Rₜ
   - kᵢ,ₜ = wᵢ,ₜ₋·rᵢ,ₜ − maliyetᵢ,ₜ (ajanın basit getiri katkısı). Katkıların toplamı Rₜ'nin riskli kısmına eşit; nakit getirisi yalnızca portföy terimine girer.

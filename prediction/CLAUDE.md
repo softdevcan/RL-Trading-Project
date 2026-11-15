@@ -27,8 +27,17 @@
   `direction_conflict`; yon = 1[p_cal>=0,5]. Fiyat tahmini iki modda AYNI. Mod model meta'sindan yuklenir.
 - Her egitimde `ensemble_test_metrics['calibration']` (iki yol da): ECE 15 kutu, Brier, guvenilirlik
   (`evaluation/calibration.py`). `compute_calibration` (5 kutu, tracker) bununla KARISTIRILMAZ.
-- Sinir: yon modeli %60 modellerinin OOF'unda uyar, dagitilan modeller %80 (K19/Y26) — P'de cozulur.
-  Sicaklik sembol basina; plandaki havuzlu T (Faz 10 §3.1.2) P'de (batch). Test: `tests/test_calibration.py`.
+- Sinir: yon modeli %60 modellerinin OOF'unda uyar, dagitilan modeller %80 (K19/Y26) — tek model egitiminde KALIR;
+  P tablosunda cozuldu (asagida). Sicaklik burada sembol basina, P'de havuzlu. Test: `tests/test_calibration.py`.
+
+## Nokta-zamanli tahmin tablosu (Faz 9 P; K11 v1, K19)
+- `prediction/pit_table.py` — ajanlara giden TEK tahmin kaynagi (S-obs/S-msg). 3 GBM + lojistik meta, yalniz fiyat/hacim
+  ozellikleri, veri 2009-09'dan; capa 2012-01'den her 63 seans; taban egitimi `label_date < capa`; meta + sicaklik
+  yalniz GECMIS bloklarin orneklem disi tahminlerinde (K19: %80 yeniden uyum / orneklem ici meta YOK); T capa basina
+  30 sembolde havuzlu. Eksik hucre `mask_reason` (sessiz 0,5 YOK). `informative_asof` capa anindaki bilgi kapisi.
+- Uretim: `python scripts/build_pit_table.py` -> `results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + manifest;
+  olcum `docs/development/measurements/phase9-p/`. Test `tests/test_pit_table.py`. Ensemble'in 'calibrated' modu
+  (sembol basina T, %60 OOF) tek model egitimi icin kalir; tez/MARL sinyali P tablosundan.
 
 ## evaluator.py metrikleri (Faz 3)
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover

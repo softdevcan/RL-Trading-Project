@@ -31,4 +31,9 @@
   (`python -m data.index_fetcher`). `episodes` bagimsiz donem DEGIL; `episodes_min20` + blok bootstrap.
 - **Kalibrasyon sifati**: `informative` kapisi (T sinirda degil, BSS > 0, AUC GA'si 0,5'i dislar) gecilmeden
   "kalibre" yazma; "sicaklik olcekli, ayirt edici degil" (F, I2). GPU'da DL tek kosu sayilari oynak (C1).
+- **Baseline ve birimler (D1/D3/D4):** `evaluation/baselines.py` (1/N aylik, al-tut, XU030 fiyat endeksi — temettusuz,
+  maliyetsiz; sentetik yedek YOK), `evaluation/units.py` (nominal / TUFE-reel basamak / USD = USDTRY_{t-1}). Maliyet
+  `COST_GRID_BPS` gidis-donus, ana 20; tek yon bps/2 x devir. Birincil Sharpe nominal TL A8 fazla getiri; reel/USD `sharpe_rf0`.
+  Eski 0,02 sabitleri kaldirildi (`ModelAnalyzer(return_dates=)`; tarihsiz -> `risk_free_source='rf0 ...'`). Odulun 0,15'i
+  eski ortamda BEYAN (Ansari sadakati), G2 yeni ortamda. Test `tests/test_baselines.py` (19).
 - Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (43)

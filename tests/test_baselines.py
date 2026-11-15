@@ -155,6 +155,9 @@ if all(os.path.exists(p) for p in need):
     check("2021: 1/N, al-tut, XU030 x 3 birim dolu", all(
         set(st[k]['costs'][c]) == set(U.UNITS) for k in st for c in st[k]['costs']) and 'xu030' in st)
     check("1/N fazla getiri Sharpe'i maliyetle monoton azalir", all(x > y for x, y in zip(sh, sh[1:])), str(sh))
+    bs = [st['buy_hold']['costs'][str(b)]['nominal_try']['sharpe_excess'] for b in B.COST_GRID_BPS]
+    check("al-tut Sharpe'i de maliyetle azalir (ilk gun giris maliyeti Sharpe'a dahil)",
+          all(x > y for x, y in zip(bs, bs[1:])), str(bs))
     ew_ = st['ew_monthly']['costs']['20']
     check("2021 USD ve reel yillik getiri nominalden dusuk (TL degerkaybi, enflasyon)",
           ew_['usd']['ann_return'] < ew_['nominal_try']['ann_return']

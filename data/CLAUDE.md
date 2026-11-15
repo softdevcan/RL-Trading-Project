@@ -68,5 +68,8 @@ borsapy/yf     → gold_fetcher.py       ─┘
 - **XU100 uzun seri ayri dosyada (B6):** `data/index_fetcher.py` -> `data/macro/xu100.csv` + `xu100_source.json`
   (2005..; `macro_data.csv`'deki `bist100_index` 2018'de basliyor). `check_index_series` |r| > %15 sicramada
   YAZMAZ (2020-07 sifir atma yfinance'te duzeltilmis, olculdu).
+- **D icin seriler:** `data/macro/xu030.csv` (`fetch_index_close('XU030.IS', path=...)`, fiyat endeksi) ve
+  `data/macro/cpi_index.csv` (`MacroDataFetcher().fetch_cpi_index()`: TP.TUKFIY2025.GENEL DUZEYI, aylik, ay basi;
+  yalniz ex post raporlama birimi, karar girdisi DEGIL -> aciklanma gecikmesi yok). Ikisi de `_source.json` + SHA.
 - **Makro 2018'den başlıyor** (varsayılan `start_date`); RL penceresi 2013-06. Faz 2 RL ortamı
   2013–2017'de makro gözlemi 0 görür — bilinen açık.

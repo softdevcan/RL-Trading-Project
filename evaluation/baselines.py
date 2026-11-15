@@ -108,15 +108,20 @@ def metrics(returns: pd.Series, risk_free: Optional[pd.Series] = None) -> Dict[s
     r = pd.Series(returns, dtype=float)
     v = (1.0 + r).cumprod()
     n = len(r)
+    # Ilk seans: brut 0, net = -giris maliyeti. Sharpe'a DAHIL (al-tutun tek maliyeti budur);
+    # o gun icin tahakkuk eden risksiz faiz yok (rf_0 = 0; per_period_rate ilk seansi NaN verir).
     out = {'n': int(n),
-           'ann_return': float(v.iloc[-1] ** (PERIODS / max(n - 1, 1)) - 1.0),
-           'ann_vol': float(r.iloc[1:].std(ddof=1) * np.sqrt(PERIODS)) if n > 2 else None,
-           'max_drawdown': float((v / v.cummax() - 1.0).min()),
+           'ann_return': float(v.iloc[-1] ** (PERIODS / n) - 1.0),
+           'ann_vol': float(r.std(ddof=1) * np.sqrt(PERIODS)) if n > 2 else None,
+           'max_drawdown': float(np.minimum((v / v.cummax() - 1.0).min(), v.iloc[0] - 1.0)),
            'total_return': float(v.iloc[-1] - 1.0)}
     if risk_free is not None:
-        out['sharpe_excess'] = excess_sharpe(r.iloc[1:].to_numpy(), r.index[1:], risk_free)
+        rf = pd.Series(risk_free).reindex(r.index)
+        if pd.isna(rf.iloc[0]):
+            rf.iloc[0] = 0.0
+        out['sharpe_excess'] = excess_sharpe(r.to_numpy(), r.index, rf)
     else:
-        out['sharpe_rf0'] = excess_sharpe(r.iloc[1:].to_numpy())
+        out['sharpe_rf0'] = excess_sharpe(r.to_numpy())
     return out
 
 

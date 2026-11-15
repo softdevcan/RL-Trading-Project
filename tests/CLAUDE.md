@@ -92,6 +92,12 @@ python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etik
 python tests/test_calibration.py           # Faz 9/F1-F4: ECE (15 kutu) ve Brier elle, sicaklik T~3 bulur; ensemble
                                            #          legacy/calibrated, p_up_raw+p_up_cal, fiyat ayni, kaydet/yukle, test
                                            #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu; AUC/BSS bilgi kapisi (18, ~1 dk)
+python tests/test_pit_table.py            # Faz 9/P: PIT tahmin tablosu — B0 gunluk + haftalik (t sonrasi bozma), arindirmasiz
+                                           #          taban ve meta mutasyonu B0'i kirar, K19 tarihleri, havuzlu T, acik maske,
+                                           #          P2 kapsam, parquet + manifest, bootstrap p-degeri + BH (21, ~1 dk; gercek panel)
+python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut elle hesap, gec listeleme, maliyet izgarasi,
+                                           #          reel (TUFE basamak) / USD (kur t-1) + ayni gun kur mutasyonu, A8 0,02 yok,
+                                           #          gercek 2021 penceresi (19, ~10 sn)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)
