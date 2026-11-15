@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.0.0` · Milestone 0' m0p-v2 **koşuldu** (180/180) ve hakem-2 sonuç okuması Kabul (§9.37, ara karar). Sırada pozitif kontrol ölçümü (a) kararı ve Faz 10 M2.
+**Son güncelleme:** 2026-11-16 · `v2.1.0` · Milestone 0' m0p-v2 **koşuldu** (180/180) ve hakem-2 sonuç okuması Kabul (§9.37, ara karar). Sırada pozitif kontrol ölçümü (a) kararı ve Faz 10 M2.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
