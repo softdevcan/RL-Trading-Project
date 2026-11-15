@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.2.0` · Milestone 0' koşuldu (ara karar, §9.37); Faz 10 M1 spike bitti, **BenchMARL + TorchRL seçildi** (§3.2.7); K27 pano maddesi eklendi. Sırada pozitif kontrol ölçümleri (a)+(b), sonra M2.
+**Son güncelleme:** 2026-11-16 · `v2.3.0` · Pozitif kontrol ölçümleri (Faz 9 §9.38–9.39): PC060'ın RL'siz değeri MDE'yi aşıyor, eski ortamın politikaları bloktan değer üretmiyor → Faz 10 S-obs girdisi. Sırada Faz 10 M2.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
