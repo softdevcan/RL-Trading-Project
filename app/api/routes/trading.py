@@ -261,6 +261,9 @@ async def start_training(
     if request.sharpe_term != "ema_level" and request.phase != 2:
         raise HTTPException(status_code=400,
                             detail="sharpe_term yalniz faz 2 (PSR odulu) ile kullanilabilir")
+    if request.sharpe_weight is not None and request.phase != 2:
+        raise HTTPException(status_code=400,
+                            detail="sharpe_weight yalniz faz 2 (PSR odulu) ile kullanilabilir")
 
     # Veri tazeliği ön kontrolü — boş/bayat veriyle eğitim başlatmayı engeller.
     _check_training_data_freshness(request.phase)
@@ -1258,6 +1261,9 @@ async def _run_training_inner(request: TrainingRequest, training_state: Dict[str
             # G1: 'simple' odulde Sharpe terimi yok (start_training faz 2 disini reddeder)
             sharpe_term=request.sharpe_term if reward_type == 'psr' else 'ema_level',
         )
+        if request.sharpe_weight is not None:
+            # K4 olcek esitlemesi (Milestone 0'): yalniz w2 ezilir, diger agirliklar varsayilan
+            env_settings['reward_weights'] = {'w2': float(request.sharpe_weight)}
         # Faz 9 / P4 (Milestone 0' DTF): nokta-zamanli tahmin tablosu -> env tahmin arayuzu.
         # Uc blogun her (gun, sembol) hucresi adaptorle ACIKCA doldurulur (env varsayilani eksik
         # hucrede yonu -1 yapar). Tablo verilmezse env tahminsiz (DT; eski davranis).

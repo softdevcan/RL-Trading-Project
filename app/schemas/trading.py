@@ -82,6 +82,12 @@ class TrainingRequest(BaseModel):
         description="Sharpe term of the PSR reward (phase 2 only): 'ema_level' (legacy EMA "
                     "Sharpe level) or 'differential' (Moody & Saffell 2001 D_t; G1)",
     )
+    # Milestone 0' K4 olcek esitlemesi: PSR odulunde Sharpe teriminin agirligi w2 (None = 0,30
+    # varsayilan). Yalniz faz 2. Deger reward_spec ile kayda girer (docs/.../phase9-m0/k4_scale.json).
+    sharpe_weight: Optional[float] = Field(
+        default=None, gt=0, le=1,
+        description="PSR Sharpe-term weight w2 (phase 2 only); None = default 0.30",
+    )
     # Faz 9 / R1: walk-forward kati. Pencereler oranla degil `evaluation/splits.py`'deki
     # sabit tarihli tanimdan gelir. None = panelin tamamen kapsadigi EN SON kat.
     fold: Optional[str] = Field(
