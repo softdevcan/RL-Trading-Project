@@ -1921,6 +1921,28 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 ---
 
+### 9.33 Milestone 0' protokolü (taslak) ve kod hazırlığı (2026-11-15, dal `feat/phase9-m0-protocol`)
+
+**§9.22 madde 8.** Protokol [milestone0-protocol.md](milestone0-protocol.md) + [milestone0/protocol-v1.json](milestone0/protocol-v1.json) (m0p-v1, **TASLAK**). Kapanış kapısında (hakem-2) ve kullanıcı onayıyla dondurulur.
+
+**"Kod hazır" denetiminde bulunan ve kapatılan açıklar:**
+- **Rota → P tablosu:** `TrainingRequest.prediction_table`. Üç blok P4 adaptörüyle dolduruluyor; deneme kaydı ve model meta'sı tablo kimliğini ve SHA'sını taşıyor.
+- **M8 seçim kuralı etkeni (R1; kullanıcı kararı 2026-11-14):** rota testte yalnız argmax noktasını okuyordu. Artık aynı eğitimden ikinci bir test kaydı (`selection_rule='last_checkpoint'`) yazılıyor; `paired_trial_id` ve `same_policy` alanlarıyla bağlı.
+- **Koşum betiği** [scripts/run_milestone0.py](../../scripts/run_milestone0.py): protokol JSON'unun SHA'sı deftere bağlanıyor ve dosya değişirse betik koşmayı reddediyor. Kaldığı yerden devam edebiliyor. `--smoke` deneme kaydına yazmıyor.
+- **Plan dışı hata (düzeltildi):** `.env`'e eklenen `KAP_*` anahtarları `Settings`'i bozuyordu (pydantic-settings bilinmeyen anahtarı reddeder). Uygulama ve rotayı içe aktaran testler açılmıyordu. Alanlar `app/core/config.py`'de tanımlandı.
+
+**Tasarımın ana noktaları:**
+- **2021 katı ön elemede koşulmaz;** testi henüz okunmamış tek pencere bu (`eval_window_unexposed`). Ön elemede seçim yalnız doğrulamadan yapılıyor.
+- Ön eleme 540 eğitim, nihai 720, maliyet duyarlılığı 240.
+- Duman ölçümü: PPO 20 bin adım 30,7 sn → toplam ~127 saat tek süreç.
+- Açık kararlar §10'da: budama, doğrulayıcı kanıt, K4 ölçek eşitlemesi, DTF pozitif kontrolü, yön özelliği.
+
+**Kabul:**
+- `test_rl_walk_forward` **98/0**: rota DTF; üç blok dolu; gözlem +4n; kayıtta SHA; maskeli hücre nötr; iki test kaydı; farklı politikada son model ayrıca koşuyor.
+- Rota komşuları yeşil: `test_price_stats_window` 106, `test_k18_obs_health` 109, `test_rl_reproducibility` 43, `test_auth` 29, `test_workspace_isolation` 20, `test_training_status` 19, `test_trade_universe` 22, `test_indicator_warmup` 28, `test_env_missing_mode` 17.
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -1979,3 +2001,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.30, İ3):** hakem-finans Büyük (çıkarım katmanı), hakem-rl Küçük. Kapı v2: blok içi havuzlu AUC 0,501 (sıralama bilgisi tespit edilmedi), MDE aile 0,554. Reel/USD Sharpe aylık. M8'e: S-msg boş sonuç beyanı, pozitif kontrol kolu, P tohumları. hakem-finans ikinci okuması bekliyor.
 - **2026-11-15 (§9.31, İ3 ikinci okuma):** hakem-finans Küçük revizyon. Kapı duyarlılıkları (çapa kümesi ve 63 seans bootstrap, eşit kapanış dışı, Bonferroni, MDE dağılımı): havuzlu 0,511'in anlamlılığı eşit kapanış sayımına bağlı (eşitsiz 0,503, p 0,18); blok içi sonuç değişmedi. Ad → kod eşlemesi ve H3/M5 (P v1 + pozitif kontrol + 2018+ makro alt deneyi) kullanıcı kararı. KAP VYK API istemcisi; test geçidi yalnız 2023: dönem içi XU030 olayı 0, çeyreklik duyurular arşivle 4/4 uyumlu (2017–2018 yok). `test_pit_table` 25, `test_universe` 36.
 - **2026-11-15 (§9.32, P4 + E1 kapanışı):** P tablosu → eski `TradingEnv` tahmin arayüzü (kullanıcı kararı; env kodu değişmez, maskeli hücre nötr). Env varsayılanı eksik hücrede yönü −1 yapıyordu (adaptör bunu önlüyor). Gerçek tabloda %97,6 dolu; getiri ve güven gözlemi sıfıra yakın, yön ikili ve tam ölçekli (M8 beyanı). E1 ölçülen geçici kapsamla beyanla kapandı. `test_pit_table` 31.
+- **2026-11-15 (§9.33, Milestone 0' protokolü taslak):** m0p-v1 protokolü ve koşum betiği. Rota P tablosunu alıyor (DTF); M8 son nokta test kaydı eklendi. `.env` KAP anahtarları `Settings`'i bozuyordu (düzeltildi). 2021 katı ön elemede koşulmaz. Bütçe ölçümü ~127 sa tek süreç. `test_rl_walk_forward` 98.

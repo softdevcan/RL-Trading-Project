@@ -8,6 +8,12 @@ Rota (`app/api/routes/trading.py`), HPO (`hyperparameter_optimization/`) ve `eva
 - **Phase 1 (RL)**: 56 features — balance(1) + shares_owned(5) + OHLCV(25) + technicals(25)
 - **Phase 2 (RL + Prediction)**: +4×N features — predicted_return, predicted_direction, prediction_confidence, ensemble_agreement (N sembol başına)
 - **Phase 3 (RL)**: ATR tabanlı dinamik pozisyon boyutlandırma + Kelly Criterion (opt-in, `use_atr_sizing`, `use_kelly`)
+- **Tahmin blogu (+4n) yalniz P tablosundan (Faz 9 P4):** rota `TrainingRequest.prediction_table=<run_id>` ->
+  `pit_table.env_prediction_features` uc blogun her (gun, sembol) hucresini doldurur (env'in kendi varsayilani eksik
+  hucrede yonu -1 yapar). Kayitta `config.prediction_table` (kimlik + SHA): DT ve DTF farkli yapilandirma.
+- **Her egitim IKI test kaydi yazar (M8 secim kurali):** `selection_rule='argmax_validation'` ve `'last_checkpoint'`
+  (`paired_trial_id`, `same_policy`); ikisi de N'ye sayilir. Milestone 0' kosumlari `scripts/run_milestone0.py`
+  (dondurulmus protokol JSON'u, `docs/development/milestone0-protocol.md`).
 
 ## Sembol evreni ve train/test bolmesi (ONEMLI)
 - Gozlem uzayi sembol sayisina bagli: `1 + n + 5n + 5n`. 5 sembol -> 56,
