@@ -394,6 +394,8 @@ class PredictionEvaluator:
 
         Sharpe'dan farklı olarak pozitif volatilite cezalandirilmaz.
         > 1.0 = kabul edilebilir, > 2.0 = iyi.
+        Faz 9 D/A8: getiri tarihsiz geldigi icin varsayilan rf = 0 (sortino_rf0 anlaminda);
+        A8 serisiyle fazla getiri icin evaluation/baselines.metrics ya da risk_free_series.
         """
         r = np.asarray(returns, dtype=float)
         r = r[np.isfinite(r)]

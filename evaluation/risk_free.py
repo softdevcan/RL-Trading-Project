@@ -25,10 +25,13 @@ uygulanmasidir:  rf_t = (1 + R_{t-1}/100) ** (gun_t / 365) - 1.
 TL para piyasasi ACT/365 kuralini izler; hafta sonu ve tatil getirisi bir
 sonraki seansa yazilir.
 
-ESKI CAGIRANLAR BAGLANMADI: reward_functions'in 0,15'i egitilmis RL
-modellerinin oduludur (davranis dondurma, Faz 10 §3.2.1); model_analysis ve
-evaluator panoda gorunen sayilari degistirir ve sonuc dosyalarinda tarih
-yok. Baglama D paketi (raporlama) / Milestone 0' ile yapilir.
+ESKI CAGIRANLAR (Faz 9 D, 2026-11-15): 0,02 sabitleri kaldirildi —
+`ModelAnalyzer.calculate_advanced_metrics(return_dates=)` bu seriyi okur, tarih
+yoksa rf = 0 ve `risk_free_source` acik; eski benchmark/rapor betikleri tarihsiz
+oldugundan rf0 etiketli. Tez baseline'lari `evaluation/baselines.py` (A8 fazla
+getiri). reward_functions'in 0,15'i egitilmis RL modellerinin oduludur ve eski
+ortam sadik Ansari replikasyonu olarak KALIR (beyan; nakit faizi karariyla ayni
+gerekce, Faz 9 §9.23); yeni ortamda odul ve nakit bu seriyle (Faz 10 §3.2.1, G2).
 """
 
 from __future__ import annotations
