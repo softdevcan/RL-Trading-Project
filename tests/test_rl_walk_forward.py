@@ -230,7 +230,7 @@ def fold_digests(raw_or_panel, price_norm, *, is_panel=False, start="2016-01-04"
 
 
 def run_route(panel, *, seed=11, total=1024, spec="r1-test", fold="t", price_norm="stats",
-              risk_free=const_risk_free):
+              risk_free=const_risk_free, prediction_table=None):
     """_run_training_inner'i sentetik panelle kostur (SB3 ciktisi yutulur)."""
     import data.data_fetcher as dfm
     from app.api.routes import trading as tr
@@ -240,7 +240,7 @@ def run_route(panel, *, seed=11, total=1024, spec="r1-test", fold="t", price_nor
     state = tr._empty_training_state()
     req = TrainingRequest(algorithm="A2C", phase=1, total_timesteps=total,
                           initial_balance=100_000, seed=seed, split_spec=spec, fold=fold,
-                          price_norm=price_norm)
+                          price_norm=price_norm, prediction_table=prediction_table)
     with patched(dfm.DataFetcher, "load_data",
                  lambda self, filename="raw_stock_data.csv": panel.copy()), \
             patched(rl_folds, "load_risk_free", risk_free), \
@@ -661,6 +661,80 @@ def main():
         run_route(panel, total=256, price_norm="stats")
     check("mutasyon: HPO ADX'i yeniden hesaplamazsa egitim izi ayrisir (yakalanir)",
           first_digest(m_rec, "train") != first_digest(r_rec, "train"))
+
+    # ------------------------------------------------------------------ P4
+    print("\nP4 — rota P tablosuyla (Milestone 0' DTF): uc blok dolu, gozlem +4n, kayitta tablo SHA'si")
+    from prediction import pit_table as pit
+    pdir = os.path.join(os.environ["RESULTS_DIR"], "predictions_pit")
+    os.makedirs(pdir, exist_ok=True)
+    days = session_dates(panel)
+    syms_p = sorted(set(panel.index.get_level_values("symbol")))
+    rng_p = np.random.default_rng(21)
+    rows = [{"date": d, "symbol": s, "p_up_cal": float(rng_p.uniform(0.3, 0.7)),
+             "pred_logret": float(rng_p.normal(0, 0.01)),
+             **{c: float(rng_p.normal(0, 0.01)) for c in ("ret_xgboost", "ret_lightgbm", "ret_catboost")},
+             "meta_ok": True, "mask_reason": "ok"} for d in days for s in syms_p]
+    ptab = pd.DataFrame(rows)
+    ptab.loc[ptab.index[:len(syms_p)], ["meta_ok", "mask_reason"]] = [False, "insufficient_history"]
+    ptab.to_parquet(os.path.join(pdir, "p4test.parquet"), index=False)
+    with recording_envs() as p_rec:
+        s_p, t_p, _ = run_route(panel, total=256, prediction_table="p4test")
+    with recording_envs() as d_rec:
+        s_d, t_d, _ = run_route(panel, total=256)
+    feats = {r: kw.get("prediction_features") for r, _df, kw in p_rec}
+    cover = all(feats.get(r) is not None
+                and set(str(x)[:10] for x in pd.to_datetime(df.index.get_level_values("date"))) <= set(feats[r])
+                for r, df, _kw in p_rec)
+    check("DTF rota kosumu tamamlandi; train/val/test ortamlarinin her gunu adaptorle dolu",
+          s_p.get("state") == "completed" and {r for r, _, _ in p_rec} >= {"train", "val", "test"} and cover,
+          str(s_p.get("error")))
+    from env.trading_env import TradingEnv
+    dim = lambda rec: next(TradingEnv(df, **kw).observation_space.shape[0] for r, df, kw in rec if r == "train")
+    n_sym = len(syms_p)
+    check("gozlem boyutu DTF = DT + 4n (durum uzayi yapisi ayni, tahmin blogu ekli)",
+          dim(p_rec) == dim(d_rec) + 4 * n_sym, f"{dim(p_rec)} vs {dim(d_rec)}")
+    with open(os.path.join(pdir, "p4test.parquet"), "rb") as fh:
+        psha = hashlib.sha256(fh.read()).hexdigest()
+    pt = (t_p or {}).get("config", {}).get("prediction_table") or {}
+    check("deneme kaydi: DTF'de tablo kimligi + SHA-256 + esleme; DT'de None (farkli yapilandirma)",
+          pt.get("run_id") == "p4test" and pt.get("sha256") == psha and pt.get("mapping")
+          and (t_d or {}).get("config", {}).get("prediction_table") is None, str(pt))
+    first = str(days[0])[:10]
+    check("maskeli hucre env'e notr gider (yon 0,5; env varsayilani -1'e dusmez)",
+          all(feats[r].get(first, {}).get(syms_p[0]) in (None, pit.ENV_PRED_NEUTRAL) for r in feats))
+    from evaluation.trial_registry import load_trials
+    allt = load_trials(directory=os.environ["RESULTS_DIR"], exclude_tags=())
+    pair = [t for t in allt if (t.get("extra") or {}).get("paired_trial_id") == (t_p or {}).get("trial_id")]
+    lt = pair[0] if pair else {}
+    same = (lt.get("extra") or {}).get("same_policy")
+    check("M8 secim kurali: ayni egitimden ikinci test kaydi (last_checkpoint), ana kayda bagli, ayni tohum/kat",
+          len(pair) == 1 and lt["config"].get("selection_rule") == "last_checkpoint"
+          and t_p["config"].get("selection_rule") == "argmax_validation"
+          and lt.get("seed") == t_p.get("seed") and lt.get("fold") == t_p.get("fold"),
+          f"{len(pair)} {lt.get('config', {}).get('selection_rule')}")
+    from evaluation.trial_registry import load_returns
+    r_last = load_returns({**lt, "_dir": os.environ["RESULTS_DIR"]}) if lt else None
+    r_main = load_returns({**t_p, "_dir": os.environ["RESULTS_DIR"]}) if t_p else None
+    check("son nokta kaydi: getiri serisi ana kayitla ayni tarihlerde; same_policy ise getiriler AYNI",
+          r_last is not None and len(r_last) == len(r_main) > 0 and r_last.index.equals(r_main.index)
+          and (not same or np.allclose(r_last.to_numpy(), r_main.to_numpy())), f"same_policy={same}")
+    by_id = {t["trial_id"]: t for t in allt}
+    diff_pairs = [(by_id[(t.get("extra") or {})["paired_trial_id"]], t) for t in allt
+                  if (t.get("extra") or {}).get("same_policy") is False
+                  and (t.get("extra") or {}).get("paired_trial_id") in by_id]
+    ok_diff = bool(diff_pairs) and all(
+        load_returns(m).index.equals(load_returns(l).index)
+        and not np.allclose(load_returns(m).to_numpy(), load_returns(l).to_numpy())
+        for m, l in diff_pairs)
+    check("secilen nokta son degilse son model AYRICA kosulur: ayni test gunleri, farkli getiri "
+          "(bu dosyanin onceki rota kosularindan)", ok_diff, f"farkli politikali cift {len(diff_pairs)}")
+    try:
+        from app.schemas.trading import TrainingRequest as _TR
+        _TR(prediction_table="../disari")
+        bad_id = False
+    except Exception:
+        bad_id = True
+    check("sema: P tablosu kimligi yol ayirici tasiyamaz", bad_id)
 
     # ------------------------------------------------------------------ F
     print("\nF — AST bekcisi")

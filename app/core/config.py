@@ -31,6 +31,13 @@ class Settings(BaseSettings):
 
     # External API Keys
     EVDS_API_KEY: str = ""
+    # KAP VYK API (MKK; Faz 9 E1). Okuyan `data/kap_api.py` (ortamdan); burada tanimli olmalari
+    # sart: pydantic-settings .env'deki bilinmeyen anahtari reddeder ve uygulama hic acilmaz.
+    KAP_API_KEY: str = ""
+    KAP_API_SECRET: str = ""
+    KAP_API_TOKEN: str = ""   # eski ad (KAP_API_KEY yoksa anahtar olarak okunur)
+    KAP_API_BASE: str = ""
+    KAP_AUTH: str = ""
 
     # Directory paths (#27)
     MODELS_DIR: str = "models"

@@ -1,0 +1,41 @@
+{
+ "protocol_id": "m0p-v1",
+ "status": "TASLAK — kapanis kapisi (hakem-2) ve kullanici onayindan sonra dondurulur; dondurulunca bu dosya degismez (kosum betigi SHA'sini deftere baglar)",
+ "doc": "docs/development/milestone0-protocol.md",
+ "factors": {
+  "algorithm": ["PPO", "A2C", "TD3"],
+  "reward": ["simple", "psr_ema_level", "psr_differential"],
+  "price_norm": ["stats", "causal"],
+  "prediction": ["DT", "DTF"]
+ },
+ "reward_levels": {
+  "simple": {"phase": 1, "source": "Ansari uyarlamasi basit odul (reward-definition.md §3)"},
+  "psr_ema_level": {"phase": 2, "sharpe_term": "ema_level", "source": "K4; eski Sharpe seviyesi"},
+  "psr_differential": {"phase": 2, "sharpe_term": "differential", "source": "K4; Moody & Saffell 2001 D_t (G1)"}
+ },
+ "prediction_levels": {
+  "DT": {"table": null},
+  "DTF": {"table": "pit_v1_seed42", "table_sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9", "mapping": "P4 v1 (plan §9.32)"}
+ },
+ "fixed": {
+  "split_spec": "wf-v1",
+  "initial_balance": 1000000,
+  "commission_rate": 0.001,
+  "max_shares_per_trade": 100,
+  "validation_overhead": 0.15
+ },
+ "stages": {
+  "prescreen": {
+   "folds": ["2022", "2023", "2024", "2025", "2026"],
+   "seeds": [101, 202, 303],
+   "total_timesteps": 200000,
+   "selection": "yalniz dogrulama: secilen kontrol noktasinin dogrulama fazla getiri Sharpe'i, kat x tohum medyani; test metrikleri secime GIRMEZ. 2021 kati (okunmamis tek pencere) on elemede KOSULMAZ"
+  },
+  "final": {
+   "folds": ["2021", "2022", "2023", "2024", "2025", "2026"],
+   "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010],
+   "total_timesteps": 200000,
+   "factor_override": "on eleme budama kuralinin ciktisi (milestone0-protocol.md §5); ayri dondurulmus dosya protocol-v1-final.json, kural mekanik"
+  }
+ }
+}
