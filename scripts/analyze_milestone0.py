@@ -70,8 +70,12 @@ def count_n(dirs):
     return len(seen), seen
 
 
+def norm_dir(d: str) -> str:
+    return os.path.normcase(os.path.abspath(d))
+
+
 def last_checkpoint_record(cell: dict, by_dir: dict) -> dict:
-    recs = [t for t in by_dir[cell['results_dir']]
+    recs = [t for t in by_dir.get(norm_dir(cell['results_dir']), [])
             if (t.get('config') or {}).get('selection_rule') == 'last_checkpoint'
             and (t.get('extra') or {}).get('paired_trial_id') == cell['trial_id']]
     if len(recs) != 1:
@@ -124,7 +128,8 @@ def contrast(per_fold, algos, a_pred: str, b_pred: str, folds, margin_annual=Non
         if not a.index.equals(b.index):
             raise SystemExit(f'{al}: {a_pred} ve {b_pred} tarihleri farkli')
         pairs.append((a.to_numpy(), b.to_numpy()))
-        rhos[al] = float(np.corrcoef(a, b)[0, 1])
+        ok = np.isfinite(a.to_numpy()) & np.isfinite(b.to_numpy())  # testle ayni maske
+        rhos[al] = float(np.corrcoef(a.to_numpy()[ok], b.to_numpy()[ok])[0, 1])
     res = sharpe_diff_hac_pooled(pairs, margin=None if margin_annual is None else margin_annual / ANN)
     se_a = res['se'] * ANN
     out = {
@@ -148,8 +153,10 @@ def q3_reading(q2: dict, pc: dict, alpha: float) -> str:
     if equiv and detected:
         return "Q2: esdegerlik (TOST) ve ayni pencerede PC060 farki tespit edildi -> 'tahmin katki vermez' yazilabilir."
     if not detected:
-        return ("Q2 bos; PC060 farki da tespit edilmedi -> 'bu boru hatti ve bu gucle AUC 0,60'lik bir sinyal bile "
-                "aktarilamadi'. P tablosu hakkinda bir sey soylenmez.")
+        eq = ('esdegerlik TOST ile gosterildi' if equiv else 'esdegerlik gosterilemedi')
+        return (f"Q2 bos ({eq}); PC060 farki da tespit edilmedi -> 'bu boru hatti ve bu gucle AUC 0,60'lik bir sinyal "
+                "bile aktarilamadi'. P tablosu hakkinda bir sey soylenmez; 'tahmin katki vermez' YAZILMAZ "
+                "(positive_control_rule'un ikinci kosulu yok).")
     return ("Q2 bos ve esdegerlik gosterilemedi; PC060 farki tespit edildi -> 'bu gucle tespit edilmedi (MDE = x)'; "
             "'tahmin katki vermez' YAZILMAZ (TOST basarisiz).")
 
@@ -170,9 +177,7 @@ def analyze(protocol_path: str, mroot: str, results_root: str, rf_fn) -> dict:
     n_trials, allrec = count_n(dirs)
     by_dir = {}
     for t in allrec.values():
-        by_dir.setdefault(t['_dir'], []).append(t)
-    for c in cells.values():
-        by_dir.setdefault(c['results_dir'], [])
+        by_dir.setdefault(norm_dir(t['_dir']), []).append(t)
     _, per_fold = series_table(cells, by_dir, rf_fn)
     inf = p['inference']
     algos = p['factors']['algorithm']
@@ -196,6 +201,8 @@ def analyze(protocol_path: str, mroot: str, results_root: str, rf_fn) -> dict:
         },
         'required_footnotes': {'exposure_note': p['exposure_note'], 'table': inf['result_table_footnote']},
         'cannot_claim': inf['cannot_claim'],
+        'notes': ["Her katin ilk seansinda risksiz faiz tanimsiz (evaluation.risk_free.per_period_rate ilk seans NaN); "
+                  "o gun test, rho ve MDE'den ortak maskeyle dusulur (2021: 248 -> 247 gun)."],
     }
 
 
