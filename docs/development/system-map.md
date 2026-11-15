@@ -153,6 +153,7 @@ flowchart TB
     M67["M6/M7 rejim, yorum"]:::planned
     M8["M8 ön kayıt"]:::planned
     FINAL["Nihai koşumlar"]:::planned
+    K27["K27 pano: ajan türü seçimi<br/>+ karşılaştırma görünümü"]:::planned
   end
 
   subgraph TEZ["Tez"]
@@ -166,6 +167,7 @@ flowchart TB
   B5 --> K0K4
   M1 --> M2
   FIN --> M2 --> M34 --> M5 --> M67 --> M8 --> FINAL
+  M2 --> K27
   T1 --> T4
   FINAL --> T4
   K0K4 --> T4
@@ -189,6 +191,7 @@ flowchart TB
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | planlı (K9 kararlı) | Faz 10 plan §4 S1, K9 | BenchMARL/TorchRL önce, ayrı `venv-marl/`; Windows, bütçe |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
+| K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
 | Y30 SHAP ucu, Y31 altın birimi | açık (ürün) | `prediction/CLAUDE.md` | Tez sonucu değil |
 | Tez Milestone 1 (literatür) | kısmen | [roadmap.md](roadmap.md) Milestone 1 | Dört 2026 tam metni, YÖK taraması |
