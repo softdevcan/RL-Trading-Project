@@ -5,8 +5,8 @@ makale calismasi (Ansari vd. 2024 replikasyonu -> Faz 10 MARL). Tamamlanan fazla
 2 (tahmin sistemi), 3 (uretim iyilestirmeleri), 6 (performans), 7 (kimlik + cok kullanici),
 8 (UI/UX), **9 (arastirma gecerliligi; kapandi 2026-11-15)** — durum ve olcumler
 `docs/development/phase-9-research-validity-plan.md` §9 (son alt bolum en guncel). **Siradaki: Milestone 0'**
-(protokol DONDURULDU `docs/development/milestone0-protocol.md`, etiket `m0-protocol-v1`; golden K1 yenilemesi + kosumlar
-`scripts/run_milestone0.py`; protokol JSON/belgesi DEGISTIRILMEZ, yeni surum m0p-v2). Faz 10 plani
+(protokol **m0p-v2** DONDURULDU `docs/development/milestone0-protocol-v2.md`, etiket `m0-protocol-v2`; v1 kosulmadan
+birakildi; golden K1 yenilendi, v2.0.0; kosumlar `scripts/run_milestone0.py`; protokol JSON/belgesi DEGISTIRILMEZ, yeni surum m0p-v3). Faz 10 plani
 `docs/development/phase-10-marl-plan.md`. Dokuman indeksi `docs/README.md`.
 **Sistem haritasi** `docs/development/system-map.md`: bir bilesenin ya da asamanin DURUMUNU degistiren PR
 ayni PR'da haritayi da gunceller (dugum sinifi + durum tablosu + 'Son guncelleme' satiri).
@@ -17,10 +17,11 @@ Kullanici hangi dilde yazarsa o dilde yanit ver.
 - Sunucu: `python run_server.py` -> http://localhost:8000 (pano `/dash/`, API `/api/*`)
 - Testler bagimsiz betik: `python tests/<ad>.py` (pytest degil). Hangi test neyi denetler ve
   beklenen kontrol sayilari: `tests/CLAUDE.md`. Bir degisiklikten sonra o alanin testini oradan bul.
-- **Tahmin golden'i (`tests/test_prediction_regression.py`) BILINEN NEDENLE KIRMIZI** (B11 DL
-  hizalamasi, Faz 9 §9.18; K1 secenek 1). Milestone 0' ile bir kez yenilenir — o zamana kadar
-  `--update` YAPMA ve golden'i baska bir degisikligin kaniti sayma.
+- **Tahmin golden'i (`tests/test_prediction_regression.py`) YESIL** — K1 geregi 2026-11-15'te bir kez CPU'da
+  yenilendi (v2.0.0, Faz 9 §9.36). Test kendini CPU'ya sabitler (GPU sonucu farkli); kirmizi = gercek davranis
+  degisikligi. Bilincli bir davranis degisikliginde yenile, nedenini plana yaz; `--update --gpu` reddedilir.
 - `env/` = proje kodu (Gymnasium ortami). `venv/` = sanal ortam; okuma, degistirme.
+  `venv-marl/` = Faz 10 M1 cerceve spike'i icin AYRI ortam (K9; BenchMARL/TorchRL); uretim kodu ona bagimli olmaz.
 - **Surum ve yayin:** tek kaynak `app/__init__.py` (`__version__`, SemVer: paket = MINOR). main korumali
   (yalniz PR). Birlesmeden sonra tag + `gh release --generate-notes`: `docs/development/versioning.md`.
 

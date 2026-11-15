@@ -24,6 +24,12 @@ import json
 import os
 import sys
 
+# Golden CPU'da uretilir ve CPU'da denetlenir (Faz 9 §9.36; C1: bit-eslik yalniz CPU'da). Olcum 2026-11-15:
+# CPU'da iki kosu bit-es (test_mape 166,7641); GPU kendi icinde sabit ama CPU'dan farkli (162,3193) -> GPU'da
+# denetlemek golden'i makineye bagli yapar. Torch yuklenmeden ONCE ayarlanmali. Bilincli GPU kiyasi: --gpu.
+if '--gpu' not in sys.argv:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import warnings
@@ -168,10 +174,16 @@ def _compare(golden: dict, current: dict) -> list:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--update', action='store_true', help='Altın-dosyayı yeniden üret')
+    ap.add_argument('--gpu', action='store_true', help='GPU ile kos (golden CPU; yalniz bilincli kiyas)')
     args = ap.parse_args()
+    if args.update and args.gpu:
+        print("[REGRESYON] --update --gpu reddedildi: golden yalniz CPU'da uretilir (§9.36)")
+        return 2
 
     print("[REGRESYON] Snapshot üretiliyor (5-model ensemble, seed sabit)...")
     current = _compute_snapshot()
+    import torch
+    current['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"  Modeller: {current['ensemble']['models_trained']}")
     print(f"  Feature: {current['feature']['n_rows']}x{current['feature']['n_features']}")
     print(f"  Test MAPE: {current['ensemble']['test_mape']} | "

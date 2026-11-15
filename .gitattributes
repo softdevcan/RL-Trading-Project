@@ -5,3 +5,4 @@ data/universe/*.json -text
 docs/development/measurements/**/*.json -text
 docs/development/milestone0/** -text
 docs/development/milestone0-protocol.md -text
+docs/development/milestone0-protocol-v2.md -text

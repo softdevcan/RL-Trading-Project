@@ -47,8 +47,8 @@
 - Sortino Ratio, Calmar Ratio, Deflated Sharpe Ratio (Bailey & Lopez de Prado), Turnover
 
 ## Davranis dondurma ve golden
-- Golden: `tests/test_prediction_regression.py`. **B11'den beri bilinen nedenle kirmizi** (Faz 9 §9.18,
-  K1 secenek 1); Milestone 0' ile bir kez yenilenir — o zamana kadar `--update` yapma, golden'i kanit sayma.
+- Golden: `tests/test_prediction_regression.py`. **YESIL:** K1 geregi 2026-11-15'te bir kez CPU'da yenilendi (Faz 9 §9.36,
+  test_mape 166,7641, yon UP). Test CPU'ya sabit: CPU iki kosu bit-es, GPU kendi icinde sabit ama farkli (162,3193).
 - **DL perf knob'lari (Faz 6) varsayilan KAPALI (opt-in)**: tam hatta RNG sirasini kaydirip golden'i
   degistiriyorlar (GPU-preload, TFT gruplanmis-VSN, AMP olculup reddedildi). Sifirdan yeniden egitimde
   acilir, golden o donanimda yenilenir. Ayrinti `docs/development/phase-6-backend-performance.md`.

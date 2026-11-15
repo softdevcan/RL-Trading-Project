@@ -327,10 +327,11 @@
       "xgboost"
     ],
     "n_models": 5,
-    "test_mape": 139.4194,
-    "test_dir_acc": 55.29,
+    "test_mape": 166.7641,
+    "test_dir_acc": 57.65,
     "predicted_direction": "UP",
-    "predicted_change_pct": 0.45,
+    "predicted_change_pct": 0.21,
     "n_models_predict": 5
-  }
+  },
+  "device": "cpu"
 }

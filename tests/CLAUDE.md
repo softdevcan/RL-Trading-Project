@@ -28,9 +28,8 @@ python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni 
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC + CV deney dizini (20 kontrol)
-python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma (GPU'da rebaseline: --update)
-                                           # !! B11'den beri BILINEN NEDENLE KIRMIZI (DL hizalamasi, K1 secenek 1);
-                                           #    Milestone 0' ile bir kez yenilenir — o zamana kadar --update YAPMA
+python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma; CPU'ya sabit (~1 dk), YESIL (K1 2026-11-15
+                                           #    CPU'da yenilendi, §9.36). Bilincli degisiklikte --update (CPU); --gpu yalniz kiyas
 python tests/test_tft_fast_vsn.py          # Faz 6: gruplanmis-VSN esdegerlik (12 kontrol)
 python tests/test_train_batch_parallel.py  # Faz 6: batch paralellik + izolasyon (18 kontrol)
 python tests/test_manifest_workspace.py    # Faz 6: manifest calisma alani cozumleme (13 kontrol)

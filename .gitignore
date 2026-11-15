@@ -22,6 +22,7 @@ wheels/
 
 # Virtual Environment (but NOT our env/ trading environment folder!)
 venv/
+venv-marl/
 
 # Environment variables
 .env
