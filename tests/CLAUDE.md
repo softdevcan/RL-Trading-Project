@@ -88,10 +88,10 @@ python tests/test_reward_differential.py   # Faz 9/G1: Moody-Saffell D_t — den
                                            #          denklem 16 sonlu fark, fazla getiri, isinma, 2 mutasyon; varsayilan
                                            #          'ema_level' main'deki reward_functions.py ile bit-es; nakitte taban; env + hpo_reward_mismatch tam odul tanimi (22)
 python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etiketi — B0 kesme degismezligi (sentetik +
-                                           #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet (13, ag yok)
+                                           #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet; kayan tercil + USD kolu B0, episodes_min20 (17, ag yok)
 python tests/test_calibration.py           # Faz 9/F1-F4: ECE (15 kutu) ve Brier elle, sicaklik T~3 bulur; ensemble
                                            #          legacy/calibrated, p_up_raw+p_up_cal, fiyat ayni, kaydet/yukle, test
-                                           #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu (15, ~1 dk)
+                                           #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu; AUC/BSS bilgi kapisi (18, ~1 dk)
 python tests/test_rl_walk_forward.py       # Faz 9/R1: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit (90, < 1 dk)

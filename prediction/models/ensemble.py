@@ -556,9 +556,11 @@ class StackingEnsemble:
 
         # Test: eski yolun kalibrasyonu ve bas-fiyat catisma orani (her iki modda; F3, Y4)
         p_leg, conflict_leg, _, Lt = self._legacy_p_up(test_preds, heads_t, ens_pred_test, close_t)
+        # BSS referansi: meta bolumunun (testten ONCE) taban orani, arindirilan son h satir haric
+        base_ref = float(y_m_all[:max(len(y_m_all) - h, 1)].mean())
         out: Dict[str, Any] = {
-            'n_bins': cal.N_BINS, 'horizon_purge': h,
-            'legacy': {**cal.summary(p_leg, y_t_all[-Lt:]),
+            'n_bins': cal.N_BINS, 'horizon_purge': h, 'base_rate_ref': base_ref,
+            'legacy': {**cal.summary(p_leg, y_t_all[-Lt:], base_rate=base_ref),
                        'head_vs_price_conflict_rate': float(np.mean(conflict_leg)),
                        'has_direction_heads': bool(heads_t)},
         }
@@ -592,12 +594,20 @@ class StackingEnsemble:
         p_temp = cal.apply_temperature(z_t, T)
         p_iso = iso.predict(p_raw)
         up_price_t = self._ret_of(np.asarray(ens_pred_test)[-Lt2:], close_t[-Lt2:]) > 0
+        at_bound = bool(T >= 0.99 * 20.0 or T <= 0.05 / 0.99)
+        s_temp = cal.summary(p_temp, yt, base_rate=base_ref)
+        info = cal.informative(s_temp, at_bound)
         out['calibrated'] = {
             'temperature': T,
             # T arama sinirinda: en iyi NLL p -> 0,5 (bilgisiz) yonunde; "kalibre" guven sabite yakin
-            'temperature_at_bound': bool(T >= 0.99 * 20.0 or T <= 0.05 / 0.99),
-            'raw': cal.summary(p_raw, yt), 'temperature_scaled': cal.summary(p_temp, yt),
-            'isotonic_compare': cal.summary(p_iso, yt, with_bins=False),
+            'temperature_at_bound': at_bound,
+            # hakem-finans I2 #1: 'kalibre' sifati yalniz bu kapi gecilirse (T sinirda degil,
+            # BSS > 0, AUC GA'si 0,5'i dislar); aksi halde "sicaklik olcekli, ayirt edici degil"
+            'informative': info,
+            'label': 'kalibre (ayirt edici)' if info else 'sicaklik olcekli, ayirt edici degil',
+            'raw': cal.summary(p_raw, yt, base_rate=base_ref), 'temperature_scaled': s_temp,
+            'isotonic_compare': cal.summary(p_iso, yt, with_bins=False, base_rate=base_ref,
+                                            ci=False),
             # F1: fiyat tahmininin yonu ile p'nin yonu catisiyor mu (ayri bayrak)
             'price_vs_p_conflict_rate': float(np.mean((p_temp >= 0.5) != up_price_t)),
         }
@@ -605,7 +615,8 @@ class StackingEnsemble:
             self.direction_model = {
                 'features': keys, 'mean': mu.tolist(), 'scale': sd.tolist(),
                 'coef': clf.coef_[0].tolist(), 'intercept': float(clf.intercept_[0]),
-                'temperature': T, 'fit_on': 'OOF meta bolumu ilk yari (%60 modelleri)',
+                'temperature': T, 'informative': info,
+                'fit_on': 'OOF meta bolumu ilk yari (%60 modelleri)',
                 'calibrated_on': 'OOF meta bolumu ikinci yari',
             }
         logger.info(f"  [KALIBRASYON] T={T:.3f} test ECE ham {out['calibrated']['raw']['ece']:.4f} -> "
@@ -832,11 +843,18 @@ class StackingEnsemble:
                 p_raw = float(1 / (1 + np.exp(-z)))
                 p_cal = float(1 / (1 + np.exp(-z / dm['temperature'])))
                 direction_price = direction
-                direction = 'UP' if p_cal >= 0.5 else 'DOWN'
+                direction_p = 'UP' if p_cal >= 0.5 else 'DOWN'
+                info = bool(dm.get('informative', False))
+                # hakem-finans I2 #4: bilgisiz modelde (kapi gecilmedi) p ~ 0,5 ve yonu gurultuyle
+                # cevirirdi -> yon fiyat isaretinde kalir; guven p'den ama 'bilgisiz' isaretli
+                if info:
+                    direction = direction_p
                 confidence = round(max(p_cal, 1 - p_cal), 4)
                 calib_out.update({'p_up_raw': round(p_raw, 6), 'p_up_cal': round(p_cal, 6),
                                   'direction_price': direction_price,
-                                  'direction_conflict': direction_price != direction,
+                                  'direction_from': 'p_cal' if info else 'price (bilgisiz yon modeli)',
+                                  'confidence_informative': info,
+                                  'direction_conflict': direction_price != direction_p,
                                   'temperature': dm['temperature']})
 
         # Y29: hedef tarih verinin son seansindan (feature_date) h is gunu sonra; duvar saatinden

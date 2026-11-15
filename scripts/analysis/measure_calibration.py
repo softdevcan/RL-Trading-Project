@@ -28,6 +28,10 @@ sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
 
+KEYS = ('n', 'ece', 'ece_ci', 'brier', 'brier_skill', 'accuracy', 'accuracy_ci', 'auc', 'auc_ci',
+        'n_nonempty_bins')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--symbols', default='THYAO.IS,GARAN.IS,ASELS.IS')
@@ -61,14 +65,16 @@ def main():
             leg, cc = c.get('legacy', {}), c.get('calibrated') or {}
             row = {'n_rows': int(len(d)), 'seconds': round(time.time() - t0, 1),
                    'features': c.get('features'), 'n_fit': c.get('n_fit'), 'n_calib': c.get('n_calib'),
-                   'legacy': {k: leg.get(k) for k in ('n', 'ece', 'brier', 'accuracy', 'base_rate',
-                                                       'head_vs_price_conflict_rate', 'has_direction_heads')},
+                   'base_rate_ref': c.get('base_rate_ref'),
+                   'legacy': {k: leg.get(k) for k in KEYS + ('base_rate', 'head_vs_price_conflict_rate',
+                                                             'has_direction_heads')},
                    'calibrated': None if not cc else {
                        'temperature': cc['temperature'],
                        'temperature_at_bound': cc.get('temperature_at_bound'),
-                       'raw': {k: cc['raw'][k] for k in ('n', 'ece', 'brier', 'accuracy')},
-                       'temperature_scaled': {k: cc['temperature_scaled'][k] for k in ('n', 'ece', 'brier', 'accuracy')},
-                       'isotonic_compare': {k: cc['isotonic_compare'][k] for k in ('n', 'ece', 'brier', 'accuracy')},
+                       'informative': cc.get('informative'), 'label': cc.get('label'),
+                       'raw': {k: cc['raw'].get(k) for k in KEYS},
+                       'temperature_scaled': {k: cc['temperature_scaled'].get(k) for k in KEYS},
+                       'isotonic_compare': {k: cc['isotonic_compare'].get(k) for k in KEYS},
                        'price_vs_p_conflict_rate': cc['price_vs_p_conflict_rate']},
                    'skipped': c.get('skipped'), 'error': c.get('error')}
             out['symbols'][sym] = row

@@ -99,11 +99,80 @@ def fit_isotonic(p_up, y_up):
     return iso
 
 
-def summary(p_up, y_up, n_bins: int = N_BINS, with_bins: bool = True) -> Dict[str, object]:
+def auc(p_up, y_up) -> Optional[float]:
+    """Ayirt edicilik: ROC alani (Mann-Whitney U / (n+ n-)). Tek sinifta None."""
     p, y = _as_arrays(p_up, y_up)
+    pos, neg = p[y == 1], p[y == 0]
+    if len(pos) == 0 or len(neg) == 0:
+        return None
+    from scipy.stats import rankdata
+    r = rankdata(np.r_[pos, neg])
+    return float((r[:len(pos)].sum() - len(pos) * (len(pos) + 1) / 2) / (len(pos) * len(neg)))
+
+
+def brier_skill(p_up, y_up, base_rate: float) -> float:
+    """1 - Brier / Brier(sabit taban orani). Taban orani TEST DISINDAN (nokta-zamanli) verilir."""
+    p, y = _as_arrays(p_up, y_up)
+    ref = float(np.mean((base_rate - y) ** 2))
+    return float(1.0 - brier(p, y) / ref) if ref > 0 else float('nan')
+
+
+def block_bootstrap_ci(fn, p_up, y_up, block: int = 20, n_boot: int = 1000, seed: int = 0,
+                       alpha: float = 0.05):
+    """Hareketli blok bootstrap ile metrigin (1 - alpha) yuzdelik araligi (zaman bagimliligi).
+
+    Blok 20 gun bir tasarim varsayimi (hakem-finans I2 #2). None/NaN donduren tekrarlar atlanir.
+    """
+    p, y = _as_arrays(p_up, y_up)
+    n = len(p)
+    if n < 2 * block:
+        return None
+    rng = np.random.default_rng(seed)
+    k = int(np.ceil(n / block))
+    vals = []
+    for _ in range(n_boot):
+        starts = rng.integers(0, n - block + 1, size=k)
+        idx = (starts[:, None] + np.arange(block)[None, :]).ravel()[:n]
+        v = fn(p[idx], y[idx])
+        if v is not None and np.isfinite(v):
+            vals.append(v)
+    if len(vals) < n_boot // 2:
+        return None
+    return [float(np.quantile(vals, alpha / 2)), float(np.quantile(vals, 1 - alpha / 2))]
+
+
+def _accuracy(p, y):
+    return float(np.mean((p >= 0.5) == (y == 1)))
+
+
+def summary(p_up, y_up, n_bins: int = N_BINS, with_bins: bool = True,
+            base_rate: Optional[float] = None, ci: bool = True) -> Dict[str, object]:
+    """ECE, Brier, NLL, isabet, AUC; base_rate verilirse BSS; blok bootstrap GA'lari.
+
+    `n_nonempty_bins`: ikili durumda guven >= 0,5 oldugundan 15 kutunun en fazla ~8'i dolar,
+    p ~ 0,5'e cokunce 1-2 (hakem-finans I2 #3).
+    """
+    p, y = _as_arrays(p_up, y_up)
+    bins = reliability(p, y, n_bins)
     out: Dict[str, object] = {'n': int(len(p)), 'ece': ece(p, y, n_bins), 'brier': brier(p, y),
                               'nll': nll(p, y), 'base_rate': float(y.mean()),
-                              'accuracy': float(np.mean((p >= 0.5) == (y == 1)))}
+                              'accuracy': _accuracy(p, y), 'auc': auc(p, y),
+                              'n_nonempty_bins': int(sum(1 for b in bins if b['n']))}
+    if base_rate is not None:
+        out['base_rate_ref'] = float(base_rate)
+        out['brier_skill'] = brier_skill(p, y, base_rate)
+    if ci:
+        out['ece_ci'] = block_bootstrap_ci(lambda a, b: ece(a, b, n_bins), p, y)
+        out['accuracy_ci'] = block_bootstrap_ci(_accuracy, p, y)
+        out['auc_ci'] = block_bootstrap_ci(auc, p, y)
     if with_bins:
-        out['reliability'] = reliability(p, y, n_bins)
+        out['reliability'] = bins
     return out
+
+
+def informative(s: Dict[str, object], temperature_at_bound: bool = False) -> bool:
+    """'Kalibre' sifati kapisi (hakem-finans I2 #1): T sinirda degil, BSS > 0, AUC GA'si 0,5'i dislar."""
+    ci = s.get('auc_ci')
+    bss = s.get('brier_skill')
+    return bool(not temperature_at_bound and bss is not None and np.isfinite(bss) and bss > 0
+                and ci is not None and ci[0] > 0.5)

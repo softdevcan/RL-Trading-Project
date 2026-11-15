@@ -3,12 +3,12 @@
  "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
  "horizon": "daily",
  "start": "2013-06-01",
- "commit": "5db6f05",
+ "commit": "834a30d",
  "config": "tam ensemble (5 model), use_tats=False, yalniz fiyat ozellikleri, confidence_mode=calibrated",
  "symbols": {
   "THYAO.IS": {
    "n_rows": 3431,
-   "seconds": 189.2,
+   "seconds": 146.3,
    "features": [
     "dir_bilstm",
     "dir_tft",
@@ -20,44 +20,98 @@
    ],
    "n_fit": 313,
    "n_calib": 313,
+   "base_rate_ref": 0.5487804878048781,
    "legacy": {
     "n": 628,
-    "ece": 0.12515744454209587,
-    "brier": 0.2645658108157297,
-    "accuracy": 0.5159235668789809,
+    "ece": 0.08305729610050556,
+    "ece_ci": [
+     0.03981186304727846,
+     0.11891928139813003
+    ],
+    "brier": 0.25515984809340925,
+    "brier_skill": 0.0012788356448130145,
+    "accuracy": 0.47611464968152867,
+    "accuracy_ci": [
+     0.44263535031847134,
+     0.5191480891719745
+    ],
+    "auc": 0.4978919711597214,
+    "auc_ci": [
+     0.46091671678030144,
+     0.541069834890719
+    ],
+    "n_nonempty_bins": 2,
     "base_rate": 0.4681528662420382,
-    "head_vs_price_conflict_rate": 0.32802547770700635,
+    "head_vs_price_conflict_rate": 0.8455414012738853,
     "has_direction_heads": true
    },
    "calibrated": {
-    "temperature": 19.99988025665256,
+    "temperature": 19.999906021591812,
+    "temperature_at_bound": true,
+    "informative": false,
+    "label": "sicaklik olcekli, ayirt edici degil",
     "raw": {
      "n": 628,
-     "ece": 0.24132560381897708,
-     "brier": 0.31676935988551363,
-     "accuracy": 0.46656050955414013
+     "ece": 0.178593178630437,
+     "ece_ci": [
+      0.1274557338711459,
+      0.23065858660824984
+     ],
+     "brier": 0.293337888510724,
+     "brier_skill": -0.14815383279141203,
+     "accuracy": 0.46656050955414013,
+     "accuracy_ci": [
+      0.428343949044586,
+      0.5143312101910829
+     ],
+     "auc": 0.49656808831316956,
+     "auc_ci": [
+      0.44730733788730015,
+      0.5455324360993312
+     ],
+     "n_nonempty_bins": 7
     },
     "temperature_scaled": {
      "n": 628,
-     "ece": 0.04663863484090967,
-     "brier": 0.2534842498121289,
-     "accuracy": 0.46656050955414013
+     "ece": 0.04326548089614819,
+     "ece_ci": [
+      0.007722589963387383,
+      0.08245465021947009
+     ],
+     "brier": 0.25355829570590144,
+     "brier_skill": 0.0075474718631654,
+     "accuracy": 0.46656050955414013,
+     "accuracy_ci": [
+      0.428343949044586,
+      0.5143312101910829
+     ],
+     "auc": 0.49656808831316956,
+     "auc_ci": [
+      0.44730733788730015,
+      0.5455324360993312
+     ],
+     "n_nonempty_bins": 4
     },
     "isotonic_compare": {
      "n": 628,
-     "ece": 0.12004314203878146,
-     "brier": 0.29321730247519107,
-     "accuracy": 0.4681528662420382
+     "ece": 0.13017681189968947,
+     "ece_ci": null,
+     "brier": 0.304966679165478,
+     "brier_skill": -0.19367008242684447,
+     "accuracy": 0.4745222929936306,
+     "accuracy_ci": null,
+     "auc": 0.4876420628131492,
+     "auc_ci": null,
+     "n_nonempty_bins": 8
     },
-    "price_vs_p_conflict_rate": 0.6703821656050956,
-    "temperature_at_bound": true
+    "price_vs_p_conflict_rate": 0.15605095541401273
    },
    "skipped": null,
    "error": null
   },
   "GARAN.IS": {
    "n_rows": 3431,
-   "seconds": 196.8,
+   "seconds": 155.6,
    "features": [
     "dir_bilstm",
     "dir_tft",
@@ -69,44 +123,98 @@
    ],
    "n_fit": 313,
    "n_calib": 313,
+   "base_rate_ref": 0.5015243902439024,
    "legacy": {
     "n": 628,
-    "ece": 0.060203366361226196,
-    "brier": 0.2536769750657597,
+    "ece": 0.11068313744417421,
+    "ece_ci": [
+     0.07325573974781359,
+     0.1470330981341944
+    ],
+    "brier": 0.2630284190221957,
+    "brier_skill": -0.0520017536406685,
     "accuracy": 0.49363057324840764,
+    "accuracy_ci": [
+     0.4570063694267516,
+     0.5334792993630574
+    ],
+    "auc": 0.47621511397875643,
+    "auc_ci": [
+     0.42953814657069656,
+     0.5315415198038874
+    ],
+    "n_nonempty_bins": 3,
     "base_rate": 0.49203821656050956,
-    "head_vs_price_conflict_rate": 0.5334394904458599,
+    "head_vs_price_conflict_rate": 0.5302547770700637,
     "has_direction_heads": true
    },
    "calibrated": {
-    "temperature": 16.052256263276067,
+    "temperature": 3.6171227707083293,
+    "temperature_at_bound": false,
+    "informative": false,
+    "label": "sicaklik olcekli, ayirt edici degil",
     "raw": {
      "n": 628,
-     "ece": 0.06254982327584907,
-     "brier": 0.2544524568059062,
-     "accuracy": 0.5063694267515924
+     "ece": 0.07642574380930642,
+     "ece_ci": [
+      0.03760541028463933,
+      0.11789293658069709
+     ],
+     "brier": 0.2537777325572512,
+     "brier_skill": -0.015002944083590375,
+     "accuracy": 0.46656050955414013,
+     "accuracy_ci": [
+      0.4299363057324841,
+      0.5079617834394905
+     ],
+     "auc": 0.49250793844031204,
+     "auc_ci": [
+      0.4573141192186585,
+      0.5377502900236738
+     ],
+     "n_nonempty_bins": 5
     },
     "temperature_scaled": {
      "n": 628,
-     "ece": 0.0034588376477947547,
-     "brier": 0.2500764389311641,
-     "accuracy": 0.5063694267515924
+     "ece": 0.044995638586887134,
+     "ece_ci": [
+      0.008169678343496226,
+      0.08419660924874514
+     ],
+     "brier": 0.25049032222775663,
+     "brier_skill": -0.001854701606898379,
+     "accuracy": 0.46656050955414013,
+     "accuracy_ci": [
+      0.4299363057324841,
+      0.5079617834394905
+     ],
+     "auc": 0.49250793844031204,
+     "auc_ci": [
+      0.4573141192186585,
+      0.5377502900236738
+     ],
+     "n_nonempty_bins": 2
     },
     "isotonic_compare": {
      "n": 628,
-     "ece": 0.023496288067457252,
-     "brier": 0.2516203611647242,
-     "accuracy": 0.5238853503184714
+     "ece": 0.0917736806561571,
+     "ece_ci": null,
+     "brier": 0.2558646615053528,
+     "brier_skill": -0.02334977185713627,
+     "accuracy": 0.46178343949044587,
+     "accuracy_ci": null,
+     "auc": 0.4942833084781528,
+     "auc_ci": null,
+     "n_nonempty_bins": 2
     },
-    "price_vs_p_conflict_rate": 0.39490445859872614,
-    "temperature_at_bound": false
+    "price_vs_p_conflict_rate": 0.4251592356687898
    },
    "skipped": null,
    "error": null
   },
   "ASELS.IS": {
    "n_rows": 3431,
-   "seconds": 154.1,
+   "seconds": 155.1,
    "features": [
     "dir_bilstm",
     "dir_tft",
@@ -118,41 +226,94 @@
    ],
    "n_fit": 312,
    "n_calib": 312,
+   "base_rate_ref": 0.5198776758409785,
    "legacy": {
     "n": 626,
-    "ece": 0.021939391597581806,
-    "brier": 0.24972112927296333,
-    "accuracy": 0.5223642172523961,
+    "ece": 0.03839054011022704,
+    "ece_ci": [
+     0.013771783627760084,
+     0.08393099990230019
+    ],
+    "brier": 0.25099283241712395,
+    "brier_skill": -0.005191449023816075,
+    "accuracy": 0.5095846645367412,
+    "accuracy_ci": [
+     0.4712460063897764,
+     0.5511182108626198
+    ],
+    "auc": 0.5058969013163274,
+    "auc_ci": [
+     0.4587663374925546,
+     0.551492689667272
+    ],
+    "n_nonempty_bins": 2,
     "base_rate": 0.5175718849840255,
-    "head_vs_price_conflict_rate": 0.6150159744408946,
+    "head_vs_price_conflict_rate": 0.5910543130990416,
     "has_direction_heads": true
    },
    "calibrated": {
-    "temperature": 12.792390029230516,
+    "temperature": 2.1932665837382346,
+    "temperature_at_bound": false,
+    "informative": false,
+    "label": "sicaklik olcekli, ayirt edici degil",
     "raw": {
      "n": 626,
-     "ece": 0.08025844744683626,
-     "brier": 0.2542082701492173,
-     "accuracy": 0.4696485623003195
+     "ece": 0.02128598472465052,
+     "ece_ci": [
+      0.007499986655006244,
+      0.06181049298476944
+     ],
+     "brier": 0.2515582287788537,
+     "brier_skill": -0.007455782959756574,
+     "accuracy": 0.5239616613418531,
+     "accuracy_ci": [
+      0.4936102236421725,
+      0.560702875399361
+     ],
+     "auc": 0.5242212411086583,
+     "auc_ci": [
+      0.48666773352363996,
+      0.5642091639795465
+     ],
+     "n_nonempty_bins": 4
     },
     "temperature_scaled": {
      "n": 626,
-     "ece": 0.03367392517729184,
-     "brier": 0.2501382900998252,
-     "accuracy": 0.4696485623003195
+     "ece": 0.025432806124330156,
+     "ece_ci": [
+      0.006097206085853879,
+      0.06209914381671539
+     ],
+     "brier": 0.25003965162578184,
+     "brier_skill": -0.0013740922825744573,
+     "accuracy": 0.5239616613418531,
+     "accuracy_ci": [
+      0.4936102236421725,
+      0.560702875399361
+     ],
+     "auc": 0.5242212411086583,
+     "auc_ci": [
+      0.48666773352363996,
+      0.5642091639795465
+     ],
+     "n_nonempty_bins": 2
     },
     "isotonic_compare": {
      "n": 626,
-     "ece": 0.04957430192452304,
-     "brier": 0.2520684959272538,
-     "accuracy": 0.48881789137380194
+     "ece": 0.12643543369563334,
+     "ece_ci": null,
+     "brier": 0.28394416996919464,
+     "brier_skill": -0.13715698135500554,
+     "accuracy": 0.4952076677316294,
+     "accuracy_ci": null,
+     "auc": 0.5067042760199493,
+     "auc_ci": null,
+     "n_nonempty_bins": 7
     },
-    "price_vs_p_conflict_rate": 0.5702875399361023,
-    "temperature_at_bound": false
+    "price_vs_p_conflict_rate": 0.6054313099041534
    },
    "skipped": null,
    "error": null
   }
- },
- "note": "temperature_at_bound sonradan ayni kuralla (T >= 0,99 x 20) eklendi; sinirlar fit_temperature varsayilani (0,05..20)"
+ }
 }

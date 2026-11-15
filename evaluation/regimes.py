@@ -28,12 +28,33 @@ TREND_WINDOW = 200
 VOL_WINDOW = 60
 MIN_VOL_HISTORY = 252
 VOL_LEVELS = ('low', 'mid', 'high')
+MIN_EPISODE_DAYS = 20
+
+
+def usd_index(close_try: pd.Series, usdtry: pd.Series) -> pd.Series:
+    """Endeksin USD karsiligi: XU100_t / USDTRY_{t-1} (son kur gozlemi, t'den ONCE).
+
+    Tasarim varsayimi: Yahoo 'TRY=X' gunluk kapanisi BIST kapanisindan sonra olabilir (Faz 9
+    §9.4 #12, "ayni gun FX"); bu yuzden t gunu icin t'den kesin once biten son kur kullanilir.
+    """
+    c = pd.Series(close_try, dtype=float).sort_index()
+    fx = pd.Series(usdtry, dtype=float).sort_index().dropna()
+    pos = fx.index.searchsorted(c.index, side='left') - 1  # kesin < t
+    rate = np.where(pos >= 0, fx.to_numpy()[np.clip(pos, 0, None)], np.nan)
+    return pd.Series(c.to_numpy() / rate, index=c.index, name='close_usd').dropna()
 
 
 def regime_labels(close: pd.Series, trend_window: int = TREND_WINDOW,
                   vol_window: int = VOL_WINDOW,
-                  min_vol_history: int = MIN_VOL_HISTORY) -> pd.DataFrame:
-    """Gun basina rejim etiketi. Girdi: tarih indeksli endeks kapanisi."""
+                  min_vol_history: int = MIN_VOL_HISTORY,
+                  tercile: str = 'expanding', tercile_window: int = 1260) -> pd.DataFrame:
+    """Gun basina rejim etiketi. Girdi: tarih indeksli endeks kapanisi.
+
+    tercile: 'expanding' (birincil; <= t tum gecmis) ya da 'rolling' (son `tercile_window`
+    vol gozlemi, 1260 ~ 5 yil; duyarlilik kolu, hakem-finans I2 soru 2). Ikisi de nedensel.
+    """
+    if tercile not in ('expanding', 'rolling'):
+        raise ValueError(f"tercile 'expanding' ya da 'rolling': {tercile}")
     c = pd.Series(close, dtype=float).sort_index()
     if c.index.has_duplicates:
         raise ValueError("endeks serisinde tekrarlanan tarih")
@@ -46,8 +67,10 @@ def regime_labels(close: pd.Series, trend_window: int = TREND_WINDOW,
 
     logr = np.log(c).diff()
     vol = logr.rolling(vol_window, min_periods=vol_window).std() * np.sqrt(252)
-    q1 = vol.expanding(min_periods=min_vol_history).quantile(1 / 3)
-    q2 = vol.expanding(min_periods=min_vol_history).quantile(2 / 3)
+    win = (vol.expanding(min_periods=min_vol_history) if tercile == 'expanding'
+           else vol.rolling(tercile_window, min_periods=min_vol_history))
+    q1 = win.quantile(1 / 3)
+    q2 = win.quantile(2 / 3)
     level = pd.Series(np.where(vol <= q1, 'low', np.where(vol <= q2, 'mid', 'high')),
                       index=c.index, dtype=object)
     level[q1.isna() | vol.isna()] = np.nan
@@ -60,7 +83,12 @@ def regime_labels(close: pd.Series, trend_window: int = TREND_WINDOW,
 
 def regime_summary(labels: pd.DataFrame, column: str = 'regime',
                    start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, dict]:
-    """Rejim basina gun sayisi ve bagimsiz donem (ardisik blok) sayisi (M6: raporlanir)."""
+    """Rejim basina gun sayisi ve donem (ardisik blok) sayisi (M6: raporlanir).
+
+    `episodes` her ardisik blogu sayar; SMA200 cevresinde cirpinan etiket bunu sisirir.
+    `episodes_min20`: en az MIN_EPISODE_DAYS gun suren bloklar (hakem-finans I2 #5). Bloklar
+    bagimsiz DEGIL; M6 cikariminda blok bootstrap kullanilir.
+    """
     lab = labels[column]
     if start is not None:
         lab = lab[lab.index >= pd.Timestamp(start)]
@@ -69,8 +97,11 @@ def regime_summary(labels: pd.DataFrame, column: str = 'regime',
     out: Dict[str, dict] = {}
     known = lab.dropna()
     run_id = (known != known.shift()).cumsum()
+    run_len = run_id.map(run_id.value_counts())
     for name, grp in known.groupby(known):
-        out[str(name)] = {'days': int(len(grp)), 'episodes': int(run_id[grp.index].nunique())}
+        ids = run_id[grp.index]
+        out[str(name)] = {'days': int(len(grp)), 'episodes': int(ids.nunique()),
+                          'episodes_min20': int(ids[run_len[grp.index] >= MIN_EPISODE_DAYS].nunique())}
     out['_unlabeled_days'] = int(lab.isna().sum())
     out['_total_days'] = int(len(lab))
     return out
@@ -107,6 +138,25 @@ def by_regime(dates, labels: pd.DataFrame, metric: Callable[[np.ndarray], float]
         out[name] = {'n_samples': int(m.sum()), 'value': float(metric(*[a[m] for a in arrs]))}
     out['_unlabeled'] = int(lab.isna().sum())
     return out
+
+
+# Kullanici karari (2026-11-15; hakem-finans I2 soru 1): BIRINCIL etiket USD bazli XU100,
+# genisleyen tercil. Nominal TL ve 5 yillik kayan tercil duyarlilik kollari (M8 on kaydi).
+PRIMARY = 'usd_expanding'
+
+
+def load_primary_labels(**kw) -> pd.DataFrame:
+    """H4/M6 icin birincil rejim etiketi (M8 on kaydi): XU100 / USDTRY_{t-1}, genisleyen tercil."""
+    return load_xu100_usd_labels(**kw)
+
+
+def load_xu100_usd_labels(**kw) -> pd.DataFrame:
+    """Duyarlilik kolu: XU100 / USDTRY_{t-1} (`data/macro/usdtry.csv`)."""
+    from data.index_fetcher import (DEFAULT_INDEX_CSV, DEFAULT_USDTRY_CSV, FX_JUMP_LIMIT,
+                                    load_index_close)
+    usd = usd_index(load_index_close(DEFAULT_INDEX_CSV),
+                    load_index_close(DEFAULT_USDTRY_CSV, jump_limit=FX_JUMP_LIMIT))
+    return regime_labels(usd, **kw)
 
 
 def load_xu100_labels(path: Optional[str] = None, **kw) -> pd.DataFrame:

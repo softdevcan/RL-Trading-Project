@@ -154,8 +154,28 @@ toy = pd.DataFrame({'regime': ['a', 'a', 'b', 'a', np.nan, 'b', 'b']},
                    index=pd.bdate_range("2020-01-01", periods=7))
 sm = rg.regime_summary(toy)
 check("gun ve donem: a 3 gun / 2 donem, b 3 gun / 2 donem, etiketsiz 1",
-      sm['a'] == {'days': 3, 'episodes': 2} and sm['b'] == {'days': 3, 'episodes': 2}
+      sm['a'] == {'days': 3, 'episodes': 2, 'episodes_min20': 0}
+      and sm['b'] == {'days': 3, 'episodes': 2, 'episodes_min20': 0}
       and sm['_unlabeled_days'] == 1, str(sm))
+
+check("en az 20 gunluk donem sayisi (hakem-finans I2 #5): kisa bloklar sayilmaz",
+      all(v['episodes_min20'] == 0 for k, v in sm.items() if not k.startswith('_'))
+      and rg.regime_summary(lab)['bull_mid']['episodes_min20'] <= rg.regime_summary(lab)['bull_mid']['episodes'])
+
+print("\n[6b] Duyarlilik kollari: kayan tercil ve USD bazli endeks (I2 soru 1-2)")
+bad = cutoff_invariant(lambda c: rg.regime_labels(c, tercile='rolling', tercile_window=400), close, TS)
+check("kayan tercil de B0 bit-es; genisleyenden farkli etiket uretiyor",
+      not bad and not same(rg.regime_labels(close), rg.regime_labels(close, tercile='rolling',
+                                                                      tercile_window=400)),
+      f"kirilan t: {bad}")
+fx = pd.Series(5 * np.exp(np.cumsum(np.random.default_rng(4).normal(0.0004, 0.006, len(close)))),
+               index=close.index)
+u = rg.usd_index(close, fx)
+check("USD endeksi = XU100_t / USDTRY_{t-1} (ayni gun kuru kullanilmaz); ilk gun kursuz -> dusuyor",
+      abs(u.iloc[0] - close.iloc[1] / fx.iloc[0]) < 1e-12 and u.index[0] == close.index[1]
+      and abs(u.loc[close.index[500]] - close.iloc[500] / fx.iloc[499]) < 1e-12)
+bad = cutoff_invariant(lambda c: rg.regime_labels(rg.usd_index(c, fx)), close, TS)
+check("USD kolunda B0 bit-es", not bad, f"kirilan t: {bad}")
 
 print("\n[7] Gercek XU100")
 path = os.path.join('data', 'macro', 'xu100.csv')

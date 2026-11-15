@@ -25,6 +25,10 @@
   kullan (Faz 9 §9.17).
 - **Rejim etiketi** yalniz `evaluation/regimes.py`'den (B6): XU100 200g trend x 60g vol GENISLEYEN
   tercil, <= t (B0 testli). Gerceklesen getiriye kosullu "rejim" YAZMA (Y3; eski fonksiyon kaldirildi).
-  Seri `data/macro/xu100.csv` (`python -m data.index_fetcher`). Etiket NOMINAL TL'de — enflasyon
-  trendi 'bull'a iter (acik soru, plan §9.24).
+  **Birincil = `load_primary_labels()` = USD bazli XU100 (XU100 / USDTRY_{t-1}), genisleyen tercil**
+  (kullanici karari 2026-11-15, M8 on kaydi); nominal TL ve 5y kayan tercil duyarlilik kollari. Nominal
+  trend enflasyonla 'bull'a kayar (2022'de hic bear yok). Seriler `data/macro/xu100.csv`, `usdtry.csv`
+  (`python -m data.index_fetcher`). `episodes` bagimsiz donem DEGIL; `episodes_min20` + blok bootstrap.
+- **Kalibrasyon sifati**: `informative` kapisi (T sinirda degil, BSS > 0, AUC GA'si 0,5'i dislar) gecilmeden
+  "kalibre" yazma; "sicaklik olcekli, ayirt edici degil" (F, I2). GPU'da DL tek kosu sayilari oynak (C1).
 - Test: `python tests/test_eval_stats.py` (51), `python tests/test_rl_reproducibility.py` (43)

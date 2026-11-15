@@ -47,7 +47,8 @@ def check_index_series(close: pd.Series, jump_limit: float = JUMP_LIMIT) -> None
 
 
 def fetch_index_close(symbol: str = 'XU100.IS', start: str = '2005-01-01',
-                      path: str = DEFAULT_INDEX_CSV, save: bool = True) -> pd.Series:
+                      path: str = DEFAULT_INDEX_CSV, save: bool = True,
+                      jump_limit: float = JUMP_LIMIT) -> pd.Series:
     """yfinance'ten gunluk kapanis (auto_adjust=False; endekste temettu duzeltmesi yok)."""
     import yfinance as yf
     df = yf.download(symbol, start=start, progress=False, auto_adjust=False)
@@ -61,7 +62,7 @@ def fetch_index_close(symbol: str = 'XU100.IS', start: str = '2005-01-01',
     close = close[~close.index.duplicated(keep='last')].sort_index()
     close.name = 'close'
     close.index.name = 'date'
-    check_index_series(close)
+    check_index_series(close, jump_limit)
     if save:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         close.to_csv(path, lineterminator='\n')
@@ -71,21 +72,28 @@ def fetch_index_close(symbol: str = 'XU100.IS', start: str = '2005-01-01',
                 'yfinance_version': getattr(yf, '__version__', None),
                 'fetched_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
                 'range': [str(close.index[0].date()), str(close.index[-1].date())],
-                'n': int(len(close)), 'sha256': sha, 'jump_limit': JUMP_LIMIT}
+                'n': int(len(close)), 'sha256': sha, 'jump_limit': jump_limit}
         with open(os.path.splitext(path)[0] + '_source.json', 'w', encoding='utf-8') as fh:
             json.dump(meta, fh, indent=1)
     return close
 
 
-def load_index_close(path: str = DEFAULT_INDEX_CSV) -> pd.Series:
+DEFAULT_USDTRY_CSV = os.path.join('data', 'macro', 'usdtry.csv')
+FX_JUMP_LIMIT = 0.35  # kur: Aralik 2021 gibi gercek gunluk hareketler %15'i asiyor
+
+
+def load_index_close(path: str = DEFAULT_INDEX_CSV, jump_limit: float = JUMP_LIMIT) -> pd.Series:
     """Kaydedilmis endeks kapanisi. Dosya yoksa FileNotFoundError (sessiz yedek yok)."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"{path} yok: `python -m data.index_fetcher` ile cek")
     s = pd.read_csv(path, parse_dates=['date'], index_col='date')['close'].astype(float)
-    check_index_series(s)
+    check_index_series(s, jump_limit)
     return s
 
 
 if __name__ == '__main__':
     s = fetch_index_close()
     print(f"XU100: {s.index[0].date()}..{s.index[-1].date()} ({len(s)} gun) -> {DEFAULT_INDEX_CSV}")
+    # B6 duyarlilik kolu (USD bazli trend; hakem-finans I2 soru 1)
+    f = fetch_index_close('TRY=X', path=DEFAULT_USDTRY_CSV, jump_limit=FX_JUMP_LIMIT)
+    print(f"USDTRY: {f.index[0].date()}..{f.index[-1].date()} ({len(f)} gun) -> {DEFAULT_USDTRY_CSV}")

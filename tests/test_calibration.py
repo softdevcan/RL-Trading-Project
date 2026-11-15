@@ -77,6 +77,21 @@ check("fit_temperature asiri guveni bulur (|T - 3| < 0,3) ve ECE'yi kalibre duze
       abs(T - 3) < 0.3 and e_fix < 0.02, f"T={T:.3f}, ECE {e_fix:.4f}")
 
 
+print("\n[A3] Ayirt edicilik ve bilgi kapisi (hakem-finans I2 #1, #2)")
+check("AUC: tam ayrim 1, ters 0", cal.auc([0.9, 0.8, 0.2, 0.1], [1, 1, 0, 0]) == 1.0
+      and cal.auc([0.1, 0.2, 0.8, 0.9], [1, 1, 0, 0]) == 0.0)
+sz = cal.summary(cal.sigmoid(z), y_true, base_rate=float(y_true.mean()), with_bins=False)
+flat = cal.summary(np.full(z.size, 0.5), y_true, base_rate=float(y_true.mean()), with_bins=False)
+print(f"    bilgili: AUC {sz['auc']:.3f} GA {sz['auc_ci']}, BSS {sz['brier_skill']:.3f}; "
+      f"sabit 0,5: AUC {flat['auc']}, BSS {flat['brier_skill']:.4f}, dolu kutu {flat['n_nonempty_bins']}")
+check("bilgili tahminci kapiyi gecer (AUC GA > 0,5, BSS > 0); sabit 0,5 gecmez; T sinirdaysa gecmez",
+      cal.informative(sz) and not cal.informative(flat) and not cal.informative(sz, temperature_at_bound=True))
+check("sabit taban orani tahmincisinin BSS'i 0; ECE GA'si ve dolu kutu sayisi raporlaniyor",
+      abs(cal.brier_skill(np.full(len(y_true), y_true.mean()), y_true, float(y_true.mean()))) < 1e-12
+      and sz['ece_ci'] is not None and sz['ece_ci'][0] <= sz['ece'] <= sz['ece_ci'][1]
+      and flat['n_nonempty_bins'] == 1)
+
+
 def raises(fn):
     try:
         fn()
@@ -163,7 +178,9 @@ try:
           cl.direction_model is not None and cc.get("temperature", 0) > 0
           and any(k.startswith("dir_") for k in cl.direction_model["features"])
           and any(k.startswith("ret_") for k in cl.direction_model["features"])
-          and {"raw", "temperature_scaled", "isotonic_compare", "price_vs_p_conflict_rate"} <= set(cc),
+          and {"raw", "temperature_scaled", "isotonic_compare", "price_vs_p_conflict_rate",
+               "informative", "label"} <= set(cc)
+          and {"auc", "auc_ci", "brier_skill", "ece_ci"} <= set(cc["temperature_scaled"]),
           str(tm_cl.get("calibration"))[:300])
     n_meta = int(len(leg.feature_engineer.build_features(df, "SYN")) * 0.8) - \
         int(len(leg.feature_engineer.build_features(df, "SYN")) * 0.6)
@@ -175,7 +192,8 @@ try:
     ok = {"p_up_raw", "p_up_cal", "direction_price", "direction_conflict"} <= set(c)
     check("[4] predict_next: p_up_raw ve p_up_cal birlikte (F4); yon = 1[p_cal >= 0,5], "
           "guven = max(p, 1-p) (F1); fiyat yonu ayri + catisma bayragi",
-          ok and pc["predicted_direction"] == ("UP" if c["p_up_cal"] >= 0.5 else "DOWN")
+          ok and pc["predicted_direction"] == (("UP" if c["p_up_cal"] >= 0.5 else "DOWN")
+                                              if c["confidence_informative"] else c["direction_price"])
           and abs(pc["confidence"] - round(max(c["p_up_cal"], 1 - c["p_up_cal"]), 4)) < 1e-12
           and c["direction_conflict"] == (c["direction_price"] != pc["predicted_direction"]), str(c))
     check("[3] fiyat tahmini iki modda AYNI (yalniz yon/guven degisir)",

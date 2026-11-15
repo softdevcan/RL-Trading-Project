@@ -265,6 +265,11 @@ Nihai koşumlardan önce `docs/thesis/analysis-plan.md` dondurulur:
 - **Tohum:** ön eleme 3–5, nihai ≥10; tohumlar önceden listelenir.
 - **Durma kuralı:** ön elemeden sonra nihaiye taşınan yapılandırma sayısı önceden sabitlenir (Bailey & LdP 2014 "when should we stop testing").
 - **Model seçim kuralı (R1; kullanıcı kararı 2026-11-14):** kontrol noktası seçiminin değeri önceden tanımlı bir etkenle ölçülür: argmax (doğrulamada fazla getiri Sharpe'ı) ↔ son nokta. Her kural kendi kaydıyla testte bir kez okunur ve N'ye sayılır. Negatif fazla getiri rejiminde seçim metriğinin davranışı (Faz 9 §9.12) bu karşılaştırmada raporlanır; yüksek faizli doğrulama yıllarında negatif ortalama olağan, `picks_agree` raporlanır.
+- **Rejim etiketi (H4/M6; kullanıcı kararı 2026-11-15, hakem-finans İ2):**
+  - Birincil: USD bazlı XU100 (XU100_t / USDTRY_{t−1}), 200 günlük trend × 60 günlük vol, genişleyen tercil (`evaluation.regimes.load_primary_labels`).
+  - Duyarlılık kolları: nominal TL ve 5 yıllık kayan tercil. Kollar arası uyuşma raporlanır.
+  - Çıkarım katlar birleştirilerek, blok bootstrap ile yapılır. Ardışık bloklar bağımsız dönem sayılmaz (`episodes_min20`).
+- **Güven kolları (M5/H3; hakem-finans İ2):** "kalibre" sıfatı ve M5'in güven kolları yalnız bilgi kapısını geçen sembolde kullanılır. Kapı: T sınırda değil, BSS > 0 (taban oranı test dışından), AUC'nin blok bootstrap GA'sı 0,5'i dışlıyor. Kapı P tablosunda 30 hissede ölçülür; geçmeyen sembol "sıcaklık ölçekli, ayırt edici değil" diye raporlanır.
 - **Ödül terimi kıyası (K4; hakem-rl İ1, 2026-11-15):**
   - `ema_level` ↔ `differential` aynı w₂ ile tek etkenli değil. Terimin ödüldeki oynaklığı gerçek panelde ~5,6 kat farklı (§9.23). Kol başına küçük bir w₂ ızgarası ya da ölçek eşitlemesi burada sabitlenir; ızgara N'ye sayılır.
   - Ön eleme "G2 öncesi, r_f sabit" etiketini taşır.
@@ -1645,6 +1650,53 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - Mutasyon (eski davranış, tohumsuz) iki kurulumda farklı öneriler veriyor.
 - Dış sampler korunuyor.
 
+### 9.27 İ2 — hakem-finans (F + B6): Küçük revizyon; bilgi kapısı, rejim birincil tanımı (2026-11-15)
+
+**İnceleme:** hakem-finans (sonnet), ~37 bin token, 7 araç, ~67 sn; test koşmadı, paketteki JSON'ları kullandı. **Karar: Küçük revizyon** (2 BÜYÜK, 3 KÜÇÜK).
+
+| # | Önem | Bulgu | Yanıt |
+|---|---|---|---|
+| 1 | BÜYÜK | ECE tek başına "kalibre" kanıtı değil. Sıcaklık sonrası Brier 0,25 = sabit 0,5 tahmincisi; ayırt edicilik yok | **Kabul, düzeltildi.** `evaluation/calibration.py`'ye AUC, BSS (taban oranı test dışından: meta bölümü, arındırılmış) ve `informative` kapısı eklendi. Kapı: T sınırda değil, BSS > 0, AUC GA'sı 0,5'i dışlıyor. Ensemble bloğunda `informative` ve `label` alanları; geçmezse etiket "sıcaklık ölçekli, ayırt edici değil". M8'e yazıldı |
+| 2 | BÜYÜK | ECE farkları gürültü düzeyinde; isabet ile taban oranı karşılaştırması testsiz | **Kabul, düzeltildi.** ECE, isabet ve AUC için hareketli blok bootstrap GA (blok 20 gün, 1.000 tekrar; tasarım varsayımı) |
+| 3 | KÜÇÜK | "15 kutu" yanıltıcı; etkin kutu ~7–8, çöküşte 1–2 | **Kabul.** `n_nonempty_bins` raporlanıyor (gerçek veride 2–4) |
+| 4 | KÜÇÜK | p ≈ 0,5'e çökmüşken yön gürültüyle çevriliyor | **Kabul, düzeltildi.** Kapıyı geçmeyen modelde `predict_next` yönü fiyat işaretinde bırakıyor (`direction_from`, `confidence_informative`) |
+| 5 | KÜÇÜK | "Bağımsız dönem" ardışık blok sayısı; çırpınma şişiriyor | **Kabul.** `episodes_min20` eklendi (nominal: bear_low 32 → 3, bull_high 22 → 5); M8'de blok bootstrap |
+
+**Soru 1 → kullanıcı kararı:** H4/M6 için birincil rejim etiketi **USD bazlı XU100** (XU100_t / USDTRY_{t−1}; kur t'den kesin önce, §9.4 #12 "aynı gün FX" temkini). Nominal TL ve 5 yıllık kayan tercil duyarlılık kolları. Seri `data/macro/usdtry.csv` (`TRY=X`, 2005..; gerçek günlük hareketler %15'i aştığı için kur eşiği 0,35; en büyükleri 2018-08-13 +%22,8 ve 2021-12-21 −%18,9).
+
+**Ölçüm** ([regimes.json](measurements/phase9-b6/regimes.json) → `arms`; RL penceresi 2013-06..):
+
+| Kol | bull / bear gün | Rejim uyuşması (nominal-genişleyen ile) | 2022 testinde bear günü |
+|---|---|---|---|
+| nominal, genişleyen | 2.348 / 1.016 | 1,00 | 0 |
+| nominal, kayan 5 yıl | 2.348 / 1.016 | 0,71 | 0 |
+| **USD, genişleyen (birincil)** | **1.497 / 1.867** | 0,57 | **116** |
+| USD, kayan 5 yıl | 1.497 / 1.867 | 0,44 | 116 |
+
+**Soru 2–5:** genişleyen tercil birincil, kayan 5 yıl duyarlılık (yukarıda). F etiketi nominal kalır; fazla getiri etiketi ve iki etiketin taban oranları P'de duyarlılık olarak. Y4 beyanı: eski faz 2 gözlemindeki `prediction_confidence` ile `predicted_direction` farklı kaynaklardan geliyor; tez metninde "güven" diye adlandırılmaz.
+
+**F ölçümü yeniden** (kapıyla; [calibration.json](measurements/phase9-f/calibration.json); aynı yapılandırma, ikinci GPU koşusu):
+
+| | THYAO | GARAN | ASELS |
+|---|---|---|---|
+| Eski yol ECE [GA] | 0,083 [0,040, 0,119] | 0,111 [0,073, 0,147] | 0,038 [0,014, 0,084] |
+| Eski yol AUC [GA] | 0,498 [0,461, 0,541] | 0,476 [0,430, 0,532] | 0,506 [0,459, 0,551] |
+| T (sınırda mı) | 20,0 (evet) | 3,62 | 2,19 |
+| Sıcaklık sonrası ECE [GA] | 0,043 [0,008, 0,082] | 0,045 [0,008, 0,084] | 0,025 [0,006, 0,062] |
+| Sıcaklık sonrası AUC [GA] / BSS | 0,497 [0,447, 0,546] / 0,008 | 0,493 [0,457, 0,538] / −0,002 | 0,524 [0,487, 0,564] / −0,001 |
+| Dolu kutu | 4 | 2 | 2 |
+| **Bilgi kapısı** | **geçmedi** | **geçmedi** | **geçmedi** |
+
+**Sonuçlar:**
+1. Üç hissede de yön bilgisi yok. AUC GA'larının hepsi 0,5'i içeriyor; §9.25'teki "kalibre güven ≈ 0,5" bulgusu kapıyla doğrulandı.
+2. **Koşudan koşuya oynaklık.** İlk koşuyla (§9.25) bu koşu aynı tohum ve yapılandırmayla belirgin farklı: GARAN'da T 16,05 → 3,62, THYAO'da eski ECE 0,125 → 0,083. GPU'da DL eğitimi belirlenimci değil (C1 açık maddesi, §9.22 beyan listesi). "Bilgisiz" hükmü iki koşuda aynı, ama tekil ECE/T sayıları tek koşudan raporlanmaz; P ve Milestone 0' çoklu tohum ister. §9.25 tablosu ilk koşunun kaydıdır.
+
+**Kabul:**
+- `test_calibration` **18/0**: AUC uçları, bilgili/sabit tahminci kapısı, BSS = 0 tabanı, ECE GA'sı, kapıya göre yön.
+- `test_regimes` **17/0**: kayan tercil ve USD kolu B0 bit-eş; USD = XU100_t / USDTRY_{t−1}; `episodes_min20`.
+
+**İkinci okuma:** BÜYÜK bulgular kodla kapatıldı; kademeli kurala göre ikinci okuma aşağıda.
+
 ---
 
 ## Versiyon geçmişi
@@ -1698,3 +1750,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.24, B6):** Y3'ün eski rejim metriği kaldırıldı; nedensel XU100 etiketi (200g trend × 60g vol genişleyen tercil), ayrı uzun endeks serisi (`data/index_fetcher.py`). `test_regimes` 13 (B0 sentetik + gerçek, 2 mutasyon). Açık soru: nominal TL trend enflasyonla bull'a kayıyor (İ2).
 - **2026-11-15 (§9.25, F1–F4):** `confidence_mode='calibrated'` (lojistik p(UP) + sıcaklık, OOF ikiye bölünmüş, arındırmalı; varsayılan `legacy`, fiyat tahmini aynı), `evaluation/calibration.py` (ECE 15 kutu, Brier), her eğitimde iki yolun test kalibrasyonu. `test_calibration` 15. Gerçek veride Y4 %33–62; yön isabeti taban oranında, T 12,8–20 (kalibre güven ≈ 0,5).
 - **2026-11-15 (§9.26):** HPO varsayılan TPE sampler'ı ayar tohumuyla (§9.11 bulgu 3 kapandı). `test_rl_reproducibility` 43.
+- **2026-11-15 (§9.27, İ2):** hakem-finans Küçük revizyon. Bilgi kapısı (AUC + BSS + T sınırı), blok bootstrap GA'ları, kapısız modelde yön fiyattan. Rejim birincil = USD bazlı XU100 (kullanıcı kararı; M8). Gerçek veride üç hissede kapı geçilmedi; GPU koşuları arasında sayılar oynak (C1). `test_calibration` 18, `test_regimes` 17.

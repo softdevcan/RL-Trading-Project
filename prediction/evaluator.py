@@ -559,7 +559,7 @@ class PredictionEvaluator:
                     (t - p) / np.where(t != 0, t, 1))) * 100), yt, yp),
                 'direction_accuracy': by_regime(dates, regime_labels, lambda t, p, c: float(np.mean(
                     (p > c) == (t > c)) * 100), yt, yp, cp),
-                'label': 'XU100 200g trend x 60g vol tercili (evaluation/regimes.py, B6)',
+                'label': 'verilen etiket (evaluation/regimes.py, B6; birincil: load_primary_labels = USD bazli XU100)',
             }
         backtest = PredictionEvaluator.backtest_simulation(y_true, y_pred, current_prices)
 
