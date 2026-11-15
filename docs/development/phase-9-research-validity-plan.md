@@ -1839,6 +1839,48 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 
 ---
 
+### 9.31 İ3 ikinci okuma (hakem-finans), kapı duyarlılıkları; kullanıcı kararları; E1 KAP API (2026-11-15, dal `feat/phase9-i3-fixes-e1-events`)
+
+**Bağlam.** PR #24 (§9.22–9.30) kullanıcı kararıyla ikinci okumadan önce birleşti (v1.13.0). İlk okumanın ajan bağlamı kaybolduğu için ikinci okuma yeni bir hakem-finans ajanıyla, §9.30 tablosu ve ölçüm JSON'larıyla yapıldı.
+
+**Karar: Küçük revizyon** (BÜYÜK yok). Duyarlılıklar `evaluate_gate(..., sensitivity=True)` ile ölçüldü; ana kapı alanları değişmez ([gate_v2_sensitivity.json](measurements/phase9-p/gate_v2_sensitivity.json), commit `e1081e3`, tablo SHA'sı `pit_v1.json` ile aynı).
+
+| # | Bulgu | Ölçülen | Sonuç |
+|---|---|---|---|
+| 1 | 20 seanslık tarih bloğu çapa bağımlılığını eksik yakalar; havuzlu GA dar olabilir | Havuzlu AUC GA: blok 20 [0,5037; 0,5175], blok 63 [0,5034; 0,5183], çapa kümesi (59 çapa) [0,5037; 0,5189]; p 0,004 / 0,002 / 0,002 | Kaygı sayıca doğrulanmadı; GA neredeyse aynı. Asıl duyarlılık #4'te |
+| 2 | Blok içi GA aynı bootstrap'la; "seviyeden geliyor" cümlesi fazla güçlü | Blok içi AUC 0,501; çapa kümesiyle GA [0,4952; 0,5068], p 0,40. Sembol başına blok içi AUC 0,460–0,538, medyan 0,499 | Cümle "tutarlıdır" düzeyine indirildi (aşağıda) |
+| 3 | "≳0,55 dışlanır" iyimser | Aile MDE: blok 20 0,543–0,590 (medyan 0,554), blok 63 0,536–0,599 (medyan 0,553); tek test medyanı 0,535 | "Tipik sembolde ≳0,55–0,56; bazı sembollerde 0,60'a kadar" |
+| 4 | Eşit kapanış DOWN sayılıyor; etkisi sınanmadı | Eşit kapanışlar (44.222 satır kalır) dışarıda: **havuzlu AUC 0,503 [0,496; 0,510], p 0,18**; blok içi 0,502 [0,498; 0,508], p 0,17. ODAS blok içi 0,464, iki taraflı p 0,002 | **§9.30'daki havuzlu "küçük ama anlamlı fark" eşit kapanış sayımına bağlı; eşitler dışarıda anlamlı değil.** ODAS sonucu eşitlerden kaynaklanmıyor |
+| 5 | ODAS p düzeltmesiz; T sınırda | Bonferroni (m = 30) p = 0,060; `T_at_bound_any` = true. İki taraflı p < 0,05: 3/30 sembol (beklenen ≈ 1,5); küme eşitlerle BIMAS/ODAS/SASA, eşitsiz AKBNK/ODAS/YKBNK | ODAS yalnız beyan; tek sembolde sınırda, küme kırılgan |
+| 6 | Baseline tablosunun tezdeki kullanımı sınırlanmalı | — | `baselines.py` beyanına: yanlılık yukarı; yalnız RL ile aynı dondurulmuş evrende kıyas; XU030 "kıyas değil" dipnotuyla |
+| 7 | F4–F8 yerinde | — | Ek iş yok |
+
+**Revize iddia (§9.30 "Revize iddia"nın yerine):** Bu özellik kümesiyle sembol ve çapa içinde sıralama bilgisi tespit edilmedi (blok içi havuzlu AUC 0,501; çapa kümesi bootstrap'ıyla p 0,40).
+- Havuzlu AUC'nin 0,5'ten küçük farkı (0,511) eşit kapanışlar DOWN sayılınca ortaya çıkıyor. Eşitler dışarıda bırakılınca 0,503 [0,496; 0,510] ve anlamlı değil. Çapalar arası seviye farkıyla tutarlı; tek kaynağı ayrıştırılmadı.
+- Tipik sembolde AUC ≳ 0,55–0,56'lık bir sinyal 30 sembollük ailede tespit edilebilirdi ve görülmedi; bazı sembollerde eşik 0,60'a kadar çıkıyor. Daha küçük sinyal dışlanamaz. SE hareketli blok bootstrap'tan; 63 seanslık blokla da aynı.
+- ODAS'ın ters sıralaması blok içinde ve eşitler dışarıda da duruyor (0,464). Bonferroni p 0,06, sıcaklık sınırda; yorumlanmaz.
+
+**Kabul:** `test_pit_table` **25/0**: çapa kümesi bootstrap'ı, sabit çapa seviyesinde 20'lik bloktan geniş GA veriyor (mekanizma), duyarlılık alanları var ve ana alanlar değişmiyor.
+
+**Kullanıcı kararları (2026-11-15):**
+- **Ad → kod eşlemesi onaylandı:** `data/universe/bist_name_map.csv`, 10 ad, birebir ünvan eşitliği. Kullanıcı denetimi kapandı.
+- **H3/M5 sinyali:** ana tasarım P v1 (3 GBM) ve pozitif kontrol kolu (§9.30 R2). Makro/çapraz özellik kolu 2018+ alt deneyi olarak kurulur (hakem-rl önerisi). Milestone 0' ön kaydına (M8) girer.
+
+**E1 — KAP VYK API (MKK) erişimi:**
+- İstemci [data/kap_api.py](../../data/kap_api.py): kimlik bilgisi yalnız `.env` (`KAP_API_KEY`, `KAP_API_SECRET`), HTTP Basic. Bu kip test geçidinde (`apigwdev.mkk.com.tr`) doğrulandı; `/auth/generateToken` (üretim) bu anahtarla "Proxy was not found" döndü.
+- Dakikada 6 çağrı. Ham yanıtlar `data/universe/sources/kap_api/` altında (gitignore), SHA-256 ile.
+- **Test geçidinin kapsamı ölçüldü:** en eski Borsa İstanbul (şirket kimliği 49) bildirimi #1091709, 02.01.2023 09:14. hakem-2'nin istediği 2017-06..2018-05 dönem içi olaylar ve açık uçlu OTKAR/ECILC/SKBNK aralıkları (2015–2018) **bu geçitte yok**. Üretim erişimi (belirteç + üretim adresi) kullanıcıda.
+- **Test geçidi yalnız 2023-01-03..2023-12-29'u kapsıyor.** Borsa İstanbul'un bu dönemde 2217 bildirimi var (`scripts/fetch_kap_disclosures.py`). Bunların 92'si `oda-11700` (Endeks Şirketlerinde Değişiklik), 14'ü `oda-13500` (BIST Pay Endeksleri).
+- 106 bildirimin ayrıntısı ve 4 çeyreklik PDF eki çekildi (`scripts/build_kap_index_events.py`). Ham HTML ve PDF'ler gitignore'da; tarama özeti SHA'larla [bist30_kap_scan.json](../../data/universe/bist30_kap_scan.json).
+- **Pozitif kontrol:** 2023Q2–2024Q1 çeyreklik duyurularının tarihleri Borsa İstanbul arşiviyle aynı (2023-03-16, 06-16, 09-21, 12-22). PDF ekindeki BIST 30 bloğu `bist30_changes.csv` kodlarını içeriyor; 2024Q1'in "değişiklik yok" kaydı da tutuyor (4/4). Mutasyon (yanlış kod, uydurulmuş değişiklik) uyumsuzluk veriyor.
+- **Sonuç:** 2023'te dönem içi XU030 olayı **0**. Hiçbir `oda-11700` bildiriminde XU030 satırı yok. Ham metinde "XU030/BIST 30" yalnız 4 çeyreklik duyuruda geçiyor (ayrıştırıcıdan bağımsız denetim). [bist30_kap_events.csv](../../data/universe/bist30_kap_events.csv) bu yüzden boş.
+- **Kapsam sınırı:** taranan türler yalnız `oda-11700` ve `oda-13500`. Diğer Borsa bildirimlerinde (ör. işlem sırası değişikliği, birleşme) XU030'a etki eden bir olay taranmadı; 2.111 ek çağrı, ~6 saat. Asıl açık aralıklar (2015–2018: OTKAR, ECILC, SKBNK; hakem-2'nin 2017-06..2018-05 dönemi) üretim erişimi gerektiriyor. Üretim belirteci (`generateToken`) ve adresi kullanıcıda.
+- Bulgular: ek yanıtı Java serileştirilmiş byte[] (`_unwrap_java_bytes`); HTML base64 ve UTF-8; olay tablosu 9 hücreli (TR 4 + EN 4 + simge). `test_universe` **36/0**.
+
+**İnceleme maliyeti:** hakem-finans (sonnet), ikinci okuma, yeni ajan: ~33 bin token, 7 araç çağrısı, ~0,9 dk.
+
+---
+
 ## Versiyon geçmişi
 
 - **2026-10-07:** İlk plan. 66 tam metin arşivlendi; 10 yeni bulgu (Y1–Y10) kod ve makaleyle doğrulandı; A–G geçerlilik paketleri, Makale 2 deney tasarımı, M1–M8 MARL kararları, 6 açık karar. **Kod değişikliği yok.**
@@ -1895,3 +1937,4 @@ Regresyon: `test_tats_labels` 43/0, `test_dl_alignment` 18/0, `test_prediction` 
 - **2026-11-15 (§9.28, P):** K11 v1 teyit edildi (3 GBM + lojistik meta). Nokta-zamanlı örneklem dışı tablo; meta ve sıcaklık yalnız geçmiş OOF'ta (K19/Y26 kapandı). 30 sembol / 60 çapa, RL penceresinde %97,6 dolu. Geliştirme penceresinde yön bilgisi yok (0/30, BH 0, havuzlu AUC 0,511). `test_pit_table` 21.
 - **2026-11-15 (§9.29, D):** 1/N aylık, al-tut, XU030; nominal / TÜFE-reel / USD; 0–50 bps ızgara. 0,02 sabitleri kaldırıldı; ödülün 0,15'i eski ortamda beyan, G2 yeni ortamda. `test_baselines` 20.
 - **2026-11-15 (§9.30, İ3):** hakem-finans Büyük (çıkarım katmanı), hakem-rl Küçük. Kapı v2: blok içi havuzlu AUC 0,501 (sıralama bilgisi tespit edilmedi), MDE aile 0,554. Reel/USD Sharpe aylık. M8'e: S-msg boş sonuç beyanı, pozitif kontrol kolu, P tohumları. hakem-finans ikinci okuması bekliyor.
+- **2026-11-15 (§9.31, İ3 ikinci okuma):** hakem-finans Küçük revizyon. Kapı duyarlılıkları (çapa kümesi ve 63 seans bootstrap, eşit kapanış dışı, Bonferroni, MDE dağılımı): havuzlu 0,511'in anlamlılığı eşit kapanış sayımına bağlı (eşitsiz 0,503, p 0,18); blok içi sonuç değişmedi. Ad → kod eşlemesi ve H3/M5 (P v1 + pozitif kontrol + 2018+ makro alt deneyi) kullanıcı kararı. KAP VYK API istemcisi; test geçidi yalnız 2023: dönem içi XU030 olayı 0, çeyreklik duyurular arşivle 4/4 uyumlu (2017–2018 yok). `test_pit_table` 25, `test_universe` 36.

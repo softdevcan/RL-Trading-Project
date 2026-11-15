@@ -29,7 +29,7 @@ borsapy/yf     → gold_fetcher.py       ─┘
   evrende <2 uyeli olanlar DIGER (8 grup). Ham KAP/Borsa sayfalari `data/universe/sources/` (gitignore).
 - Tarihsel uyelik (E1, suruyor): `scripts/build_membership.py` (index/nodes/fetch/parse/chain/exposure). `/node/<id>`
   301 ile kanonik slug'a yonlenir (slug tahmini gereksiz); 54/54 ceyrek -> `bist30_changes.csv`, eski bicim ad->kod
-  `bist_name_map.csv` (birebir unvan esitligi, onek YOK). `chain` ihlalde uyelik YAZMAZ (`--provisional`: GECICI;
+  `bist_name_map.csv` (birebir unvan esitligi, onek YOK; kullanici onayladi 2026-11-15). `chain` ihlalde uyelik YAZMAZ (`--provisional`: GECICI;
   meta `bist30_membership_meta.json` -> `unknown_intervals`: ihlal basina [d, payin SONRAKI kaydi), segment degil). `universe_mask(date, mode=)`:
   'strict' (varsayilan; bilinmeyen gun None — su an hep None), 'count_checked' (SEZGISEL, yalniz sayi denetimi), 'raw'.
   Tutarlilik dogruluk degil (donem ici takas sayiyi bozmaz). Duyurudaki `(*)` dipnotu = donem ici olay ADAYI
@@ -37,6 +37,12 @@ borsapy/yf     → gold_fetcher.py       ─┘
   `data/universe/bist30_anchor.json` = BUGUNKU BIST 30 (KAP XU030); panelin 6 hissesi bugun endekste degil.
   **Arama/WebFetch tablo ozetini kanit sayma** (HALKB 'alinan' okundu, ham tabloda yedek); yalniz ham tablodan.
   Borsa Istanbul duyuru URL'sinde slug zorunlu (yanlis slug 404); TR liste sayfasi statik, sayfalama JS.
+- **KAP VYK API (MKK, E1 donem ici olaylar):** `data/kap_api.py` — `.env` `KAP_API_KEY` + `KAP_API_SECRET`, HTTP Basic
+  (test gecidi `apigwdev.mkk.com.tr`'de dogrulandi; `generateToken` uretim icin). Dakikada 6 cagri (`MIN_INTERVAL` 10,5 sn).
+  Ham yanit `data/universe/sources/kap_api/` (gitignore). **Test gecidinde veri 2023-01-02'den basliyor** (2017-2018 yok).
+  Borsa Istanbul sirket kimligi 49. `/disclosures` 50'lik sayfa, ER005 = o indeksten sonra bildirim yok (hata degil).
+  Test gecidi YALNIZ 2023-01-03..2023-12-29. Olaylar `scripts/build_kap_index_events.py` -> `bist30_kap_events.csv` (2023'te 0)
+  + `bist30_kap_scan.json` (ceyreklik PDF capraz denetimi 4/4). HTML base64 UTF-8; ek Java byte[] sarmali (`_unwrap_java_bytes`).
 
 ## data_fetcher.py özellikleri
 - `fetch_stock_data()`: Retry (exponential backoff) + class-level cache + coverage check (%80)

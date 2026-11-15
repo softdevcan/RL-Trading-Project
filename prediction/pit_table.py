@@ -472,6 +472,22 @@ def _date_block_bootstrap(dates: np.ndarray, fn, n_boot: int = 500, block: int =
     return np.asarray(vals, dtype=np.float64)
 
 
+def _cluster_bootstrap(clusters: np.ndarray, fn, n_boot: int = 500, seed: int = 0):
+    """Kume (capa = model_version) bootstrap: capalar yerine koyarak orneklenir, bir capanin tum
+    sembol x gun satirlari birlikte gelir. Capa seviyesi 63 seans sabit oldugundan bagimsiz birim
+    capadir; 20 seanslik tarih blogu ayni capanin parcalarini bagimsiz sayar (hakem-finans I3-2 #1)."""
+    uc, inv = np.unique(clusters, return_inverse=True)
+    rows_of = [np.flatnonzero(inv == i) for i in range(len(uc))]
+    rng = np.random.default_rng(seed)
+    vals = []
+    for _ in range(n_boot):
+        pick = rng.integers(0, len(uc), size=len(uc))
+        v = fn(np.concatenate([rows_of[i] for i in pick]))
+        if v is not None and np.isfinite(v):
+            vals.append(v)
+    return np.asarray(vals, dtype=np.float64)
+
+
 def _p_one_two(vals: np.ndarray, null: float = 0.5):
     """(tek tarafli H0: metrik <= null, iki tarafli) yuzdelik bootstrap p-degerleri."""
     p_gt = float((1 + np.sum(vals <= null)) / (1 + len(vals)))
@@ -481,7 +497,7 @@ def _p_one_two(vals: np.ndarray, null: float = 0.5):
 
 def evaluate_gate(table: pd.DataFrame, labels: pd.DataFrame, window=DEV_WINDOW,
                   alpha: float = 0.05, n_boot: int = 1000, power: float = 0.8,
-                  pooled_boot: int = 500) -> dict:
+                  pooled_boot: int = 500, sensitivity: bool = False) -> dict:
     """Bilgi kapisi (sembol basina) + BH (30 sembol tek aile; hakem-finans I2 not 1) + guc (I3 #1-#2).
 
     BSS referansi satir basina `base_rate_asof` (capa anindaki uyum yarisi taban orani; test disi).
@@ -540,7 +556,11 @@ def evaluate_gate(table: pd.DataFrame, labels: pd.DataFrame, window=DEV_WINDOW,
                 'n_boot': int(len(vals))}
 
     ses = [v['auc_se_boot'] for v in per.values() if v.get('auc_se_boot') is not None]
+    sens = None
+    if sensitivity:
+        sens = _gate_sensitivity(t, per, grp, dates, pooled_boot, n_boot, z1, zm, z_pow, summ)
     return {'window': list(window), 'n_rows': int(len(t)), 'per_symbol': per, 'bh': bh,
+            'sensitivity': sens,
             'n_informative': int(sum(v.get('informative', False) for v in per.values())),
             'n_bh_reject': int(sum(r['reject'] for r in bh['results'].values())) if bh else 0,
             'expected_false_pass_one_sided_2_5pct': round(0.025 * len(pvals), 2),
@@ -554,6 +574,73 @@ def evaluate_gate(table: pd.DataFrame, labels: pd.DataFrame, window=DEV_WINDOW,
                        'tie_rate': float(t['tie'].mean()) if 'tie' in t else None},
             'note': ('havuzlu GA tarih blogu bootstrap (20 seans, ayni gunun sembolleri birlikte); '
                      'MDE = 0,5 + (z_{1-a} + z_guc) * SE_boot, a = alpha ya da alpha/m')}
+
+
+def _gate_sensitivity(t, per, grp, dates, pooled_boot, n_boot, z1, zm, z_pow, summ) -> dict:
+    """hakem-finans I3 ikinci okuma (#1-#5) duyarliliklari; ana kapi alanlarini degistirmez.
+
+    - havuzlu ve blok ici AUC: tarih blogu 63 seans (capa araligi) ve capa kumesi bootstrap'i;
+    - sembol basina SE ve MDE: 63 seanslik hareketli blokla; MDE ve blok ici AUC dagilimi (min/medyan/maks);
+    - esit kapanislar (tie) disarida birakilarak havuzlu, blok ici ve sembol basina blok ici AUC;
+    - Bonferroni (m = sembol sayisi) iki tarafli p.
+    """
+    from evaluation import calibration as cal
+    pool_p, pool_y = t['p_up_cal'].to_numpy(), t['y_up'].to_numpy()
+    clusters = t['model_version'].astype(str).to_numpy()
+    f_auc = lambda i: cal.auc(pool_p[i], pool_y[i])
+    f_wb = lambda i: _within_block_auc(pool_p[i], pool_y[i], grp[i])
+    pt_auc, pt_wb = cal.auc(pool_p, pool_y), _within_block_auc(pool_p, pool_y, grp)
+    out = {'pooled_block63': {'auc': summ(pt_auc, _date_block_bootstrap(dates, f_auc, pooled_boot, block=63)),
+                              'auc_within_block': summ(pt_wb, _date_block_bootstrap(dates, f_wb, pooled_boot,
+                                                                                    block=63))},
+           'pooled_anchor_cluster': {'auc': summ(pt_auc, _cluster_bootstrap(clusters, f_auc, pooled_boot)),
+                                     'auc_within_block': summ(pt_wb, _cluster_bootstrap(clusters, f_wb,
+                                                                                        pooled_boot)),
+                                     'n_clusters': int(len(np.unique(clusters)))}}
+
+    def dist(xs):
+        xs = [x for x in xs if x is not None]
+        return {'min': float(min(xs)), 'median': float(np.median(xs)), 'max': float(max(xs)),
+                'n': len(xs)} if xs else None
+
+    ok = {s: v for s, v in per.items() if 'auc' in v}
+    out['mde_family_block20'] = dist([v['mde_auc_family'] for v in ok.values()])
+    out['mde_single_block20'] = dist([v['mde_auc_single'] for v in ok.values()])
+    out['auc_within_block_per_symbol'] = dist([v['auc_within_block'] for v in ok.values()])
+    se63, bonf = {}, {}
+    m = len(ok)
+    for s, g in t.groupby('symbol'):
+        if s not in ok:
+            continue
+        vals = cal._block_bootstrap_vals(cal.auc, g['p_up_cal'].to_numpy(), g['y_up'].to_numpy(),
+                                         block=63, n_boot=n_boot)
+        se63[s] = None if vals is None else float(vals.std(ddof=1))
+        bonf[s] = min(1.0, m * ok[s]['p_two_sided']) if ok[s].get('p_two_sided') is not None else None
+    out['mde_family_block63'] = dist([0.5 + (zm + z_pow) * x for x in se63.values() if x is not None])
+    out['mde_single_block63'] = dist([0.5 + (z1 + z_pow) * x for x in se63.values() if x is not None])
+    out['p_two_sided_bonferroni'] = bonf
+    out['n_two_sided_p_lt_005'] = int(sum(v['p_two_sided'] < 0.05 for v in ok.values()))
+    if 'tie' in t:
+        nt = ~t['tie'].astype(bool).to_numpy()
+        tp, ty, tg = pool_p[nt], pool_y[nt], grp[nt]
+        per_nt = {}
+        for s in ok:
+            ms = nt & (t['symbol'].to_numpy() == s)
+            vals = cal._block_bootstrap_vals(cal.auc, pool_p[ms], pool_y[ms], n_boot=n_boot)
+            p1, p2 = _p_one_two(vals) if vals is not None else (None, None)
+            per_nt[s] = {'n': int(ms.sum()), 'auc': cal.auc(pool_p[ms], pool_y[ms]),
+                         'auc_within_block': _within_block_auc(pool_p[ms], pool_y[ms], grp[ms]),
+                         'p_two_sided': p2}
+        td = dates[nt]
+        out['ties_excluded'] = {
+            'n_rows': int(nt.sum()),
+            'pooled_auc': summ(cal.auc(tp, ty), _date_block_bootstrap(td, lambda i: cal.auc(tp[i], ty[i]),
+                                                                      pooled_boot)),
+            'pooled_auc_within_block': summ(_within_block_auc(tp, ty, tg),
+                                            _date_block_bootstrap(td, lambda i: _within_block_auc(
+                                                tp[i], ty[i], tg[i]), pooled_boot)),
+            'per_symbol': per_nt}
+    return out
 
 
 def write_table(table: pd.DataFrame, report: dict, run_id: Optional[str] = None,
