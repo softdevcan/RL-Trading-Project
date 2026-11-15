@@ -299,6 +299,28 @@ Vision §3.5'in F2 (RLlib) tavsiyesi bu yüzden spike sonucuna bağlanır (§6 K
 
 **Spike çıktısı:** seçim + gerekçe; 30 ajan × `attn` × 200K adım süre ölçümü; aynı tohumla iki CPU koşumunun eşitliği. Bu sonuçlarla vision §5.1 hesap tablosu ve §5.1'deki "≥10 tohum" bütçesi yeniden hesaplanır (vision §5.1 v0.2 notu bunu açık iş olarak bırakmıştı).
 
+#### 3.2.7 M1 spike sonucu (2026-11-16, dal `feat/phase10-m1-spike`)
+
+**Kapsam.** Yalnız 1. aday (BenchMARL 1.4.0 + TorchRL 0.7.2 + PettingZoo 1.24.3; `requirements-marl.txt`, ayrı `venv-marl/`, K9). Kod `scripts/spike_m1/`. Spike ortamı M2 ortamı değildir: 30 ajan, gerçek panel (2013-06..2020-12; 2021'e dokunmaz; SHA `7e17897a…`), softmax([0, z]) ağırlık, t+1 açılış yürütme, α·kᵢ + (1−α)·R. **Performans sayısı üretilmedi (S1).** Ölçüm JSON'ları `measurements/phase10-m1/`.
+
+| # | Ölçüt | Sonuç | Kanıt |
+|---|---|---|---|
+| 1 | Özel iletişim modülü | Geçti: `AttnComm` (paylaşımlı kodlayıcı → ajanlar arası çok başlı öz-dikkat → çıktı), BenchMARL `Model` arayüzüyle | `benchmarl_glue.py` |
+| 2 | Tohumla tekrar üretim | Geçti (CPU): aynı tohumla iki koşuda politika ağırlık özeti eşit, tam parti (6.000 adım, 45 mini-parti turu). GPU'da seri ve paralel toplama aynı özeti verdi; GPU'da aynı yapılandırmanın iki koşusu ayrıca **ölçülmedi** | `m1_cpu_repro.json`; `m1_gpu_attn*.json` |
+| 3 | Windows | Geçti (Windows 11, Python 3.12.5); Ray yok | tüm koşular |
+| 4 | RTX 4060 süresi (200K adıma ölçeklenmiş, 18K adımdan) | `attn` GPU eğitim 739 sn; `none` 669 sn; `attn` CPU 989 sn | `m1_gpu_attn.json`, `m1_gpu_none.json`, `m1_cpu_attn.json` |
+| 5 | Ajan ekseni tensör boyutu | Geçti: politika girdisi `[..., 30, F]`, iletişim tek ileri geçişte | `AttnComm._forward` |
+| 6 | Paralel ortam | Geçti: `parallel_collection` (10 ortam) Windows'ta çalıştı; `attn` GPU **391 sn / 200K** (seriye göre ~1,9 kat) | `m1_gpu_attn_par.json` |
+| 7 | torch CUDA çakışması | Yok: venv-marl torch 2.6.0+cu124 = ana venv | `requirements-marl.txt` |
+
+**Öneri (kullanıcı kararı):** yedi ölçütün yedisi 1. adayda geçtiği için RLlib (2. aday) denenmeden **BenchMARL + TorchRL seçilsin**; vision §3.5 F2 (RLlib) tavsiyesi buna göre güncellensin (§6 K9). Bütçe birimi: 30 ajan × `attn` × 200K adım ≈ 6,5 dk (GPU + paralel toplama); vision §5.1 tablosu bu birimle yeniden hesaplanacak.
+
+**M2 tasarımına girdiler (ölçüldü):**
+- **Nakit üst sınırı:** nakit logiti sabit 0 ve logit sınırı ±5 iken 30 ajanla nakit ağırlığı en fazla 1/(1+30e⁻⁵) ≈ %83 (tamamen nakde geçilemiyor). §3.2.2'deki "z₀ = 0 sabit" varsayımı için logit sınırı N'e göre ölçeklenmeli ya da nakit ayrı bir logit almalı.
+- **Eksik hücre:** panelde tüm sembollerin dolu olmadığı 69 gün var (2013-08..2020-12); spike bunları attı, M2 ortamı atmak yerine hücre başına işlem maskesi tutmalı.
+- **Eşit bütçe (M4):** varsayılan ayarlarda politika parametresi `none` (BenchMARL MLP) 77.314, `attn` 27.906; ±%10 kuralı için boyutlar ayarlanmalı.
+- **Sürüm:** TorchRL 0.7.2 PettingZoo 1.24.3 ile test edilmiş; 1.27 uyarı veriyor → 1.24.3 sabit.
+
 ### 3.3 Karar mekanizması
 
 **Bugünkü akış:**
