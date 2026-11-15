@@ -1,0 +1,24 @@
+{
+ "commit": "e8e1b3d",
+ "note": "P3 kaba maliyet (tek olcum, gunluk ufuk, 2013-06.. ~3431 satir, egitim + %80 yeniden uyum dahil). Tam ensemble sureleri calibration.json ikinci kosusundan (GPU, RTX 4060); 3 GBM sureleri 2026-11-15 ad hoc kosu (ayni makine). Yeniden egitim sayisi 63 seansta bir varsayimiyla ~52. Haftalik ufuk ve tohum sayisi carpani dahil degil.",
+ "per_symbol_seconds": {
+  "full_5_models": {
+   "THYAO.IS": 146.3,
+   "GARAN.IS": 155.6,
+   "ASELS.IS": 155.1
+  },
+  "gbm_3_models": {
+   "THYAO.IS": 2.3,
+   "GARAN.IS": 1.7
+  }
+ },
+ "assumptions": {
+  "retrain_every_sessions": 63,
+  "n_retrains": 52,
+  "n_symbols": 30
+ },
+ "estimate_hours": {
+  "full_5_models": 66.0,
+  "gbm_3_models": 0.87
+ }
+}
