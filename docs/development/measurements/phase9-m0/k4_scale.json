@@ -1,0 +1,34 @@
+{
+ "commit": "ac9a13d",
+ "panel": "data\\bist\\stock_data_with_indicators.csv",
+ "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "window": [
+  "2013-06-01",
+  "2019-12-31"
+ ],
+ "n": 1686,
+ "reference": "esit agirlikli tam yatirim, gunluk getiri satir ortalamasi (pct_change fill_method=None)",
+ "reward_spec_default": {
+  "sharpe_term": "ema_level",
+  "w1": 0.5,
+  "w2": 0.3,
+  "w3": 0.1,
+  "w4": 0.05,
+  "w5": 0.05,
+  "rolling_window": 30,
+  "target_trades_per_100": 50,
+  "risk_free_rate": 0.15
+ },
+ "ema_level": {
+  "std": 0.06688677936958781,
+  "mean": 0.008634168905787661
+ },
+ "differential": {
+  "std": 0.40487619272754605,
+  "mean": 0.0033419887514376206
+ },
+ "k_std_ratio": 0.1652030437230426,
+ "w2_default": 0.3,
+ "w2_differential_scaled": 0.049561,
+ "rule": "differential kolunda w2 = 0,30 * k (k bu dosyadan; dondurulur)"
+}

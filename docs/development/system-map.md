@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-15 · main `v1.16.0` · Faz 9 kapanış kapısında.
+**Son güncelleme:** 2026-11-15 · `v1.17.0` · Faz 9 kapanış kapısı: hakem-2 Büyük revizyon işlendi (§9.34), ikinci okuma ve bütçe kararı bekliyor.
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -130,9 +130,9 @@ flowchart TB
     P9A["A, C, V, B1-B3, B7-B11<br/>K18, R1, E0, E2<br/>§9.1-9.21"]:::done
     P9B["Kapanış 1-6: G1+G3, B6, F1-F4<br/>sampler tohumu, P, D<br/>§9.23-9.31"]:::done
     P9E["Kapanış 7: E1<br/>beyanla, §9.32"]:::partial
-    P9M["Kapanış 8: Milestone 0' protokolü<br/>taslak m0p-v1, §9.33"]:::active
-    H2["Kapanış kapısı hakem-2"]:::active
-    KD["Protokol kararları<br/>budama, kanıt, K4, kontrol, yön"]:::decision
+    P9M["Kapanış 8: Milestone 0' protokolü<br/>taslak r2, §9.33-9.34"]:::active
+    H2["Kapanış kapısı hakem-2<br/>Büyük revizyon işlendi; ikinci okuma"]:::active
+    KD["Bütçe kararı<br/>TD3 kazanırsa ~649 sa"]:::decision
   end
 
   subgraph M0["Milestone 0' koşumları"]
@@ -185,9 +185,9 @@ flowchart TB
 | Faz 9 kapanış 7: E1 tarihsel üyelik | beyanla kapandı | plan §9.32; `test_universe` 36 | Üretim KAP erişimi olursa 2013–2022 dönem içi olaylar |
 | P4: P tablosu → eski RL ortamı | bitti | plan §9.32; `test_pit_table` 31 | — |
 | Rota DTF + M8 son nokta test kaydı + koşum betiği | bitti | plan §9.33; `test_rl_walk_forward` 98 | — |
-| Faz 9 kapanış 8: Milestone 0' protokolü | taslak | [milestone0-protocol.md](milestone0-protocol.md) | hakem-2 kapanış kapısı → kullanıcı kararları (§10) → dondurma, etiket `m0-protocol-v1` |
+| Faz 9 kapanış 8: Milestone 0' protokolü | taslak r2 | [milestone0-protocol.md](milestone0-protocol.md); plan §9.33–9.34 | Bütçe kararı (protokol §10) → hakem-2 ikinci okuma → dondurma, etiket `m0-protocol-v1` |
 | Golden yenileme (K1) | planlı | plan §9.18 | Kapanıştan sonra, GPU'da bir kez; MAJOR sürüm |
-| Milestone 0' koşumları | planlı | protokol §5, §9 | Ön eleme 540 → budama → nihai 720 + maliyet 240 (~127 sa tek süreç) |
+| Milestone 0' koşumları | planlı | protokol §5, §10 | Ön eleme 432 → budama → nihai 720 + maliyet 240 + pozitif kontrol 120 (ölçülen bütçe ~226–649 sa tek süreç) |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | planlı | Faz 10 plan §4 S1 | BenchMARL/TorchRL ↔ RLlib, Windows, bütçe |
 | Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
