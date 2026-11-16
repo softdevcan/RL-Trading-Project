@@ -84,6 +84,11 @@ def main():
     base = base.copy()
     base['date'] = pd.to_datetime(base['date']).dt.tz_localize(None).dt.normalize()
     labels = pc.k12_labels(arrays, px)
+    from evaluation.calibration import auc as _auc
+    _lab = labels.copy()
+    _lab['date'] = _lab['date'].dt.strftime('%Y-%m-%d')
+    Y = (_lab.pivot_table(index='date', columns='symbol', values='y_up', aggfunc='first')
+         .reindex(index=list(arrays['dates']), columns=list(arrays['symbols'])).to_numpy(dtype=np.float64))
     rec = {'panel_sha256': arrays['sha256'], 'base_table': side['base_table'], 'target_auc': side['target_auc'],
            'label': '1[Of_{t+2} > Of_{t+1}] (pc_alignment_m2.k12_labels)', **provenance(), 'blocks': []}
     os.makedirs(a.out_dir, exist_ok=True)
@@ -99,9 +104,13 @@ def main():
         np.savez_compressed(path, dates=arrays['dates'], symbols=arrays['symbols'], **blk)
         sha = hashlib.sha256(open(path, 'rb').read()).hexdigest()
         cov = float(np.isfinite(blk['p_up_cal']).mean())
+        m = np.isfinite(blk['p_up_cal']) & np.isfinite(Y)
+        auc_block = float(_auc(blk['p_up_cal'][m], Y[m]))   # dosyadaki blogun K12 etiketiyle AUC'si
         rec['blocks'].append({'seed': sd, 'shuffled_rows': bool(a.shuffle), 'path': path.replace(os.sep, '/'), 'sha256': sha,
-                              'achieved_auc_meta_ok': info['achieved_auc_meta_ok'], 'coverage': cov})
-        print(f"tohum {sd}: {path} AUC {info['achieved_auc_meta_ok']:.4f} kapsam {cov:.3f} sha {sha[:8]}")
+                              'generator_auc_meta_ok': info['achieved_auc_meta_ok'], 'auc_block_vs_label': auc_block,
+                              'coverage': cov})
+        print(f"tohum {sd}: {path} uretec AUC {info['achieved_auc_meta_ok']:.4f} blok AUC {auc_block:.4f} "
+              f"kapsam {cov:.3f} sha {sha[:8]}")
     a.json = a.json or os.path.join('docs', 'development', 'measurements', 'phase10-m3',
                                     'pred_blocks_shuf.json' if a.shuffle else 'pred_blocks.json')
     os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
