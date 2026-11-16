@@ -1,0 +1,56 @@
+{
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "base_table": {
+  "run_id": "pit_v1_seed42",
+  "sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9",
+  "table_version": "pit-v1",
+  "seed": null,
+  "models": [
+   "xgboost",
+   "lightgbm",
+   "catboost"
+  ]
+ },
+ "target_auc": 0.6,
+ "label": "1[Of_{t+2} > Of_{t+1}] (pc_alignment_m2.k12_labels)",
+ "commit": "451c4c72a7f309be1a6dbe0af5b18cd26bac219c",
+ "git_status_porcelain": "?? docs/apispec.json",
+ "script_sha256": "56cb841a61e72f5ec2b93e1ca7d0eef0883022a54677f65b5c7048ffd9173adc",
+ "blocks": [
+  {
+   "seed": 20261115,
+   "path": "data/marl/pred_pc060_k12_g20261115.npz",
+   "sha256": "01ce2ce50a2156a474371d483ea56ce7f2c1993f288c2769a9dc71f61ee6e6e6",
+   "achieved_auc_meta_ok": 0.5951580578428247,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 1,
+   "path": "data/marl/pred_pc060_k12_g1.npz",
+   "sha256": "6bffc1510f81cab22c8e4262be361cd7212f3de104c7fe48ac40a657963c013d",
+   "achieved_auc_meta_ok": 0.6005049427790998,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 2,
+   "path": "data/marl/pred_pc060_k12_g2.npz",
+   "sha256": "efeaff9bdc85ed7a7c2c56fe991e853bafc4b871d4c862777573b5b6419c0c12",
+   "achieved_auc_meta_ok": 0.6004178977604294,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 3,
+   "path": "data/marl/pred_pc060_k12_g3.npz",
+   "sha256": "697bbb549e7e0b10d32ebf7ef6bb2d4131e36b4ae4ca7e403bff8e3bec3c68a1",
+   "achieved_auc_meta_ok": 0.6010922630230495,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 4,
+   "path": "data/marl/pred_pc060_k12_g4.npz",
+   "sha256": "bc1f2a8cd280047739370cf9e86485dc04a7cd3eb9dc0ba71c3990d44347b61e",
+   "achieved_auc_meta_ok": 0.6017765934635385,
+   "coverage": 0.9591482649842271
+  }
+ ]
+}
