@@ -31,5 +31,5 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (53, ana venv)
+- `python tests/test_marl_core.py` (54, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (31, yalniz venv-marl)

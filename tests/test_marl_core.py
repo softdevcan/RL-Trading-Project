@@ -145,6 +145,12 @@ try:
 except ValueError:
     _neg = True
 check("kilit negatif -> ValueError", _neg)
+# hakem-rl M2 #8: kilit gozlemde ayri bayrak degil; kilitli hucrede feat_ok = 0 oldugu icin ajan gorur.
+# Degismez: kilit penceresi feat_ok = 0 penceresinin icinde (kilit uzar ya da ozellik isinmasi kisalirsa kirilir)
+from marl import obs_spec as _OS  # noqa: E402
+_f, _ok = _OS.compute_raw_features(_la)
+check("kilit penceresi feat_ok = 0 icinde (ajan kilidi feat_ok ile gorur; LISTING_LOCKOUT <= ozellik isinmasi)",
+      _lk['lockout'].any() and not _ok[_lk['lockout']].any())
 
 w = np.array([0.5, 0.5])
 g_on, g_day, rf, cost = np.array([1.02]), np.array([0.99]), 0.0004, 0.001

@@ -75,8 +75,18 @@ def main():
         dn = v1 & (g_on <= 1 - thr)
         limits[f'{thr:.3f}'] = {'open_gap_up_cells': int(up.sum()), 'open_gap_down_cells': int(dn.sum()),
                                 'frac_of_valid': float((up | dn).sum() / max(v1.sum(), 1)),
+                                'frac_up': float(up.sum() / max(v1.sum(), 1)),
+                                'frac_down': float(dn.sum() / max(v1.sum(), 1)),
                                 'up_in_health_rows': int(up[rows[1:]].sum()),
                                 'down_in_health_rows': int(dn[rows[1:]].sum())}
+    # hakem-finans M2 ikinci okuma #9: kilit sonrasi ilk 10 seansta tavan/taban acilis boslugu
+    post = {}
+    for i in np.flatnonzero(px['lockout'].any(0)):
+        end = int(np.flatnonzero(px['lockout'][:, i])[-1]) + 1          # kilitten sonraki ilk satir
+        seg = g_on[end - 1:end - 1 + 10, i]                               # g_on[t] = t -> t+1
+        post[str(arrays['symbols'][i])] = {'first_tradable': str(dates[end]),
+                                           'gap_up_0.095': int(np.sum(seg >= 1.095)),
+                                           'gap_down_0.095': int(np.sum(seg <= 0.905))}
     o_ok = np.isfinite(arrays['open']) & (arrays['open'] > 0)
     c_ok = np.isfinite(arrays['close']) & (arrays['close'] > 0)
     market = {
@@ -84,6 +94,7 @@ def main():
         'listing_lockout_cells': int(px['lockout'].sum()),
         'listing_lockout_symbols': [str(arrays['symbols'][i]) for i in np.flatnonzero(px['lockout'].any(0))],
         'open_gap_limit_cells': limits,
+        'post_lockout_first10_gaps': post,
         'open_valid_close_missing_cells': int((o_ok & ~c_ok).sum()),
         'price_basis': 'yfinance history() auto_adjust varsayilani (bolunme + temettu duzeltilmis)',
     }

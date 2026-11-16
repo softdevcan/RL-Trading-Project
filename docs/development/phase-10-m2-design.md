@@ -92,7 +92,9 @@ Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
   - değerleme sembolün kendi son kapanışıyla yapılır
 - **Hücre yeniden geçerli olunca:** g_on = O / son geçerli kapanış. Aradaki hareket o gün yazılır.
 - **Listelenmemiş sembol:** Cf = NaN, ağırlığı 0 kalır.
-- **Listeleme kilidi — KARAR (2026-11-16, kullanıcı; hakem-finans M2 #1).** Panelde ilk satırdan sonra listelenen sembol ilk geçerli gününden itibaren **20 seans** işlem göremez (`LISTING_LOCKOUT`, ortamda `listing_lockout`). Gerekçe: BIST'te halka arz sonrası ilk seanslar çoğunlukla tavan serisi; açılıştan tam dolum gerçekçi değil. Kilit nedenseldir (ilk geçerli gün o gün bilinir; `test_marl_core` [3] B0). Panel başında zaten listeli sembolün halka arz tarihi panelden görünmez; bu beyan edilir. Etkilenen hücre sayısı gerçek panel ölçümünde (`market.listing_lockout_cells`).
+- **Listeleme kilidi — KARAR (2026-11-16, kullanıcı; hakem-finans M2 #1).** Panelde ilk satırdan sonra listelenen sembol ilk geçerli gününden itibaren **20 seans** işlem göremez (`LISTING_LOCKOUT`, ortamda `listing_lockout`). Gerekçe: BIST'te halka arz sonrası ilk seanslar çoğunlukla tavan serisi; açılıştan tam dolum gerçekçi değil. Kilit nedenseldir (ilk geçerli gün o gün bilinir; `test_marl_core` [3] B0). Panel başında zaten listeli sembolün halka arz tarihi panelden görünmez; bu beyan edilir. Etkilenen hücre sayısı gerçek panel ölçümünde (`market.listing_lockout_cells`); kilit sonrası ilk 10 seanstaki ±%9,5 açılış boşluğu ayrıca (`market.post_lockout_first10_gaps`; tavan serisi 20 seanstan uzunsa kilit uzatılır ya da §9 #9 yön kısıtı bu hücreleri kapsar).
+  - **Panel kesimi:** kilit "panelin ilk satırından sonra listelenen" sembole uygulanır. Panel her zaman `RL_DATA_START`'tan (K17) bütün olarak kurulur, eğitim/doğrulama/test pencereleri bunun içinden `start_row`/`end_row` ile kesilir. Bu yüzden kilit kümesi pencere seçimine bağlı değildir. Panel başka bir başlangıçla kurulursa kilit kümesi değişir (hakem-rl M2 ikinci okuma #9).
+  - **Gözlemde:** kilit ayrı bir bayrak değildir. Kilitli hücrede `feat_ok` = 0'dır (r20 ve vlog_z listelemeden sonra en az 20–40 seans ister), yani ajan kilidi `feat_ok` ile görür. Değişmez `test_marl_core` [3]'te. Kilitli ajanın eylemi etkisiz, kᵢ = 0; ödülü yalnız (1 − α)G. Bu etkisiz ajan gürültüsü kabul edilir, PPO kaybında maske yok (hakem-rl M2 ikinci okuma #8).
 - **Açılış geçerli, kapanış eksik hücre** (satıcı veri boşluğu) şu an `valid = False` sayılır ve hisse donar; açılışta kapanışın eksik olacağı bilinmez, bu yüzden bu bir ileriye bakış sayılabilir (hakem-finans M2 S3). Muhafazakâr yön (işlem yapılmaz). Sayısı gerçek panel ölçümünde (`market.open_valid_close_missing_cells`); sıfır değilse düzeltilir.
 - **Aynı yaklaşım:** eski ortamdaki `missing_data_mode='own_last'` ve `evaluation/baselines.py` aynı taşıma mantığını kullanıyor.
 
@@ -110,7 +112,7 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 ### 2.5 Yürütme ve veri beyanları (hakem-finans M2)
 
 - **Fiyat tabanı — KARAR (2026-11-16, kullanıcı).** `data_fetcher.py` yfinance `history()`'yi `auto_adjust` vermeden çağırır; varsayılan True, yani OHLC bölünme ve temettüye göre düzeltilmiş. g_on ve g_day toplam getiri oranıdır; bu doğru. Tam sayı modunda fiyat seviyesi ve lot gerçek değildir, seviye sonraki şirket olaylarına bağlıdır. Tam sayı modu muhasebe doğruluğu (nakit/adet tutarlılığı) içindir, gerçek lot ve fiyat basamağı iddiası yapılmaz. `model_meta()['price_basis']`.
-- **Fiyat limiti (tavan/taban).** Açılışta tavan varken alım, tabanda satım şu an tam dolar; iyimser ve asimetrik. KARAR (2026-11-16, kullanıcı): önce ölçülür (`market.open_gap_limit_cells`, ±%9,5 ve ±%19,5 açılış boşluğu; dönem marjına göre ikisi de), sonra seyrekse beyan, değilse yön kısıtı (açılışta bilinir, sızıntı değil). §9 #9.
+- **Fiyat limiti (tavan/taban).** Açılışta tavan varken alım, tabanda satım şu an tam dolar; iyimser ve asimetrik. KARAR (2026-11-16, kullanıcı): önce ölçülür (`market.open_gap_limit_cells`, ±%9,5 ve ±%19,5 açılış boşluğu; dönem marjına göre ikisi de). Karar kuralı ölçümden önce yazıldı (§9 #9): taban `frac_down` ≥ %0,05 → satış engeli, tavan `frac_up` ≥ %0,1 → alım engeli, altı beyan. Yön kısıtı açılışta bilinir, sızıntı değil.
 - **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
 - **Evren (hakem-finans M2 #2).** Panel dondurulmuş bir 30'lu liste (E0); tarihsel üyelik değil, 6 hissesi bugün XU030'da değil (`data/CLAUDE.md`). Evren sonradan seçilmiştir. **Mutlak performans iddiası yapılmaz;** yalnız aynı evrende göreli karşılaştırma (MARL ↔ SARL ↔ baseline). E1 üyelik maskesi hazır olunca eval'e bağlanır. Bu beyan tez metnine de girer.
 
@@ -285,7 +287,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | Test | Ortam | Kontrol | Kapsam |
 |---|---|---|---|
-| `python tests/test_marl_core.py` | `venv/` | 53 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
+| `python tests/test_marl_core.py` | `venv/` | 54 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
 | `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 31 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
 
 ---
@@ -302,9 +304,9 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
 | 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
 | 8 | ~~DSR ısınması ↔ bölüm uzunluğu~~ **kapandı (karar 2026-11-16)** | Birincil ödül `'excess'`; `'differential'` yalnız α = 0 ablasyonu (§2.2). Isınma bekçisi yalnız eğitimde | η, ablasyonun ön kaydında |
-| 9 | **Fiyat limiti** | Açılış boşluğu ±%9,5 / ±%19,5 hücre sayısı ölçülecek (`market.open_gap_limit_cells`) | Ölçümden sonra: seyrekse beyan, değilse yön kısıtı (kullanıcı kararı 2026-11-16) |
+| 9 | **Fiyat limiti — ÖN KAYIT (2026-11-16, kullanıcı; hakem-finans ikinci okuma #8), ölçümden ÖNCE** | Ölçü: `market.open_gap_limit_cells['0.095']`, pencere `RL_DATA_START`..2020-12-31, tüm geçerli hücreler. **Taban:** `frac_down` ≥ %0,05 → açılış boşluğu ≤ −%9,5 olan hücrede SATIŞ engeli. **Tavan:** `frac_up` ≥ %0,1 → açılış boşluğu ≥ +%9,5 olan hücrede ALIM engeli. Eşiğin altında kalan yön yalnız beyan. Kilit sonrası tavan serisi (`post_lockout_first10_gaps`) tavan kuralına dahil. Eşikler ölçüm görüldükten sonra değiştirilmez | Ev makinesinde ölçüm → kurala göre `project`'e yön sınırı (alt/üst) ya da beyan |
 | 10 | **M3'e taşınan RL maddeleri** (hakem-rl M2 #4–#7) | Yerel gözleme piyasa bağlamı (kesitsel ortalama z, geçerli oran) ↔ yok; eleştirmene tam z (N×F) ↔ ortalama; TorchRL'de bölüm sonu `terminated=False` ve bootstrap V(sₜ₊₁) ≠ 0 duman testi; başlangıç log-std ~0,2–0,3 / tanh ezmesi, eval'de ortalama eylem | M3 görev + eğitim betiği; gözlem/eleştirmen kolları ablasyon olarak ön kayda |
-| 11 | **Baseline'lar aynı sınırla** (hakem-finans M2 #7) | 1/N ve al-tut aynı `project` ve rf ile ya da duyarlılık satırı | M3/M8 değerlendirme |
+| 11 | **Baseline'lar aynı sınırla** (hakem-finans M2 #7, ikinci okuma #10) | 1/N ve al-tut aynı `fill_prices(listing_lockout=20)`, aynı `project` ve aynı rf ile; sınırsız 1/N ayrı duyarlılık satırı | M3/M8 değerlendirme |
 | 12 | **Evren beyanı tez metnine** (hakem-finans M2 #2) | Mutlak performans iddiası yok (§2.5); E1 maskesi hazır olunca eval'e bağlanır | Tez metni; E1 |
 
 ---
@@ -328,12 +330,21 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 | F7 | hakem-finans | KÜÇÜK | Sınır fazlası nakde → baseline aynı sınırla koşulmalı | §3.2, §9 #11 |
 | F-S3 | hakem-finans | KÜÇÜK | `valid` kapanışı da içeriyor (açılışta bilinmez) | Beyan + ölçüm alanı (§2.3); sıfır değilse düzeltilir |
 
-İkinci okuma: kademeli kurala göre BÜYÜK bulgu olduğu için aynı hakemlerle (SendMessage), yalnız değişen satırlarla.
+**İkinci okuma (SendMessage, yalnız `git diff db8ef48..28693d2`):** hakem-rl **Kabul**, hakem-finans **Kabul (koşullu)**. Yeni BÜYÜK yok.
+
+| # | Kaynak | Cid. | Bulgu | Sonuç |
+|---|---|---|---|---|
+| R8 | hakem-rl | KÜÇÜK | Kilit gözlemde ayrı bayrak değil | Kilitli hücrede feat_ok = 0 (ana oturum gösterdi); değişmez testi `test_marl_core` [3]; etkisiz ajan gürültüsü kabul (§2.3) |
+| R9 | hakem-rl | KÜÇÜK | Kilit kümesi panel kesimine bağlı | Panel hep `RL_DATA_START`'tan kurulur, pencere içinden kesilir (§2.3) |
+| F8 | hakem-finans | KÜÇÜK (koşul) | Fiyat limitinde "seyrek" eşiği ölçümden önce yazılmalı; taban yönü ayrı | Ön kayıt yazıldı (kullanıcı kararı): taban %0,05, tavan %0,1 (§9 #9) |
+| F9 | hakem-finans | KÜÇÜK | Tavan serisi 20 seanstan uzun sürebilir | Ölçüme `post_lockout_first10_gaps` eklendi (§2.3) |
+| F10 | hakem-finans | KÜÇÜK | Baseline aynı kilit ve `tradable` kuralıyla | §9 #11 |
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-16):** İkinci okuma: hakem-rl Kabul, hakem-finans Kabul (koşullu; §10). Fiyat limiti karar kuralı ön kaydı (§9 #9). Kilit ⊂ feat_ok = 0 değişmezi; panel kesimi ve baseline kilidi beyanı; ölçüme kilit sonrası tavan serisi. Testler 54 + 31.
 - **v0.3 (2026-11-16):** Hakem-rl + hakem-finans ilk okuması (§10). Kullanıcı kararları: birincil ödül `'excess'` (DSR yalnız α = 0), listeleme kilidi 20 seans, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan. Testler 53 + 31. §2.5 yürütme ve veri beyanları.
 - **v0.2 (2026-11-16):** Öz-kontrol bulgusu: varsayılan η ve `episode_len` ile `'differential'` G hep 0'dı. Ortam artık hata veriyor; test 25 → 27 (§7, §9 #8).
 - **v0.1 (2026-11-16):** İlk sürüm. Kullanıcı kararı: logit sınırı 5 + ln N (§3.1). `marl/` çekirdek + PettingZoo ortamı + iki test (49 + 25). Ölçülen: maliyet yaklaşımı ≤ 1,0e-4 günlük getiri farkı (sentetik, 20 bps). `venv-marl/` iş makinesinde CPU torch 2.6.0 ile kuruldu (GPU yok).
