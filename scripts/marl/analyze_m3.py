@@ -8,7 +8,7 @@ A1 = PC060-K12, S1 = karistirilmis PC (ayni uretec, gunler permute; sinyal yok).
 GECTI = uc kosulun HEPSI (hakem-rl M3a #1, #3, #5):
   (i)   egitim penceresi: D = ort_s [SR(A1_s) - SR(S1_s)] >= 0,3 (yillik) VE ortak HAC tek yonlu p < 0,05
   (ii)  egitim penceresi: min_s SR(A1_s) > max_s SR(S1_s) (3'e 3 kesin permutasyon, tek yonlu p = 1/20)
-  (iii) dogrulama penceresi: D_val > 0 VE en az 2/3 tohumda SR(A1_s) - SR(S1_s) > 0
+  (iii) dogrulama penceresi ISARET KONTROLU (yetersiz guc; genelleme kaniti degil): D_val > 0 VE >= 2/3 tohumda Delta > 0
 KISMI = (i)'de D > 0 ve p < 0,05 var ama GECTI degil. Aksi halde GOZLENMEDI ("bu butce ve lr'de aktarim
 gozlenmedi", kanit yoklugu; "aktaramiyor" denmez).
 
@@ -100,8 +100,9 @@ def analyze(root):
     res['conditions'] = {'i_train_D_ge_0.3_p_lt_0.05': bool(c1), 'ii_train_min_A1_gt_max_S1': bool(c2),
                          'iii_val_D_gt_0_and_2of3': bool(c3)}
     if c1 and c2 and c3:
-        res.update(label='GECTI', reading='GECTI: boru hatti bilinen bir sinyali maliyetsiz kosulda eyleme aktariyor; '
-                                          'dogrulama penceresinde de isaret korunuyor (M3 §5 v0.2). M3b/M4 acilir.')
+        res.update(label='GECTI', reading='GECTI: egitim penceresinde, ayni kapasite ve parmak izine sahip kontrole karsi, '
+                                          'maliyetsiz kosulda sinyal aktarimi gozlendi; dogrulamada isaret celismiyor '
+                                          '(M3 §5 v0.2). M3b/M4 acilir.')
     elif tr['D_annual'] > 0 and tr['p_one_sided'] < ALPHA:
         res.update(label='KISMI', reading='KISMI: egitim penceresinde anlamli pozitif fark var ama GECTI kosullarinin '
                                           'hepsi saglanmadi (§5 v0.2). Gercek sinyalli MARL kosusu yapilmaz.')

@@ -22,6 +22,7 @@ PY = sys.executable
 GEN = {0: 20261115, 1: 1, 2: 2}                                  # tohum s -> uretec tohumu g_s (§5 v0.2)
 ARMS = [('A1', 0.0, ''), ('S1', 0.0, '_shuf')]                    # PC060-K12 | karistirilmis PC (maliyetsiz)
 SEEDS = (0, 1, 2)
+F_MIN = 600_000                                                  # §5.1 alt sinir (hakem-rl ikinci okuma #3)
 
 
 def gpu_busy(threshold: int) -> bool:
@@ -57,6 +58,8 @@ def main():
     ap.add_argument('--max-wait', type=int, default=4 * 3600)
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
+    if a.frames < F_MIN:
+        raise SystemExit(f'F = {a.frames} < F_min = {F_MIN}: M3a kosulmaz, sure karari kullaniciya doner (§5.1)')
     for window in ('train', 'val'):
         for bps in (0,):
             out = os.path.join(a.root, f'baselines_{window}_{bps}.npz')

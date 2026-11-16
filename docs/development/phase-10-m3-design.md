@@ -123,10 +123,10 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 
 1. **GEÇTİ = üçü birden:**
    - (i) Eğitim penceresi: D ≥ **0,3** ve ortak HAC (`sharpe_diff_hac_pooled`) tek yönlü p < 0,05 (hakem-rl #5: büyüklük eşiği).
-   - (ii) Eğitim penceresi: min_s SR(A1_s) > max_s SR(S1_s). Bu, 3'e 3 kesin permütasyon testinde tek yönlü p = 1/20 (hakem-rl #1: tohum varyansı; ortak HAC yalnız gün gürültüsünü ölçer).
-   - (iii) Doğrulama penceresi: D > 0 ve en az 2/3 tohumda Δ_s > 0 (hakem-rl #3: genelleme işareti).
+   - (ii) Eğitim penceresi, **tanımsal sıralama kuralı:** min_s SR(A1_s) > max_s SR(S1_s). 3'e 3 kesin permütasyon testinde bu sıralamanın tek yönlü p'si tam 1/20 = 0,05; kural için ≤ 0,05 kabul edilir (hakem-rl #1 ve ikinci okuma #1: tohum varyansı; ortak HAC yalnız gün gürültüsünü ölçer). 3 tohumla ulaşılabilecek en küçük p bu olduğundan bir **güç sınırlamasıdır** (§8).
+   - (iii) Doğrulama penceresi, **işaret kontrolü (yetersiz güç):** D > 0 ve en az 2/3 tohumda Δ_s > 0. Bu bir genelleme kanıtı değildir; H0 altında da ~0,5 olasılıkla sağlanır. Yalnız çelişkiyi dışlar (hakem-rl #3, ikinci okuma #2).
 
-   Okuma: "Boru hattı bilinen bir sinyali maliyetsiz koşulda eyleme aktarıyor; doğrulama penceresinde de işaret korunuyor." M3b ve M4 açılır.
+   Okuma: "Eğitim penceresinde, aynı kapasite ve parmak izine sahip kontrole karşı, maliyetsiz koşulda sinyal aktarımı gözlendi; doğrulamada işaret çelişmiyor." M3b ve M4 açılır.
 2. **KISMİ:** eğitimde D > 0 ve p < 0,05 var, ama GEÇTİ koşullarından biri eksik. Gerçek sinyalli MARL koşusu yapılmaz.
 3. **GÖZLENMEDİ:** "Bu bütçe ve lr'de aktarım gözlenmedi." Bu bir kanıt yokluğudur; "aktaramıyor" denmez (hakem-rl #4). Keşifsel tanı, ön kayıtsız ve tez dışı:
    - tek tohumla 4F
@@ -148,6 +148,7 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 - 6 koşu.
 - Eğitim F kare: koşu başına ≤ **8 dakika** eğitim duvar süresi. Her koşuya ~1 dk değerlendirme eklenir.
 - F = min(2.000.000, ⌊8 × 60 / saniye_kare⌋), 60.000'e (10 parti) aşağı yuvarlanır.
+- **Alt sınır F_min = 600.000** (~100 parti ≈ 1000 Adam adımı; hakem-rl ikinci okuma #3, ölçümden ÖNCE sabitlendi). F < F_min çıkarsa M3a **koşulmaz**; süre kararı kullanıcıya döner. Tohum sayısı 3'ün altına inmez, S1 kontrolü korunur. `run_m3a.py` F < F_min'i reddeder.
 - Saniye/kare: `train_m3.py --frames 30000 --train-device cuda --parallel` ölçümü. GPU başka işle meşgul değilken; `nvidia-smi` kontrolü, `run_m3a.py` de her koşudan önce bakar.
 - **Ölçüm:** — *(doldurulacak; eğitim sonucu görülmeden ayrı commit)*
 - **F:** — *(doldurulacak)*
@@ -190,6 +191,8 @@ M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
 | 5 | KÜÇÜK | D > 0 zayıf eşik | Kural (i): D ≥ 0,3; KISMİ etiketi |
 | 6 | KÜÇÜK | Kontrol noktası politikası yazılı değil | Son ağırlıklar, seçim yok (§5) |
 | 7 | KÜÇÜK | 20 bps çiftinin beklenen sonucu boş | Çift M3b'ye ertelendi (kullanıcının bütçe kararı) |
+
+**İkinci okuma** (SendMessage, yalnız v0.1 → v0.2 farkı; ~40 bin token önceki bağlamla / 2 araç / ~0,4 dk): Küçük revizyon, 7/7 karşılandı. Açık kalan 3 madde v0.2'de işlendi: (ii) tanımsal sıralama kuralı ve p = 0,05 eşitliği; (iii) "işaret kontrolü" etiketi, GEÇTİ cümlesi daraltıldı; **F_min = 600.000** (BÜYÜK: adım tabanı yoksa GÖZLENMEDİ yine lr/bütçe artefaktı olabilir). Hakem: "3 tohumla tutucu bir kapı olarak savunulabilir; GÖZLENMEDİ zayıf bilgi taşır."
 
 Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüzünden 3 tohum ile #1'in kesin permütasyon ölçütü kullanıldı; 3'e 3'te en küçük p tam 0,05. Bu bir **güç sınırlamasıdır**, beyan edilir. İkinci okuma: SendMessage ile, yalnız v0.1 → v0.2 farkı.
 
