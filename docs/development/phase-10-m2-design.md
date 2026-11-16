@@ -330,6 +330,51 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 ---
 
+### 9.1 Ön kayıt — S-obs ufuk hizası ve PC060 yeni ortamda (§9 #2–#3; 2026-11-16, sonuçtan ÖNCE)
+
+**Soru.** PC060 (plan Faz 9 §9.38) y_up = 1[Cₜ₊₁ > Cₜ] üzerinden sentetik AUC 0,60 sinyalidir; ufku kapanışₜ → kapanışₜ₊₁. K12'de t kapanışındaki karar t+1 açılışında yürütülür ve yeni ağırlık bir sonraki yürütmeye kadar tutulur. Bu yüzden kararın kazandığı getiri **açılışₜ₊₁ → açılışₜ₊₂**'dir. İki ufkun kesişimi yalnız t+1 seans içidir. Gece parçası (kapanışₜ → açılışₜ₊₁) önceki kararın ağırlığıyla geçer (§2.2 varsayım 3). Soru şu: PC060'ın RL'siz değerinin ne kadarı yeni ortamda ulaşılabilir? PC060 M3'te pozitif kontrol olarak kullanılabilir mi?
+
+**Veri.**
+- `data/marl/panel_m2.npz`, SHA `a5dcf9a6…`
+- P tablosu `pc_auc060`, SHA `0ceb5c7a…`; protokol m0p-v2 ile aynı
+- Pencereler: eğitim 2013-08-27..2018-12-31, doğrulama 2019-01-02..2020-12-31, **birincil = ikisinin birleşimi**. 2021 ve sonrası okunmaz.
+
+**Kural portföyleri (RL yok; §9.38 ile aynı tanımlar).**
+- **S_yön:** t satırında `p_up_cal` ≥ 0,5 ve `meta_ok` olan, t'de listeli sembollere eşit ağırlık. Hiç sembol yoksa 1/N.
+- **1/N:** t'de listeli sembollere eşit ağırlık.
+- İkisi de tam yatırımlı (nakit 0) ve günlük yeniden dengelenir.
+
+**İki yürütme.**
+- **E0 (eski, referans):** t kapanışında yürütme; getiri Cfₜ₊₁/Cfₜ. Maliyet tek yön 0,001 × Σ|w − w̃|.
+- **E1 (yeni, K12):** ortamın kendi muhasebesi `accounting.step_fractional`. Ayrıntılar:
+  - `fill_prices(listing_lockout=20, limit_down_gap=0,095)`
+  - hedef `project(u, w̃, tradable, no_sell=…)`, sınırsız `Constraints()`
+  - c = 0,001, rf A8
+
+**Metrik.**
+- ΔSR = SR(S_yön) − SR(1/N), yıllık, A8 fazla getiri üzerinde, `sharpe_diff_hac`.
+- Net (20 bps) birincil; brüt ayrıca raporlanır.
+
+**Betimsel ayrıştırma (brüt).** Sinyal ağırlığı wₜ ile eşit ağırlık arasındaki farkın günlük katkısı iki parçaya ayrılır:
+- D_on = Σᵢ (wₜ,ᵢ − ewₜ,ᵢ)(g_onₜ₊₁,ᵢ − 1)
+- D_day = Σᵢ (wₜ,ᵢ − ewₜ,ᵢ)(g_dayₜ₊₁,ᵢ − 1)
+
+Ortalamaları ve D_day / (D_on + D_day) payı raporlanır. **Hizalama denetimi:** E0 brüt S_yön, 1/N'in açıkça üstünde olmalı (§9.38 2021'de 2,03'e 0,55). Değilse ölçüm durur.
+
+**Okuma kuralı (önceden; eşik 0,17 = §9.38 6 kat MDE'si).** 1445 günlük pencere için hesaplanmıştı. Burada pencere ~1840 gün, yani MDE daha küçük; aynı eşiği kullanmak muhafazakârdır.
+1. Birincil E1 net ΔSR(S_yön − 1/N) **≥ 0,17** → PC060 yeni ortamda pozitif kontrol olarak kalır; M3 onu S-obs kolunda kullanır.
+2. **< 0,17** → PC060 yeni ortamda geçerli bir pozitif kontrol değildir. Aynı üreteçle (`positive_control_table`, AUC 0,60, aynı tohum) K12 ufkuna hizalı bir kontrol kurulur: **PC060-K12**, etiket y = 1[Ofₜ₊₂ > Ofₜ₊₁] (açılıştan açılışa; iki gün de geçerli olmalı, aksi hâlde etiket yok). Aynı E1 ölçümü PC060-K12 için koşulur.
+   - PC060-K12 E1 net ΔSR ≥ 0,17 → M3 pozitif kontrolü PC060-K12'dir.
+   - PC060-K12 < 0,17 → AUC 0,60 bu yürütme ve maliyetle tespit edilebilir değer üretmiyor. Kontrolün gücü (AUC) kullanıcı kararına bırakılır; bu ölçümde seçilmez.
+3. Hiçbir sonuç "tahmin katkı verir/vermez" ya da "RL piyasayı yener" cümlesine dönüştürülmez. Sinyal bilerek gelecekten türetilmiştir; bu bir üst sınırdır.
+
+**Sınırlamalar (önceden).**
+- Kural portföyü her gün tam döner. RL ajanı devri azaltarak maliyetin bir kısmını geri alabilir. Değer bu yönden alt sınırdır, sinyal yönünden üst sınırdır.
+- Tek üreteç tohumu.
+- Gerçek tahmin hattı (`pit_v1`) da kapanıştan kapanışa ufukla eğitilmiştir. Hizasızlık bulunursa tahmin hedefinin K12 ufkuna taşınması ayrı bir plan maddesidir (P paketi); bu ölçümde değiştirilmez.
+
+**Betik:** `scripts/marl/pc_alignment_m2.py` (ana venv); çıktı `measurements/phase10-m2/pc_alignment.json`.
+
 ## 10. Hakem incelemesi (2026-11-16, uç `db8ef48`)
 
 Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin token / 5 araç; hakem-finans ~52 bin / 13. İkisi de Küçük revizyon, test koşmadı. Ölçümleri ana oturum yaptı (`synthetic_checks.json`).
