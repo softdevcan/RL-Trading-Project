@@ -1,0 +1,191 @@
+{
+ "note": "BETIMSEL, hakem-2 M2 kapanisi #3/#5 sonrasi (sonuctan sonra); birincil karar (§9.1) degismez. PC060_panel_labels etiketi panelden kurulur (orijinal pc_auc060 etiket dosyasi degil); tohum 20261115 satiri bu yuzden pc_alignment.json PC060 ile ayni olmayabilir.",
+ "commit": "b62a71a5dbd422f3f2b1fbc0b8e35e796c23dbca",
+ "git_status_porcelain": "?? docs/apispec.json\n?? docs/development/measurements/phase10-m2/open_gap_audit.json",
+ "script_sha256": "9ab72e81518084854df263afa523ea8f908d1851d3040ea4af344f192a6cb9fa",
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "base_table": {
+  "run_id": "pit_v1_seed42",
+  "sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9",
+  "table_version": "pit-v1",
+  "seed": null,
+  "models": [
+   "xgboost",
+   "lightgbm",
+   "catboost"
+  ]
+ },
+ "target_auc": 0.6,
+ "threshold": 0.17,
+ "rows": [
+  {
+   "seed": 20261115,
+   "PC060_panel_labels": {
+    "auc": 0.6022746617819273,
+    "E1_net_pooled": 0.0994982466811358,
+    "E1_net_train": -0.08040598025408219,
+    "E1_net_val": 0.4973126049291507,
+    "E1_net_se_pooled": 0.09489206631158077
+   },
+   "PC060_K12": {
+    "auc": 0.5951580578428247,
+    "E1_net_pooled": 0.35772982597959474,
+    "E1_net_train": 0.2202411201921687,
+    "E1_net_val": 0.6666548554153936,
+    "E1_net_se_pooled": 0.093383307414319
+   }
+  },
+  {
+   "seed": 1,
+   "PC060_panel_labels": {
+    "auc": 0.5993138286851383,
+    "E1_net_pooled": -0.044973891131386744,
+    "E1_net_train": -0.2405736606145659,
+    "E1_net_val": 0.3843786964774963,
+    "E1_net_se_pooled": 0.09887559711331485
+   },
+   "PC060_K12": {
+    "auc": 0.6005049427790998,
+    "E1_net_pooled": 0.23168626089814323,
+    "E1_net_train": 0.0771950950069442,
+    "E1_net_val": 0.572753365173836,
+    "E1_net_se_pooled": 0.09860363300964864
+   }
+  },
+  {
+   "seed": 2,
+   "PC060_panel_labels": {
+    "auc": 0.6006498641177248,
+    "E1_net_pooled": 0.053723490759343795,
+    "E1_net_train": -0.06050088760139599,
+    "E1_net_val": 0.305429676412969,
+    "E1_net_se_pooled": 0.0942617737928764
+   },
+   "PC060_K12": {
+    "auc": 0.6004178977604294,
+    "E1_net_pooled": 0.2913347436380643,
+    "E1_net_train": 0.18499912994447446,
+    "E1_net_val": 0.5319388465334942,
+    "E1_net_se_pooled": 0.09385427707017262
+   }
+  },
+  {
+   "seed": 3,
+   "PC060_panel_labels": {
+    "auc": 0.5991665922858966,
+    "E1_net_pooled": -0.004011872926928722,
+    "E1_net_train": -0.08766958677624269,
+    "E1_net_val": 0.17586956481326746,
+    "E1_net_se_pooled": 0.10004506986153802
+   },
+   "PC060_K12": {
+    "auc": 0.6010922630230495,
+    "E1_net_pooled": 0.2311982073758499,
+    "E1_net_train": 0.15875508512696873,
+    "E1_net_val": 0.39159191593062587,
+    "E1_net_se_pooled": 0.10031690241423077
+   }
+  },
+  {
+   "seed": 4,
+   "PC060_panel_labels": {
+    "auc": 0.6023927234967914,
+    "E1_net_pooled": 0.06668505133519986,
+    "E1_net_train": -0.0663217859125117,
+    "E1_net_val": 0.3744667458679021,
+    "E1_net_se_pooled": 0.09409587428776399
+   },
+   "PC060_K12": {
+    "auc": 0.6017765934635385,
+    "E1_net_pooled": 0.3356160128394796,
+    "E1_net_train": 0.2564476562886877,
+    "E1_net_val": 0.523460188436883,
+    "E1_net_se_pooled": 0.09257828810415733
+   }
+  },
+  {
+   "seed": 5,
+   "PC060_panel_labels": {
+    "auc": 0.6031761486736233,
+    "E1_net_pooled": 0.0658403217464357,
+    "E1_net_train": -0.049803039977658045,
+    "E1_net_val": 0.34013405958103554,
+    "E1_net_se_pooled": 0.09515172234415481
+   },
+   "PC060_K12": {
+    "auc": 0.6004501122095363,
+    "E1_net_pooled": 0.34964447341489274,
+    "E1_net_train": 0.3042508939283035,
+    "E1_net_val": 0.46313270813267116,
+    "E1_net_se_pooled": 0.09519043587279352
+   }
+  },
+  {
+   "seed": 6,
+   "PC060_panel_labels": {
+    "auc": 0.5996424777722115,
+    "E1_net_pooled": -0.01792347394717279,
+    "E1_net_train": -0.05315216320272084,
+    "E1_net_val": 0.06564906037477894,
+    "E1_net_se_pooled": 0.09561685395733997
+   },
+   "PC060_K12": {
+    "auc": 0.5983391145289176,
+    "E1_net_pooled": 0.2635213951847623,
+    "E1_net_train": 0.2732198936335639,
+    "E1_net_val": 0.2494136080801513,
+    "E1_net_se_pooled": 0.09597586635184928
+   }
+  },
+  {
+   "seed": 7,
+   "PC060_panel_labels": {
+    "auc": 0.5987555547693084,
+    "E1_net_pooled": 0.07998236737447419,
+    "E1_net_train": -0.04827612227377859,
+    "E1_net_val": 0.36310534868025157,
+    "E1_net_se_pooled": 0.09783615918481367
+   },
+   "PC060_K12": {
+    "auc": 0.6000590576365483,
+    "E1_net_pooled": 0.35199933575960635,
+    "E1_net_train": 0.25648927048652426,
+    "E1_net_val": 0.5666506488970915,
+    "E1_net_se_pooled": 0.09936872686481743
+   }
+  },
+  {
+   "seed": 8,
+   "PC060_panel_labels": {
+    "auc": 0.6001692879522184,
+    "E1_net_pooled": -0.07317136695959432,
+    "E1_net_train": -0.23592828646298028,
+    "E1_net_val": 0.28648189747309777,
+    "E1_net_se_pooled": 0.09905290877402805
+   },
+   "PC060_K12": {
+    "auc": 0.6002120966875085,
+    "E1_net_pooled": 0.2036524295069644,
+    "E1_net_train": 0.1009697791391509,
+    "E1_net_val": 0.43668012247652727,
+    "E1_net_se_pooled": 0.09380029520316412
+   }
+  }
+ ],
+ "summary": {
+  "PC060_panel_labels": {
+   "min": -0.07317136695959432,
+   "mean": 0.02507209699238964,
+   "max": 0.0994982466811358,
+   "n_ge_threshold": 0,
+   "n": 9
+  },
+  "PC060_K12": {
+   "min": 0.2036524295069644,
+   "mean": 0.2907091871774842,
+   "max": 0.35772982597959474,
+   "n_ge_threshold": 9,
+   "n": 9
+  }
+ }
+}

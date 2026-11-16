@@ -1,4 +1,4 @@
-"""Faz 10 M2: gercek panelde ortam duman kosusu (hakem-2 M2 kapanisi #10). venv-marl; performans sayisi DEGIL.
+r"""Faz 10 M2: gercek panelde ortam duman kosusu (hakem-2 M2 kapanisi #10). venv-marl; performans sayisi DEGIL.
 
 Egitim ortami 2013-08-27..2018-12-31 norm_stats=fit; dogrulama ortami 2019..2020 egitim istatistigiyle, kesirli ve
 tam sayi modunda rastgele eylemle bir bolum. Kontrol: adimlar sonlu, gozlem boyutu, satis engeli tetiklenir.

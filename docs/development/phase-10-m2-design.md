@@ -155,7 +155,7 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 | b. Bant b | \|w*ᵢ − w̃ᵢ\| < b ise hisse w̃ᵢ'de kalır. Hisse toplamı 1'i aşarsa bantta kalmayan hisseler orantılı küçültülür |
 | c. Pozisyon sınırı | İşlem gören hissede w*ᵢ ≤ max_position; fazlası **nakde** gider |
 | d. Grup sınırı | Grubun işlem gören kısmı orantılı küçültülür, fazlası nakde gider. Dondurulmuş kısım sınırdan düşülür |
-| e. Satış engeli (§9 #9) | `no_sell` hissesinin hedefi w̃ᵢ'nin altına düşerse hisse o gün **dondurulur** ve a–d baştan koşulur. Dondurulan küme yalnız büyür, en fazla N turda biter. Alım yönü açık kalır. Rapor `n_sell_blocked` |
+| e. Satış engeli (§9 #9) | `no_sell` hissesinin hedefi w̃ᵢ'nin altına düşerse hisse o gün **dondurulur** ve a–d baştan koşulur. Dondurulan küme yalnız büyür, en fazla N turda biter. Alım yönü açık kalır. Rapor `n_sell_blocked`. **Yan etki (hakem-2 H9):** satılamayan kütle nakit ve diğer işlem gören hisselerden u oranında düşülür; ajanın tutmak istediği bir hisse de bu yüzden kısmen satılabilir (ek devir ve maliyet). Mevcut dondurmanın da özelliğidir |
 
 **Tasarım varsayımları:**
 - Sınırlar yalnız küçültür. Fazla kütle başka hisselere dağıtılmaz, nakde gider. Böylece projeksiyon tek geçişte ve deterministik olur; hedef uzun-yalnız kalır, toplamı 1'dir, nakit ≥ 0'dır.
@@ -315,7 +315,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | # | Madde | Neden açık | Sıradaki |
 |---|---|---|---|
-| 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `a5dcf9a6…` (`npz.sha256`); rf 1902 satırın 1901'inde sonlu, satır 0 tanım gereği yok (`risk_free`). Gerçek panelde eğitim + doğrulama ortamı uçtan uca koştu (duman, performans sayısı değil) | — |
+| 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `a5dcf9a6…` (`npz.sha256`); rf 1902 satırın 1901'inde sonlu, satır 0 tanım gereği yok (`risk_free`). Gerçek panelde eğitim + doğrulama ortamı uçtan uca koştu (duman, performans sayısı değil): `venv-marl\Scripts\python scripts/marl/smoke_real_panel_m2.py` → doğrulama 500 adım, kesirli ve tam sayı modunda R sonlu, gözlem boyutu 44, satış engeli 10 / 9 kez (hakem-2 H10) | — |
 | 2 | ~~**S-obs ufuk hizası**~~ **ölçüldü (§9.1)** | PC060 (kapanış → kapanış) K12'de E1 net ΔSR +0,10 < 0,17 | Gerçek tahmin hedefinin K12 ufkuna (açılış → açılış) taşınması: plana eklenecek madde önerisi (P paketi; kullanıcı kararı) |
 | 3 | ~~**PC060 yeni ortamda**~~ **karar (ön kayıt §9.1)** | M3 pozitif kontrolü **PC060-K12** (E1 net ΔSR +0,36, SE 0,09) | M3: PC060-K12 P tablosu (`positive_control_table`, etiket 1[Ofₜ₊₂ > Ofₜ₊₁]) + S-obs kolu |
 | 4 | **BenchMARL görevi + eğitim betiği** | M3 kapsamı | `scripts/spike_m1/benchmarl_glue.py` kalıbıyla `marl/benchmarl_task.py` |
@@ -382,14 +382,14 @@ Birincil pencere 2013-08-27..2020-12-31 (1843 gün). ΔSR(S_yön − 1/N), yıll
 | Sinyal | E0 brüt | E0 net | E1 brüt | **E1 net (birincil)** | Gün içi pay (brüt, betimsel) |
 |---|---|---|---|---|---|
 | PC060 (kapanış → kapanış) | +1,57 | +0,35 (SE 0,10) | +1,34 | **+0,10** (SE 0,10; p 0,29) | %82 |
-| PC060-K12 (açılış → açılış; AUC 0,595 gerçekleşen) | +1,21 | +0,01 | +1,58 | **+0,36** (SE 0,09; p 1e-4) | ~%100 |
+| PC060-K12 (açılış → açılış; AUC 0,595 gerçekleşen) | +1,21 | +0,01 | +1,58 | **+0,36** (SE 0,09; p 1e-4) | %82 (K12 ufkuna göre: D_day / (D_day + D_on₊₁); düzeltildi, hakem-2 #4) |
 
 - **Hizalama kapısı geçti:** PC060 E0 brüt +1,57, p ≈ 1e-47.
 - **Pencere ayrımı, E1 net:**
   - PC060: eğitim −0,08, doğrulama +0,50
   - PC060-K12: eğitim +0,22 (p 0,07), doğrulama +0,67
 - **Devir:** kural portföyünde günlük ~1,12 (S_yön), 1/N'de 0,013.
-- **Satış engeli:** S_yön yürütmesinde 12 adımda devreye girdi.
+- **Satış engeli:** S_yön yürütmesinde PC060'ta 12, PC060-K12'de 11 adımda devreye girdi.
 
 **Ön kayıtlı okuma:** PC060 E1 net ΔSR 0,10 < 0,17 → **PC060 yeni ortamda geçerli bir pozitif kontrol değildir.** PC060-K12 0,36 ≥ 0,17 → **M3 pozitif kontrolü PC060-K12'dir.**
 
@@ -403,6 +403,20 @@ Birincil pencere 2013-08-27..2020-12-31 (1843 gün). ΔSR(S_yön − 1/N), yıll
 - PC060-K12 etiketi yalnız panel aralığında (2013-06..2020-12) kuruldu. 2021+ test pencereleri için etiket M3/M8'de aynı tanımla genişletilir.
 - Tek üreteç tohumu (20261115).
 - Eğitim penceresinde PC060-K12 tek başına sınırda (p 0,07). Birincil havuzlu pencerede açık.
+
+**Hakem-2 M2 kapanışı sonrası notlar (SONUÇTAN SONRA; ön kayıt metni ve karar değişmez; §10 H2–H8):**
+- **Eşiğin dayanağı (H2).** 0,17, Faz 9 §9.37'de bir RL ↔ RL farkının MDE'siydi (eşli, yüksek korelasyonlu). Buradaki S_yön − 1/N testinin kendi MDE'si (%80 güç, α 0,05) ≈ 2,8 × SE ≈ **0,26–0,27** (SE 0,093–0,095, `pc_alignment.json`). Ön kayıttaki "pencere uzun → muhafazakâr" gerekçesi bu yüzden yanlıştı. Karar iki eşikte de aynı: PC060 0,10 her ikisinin altında, PC060-K12 0,36 her ikisinin üstünde.
+- **Tohum yayılımı (H3, H5).** Kayıtlı tohum ve 1–8 tohumları, betimsel ([pc_alignment_seeds.json](measurements/phase10-m2/pc_alignment_seeds.json); `--extra-seeds 1-8`). E1 net ΔSR, havuzlu pencere:
+  - PC060: −0,07…+0,10, ortalama 0,03; 9 tohumun 0'ı ≥ 0,17
+  - PC060-K12: 0,20…0,36, ortalama 0,29; 9/9 ≥ 0,17
+  - Kayıtlı tohum K12 yayılımının en üstünde. 9 tohumun 4'ü bu testin kendi MDE'sinin (≈0,27) altında.
+
+  Her tohumda K12 > PC060, yani "ufuk yürütmeye göre seçilmeli" okuması tohuma bağlı değil. **M3 ön kaydı başarı ölçütünü 0,36'ya göre değil, yayılıma göre (≈0,20–0,36) kurar; P tablosu tohumu ayrı etken olarak beyan edilir.** PC060'ın panelden kurulan etiketi kayıtlı tohumda orijinal tabloyu birebir verir (0,0995).
+- **Uygulama sapmaları (H7).**
+  - "t'de listeli" kodda `valid_t` (O ve C geçerli) olarak işlemleştirildi; eksik hücre %0,2.
+  - "Açıkça üstünde" kodda ΔSR > 0 ve p < 0,01 olarak işlemleştirildi; bu ön kayıtta yoktu. Gerçekleşen p ≈ 1e-47.
+  - İkisinin etkisi ihmal edilebilir.
+- **Ölçüm izi (H8).** İlk JSON'un `commit` alanı `0232f11` idi, ama betik o commit'te değildi: koşum kirli ağaçta yapıldı (ön kayıt `0232f11` → betik ve sonuç `5d81571`). Betik artık JSON'a `git_status_porcelain` ve `script_sha256` yazıyor. Temiz commit'ten (`b62a71a`) yeniden koşuldu; birincil test alanlarının hepsi bit-eş (en büyük fark 0).
 
 ## 10. Hakem incelemesi (2026-11-16, uç `db8ef48`)
 
@@ -433,9 +447,26 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 | F9 | hakem-finans | KÜÇÜK | Tavan serisi 20 seanstan uzun sürebilir | Ölçüme `post_lockout_first10_gaps` eklendi (§2.3) |
 | F10 | hakem-finans | KÜÇÜK | Baseline aynı kilit ve `tradable` kuralıyla | §9 #11 |
 
+**Hakem-2, M2 kapanış kapısı (2026-11-16, uç `5d81571`).** Paket yalnız `096ae80..5d81571` farkını ve tüm M2 iddialarını kaynaklarıyla verdi. Maliyet ~104 bin token / 25 araç / ~6,3 dk. Testleri kendisi koştu (58/0, 36/0) ve kendi tohum ölçümünü yaptı. **Karar: Küçük revizyon; M3'e geçişi engellemiyor.**
+
+| # | Cid. | Bulgu | Sonuç |
+|---|---|---|---|
+| H1 | BÜYÜK | Satış engelinin dayanağı veri döneminde yanlış. Marj 2015-11-30..2020-03-12'de ±%20 (BISTECH belgesi §2.1.2), ancak 13.03.2020'de ±%10'a indi (bianet). 42 taban hücresinin 27'si ±%20 döneminde ve bant içinde; 15'i BISTECH öncesinde, o dönemin marjı doğrulanmadı. Hiçbiri ±%10 döneminde değil (`open_gap_audit.json`). 2020-02-28'deki 18 hücre açılıştan kapanışa ortalama +%11,7 toparlanıyor; yani engel muhafazakâr değil. Sayısal etki ≤ 0,015 ΔSR | **Kullanıcı kararı bekliyor** (yeni ön kayıt) |
+| H2 | BÜYÜK | 0,17 eşiği bu testin MDE'si değil (≈0,26–0,27) | §9.1 sonrası not; karar değişmez |
+| H3 | BÜYÜK | Tohum yayılımı beyan edilmemişti; kayıtlı tohum en üstte | Ölçüldü (`pc_alignment_seeds.json`); M3 ölçütü yayılıma göre |
+| H4 | KÜÇÜK | K12 gün içi payı yanlış ufka göre hesaplanmıştı (> 1) | `D_on_next` eklendi; K12 %82 |
+| H5 | KÜÇÜK | "0,10 → 0,36" tek tohum | 9/9 tohumda K12 > PC060 |
+| H6 | KÜÇÜK | Açılış verisi denetlenmemiş | `open_gap_audit.json`: bant dışı 1 hücre (PGSUS 2020-02-28, −%21,4; muhtemel veri hatası) |
+| H7 | KÜÇÜK | `valid_t` ↔ "listeli"; kapı p < 0,01 ön kayıtta yok | §9.1 sapma notu |
+| H8 | KÜÇÜK | Koşum kirli ağaçta, iz yok | JSON'a git durumu + betik SHA; temiz yeniden koşum bit-eş |
+| H9 | KÜÇÜK | Dondurmanın yan etkisi beyan edilmemiş | §3.2 e |
+| H10 | KÜÇÜK | Duman koşusu izsiz | `smoke_real_panel_m2.py` + çıktı (§9 #1) |
+
 ---
 
 ## Versiyon geçmişi
+
+- **v0.7-taslak (2026-11-16):** Hakem-2 M2 kapanışı (§10 H1–H10). H2–H10 işlendi: §9.1 sonrası notlar, K12 gece ayrıştırması, tohum yayılımı JSON'u, ölçüm izi, açılış boşluğu denetimi (`open_gap_audit.json`), duman betiği, §3.2 e yan etki beyanı. H1 (fiyat limiti dayanağı) kullanıcı kararını bekliyor.
 
 - **v0.6 (2026-11-16):** §9.1 ön kaydı (commit `0232f11`, sonuçtan önce) ve sonucu: PC060 yeni ortamda pozitif kontrol değil (E1 net +0,10); M3 pozitif kontrolü PC060-K12 (+0,36). `scripts/marl/pc_alignment_m2.py`, `measurements/phase10-m2/pc_alignment.json`.
 - **v0.5 (2026-11-16, ev makinesi):** §9 #1 gerçek panel ölçümü (`measurements/phase10-m2/obs_health.json`, doğrulama satırları dahil). §9 #9 ön kayıtlı kural uygulandı: taban açılışta satış engeli (`fill_prices(limit_down_gap)`, `project(no_sell)` adım e, K5 bekçisi); tavan beyan. Listeleme kilidi kümesinin artefakt olduğu beyan edildi (§2.3). `prepare_panel_m2.py` JSON'a yerel yol yazmıyor. Testler 58 + 36.

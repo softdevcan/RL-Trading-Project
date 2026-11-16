@@ -1,6 +1,8 @@
 {
  "preregistration": "phase-10-m2-design.md §9.1, commit 0232f11 (sonuctan once)",
- "commit": "0232f11978eed5d3075e371364c5ca912f9f1bbe",
+ "commit": "b62a71a5dbd422f3f2b1fbc0b8e35e796c23dbca",
+ "git_status_porcelain": "?? docs/apispec.json\n?? docs/development/measurements/phase10-m2/open_gap_audit.json",
+ "script_sha256": "9ab72e81518084854df263afa523ea8f908d1851d3040ea4af344f192a6cb9fa",
  "panel": "data/marl/panel_m2.npz",
  "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
  "table": "pc_auc060",
@@ -63,7 +65,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": 0.0002502111568998503,
      "D_day_mean_daily": 0.00110387366571153,
-     "intraday_share": 0.8152175161247928
+     "intraday_share": 0.8152175161247928,
+     "D_on_next_mean_daily": -6.64632458887816e-05,
+     "intraday_share_k12_horizon": 1.0640664915435663,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.1185333334106071,
@@ -110,7 +115,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": 0.0002559348626189973,
      "D_day_mean_daily": 0.0014094463093981928,
-     "intraday_share": 0.8463205499621468
+     "intraday_share": 0.8463205499621468,
+     "D_on_next_mean_daily": 0.0001945091487168731,
+     "intraday_share_k12_horizon": 0.8787315771564779,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.120202641337855,
@@ -157,7 +165,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": 0.000251763979938143,
      "D_day_mean_daily": 0.0011867745457133376,
-     "intraday_share": 0.8249862791654293
+     "intraday_share": 0.8249862791654293,
+     "D_on_next_mean_daily": 4.3377293162251134e-06,
+     "intraday_share_k12_horizon": 0.9963582531998358,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.1189862113073104,
@@ -215,7 +226,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": -7.369726925376168e-05,
      "D_day_mean_daily": 0.001058249174914308,
-     "intraday_share": 1.074853614959302
+     "intraday_share": 1.074853614959302,
+     "D_on_next_mean_daily": 0.00021629515713175647,
+     "intraday_share_k12_horizon": 0.8302960895957763,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.1046333418126824,
@@ -262,7 +276,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": 6.023247369195207e-05,
      "D_day_mean_daily": 0.0014096997923457048,
-     "intraday_share": 0.9590236400114446
+     "intraday_share": 0.9590236400114446,
+     "D_on_next_mean_daily": 0.0003540420991268606,
+     "intraday_share_k12_horizon": 0.7992664908405236,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.1182458165872249,
@@ -309,7 +326,10 @@
     "decomposition_gross": {
      "D_on_mean_daily": -3.73625587421736e-05,
      "D_day_mean_daily": 0.0011535966023238024,
-     "intraday_share": 1.0334719756640727
+     "intraday_share": 1.0334719756640727,
+     "D_on_next_mean_daily": 0.0002536654615254364,
+     "intraday_share_k12_horizon": 0.8197453992104404,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
     },
     "turnover_mean": {
      "E1_S": 1.10832636264137,
