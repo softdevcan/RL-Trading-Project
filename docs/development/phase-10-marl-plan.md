@@ -211,6 +211,29 @@ Yeni bulgulardan dört madde eklenir:
 - Konum: kullanıcı çalışma alanı, `results_dir()/predictions_pit/<run_id>.parquet`, manifest ile (`prediction/manifest.py`).
 - Sembolün tahmini yoksa bu açık bir maskeyle işaretlenir; sessiz bir varsayılana düşülmez. Bugünkü kodda böyle sessiz varsayılanlar var: `.get('confidence', 0.5)` ([trading_env.py:694](../../env/trading_env.py#L694); [daily_trading.py:622](../../app/services/daily_trading.py#L622)).
 
+**P5 — Tahmin hedefi yürütme ufkuna hizalanır (yeni, 2026-11-16; kullanıcı onayı; girdi: [M2 tasarımı](phase-10-m2-design.md) §9.1).**
+
+**Neden.** MARL ortamında karar t kapanışında verilir, t+1 açılışında yürütülür ve pozisyon bir sonraki yürütmeye, yani t+2 açılışına kadar tutulur (K12). Kararın kazandığı getiri **Oₜ₊₁ → Oₜ₊₂**'dir. P tablosu `pit_v1` ise Cₜ → Cₜ₊₁ yönünü tahmin ediyor:
+- İlk parçası (t gecesi) önceki kararın pozisyonuyla geçer, yani yeni karar için işe yaramaz.
+- Pozisyonun taşıdığı ikinci gece (t+1 → t+2) hiç hedeflenmez.
+
+M2 §9.1'de aynı üreteç ve AUC'yle (0,60) yalnız ufuk kaydırıldığında RL'siz kural portföyünün E1 net ΔSR'si ≈ 0,09'dan 0,20–0,36'ya çıktı (9 tohum). Bu sentetik bir üst sınırdır; gerçek modelde kazancın ne kadarının tutacağı bilinmiyor.
+
+| İş | Ne | Kabul ölçütü |
+|---|---|---|
+| **P5a** | P tablosu kurucusuna hedef ufku parametresi: `target='open_to_open'` → y_up = 1[Oₜ₊₂ > Oₜ₊₁], `pred_logret` hedefi log(Oₜ₊₂/Oₜ₊₁). Girdiler değişmez (≤ t kapanışı). Yeni tablo **`pit_v2`**; `pit_v1` dondurulmuş kalır (M0' sonuçları ona bağlı). Canlı tahmin hattı ve golden **değişmez** (parametre yalnız P kurucusunda, varsayılan eski hedef) | (i) Etiketin son tarihi t+2: `label_end` = satır t'nin 2 seans sonrası; purge/embargo ufku ≥ 2 seans. **Mutasyon:** purge 1 seansa indirilince B0 ya da etiket sınırı testi kırılır. (ii) B0: t sonrası veri değişince t satırı bit-eş. (iii) Açılış verisi denetimi: fiyat marjı dışındaki açılışlar (M2 `open_gap_audit`) etiket maskesine girer, sessizce kullanılmaz |
+| **P5b** | Maliyet önce ölçülür (P3 kalıbı, 15–20 dk'lık örnek); sonra tam `pit_v2` üretimi | Ölçülen süre ve karar |
+| **P5c** | Kalibrasyon (F1–F4) ve bilgi kapısı (İ3; AUC, BSS, blok içi AUC, MDE) `pit_v2` için yeniden koşulur. **Sonuç ne olursa olsun raporlanır.** Açılıştan açılışa yön daha zor da olabilir, daha kolay da | Kapı raporu manifestte; `pit_v1` ile yan yana |
+
+**Sıra ve bağımlılık:**
+- M3'ü **bloklamaz**; M3 pozitif kontrolü sentetik PC060-K12 (M2 §9.1).
+- M5'in gerçek sinyal kolları (S-obs, S-msg) ve gerçek sinyalli her MARL koşumu P5'ten **sonra** gelir.
+- Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır.
+
+**Bilinen bedel ve beyanlar:**
+- M0' ve eski ortamın sonuçları kapanış → kapanış hedefine bağlı kalır; MARL ↔ SARL karşılaştırmasında iki hedefin farkı beyan edilir ya da SARL kolu da `pit_v2` ile koşulur (M8 ön kaydında karar).
+- Canlı MARL kararı (§3.3) `pit_v2` hedefiyle eğitilmiş modelin tahminini kullanır. Ortamla aynı hedef kullanılır (K2 ilkesi).
+
 **Sinyal yolları:**
 
 | Yol | Vision karşılığı | Tasarım |
@@ -565,3 +588,4 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
 - **2026-11-15 (K27):** Kullanıcı önerisiyle K27 eklendi: panoda ajan türü seçimi (tek ajan / SARL / MARL) ve yalnız aynı ortam-pencere-maliyetteki modelleri yan yana koyan karşılaştırma görünümü; eski ortam ayrı sekmede. M2 + karar katmanından sonra. **Kod değişikliği yok.**
 - **2026-11-16 (§3.2.7, M1 spike):** BenchMARL + TorchRL 7/7 ölçütte geçti (Windows, CPU tekrar üretim, paralel toplama, ajan ekseni). 30 ajan × attn × 200K ≈ 391 sn (RTX 4060 + paralel toplama). Öneri: RLlib denenmeden BenchMARL seçilsin (kullanıcı kararı). M2 girdileri: nakit üst sınırı %83, eksik hücre maskesi, M4 parametre eşitliği. Performans sayısı yok (S1).
 - **2026-11-16 (M2 çekirdeği, dal `feat/phase10-m2-core`):** Tasarım belgesi [phase-10-m2-design.md](phase-10-m2-design.md) v0.1. Belge §8 #13'ün zaman indeksli muhasebe denklemini, §3.2.1'deki nakit faizini ve G2'yi, §3.2.2'deki projeksiyonu ve tam sayı emri (K5), §3.2.3'teki `obs_spec` v1'i (K18/K26 ölçeksiz özellikler, S-obs maskesi) ve K2 paritesini koda bağlıyor. Kullanıcı kararı: logit sınırı 5 + ln N (§3.2.2). Kod `marl/` paketinde; `env/` dışında tutulmasının nedeni tasarım §1. Testler 49 + 27. Aynı gün hakem-rl + hakem-finans ilk okuması (tasarım §10, v0.3); kullanıcı kararları: birincil ödül `'excess'` (`'differential'` yalnız α = 0 ablasyonu; §3.2.2 α ön elemesi yalnız `'excess'`), geç listelemede 20 seans işlem kilidi, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan, evren için mutlak performans iddiası yok. Testler 53 + 31. İkinci okuma: iki hakem Kabul; fiyat limiti karar kuralı ölçümden önce yazıldı (taban %0,05 → satış engeli, tavan %0,1 → alım engeli; tasarım §9 #9). Testler 54 + 31. Performans sayısı yok. Açık maddeler tasarım §9'da: gerçek panel ölçümü, S-obs ufuk hizası, PC060 yeni ortamda, hakem incelemesi.
+- **2026-11-16 (M2 kapanışı, v2.4.0, PR #34):** Tasarım v0.7. Gerçek panel ölçüldü; satış engeli dönem bağımlı fiyat marjıyla (ön kayıt v0.7; 2021+ marjı M8'den önce doğrulanır). S-obs ufuk hizası (tasarım §9.1): PC060 yeni ortamda pozitif kontrol değil, M3 pozitif kontrolü PC060-K12. Hakem-2 kapanış: Küçük revizyon → Kabul. **§3.1.3'e P5 eklendi** (kullanıcı onayı): tahmin hedefi K12 yürütme ufkuna (Oₜ₊₁ → Oₜ₊₂) hizalanır; `pit_v2`, purge ≥ 2 seans; M3'ü bloklamaz, gerçek sinyalli MARL koşumlarından önce gelir.
