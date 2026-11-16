@@ -4,6 +4,9 @@ PC060-K12: `prediction.pit_table.positive_control_table` (AUC 0,60), taban tablo
 etiket 1[Of_{t+2} > Of_{t+1}] (`scripts/marl/pc_alignment_m2.py::k12_labels`, ayni tanim). BILEREK GELECEKTEN:
 yalniz boru hatti kontrolu; tez sonucu degil. `meta_ok` olmayan hucre NaN -> ortamda pred_ok = 0 (maske).
 Cikti panel tarih/sembol sirasiyla hizali [T, N]; `marl.benchmarl_task.load_pred` hizayi denetler.
+`--shuffle`: KARISTIRILMIS kontrol (M3 on kaydi v0.2, hakem-rl M3a #2): ayni blok, SATIRLAR (gunler) tohum = uretec
+tohumuyla rastgele permute edilir (uc alan + maske birlikte; kesit yapisi ve marjinal dagilim ayni, zaman
+hizasi yok -> sinyal yok). Dosya `pred_pc060_k12_g{tohum}_shuf.npz`.
 
     python scripts/marl/build_pred_m3.py --seeds 20261115,1,2,3,4 --out-dir data/marl
 """
@@ -60,9 +63,9 @@ def to_arrays(table: pd.DataFrame, dates, symbols) -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--seeds', default='20261115,1,2,3,4')
+    ap.add_argument('--shuffle', action='store_true', help='karistirilmis kontrol bloklari (gunler permute)')
     ap.add_argument('--out-dir', default=os.path.join('data', 'marl'))
-    ap.add_argument('--json', default=os.path.join('docs', 'development', 'measurements', 'phase10-m3',
-                                                   'pred_blocks.json'))
+    ap.add_argument('--json', default=None, help="varsayilan measurements/phase10-m3/pred_blocks[_shuf].json")
     a = ap.parse_args()
     from app.auth import workspace as ws
     from marl import accounting as A
@@ -87,13 +90,20 @@ def main():
     for sd in [int(s) for s in a.seeds.split(',')]:
         tab, info = positive_control_table(base, labels, side['target_auc'], seed=sd)
         blk = to_arrays(tab, arrays['dates'], arrays['symbols'])
-        path = os.path.join(a.out_dir, f'pred_pc060_k12_g{sd}.npz')
+        suffix = ''
+        if a.shuffle:
+            perm = np.random.default_rng(sd).permutation(len(arrays['dates']))
+            blk = {k: v[perm] for k, v in blk.items()}
+            suffix = '_shuf'
+        path = os.path.join(a.out_dir, f'pred_pc060_k12_g{sd}{suffix}.npz')
         np.savez_compressed(path, dates=arrays['dates'], symbols=arrays['symbols'], **blk)
         sha = hashlib.sha256(open(path, 'rb').read()).hexdigest()
         cov = float(np.isfinite(blk['p_up_cal']).mean())
-        rec['blocks'].append({'seed': sd, 'path': path.replace(os.sep, '/'), 'sha256': sha,
+        rec['blocks'].append({'seed': sd, 'shuffled_rows': bool(a.shuffle), 'path': path.replace(os.sep, '/'), 'sha256': sha,
                               'achieved_auc_meta_ok': info['achieved_auc_meta_ok'], 'coverage': cov})
         print(f"tohum {sd}: {path} AUC {info['achieved_auc_meta_ok']:.4f} kapsam {cov:.3f} sha {sha[:8]}")
+    a.json = a.json or os.path.join('docs', 'development', 'measurements', 'phase10-m3',
+                                    'pred_blocks_shuf.json' if a.shuffle else 'pred_blocks.json')
     os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
     with open(a.json, 'w', encoding='utf-8') as fh:
         json.dump(rec, fh, indent=1, ensure_ascii=False, default=str)
