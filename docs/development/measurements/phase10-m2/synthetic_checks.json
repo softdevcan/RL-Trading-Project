@@ -1,0 +1,45 @@
+{
+  "note": "SENTETIK panel (tests/_marl_fixtures.synth_arrays); gercek panel olcumu degil",
+  "commit": "d82bb7de903a89f997481953b9c03340b68a0dce",
+  "cost_gap_integer_vs_fractional": [
+    {
+      "bps_roundtrip": 0.0,
+      "steps": 79,
+      "max_abs_R_diff": 7.473919261258288e-10,
+      "mean_abs_R_diff": 2.1544604497061332e-10
+    },
+    {
+      "bps_roundtrip": 20.0,
+      "steps": 79,
+      "max_abs_R_diff": 7.212770248599121e-05,
+      "mean_abs_R_diff": 1.5338731457359984e-05
+    }
+  ],
+  "dsr_warmup": [
+    {
+      "episode_len": 100,
+      "dsr_eta": 0.003968253968253968,
+      "error": "'differential': bolum uzunlugu 100 <= DSR isinmasi 252 (eta=0.003968253968253968); G hep 0 olur. dsr_eta'yi buyut ya da bolumu uzat"
+    },
+    {
+      "episode_len": 252,
+      "dsr_eta": 0.003968253968253968,
+      "error": "'differential': bolum uzunlugu 252 <= DSR isinmasi 252 (eta=0.003968253968253968); G hep 0 olur. dsr_eta'yi buyut ya da bolumu uzat"
+    },
+    {
+      "episode_len": 300,
+      "dsr_eta": 0.003968253968253968,
+      "nonzero_frac": 0.16
+    },
+    {
+      "episode_len": 252,
+      "dsr_eta": 0.015873015873015872,
+      "nonzero_frac": 0.75
+    },
+    {
+      "episode_len": 100,
+      "dsr_eta": 0.05,
+      "nonzero_frac": 0.8
+    }
+  ]
+}
