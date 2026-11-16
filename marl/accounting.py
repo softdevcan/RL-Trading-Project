@@ -127,6 +127,7 @@ class DifferentialSharpe:
         if not (0 < eta < 1):
             raise ValueError(f"eta (0, 1) olmali: {eta}")
         self.eta = eta
+        self.warmup = int(round(1.0 / eta))   # ilk `warmup` adimda D = 0
         self.reset()
 
     def reset(self):
@@ -142,7 +143,7 @@ class DifferentialSharpe:
         self.a = a_prev + self.eta * d_a
         self.b = b_prev + self.eta * d_b
         self.n += 1
-        if self.n <= int(round(1.0 / self.eta)) or not np.isfinite(var_prev):
+        if self.n <= self.warmup or not np.isfinite(var_prev):
             return 0.0, 0.0
         d_t = (b_prev * d_a - 0.5 * a_prev * d_b) / max(var_prev, 1e-9) ** 1.5
         if not np.isfinite(d_t):

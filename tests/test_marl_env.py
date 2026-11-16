@@ -203,9 +203,13 @@ check("pozisyon siniri 0,3 (tum logitler +B): kapanista max hisse <= 0,3 x (1 + 
 
 # ---------------------------------------------------------------------------------------------
 print("\n[8] Odul terimi ve TorchRL")
-ed = make(reward_term='differential', episode_len=100, alpha=0.25)
+check("'differential': bolum (100) <= isinma (252) -> ValueError (G sessizce hep 0 olmasin)",
+      raises(lambda: make(reward_term='differential', episode_len=100)))
+ed = make(reward_term='differential', episode_len=100, alpha=0.25, dsr_eta=1.0 / 20)
 td = run(ed, seed=3)
 check("'differential' odul sonlu", all(np.isfinite(r).all() for _, r, _ in td))
+nz = np.mean([inf['dsr_raw'] != 0.0 for _, _, inf in td])
+check("'differential' G bolumun isinma sonrasinda sifir degil (pay >= 0,7)", nz >= 0.7, f"{nz:.2f}")
 try:
     from torchrl.envs.libs.pettingzoo import PettingZooWrapper
     wrapped = PettingZooWrapper(env=make(episode_len=20), use_mask=False,

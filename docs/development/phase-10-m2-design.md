@@ -260,6 +260,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 - `train` modu: pencere içinde rastgele başlangıç, uzunluk `episode_len`.
 - `eval` modu: pencerenin tamamı.
 - Her bölüm tam nakitle başlar.
+- **`'differential'` ısınması:** DSR durumu her bölüm başında sıfırlanır ve ilk 1/η adımda Dₜ = 0 verir. Bölüm uzunluğu ≤ 1/η ise G bütün bölüm boyunca 0 olur ve ödül sessizce yalnız α·kᵢ'ye iner. Varsayılan η = 1/252 ve `episode_len` = 252 tam bu durumdaydı (öz-kontrol 2026-11-16: 100 ve 252 adımda sıfır olmayan pay 0, 300 adımda 0,16). Ortam bu durumda `ValueError` verir. η ile bölüm uzunluğunun birlikte seçimi açık madde (§9 #8).
 
 **Diğer:**
 - `last_info` portföy düzeyindeki ayrıntıyı taşır: R, X, devir, nakit ağırlığı, projeksiyon raporu, katkı artığı. PettingZoo `infos` boş bırakılır; TorchRL spec'i sabit kalsın diye.
@@ -272,7 +273,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | Test | Ortam | Kontrol | Kapsam |
 |---|---|---|---|
 | `python tests/test_marl_core.py` | `venv/` | 49 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
-| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 25 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR, TorchRL sarmalayıcı |
+| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 27 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (ısınma bölümü doldurursa hata; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
 
 ---
 
@@ -287,9 +288,11 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | 5 | **Canlı uç** (`POST /api/marl/daily-decision`, `RequireWriter`, `ws.use_workspace`) | Seçilecek MARL modeli yok (K27 ile aynı gerekçe) | Karar katmanında; K2/K5 fonksiyonları hazır |
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
 | 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
+| 8 | **DSR ısınması ↔ bölüm uzunluğu** | η = 1/252 ile 252 günlük bölümde ısınma bölümü dolduruyor (§7). Seçenekler: η büyütmek (örn. 1/63), bölümü uzatmak, ısınmayı bölümden önceki bağlam satırlarında bir referans politikayla doldurmak | Hakem-rl sorusu; M3 ön elemesinden önce karar |
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-16):** Öz-kontrol bulgusu: varsayılan η ve `episode_len` ile `'differential'` G hep 0'dı. Ortam artık hata veriyor; test 25 → 27 (§7, §9 #8).
 - **v0.1 (2026-11-16):** İlk sürüm. Kullanıcı kararı: logit sınırı 5 + ln N (§3.1). `marl/` çekirdek + PettingZoo ortamı + iki test (49 + 25). Ölçülen: maliyet yaklaşımı ≤ 1,0e-4 günlük getiri farkı (sentetik, 20 bps). `venv-marl/` iş makinesinde CPU torch 2.6.0 ile kuruldu (GPU yok).

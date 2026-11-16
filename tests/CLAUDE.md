@@ -105,7 +105,7 @@ python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri
                                            #          gozlem B0 + mutasyon + K2 bit-es, panel (49, ~5 sn; ana venv)
 venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
-                                           #          TorchRL sarmalayici (25, ~10 sn; YALNIZ venv-marl)
+                                           #          DSR isinma bekcisi, TorchRL sarmalayici (27, ~10 sn; YALNIZ venv-marl)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

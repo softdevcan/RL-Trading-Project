@@ -28,4 +28,4 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 
 ## Test
 - `python tests/test_marl_core.py` (49, ana venv)
-- `venv-marl\Scripts\python tests/test_marl_env.py` (25, yalniz venv-marl)
+- `venv-marl\Scripts\python tests/test_marl_env.py` (27, yalniz venv-marl)

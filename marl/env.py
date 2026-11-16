@@ -86,6 +86,14 @@ class MarlPortfolioEnv(ParallelEnv):
         self.reward_term, self.scale = reward_term, reward_scale
         self.dsr = DifferentialSharpe(dsr_eta)
         self.episode_len = int(episode_len)
+        if reward_term == 'differential':
+            span = end_row - start_row
+            eff = self.episode_len if (mode == 'train' and self.episode_len < span) else span
+            if eff <= self.dsr.warmup:
+                # Isinma bolum basinda sifirlanir; bolum isinmadan kisaysa G hep 0 olur ve odul
+                # sessizce yalniz alpha*k_i'ye iner (oz-kontrol 2026-11-16: 252 adim, eta=1/252).
+                raise ValueError(f"'differential': bolum uzunlugu {eff} <= DSR isinmasi {self.dsr.warmup} "
+                                 f"(eta={dsr_eta}); G hep 0 olur. dsr_eta'yi buyut ya da bolumu uzat")
         self.integer_shares, self.initial_capital = integer_shares, float(initial_capital)
         self.bound = logit_bound(self.N)
         self.possible_agents = [f'agent_{i}' for i in range(self.N)]
