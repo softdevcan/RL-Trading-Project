@@ -63,8 +63,32 @@ def main():
         commit = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
     except Exception:  # noqa: BLE001
         commit = None
+    # Hakem-finans M2 #1, #4, Q3 (2026-11-16): kilit, fiyat limiti, acilis gecerli / kapanis eksik
+    from marl.accounting import LISTING_LOCKOUT, fill_prices
+    px = fill_prices(arrays['open'], arrays['close'], LISTING_LOCKOUT)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        g_on = px['open'][1:] / px['close'][:-1]
+    v1 = px['valid'][1:] & px['listed'][:-1]
+    limits = {}
+    for thr in (0.095, 0.195):   # BIST fiyat marji donemine gore +-%10 / +-%20; ikisi de raporlanir
+        up = v1 & (g_on >= 1 + thr)
+        dn = v1 & (g_on <= 1 - thr)
+        limits[f'{thr:.3f}'] = {'open_gap_up_cells': int(up.sum()), 'open_gap_down_cells': int(dn.sum()),
+                                'frac_of_valid': float((up | dn).sum() / max(v1.sum(), 1)),
+                                'up_in_health_rows': int(up[rows[1:]].sum()),
+                                'down_in_health_rows': int(dn[rows[1:]].sum())}
+    o_ok = np.isfinite(arrays['open']) & (arrays['open'] > 0)
+    c_ok = np.isfinite(arrays['close']) & (arrays['close'] > 0)
+    market = {
+        'listing_lockout_sessions': LISTING_LOCKOUT,
+        'listing_lockout_cells': int(px['lockout'].sum()),
+        'listing_lockout_symbols': [str(arrays['symbols'][i]) for i in np.flatnonzero(px['lockout'].any(0))],
+        'open_gap_limit_cells': limits,
+        'open_valid_close_missing_cells': int((o_ok & ~c_ok).sum()),
+        'price_basis': 'yfinance history() auto_adjust varsayilani (bolunme + temettu duzeltilmis)',
+    }
     rep = {
-        'source_csv': src, 'source_sha256': _sha(src), 'commit': commit,
+        'source_csv': src, 'source_sha256': _sha(src), 'commit': commit, 'market': market,
         'window': [str(dates[0]), str(dates[-1])], 'T': int(len(dates)), 'N': int(len(arrays['symbols'])),
         'symbols': [str(s) for s in arrays['symbols']],
         'incomplete_days': incomplete, 'missing_cell_frac': float(1 - valid.mean()),
@@ -78,7 +102,7 @@ def main():
             os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
             open(a.json, 'w', encoding='utf-8').write(out)
         print(json.dumps({k: rep[k] for k in ('window', 'T', 'N', 'incomplete_days', 'missing_cell_frac',
-                                              'health_rows', 'source_sha256')}, indent=1, default=str))
+                                              'health_rows', 'source_sha256', 'market')}, indent=1, default=str))
         for n, h in health.items():
             print(f"  {n:10s} kirpma {h['clip_frac']:.4%}  sabit {h['constant']}  n {h['n']}")
         return

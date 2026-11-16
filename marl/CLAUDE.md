@@ -22,10 +22,14 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - **Logit siniri `5 + ln N`** (kullanici karari 2026-11-16); nakit logiti sabit 0. Sabit 5'e geri donme.
 - **Eksik hucre atilmaz**: `fill_prices` tasir, hisse o gun dondurulur. Gozleme t+1 gecerliligi KONMAZ
   (t+1 acilisinda bilinir).
+- **Birincil odul `'excess'`** (kullanici karari 2026-11-16): alpha onelemesi yalniz burada; `'differential'` yalniz alpha=0
+  ablasyonu, kodda zorlanir. Gevsetme.
+- **Listeleme kilidi** `LISTING_LOCKOUT=20` seans (`fill_prices`, ortam `listing_lockout`); canli karar da ayni
+  `tradable` maskesini kullanir. Fiyatlar yfinance duzeltilmis: tam sayi modunda lot/fiyat seviyesi iddiasi yok.
 - **Sembol sirasi panelin gorunme sirasi**; `sorted()` uygulama.
 - Legacy ADX (hep 0) `panel.build_arrays`'te reddedilir; `with_adx(df, 'wilder')` kullan.
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (49, ana venv)
-- `venv-marl\Scripts\python tests/test_marl_env.py` (27, yalniz venv-marl)
+- `python tests/test_marl_core.py` (53, ana venv)
+- `venv-marl\Scripts\python tests/test_marl_env.py` (31, yalniz venv-marl)

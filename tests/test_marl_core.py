@@ -123,7 +123,28 @@ check("eksik gun: g = 1 ve islem goremez", g_on1[0] == 1 and g_day1[0] == 1 and 
 check("donus gunu: g_on = O / son gecerli kapanis", abs(g_on3[0] - 1.2) < 1e-15 and tr3[0])
 po = A.fill_prices(np.array([[np.nan], [5.0]]), np.array([[np.nan], [5.5]]))
 g1_, gd_, tr_ = A.step_growth(po, 0)
-check("listelenmeden once g = 1, ilk gun islem gorebilir", g1_[0] == 1 and tr_[0])
+check("listelenmeden once g = 1, kilit 0 iken ilk gun islem gorebilir", g1_[0] == 1 and tr_[0])
+# Listeleme kilidi (kullanici karari 2026-11-16, hakem-finans M2 #1): panelde sonradan listelenen sembol
+_la = synth_arrays()   # sembol 2 ilk 90 satir NaN, sembol 1'de 150-152 eksik
+_lk = A.fill_prices(_la['open'], _la['close'], A.LISTING_LOCKOUT)
+_l0 = A.fill_prices(_la['open'], _la['close'], 0)
+_first2 = int(np.flatnonzero(_lk['valid'][:, 2])[0])
+check("kilit: sonradan listelenen sembol ilk gecerli gunden itibaren 20 seans islem goremez, 21.'de gorur",
+      _first2 == 90 and not _lk['tradable'][90:110, 2].any() and _lk['tradable'][110, 2]
+      and _lk['valid'][90:110, 2].all())
+check("kilit: panel basinda listeli semboller etkilenmez; kilit 0 -> tradable = valid",
+      np.array_equal(_lk['tradable'][:, [0, 1, 3]], _lk['valid'][:, [0, 1, 3]])
+      and np.array_equal(_l0['tradable'], _l0['valid']))
+_cut = 100
+_lc = A.fill_prices(_la['open'][:_cut + 1], _la['close'][:_cut + 1], A.LISTING_LOCKOUT)
+check("kilit nedensel (B0): panel t=100'de kesilince satir <= t maskesi ayni",
+      np.array_equal(_lc['tradable'], _lk['tradable'][:_cut + 1]))
+try:
+    A.fill_prices(o, c, -1)
+    _neg = False
+except ValueError:
+    _neg = True
+check("kilit negatif -> ValueError", _neg)
 
 w = np.array([0.5, 0.5])
 g_on, g_day, rf, cost = np.array([1.02]), np.array([0.99]), 0.0004, 0.001

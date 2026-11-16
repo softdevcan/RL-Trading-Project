@@ -74,11 +74,14 @@ Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
 - **Fazla getiri:** X = R − rfₜ₊₁
 - **Ajan katkısı:** kᵢ = wᵢ (g_onᵢ − 1 − rf) + w*ᵢ (g_dayᵢ − 1) − c \|w*ᵢ − w̃ᵢ\|
 - **Ödül:** rᵢ = ölçek · (α kᵢ + (1 − α) G), G = X (`'excess'`) ya da X üzerinde Moody-Saffell Dₜ (`'differential'`). α ∈ [0, 1); α = 1 reddedilir (vision §3.3 β).
+- **Birincil ödül `'excess'` — KARAR (2026-11-16, kullanıcı; hakem-rl M2 #1–#2).** α ön elemesi {0; 0,25; 0,5} yalnız `'excess'` ile yapılır. `'differential'` yalnız α = 0 ile kurulabilir (ablasyon); başka α `ValueError`. Gerekçe:
+  - Ölçek: tanh(Dₜ/2) ∈ (−1, 1), kᵢ ise günlük getiri mertebesinde. α = 0,25'te portföy teriminin std'si bireysel terimin 242 katı (`'excess'`te 6,3; sentetik N = 4, `measurements/phase10-m2/synthetic_checks.json` → `reward_term_scale`). DSR'de α fiilen 0 olur.
+  - Markov: Dₜ DSR'nin (a, b) durumuna bağlı, bu durum gözlemde yok; her bölüm başında sıfırlanır.
 
 **Tasarım varsayımları:**
 1. **Faiz yalnız gece kazanılır.** Fonlama faizi gecelik bir orandır; t kapanışında tutulan nakit t → t+1 gecesinde rfₜ₊₁ kazanır. Hedefin nakit kısmı ilk kez bir sonraki gece faiz alır.
 2. **Maliyet portföyden orantılı düşer.** Jiang vd. (2017) kesin işlem kalanı μ'su yerine birinci derece c·τ kullanılır. Bunun bedeli §2.4'te ölçüldü.
-3. **Katkı ayrışımı yalnız birinci derecedir** (plan §8 #13). Σᵢ kᵢ = X + ikinci derece çapraz terimler. Nakdin fazla getiri katkısı tanım gereği 0'dır: Σᵢ wᵢ rf + w₀ rf − rf = 0. "Katkılar toplamı = portföy fazla getirisi" iddiası **yalnız bu basit getiri terimi** için yapılır; diferansiyel Sharpe için yapılmaz.
+3. **Katkı ayrışımı yalnız birinci derecedir** (plan §8 #13). Σᵢ kᵢ = X + ikinci derece çapraz terimler; kalan `contrib_residual` her adımda `last_info`'da raporlanır. Çapraz terim (g_on − 1)(g_day − 1) günlük ~1e-4, yani maliyet mertebesinde. **Gece terimi wᵢ(g_onᵢ − 1 − rf) bu adımdaki eylemden bağımsızdır;** bir önceki kararın sonucudur. kᵢ "ajanın bu adımdaki kararının katkısı" diye okunmaz (hakem-finans M2 #6). Nakdin fazla getiri katkısı tanım gereği 0'dır: Σᵢ wᵢ rf + w₀ rf − rf = 0. "Katkılar toplamı = portföy fazla getirisi" iddiası **yalnız bu basit getiri terimi** için yapılır; diferansiyel Sharpe için yapılmaz.
 4. **Eski ortamla fark:** komisyon eski ortamda ödülde iki kez sayılıyor (G3). Burada yalnız bir kez sayılır: `test_marl_core` [3], "maliyet bir kez".
 
 ### 2.3 Eksik hücre (M1 girdisi)
@@ -88,7 +91,9 @@ Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
   - hisse o gün `tradable = False` olur ve projeksiyonda dondurulur (§3.2)
   - değerleme sembolün kendi son kapanışıyla yapılır
 - **Hücre yeniden geçerli olunca:** g_on = O / son geçerli kapanış. Aradaki hareket o gün yazılır.
-- **Listelenmemiş sembol:** Cf = NaN, ağırlığı 0 kalır; ilk geçerli gününün açılışında alınabilir.
+- **Listelenmemiş sembol:** Cf = NaN, ağırlığı 0 kalır.
+- **Listeleme kilidi — KARAR (2026-11-16, kullanıcı; hakem-finans M2 #1).** Panelde ilk satırdan sonra listelenen sembol ilk geçerli gününden itibaren **20 seans** işlem göremez (`LISTING_LOCKOUT`, ortamda `listing_lockout`). Gerekçe: BIST'te halka arz sonrası ilk seanslar çoğunlukla tavan serisi; açılıştan tam dolum gerçekçi değil. Kilit nedenseldir (ilk geçerli gün o gün bilinir; `test_marl_core` [3] B0). Panel başında zaten listeli sembolün halka arz tarihi panelden görünmez; bu beyan edilir. Etkilenen hücre sayısı gerçek panel ölçümünde (`market.listing_lockout_cells`).
+- **Açılış geçerli, kapanış eksik hücre** (satıcı veri boşluğu) şu an `valid = False` sayılır ve hisse donar; açılışta kapanışın eksik olacağı bilinmez, bu yüzden bu bir ileriye bakış sayılabilir (hakem-finans M2 S3). Muhafazakâr yön (işlem yapılmaz). Sayısı gerçek panel ölçümünde (`market.open_valid_close_missing_cells`); sıfır değilse düzeltilir.
 - **Aynı yaklaşım:** eski ortamdaki `missing_data_mode='own_last'` ve `evaluation/baselines.py` aynı taşıma mantığını kullanıyor.
 
 ### 2.4 Ölçüm: maliyet yaklaşımının bedeli
@@ -101,6 +106,13 @@ Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
 | 20 bps | 1,0e-4 | maliyetin nakitten değil portföyden düşmesi ve son alımların komisyon kadar kısa kalması; mertebesi c·τ·\|g−1\| |
 
 Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'ler tam sayı modunda koşulur (plan §3.2.2), bu yüzden raporlanan sayılar kesin muhasebeyle üretilir. Eğitimdeki kesirli mod bir yaklaşımdır ve böyle beyan edilir.
+
+### 2.5 Yürütme ve veri beyanları (hakem-finans M2)
+
+- **Fiyat tabanı — KARAR (2026-11-16, kullanıcı).** `data_fetcher.py` yfinance `history()`'yi `auto_adjust` vermeden çağırır; varsayılan True, yani OHLC bölünme ve temettüye göre düzeltilmiş. g_on ve g_day toplam getiri oranıdır; bu doğru. Tam sayı modunda fiyat seviyesi ve lot gerçek değildir, seviye sonraki şirket olaylarına bağlıdır. Tam sayı modu muhasebe doğruluğu (nakit/adet tutarlılığı) içindir, gerçek lot ve fiyat basamağı iddiası yapılmaz. `model_meta()['price_basis']`.
+- **Fiyat limiti (tavan/taban).** Açılışta tavan varken alım, tabanda satım şu an tam dolar; iyimser ve asimetrik. KARAR (2026-11-16, kullanıcı): önce ölçülür (`market.open_gap_limit_cells`, ±%9,5 ve ±%19,5 açılış boşluğu; dönem marjına göre ikisi de), sonra seyrekse beyan, değilse yön kısıtı (açılışta bilinir, sızıntı değil). §9 #9.
+- **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
+- **Evren (hakem-finans M2 #2).** Panel dondurulmuş bir 30'lu liste (E0); tarihsel üyelik değil, 6 hissesi bugün XU030'da değil (`data/CLAUDE.md`). Evren sonradan seçilmiştir. **Mutlak performans iddiası yapılmaz;** yalnız aynı evrende göreli karşılaştırma (MARL ↔ SARL ↔ baseline). E1 üyelik maskesi hazır olunca eval'e bağlanır. Bu beyan tez metnine de girer.
 
 ---
 
@@ -132,6 +144,7 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 **Tasarım varsayımları:**
 - Sınırlar yalnız küçültür. Fazla kütle başka hisselere dağıtılmaz, nakde gider. Böylece projeksiyon tek geçişte ve deterministik olur; hedef uzun-yalnız kalır, toplamı 1'dir, nakit ≥ 0'dır.
 - Dondurulmuş hisse sınırı aşabilir, çünkü o gün satılamaz. Bu durum `frozen_over_cap` ile raporlanır.
+- Sınır fazlası nakde gittiği ve nakit faiz aldığı için sınırlar oynaklığı ve fazla getiriyi sistematik etkiler. **Baseline'lar (1/N, al-tut) aynı `project` sınırları ve aynı rf ile de koşulur** ya da fark duyarlılık satırı olarak verilir (hakem-finans M2 #7; M3/M8).
 - Grup kimliği E2 sektörüdür (`data.bist30_symbols.load_sector_groups`). Ortamda `groups=` parametresiyle verilir ve gözleme sektör one-hot'u olarak da girer.
 
 **Test:** `test_marl_core` [2], 500 rastgele durum.
@@ -260,7 +273,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 - `train` modu: pencere içinde rastgele başlangıç, uzunluk `episode_len`.
 - `eval` modu: pencerenin tamamı.
 - Her bölüm tam nakitle başlar.
-- **`'differential'` ısınması:** DSR durumu her bölüm başında sıfırlanır ve ilk 1/η adımda Dₜ = 0 verir. Bölüm uzunluğu ≤ 1/η ise G bütün bölüm boyunca 0 olur ve ödül sessizce yalnız α·kᵢ'ye iner. Varsayılan η = 1/252 ve `episode_len` = 252 tam bu durumdaydı (öz-kontrol 2026-11-16: 100 ve 252 adımda sıfır olmayan pay 0, 300 adımda 0,16). Ortam bu durumda `ValueError` verir. η ile bölüm uzunluğunun birlikte seçimi açık madde (§9 #8).
+- **`'differential'` ısınması:** DSR durumu her bölüm başında sıfırlanır ve ilk 1/η adımda Dₜ = 0 verir. Bölüm uzunluğu ≤ 1/η ise G bütün bölüm boyunca 0 olur ve ödül sessizce yalnız α·kᵢ'ye iner. Varsayılan η = 1/252 ve `episode_len` = 252 tam bu durumdaydı (öz-kontrol 2026-11-16: 100 ve 252 adımda sıfır olmayan pay 0, 300 adımda 0,16). Ortam bu durumda `ValueError` verir; bekçi yalnız `mode='train'`'de çalışır (eval'de ödül kullanılmaz; hakem-rl M2 #3). `'differential'` artık yalnız α = 0 ablasyonu (§2.2), bu yüzden η seçimi ablasyonun ön kaydında yapılır.
 
 **Diğer:**
 - `last_info` portföy düzeyindeki ayrıntıyı taşır: R, X, devir, nakit ağırlığı, projeksiyon raporu, katkı artığı. PettingZoo `infos` boş bırakılır; TorchRL spec'i sabit kalsın diye.
@@ -272,8 +285,8 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | Test | Ortam | Kontrol | Kapsam |
 |---|---|---|---|
-| `python tests/test_marl_core.py` | `venv/` | 49 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
-| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 27 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (ısınma bölümü doldurursa hata; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
+| `python tests/test_marl_core.py` | `venv/` | 53 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
+| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 31 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
 
 ---
 
@@ -288,11 +301,39 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | 5 | **Canlı uç** (`POST /api/marl/daily-decision`, `RequireWriter`, `ws.use_workspace`) | Seçilecek MARL modeli yok (K27 ile aynı gerekçe) | Karar katmanında; K2/K5 fonksiyonları hazır |
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
 | 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
-| 8 | **DSR ısınması ↔ bölüm uzunluğu** | η = 1/252 ile 252 günlük bölümde ısınma bölümü dolduruyor (§7). Seçenekler: η büyütmek (örn. 1/63), bölümü uzatmak, ısınmayı bölümden önceki bağlam satırlarında bir referans politikayla doldurmak | Hakem-rl sorusu; M3 ön elemesinden önce karar |
+| 8 | ~~DSR ısınması ↔ bölüm uzunluğu~~ **kapandı (karar 2026-11-16)** | Birincil ödül `'excess'`; `'differential'` yalnız α = 0 ablasyonu (§2.2). Isınma bekçisi yalnız eğitimde | η, ablasyonun ön kaydında |
+| 9 | **Fiyat limiti** | Açılış boşluğu ±%9,5 / ±%19,5 hücre sayısı ölçülecek (`market.open_gap_limit_cells`) | Ölçümden sonra: seyrekse beyan, değilse yön kısıtı (kullanıcı kararı 2026-11-16) |
+| 10 | **M3'e taşınan RL maddeleri** (hakem-rl M2 #4–#7) | Yerel gözleme piyasa bağlamı (kesitsel ortalama z, geçerli oran) ↔ yok; eleştirmene tam z (N×F) ↔ ortalama; TorchRL'de bölüm sonu `terminated=False` ve bootstrap V(sₜ₊₁) ≠ 0 duman testi; başlangıç log-std ~0,2–0,3 / tanh ezmesi, eval'de ortalama eylem | M3 görev + eğitim betiği; gözlem/eleştirmen kolları ablasyon olarak ön kayda |
+| 11 | **Baseline'lar aynı sınırla** (hakem-finans M2 #7) | 1/N ve al-tut aynı `project` ve rf ile ya da duyarlılık satırı | M3/M8 değerlendirme |
+| 12 | **Evren beyanı tez metnine** (hakem-finans M2 #2) | Mutlak performans iddiası yok (§2.5); E1 maskesi hazır olunca eval'e bağlanır | Tez metni; E1 |
+
+---
+
+## 10. Hakem incelemesi (2026-11-16, uç `db8ef48`)
+
+Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin token / 5 araç; hakem-finans ~52 bin / 13. İkisi de Küçük revizyon, test koşmadı. Ölçümleri ana oturum yaptı (`synthetic_checks.json`).
+
+| # | Kaynak | Cid. | Bulgu | Sonuç |
+|---|---|---|---|---|
+| R1 | hakem-rl | BÜYÜK | `'differential'`te α iki terimde aynı anlamı taşımıyor (ölçüldü: std oranı 242, `'excess'`te 6,3) | Karar: birincil `'excess'`, DSR yalnız α = 0 (§2.2); kodda zorlanıyor, test |
+| R2 | hakem-rl | BÜYÜK | DSR (a, b) gözlemde yok → Markov değil | R1 kararıyla DSR yalnız ablasyon; ablasyon raporunda beyan |
+| R3 | hakem-rl | KÜÇÜK | Isınma bekçisi eval'de de tetikleniyor | Düzeltildi (yalnız `mode='train'`), test |
+| R4–R7 | hakem-rl | KÜÇÜK | Yerel gözlemde piyasa bağlamı yok; eleştirmen durumu zayıf; truncation/bootstrap çerçeveye bağlı; başlangıç gürültüsü devir üretir | §9 #10 (M3) |
+| F1 | hakem-finans | BÜYÜK | Geç listelemede ilk gün açılıştan tam dolum (halka arz tavan serisi) | Karar: 20 seans kilit (§2.3); kod + B0 + mutasyon (kilit 0 → test kırılır) |
+| F2 | hakem-finans | BÜYÜK | Evren sonradan seçilmiş; paketteki "bugünkü XU030" ifadesi yanlıştı | Beyan (§2.5), §9 #12 |
+| F3 | hakem-finans | doğrulandı | Fiyatlar düzeltilmiş (yfinance `auto_adjust` varsayılanı True) | Karar: düzeltilmiş kalır + beyan (§2.5), `model_meta.price_basis` |
+| F4 | hakem-finans | KÜÇÜK | Tavan/taban kilidi modellenmedi | Karar: önce ölçüm (§2.5, §9 #9); ölçüm alanı `prepare_panel_m2.py`'ye eklendi |
+| F5 | hakem-finans | KÜÇÜK | Nakit/T+2/kayma varsayımları yazılı değil | Beyan (§2.5) |
+| F6 | hakem-finans | KÜÇÜK | Katkı iddiası kapsamı; gece terimi önceki eyleme ait | Daraltıldı (§2.2 varsayım 3) |
+| F7 | hakem-finans | KÜÇÜK | Sınır fazlası nakde → baseline aynı sınırla koşulmalı | §3.2, §9 #11 |
+| F-S3 | hakem-finans | KÜÇÜK | `valid` kapanışı da içeriyor (açılışta bilinmez) | Beyan + ölçüm alanı (§2.3); sıfır değilse düzeltilir |
+
+İkinci okuma: kademeli kurala göre BÜYÜK bulgu olduğu için aynı hakemlerle (SendMessage), yalnız değişen satırlarla.
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.3 (2026-11-16):** Hakem-rl + hakem-finans ilk okuması (§10). Kullanıcı kararları: birincil ödül `'excess'` (DSR yalnız α = 0), listeleme kilidi 20 seans, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan. Testler 53 + 31. §2.5 yürütme ve veri beyanları.
 - **v0.2 (2026-11-16):** Öz-kontrol bulgusu: varsayılan η ve `episode_len` ile `'differential'` G hep 0'dı. Ortam artık hata veriyor; test 25 → 27 (§7, §9 #8).
 - **v0.1 (2026-11-16):** İlk sürüm. Kullanıcı kararı: logit sınırı 5 + ln N (§3.1). `marl/` çekirdek + PettingZoo ortamı + iki test (49 + 25). Ölçülen: maliyet yaklaşımı ≤ 1,0e-4 günlük getiri farkı (sentetik, 20 bps). `venv-marl/` iş makinesinde CPU torch 2.6.0 ile kuruldu (GPU yok).

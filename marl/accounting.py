@@ -38,13 +38,22 @@ def one_way_cost(bps_roundtrip: float) -> float:
     return float(bps_roundtrip) / 2.0 / 1e4
 
 
-def fill_prices(open_px, close_px) -> dict:
-    """[T, N] ham acilis/kapanis -> tasinmis seriler + gecerlilik maskesi.
+LISTING_LOCKOUT = 20   # kullanici karari 2026-11-16 (hakem-finans M2 #1): halka arz tavan serisi
+
+
+def fill_prices(open_px, close_px, listing_lockout: int = 0) -> dict:
+    """[T, N] acilis/kapanis -> tasinmis seriler + gecerlilik ve islem maskesi.
 
     valid[t,i]: O ve C sonlu ve > 0. Cf: son gecerli kapanis (listelenmeden once NaN).
     Of: gecerli gunde O, degilse Cf_{t-1} (getiri 0). listed[t,i] = Cf[t,i] sonlu.
-    Nedenseldir: satir t yalniz <= t satirlarindan uretilir.
+    tradable[t,i] = valid ve listeleme kilidi disinda: sembol panelde ILK satirdan sonra listelendiyse
+    (ilk gecerli satir > 0) ilk gecerli gunden itibaren `listing_lockout` seans islem yok (halka arz
+    sonrasi tavan serisinde acilistan dolum gercekci degil). Panel basinda zaten listeli sembolun halka
+    arz tarihi panelden gorunmez (beyan, tasarim §2.3).
+    Nedenseldir: satir t yalniz <= t satirlarindan uretilir (ilk gecerli gun o gun bilinir).
     """
+    if listing_lockout < 0:
+        raise ValueError(f"listing_lockout >= 0 olmali: {listing_lockout}")
     o = np.asarray(open_px, dtype=np.float64)
     c = np.asarray(close_px, dtype=np.float64)
     if o.shape != c.shape or o.ndim != 2:
@@ -59,7 +68,16 @@ def fill_prices(open_px, close_px) -> dict:
         of[t] = np.where(v, o[t], last)
         last = np.where(v, c[t], last)
         cf[t] = last
-    return {'open': of, 'close': cf, 'valid': valid, 'listed': np.isfinite(cf)}
+    tradable = valid.copy()
+    lockout = np.zeros((T, N), dtype=bool)
+    if listing_lockout > 0:
+        for i in range(N):
+            first = np.flatnonzero(valid[:, i])
+            if first.size and first[0] > 0:
+                lockout[first[0]:first[0] + listing_lockout, i] = True
+        tradable &= ~lockout
+    return {'open': of, 'close': cf, 'valid': valid, 'listed': np.isfinite(cf),
+            'tradable': tradable, 'lockout': lockout}
 
 
 def step_growth(px: dict, t: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -71,7 +89,7 @@ def step_growth(px: dict, t: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         g_day = cf[t1] / of[t1]
     g_on = np.where(np.isfinite(g_on), g_on, 1.0)
     g_day = np.where(np.isfinite(g_day), g_day, 1.0)
-    tradable = px['valid'][t1].copy()
+    tradable = px['tradable'][t1].copy()
     return g_on, g_day, tradable
 
 

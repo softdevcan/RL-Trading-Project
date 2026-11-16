@@ -22,8 +22,8 @@ from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
 from marl import obs_spec as OS
-from marl.accounting import (DifferentialSharpe, agent_rewards, fill_prices, one_way_cost, step_fractional,
-                             step_growth)
+from marl.accounting import (LISTING_LOCKOUT, DifferentialSharpe, agent_rewards, fill_prices, one_way_cost,
+                             step_fractional, step_growth)
 from marl.orders import apply_to_holdings, rebalance_orders
 from marl.weights import Constraints, logit_bound, project, target_weights
 
@@ -38,7 +38,8 @@ class MarlPortfolioEnv(ParallelEnv):
                  constraints: Constraints = Constraints(), groups: Optional[np.ndarray] = None,
                  reward_term: str = 'excess', reward_scale: float = 100.0, dsr_eta: float = 1.0 / 252,
                  episode_len: int = 252, integer_shares: bool = False, initial_capital: float = 1_000_000.0,
-                 pred: Optional[dict] = None, extras: Optional[np.ndarray] = None):
+                 pred: Optional[dict] = None, extras: Optional[np.ndarray] = None,
+                 listing_lockout: int = LISTING_LOCKOUT):
         if mode not in ('train', 'eval'):
             raise ValueError(f"mode 'train' | 'eval': {mode}")
         if reward_term not in REWARD_TERMS:
@@ -56,7 +57,8 @@ class MarlPortfolioEnv(ParallelEnv):
         self.rf = np.asarray(arrays['rf'], dtype=np.float64)
         if not np.all(np.isfinite(self.rf[start_row + 1:end_row + 1])):
             raise ValueError("pencerede rf eksik (A8 serisi kapsami)")
-        self.px = fill_prices(arrays['open'], arrays['close'])
+        self.listing_lockout = int(listing_lockout)
+        self.px = fill_prices(arrays['open'], arrays['close'], self.listing_lockout)
         feat, ok = OS.compute_raw_features(arrays)
         self._raw_feat, self._ok = feat, ok
         rows = np.zeros(T, dtype=bool)
@@ -86,9 +88,13 @@ class MarlPortfolioEnv(ParallelEnv):
         self.reward_term, self.scale = reward_term, reward_scale
         self.dsr = DifferentialSharpe(dsr_eta)
         self.episode_len = int(episode_len)
-        if reward_term == 'differential':
+        if reward_term == 'differential' and alpha != 0.0:
+            # Kullanici karari 2026-11-16 (hakem-rl M2 #1): tanh(D/2) bireysel terimden ~2 mertebe buyuk
+            # (sentetik olcum: std orani 242); alpha onelemesi yalniz 'excess'te. DSR = alpha 0 ablasyonu.
+            raise ValueError(f"'differential' yalniz alpha=0 ile (ablasyon; birincil odul 'excess'): {alpha}")
+        if reward_term == 'differential' and mode == 'train':
             span = end_row - start_row
-            eff = self.episode_len if (mode == 'train' and self.episode_len < span) else span
+            eff = min(self.episode_len, span)
             if eff <= self.dsr.warmup:
                 # Isinma bolum basinda sifirlanir; bolum isinmadan kisaysa G hep 0 olur ve odul
                 # sessizce yalniz alpha*k_i'ye iner (oz-kontrol 2026-11-16: 252 adim, eta=1/252).
@@ -218,7 +224,8 @@ class MarlPortfolioEnv(ParallelEnv):
             'agent_ids': list(self.possible_agents), 'obs_spec': self.spec.to_dict(),
             'norm_stats': self.norm_stats, 'logit_bound': self.bound,
             'risk_projection': self.constraints.to_dict(), 'cost_one_way': self.cost,
-            'execution': 'close_t_decision__open_t+1_execution', 'reward': {
+            'execution': 'close_t_decision__open_t+1_execution', 'listing_lockout': self.listing_lockout,
+            'price_basis': 'yfinance auto_adjust (bolunme + temettu duzeltilmis)', 'reward': {
                 'alpha': self.alpha, 'term': self.reward_term, 'scale': self.scale,
                 'dsr_eta': self.dsr.eta, 'risk_free': 'A8 funding_rate per_period (t-1)'},
             'train_range': [str(self.dates[self.start_row]), str(self.dates[self.end_row])],

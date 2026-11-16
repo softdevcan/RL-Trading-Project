@@ -155,6 +155,18 @@ check("eksik hucre gunu: hisse 1 dondurulur, agirligi yalniz yeniden normalize o
       len(w2_hist) == 3 and all(n >= 1 for *_, n in w2_hist), str(w2_hist))
 check("eval bolumu tum pencere: adim sayisi = end - start", len(vals) == 200 - 120)
 
+# Listeleme kilidi: sembol 2 satir 90'da listelenir; 90-109 alinamaz, 110 acilisinda alinabilir
+for _int in (False, True):
+    el = make('eval', make().norm_stats, (85, 125), integer_shares=_int, initial_capital=1e9)
+    el.reset(seed=0)
+    w2 = {}
+    while el.agents:
+        act = {a: np.array([el.bound if a == 'agent_2' else -el.bound], np.float32) for a in el.agents}
+        el.step(act)
+        w2[el.t] = el.w[3]   # w[0] nakit; sembol 2 -> indeks 3
+    check(f"kilit ({'tam sayi' if _int else 'kesirli'}): sembol 2 kilitte agirlik 0, kilit bitince alinir",
+          all(w2[t] == 0 for t in range(86, 110)) and w2[110] > 0.5, f"w2[109]={w2[109]:.3f} w2[110]={w2[110]:.3f}")
+
 # ---------------------------------------------------------------------------------------------
 print("\n[6] Held-out olcek")
 tr_env = make()
@@ -203,9 +215,13 @@ check("pozisyon siniri 0,3 (tum logitler +B): kapanista max hisse <= 0,3 x (1 + 
 
 # ---------------------------------------------------------------------------------------------
 print("\n[8] Odul terimi ve TorchRL")
-check("'differential': bolum (100) <= isinma (252) -> ValueError (G sessizce hep 0 olmasin)",
-      raises(lambda: make(reward_term='differential', episode_len=100)))
-ed = make(reward_term='differential', episode_len=100, alpha=0.25, dsr_eta=1.0 / 20)
+check("'differential' alpha != 0 -> ValueError (birincil odul 'excess'; kullanici karari 2026-11-16)",
+      raises(lambda: make(reward_term='differential', episode_len=100, alpha=0.25, dsr_eta=1.0 / 20)))
+check("'differential': egitim bolumu (100) <= isinma (252) -> ValueError (G sessizce hep 0 olmasin)",
+      raises(lambda: make(reward_term='differential', episode_len=100, alpha=0.0)))
+check("'differential' isinma bekcisi eval'de tetiklenmez (kisa pencere, egitim istatistigi)",
+      not raises(lambda: make('eval', make().norm_stats, EV, reward_term='differential', alpha=0.0)))
+ed = make(reward_term='differential', episode_len=100, alpha=0.0, dsr_eta=1.0 / 20)
 td = run(ed, seed=3)
 check("'differential' odul sonlu", all(np.isfinite(r).all() for _, r, _ in td))
 nz = np.mean([inf['dsr_raw'] != 0.0 for _, _, inf in td])

@@ -190,7 +190,7 @@ flowchart TB
 | Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş). Pozitif kontrol ölçümleri: (a) RL'siz değer MDE'yi aşıyor, (b) politika bloktan değer üretmiyor | plan §9.37–9.39; `measurements/phase10-m0/` | İleri veri; S-obs girdisi Faz 10 §3.2.7 |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
-| Faz 10 M2 ortam + karar çekirdeği | **sürüyor**: `marl/` (muhasebe, projeksiyon, K5, `obs_spec` v1, K2) + PettingZoo ortamı; logit sınırı 5 + ln N | [phase-10-m2-design.md](phase-10-m2-design.md); `test_marl_core` 49, `test_marl_env` 27 | Gerçek 30 sembollü panelde gözlem sağlığı ölçümü, S-obs ufuk hizası + PC060 yeni ortamda, hakem-rl + hakem-finans → hakem-2 (tasarım §9) |
+| Faz 10 M2 ortam + karar çekirdeği | **sürüyor**: `marl/` (muhasebe, projeksiyon, K5, `obs_spec` v1, K2) + PettingZoo ortamı; logit sınırı 5 + ln N | [phase-10-m2-design.md](phase-10-m2-design.md); `test_marl_core` 53, `test_marl_env` 31 | Gerçek 30 sembollü panelde gözlem sağlığı ölçümü, S-obs ufuk hizası + PC060 yeni ortamda, hakem-rl + hakem-finans → hakem-2 (tasarım §9) |
 | Faz 10 M3–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M2'den sonra |
 | K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
