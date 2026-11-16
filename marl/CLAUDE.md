@@ -40,4 +40,4 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 ## Test
 - `python tests/test_marl_core.py` (61, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
-- `venv-marl\Scripts\python tests/test_marl_m3.py` (12, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum)
+- `venv-marl\Scripts\python tests/test_marl_m3.py` (18, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7)

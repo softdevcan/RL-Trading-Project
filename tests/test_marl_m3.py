@@ -8,6 +8,9 @@ Kontroller:
      TorchRL GAE terminated=False iken V(s_T)'yi bootstrap eder (terminated=True'da etmez) — iki durumun farki
      gamma * V(s_T); BenchMARL MAPPO kaybi grup `terminated` anahtarina bagli.
   3. Kisa MAPPO kosusu (use_state False / True) tamamlanir; ayni tohumla iki kosu ayni politika ozetini verir.
+  4. M3 kosucusu: politika kaydet/yukle -> ayni agirlik; deterministik degerlendirme iki kez bit-es, tam pencere,
+     egitim norm_stats'i ile; baslangic std'si (R7) olcek eslemesine gecer; baseline'lar ayni muhasebeyle
+     (nakit X = 0, al-tut ilk gunden sonra devir 0, 1/N sonlu ve tam yatirimli).
 
     venv-marl\\Scripts\\python tests/test_marl_m3.py
 """
@@ -153,6 +156,48 @@ check("MAPPO (elestirmen = ortam state()) tamamlandi", es.total_frames >= 400)
 e1 = experiment(0)
 e1.run()
 check("ayni tohum, iki CPU kosusu -> ayni politika ozeti", digest(e0) == digest(e1))
+
+# ---------------------------------------------------------------------------------------------
+print("\n[4] M3 kosucusu: kaydet/yukle, deterministik degerlendirme, baseline")
+from marl import m3_runner as R  # noqa: E402
+build = dict(algo='mappo', seed=3, frames=400, frames_per_batch=200, epochs=2, n_envs=2, parallel=False,
+             init_std=0.12)
+er = R.build_experiment(CFG, **build)
+check("baslangic std'si olcek eslemesine gecer (biased_softplus_0.12)",
+      er.algorithm_config.scale_mapping == 'biased_softplus_0.12', str(er.algorithm_config.scale_mapping))
+from torchrl.envs.utils import ExplorationType, set_exploration_type  # noqa: E402
+
+
+def sampled_logit_std(init_std):
+    ex = R.build_experiment(CFG, **{**build, 'init_std': init_std})
+    td0 = ex.task.get_env_fun(1, True, 0, 'cpu')().reset()
+    with set_exploration_type(ExplorationType.RANDOM):
+        acts = torch.stack([ex.policy(td0.clone())['agent', 'action'] for _ in range(200)])
+    return float(acts.std(0).mean())
+
+
+_s1, _s012 = sampled_logit_std(1.0), sampled_logit_std(0.12)
+check("R7: baslangic gurultusu varsayilan std 1,0'da > 2,5 logit (~tam devir), 0,12'de < 1,5 logit",
+      _s1 > 2.5 and _s012 < 1.5, f"{_s1:.2f} {_s012:.2f}")
+er.run()
+rd = os.path.join(tmp, 'run')
+R.save_policy(er, CFG, {'build': build, 'policy_sha256': digest(er)}, rd)
+el, meta = R.load_policy(rd)
+check("kaydet/yukle: ayni politika ozeti", digest(el) == digest(er))
+ecfg = {**CFG, 'mode': 'eval', 'start_row': 180, 'end_row': 259,
+        'norm_stats_path': os.path.join(rd, 'norm_stats.json')}
+s1 = R.deterministic_rollout(el.policy, ecfg)
+s2 = R.deterministic_rollout(el.policy, ecfg)
+check("deterministik degerlendirme: iki kosu bit-es, tam pencere (79 adim), X sonlu",
+      np.array_equal(s1['X'], s2['X']) and len(s1['X']) == 79 and np.all(np.isfinite(s1['X'])), str(len(s1['X'])))
+check("degerlendirme ortami 'fit' kabul etmez (held-out olcek egitimden)",
+      raises(lambda: R.deterministic_rollout(el.policy, {**ecfg, 'norm_stats_path': None})))
+_pa = PN.load_npz(panel_path)
+bl = {k: R.rule_series(_pa, 120, 200, k, 20.0, limit_down_gap=0.095) for k in ('ew', 'bh', 'cash')}
+check("baseline: nakit X = 0, al-tut ilk gunden sonra devir 0, 1/N X sonlu ve tam yatirimli",
+      np.abs(bl['cash']['X']).max() < 1e-15 and np.abs(bl['bh']['turnover'][1:]).max() < 1e-12
+      and np.all(np.isfinite(bl['ew']['X'])) and bl['ew']['cash_weight'].max() < 1e-12,
+      f"{np.abs(bl['cash']['X']).max()} {np.abs(bl['bh']['turnover'][1:]).max()} {bl['ew']['cash_weight'].max()}")
 
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)
