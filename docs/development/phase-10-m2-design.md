@@ -126,6 +126,16 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
   | Tavan (≥ +%9,5) | 35 | %0,061 | `frac_up` ≥ %0,1 | engel yok, beyan |
 
   ±%19,5 boşlukta 1 tavan, 2 taban hücresi var. **Uygulama:** `fill_prices(limit_down_gap=0.095)` → `no_sell[t] = valid ∧ Oₜ/Cfₜ₋₁ ≤ 0,905`. Projeksiyon §3.2 e, K5 bekçisi §4. Ortamın gördüğü engelli hücre sayısı 38: ısınma ve kilit hücreleri düşülünce kalan; eğitim satırlarında 18, doğrulama satırlarında 20 (`market.no_sell_cells*`). Engel t+1 açılışında bilinir, yürütme de t+1 açılışında olur; bu yüzden sızıntı değil. Canlı karar `no_sell=None` verir, çünkü karar kapanışta verilir ve tabandaki satış emri borsada dolmaz. **Beyan:** tavan açılışta alım tam dolar (iyimser), oran ön kayıtlı eşiğin altında. Eşik bir açılış boşluğu yaklaşımıdır, gerçek limit fiyatı değildir: baz fiyat düzeltilmiş kapanıştır ve seans içinde tabana inen fiyat modellenmez.
+  - **ÖN KAYIT v0.7 — dönem bağımlı marj (KARAR 2026-11-16, kullanıcı; hakem-2 H1).** Yukarıdaki sabit 0,095 kuralının dayanağı ("−%9,5 açılış = taban") veri döneminde yanlıştı. Pay fiyat marjı baz fiyatın:
+    - 2015-11-30..2020-03-12: **±%20**; baz = önceki kapanış (Borsa İstanbul, *BISTECH sistemiyle pay piyasası yeni yapıdaki işlevsel değişiklikler* §2.1.1–2.1.2)
+    - 2020-03-13'ten itibaren: **±%10** (bianet, 13.03.2020: Yıldız/Ana Pazar %20/%15 → %10, "ikinci bir duyuruya kadar")
+    - BISTECH öncesi (< 2015-11-30): marj **doğrulanamadı**; baz önceki seansın ağırlıklı ortalaması. ±%20 **varsayılır ve beyan edilir**.
+
+    **Kural:** `no_sell[t] = valid ∧ Oₜ/Cfₜ₋₁ ≤ 1 − (marjₜ − 0,005)`. Ön kayıttaki 0,5 puanlık tolerans korunur. Frekans eşiği (`frac_down` ≥ %0,05) artık kullanılmaz: bu bir piyasa kuralının modellenmesidir, frekansa göre açılıp kapanmaz. Tavan yönü değişmez (engel yok, beyan).
+
+    **Doğrulanmış kapsam** 2020-12-31'de biter. Bu tarihten sonraki satırlarda takvim kullanılırsa kod hata verir. 2021+ pencerelerinden (M8) önce marj geçmişi kaynakla doğrulanıp takvim uzatılır.
+
+    **Duyarlılık:** sabit 0,095 kuralı ve engelsiz kol aynı ölçümlerde ayrı satır olarak raporlanır (`pc_alignment_*`). Sabit kural `LIMIT_DOWN_GAP_FIXED` adıyla yalnız duyarlılık ve testler için kalır. Kod: `accounting.limit_down_gaps(dates)`, ortam varsayılanı `limit_down_gap='schedule'`.
 - **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
 - **Evren (hakem-finans M2 #2).** Panel dondurulmuş bir 30'lu liste (E0); tarihsel üyelik değil, 6 hissesi bugün XU030'da değil (`data/CLAUDE.md`). Evren sonradan seçilmiştir. **Mutlak performans iddiası yapılmaz;** yalnız aynı evrende göreli karşılaştırma (MARL ↔ SARL ↔ baseline). E1 üyelik maskesi hazır olunca eval'e bağlanır. Bu beyan tez metnine de girer.
 
