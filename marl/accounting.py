@@ -39,13 +39,42 @@ def one_way_cost(bps_roundtrip: float) -> float:
 
 
 LISTING_LOCKOUT = 20   # kullanici karari 2026-11-16 (hakem-finans M2 #1): halka arz tavan serisi
-# Tasarim §9 #9 ON KAYDI (2026-11-16, olcumden once yazildi): taban frac_down >= %0,05 -> acilis boslugu
-# <= -%9,5 olan hucrede SATIS engeli. Olcum (obs_health.json, 2013-06..2020-12): frac_down %0,074 -> engel.
-# Tavan frac_up %0,061 < %0,1 -> alim engeli YOK (beyan). Esik olcumden sonra degistirilmez.
-LIMIT_DOWN_GAP = 0.095
+# Taban acilista SATIS engeli. ON KAYIT v0.7 (tasarim §2.5; kullanici karari 2026-11-16, hakem-2 H1): donem
+# bagimli fiyat marji, no_sell = O_t / Cf_{t-1} <= 1 - (marj_t - 0,005). Kaynaklar: BISTECH belgesi §2.1.2
+# (2015-11-30'dan itibaren paylarda %20, baz = onceki kapanis); bianet 13.03.2020 (%10). BISTECH oncesi marj
+# DOGRULANMADI: %20 varsayilir (beyan). Dogrulanmis kapsam PRICE_MARGIN_VERIFIED_UNTIL'de biter; sonrasi hata.
+# Tavan: alim engeli YOK (beyan). Eski sabit kural (§9 #9, v0.5) yalniz duyarlilik ve testler icin:
+LIMIT_DOWN_GAP_FIXED = 0.095
+PRICE_MARGIN_PRE_BISTECH = 0.20                                # DOGRULANMADI (beyan)
+PRICE_MARGIN_SCHEDULE = (('2015-11-30', 0.20), ('2020-03-13', 0.10))   # (yururluk tarihi, marj)
+PRICE_MARGIN_VERIFIED_UNTIL = '2020-12-31'
+LIMIT_TOLERANCE = 0.005
 
 
-def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap: float = 0.0) -> dict:
+def limit_down_gaps(dates) -> np.ndarray:
+    """[T] satir basina taban esigi (marj_t - 0,005); `fill_prices(limit_down_gap=...)` girdisi.
+
+    dates: 'YYYY-MM-DD' dizgileri (panel `dates`). Dogrulanmis kapsamin disindaki tarih -> ValueError
+    (2021+ pencerelerinden once marj gecmisi kaynakla dogrulanip takvim uzatilir; sessiz varsayilan yok).
+    """
+    d = np.asarray([str(x)[:10] for x in dates])
+    last = max(d.tolist()) if d.size else ''
+    if d.size and (last > PRICE_MARGIN_VERIFIED_UNTIL or not all(len(x) == 10 and x[4] == '-' for x in d)):
+        raise ValueError(f"fiyat marji takvimi yalniz {PRICE_MARGIN_VERIFIED_UNTIL}'e kadar dogrulandi "
+                         f"(son tarih {last}); tasarim §2.5 v0.7. Sentetik/duyarlilik icin sabit esik ver")
+    m = np.full(d.shape, PRICE_MARGIN_PRE_BISTECH)
+    for start, margin in PRICE_MARGIN_SCHEDULE:
+        m[d >= start] = margin
+    return m - LIMIT_TOLERANCE
+
+
+def margin_schedule_meta() -> dict:
+    return {'rule': 'no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)', 'tolerance': LIMIT_TOLERANCE,
+            'pre_bistech_assumed_unverified': PRICE_MARGIN_PRE_BISTECH, 'schedule': [list(x) for x in PRICE_MARGIN_SCHEDULE],
+            'verified_until': PRICE_MARGIN_VERIFIED_UNTIL, 'preregistration': 'phase-10-m2-design.md §2.5 v0.7 (b8e310e)'}
+
+
+def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap=0.0) -> dict:
     """[T, N] acilis/kapanis -> tasinmis seriler + gecerlilik ve islem maskesi.
 
     valid[t,i]: O ve C sonlu ve > 0. Cf: son gecerli kapanis (listelenmeden once NaN).
@@ -54,18 +83,20 @@ def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap: flo
     (ilk gecerli satir > 0) ilk gecerli gunden itibaren `listing_lockout` seans islem yok (halka arz
     sonrasi tavan serisinde acilistan dolum gercekci degil). Panel basinda zaten listeli sembolun halka
     arz tarihi panelden gorunmez (beyan, tasarim §2.3).
-    no_sell[t,i]: gecerli gunde O_t / Cf_{t-1} <= 1 - limit_down_gap (taban acilis; satis emri dolmaz).
-    t acilisinda bilinir, yurutme t acilisinda: ileriye bakis degil. 0 = kapali (gozlem yolu kapali kullanir).
+    no_sell[t,i]: gecerli gunde O_t / Cf_{t-1} <= 1 - limit_down_gap[t] (taban acilis; satis emri dolmaz).
+    limit_down_gap: sabit ya da [T] (`limit_down_gaps(dates)`, donem bagimli marj). t acilisinda bilinir,
+    yurutme t acilisinda: ileriye bakis degil. 0 = kapali (gozlem yolu kapali kullanir).
     Nedenseldir: satir t yalniz <= t satirlarindan uretilir (ilk gecerli gun o gun bilinir).
     """
     if listing_lockout < 0:
         raise ValueError(f"listing_lockout >= 0 olmali: {listing_lockout}")
-    if not (0.0 <= limit_down_gap < 1.0):
-        raise ValueError(f"limit_down_gap [0, 1) olmali: {limit_down_gap}")
     o = np.asarray(open_px, dtype=np.float64)
     c = np.asarray(close_px, dtype=np.float64)
     if o.shape != c.shape or o.ndim != 2:
         raise ValueError(f"open/close [T, N] ve ayni boyut olmali: {o.shape}, {c.shape}")
+    ldg = np.broadcast_to(np.asarray(limit_down_gap, dtype=np.float64), (o.shape[0],))
+    if np.any(ldg < 0) or np.any(ldg >= 1):
+        raise ValueError(f"limit_down_gap [0, 1) olmali: {limit_down_gap}")
     valid = np.isfinite(o) & np.isfinite(c) & (o > 0) & (c > 0)
     T, N = c.shape
     cf = np.full((T, N), np.nan)
@@ -85,10 +116,11 @@ def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap: flo
                 lockout[first[0]:first[0] + listing_lockout, i] = True
         tradable &= ~lockout
     no_sell = np.zeros((T, N), dtype=bool)
-    if limit_down_gap > 0 and T > 1:
+    if np.any(ldg > 0) and T > 1:
         with np.errstate(invalid='ignore', divide='ignore'):
             gap = o[1:] / cf[:-1]
-        no_sell[1:] = valid[1:] & np.isfinite(gap) & (gap <= 1.0 - limit_down_gap)
+        on = (ldg[1:] > 0)[:, None]
+        no_sell[1:] = on & valid[1:] & np.isfinite(gap) & (gap <= 1.0 - ldg[1:, None])
     return {'open': of, 'close': cf, 'valid': valid, 'listed': np.isfinite(cf),
             'tradable': tradable, 'lockout': lockout, 'no_sell': no_sell}
 

@@ -48,6 +48,14 @@ def check(name, condition, detail=""):
         print(f"  [FAIL] {name}  {detail}")
 
 
+def raises(fn, exc=ValueError):
+    try:
+        fn()
+    except exc:
+        return True
+    return False
+
+
 # ---------------------------------------------------------------------------------------------
 print("\n[1] Logit siniri")
 caps = []
@@ -167,12 +175,26 @@ check("kilit negatif -> ValueError", _neg)
 _go = _la['open'].copy()
 _go[120, 0] = _la['close'][119, 0] * 0.90
 _go[121, 0] = _la['close'][120, 0] * 0.906
-_gp = A.fill_prices(_go, _la['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+_gp = A.fill_prices(_go, _la['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP_FIXED)
 _gp0 = A.fill_prices(_go, _la['close'], A.LISTING_LOCKOUT)
-_gc = A.fill_prices(_go[:121], _la['close'][:121], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+_gc = A.fill_prices(_go[:121], _la['close'][:121], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP_FIXED)
 check("satis engeli: -%10 bosluk engelli, -%9,4 degil; esik 0 -> hic; nedensel (B0)",
       _gp['no_sell'][120, 0] and not _gp['no_sell'][121, 0] and not _gp0['no_sell'].any()
       and np.array_equal(_gc['no_sell'], _gp['no_sell'][:121]) and not _gp['no_sell'][~_gp['valid']].any())
+# v0.7 donem bagimli marj (hakem-2 H1): 2015-11-30 oncesi ve +-%20 doneminde esik 0,195, 2020-03-13'ten 0,095
+_ld = A.limit_down_gaps(['2014-01-02', '2015-11-27', '2015-11-30', '2020-03-12', '2020-03-13', '2020-12-31'])
+check("v0.7 takvim: 0,195 / 0,195 / 0,195 / 0,195 / 0,095 / 0,095",
+      np.allclose(_ld, [0.195, 0.195, 0.195, 0.195, 0.095, 0.095]))
+check("v0.7 takvim: dogrulanmis kapsam disi (2021-01-04) ve tarih olmayan girdi -> ValueError",
+      raises(lambda: A.limit_down_gaps(['2020-12-31', '2021-01-04'])) and raises(lambda: A.limit_down_gaps(['d0001'])))
+_go2 = _la['open'].copy()
+_go2[120, 0] = _la['close'][119, 0] * 0.85     # -%15: sabit kuralda engel, +-%20 doneminde engel yok
+_go2[121, 0] = _la['close'][120, 0] * 0.80     # -%20: her iki kuralda engel
+_row = np.full(_go2.shape[0], 0.195)
+_row[121:] = 0.095
+_gs = A.fill_prices(_go2, _la['close'], 0, _row)
+check("satir basina esik: -%15 bosluk +-%20 doneminde engelsiz, -%20 engelli",
+      not _gs['no_sell'][120, 0] and _gs['no_sell'][121, 0])
 # hakem-rl M2 #8: kilit gozlemde ayri bayrak degil; kilitli hucrede feat_ok = 0 oldugu icin ajan gorur.
 # Degismez: kilit penceresi feat_ok = 0 penceresinin icinde (kilit uzar ya da ozellik isinmasi kisalirsa kirilir)
 from marl import obs_spec as _OS  # noqa: E402

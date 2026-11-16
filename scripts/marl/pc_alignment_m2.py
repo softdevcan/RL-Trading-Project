@@ -206,6 +206,8 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--extra-seeds', default=None, help='or. 1-8: betimsel tohum yayilimi (birincil karar degismez)')
     ap.add_argument('--seeds-out', default=None)
+    ap.add_argument('--limit-rule', default='fixed', choices=['fixed', 'schedule', 'off'],
+                    help="satis engeli: fixed = 0,095 (§9.1 on kaydindaki), schedule = v0.7 donem bagimli marj, off
     a = ap.parse_args()
     from marl import accounting as A
     from marl import panel as PN
@@ -217,7 +219,8 @@ def main():
         raise SystemExit(f"panel SHA {arrays['sha256']} != on kayit {PANEL_SHA}")
     if max(arrays['dates']) > '2020-12-31':
         raise SystemExit('panel 2021+ iceriyor; M2 olcumu 2021 okumaz')
-    px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+    ldg = {'fixed': A.LIMIT_DOWN_GAP_FIXED, 'schedule': A.limit_down_gaps(arrays['dates']), 'off': 0.0}[a.limit_rule]
+    px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, ldg)
     proto = json.load(open(PROTOCOL, encoding='utf-8'))['prediction_levels']['PC060']
     from app.auth import workspace as ws
     table, tinfo = load_table(proto['table'])
@@ -251,7 +254,7 @@ def main():
     prov = _provenance()
     rec = {'preregistration': 'phase-10-m2-design.md §9.1, commit 0232f11 (sonuctan once)', **prov,
            'panel': PANEL.replace(os.sep, '/'), 'panel_sha256': arrays['sha256'], 'table': tinfo['run_id'],
-           'table_sha256': tinfo['sha256'], 'cost_one_way': COST, 'threshold': THRESHOLD, 'windows': WINDOWS,
+           'table_sha256': tinfo['sha256'], 'cost_one_way': COST, 'limit_rule': a.limit_rule, 'threshold': THRESHOLD, 'windows': WINDOWS,
            'primary_window': PRIMARY, 'results': res, 'reading': reading,
            'warning': 'sinyal bilerek gelecekten; ust sinir, strateji onerisi degil; tez sonucu degil'}
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

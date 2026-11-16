@@ -66,8 +66,8 @@ def main():
     except Exception:  # noqa: BLE001
         commit = None
     # Hakem-finans M2 #1, #4, Q3 (2026-11-16): kilit, fiyat limiti, acilis gecerli / kapanis eksik
-    from marl.accounting import LIMIT_DOWN_GAP, LISTING_LOCKOUT, fill_prices
-    px = fill_prices(arrays['open'], arrays['close'], LISTING_LOCKOUT, LIMIT_DOWN_GAP)
+    from marl.accounting import LISTING_LOCKOUT, fill_prices, limit_down_gaps, margin_schedule_meta
+    px = fill_prices(arrays['open'], arrays['close'], LISTING_LOCKOUT, limit_down_gaps(dates))   # v0.7
     with np.errstate(invalid='ignore', divide='ignore'):
         g_on = px['open'][1:] / px['close'][:-1]
     v1 = px['valid'][1:] & px['listed'][:-1]
@@ -99,7 +99,7 @@ def main():
         'post_lockout_first10_gaps': post,
         'open_valid_close_missing_cells': int((o_ok & ~c_ok).sum()),
         # §9 #9 kurali uygulandiktan sonra ortamin gordugu maske (tradable & no_sell; ortam penceresi >= WARMUP_ROWS)
-        'limit_down_gap': LIMIT_DOWN_GAP,
+        'limit_down_no_sell': margin_schedule_meta(),
         'no_sell_cells': int((px['no_sell'] & px['tradable'])[OS.WARMUP_ROWS:].sum()),
         'no_sell_cells_health_rows': int((px['no_sell'] & px['tradable'])[rows].sum()),
         'no_sell_cells_val_rows': int((px['no_sell'] & px['tradable'])[val_rows].sum()),

@@ -22,7 +22,7 @@ from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
 from marl import obs_spec as OS
-from marl.accounting import (LIMIT_DOWN_GAP, LISTING_LOCKOUT, DifferentialSharpe, agent_rewards, fill_prices, one_way_cost,
+from marl.accounting import (LISTING_LOCKOUT, DifferentialSharpe, limit_down_gaps, margin_schedule_meta, agent_rewards, fill_prices, one_way_cost,
                              step_fractional, step_growth)
 from marl.orders import apply_to_holdings, rebalance_orders
 from marl.weights import Constraints, logit_bound, project, target_weights
@@ -39,7 +39,7 @@ class MarlPortfolioEnv(ParallelEnv):
                  reward_term: str = 'excess', reward_scale: float = 100.0, dsr_eta: float = 1.0 / 252,
                  episode_len: int = 252, integer_shares: bool = False, initial_capital: float = 1_000_000.0,
                  pred: Optional[dict] = None, extras: Optional[np.ndarray] = None,
-                 listing_lockout: int = LISTING_LOCKOUT, limit_down_gap: float = LIMIT_DOWN_GAP):
+                 listing_lockout: int = LISTING_LOCKOUT, limit_down_gap='schedule'):
         if mode not in ('train', 'eval'):
             raise ValueError(f"mode 'train' | 'eval': {mode}")
         if reward_term not in REWARD_TERMS:
@@ -58,8 +58,15 @@ class MarlPortfolioEnv(ParallelEnv):
         if not np.all(np.isfinite(self.rf[start_row + 1:end_row + 1])):
             raise ValueError("pencerede rf eksik (A8 serisi kapsami)")
         self.listing_lockout = int(listing_lockout)
-        self.limit_down_gap = float(limit_down_gap)
-        self.px = fill_prices(arrays['open'], arrays['close'], self.listing_lockout, self.limit_down_gap)
+        # Satis engeli: 'schedule' = donem bagimli marj (tasarim §2.5 v0.7; dogrulanmis kapsam disinda hata),
+        # sayi = sabit esik (duyarlilik / sentetik test), 0 = kapali
+        if isinstance(limit_down_gap, str):
+            if limit_down_gap != 'schedule':
+                raise ValueError(f"limit_down_gap 'schedule' ya da sayi: {limit_down_gap}")
+            ldg, self._limit_meta = limit_down_gaps(self.dates), margin_schedule_meta()
+        else:
+            ldg, self._limit_meta = float(limit_down_gap), {'rule': 'fixed', 'limit_down_gap': float(limit_down_gap)}
+        self.px = fill_prices(arrays['open'], arrays['close'], self.listing_lockout, ldg)
         feat, ok = OS.compute_raw_features(arrays)
         self._raw_feat, self._ok = feat, ok
         rows = np.zeros(T, dtype=bool)
@@ -229,7 +236,7 @@ class MarlPortfolioEnv(ParallelEnv):
             'norm_stats': self.norm_stats, 'logit_bound': self.bound,
             'risk_projection': self.constraints.to_dict(), 'cost_one_way': self.cost,
             'execution': 'close_t_decision__open_t+1_execution', 'listing_lockout': self.listing_lockout,
-            'limit_down_no_sell_gap': self.limit_down_gap,
+            'limit_down_no_sell': self._limit_meta,
             'price_basis': 'yfinance auto_adjust (bolunme + temettu duzeltilmis)', 'reward': {
                 'alpha': self.alpha, 'term': self.reward_term, 'scale': self.scale,
                 'dsr_eta': self.dsr.eta, 'risk_free': 'A8 funding_rate per_period (t-1)'},

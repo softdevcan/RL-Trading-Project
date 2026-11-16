@@ -68,6 +68,7 @@ EV = (180, 259)
 
 
 def make(mode='train', stats='fit', rows=TR, **kw):
+    kw.setdefault('limit_down_gap', 0.095)   # sentetik tarihler ('d0000') v0.7 takvimi disinda (bilerek hata verir)
     return MarlPortfolioEnv(arr, start_row=rows[0], end_row=rows[1], norm_stats=stats, mode=mode, **kw)
 
 
@@ -173,7 +174,7 @@ _arr_g['open'][115, 0] = arr['close'][114, 0] * 0.88
 _L = 115
 for _gap in (None, 0.0):
     for _int in (False, True):
-        kw = {} if _gap is None else {'limit_down_gap': _gap}
+        kw = {'limit_down_gap': 0.095 if _gap is None else _gap}
         eg = MarlPortfolioEnv(_arr_g, 100, 125, norm_stats=make().norm_stats, mode='eval',
                               integer_shares=_int, initial_capital=1e9, **kw)
         eg.reset(seed=0)
@@ -194,7 +195,9 @@ for _gap in (None, 0.0):
         else:
             check(f"satis engeli kapali ({lbl}; kontrol kolu): ayni gun satilir",
                   nb == 0 and w1 < 0.01, f"{hist[_L]}")
-check("model_meta satis engeli esigini tasir", make().model_meta()['limit_down_no_sell_gap'] == 0.095)
+check("model_meta satis engeli kuralini tasir; 'schedule' takvim disi tarihte acik hata (sessiz varsayilan yok)",
+      make().model_meta()['limit_down_no_sell'] == {'rule': 'fixed', 'limit_down_gap': 0.095}
+      and raises(lambda: MarlPortfolioEnv(arr, TR[0], TR[1], norm_stats='fit')))
 
 # ---------------------------------------------------------------------------------------------
 print("\n[6] Held-out olcek")

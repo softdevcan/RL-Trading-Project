@@ -36,7 +36,8 @@ def main():
     from marl import panel as PN
     arr = PN.load_npz(os.path.join('data', 'marl', 'panel_m2.npz'))
     d, sy = arr['dates'], arr['symbols']
-    px = A.fill_prices(arr['open'], arr['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+    px = A.fill_prices(arr['open'], arr['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP_FIXED)
+    pxs = A.fill_prices(arr['open'], arr['close'], A.LISTING_LOCKOUT, A.limit_down_gaps(d))   # v0.7 takvim
     with np.errstate(invalid='ignore', divide='ignore'):
         gap = arr['open'][1:] / px['close'][:-1]
         gday = arr['close'][1:] / arr['open'][1:]
@@ -58,10 +59,19 @@ def main():
         reg = next(n for n, lo, hi, _ in REGIMES if lo <= rd[t] <= hi)
         out['down_0.095_cells'].append({'date': str(rd[t]), 'symbol': str(sy[i]), 'regime': reg,
                                         'gap': float(gap[t, i]), 'open_to_close': float(gday[t, i])})
+    from marl import obs_spec as OS
+    env_rows = np.arange(len(d)) >= OS.WARMUP_ROWS
+    for nm, p_ in (('fixed_0.095', px), ('schedule_v0.7', pxs)):
+        ns = p_['no_sell'] & p_['tradable'] & env_rows[:, None]
+        out.setdefault('no_sell_env_cells', {})[nm] = {
+            'n': int(ns.sum()), 'cells': [{'date': str(d[t]), 'symbol': str(sy[i])} for t, i in np.argwhere(ns)]}
+    out['schedule'] = A.margin_schedule_meta()
     with open(a.out, 'w', encoding='utf-8') as fh:
         json.dump(out, fh, indent=1, ensure_ascii=False)
     for n, r in out['regimes'].items():
         print(n, {k: (len(v_) if isinstance(v_, list) else v_) for k, v_ in r.items()})
+    print('ortam penceresinde no_sell hucresi:', {k: v_['n'] for k, v_ in out['no_sell_env_cells'].items()},
+          out['no_sell_env_cells']['schedule_v0.7']['cells'])
 
 
 if __name__ == '__main__':
