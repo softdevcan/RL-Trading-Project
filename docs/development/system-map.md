@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.3.0` · Pozitif kontrol ölçümleri (Faz 9 §9.38–9.39): PC060'ın RL'siz değeri MDE'yi aşıyor, eski ortamın politikaları bloktan değer üretmiyor → Faz 10 S-obs girdisi. Sırada Faz 10 M2.
+**Son güncelleme:** 2026-11-16 · `v2.3.0` · Faz 10 M2 başladı: `marl/` çekirdeği (muhasebe, projeksiyon, K5 emir, `obs_spec` v1, K2 paritesi) + PettingZoo ortamı, testli; logit sınırı 5 + ln N (kullanıcı kararı). Sırada gerçek panel ölçümü ve hakem incelemesi ([M2 tasarımı](phase-10-m2-design.md) §9).
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -62,7 +62,7 @@ flowchart LR
     ENV["TradingEnv tek ajan<br/>+ P4 tahmin bloğu"]:::done
     SB3["SB3 A2C/PPO/TD3/SAC<br/>doğrulamada seçim"]:::done
     HPO["HPO Optuna<br/>tohumlu sampler"]:::done
-    MENV["MARL ortamı M2<br/>hisse başına ajan, CTDE"]:::planned
+    MENV["MARL ortamı M2<br/>hisse başına ajan, CTDE<br/>marl/ çekirdek + env"]:::active
     DEC["Karar katmanı K<br/>canlı parite K13"]:::planned
   end
 
@@ -147,7 +147,7 @@ flowchart TB
 
   subgraph F10["Faz 10: MARL"]
     M1["M1 spike: BenchMARL seçildi<br/>7/7, §3.2.7"]:::done
-    M2["M2 ortam + K karar katmanı"]:::planned
+    M2["M2 ortam + K karar katmanı<br/>çekirdek testli, ölçüm + hakem açık"]:::active
     M34["M3/M4 MAPPO, iletişim"]:::planned
     M5["M5 güvenli mesaj H2/H3"]:::planned
     M67["M6/M7 rejim, yorum"]:::planned
@@ -190,7 +190,8 @@ flowchart TB
 | Milestone 0' koşumları | **bitti, ara karar** (180/180; Q2 boş, PC060 boş). Pozitif kontrol ölçümleri: (a) RL'siz değer MDE'yi aşıyor, (b) politika bloktan değer üretmiyor | plan §9.37–9.39; `measurements/phase10-m0/` | İleri veri; S-obs girdisi Faz 10 §3.2.7 |
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
-| Faz 10 M2–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M1'den sonra |
+| Faz 10 M2 ortam + karar çekirdeği | **sürüyor**: `marl/` (muhasebe, projeksiyon, K5, `obs_spec` v1, K2) + PettingZoo ortamı; logit sınırı 5 + ln N | [phase-10-m2-design.md](phase-10-m2-design.md); `test_marl_core` 49, `test_marl_env` 25 | Gerçek 30 sembollü panelde gözlem sağlığı ölçümü, S-obs ufuk hizası + PC060 yeni ortamda, hakem-rl + hakem-finans → hakem-2 (tasarım §9) |
+| Faz 10 M3–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M2'den sonra |
 | K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
 | Y30 SHAP ucu, Y31 altın birimi | açık (ürün) | `prediction/CLAUDE.md` | Tez sonucu değil |

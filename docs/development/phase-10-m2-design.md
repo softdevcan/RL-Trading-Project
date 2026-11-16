@@ -1,0 +1,295 @@
+# Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
+
+**Sürüm:** v0.1 · 2026-11-16 · dal `feat/phase10-m2-core`
+**Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
+**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli. Performans sayısı **yok** (S1). Gerçek 30 sembollü panelde ölçüm ve hakem incelemesi yapılmadı (§9).
+
+Bu belge planın M2 tasarım maddelerini koda bağlar. Bir madde burada ve kodda farklıysa kod hatalıdır. Bu belge değişmeden kod değiştirilmez.
+
+---
+
+## 0. Kapsam
+
+| Plan maddesi | Burada | Kod |
+|---|---|---|
+| §8 #13 zaman indeksli muhasebe denklemi | §2 | `marl/accounting.py` |
+| §3.2.1 nakit faizi + G2 (A8 serisi, t−1) | §2.2 | `accounting.step_fractional`, `panel.risk_free_for` |
+| §3.2.2 eylem uzayı, nakit logiti (M1 girdisi) | §3.1 | `weights.logit_bound`, `target_weights` |
+| §3.2.2 + K6 risk projeksiyonu | §3.2 | `weights.project` |
+| §3.2.2 kesirli/tam sayı, K5 emir üretimi | §4 | `marl/orders.py` |
+| §3.2.3 gözlem, K18/K26 ölçeksiz özellikler, S-obs | §5 | `marl/obs_spec.py` |
+| K2 ortak gözlem kurucu (bit-eş) | §5.4 | `obs_spec.build_obs_at` |
+| M1 girdisi: eksik hücre maskesi | §2.3, §6 | `accounting.fill_prices`, `panel.build_arrays` |
+| K1 model meta alanları (ortam kısmı) | §7 | `MarlPortfolioEnv.model_meta` |
+| PettingZoo Parallel ortamı | §7 | `marl/env.py` |
+
+**Kapsam dışı (sonraki adımlar):**
+- BenchMARL görev sarmalayıcısı ve eğitim betiği (M3)
+- canlı uç `POST /api/marl/daily-decision` (karar katmanı K3–K10)
+- iletişim kolları (M4)
+- PC060'ın yeni ortamda kurulması (§9)
+
+---
+
+## 1. Paket yerleşimi (plandan sapma)
+
+Plan §3.2 yeni ortamı `env/marl_trading_env.py` olarak adlandırıyor. Kod **`marl/`** üst düzey paketine kondu:
+
+- `env/__init__.py`, `trading_env`'i hevesle import ediyor. `env/` altındaki her modül eski ortamı ve onun bağımlılıklarını yanında getirirdi.
+- K9 uyarınca üretim kodu PettingZoo/TorchRL'e bağlanmamalı; ama K2 ve K5 için canlı karar ortamla **aynı** fonksiyonu çağırmalı.
+
+Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
+
+| Katman | Modüller | Bağımlılık | Çalıştığı ortam |
+|---|---|---|---|
+| Saf çekirdek | `weights`, `accounting`, `orders`, `obs_spec`, `panel` | numpy (panel: pandas) | `venv/` (canlı karar) ve `venv-marl/` (eğitim) |
+| Ortam | `env` | + gymnasium, pettingzoo | yalnız `venv-marl/` |
+
+`marl/__init__.py` hiçbir alt modülü import etmez. `env/trading_env.py` ve eski state space değişmez.
+
+---
+
+## 2. Muhasebe denklemi (hakem-2 #13)
+
+### 2.1 Gösterim
+
+- Seanslar t = 0..T−1; bunlar veri kapısından geçmiş takvimin satırlarıdır (§6).
+- N sembol, sırası panelin görünme sırası (meta `symbols`).
+- Ağırlık vektörü w ∈ Δᴺ: indeks 0 **nakit**, 1..N hisseler.
+- Oᵗᵢ, Cᵗᵢ ham açılış ve kapanış. `fill_prices` bunlardan taşınmış seriler üretir (§2.3):
+  - Cf: son geçerli kapanış
+  - Of: geçerli günde O, değilse Cfₜ₋₁
+- rfₜ₊₁: A8 dönem başı risksiz getiri, `evaluation.risk_free.per_period_rate`. t'de bilinen yıllık oran, t ile t+1 arasındaki takvim günü kadar bileşik uygulanır.
+- c: **tek yön** maliyet = gidiş-dönüş bps / 2 / 1e4. D4 ızgarasıyla aynı (`evaluation/baselines.py`); ana senaryo 20 bps → c = 0,001.
+
+### 2.2 Bir adım: karar t kapanışında, yürütme t+1 açılışında (K12)
+
+| Parça | Aralık | Denklem |
+|---|---|---|
+| 1. Gece | kapanışₜ → açılışₜ₊₁ | g_onᵢ = Ofₜ₊₁,ᵢ / Cfₜ,ᵢ; nakit (1 + rfₜ₊₁). g₁ = w₀(1+rf) + Σᵢ wᵢ g_onᵢ; kaymış ağırlık w̃ = drift / g₁ |
+| 2. Yürütme | açılışₜ₊₁ | Hedef w* = project(softmax([0, z]), w̃, …) (§3). Devir τ = Σᵢ \|w*ᵢ − w̃ᵢ\|, **yalnız hisseler**; nakit devre girmez. Maliyet payı c·τ |
+| 3. Seans içi | açılışₜ₊₁ → kapanışₜ₊₁ | g_dayᵢ = Cfₜ₊₁,ᵢ / Ofₜ₊₁,ᵢ; g₂ = w*₀ + Σᵢ w*ᵢ g_dayᵢ. Nakit seans içinde faiz **kazanmaz** |
+
+- **Portföy getirisi:** R = g₁ (1 − cτ) g₂ − 1
+- **Fazla getiri:** X = R − rfₜ₊₁
+- **Ajan katkısı:** kᵢ = wᵢ (g_onᵢ − 1 − rf) + w*ᵢ (g_dayᵢ − 1) − c \|w*ᵢ − w̃ᵢ\|
+- **Ödül:** rᵢ = ölçek · (α kᵢ + (1 − α) G), G = X (`'excess'`) ya da X üzerinde Moody-Saffell Dₜ (`'differential'`). α ∈ [0, 1); α = 1 reddedilir (vision §3.3 β).
+
+**Tasarım varsayımları:**
+1. **Faiz yalnız gece kazanılır.** Fonlama faizi gecelik bir orandır; t kapanışında tutulan nakit t → t+1 gecesinde rfₜ₊₁ kazanır. Hedefin nakit kısmı ilk kez bir sonraki gece faiz alır.
+2. **Maliyet portföyden orantılı düşer.** Jiang vd. (2017) kesin işlem kalanı μ'su yerine birinci derece c·τ kullanılır. Bunun bedeli §2.4'te ölçüldü.
+3. **Katkı ayrışımı yalnız birinci derecedir** (plan §8 #13). Σᵢ kᵢ = X + ikinci derece çapraz terimler. Nakdin fazla getiri katkısı tanım gereği 0'dır: Σᵢ wᵢ rf + w₀ rf − rf = 0. "Katkılar toplamı = portföy fazla getirisi" iddiası **yalnız bu basit getiri terimi** için yapılır; diferansiyel Sharpe için yapılmaz.
+4. **Eski ortamla fark:** komisyon eski ortamda ödülde iki kez sayılıyor (G3). Burada yalnız bir kez sayılır: `test_marl_core` [3], "maliyet bir kez".
+
+### 2.3 Eksik hücre (M1 girdisi)
+
+- **Kural:** hücre atılmaz. Geçersiz gün (O ya da C NaN veya ≤ 0) için:
+  - g = 1, yani getiri 0
+  - hisse o gün `tradable = False` olur ve projeksiyonda dondurulur (§3.2)
+  - değerleme sembolün kendi son kapanışıyla yapılır
+- **Hücre yeniden geçerli olunca:** g_on = O / son geçerli kapanış. Aradaki hareket o gün yazılır.
+- **Listelenmemiş sembol:** Cf = NaN, ağırlığı 0 kalır; ilk geçerli gününün açılışında alınabilir.
+- **Aynı yaklaşım:** eski ortamdaki `missing_data_mode='own_last'` ve `evaluation/baselines.py` aynı taşıma mantığını kullanıyor.
+
+### 2.4 Ölçüm: maliyet yaklaşımının bedeli
+
+`test_marl_env` [7] aynı eylem dizisini iki modda koşar: 1e9 TL sermayeli tam sayı modu ve kesirli mod (sentetik panel, 79 adım).
+
+| Maliyet | max \|R_tam − R_kesirli\| | Yorum |
+|---|---|---|
+| 0 bps | 7,5e-10 | yalnız tam sayı yuvarlaması |
+| 20 bps | 1,0e-4 | maliyetin nakitten değil portföyden düşmesi ve son alımların komisyon kadar kısa kalması; mertebesi c·τ·\|g−1\| |
+
+Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'ler tam sayı modunda koşulur (plan §3.2.2), bu yüzden raporlanan sayılar kesin muhasebeyle üretilir. Eğitimdeki kesirli mod bir yaklaşımdır ve böyle beyan edilir.
+
+---
+
+## 3. Eylem ve risk projeksiyonu
+
+### 3.1 Nakit logiti — KARAR (2026-11-16, kullanıcı)
+
+- **Problem (M1 ölçümü):** z₀ = 0 sabit ve sınır ±5 iken 30 ajanla nakit en fazla 1/(1 + 30e⁻⁵) ≈ %83 olabiliyor; portföy tamamen nakde geçemiyor.
+- **Karar:** ajan logit sınırı **B = 5 + ln N**, z₀ = 0 sabit kalır.
+  - Tüm ajanlar −B'deyken nakit 1/(1 + e⁻⁵) ≈ **%99,33** olur ve bu değer N'den bağımsızdır. N = 30 için B = 8,40.
+  - Ajanlar homojen kalır, parametre paylaşımı bozulmaz.
+  - Plan §3.2.2'deki "z₀ = 0" varsayımı ve SARL-ağırlık kolunun aynı eylem temsili (§3.2.4) korunur.
+- **Reddedilen seçenekler:**
+  - Her ajanın nakde oy vermesi: eylem boyutu 2 olur, nakit kararının kredi ataması dağılır.
+  - Ayrı nakit ajanı: heterojen olur, plan §2.2 madde 5'e aykırı.
+- **Test:** `test_marl_core` [1], N ∈ {1, 5, 30, 100}.
+
+### 3.2 Projeksiyon `project(u, w̃, tradable, Constraints, groups)`
+
+Öğrenmeyen sabit bir işlemdir, merkezi bir dağıtıcı değildir (plan §3.2.2). Ortam ve canlı karar aynı fonksiyonu çağırır (K6). Adımların sırası sabittir:
+
+| Adım | Kural |
+|---|---|
+| a. Dondurma | İşlem göremeyen hisse kaymış ağırlığını korur. Kalan kütle nakit ve işlem görenlere u oranında dağıtılır |
+| b. Bant b | \|w*ᵢ − w̃ᵢ\| < b ise hisse w̃ᵢ'de kalır. Hisse toplamı 1'i aşarsa bantta kalmayan hisseler orantılı küçültülür |
+| c. Pozisyon sınırı | İşlem gören hissede w*ᵢ ≤ max_position; fazlası **nakde** gider |
+| d. Grup sınırı | Grubun işlem gören kısmı orantılı küçültülür, fazlası nakde gider. Dondurulmuş kısım sınırdan düşülür |
+
+**Tasarım varsayımları:**
+- Sınırlar yalnız küçültür. Fazla kütle başka hisselere dağıtılmaz, nakde gider. Böylece projeksiyon tek geçişte ve deterministik olur; hedef uzun-yalnız kalır, toplamı 1'dir, nakit ≥ 0'dır.
+- Dondurulmuş hisse sınırı aşabilir, çünkü o gün satılamaz. Bu durum `frozen_over_cap` ile raporlanır.
+- Grup kimliği E2 sektörüdür (`data.bist30_symbols.load_sector_groups`). Ortamda `groups=` parametresiyle verilir ve gözleme sektör one-hot'u olarak da girer.
+
+**Test:** `test_marl_core` [2], 500 rastgele durum.
+
+---
+
+## 4. K5 — tam sayı emir üretimi `rebalance_orders`
+
+- **Ortak kullanım:** ortamın tam sayı modu ve canlı karar aynı fonksiyonu çağırır.
+- **Çıktı:** mevcut karar sözlüğü şeması (`interpret_actions_with_risk`) ile `target_weight` ve `current_weight` ek alanları.
+- **Uyumluluk:** `portfolio.apply_decisions` değişmeden çalışır. Test aynı nakdi ve aynı adedi doğrular.
+
+**Nakit tanımları** CLAUDE.md "Kağıt portföy" ile aynı:
+- BUY maliyeti komisyon **dahil**
+- SELL geliri komisyon **düşülmüş**
+
+**Algoritma (deterministik):**
+1. V = nakit + Σ hᵢpᵢ.
+2. Hedef adet nᵢ = ⌊w*ᵢ V / pᵢ⌋. İşlem göremeyen hisse için nᵢ = hᵢ.
+3. Önce satışlar.
+4. Sonra alımlar, eksik değeri büyükten küçüğe sırayla. Her alım nakdin yettiği kadarla sınırlıdır.
+
+Hedef komisyonsuz V ile kurulduğu için son alımlar birkaç adet eksik kalabilir. Bu fark `summary.weight_gap` ile raporlanır (plan §3.2.2 "yuvarlama etkisi raporlanır").
+
+**Tam sayı modunda fiyat:** fiyatlar yfinance auto_adjust düzeltmeli. Tam sayı adet düzeltilmiş fiyatla bir yaklaşımdır; temettü günü nakit akışı modellenmez. Kâğıt portföy de aynı varsayımla çalışıyor (beyan).
+
+**Test:** `test_marl_core` [4]; `test_marl_env` [7].
+
+---
+
+## 5. Gözlem `marl-obs-v1`
+
+### 5.1 Özellikler (hepsi ölçekten bağımsız)
+
+| Ad | Tanım | Not |
+|---|---|---|
+| r1, r5, r20 | log(Cfₜ / Cfₜ₋ₖ) | |
+| range | (H − L) / C | |
+| gap | log(Oₜ / Cfₜ₋₁) | |
+| vol20 | r1'in 20 günlük std'si | |
+| rsi | RSI/100 − 0,5 | |
+| cci | CCI/200 | |
+| adx | ADX/100 | **'wilder'**. Legacy ADX (hep 0) `panel.build_arrays`'te reddedilir (K18) |
+| macd_rel | MACD / C | K26: TL cinsinden MACD testte %75 doygundu |
+| vlog_z | log(1+hacim)'in 60 günlük nedensel kayan z'si | K26 hacim adayı; sermaye artırımının yarattığı seviye kaymasına dayanıklı |
+
+- **Türbülans yok.** K26 ölçümünde 30 sembolde tanh(·/2) %99,7 doymuştu.
+- **Isınma:** 59 satır (`WARMUP_ROWS`). Bu satırlar yalnız bağlam olarak kullanılır; ortam penceresi ancak bu satırlardan sonra başlayabilir.
+
+### 5.2 Normalizasyon (Y12, Y13)
+
+- Her özelliğin havuzlanmış ortalama ve std'si **yalnız eğitim satırlarından** hesaplanır: `fit_norm_stats`, ortamda `norm_stats='fit'`.
+- z = clip((x − μ)/σ, −5, 5). İstatistik model meta'sına `norm_stats` olarak yazılır.
+- **Held-out ortam:** eğitim ortamının istatistiğini almak **zorundadır**.
+  - `norm_stats=None` hata verir.
+  - Eval ortamında `'fit'` hata verir.
+  - Sessiz varsayılan yok; B9 dersi.
+- **Geçersiz hücre** (eksik gün, ısınma, listelenmemiş): özellikler 0 olur ve `feat_ok` = 0 taşınır.
+
+### 5.3 Ajanın yerel gözlemi ve eleştirmen durumu
+
+**Yerel gözlem (aktör), sırayla:**
+1. z özellikleri (F = 11)
+2. feat_ok
+3. wᵢ, w_nakit
+4. ajan kimliği one-hot (N)
+5. opsiyonel: grup one-hot (G)
+6. opsiyonel S-obs: p_up_cal − 0,5, z(pred_logret), z(model_disagreement), pred_ok
+7. opsiyonel ek özellikler (E): rejim veya makro, tüm ajanlara aynı değer
+
+Boyut: F + 3 + N + G + 4·[S-obs] + E. N = 30'da ek özellik yokken 44.
+
+**İleriye bakma koruması:** t+1 hücresinin geçerliliği gözleme **konmaz**, çünkü t+1 açılışında bilinir. Gözlem t'deki geçerliliği taşır.
+
+**Eksik tahmin** maskelenir, 0,5'e düşülmez (plan §3.1.3).
+
+**Küresel durum (MAPPO eleştirmeni):** w (N+1), z'nin kesitsel ortalaması (F), geçerli hücre oranı, E. Plan §3.2.3: eleştirmene yerel ve küresel özellikler birlikte verilir; yerel kısım BenchMARL'ın merkezi eleştirmeninde birleştirilir (M3).
+
+### 5.4 K2 paritesi
+
+- **İki yol:**
+  - Ortam özellikleri tüm panel için bir kez hesaplar.
+  - Canlı karar `build_obs_at(spec, panel[:t+1], norm_stats, w)` çağırır.
+- **Bit-eşlik testleri:**
+  - `test_marl_core` [5]: 6 tarih, tahmin, grup ve ek özelliklerle
+  - `test_marl_env` [4]: 60 adım, ortamın kendi w'siyle
+- **B0 aynı testlerde sınanıyor:** t sonrası satırlar değişince t gözlemi değişmez.
+- **Mutasyon:** ileriye bakan bir özellik B0 kontrolünü kırar.
+
+---
+
+## 6. Veri hattı
+
+`scripts/marl/prepare_panel_m2.py` ana venv'de koşar. Hat:
+
+1. `stock_data_with_indicators.csv`
+2. `with_adx('wilder')`
+3. `prepare_rl_panel(drop_indicator_warmup=True)`. Rota ile aynı kapı: hayalet gün atılır, bayat hücre eksik sayılır.
+4. `marl.panel.build_arrays`: takvim tam kalır, hücre NaN kalır.
+5. A8 rf (`risk_free_for`; seri yoksa `RiskFreeUnavailable`).
+6. `.npz` + SHA-256 + meta (kaynak SHA, commit, kapı raporu).
+
+**Diğer kurallar:**
+- Ortam yalnız `.npz` okur (`panel.load_npz`); M1 spike kalıbıyla aynı (K9).
+- `--health-only`, rf olmadan da koşar ve gözlem sağlığını ölçer (K18: özellik başına kırpma oranı ve sabitlik).
+- Varsayılan pencere sonu 2020-12-31. 2021, m0p-v2 doğrulayıcı penceresi olduğu için ona dokunulmaz.
+
+---
+
+## 7. Ortam `MarlPortfolioEnv` (PettingZoo Parallel)
+
+```python
+tr = MarlPortfolioEnv(arrays, start_row, end_row, norm_stats='fit', mode='train', alpha=0.25,
+                      cost_bps_roundtrip=20, constraints=Constraints(), groups=None,
+                      reward_term='excess', reward_scale=100, episode_len=252,
+                      integer_shares=False, pred=None, extras=None)
+ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
+```
+
+**Ajanlar ve uzaylar:**
+- Ajanlar `agent_0..agent_{N−1}`. TorchRL bunları tek grup `agent` altında toplar; ajan ekseni tensör boyutudur (`test_marl_env` [8]).
+- Eylem Box[−B, B]¹; gözlem Box[local_dim].
+- `state()` ve `state_space` MAPPO eleştirmeni için.
+
+**Bölümler:**
+- `train` modu: pencere içinde rastgele başlangıç, uzunluk `episode_len`.
+- `eval` modu: pencerenin tamamı.
+- Her bölüm tam nakitle başlar.
+
+**Diğer:**
+- `last_info` portföy düzeyindeki ayrıntıyı taşır: R, X, devir, nakit ağırlığı, projeksiyon raporu, katkı artığı. PettingZoo `infos` boş bırakılır; TorchRL spec'i sabit kalsın diye.
+- `model_meta()`, plan §3.3 K1'deki ortam alanlarını üretir: kind, action_type, symbols, agent_ids, obs_spec, norm_stats, logit_bound, risk_projection, maliyet, yürütme, ödül, train_range. Eğitim betiği bunlara `run_id`, `seed`, `prediction_source` ve `comm_arm` ekler (M3).
+
+---
+
+## 8. Testler
+
+| Test | Ortam | Kontrol | Kapsam |
+|---|---|---|---|
+| `python tests/test_marl_core.py` | `venv/` | 49 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
+| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 25 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR, TorchRL sarmalayıcı |
+
+---
+
+## 9. Açık maddeler (M2 kapanmadan önce)
+
+| # | Madde | Neden açık | Sıradaki |
+|---|---|---|---|
+| 1 | **Gerçek panelde ölçüm.** Gözlem sağlığı (kırpma/sabitlik, eğitim + doğrulama), eksik hücre sayısı, rf kapsamı | Bu makinedeki panel eski: 5 sembol, 2016-06'dan. `risk_free.csv` yok. Sayılar 30 sembollü panelde (SHA `7e17897a…`) üretilecek | `prepare_panel_m2.py --health-only --json docs/development/measurements/phase10-m2/obs_health.json` (ev makinesi) |
+| 2 | **S-obs ufuk hizası.** P tablosunun t satırı kapanışₜ → kapanışₜ₊₁ yönünü tahmin ediyor. t+1 açılışında yürütmede gece parçası eski ağırlıkla geçiyor, ajanın yeni hedefi bu parçayı yakalayamıyor | Plan §3.2.7 S-obs: "sinyal ufku ile ödül hizası sınanmalı" | PC060 pozitif kontrolü yeni ortamda: bilinen sinyalin değeri gece ve seans içi parçalarına ayrıştırılır |
+| 3 | **PC060 yeni ortamda** | §9.37–9.39: eski ortamdaki politikalar bloktan değer üretmiyor | Madde 2 ile birlikte; M3 eğitimi öncesi |
+| 4 | **BenchMARL görevi + eğitim betiği** | M3 kapsamı | `scripts/spike_m1/benchmarl_glue.py` kalıbıyla `marl/benchmarl_task.py` |
+| 5 | **Canlı uç** (`POST /api/marl/daily-decision`, `RequireWriter`, `ws.use_workspace`) | Seçilecek MARL modeli yok (K27 ile aynı gerekçe) | Karar katmanında; K2/K5 fonksiyonları hazır |
+| 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
+| 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
+
+---
+
+## Versiyon geçmişi
+
+- **v0.1 (2026-11-16):** İlk sürüm. Kullanıcı kararı: logit sınırı 5 + ln N (§3.1). `marl/` çekirdek + PettingZoo ortamı + iki test (49 + 25). Ölçülen: maliyet yaklaşımı ≤ 1,0e-4 günlük getiri farkı (sentetik, 20 bps). `venv-marl/` iş makinesinde CPU torch 2.6.0 ile kuruldu (GPU yok).

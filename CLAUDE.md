@@ -21,13 +21,15 @@ Kullanici hangi dilde yazarsa o dilde yanit ver.
   yenilendi (v2.0.0, Faz 9 §9.36). Test kendini CPU'ya sabitler (GPU sonucu farkli); kirmizi = gercek davranis
   degisikligi. Bilincli bir davranis degisikliginde yenile, nedenini plana yaz; `--update --gpu` reddedilir.
 - `env/` = proje kodu (Gymnasium ortami). `venv/` = sanal ortam; okuma, degistirme.
-  `venv-marl/` = Faz 10 M1 cerceve spike'i icin AYRI ortam (K9; BenchMARL/TorchRL); uretim kodu ona bagimli olmaz.
+  `venv-marl/` = Faz 10 MARL icin AYRI ortam (K9; BenchMARL/TorchRL); uretim kodu ona bagimli olmaz.
+  `marl/` = Faz 10 M2 cok ajanli ortam: saf cekirdek iki venv'de, `marl/env.py` yalniz venv-marl'da.
 - **Surum ve yayin:** tek kaynak `app/__init__.py` (`__version__`, SemVer: paket = MINOR). main korumali
   (yalniz PR). Birlesmeden sonra tag + `gh release --generate-notes`: `docs/development/versioning.md`.
 
 ## Alan kurallari nerede (o dizine dokununca otomatik yuklenir)
 Bir dosyayi duzenlemeden once o alanin dosyasi baglamda degilse oku:
 - **RL egitimi, HPO, rota (`app/api/routes/trading.py`), bolme, fiyat olcegi, veri kapisi** -> `env/CLAUDE.md`
+- **Faz 10 MARL ortami, muhasebe, emir, gozlem (`marl/`)** -> `marl/CLAUDE.md`
 - **Degerlendirme, deneme kaydi, protokol, risksiz faiz, tohum** -> `evaluation/CLAUDE.md`
 - **Tahmin hatti (ensemble, TATS, DL, CV)** -> `prediction/CLAUDE.md`
 - **Veri cekme (yfinance, EVDS makro)** -> `data/CLAUDE.md`
