@@ -1,12 +1,12 @@
 # Faz 10 M3 — Algoritma katmanı: tasarım ve M3a ön kaydı
 
-**Sürüm:** v0.1 · 2026-11-16 · dal `feat/phase10-m3` (taban: M2, PR #34)
+**Sürüm:** v0.2 · 2026-11-16 · dal `feat/phase10-m3` (taban: M2, PR #34)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2, §4
 - Faz 9 planı §M3 (IPPO, MAPPO, parametre paylaşımı + ajan kimliği, MAPPO önerileri)
 - [phase-10-m2-design.md](phase-10-m2-design.md): §9 #4, #10, #11 ve §9.1 (pozitif kontrol PC060-K12)
 
-**Durum:** kod ve testler hazır. **M3a ön kaydı bu belgeyle commit'lenir, ilk eğitim koşusundan ÖNCE.** Tek açık alan eğitim bütçesi (kare sayısı, §5). Bütçe süre ölçümünden sonra, hiçbir eğitim sonucu görülmeden ayrı bir commit'le doldurulur. Performans sayısı yok.
+**Durum:** kod ve testler hazır. **M3a ön kaydı v0.2** (hakem-rl okuması + kullanıcının ~1 saatlik bütçe kararı) commit'lenir, ilk eğitim koşusundan ÖNCE. Tek açık alan eğitim bütçesi (kare sayısı, §5.1). Bütçe süre ölçümünden sonra, hiçbir eğitim sonucu görülmeden ayrı bir commit'le doldurulur. Performans sayısı yok.
 
 Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
@@ -20,7 +20,7 @@ Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 | Bölüm sonu: truncation + bootstrap (M2 §9 #10, hakem-rl R6) | §1 | `test_marl_m3` [2] |
 | Başlangıç gürültüsü (R7), deterministik değerlendirme | §2 | `marl/m3_runner.py`, `test_marl_m3` [4] |
 | Baseline'lar aynı muhasebeyle (M2 §9 #11) | §3 | `m3_runner.rule_series` |
-| Pozitif kontrol PC060-K12 (M2 §9.1) | §4 | `scripts/marl/build_pred_m3.py` |
+| Pozitif kontrol PC060-K12 + karıştırılmış kontrol (M2 §9.1; hakem-rl M3a #2) | §4, §5 | `scripts/marl/build_pred_m3.py` (`--shuffle`) |
 | **M3a ön kaydı: boru hattı kapısı** | §5 | `train_m3.py`, `eval_m3.py`, `analyze_m3.py` (ön kayıttan sonra) |
 | M3b: algoritma ve eleştirmen seçimleri (IPPO ↔ MAPPO, R4, R5) | §6 | ayrı ön kayıt, M3a geçince |
 
@@ -57,7 +57,8 @@ Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 | Epoch / mini-parti | 10 epoch, parti bölünmez (`minibatch_size = frames_per_batch` = 6000) | MAPPO önerisi (Faz 9 §M3, Öneri 3) |
 | Clip ε | 0,2 | MAPPO önerisi (Öneri 4); BenchMARL varsayılanı |
 | Değer normalizasyonu | **yok** | BenchMARL 1.4 MAPPO'da seçenek yok → **sapma, beyan** (Öneri 1) |
-| lr, γ, λ, grad kırpma | 5e-5, 0,99, 0,9, 5 | BenchMARL 1.4 varsayılanları, değiştirilmedi |
+| **lr** | **5e-4** | v0.2 (hakem-rl M3a #4). Varsayılan 5e-5 ile parti başına 10 gradyan adımı ve ~1 saatlik bütçede ağırlıklar ancak çok az kayar; KALDI bir lr artefaktı olabilirdi. Önceden, sonuç görülmeden sabitlendi |
+| γ, λ, grad kırpma | 0,99, 0,9, 5 | BenchMARL 1.4 varsayılanları |
 | Entropi katsayısı | 0 | BenchMARL varsayılanı |
 | Dağılım | TanhNormal, eylem [−B, B], B = 5 + ln 30 | M2 §3.1 |
 | **Başlangıç std** (tanh öncesi) | **0,12** (`biased_softplus_0.12`) | R7: ölçüldü, varsayılan 1,0 örneklemde ~4 logit gürültü (her gün ~tam devir), 0,12 ~0,77 logit (`test_marl_m3` [4]) |
@@ -91,59 +92,67 @@ Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
 ---
 
-## 5. ÖN KAYIT — M3a boru hattı kapısı (2026-11-16, ilk eğitim koşusundan ÖNCE)
+## 5. ÖN KAYIT v0.2 — M3a boru hattı kapısı (2026-11-16, ilk eğitim koşusundan ÖNCE)
+
+v0.1 (`331730e`) hiç koşulmadan değiştirildi. Gerekçeler:
+- hakem-rl M3a okuması (§8)
+- kullanıcı kararı: toplam süre ~1 saat; v0.1'in 4 kol × 5 tohum, ~8 saatlik planı reddedildi
 
 **Soru:** Yeni MARL boru hattında MAPPO, gözlemine verilen bilinen bir sinyali (PC060-K12) eyleme dönüştürüp değer üretebiliyor mu?
 
-**Kollar** (her biri 5 eğitim tohumu, s ∈ {0, 1, 2, 3, 4}; tohum s'in PC kolu üreteç tohumu g_s ∈ {20261115, 1, 2, 3, 4} ile eşlenir):
+**Kollar.** İkisi de maliyetsiz (0 bps), 3 eğitim tohumu s ∈ {0, 1, 2}. Tohum s, üreteç tohumu g_s ∈ {20261115, 1, 2} ile eşlenir.
 
-| Kol | Tahmin | Maliyet (eğitim ve değerlendirme) | Rol |
-|---|---|---|---|
-| A0 | yok | 0 bps | birincil karşılaştırma |
-| A1 | PC060-K12 (g_s) | 0 bps | birincil |
-| B0 | yok | 20 bps | ikincil |
-| B1 | PC060-K12 (g_s) | 20 bps | ikincil |
+| Kol | Gözlemdeki tahmin bloğu | Rol |
+|---|---|---|
+| A1 | PC060-K12 (g_s); etiketle AUC 0,595–0,600 | sinyalli |
+| S1 | **aynı blok, satırları (günleri) tohum g_s ile permüte**: boyut, maske, kesit yapısı ve marjinal dağılım aynı, zaman hizası yok. Etiketle AUC 0,500–0,504 | **kontrol** |
 
-Kare bütçesi F her koşuda aynıdır (§5.1). Diğer her şey §2'deki gibi.
+AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_label`.
 
-**Birincil test.**
-- Eğitim penceresinde (1343 gün) deterministik değerlendirme.
-- D = (1/5) Σ_s [SR(A1_s) − SR(A0_s)]; X üzerinde, yıllık.
-- Ortak HAC (`sharpe_diff_hac_pooled`, m0p-v2 birleştirme kuralı), tek yönlü.
+**Neden S1:** hakem-rl M3a #2. Tahminsiz bir kol (A0) gözlem boyutunu ve kapasiteyi eşitlemez. Günlük ve tarihle hizalı bir blok, eğitim penceresinde ezbere yardım eden bir parmak izi olabilir. S1 bu parmak izini taşır ama sinyali taşımaz; fark yalnız sinyalden gelebilir. Tahminsiz kol M3a'da yok (M3b).
 
-**Pencere seçimi.** Pozitif kontrolün sorusu öğrenilebilirlik olduğu için birincil pencere eğitim penceresidir. İki kolun kapasitesi ve verisi aynı olduğundan, tarihleri ezberleme etkisi farkta birbirini götürür; fark yalnız sinyalden gelir. Bu tercih **beyan edilir**. Doğrulama penceresi ikincildir.
+**Eğitim:**
+- Her koşuda aynı F kare (§5.1).
+- **lr 5e-4** (§2; hakem-rl M3a #4).
+- Diğer her şey §2'deki gibi.
+- **Her koşunun son parti sonrası ağırlıkları değerlendirilir; kontrol noktası seçimi ve erken durdurma yok** (hakem-rl #6).
 
-**Okuma kuralı (önceden):**
-1. **D > 0 ve tek yönlü p < 0,05 → GEÇTİ:** "Boru hattı bilinen bir sinyali maliyetsiz koşulda eyleme aktarıyor." M3b ve M4 açılır.
-2. **Aksi hâlde → KALDI:** "Bu bütçe ve yapıda boru hattı bilinen sinyali aktaramıyor." Gerçek sinyalli (P5) hiçbir MARL koşusu yapılmaz. Keşifsel tanı sırası, ön kayıtsız ve tez dışı:
-   - tek tohumla 4F kare
-   - lr 5e-4
+**Değerlendirme:** deterministik, tam pencere, maliyetsiz. Eğitim penceresi 1343 gün, doğrulama penceresi 500 gün. 2021+ yok.
+
+**Okuma kuralı (önceden; `scripts/marl/analyze_m3.py`, `--self-test` 3/3).** SR yıllık, X üzerinde. Δ_s = SR(A1_s) − SR(S1_s), D = ort_s Δ_s.
+
+1. **GEÇTİ = üçü birden:**
+   - (i) Eğitim penceresi: D ≥ **0,3** ve ortak HAC (`sharpe_diff_hac_pooled`) tek yönlü p < 0,05 (hakem-rl #5: büyüklük eşiği).
+   - (ii) Eğitim penceresi: min_s SR(A1_s) > max_s SR(S1_s). Bu, 3'e 3 kesin permütasyon testinde tek yönlü p = 1/20 (hakem-rl #1: tohum varyansı; ortak HAC yalnız gün gürültüsünü ölçer).
+   - (iii) Doğrulama penceresi: D > 0 ve en az 2/3 tohumda Δ_s > 0 (hakem-rl #3: genelleme işareti).
+
+   Okuma: "Boru hattı bilinen bir sinyali maliyetsiz koşulda eyleme aktarıyor; doğrulama penceresinde de işaret korunuyor." M3b ve M4 açılır.
+2. **KISMİ:** eğitimde D > 0 ve p < 0,05 var, ama GEÇTİ koşullarından biri eksik. Gerçek sinyalli MARL koşusu yapılmaz.
+3. **GÖZLENMEDİ:** "Bu bütçe ve lr'de aktarım gözlenmedi." Bu bir kanıt yokluğudur; "aktaramıyor" denmez (hakem-rl #4). Keşifsel tanı, ön kayıtsız ve tez dışı:
+   - tek tohumla 4F
    - eleştirmen `state()`
+   - değer ölçeği
 
-   Sonra yeni bir ön kayıt yazılır.
-3. **İkincil ve betimsel,** kapı kararını değiştirmez:
-   - Doğrulama penceresinde aynı D.
-   - 20 bps çiftinde (B1 − B0) aynı D, eğitim ve doğrulama.
-   - Yakalama oranı = D(A1 − A0) / RL'siz brüt ΔSR. Referans S_yön − 1/N olduğu için oran yalnız büyüklük fikri verir.
-   - Tohum başına ΔSR dağılımı.
-   - Her kolun 1/N, al-tut ve nakde karşı ΔSR'si.
-   - Devir ve nakit ağırlığı.
-4. Hiçbir sonuç "RL piyasayı yener" ya da "tahmin katkı verir" cümlesine dönüştürülmez. Sinyal gelecekten türetilmiştir. M3 sayıları tezin bulgusu değildir (Faz 10 §4 S1 ruhu).
+   Gerçek sinyalli koşu ancak yeni bir ön kayıttan sonra yapılır.
+4. **Betimsel,** kararı değiştirmez:
+   - tohum başına SR ve Δ
+   - devir ve nakit ağırlığı
+   - kolların tohum ortalamalı serisinin 1/N ve al-tut'a karşı ΔSR'si (aynı muhasebe, maliyetsiz)
+   - RL'siz brüt referans (~1,5, M2 §9.1) ile büyüklük karşılaştırması
+5. Hiçbir sonuç "RL piyasayı yener" ya da "tahmin katkı verir" cümlesine dönüştürülmez. Sinyal gelecekten türetilmiştir. M3 sayıları tez bulgusu değildir.
 
-**Güç (önceden, kaba).**
-- RL'siz brüt değer ~1,5 olduğundan birincil test için güç sorunu beklenmez.
-- 20 bps çifti için RL'siz değer (0,08–0,30) testin MDE'sinin (~0,3) altında kalabilir; bu çiftin boş çıkması beklenen sonuçlardan biridir.
-- RL ↔ RL farkının SE'si ölçülmeden bilinmez; sonuçta raporlanır.
+**Ertelenen (v0.1'de vardı):** 20 bps çifti ve tahminsiz kol → M3b. Maliyet altında değerin RL'siz referansı (0,08–0,30) bu pencerede MDE'nin altında kalabilir; ayrı ve küçük bir soru.
 
-### 5.1 Bütçe (AÇIK — süre ölçümünden sonra, eğitim sonucu görülmeden doldurulur)
+### 5.1 Bütçe (kullanıcı kararı: toplam ~1 saat)
 
-- **Kural:** M3a toplamı 20 koşu.
-- **Hedef:** toplam GPU duvar süresi ≤ ~8 saat ve koşu başına F ≤ 2.000.000 kare.
-- F = min(2.000.000, ⌊8 sa × 3600 / 20 / (saniye/kare)⌋), en yakın 60.000'e (10 parti) aşağı yuvarlanır.
-- Saniye/kare değeri: `train_m3.py --frames 30000 --train-device cuda --parallel` ölçümü. GPU başka bir işle meşgul olmamalı; `nvidia-smi` ile kontrol edilir.
-- **Ölçüm:** — *(doldurulacak)*
+- 6 koşu.
+- Eğitim F kare: koşu başına ≤ **8 dakika** eğitim duvar süresi. Her koşuya ~1 dk değerlendirme eklenir.
+- F = min(2.000.000, ⌊8 × 60 / saniye_kare⌋), 60.000'e (10 parti) aşağı yuvarlanır.
+- Saniye/kare: `train_m3.py --frames 30000 --train-device cuda --parallel` ölçümü. GPU başka işle meşgul değilken; `nvidia-smi` kontrolü, `run_m3a.py` de her koşudan önce bakar.
+- **Ölçüm:** — *(doldurulacak; eğitim sonucu görülmeden ayrı commit)*
 - **F:** — *(doldurulacak)*
-- Koşu sırası: A0, A1, B0, B1, her biri tohum 0..4. Yarıda kalırsa tamamlanan kollar raporlanır; eksik kol okunmaz.
+- Toplam süre ön kayda yazılmadan önce kullanıcıya sunulur.
+- Sıra: A1 s0..s2, sonra S1 s0..s2 (`run_m3a.py`). Yarıda kalırsa eksik kol okunmaz.
 
 ---
 
@@ -152,6 +161,7 @@ Kare bütçesi F her koşuda aynıdır (§5.1). Diğer her şey §2'deki gibi.
 M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
 
 - **Seçimler:**
+  - tahminsiz kol (A0) ve 20 bps çifti (v0.1'den ertelendi): maliyet altında değer, ayrı küçük soru
   - IPPO ↔ MAPPO
   - eleştirmen: gözlemler ↔ `state()` (R5)
   - yerel gözleme piyasa bağlamı: kesitsel ortalama z, geçerli oran (R4)
@@ -167,6 +177,24 @@ M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
 |---|---|---|---|
 | `venv-marl\Scripts\python tests/test_marl_m3.py` | `venv-marl/` | 18 | görev, bölüm sonu + GAE bootstrap, MAPPO anahtarları, kısa MAPPO (iki eleştirmen), tohum bit-eş, kaydet/yükle, deterministik eval, aynı muhasebeyle baseline, R7 |
 
+## 8. Hakem incelemesi
+
+**hakem-rl, M3a ön kaydı v0.1 (2026-11-16, uç `331730e`).** Paket ~1,3 bin kelime; Python koşmadı. ~28 bin token / 6 araç / ~0,9 dk. **Küçük revizyon.**
+
+| # | Cid. | Bulgu | Sonuç (v0.2) |
+|---|---|---|---|
+| 1 | BÜYÜK | Ortak HAC tohum varyansını SE'ye katmıyor | Kural (ii): min A1 > max S1 (3'e 3 kesin permütasyon, p = 1/20) |
+| 2 | BÜYÜK | Eğitim penceresinde ezber ile sinyal ayrılamıyor; tahminsiz kol boyutu eşitlemiyor | Kontrol = karıştırılmış PC (S1); A0 M3b'ye |
+| 3 | BÜYÜK | "Aktarıyor" cümlesi genelleme ister | Kural (iii): doğrulamada D > 0 ve ≥ 2/3 tohum |
+| 4 | BÜYÜK | lr 5e-5 ile KALDI hiperparametre artefaktı olabilir; "aktaramıyor" cümlesi yanlış | lr 5e-4 önceden sabit; GÖZLENMEDİ etiketi (kanıt yokluğu) |
+| 5 | KÜÇÜK | D > 0 zayıf eşik | Kural (i): D ≥ 0,3; KISMİ etiketi |
+| 6 | KÜÇÜK | Kontrol noktası politikası yazılı değil | Son ağırlıklar, seçim yok (§5) |
+| 7 | KÜÇÜK | 20 bps çiftinin beklenen sonucu boş | Çift M3b'ye ertelendi (kullanıcının bütçe kararı) |
+
+Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüzünden 3 tohum ile #1'in kesin permütasyon ölçütü kullanıldı; 3'e 3'te en küçük p tam 0,05. Bu bir **güç sınırlamasıdır**, beyan edilir. İkinci okuma: SendMessage ile, yalnız v0.1 → v0.2 farkı.
+
 ## Versiyon geçmişi
+
+- **v0.2 (2026-11-16):** Ön kayıt eğitimden önce yeniden yazıldı (§5): A1 ↔ karıştırılmış PC (S1), 3 tohum, maliyetsiz, lr 5e-4. GEÇTİ = (i) D ≥ 0,3 ve p < 0,05, (ii) min A1 > max S1, (iii) doğrulamada işaret. Bütçe toplam ~1 saat (kullanıcı kararı); 20 bps çifti ve tahminsiz kol M3b'ye. Hakem-rl tablosu §8.
 
 - **v0.1 (2026-11-16):** İlk sürüm; M3a ön kaydı (§5). Bütçe (§5.1) süre ölçümünü bekliyor. GPU ölçümü 2026-11-16'da yapılamadı: GPU başka bir uygulamayla %100 doluydu, koşu durduruldu.

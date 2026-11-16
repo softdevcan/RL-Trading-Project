@@ -33,13 +33,15 @@ from marl.benchmarl_task import MarlTask, make_env
 def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames: int = 30_000,
                      frames_per_batch: int = 6000, epochs: int = 10, n_envs: int = 10, parallel: bool = False,
                      train_device: str = 'cpu', sampling_device: str = 'cpu', init_std: float = 0.12,
-                     save_folder: Optional[str] = None):
+                     lr: Optional[float] = None, save_folder: Optional[str] = None):
     from benchmarl.algorithms import IppoConfig, MappoConfig
     from benchmarl.experiment import Experiment, ExperimentConfig
     from benchmarl.models.mlp import MlpConfig
 
     cfg = ExperimentConfig.get_from_yaml()
     cfg.max_n_frames = frames
+    if lr is not None:
+        cfg.lr = float(lr)                               # M3a on kaydi v0.2: 5e-4 (hakem-rl M3a #4)
     cfg.on_policy_collected_frames_per_batch = frames_per_batch
     cfg.on_policy_n_envs_per_worker = n_envs
     cfg.on_policy_minibatch_size = frames_per_batch      # MAPPO onerisi: mini-parti bolmeme
@@ -82,7 +84,7 @@ def load_policy(run_dir: str):
     b = meta['build']
     exp = build_experiment(meta['task_cfg'], algo=b['algo'], seed=b['seed'], frames=b['frames_per_batch'],
                            frames_per_batch=b['frames_per_batch'], epochs=b['epochs'], n_envs=1,
-                           init_std=b['init_std'])
+                           init_std=b['init_std'], lr=b.get('lr'))
     exp.policy.load_state_dict(torch.load(os.path.join(run_dir, 'policy.pt'), map_location='cpu'))
     return exp, meta
 

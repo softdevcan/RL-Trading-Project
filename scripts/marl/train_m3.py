@@ -66,6 +66,7 @@ def main():
     ap.add_argument('--alpha', type=float, default=0.25)
     ap.add_argument('--cost-bps', type=float, default=20.0, help='gidis-donus bps (D4)')
     ap.add_argument('--init-std', type=float, default=0.12, help='tanh oncesi baslangic std (hakem-rl R7)')
+    ap.add_argument('--lr', type=float, default=5e-4, help='M3a on kaydi v0.2 (hakem-rl M3a #4); BenchMARL varsayilani 5e-5')
     ap.add_argument('--use-state', action='store_true', help='elestirmen girdisi ortam state() (varsayilan: tum gozlemler)')
     ap.add_argument('--pred-path', default=None)
     ap.add_argument('--train-device', default='cpu')
@@ -91,7 +92,7 @@ def main():
     end_row = int(np.flatnonzero(dates <= TRAIN_END)[-1])
     tcfg = train_task_cfg(a, end_row, OS.WARMUP_ROWS)
     build = dict(algo=a.algo, seed=a.seed, frames=a.frames, frames_per_batch=a.frames_per_batch, epochs=a.epochs,
-                 n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std)
+                 n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std, lr=a.lr)
     exp = build_experiment(tcfg, train_device=a.train_device, sampling_device=a.sampling_device, **build)
     t0 = time.perf_counter()
     exp.run()

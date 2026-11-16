@@ -1,4 +1,5 @@
-"""Faz 10 M3a duzenleyicisi (M3 tasarim §5): 4 kol x 5 tohum egitim + deterministik degerlendirme + baseline.
+"""Faz 10 M3a duzenleyicisi (M3 tasarim §5 v0.2): 2 kol (A1 PC060-K12, S1 karistirilmis PC) x 3 tohum, maliyetsiz;
+egitim + deterministik degerlendirme + baseline (toplam hedef ~1 saat).
 
 Her egitimden once GPU bos mu bakar (`nvidia-smi` kullanim %); doluysa (or. oyun) bekler, `--max-wait` dolunca
 durur. Biten koslar (eval_val.npz var) atlanir; yarida kalirsa yeniden calistirmak kaldigi yerden surer.
@@ -18,8 +19,9 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(ROOT)
 PY = sys.executable
-GEN = {0: 20261115, 1: 1, 2: 2, 3: 3, 4: 4}                     # tohum s -> uretec tohumu g_s (§5)
-ARMS = [('A0', 0.0, False), ('A1', 0.0, True), ('B0', 20.0, False), ('B1', 20.0, True)]
+GEN = {0: 20261115, 1: 1, 2: 2}                                  # tohum s -> uretec tohumu g_s (§5 v0.2)
+ARMS = [('A1', 0.0, ''), ('S1', 0.0, '_shuf')]                    # PC060-K12 | karistirilmis PC (maliyetsiz)
+SEEDS = (0, 1, 2)
 
 
 def gpu_busy(threshold: int) -> bool:
@@ -56,20 +58,19 @@ def main():
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
     for window in ('train', 'val'):
-        for bps in (0, 20):
+        for bps in (0,):
             out = os.path.join(a.root, f'baselines_{window}_{bps}.npz')
             if not os.path.exists(out):
                 run([PY, 'scripts/marl/eval_m3.py', '--baselines', '--window', window, '--cost-bps', str(bps),
                      '--out', out], a.dry_run)
-    for arm, bps, pred in ARMS:
-        for s in (0, 1, 2, 3, 4):
+    for arm, bps, suffix in ARMS:
+        for s in SEEDS:
             d = os.path.join(a.root, arm, f's{s}')
             if os.path.exists(os.path.join(d, 'eval_val.npz')):
                 continue
             cmd = [PY, 'scripts/marl/train_m3.py', '--frames', str(a.frames), '--seed', str(s), '--cost-bps', str(bps),
                    '--train-device', a.train_device, '--parallel', '--save-dir', d, '--out', os.path.join(d, 'train.json')]
-            if pred:
-                cmd += ['--pred-path', os.path.join('data', 'marl', f'pred_pc060_k12_g{GEN[s]}.npz')]
+            cmd += ['--pred-path', os.path.join('data', 'marl', f'pred_pc060_k12_g{GEN[s]}{suffix}.npz')]
             if not a.dry_run:
                 wait_gpu(a)
             if not os.path.exists(os.path.join(d, 'policy.pt')):
