@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-16 · `v2.3.0` · Faz 10 M2: `marl/` çekirdeği + PettingZoo ortamı; hakem-rl + hakem-finans Kabul; gerçek 30 sembollü panelde gözlem sağlığı ölçüldü, taban açılışta satış engeli (ön kayıtlı kural) uygulandı. S-obs ufuk hizası ölçüldü: PC060 yeni ortamda pozitif kontrol değil, M3 kontrolü PC060-K12 (§9.1). Hakem-2 kapanışı Küçük revizyon, işlendi; satış engeli dönem bağımlı fiyat marjı (v0.7). M2 çekirdeği kapandı, sırada M3 ([M2 tasarımı](phase-10-m2-design.md) §9).
+**Son güncelleme:** 2026-11-16 · `v2.4.0` · Faz 10 M2: `marl/` çekirdeği + PettingZoo ortamı; hakem-rl + hakem-finans Kabul; gerçek 30 sembollü panelde gözlem sağlığı ölçüldü, taban açılışta satış engeli (ön kayıtlı kural) uygulandı. S-obs ufuk hizası ölçüldü: PC060 yeni ortamda pozitif kontrol değil, M3 kontrolü PC060-K12 (§9.1). Hakem-2 kapanışı Küçük revizyon, işlendi; satış engeli dönem bağımlı fiyat marjı (v0.7). M2 çekirdeği kapandı, sırada M3 ([M2 tasarımı](phase-10-m2-design.md) §9).
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
