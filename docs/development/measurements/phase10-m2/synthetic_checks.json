@@ -1,6 +1,6 @@
 {
   "note": "SENTETIK panel (tests/_marl_fixtures.synth_arrays); gercek panel olcumu degil",
-  "commit": "d82bb7de903a89f997481953b9c03340b68a0dce",
+  "commit": "756d5a724a315a52c6289035c7ea237eaec22dfd",
   "cost_gap_integer_vs_fractional": [
     {
       "bps_roundtrip": 0.0,
@@ -40,6 +40,28 @@
       "episode_len": 100,
       "dsr_eta": 0.05,
       "nonzero_frac": 0.8
+    }
+  ],
+  "reward_term_scale": [
+    {
+      "term": "excess",
+      "dsr_eta": 0.003968253968253968,
+      "alpha": 0.25,
+      "N": 4,
+      "steps_used": 252,
+      "std_individual_term": 0.13613610949007032,
+      "std_portfolio_term": 0.8613175605713587,
+      "ratio_portfolio_to_individual": 6.326885378152977
+    },
+    {
+      "term": "differential",
+      "dsr_eta": 0.015873015873015872,
+      "alpha": 0.25,
+      "N": 4,
+      "steps_used": 189,
+      "std_individual_term": 0.13334937877883093,
+      "std_portfolio_term": 32.283584891202345,
+      "ratio_portfolio_to_individual": 242.09775243682896
     }
   ]
 }
