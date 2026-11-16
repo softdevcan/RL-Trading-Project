@@ -1,8 +1,8 @@
 # Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
 
-**Sürüm:** v0.5 · 2026-11-16 · dal `feat/phase10-m2-core`
+**Sürüm:** v0.6 · 2026-11-16 · dal `feat/phase10-m2-core`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
-**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). Kalan: S-obs ufuk hizası + PC060 yeni ortamda (§9 #2–#3), sonra hakem-2.
+**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). S-obs ufuk hizası ölçüldü; M3 pozitif kontrolü PC060-K12 (§9.1). Kalan: hakem-2 (M2 kapanışı).
 
 Bu belge planın M2 tasarım maddelerini koda bağlar. Bir madde burada ve kodda farklıysa kod hatalıdır. Bu belge değişmeden kod değiştirilmez.
 
@@ -316,8 +316,8 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | # | Madde | Neden açık | Sıradaki |
 |---|---|---|---|
 | 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `a5dcf9a6…` (`npz.sha256`); rf 1902 satırın 1901'inde sonlu, satır 0 tanım gereği yok (`risk_free`). Gerçek panelde eğitim + doğrulama ortamı uçtan uca koştu (duman, performans sayısı değil) | — |
-| 2 | **S-obs ufuk hizası.** P tablosunun t satırı kapanışₜ → kapanışₜ₊₁ yönünü tahmin ediyor. t+1 açılışında yürütmede gece parçası eski ağırlıkla geçiyor, ajanın yeni hedefi bu parçayı yakalayamıyor | Plan §3.2.7 S-obs: "sinyal ufku ile ödül hizası sınanmalı" | PC060 pozitif kontrolü yeni ortamda: bilinen sinyalin değeri gece ve seans içi parçalarına ayrıştırılır |
-| 3 | **PC060 yeni ortamda** | §9.37–9.39: eski ortamdaki politikalar bloktan değer üretmiyor | Madde 2 ile birlikte; M3 eğitimi öncesi |
+| 2 | ~~**S-obs ufuk hizası**~~ **ölçüldü (§9.1)** | PC060 (kapanış → kapanış) K12'de E1 net ΔSR +0,10 < 0,17 | Gerçek tahmin hedefinin K12 ufkuna (açılış → açılış) taşınması: plana eklenecek madde önerisi (P paketi; kullanıcı kararı) |
+| 3 | ~~**PC060 yeni ortamda**~~ **karar (ön kayıt §9.1)** | M3 pozitif kontrolü **PC060-K12** (E1 net ΔSR +0,36, SE 0,09) | M3: PC060-K12 P tablosu (`positive_control_table`, etiket 1[Ofₜ₊₂ > Ofₜ₊₁]) + S-obs kolu |
 | 4 | **BenchMARL görevi + eğitim betiği** | M3 kapsamı | `scripts/spike_m1/benchmarl_glue.py` kalıbıyla `marl/benchmarl_task.py` |
 | 5 | **Canlı uç** (`POST /api/marl/daily-decision`, `RequireWriter`, `ws.use_workspace`) | Seçilecek MARL modeli yok (K27 ile aynı gerekçe) | Karar katmanında; K2/K5 fonksiyonları hazır |
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
@@ -375,6 +375,35 @@ Ortalamaları ve D_day / (D_on + D_day) payı raporlanır. **Hizalama denetimi:*
 
 **Betik:** `scripts/marl/pc_alignment_m2.py` (ana venv); çıktı `measurements/phase10-m2/pc_alignment.json`.
 
+**Sonuç.** Komut: `python scripts/marl/pc_alignment_m2.py --out docs/development/measurements/phase10-m2/pc_alignment.json`. Ölçüm ön kayıttan sonra koşuldu, kural değişmedi.
+
+Birincil pencere 2013-08-27..2020-12-31 (1843 gün). ΔSR(S_yön − 1/N), yıllık, HAC:
+
+| Sinyal | E0 brüt | E0 net | E1 brüt | **E1 net (birincil)** | Gün içi pay (brüt, betimsel) |
+|---|---|---|---|---|---|
+| PC060 (kapanış → kapanış) | +1,57 | +0,35 (SE 0,10) | +1,34 | **+0,10** (SE 0,10; p 0,29) | %82 |
+| PC060-K12 (açılış → açılış; AUC 0,595 gerçekleşen) | +1,21 | +0,01 | +1,58 | **+0,36** (SE 0,09; p 1e-4) | ~%100 |
+
+- **Hizalama kapısı geçti:** PC060 E0 brüt +1,57, p ≈ 1e-47.
+- **Pencere ayrımı, E1 net:**
+  - PC060: eğitim −0,08, doğrulama +0,50
+  - PC060-K12: eğitim +0,22 (p 0,07), doğrulama +0,67
+- **Devir:** kural portföyünde günlük ~1,12 (S_yön), 1/N'de 0,013.
+- **Satış engeli:** S_yön yürütmesinde 12 adımda devreye girdi.
+
+**Ön kayıtlı okuma:** PC060 E1 net ΔSR 0,10 < 0,17 → **PC060 yeni ortamda geçerli bir pozitif kontrol değildir.** PC060-K12 0,36 ≥ 0,17 → **M3 pozitif kontrolü PC060-K12'dir.**
+
+**Betimsel (kuralın parçası değil):**
+- PC060'ın brüt fark değerinin ~%82'si t+1 seans içinde; yani K12 yürütmesi değerin çoğunu brüt düzeyde koruyor (1,57 → 1,34).
+- Asıl kayıp günlük tam devrin maliyeti: brüt 1,3–1,6, net 0,1–0,4. Hizasızlığın aldığı ~0,2–0,25'lik pay, kalan net marjı eşiğin altına düşürüyor.
+- Aynı sinyal ailesinde K12 ufkuna hizalanınca E1 net değer 0,10'dan 0,36'ya çıkıyor; E0 net ise 0,35'ten 0,01'e iniyor. Bu, ufkun yürütme anına göre seçilmesi gerektiğiyle tutarlı.
+- **Gerçek tahmin hattı için girdi:** `pit_v1` de kapanıştan kapanışa ufukla eğitilmiş. Hedefin K12 ufkuna taşınması ayrı bir plan maddesi olarak önerilir (P paketi; kullanıcı kararı). Bu ölçüm bunu değiştirmez.
+
+**Sınırlamalar:**
+- PC060-K12 etiketi yalnız panel aralığında (2013-06..2020-12) kuruldu. 2021+ test pencereleri için etiket M3/M8'de aynı tanımla genişletilir.
+- Tek üreteç tohumu (20261115).
+- Eğitim penceresinde PC060-K12 tek başına sınırda (p 0,07). Birincil havuzlu pencerede açık.
+
 ## 10. Hakem incelemesi (2026-11-16, uç `db8ef48`)
 
 Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin token / 5 araç; hakem-finans ~52 bin / 13. İkisi de Küçük revizyon, test koşmadı. Ölçümleri ana oturum yaptı (`synthetic_checks.json`).
@@ -408,6 +437,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-16):** §9.1 ön kaydı (commit `0232f11`, sonuçtan önce) ve sonucu: PC060 yeni ortamda pozitif kontrol değil (E1 net +0,10); M3 pozitif kontrolü PC060-K12 (+0,36). `scripts/marl/pc_alignment_m2.py`, `measurements/phase10-m2/pc_alignment.json`.
 - **v0.5 (2026-11-16, ev makinesi):** §9 #1 gerçek panel ölçümü (`measurements/phase10-m2/obs_health.json`, doğrulama satırları dahil). §9 #9 ön kayıtlı kural uygulandı: taban açılışta satış engeli (`fill_prices(limit_down_gap)`, `project(no_sell)` adım e, K5 bekçisi); tavan beyan. Listeleme kilidi kümesinin artefakt olduğu beyan edildi (§2.3). `prepare_panel_m2.py` JSON'a yerel yol yazmıyor. Testler 58 + 36.
 - **v0.4 (2026-11-16):** İkinci okuma: hakem-rl Kabul, hakem-finans Kabul (koşullu; §10). Fiyat limiti karar kuralı ön kaydı (§9 #9). Kilit ⊂ feat_ok = 0 değişmezi; panel kesimi ve baseline kilidi beyanı; ölçüme kilit sonrası tavan serisi. Testler 54 + 31.
 - **v0.3 (2026-11-16):** Hakem-rl + hakem-finans ilk okuması (§10). Kullanıcı kararları: birincil ödül `'excess'` (DSR yalnız α = 0), listeleme kilidi 20 seans, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan. Testler 53 + 31. §2.5 yürütme ve veri beyanları.
