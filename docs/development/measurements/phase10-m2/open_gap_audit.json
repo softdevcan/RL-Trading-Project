@@ -335,5 +335,194 @@
    "gap": 0.8720934791042639,
    "open_to_close": 0.8733331184650259
   }
- ]
+ ],
+ "no_sell_env_cells": {
+  "fixed_0.095": {
+   "n": 38,
+   "cells": [
+    {
+     "date": "2013-12-27",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2013-12-27",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "EKGYO.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "SKBNK.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "VAKBN.IS"
+    },
+    {
+     "date": "2015-08-10",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2015-08-19",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2016-06-24",
+     "symbol": "MGROS.IS"
+    },
+    {
+     "date": "2017-03-29",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2017-05-29",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2017-10-09",
+     "symbol": "PGSUS.IS"
+    },
+    {
+     "date": "2017-10-09",
+     "symbol": "THYAO.IS"
+    },
+    {
+     "date": "2018-06-07",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2018-07-11",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2019-11-07",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "AKBNK.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "EKGYO.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "EREGL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "GARAN.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "MGROS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SISE.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SKBNK.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "THYAO.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TKFEN.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TSKB.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "YKBNK.IS"
+    },
+    {
+     "date": "2020-03-12",
+     "symbol": "ODAS.IS"
+    }
+   ]
+  },
+  "schedule_v0.7": {
+   "n": 2,
+   "cells": [
+    {
+     "date": "2018-07-11",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS"
+    }
+   ]
+  }
+ },
+ "schedule": {
+  "rule": "no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)",
+  "tolerance": 0.005,
+  "pre_bistech_assumed_unverified": 0.2,
+  "schedule": [
+   [
+    "2015-11-30",
+    0.2
+   ],
+   [
+    "2020-03-13",
+    0.1
+   ]
+  ],
+  "verified_until": "2020-12-31",
+  "preregistration": "phase-10-m2-design.md §2.5 v0.7 (b8e310e)"
+ }
 }

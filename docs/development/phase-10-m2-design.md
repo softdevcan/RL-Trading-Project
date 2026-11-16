@@ -1,8 +1,8 @@
 # Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
 
-**Sürüm:** v0.6 · 2026-11-16 · dal `feat/phase10-m2-core`
+**Sürüm:** v0.7 · 2026-11-16 · dal `feat/phase10-m2-core`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
-**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). S-obs ufuk hizası ölçüldü; M3 pozitif kontrolü PC060-K12 (§9.1). Kalan: hakem-2 (M2 kapanışı).
+**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). S-obs ufuk hizası ölçüldü; M3 pozitif kontrolü PC060-K12 (§9.1). Hakem-2 M2 kapanışı: Küçük revizyon, bulgular işlendi (§10); satış engeli dönem bağımlı marja geçti (v0.7). **M2 çekirdeği kapandı;** sıradaki M3.
 
 Bu belge planın M2 tasarım maddelerini koda bağlar. Bir madde burada ve kodda farklıysa kod hatalıdır. Bu belge değişmeden kod değiştirilmez.
 
@@ -134,6 +134,8 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
     **Kural:** `no_sell[t] = valid ∧ Oₜ/Cfₜ₋₁ ≤ 1 − (marjₜ − 0,005)`. Ön kayıttaki 0,5 puanlık tolerans korunur. Frekans eşiği (`frac_down` ≥ %0,05) artık kullanılmaz: bu bir piyasa kuralının modellenmesidir, frekansa göre açılıp kapanmaz. Tavan yönü değişmez (engel yok, beyan).
 
     **Doğrulanmış kapsam** 2020-12-31'de biter. Bu tarihten sonraki satırlarda takvim kullanılırsa kod hata verir. 2021+ pencerelerinden (M8) önce marj geçmişi kaynakla doğrulanıp takvim uzatılır.
+
+    **Uygulandı (`815a8e7`).** Ortam penceresinde engelli hücre sayısı 38'den **2**'ye indi: TAVHL 2018-07-11 (−%19,9) ve PGSUS 2020-02-28 (−%21,4, bant dışı, muhtemel veri hatası). Kaynak: `open_gap_audit.json` → `no_sell_env_cells`. `obs_health.json`'daki `market.no_sell_cells*` (38 / 18 / 20) eski sabit kurala aittir; tarihsel olarak kalır.
 
     **Duyarlılık:** sabit 0,095 kuralı ve engelsiz kol aynı ölçümlerde ayrı satır olarak raporlanır (`pc_alignment_*`). Sabit kural `LIMIT_DOWN_GAP_FIXED` adıyla yalnız duyarlılık ve testler için kalır. Kod: `accounting.limit_down_gaps(dates)`, ortam varsayılanı `limit_down_gap='schedule'`.
 - **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
@@ -314,8 +316,8 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | Test | Ortam | Kontrol | Kapsam |
 |---|---|---|---|
-| `python tests/test_marl_core.py` | `venv/` | 58 | logit sınırı, projeksiyon (500 rastgele, satış engeliyle), satış engeli (dondurma, alım açık, `None` bit-eş, maske eşiği + B0, K5 bekçisi), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
-| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 36 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), satış engeli (kesirli + tam sayı; engel 0 kontrol kolu), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
+| `python tests/test_marl_core.py` | `venv/` | 61 | logit sınırı, projeksiyon (500 rastgele, satış engeliyle), satış engeli (dondurma, alım açık, `None` bit-eş, maske eşiği + B0, K5 bekçisi; v0.7 takvim, kapsam dışı hata, satır başına eşik), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
+| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 36 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), satış engeli (kesirli + tam sayı; engel 0 kontrol kolu; `'schedule'` takvim dışı tarihte açık hata), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
 
 **Mutasyon (2026-11-16):** `project`'te satış engeli döngüsü kapatılınca (`tr_eff &= ~hit` → `break`) `test_marl_core` [2]'de iki kontrol kırılır.
 
@@ -333,7 +335,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
 | 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
 | 8 | ~~DSR ısınması ↔ bölüm uzunluğu~~ **kapandı (karar 2026-11-16)** | Birincil ödül `'excess'`; `'differential'` yalnız α = 0 ablasyonu (§2.2). Isınma bekçisi yalnız eğitimde | η, ablasyonun ön kaydında |
-| 9 | **Fiyat limiti — ÖN KAYIT (2026-11-16, kullanıcı; hakem-finans ikinci okuma #8), ölçümden ÖNCE.** **Uygulandı (2026-11-16):** `frac_down` %0,074 → satış engeli; `frac_up` %0,061 → beyan (§2.5) | Ölçü: `market.open_gap_limit_cells['0.095']`, pencere `RL_DATA_START`..2020-12-31, tüm geçerli hücreler. **Taban:** `frac_down` ≥ %0,05 → açılış boşluğu ≤ −%9,5 olan hücrede SATIŞ engeli. **Tavan:** `frac_up` ≥ %0,1 → açılış boşluğu ≥ +%9,5 olan hücrede ALIM engeli. Eşiğin altında kalan yön yalnız beyan. Kilit sonrası tavan serisi (`post_lockout_first10_gaps`) tavan kuralına dahil. Eşikler ölçüm görüldükten sonra değiştirilmez | Ev makinesinde ölçüm → kurala göre `project`'e yön sınırı (alt/üst) ya da beyan |
+| 9 | **Fiyat limiti — ÖN KAYIT (2026-11-16, kullanıcı; hakem-finans ikinci okuma #8), ölçümden ÖNCE.** Uygulandı: `frac_down` %0,074 → satış engeli; `frac_up` %0,061 → beyan. **v0.7 ile değiştirildi (hakem-2 H1, kullanıcı kararı):** dönem bağımlı marj (§2.5); ortamda 2 engelli hücre. 2021+ için marj geçmişi M8'den önce doğrulanır | Ölçü: `market.open_gap_limit_cells['0.095']`, pencere `RL_DATA_START`..2020-12-31, tüm geçerli hücreler. **Taban:** `frac_down` ≥ %0,05 → açılış boşluğu ≤ −%9,5 olan hücrede SATIŞ engeli. **Tavan:** `frac_up` ≥ %0,1 → açılış boşluğu ≥ +%9,5 olan hücrede ALIM engeli. Eşiğin altında kalan yön yalnız beyan. Kilit sonrası tavan serisi (`post_lockout_first10_gaps`) tavan kuralına dahil. Eşikler ölçüm görüldükten sonra değiştirilmez | Ev makinesinde ölçüm → kurala göre `project`'e yön sınırı (alt/üst) ya da beyan |
 | 10 | **M3'e taşınan RL maddeleri** (hakem-rl M2 #4–#7) | Yerel gözleme piyasa bağlamı (kesitsel ortalama z, geçerli oran) ↔ yok; eleştirmene tam z (N×F) ↔ ortalama; TorchRL'de bölüm sonu `terminated=False` ve bootstrap V(sₜ₊₁) ≠ 0 duman testi; başlangıç log-std ~0,2–0,3 / tanh ezmesi, eval'de ortalama eylem | M3 görev + eğitim betiği; gözlem/eleştirmen kolları ablasyon olarak ön kayda |
 | 11 | **Baseline'lar aynı sınırla** (hakem-finans M2 #7, ikinci okuma #10) | 1/N ve al-tut aynı `fill_prices(listing_lockout=20)`, aynı `project` ve aynı rf ile; sınırsız 1/N ayrı duyarlılık satırı | M3/M8 değerlendirme |
 | 12 | **Evren beyanı tez metnine** (hakem-finans M2 #2) | Mutlak performans iddiası yok (§2.5); E1 maskesi hazır olunca eval'e bağlanır | Tez metni; E1 |
@@ -414,6 +416,16 @@ Birincil pencere 2013-08-27..2020-12-31 (1843 gün). ΔSR(S_yön − 1/N), yıll
 - Tek üreteç tohumu (20261115).
 - Eğitim penceresinde PC060-K12 tek başına sınırda (p 0,07). Birincil havuzlu pencerede açık.
 
+**Satış engeli kuralına duyarlılık (v0.7, hakem-2 H1).** E1 net ΔSR, havuzlu pencere:
+
+| Kural | PC060 | PC060-K12 | Kaynak |
+|---|---|---|---|
+| sabit 0,095 (§9.1 ön kaydındaki) | +0,099 | +0,358 | `pc_alignment.json` |
+| dönem bağımlı marj (v0.7, ortam varsayılanı) | +0,091 | +0,344 | `pc_alignment_schedule.json` |
+| engel yok | +0,091 | +0,344 | `pc_alignment_off.json` |
+
+Fark ≤ 0,015 ΔSR; karar üç kuralda da aynı.
+
 **Hakem-2 M2 kapanışı sonrası notlar (SONUÇTAN SONRA; ön kayıt metni ve karar değişmez; §10 H2–H8):**
 - **Eşiğin dayanağı (H2).** 0,17, Faz 9 §9.37'de bir RL ↔ RL farkının MDE'siydi (eşli, yüksek korelasyonlu). Buradaki S_yön − 1/N testinin kendi MDE'si (%80 güç, α 0,05) ≈ 2,8 × SE ≈ **0,26–0,27** (SE 0,093–0,095, `pc_alignment.json`). Ön kayıttaki "pencere uzun → muhafazakâr" gerekçesi bu yüzden yanlıştı. Karar iki eşikte de aynı: PC060 0,10 her ikisinin altında, PC060-K12 0,36 her ikisinin üstünde.
 - **Tohum yayılımı (H3, H5).** Kayıtlı tohum ve 1–8 tohumları, betimsel ([pc_alignment_seeds.json](measurements/phase10-m2/pc_alignment_seeds.json); `--extra-seeds 1-8`). E1 net ΔSR, havuzlu pencere:
@@ -461,7 +473,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 | # | Cid. | Bulgu | Sonuç |
 |---|---|---|---|
-| H1 | BÜYÜK | Satış engelinin dayanağı veri döneminde yanlış. Marj 2015-11-30..2020-03-12'de ±%20 (BISTECH belgesi §2.1.2), ancak 13.03.2020'de ±%10'a indi (bianet). 42 taban hücresinin 27'si ±%20 döneminde ve bant içinde; 15'i BISTECH öncesinde, o dönemin marjı doğrulanmadı. Hiçbiri ±%10 döneminde değil (`open_gap_audit.json`). 2020-02-28'deki 18 hücre açılıştan kapanışa ortalama +%11,7 toparlanıyor; yani engel muhafazakâr değil. Sayısal etki ≤ 0,015 ΔSR | **Kullanıcı kararı bekliyor** (yeni ön kayıt) |
+| H1 | BÜYÜK | ~~Satış engelinin dayanağı veri döneminde yanlış.~~ Marj 2015-11-30..2020-03-12'de ±%20 (BISTECH belgesi §2.1.2), ancak 13.03.2020'de ±%10'a indi (bianet). 42 taban hücresinin 27'si ±%20 döneminde ve bant içinde; 15'i BISTECH öncesinde, o dönemin marjı doğrulanmadı. Hiçbiri ±%10 döneminde değil (`open_gap_audit.json`). 2020-02-28'deki 18 hücre açılıştan kapanışa ortalama +%11,7 toparlanıyor; yani engel muhafazakâr değil. Sayısal etki ≤ 0,015 ΔSR | **Kapandı:** ön kayıt v0.7 (`b8e310e`, kullanıcı kararı), dönem bağımlı marj (`815a8e7`). Duyarlılık §9.1 |
 | H2 | BÜYÜK | 0,17 eşiği bu testin MDE'si değil (≈0,26–0,27) | §9.1 sonrası not; karar değişmez |
 | H3 | BÜYÜK | Tohum yayılımı beyan edilmemişti; kayıtlı tohum en üstte | Ölçüldü (`pc_alignment_seeds.json`); M3 ölçütü yayılıma göre |
 | H4 | KÜÇÜK | K12 gün içi payı yanlış ufka göre hesaplanmıştı (> 1) | `D_on_next` eklendi; K12 %82 |
@@ -476,7 +488,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
-- **v0.7-taslak (2026-11-16):** Hakem-2 M2 kapanışı (§10 H1–H10). H2–H10 işlendi: §9.1 sonrası notlar, K12 gece ayrıştırması, tohum yayılımı JSON'u, ölçüm izi, açılış boşluğu denetimi (`open_gap_audit.json`), duman betiği, §3.2 e yan etki beyanı. H1 (fiyat limiti dayanağı) kullanıcı kararını bekliyor.
+- **v0.7 (2026-11-16):** Hakem-2 M2 kapanışı (§10 H1–H10; Küçük revizyon). H1: ön kayıt v0.7, satış engeli dönem bağımlı fiyat marjı (kullanıcı kararı; ortamda 38 → 2 hücre; 2021+ için kod açık hata verir). H2–H10: §9.1 sonrası notlar (MDE ≈ 0,26–0,27; tohum yayılımı K12 0,20–0,36), K12 gece ayrıştırması, ölçüm izi, açılış boşluğu denetimi, duman betiği, §3.2 e yan etki beyanı. Karar değişmedi: M3 pozitif kontrolü PC060-K12. Testler 61 + 36. **M2 çekirdeği kapandı;** kalan maddeler M3/M8'de (§9 #4–#6, #10–#12).
 
 - **v0.6 (2026-11-16):** §9.1 ön kaydı (commit `0232f11`, sonuçtan önce) ve sonucu: PC060 yeni ortamda pozitif kontrol değil (E1 net +0,10); M3 pozitif kontrolü PC060-K12 (+0,36). `scripts/marl/pc_alignment_m2.py`, `measurements/phase10-m2/pc_alignment.json`.
 - **v0.5 (2026-11-16, ev makinesi):** §9 #1 gerçek panel ölçümü (`measurements/phase10-m2/obs_health.json`, doğrulama satırları dahil). §9 #9 ön kayıtlı kural uygulandı: taban açılışta satış engeli (`fill_prices(limit_down_gap)`, `project(no_sell)` adım e, K5 bekçisi); tavan beyan. Listeleme kilidi kümesinin artefakt olduğu beyan edildi (§2.3). `prepare_panel_m2.py` JSON'a yerel yol yazmıyor. Testler 58 + 36.

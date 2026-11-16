@@ -26,13 +26,15 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   ablasyonu, kodda zorlanir. Gevsetme.
 - **Listeleme kilidi** `LISTING_LOCKOUT=20` seans (`fill_prices`, ortam `listing_lockout`); canli karar da ayni
   `tradable` maskesini kullanir. Fiyatlar yfinance duzeltilmis: tam sayi modunda lot/fiyat seviyesi iddiasi yok.
-- **Taban acilista satis engeli** `LIMIT_DOWN_GAP=0.095` (tasarim §9 #9 ON KAYDI, olcumle uygulandi; esik DEGISMEZ):
-  `fill_prices(limit_down_gap)` -> `no_sell`; `project(no_sell)` ve `rebalance_orders(no_sell)` ayni maskeyi alir.
-  Canli karar `no_sell=None` verir (engel acilista bilinir). Tavan alim engeli YOK (olcum esigin altinda, beyan).
+- **Taban acilista satis engeli, DONEM BAGIMLI marj** (tasarim §2.5 ON KAYIT v0.7; hakem-2 H1): `limit_down_gaps(dates)`
+  -> esik marj - 0,005; marj BISTECH oncesi %20 (DOGRULANMADI), 2015-11-30 %20, 2020-03-13 %10. Kapsam
+  `PRICE_MARGIN_VERIFIED_UNTIL` (2020-12-31) sonrasi HATA: 2021+ icin once marj gecmisini kaynakla dogrula, takvimi uzat.
+  Ortam varsayilani `limit_down_gap='schedule'`; sabit `LIMIT_DOWN_GAP_FIXED=0.095` yalniz duyarlilik/sentetik test.
+  `project(no_sell)` ve `rebalance_orders(no_sell)` ayni maskeyi alir. Canli karar `no_sell=None`. Tavan alim engeli YOK.
 - **Sembol sirasi panelin gorunme sirasi**; `sorted()` uygulama.
 - Legacy ADX (hep 0) `panel.build_arrays`'te reddedilir; `with_adx(df, 'wilder')` kullan.
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (58, ana venv)
+- `python tests/test_marl_core.py` (61, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
