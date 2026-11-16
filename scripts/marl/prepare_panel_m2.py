@@ -8,7 +8,7 @@ Eksik gunler ATILMAZ (M1 spike'i 69 gunu atiyordu); hucre maskesi ortamda.
     python scripts/marl/prepare_panel_m2.py --end 2020-12-31 --health-only --train-end 2018-12-31
 
 --health-only: rf olmadan da kosar; .npz YAZMAZ, gozlem sagligini (ozellik basina kirpma orani,
-sabitlik; K18) egitim satirlarinda olcer. rf yoksa .npz yazimi acik hatayla durur (sabite dusulmez).
+sabitlik; K18) egitim satirlarinda ve egitim istatistigiyle dogrulama satirlarinda (train_end, end] olcer. rf yoksa .npz yazimi acik hatayla durur (sabite dusulmez).
 Pencere 2021'e dokunmaz (m0p-v2 dogrulayici penceresi; --end varsayilani 2020-12-31).
 """
 from __future__ import annotations
@@ -59,13 +59,15 @@ def main():
     rows = (dates <= a.train_end) & (np.arange(len(dates)) >= OS.WARMUP_ROWS)
     stats = OS.fit_norm_stats(feat, ok, rows)
     health = OS.clip_report(feat, ok, stats, rows)
+    val_rows = (dates > a.train_end) & (np.arange(len(dates)) >= OS.WARMUP_ROWS)
+    health_val = OS.clip_report(feat, ok, stats, val_rows) if val_rows.any() else {}
     try:
         commit = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
     except Exception:  # noqa: BLE001
         commit = None
     # Hakem-finans M2 #1, #4, Q3 (2026-11-16): kilit, fiyat limiti, acilis gecerli / kapanis eksik
-    from marl.accounting import LISTING_LOCKOUT, fill_prices
-    px = fill_prices(arrays['open'], arrays['close'], LISTING_LOCKOUT)
+    from marl.accounting import LIMIT_DOWN_GAP, LISTING_LOCKOUT, fill_prices
+    px = fill_prices(arrays['open'], arrays['close'], LISTING_LOCKOUT, LIMIT_DOWN_GAP)
     with np.errstate(invalid='ignore', divide='ignore'):
         g_on = px['open'][1:] / px['close'][:-1]
     v1 = px['valid'][1:] & px['listed'][:-1]
@@ -96,33 +98,51 @@ def main():
         'open_gap_limit_cells': limits,
         'post_lockout_first10_gaps': post,
         'open_valid_close_missing_cells': int((o_ok & ~c_ok).sum()),
+        # §9 #9 kurali uygulandiktan sonra ortamin gordugu maske (tradable & no_sell; ortam penceresi >= WARMUP_ROWS)
+        'limit_down_gap': LIMIT_DOWN_GAP,
+        'no_sell_cells': int((px['no_sell'] & px['tradable'])[OS.WARMUP_ROWS:].sum()),
+        'no_sell_cells_health_rows': int((px['no_sell'] & px['tradable'])[rows].sum()),
+        'no_sell_cells_val_rows': int((px['no_sell'] & px['tradable'])[val_rows].sum()),
         'price_basis': 'yfinance history() auto_adjust varsayilani (bolunme + temettu duzeltilmis)',
     }
     rep = {
-        'source_csv': src, 'source_sha256': _sha(src), 'commit': commit, 'market': market,
+        'source_csv': os.path.relpath(src, ROOT).replace(os.sep, '/'),   # yerel yol JSON'a girmez
+        'source_sha256': _sha(src), 'commit': commit, 'market': market,
         'window': [str(dates[0]), str(dates[-1])], 'T': int(len(dates)), 'N': int(len(arrays['symbols'])),
         'symbols': [str(s) for s in arrays['symbols']],
         'incomplete_days': incomplete, 'missing_cell_frac': float(1 - valid.mean()),
         'obs_spec': OS.OBS_SPEC_VERSION, 'health_rows': [str(dates[rows][0]), str(dates[rows][-1])],
-        'health': health, 'norm_stats': stats,
+        'health': health, 'val_rows': [str(dates[val_rows][0]), str(dates[val_rows][-1])] if val_rows.any() else None,
+        'health_val': health_val, 'norm_stats': stats,
         'gate': {k: gate[k] for k in list(gate)[:12]},
     }
-    if a.health_only:
-        out = json.dumps(rep, indent=1, default=str, ensure_ascii=False)
+    def _write_json():
         if a.json:
             os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
-            open(a.json, 'w', encoding='utf-8').write(out)
+            open(a.json, 'w', encoding='utf-8').write(json.dumps(rep, indent=1, default=str, ensure_ascii=False))
+
+    if a.health_only:
+        _write_json()
         print(json.dumps({k: rep[k] for k in ('window', 'T', 'N', 'incomplete_days', 'missing_cell_frac',
                                               'health_rows', 'source_sha256', 'market')}, indent=1, default=str))
         for n, h in health.items():
-            print(f"  {n:10s} kirpma {h['clip_frac']:.4%}  sabit {h['constant']}  n {h['n']}")
+            hv = health_val.get(n, {})
+            print(f"  {n:10s} egitim kirpma {h['clip_frac']:.4%} sabit {h['constant']} n {h['n']}"
+                  f" | dogrulama kirpma {hv.get('clip_frac', float('nan')):.4%} sabit {hv.get('constant')} n {hv.get('n')}")
         return
     if not a.out:
         ap.error('--out gerekli (ya da --health-only)')
     arrays['rf'] = PN.risk_free_for(dates)   # RiskFreeUnavailable: sabite dusulmez
-    info = PN.save_npz(arrays, a.out, meta={k: rep[k] for k in rep if k not in ('health', 'norm_stats')})
-    print(json.dumps(info, indent=1))
-
+    rf = arrays['rf']
+    rep['risk_free'] = {'finite_rows': int(np.isfinite(rf).sum()), 'rows': int(len(rf)),
+                        'first_nan_rows': int(np.argmax(np.isfinite(rf))) if np.isfinite(rf).any() else None,
+                        'per_period_mean': float(np.nanmean(rf)), 'per_period_max': float(np.nanmax(rf))}
+    info = PN.save_npz(arrays, a.out, meta={k: rep[k] for k in rep
+                                            if k not in ('health', 'health_val', 'norm_stats')})
+    info['path'] = os.path.relpath(os.path.abspath(a.out), ROOT).replace(os.sep, '/')   # yerel yol JSON'a girmez
+    rep['npz'] = info
+    _write_json()   # .npz SHA + rf kapsami olcum JSON'una (health-only ile ayni alanlar + npz, risk_free)
+    print(json.dumps({**info, 'risk_free': rep['risk_free']}, indent=1))
 
 if __name__ == '__main__':
     main()

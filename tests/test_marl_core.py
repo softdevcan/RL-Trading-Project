@@ -4,8 +4,9 @@ Faz 10 M2 saf cekirdek (`marl/weights.py`, `marl/accounting.py`, `marl/orders.py
 
 Kontroller:
   1. Logit siniri B = 5 + ln N: tum ajanlar -B'de nakit ~ %99,33, N'den bagimsiz (M1: N=30'da %83 tavan).
-  2. Projeksiyon: kisitsiz = u; dondurma, bant, pozisyon ve grup siniri; 500 rastgele durumda
-     uzun-yalniz, toplam 1, sinirlar islem goren hissede tutar.
+  2. Projeksiyon: kisitsiz = u; dondurma, bant, pozisyon ve grup siniri; satis engeli (taban acilis,
+     §9 #9); 500 rastgele durumda uzun-yalniz, toplam 1, sinirlar islem goren hissede, engelli hisse
+     w~'nin altina inmez.
   3. Muhasebe: tasinan fiyat (eksik gun getiri 0, donuste aradaki hareket), elle hesap (gece + maliyet +
      seans ici + nakit faizi), tam nakit X = 0, maliyet bir kez, katki toplami = X (birinci derece).
   4. Emir (K5): sema interpret_actions_with_risk'in ust kumesi; nakit >= 0; satis <= adet;
@@ -90,6 +91,19 @@ groups = np.array([0, 0, 1, 1, 1])
 w, _ = W.project(W.target_weights([0, 0, 3, 3, 3], W.logit_bound(5)), wd, all_tr,
                  W.Constraints(max_group=0.4), groups)
 check("grup siniri: grup 1 toplami <= 0,4", w[3:].sum() <= 0.4 + 1e-12, str(w))
+# Satis engeli (tasarim §9 #9 on kaydi): hisse 0 w~ 0,1'den 0'a inmek istiyor, engelli -> 0,1'de kalir
+_us = W.target_weights([-8.0, 2.0, 0, 0, 0], W.logit_bound(5))
+_ns = np.array([True, False, False, False, False])
+w_ns, r_ns = W.project(_us, wd, all_tr, no_sell=_ns)
+w_free, _ = W.project(_us, wd, all_tr)
+check("satis engeli: hedef w~'nin altindaysa hisse dondurulur; serbestte satilir",
+      w_ns[1] == wd[1] and r_ns['n_sell_blocked'] == 1 and w_free[1] < 0.01 and abs(w_ns.sum() - 1) < 1e-12)
+_ub = W.target_weights([4.0, 0, 0, 0, 0], W.logit_bound(5))
+w_b1, r_b1 = W.project(_ub, wd, all_tr, no_sell=_ns)
+w_b0, _ = W.project(_ub, wd, all_tr)
+check("satis engeli alimi kisitlamaz; engel yokken None ile bit-es",
+      np.array_equal(w_b1, w_b0) and r_b1['n_sell_blocked'] == 0
+      and np.array_equal(W.project(u, wd, all_tr, no_sell=np.zeros(n, bool))[0], W.project(u, wd, all_tr)[0]))
 rng = np.random.default_rng(1)
 ok_all = True
 for _ in range(500):
@@ -101,16 +115,20 @@ for _ in range(500):
     g = rng.integers(0, 3, n)
     c = W.Constraints(band=float(rng.choice([0, 0.01, 0.05])), max_position=float(rng.choice([1, 0.3, 0.15])),
                       max_group=float(rng.choice([1, 0.5])))
-    w, rep = W.project(u, wd, tr, c, g)
+    ns = rng.random(n) > 0.7
+    w, rep = W.project(u, wd, tr, c, g, ns)
     s = w[1:]
-    ok = (w.min() >= -1e-12 and abs(w.sum() - 1) < 1e-9 and np.all(s[tr] <= c.max_position + 1e-12)
-          and np.all(s[~tr] == wd[1:][~tr]))
+    ok = (w.min() >= -1e-12 and abs(w.sum() - 1) < 1e-9 and np.all(s[~tr] == wd[1:][~tr])
+          and np.all(s[tr & ns] >= wd[1:][tr & ns] - 1e-12))
+    ok &= np.all(s[tr & ~ns] <= c.max_position + 1e-12)
+    ok &= np.all((s[tr & ns] <= c.max_position + 1e-12) | (s[tr & ns] == wd[1:][tr & ns]))
+    stuck = ~tr | (tr & ns & (s == wd[1:]))   # satilamayan kutle: dondurulmus + engelli (sinir asilabilir)
     for gid in np.unique(g):
         m = g == gid
-        if s[m & ~tr].sum() <= c.max_group:
+        if s[m & stuck].sum() <= c.max_group:
             ok &= s[m].sum() <= c.max_group + 1e-9
     ok_all &= bool(ok)
-check("500 rastgele durum: uzun-yalniz, toplam 1, sinirlar, dondurma", ok_all)
+check("500 rastgele durum: uzun-yalniz, toplam 1, sinirlar, dondurma, satis engeli", ok_all)
 
 # ---------------------------------------------------------------------------------------------
 print("\n[3] Muhasebe")
@@ -145,6 +163,16 @@ try:
 except ValueError:
     _neg = True
 check("kilit negatif -> ValueError", _neg)
+# Satis engeli maskesi (§9 #9): acilis boslugu O_t / Cf_{t-1} <= 0,905; t acilisinda bilinir
+_go = _la['open'].copy()
+_go[120, 0] = _la['close'][119, 0] * 0.90
+_go[121, 0] = _la['close'][120, 0] * 0.906
+_gp = A.fill_prices(_go, _la['close'], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+_gp0 = A.fill_prices(_go, _la['close'], A.LISTING_LOCKOUT)
+_gc = A.fill_prices(_go[:121], _la['close'][:121], A.LISTING_LOCKOUT, A.LIMIT_DOWN_GAP)
+check("satis engeli: -%10 bosluk engelli, -%9,4 degil; esik 0 -> hic; nedensel (B0)",
+      _gp['no_sell'][120, 0] and not _gp['no_sell'][121, 0] and not _gp0['no_sell'].any()
+      and np.array_equal(_gc['no_sell'], _gp['no_sell'][:121]) and not _gp['no_sell'][~_gp['valid']].any())
 # hakem-rl M2 #8: kilit gozlemde ayri bayrak degil; kilitli hucrede feat_ok = 0 oldugu icin ajan gorur.
 # Degismez: kilit penceresi feat_ok = 0 penceresinin icinde (kilit uzar ya da ozellik isinmasi kisalirsa kirilir)
 from marl import obs_spec as _OS  # noqa: E402
@@ -243,6 +271,11 @@ dec2, s2 = O.rebalance_orders(np.array([1.0, 0, 0, 0]), prices, hold, cash, 0.00
                               tradable=np.array([True, True, False]))
 check("islem goremeyen hisseye dokunulmaz", dec2[2]['action'] == 'HOLD' and s2['holdings_after'][2] == 50
       and dec2[0]['action'] == 'SELL')
+dec3, s3 = O.rebalance_orders(np.array([1.0, 0, 0, 0]), prices, hold, cash, 0.001, syms,
+                              no_sell=np.array([True, False, False]))
+check("satis engeli (K5 bekcisi): engelli hisse satilmaz, digeri satilir",
+      dec3[0]['action'] == 'HOLD' and 'satis engeli' in dec3[0]['reason'] and s3['holdings_after'][0] == 100
+      and dec3[2]['action'] == 'SELL')
 rng = np.random.default_rng(3)
 ok = True
 gaps = []

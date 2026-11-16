@@ -27,7 +27,8 @@ import numpy as np
 
 def rebalance_orders(target_w, prices, holdings, cash: float, commission: float,
                      symbols: Sequence[str], tradable: Optional[np.ndarray] = None,
-                     logits: Optional[np.ndarray] = None) -> tuple[List[dict], dict]:
+                     logits: Optional[np.ndarray] = None,
+                     no_sell: Optional[np.ndarray] = None) -> tuple[List[dict], dict]:
     """Hedef agirlik -> emir listesi + ozet.
 
     Args:
@@ -39,6 +40,8 @@ def rebalance_orders(target_w, prices, holdings, cash: float, commission: float,
         symbols: [N] sembol adlari (meta `symbols` sirasi).
         tradable: [N] bool; None -> hepsi.
         logits: [N] opsiyonel ham ajan logitleri; `raw_signal` alanina yazilir (yoksa hedef agirlik).
+        no_sell: [N] bool satis engeli (taban acilis); hedef adet mevcut adedin altina inmez.
+            `weights.project` ayni maskeyle hedefi w~_i'nin altina indirmez; bu, yuvarlamaya karsi bekci.
     Returns:
         (kararlar, ozet). ozet: cash_after, holdings_after, value, turnover, weight_gap, commission.
     """
@@ -64,6 +67,8 @@ def rebalance_orders(target_w, prices, holdings, cash: float, commission: float,
     cur_w = (h * p) / value if value > 0 else np.zeros(n)
     tgt = h.copy()
     tgt[tr] = np.floor(np.maximum(w[1:][tr], 0.0) * value / p[tr] + 1e-9).astype(np.int64)
+    ns = np.zeros(n, dtype=bool) if no_sell is None else np.asarray(no_sell, dtype=bool)
+    tgt[ns] = np.maximum(tgt[ns], h[ns])
 
     decisions: List[Optional[dict]] = [None] * n
     cash_now = float(cash)
@@ -110,8 +115,9 @@ def rebalance_orders(target_w, prices, holdings, cash: float, commission: float,
 
     for i in range(n):
         if decisions[i] is None:
-            decisions[i] = _row(i, 'HOLD', 0,
-                                reason='islem goremez (eksik hucre)' if not tr[i] else 'hedef adet = mevcut')
+            why = ('islem goremez (eksik hucre)' if not tr[i]
+                   else 'satis engeli (taban acilis)' if ns[i] else 'hedef adet = mevcut')
+            decisions[i] = _row(i, 'HOLD', 0, reason=why)
 
     h_after = h.copy()
     for i, d in enumerate(decisions):

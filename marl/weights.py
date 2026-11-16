@@ -58,7 +58,8 @@ class Constraints:
 
 
 def project(u, w_drift, tradable, constraints: Constraints = Constraints(),
-            groups: Optional[np.ndarray] = None) -> tuple[np.ndarray, dict]:
+            groups: Optional[np.ndarray] = None,
+            no_sell: Optional[np.ndarray] = None) -> tuple[np.ndarray, dict]:
     """Ham hedef u'yu uygulanabilir hedef w*'a tasir (tasarim §3.2). Sira sabittir:
 
       a. Dondurma: islem goremeyen hisse (tradable=False) kaymis agirligini korur; kalan kutle nakit +
@@ -72,11 +73,17 @@ def project(u, w_drift, tradable, constraints: Constraints = Constraints(),
     varsayimidir; hedef her zaman uzun-yalniz, toplam 1, nakit >= 0. Dondurulmus hisse siniri
     asabilir (satilamaz); `frozen_over_cap` ile raporlanir.
 
+      e. Satis engeli (tasarim §3.2, §9 #9 on kaydi): `no_sell` hissesinin hedefi w~_i'nin altina
+         duserse hisse o gun DONDURULUR ve a-d bastan kosulur. Dondurulan kume yalniz buyur, bu yuzden
+         en fazla N turda biter; alim yonu acik kalir (hedef >= w~_i ise dokunulmaz).
+
     Args:
         u: [N+1] ham hedef (`target_weights`).
         w_drift: [N+1] yurutme anindaki kaymis agirlik (0 = nakit).
         tradable: [N] bool, yurutme gunu hucresi gecerli mi.
         groups: [N] tam sayi grup kimligi (or. E2 sektoru); None -> grup siniri yok.
+        no_sell: [N] bool, yurutme acilisinda satis engeli (taban acilis; `accounting.fill_prices`).
+            None -> yok. Canli karar None verir: engel acilista bilinir, karar kapanista verilir.
     Returns:
         (w* [N+1], rapor)
     """
@@ -86,7 +93,33 @@ def project(u, w_drift, tradable, constraints: Constraints = Constraints(),
     n = tr.shape[0]
     if u.shape != (n + 1,) or wd.shape != (n + 1,):
         raise ValueError(f"u ve w_drift [N+1={n + 1}] olmali: {u.shape}, {wd.shape}")
-    c = constraints
+    g = None
+    if groups is not None and constraints.max_group < 1.0:
+        g = np.asarray(groups)
+        if g.shape != (n,):
+            raise ValueError(f"groups [N={n}] olmali: {g.shape}")
+    ns = np.zeros(n, dtype=bool) if no_sell is None else np.asarray(no_sell, dtype=bool)
+    if ns.shape != (n,):
+        raise ValueError(f"no_sell [N={n}] olmali: {ns.shape}")
+    tr_eff = tr.copy()
+    while True:
+        w, frozen, banded = _project_once(u, wd, tr_eff, constraints, g)
+        hit = tr_eff & ns & (w[1:] < wd[1:] - 1e-12)
+        if not hit.any():
+            break
+        tr_eff &= ~hit
+    report = {
+        'n_frozen': int((~tr).sum()),
+        'n_banded': int(banded.sum()),
+        'n_sell_blocked': int((tr & ~tr_eff).sum()),
+        'frozen_over_cap': int((frozen & (w[1:] > constraints.max_position + 1e-12)).sum()),
+    }
+    return w, report
+
+
+def _project_once(u, wd, tr, c: Constraints, g):
+    """a-d tek gecis (tr = dondurulmayan hisseler). Donus (w*, frozen, banded)."""
+    n = tr.shape[0]
     w = np.zeros(n + 1)
     stocks_wd = wd[1:]
 
@@ -119,10 +152,7 @@ def project(u, w_drift, tradable, constraints: Constraints = Constraints(),
         w[1:][over] = c.max_position
 
     # d. grup siniri
-    if groups is not None and c.max_group < 1.0:
-        g = np.asarray(groups)
-        if g.shape != (n,):
-            raise ValueError(f"groups [N={n}] olmali: {g.shape}")
+    if g is not None:
         for gid in np.unique(g):
             m = g == gid
             t_sum = float(w[1:][m & tr].sum())
@@ -135,9 +165,4 @@ def project(u, w_drift, tradable, constraints: Constraints = Constraints(),
         if w[0] < -1e-12:
             raise AssertionError(f"projeksiyon nakdi eksiye dusurdu: {w[0]}")
         w[0] = 0.0
-    report = {
-        'n_frozen': int(frozen.sum()),
-        'n_banded': int(banded.sum()),
-        'frozen_over_cap': int((frozen & (w[1:] > c.max_position + 1e-12)).sum()),
-    }
-    return w, report
+    return w, frozen, banded

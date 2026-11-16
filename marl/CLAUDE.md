@@ -26,10 +26,13 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   ablasyonu, kodda zorlanir. Gevsetme.
 - **Listeleme kilidi** `LISTING_LOCKOUT=20` seans (`fill_prices`, ortam `listing_lockout`); canli karar da ayni
   `tradable` maskesini kullanir. Fiyatlar yfinance duzeltilmis: tam sayi modunda lot/fiyat seviyesi iddiasi yok.
+- **Taban acilista satis engeli** `LIMIT_DOWN_GAP=0.095` (tasarim §9 #9 ON KAYDI, olcumle uygulandi; esik DEGISMEZ):
+  `fill_prices(limit_down_gap)` -> `no_sell`; `project(no_sell)` ve `rebalance_orders(no_sell)` ayni maskeyi alir.
+  Canli karar `no_sell=None` verir (engel acilista bilinir). Tavan alim engeli YOK (olcum esigin altinda, beyan).
 - **Sembol sirasi panelin gorunme sirasi**; `sorted()` uygulama.
 - Legacy ADX (hep 0) `panel.build_arrays`'te reddedilir; `with_adx(df, 'wilder')` kullan.
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (54, ana venv)
-- `venv-marl\Scripts\python tests/test_marl_env.py` (31, yalniz venv-marl)
+- `python tests/test_marl_core.py` (58, ana venv)
+- `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)

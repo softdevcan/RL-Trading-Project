@@ -1,8 +1,8 @@
 # Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
 
-**Sürüm:** v0.1 · 2026-11-16 · dal `feat/phase10-m2-core`
+**Sürüm:** v0.5 · 2026-11-16 · dal `feat/phase10-m2-core`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
-**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli. Performans sayısı **yok** (S1). Gerçek 30 sembollü panelde ölçüm ve hakem incelemesi yapılmadı (§9).
+**Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). Kalan: S-obs ufuk hizası + PC060 yeni ortamda (§9 #2–#3), sonra hakem-2.
 
 Bu belge planın M2 tasarım maddelerini koda bağlar. Bir madde burada ve kodda farklıysa kod hatalıdır. Bu belge değişmeden kod değiştirilmez.
 
@@ -16,6 +16,7 @@ Bu belge planın M2 tasarım maddelerini koda bağlar. Bir madde burada ve kodda
 | §3.2.1 nakit faizi + G2 (A8 serisi, t−1) | §2.2 | `accounting.step_fractional`, `panel.risk_free_for` |
 | §3.2.2 eylem uzayı, nakit logiti (M1 girdisi) | §3.1 | `weights.logit_bound`, `target_weights` |
 | §3.2.2 + K6 risk projeksiyonu | §3.2 | `weights.project` |
+| §9 #9 ön kaydı: taban açılışta satış engeli | §2.5, §3.2 e | `accounting.fill_prices(limit_down_gap)`, `project(no_sell)`, `rebalance_orders(no_sell)` |
 | §3.2.2 kesirli/tam sayı, K5 emir üretimi | §4 | `marl/orders.py` |
 | §3.2.3 gözlem, K18/K26 ölçeksiz özellikler, S-obs | §5 | `marl/obs_spec.py` |
 | K2 ortak gözlem kurucu (bit-eş) | §5.4 | `obs_spec.build_obs_at` |
@@ -94,8 +95,13 @@ Bu iki gereklilik paketin iki katmana ayrılmasını gerektiriyor:
 - **Listelenmemiş sembol:** Cf = NaN, ağırlığı 0 kalır.
 - **Listeleme kilidi — KARAR (2026-11-16, kullanıcı; hakem-finans M2 #1).** Panelde ilk satırdan sonra listelenen sembol ilk geçerli gününden itibaren **20 seans** işlem göremez (`LISTING_LOCKOUT`, ortamda `listing_lockout`). Gerekçe: BIST'te halka arz sonrası ilk seanslar çoğunlukla tavan serisi; açılıştan tam dolum gerçekçi değil. Kilit nedenseldir (ilk geçerli gün o gün bilinir; `test_marl_core` [3] B0). Panel başında zaten listeli sembolün halka arz tarihi panelden görünmez; bu beyan edilir. Etkilenen hücre sayısı gerçek panel ölçümünde (`market.listing_lockout_cells`); kilit sonrası ilk 10 seanstaki ±%9,5 açılış boşluğu ayrıca (`market.post_lockout_first10_gaps`; tavan serisi 20 seanstan uzunsa kilit uzatılır ya da §9 #9 yön kısıtı bu hücreleri kapsar).
   - **Panel kesimi:** kilit "panelin ilk satırından sonra listelenen" sembole uygulanır. Panel her zaman `RL_DATA_START`'tan (K17) bütün olarak kurulur, eğitim/doğrulama/test pencereleri bunun içinden `start_row`/`end_row` ile kesilir. Bu yüzden kilit kümesi pencere seçimine bağlı değildir. Panel başka bir başlangıçla kurulursa kilit kümesi değişir (hakem-rl M2 ikinci okuma #9).
+  - **Gerçek panel ölçümü (`measurements/phase10-m2/obs_health.json`, `market.listing_lockout_*`):** 3 sembol, 60 hücre. Üçü de **gerçek halka arz değil, veri artefaktı**; pencerede (2013-06..2020-12) 30 sembolden hiçbiri halka arz olmadı:
+    - EKGYO: 2010'dan beri işlem görüyor; ilk 5 satır bayat hücre olarak atıldı, ilk geçerli gün 2013-06-10.
+    - ODAS (halka arz 2013-05-21): gösterge ısınması 17 satır atıldı, ilk geçerli gün 2013-06-27.
+    - PGSUS (halka arz 2013-04-26): yfinance'te 2013-05..07 boşluğu ve 24 satır ısınma atıldı, ilk geçerli gün 2013-08-28.
+    EKGYO ve ODAS kilidi 59 satırlık ısınmanın (`WARMUP_ROWS`) içinde kalır, ortamı etkilemez. PGSUS kilidi 2013-08-28..2013-09-25 ortam penceresinin ilk ~20 seansındadır: bu sürede PGSUS alınamaz. Yön muhafazakâr (işlem yok); kod değişmez, beyan edilir. Kilit sonrası ilk 10 seansta ±%9,5 açılış boşluğu 0 (`post_lockout_first10_gaps`), yani kilit uzatılmaz.
   - **Gözlemde:** kilit ayrı bir bayrak değildir. Kilitli hücrede `feat_ok` = 0'dır (r20 ve vlog_z listelemeden sonra en az 20–40 seans ister), yani ajan kilidi `feat_ok` ile görür. Değişmez `test_marl_core` [3]'te. Kilitli ajanın eylemi etkisiz, kᵢ = 0; ödülü yalnız (1 − α)G. Bu etkisiz ajan gürültüsü kabul edilir, PPO kaybında maske yok (hakem-rl M2 ikinci okuma #8).
-- **Açılış geçerli, kapanış eksik hücre** (satıcı veri boşluğu) şu an `valid = False` sayılır ve hisse donar; açılışta kapanışın eksik olacağı bilinmez, bu yüzden bu bir ileriye bakış sayılabilir (hakem-finans M2 S3). Muhafazakâr yön (işlem yapılmaz). Sayısı gerçek panel ölçümünde (`market.open_valid_close_missing_cells`); sıfır değilse düzeltilir.
+- **Açılış geçerli, kapanış eksik hücre** (satıcı veri boşluğu) şu an `valid = False` sayılır ve hisse donar; açılışta kapanışın eksik olacağı bilinmez, bu yüzden bu bir ileriye bakış sayılabilir (hakem-finans M2 S3). Muhafazakâr yön (işlem yapılmaz). Gerçek panelde **0 hücre** (`market.open_valid_close_missing_cells`, `measurements/phase10-m2/obs_health.json`); düzeltme gerekmez.
 - **Aynı yaklaşım:** eski ortamdaki `missing_data_mode='own_last'` ve `evaluation/baselines.py` aynı taşıma mantığını kullanıyor.
 
 ### 2.4 Ölçüm: maliyet yaklaşımının bedeli
@@ -112,7 +118,14 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 ### 2.5 Yürütme ve veri beyanları (hakem-finans M2)
 
 - **Fiyat tabanı — KARAR (2026-11-16, kullanıcı).** `data_fetcher.py` yfinance `history()`'yi `auto_adjust` vermeden çağırır; varsayılan True, yani OHLC bölünme ve temettüye göre düzeltilmiş. g_on ve g_day toplam getiri oranıdır; bu doğru. Tam sayı modunda fiyat seviyesi ve lot gerçek değildir, seviye sonraki şirket olaylarına bağlıdır. Tam sayı modu muhasebe doğruluğu (nakit/adet tutarlılığı) içindir, gerçek lot ve fiyat basamağı iddiası yapılmaz. `model_meta()['price_basis']`.
-- **Fiyat limiti (tavan/taban).** Açılışta tavan varken alım, tabanda satım şu an tam dolar; iyimser ve asimetrik. KARAR (2026-11-16, kullanıcı): önce ölçülür (`market.open_gap_limit_cells`, ±%9,5 ve ±%19,5 açılış boşluğu; dönem marjına göre ikisi de). Karar kuralı ölçümden önce yazıldı (§9 #9): taban `frac_down` ≥ %0,05 → satış engeli, tavan `frac_up` ≥ %0,1 → alım engeli, altı beyan. Yön kısıtı açılışta bilinir, sızıntı değil.
+- **Fiyat limiti (tavan/taban).** KARAR (2026-11-16, kullanıcı): önce ölçülür; karar kuralı ölçümden önce yazıldı (§9 #9). **Ölçüm** (`measurements/phase10-m2/obs_health.json`, `market.open_gap_limit_cells['0.095']`, `RL_DATA_START`..2020-12-31, 56.919 geçerli gece geçişi):
+
+  | Yön | Hücre | Oran | Eşik (ön kayıt) | Sonuç |
+  |---|---|---|---|---|
+  | Taban (açılış boşluğu ≤ −%9,5) | 42 | %0,074 | `frac_down` ≥ %0,05 | **satış engeli uygulandı** |
+  | Tavan (≥ +%9,5) | 35 | %0,061 | `frac_up` ≥ %0,1 | engel yok, beyan |
+
+  ±%19,5 boşlukta 1 tavan, 2 taban hücresi var. **Uygulama:** `fill_prices(limit_down_gap=0.095)` → `no_sell[t] = valid ∧ Oₜ/Cfₜ₋₁ ≤ 0,905`. Projeksiyon §3.2 e, K5 bekçisi §4. Ortamın gördüğü engelli hücre sayısı 38: ısınma ve kilit hücreleri düşülünce kalan; eğitim satırlarında 18, doğrulama satırlarında 20 (`market.no_sell_cells*`). Engel t+1 açılışında bilinir, yürütme de t+1 açılışında olur; bu yüzden sızıntı değil. Canlı karar `no_sell=None` verir, çünkü karar kapanışta verilir ve tabandaki satış emri borsada dolmaz. **Beyan:** tavan açılışta alım tam dolar (iyimser), oran ön kayıtlı eşiğin altında. Eşik bir açılış boşluğu yaklaşımıdır, gerçek limit fiyatı değildir: baz fiyat düzeltilmiş kapanıştır ve seans içinde tabana inen fiyat modellenmez.
 - **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
 - **Evren (hakem-finans M2 #2).** Panel dondurulmuş bir 30'lu liste (E0); tarihsel üyelik değil, 6 hissesi bugün XU030'da değil (`data/CLAUDE.md`). Evren sonradan seçilmiştir. **Mutlak performans iddiası yapılmaz;** yalnız aynı evrende göreli karşılaştırma (MARL ↔ SARL ↔ baseline). E1 üyelik maskesi hazır olunca eval'e bağlanır. Bu beyan tez metnine de girer.
 
@@ -142,10 +155,12 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 | b. Bant b | \|w*ᵢ − w̃ᵢ\| < b ise hisse w̃ᵢ'de kalır. Hisse toplamı 1'i aşarsa bantta kalmayan hisseler orantılı küçültülür |
 | c. Pozisyon sınırı | İşlem gören hissede w*ᵢ ≤ max_position; fazlası **nakde** gider |
 | d. Grup sınırı | Grubun işlem gören kısmı orantılı küçültülür, fazlası nakde gider. Dondurulmuş kısım sınırdan düşülür |
+| e. Satış engeli (§9 #9) | `no_sell` hissesinin hedefi w̃ᵢ'nin altına düşerse hisse o gün **dondurulur** ve a–d baştan koşulur. Dondurulan küme yalnız büyür, en fazla N turda biter. Alım yönü açık kalır. Rapor `n_sell_blocked` |
 
 **Tasarım varsayımları:**
 - Sınırlar yalnız küçültür. Fazla kütle başka hisselere dağıtılmaz, nakde gider. Böylece projeksiyon tek geçişte ve deterministik olur; hedef uzun-yalnız kalır, toplamı 1'dir, nakit ≥ 0'dır.
-- Dondurulmuş hisse sınırı aşabilir, çünkü o gün satılamaz. Bu durum `frozen_over_cap` ile raporlanır.
+- Dondurulmuş hisse sınırı aşabilir, çünkü o gün satılamaz. Bu durum `frozen_over_cap` ile raporlanır. Satış engelli hisse de dondurulmuş sayılır; grup sınırını aşabilir.
+- Satış engeli yeni bir mekanizma değildir, dondurmanın yön koşullu hâlidir. `no_sell=None` ile sonuç eskisiyle bit-eştir (`test_marl_core` [2]).
 - Sınır fazlası nakde gittiği ve nakit faiz aldığı için sınırlar oynaklığı ve fazla getiriyi sistematik etkiler. **Baseline'lar (1/N, al-tut) aynı `project` sınırları ve aynı rf ile de koşulur** ya da fark duyarlılık satırı olarak verilir (hakem-finans M2 #7; M3/M8).
 - Grup kimliği E2 sektörüdür (`data.bist30_symbols.load_sector_groups`). Ortamda `groups=` parametresiyle verilir ve gözleme sektör one-hot'u olarak da girer.
 
@@ -158,6 +173,7 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 - **Ortak kullanım:** ortamın tam sayı modu ve canlı karar aynı fonksiyonu çağırır.
 - **Çıktı:** mevcut karar sözlüğü şeması (`interpret_actions_with_risk`) ile `target_weight` ve `current_weight` ek alanları.
 - **Uyumluluk:** `portfolio.apply_decisions` değişmeden çalışır. Test aynı nakdi ve aynı adedi doğrular.
+- **Satış engeli:** `no_sell` hissesinde hedef adet mevcut adedin altına inmez (`reason='satis engeli (taban acilis)'`). `project` aynı maskeyle hedefi zaten w̃ᵢ'de tutar; bu, yuvarlamaya karşı bekçidir.
 
 **Nakit tanımları** CLAUDE.md "Kağıt portföy" ile aynı:
 - BUY maliyeti komisyon **dahil**
@@ -251,7 +267,8 @@ Boyut: F + 3 + N + G + 4·[S-obs] + E. N = 30'da ek özellik yokken 44.
 
 **Diğer kurallar:**
 - Ortam yalnız `.npz` okur (`panel.load_npz`); M1 spike kalıbıyla aynı (K9).
-- `--health-only`, rf olmadan da koşar ve gözlem sağlığını ölçer (K18: özellik başına kırpma oranı ve sabitlik).
+- `--health-only`, rf olmadan da koşar ve gözlem sağlığını ölçer (K18: özellik başına kırpma oranı ve sabitlik; eğitim + doğrulama satırları).
+- `.npz` yazımında `--json` aynı ölçüm alanlarına `npz` (göreli yol, SHA-256) ve `risk_free` (kapsam) ekler. Panel `data/marl/panel_m2.npz` (git dışı).
 - Varsayılan pencere sonu 2020-12-31. 2021, m0p-v2 doğrulayıcı penceresi olduğu için ona dokunulmaz.
 
 ---
@@ -287,8 +304,10 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | Test | Ortam | Kontrol | Kapsam |
 |---|---|---|---|
-| `python tests/test_marl_core.py` | `venv/` | 54 | logit sınırı, projeksiyon (500 rastgele), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
-| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 31 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
+| `python tests/test_marl_core.py` | `venv/` | 58 | logit sınırı, projeksiyon (500 rastgele, satış engeliyle), satış engeli (dondurma, alım açık, `None` bit-eş, maske eşiği + B0, K5 bekçisi), muhasebe (elle hesap, maliyet bir kez, katkı), K5 + `apply_decisions` gidiş-dönüş, gözlem B0 + mutasyon + K2, panel |
+| `venv-marl\Scripts\python tests/test_marl_env.py` | `venv-marl/` | 36 | `parallel_api_test`, açık hatalar, tohum, K2 (60 adım), değer = Π(1+R), eksik hücre, listeleme kilidi (kesirli + tam sayı), satış engeli (kesirli + tam sayı; engel 0 kontrol kolu), held-out ölçek, tam sayı ↔ kesirli (§2.4), DSR (yalnız α = 0; eğitim bölümü ısınmadan kısaysa hata, eval'de değil; ısınma sonrası G ≠ 0), TorchRL sarmalayıcı |
+
+**Mutasyon (2026-11-16):** `project`'te satış engeli döngüsü kapatılınca (`tr_eff &= ~hit` → `break`) `test_marl_core` [2]'de iki kontrol kırılır.
 
 ---
 
@@ -296,7 +315,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | # | Madde | Neden açık | Sıradaki |
 |---|---|---|---|
-| 1 | **Gerçek panelde ölçüm.** Gözlem sağlığı (kırpma/sabitlik, eğitim + doğrulama), eksik hücre sayısı, rf kapsamı | Bu makinedeki panel eski: 5 sembol, 2016-06'dan. `risk_free.csv` yok. Sayılar 30 sembollü panelde (SHA `7e17897a…`) üretilecek | `prepare_panel_m2.py --health-only --json docs/development/measurements/phase10-m2/obs_health.json` (ev makinesi) |
+| 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `obs_health.json`'un `npz` alanında | — |
 | 2 | **S-obs ufuk hizası.** P tablosunun t satırı kapanışₜ → kapanışₜ₊₁ yönünü tahmin ediyor. t+1 açılışında yürütmede gece parçası eski ağırlıkla geçiyor, ajanın yeni hedefi bu parçayı yakalayamıyor | Plan §3.2.7 S-obs: "sinyal ufku ile ödül hizası sınanmalı" | PC060 pozitif kontrolü yeni ortamda: bilinen sinyalin değeri gece ve seans içi parçalarına ayrıştırılır |
 | 3 | **PC060 yeni ortamda** | §9.37–9.39: eski ortamdaki politikalar bloktan değer üretmiyor | Madde 2 ile birlikte; M3 eğitimi öncesi |
 | 4 | **BenchMARL görevi + eğitim betiği** | M3 kapsamı | `scripts/spike_m1/benchmarl_glue.py` kalıbıyla `marl/benchmarl_task.py` |
@@ -304,7 +323,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 | 6 | **M4 parametre eşitliği** (`none` 77.314 ↔ `attn` 27.906) | M4 kapsamı | M4 |
 | 7 | **Hakem incelemesi** | Muhasebe ve ödül tanımı bir RL + finans iddiası | `hakem-rl` + `hakem-finans` paralel, sonra `hakem-2`; paket: bu belge + `marl/` + iki test |
 | 8 | ~~DSR ısınması ↔ bölüm uzunluğu~~ **kapandı (karar 2026-11-16)** | Birincil ödül `'excess'`; `'differential'` yalnız α = 0 ablasyonu (§2.2). Isınma bekçisi yalnız eğitimde | η, ablasyonun ön kaydında |
-| 9 | **Fiyat limiti — ÖN KAYIT (2026-11-16, kullanıcı; hakem-finans ikinci okuma #8), ölçümden ÖNCE** | Ölçü: `market.open_gap_limit_cells['0.095']`, pencere `RL_DATA_START`..2020-12-31, tüm geçerli hücreler. **Taban:** `frac_down` ≥ %0,05 → açılış boşluğu ≤ −%9,5 olan hücrede SATIŞ engeli. **Tavan:** `frac_up` ≥ %0,1 → açılış boşluğu ≥ +%9,5 olan hücrede ALIM engeli. Eşiğin altında kalan yön yalnız beyan. Kilit sonrası tavan serisi (`post_lockout_first10_gaps`) tavan kuralına dahil. Eşikler ölçüm görüldükten sonra değiştirilmez | Ev makinesinde ölçüm → kurala göre `project`'e yön sınırı (alt/üst) ya da beyan |
+| 9 | **Fiyat limiti — ÖN KAYIT (2026-11-16, kullanıcı; hakem-finans ikinci okuma #8), ölçümden ÖNCE.** **Uygulandı (2026-11-16):** `frac_down` %0,074 → satış engeli; `frac_up` %0,061 → beyan (§2.5) | Ölçü: `market.open_gap_limit_cells['0.095']`, pencere `RL_DATA_START`..2020-12-31, tüm geçerli hücreler. **Taban:** `frac_down` ≥ %0,05 → açılış boşluğu ≤ −%9,5 olan hücrede SATIŞ engeli. **Tavan:** `frac_up` ≥ %0,1 → açılış boşluğu ≥ +%9,5 olan hücrede ALIM engeli. Eşiğin altında kalan yön yalnız beyan. Kilit sonrası tavan serisi (`post_lockout_first10_gaps`) tavan kuralına dahil. Eşikler ölçüm görüldükten sonra değiştirilmez | Ev makinesinde ölçüm → kurala göre `project`'e yön sınırı (alt/üst) ya da beyan |
 | 10 | **M3'e taşınan RL maddeleri** (hakem-rl M2 #4–#7) | Yerel gözleme piyasa bağlamı (kesitsel ortalama z, geçerli oran) ↔ yok; eleştirmene tam z (N×F) ↔ ortalama; TorchRL'de bölüm sonu `terminated=False` ve bootstrap V(sₜ₊₁) ≠ 0 duman testi; başlangıç log-std ~0,2–0,3 / tanh ezmesi, eval'de ortalama eylem | M3 görev + eğitim betiği; gözlem/eleştirmen kolları ablasyon olarak ön kayda |
 | 11 | **Baseline'lar aynı sınırla** (hakem-finans M2 #7, ikinci okuma #10) | 1/N ve al-tut aynı `fill_prices(listing_lockout=20)`, aynı `project` ve aynı rf ile; sınırsız 1/N ayrı duyarlılık satırı | M3/M8 değerlendirme |
 | 12 | **Evren beyanı tez metnine** (hakem-finans M2 #2) | Mutlak performans iddiası yok (§2.5); E1 maskesi hazır olunca eval'e bağlanır | Tez metni; E1 |
@@ -344,6 +363,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.5 (2026-11-16, ev makinesi):** §9 #1 gerçek panel ölçümü (`measurements/phase10-m2/obs_health.json`, doğrulama satırları dahil). §9 #9 ön kayıtlı kural uygulandı: taban açılışta satış engeli (`fill_prices(limit_down_gap)`, `project(no_sell)` adım e, K5 bekçisi); tavan beyan. Listeleme kilidi kümesinin artefakt olduğu beyan edildi (§2.3). `prepare_panel_m2.py` JSON'a yerel yol yazmıyor. Testler 58 + 36.
 - **v0.4 (2026-11-16):** İkinci okuma: hakem-rl Kabul, hakem-finans Kabul (koşullu; §10). Fiyat limiti karar kuralı ön kaydı (§9 #9). Kilit ⊂ feat_ok = 0 değişmezi; panel kesimi ve baseline kilidi beyanı; ölçüme kilit sonrası tavan serisi. Testler 54 + 31.
 - **v0.3 (2026-11-16):** Hakem-rl + hakem-finans ilk okuması (§10). Kullanıcı kararları: birincil ödül `'excess'` (DSR yalnız α = 0), listeleme kilidi 20 seans, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan. Testler 53 + 31. §2.5 yürütme ve veri beyanları.
 - **v0.2 (2026-11-16):** Öz-kontrol bulgusu: varsayılan η ve `episode_len` ile `'differential'` G hep 0'dı. Ortam artık hata veriyor; test 25 → 27 (§7, §9 #8).

@@ -39,9 +39,13 @@ def one_way_cost(bps_roundtrip: float) -> float:
 
 
 LISTING_LOCKOUT = 20   # kullanici karari 2026-11-16 (hakem-finans M2 #1): halka arz tavan serisi
+# Tasarim §9 #9 ON KAYDI (2026-11-16, olcumden once yazildi): taban frac_down >= %0,05 -> acilis boslugu
+# <= -%9,5 olan hucrede SATIS engeli. Olcum (obs_health.json, 2013-06..2020-12): frac_down %0,074 -> engel.
+# Tavan frac_up %0,061 < %0,1 -> alim engeli YOK (beyan). Esik olcumden sonra degistirilmez.
+LIMIT_DOWN_GAP = 0.095
 
 
-def fill_prices(open_px, close_px, listing_lockout: int = 0) -> dict:
+def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap: float = 0.0) -> dict:
     """[T, N] acilis/kapanis -> tasinmis seriler + gecerlilik ve islem maskesi.
 
     valid[t,i]: O ve C sonlu ve > 0. Cf: son gecerli kapanis (listelenmeden once NaN).
@@ -50,10 +54,14 @@ def fill_prices(open_px, close_px, listing_lockout: int = 0) -> dict:
     (ilk gecerli satir > 0) ilk gecerli gunden itibaren `listing_lockout` seans islem yok (halka arz
     sonrasi tavan serisinde acilistan dolum gercekci degil). Panel basinda zaten listeli sembolun halka
     arz tarihi panelden gorunmez (beyan, tasarim §2.3).
+    no_sell[t,i]: gecerli gunde O_t / Cf_{t-1} <= 1 - limit_down_gap (taban acilis; satis emri dolmaz).
+    t acilisinda bilinir, yurutme t acilisinda: ileriye bakis degil. 0 = kapali (gozlem yolu kapali kullanir).
     Nedenseldir: satir t yalniz <= t satirlarindan uretilir (ilk gecerli gun o gun bilinir).
     """
     if listing_lockout < 0:
         raise ValueError(f"listing_lockout >= 0 olmali: {listing_lockout}")
+    if not (0.0 <= limit_down_gap < 1.0):
+        raise ValueError(f"limit_down_gap [0, 1) olmali: {limit_down_gap}")
     o = np.asarray(open_px, dtype=np.float64)
     c = np.asarray(close_px, dtype=np.float64)
     if o.shape != c.shape or o.ndim != 2:
@@ -76,8 +84,13 @@ def fill_prices(open_px, close_px, listing_lockout: int = 0) -> dict:
             if first.size and first[0] > 0:
                 lockout[first[0]:first[0] + listing_lockout, i] = True
         tradable &= ~lockout
+    no_sell = np.zeros((T, N), dtype=bool)
+    if limit_down_gap > 0 and T > 1:
+        with np.errstate(invalid='ignore', divide='ignore'):
+            gap = o[1:] / cf[:-1]
+        no_sell[1:] = valid[1:] & np.isfinite(gap) & (gap <= 1.0 - limit_down_gap)
     return {'open': of, 'close': cf, 'valid': valid, 'listed': np.isfinite(cf),
-            'tradable': tradable, 'lockout': lockout}
+            'tradable': tradable, 'lockout': lockout, 'no_sell': no_sell}
 
 
 def step_growth(px: dict, t: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -113,7 +126,8 @@ class StepResult:
 
 def step_fractional(w, u, g_on, g_day, tradable, rf: float, cost: float,
                     constraints: Constraints = Constraints(),
-                    groups: Optional[np.ndarray] = None) -> StepResult:
+                    groups: Optional[np.ndarray] = None,
+                    no_sell: Optional[np.ndarray] = None) -> StepResult:
     """Kesirli mod bir adim (modul docstring'indeki denklem). w: kapanis_t agirligi [N+1]."""
     w = np.asarray(w, dtype=np.float64)
     if not np.isfinite(rf):
@@ -121,7 +135,7 @@ def step_fractional(w, u, g_on, g_day, tradable, rf: float, cost: float,
     drift = w * np.concatenate([[1.0 + rf], g_on])
     g1 = float(drift.sum())
     w_tilde = drift / g1
-    w_star, rep = project(u, w_tilde, tradable, constraints, groups)
+    w_star, rep = project(u, w_tilde, tradable, constraints, groups, no_sell)
     trade = np.abs(w_star[1:] - w_tilde[1:])
     tau = float(trade.sum())
     cf = cost * tau

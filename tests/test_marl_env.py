@@ -167,6 +167,35 @@ for _int in (False, True):
     check(f"kilit ({'tam sayi' if _int else 'kesirli'}): sembol 2 kilitte agirlik 0, kilit bitince alinir",
           all(w2[t] == 0 for t in range(86, 110)) and w2[110] > 0.5, f"w2[109]={w2[109]:.3f} w2[110]={w2[110]:.3f}")
 
+# Satis engeli (§9 #9): sembol 0 satir 115 acilisinda -%12 bosluk; o gun satilamaz, 116'da satilir
+_arr_g = {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in arr.items()}
+_arr_g['open'][115, 0] = arr['close'][114, 0] * 0.88
+_L = 115
+for _gap in (None, 0.0):
+    for _int in (False, True):
+        kw = {} if _gap is None else {'limit_down_gap': _gap}
+        eg = MarlPortfolioEnv(_arr_g, 100, 125, norm_stats=make().norm_stats, mode='eval',
+                              integer_shares=_int, initial_capital=1e9, **kw)
+        eg.reset(seed=0)
+        hist = {}
+        while eg.agents:
+            sell = eg.t + 1 >= _L
+            act = {a: np.array([(-eg.bound if sell else eg.bound) if a == 'agent_0' else -eg.bound], np.float32)
+                   for a in eg.agents}
+            h0 = eg.holdings[0] if _int else None
+            eg.step(act)
+            hist[eg.t] = (eg.last_info['n_sell_blocked'], eg.w[1], h0, eg.holdings[0] if _int else None)
+        nb, w1, hb, ha = hist[_L]
+        lbl = 'tam sayi' if _int else 'kesirli'
+        if _gap is None:
+            kept = (hb == ha) if _int else w1 > 0.5
+            check(f"satis engeli ({lbl}): taban acilista satilmaz, ertesi gun satilir",
+                  nb == 1 and kept and hist[_L + 1][1] < 0.01, f"{hist[_L]} {hist[_L + 1]}")
+        else:
+            check(f"satis engeli kapali ({lbl}; kontrol kolu): ayni gun satilir",
+                  nb == 0 and w1 < 0.01, f"{hist[_L]}")
+check("model_meta satis engeli esigini tasir", make().model_meta()['limit_down_no_sell_gap'] == 0.095)
+
 # ---------------------------------------------------------------------------------------------
 print("\n[6] Held-out olcek")
 tr_env = make()

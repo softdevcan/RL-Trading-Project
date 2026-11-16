@@ -22,7 +22,7 @@ from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
 from marl import obs_spec as OS
-from marl.accounting import (LISTING_LOCKOUT, DifferentialSharpe, agent_rewards, fill_prices, one_way_cost,
+from marl.accounting import (LIMIT_DOWN_GAP, LISTING_LOCKOUT, DifferentialSharpe, agent_rewards, fill_prices, one_way_cost,
                              step_fractional, step_growth)
 from marl.orders import apply_to_holdings, rebalance_orders
 from marl.weights import Constraints, logit_bound, project, target_weights
@@ -39,7 +39,7 @@ class MarlPortfolioEnv(ParallelEnv):
                  reward_term: str = 'excess', reward_scale: float = 100.0, dsr_eta: float = 1.0 / 252,
                  episode_len: int = 252, integer_shares: bool = False, initial_capital: float = 1_000_000.0,
                  pred: Optional[dict] = None, extras: Optional[np.ndarray] = None,
-                 listing_lockout: int = LISTING_LOCKOUT):
+                 listing_lockout: int = LISTING_LOCKOUT, limit_down_gap: float = LIMIT_DOWN_GAP):
         if mode not in ('train', 'eval'):
             raise ValueError(f"mode 'train' | 'eval': {mode}")
         if reward_term not in REWARD_TERMS:
@@ -58,7 +58,8 @@ class MarlPortfolioEnv(ParallelEnv):
         if not np.all(np.isfinite(self.rf[start_row + 1:end_row + 1])):
             raise ValueError("pencerede rf eksik (A8 serisi kapsami)")
         self.listing_lockout = int(listing_lockout)
-        self.px = fill_prices(arrays['open'], arrays['close'], self.listing_lockout)
+        self.limit_down_gap = float(limit_down_gap)
+        self.px = fill_prices(arrays['open'], arrays['close'], self.listing_lockout, self.limit_down_gap)
         feat, ok = OS.compute_raw_features(arrays)
         self._raw_feat, self._ok = feat, ok
         rows = np.zeros(T, dtype=bool)
@@ -158,7 +159,7 @@ class MarlPortfolioEnv(ParallelEnv):
         self.last_info = {'date': str(self.dates[self.t]), 'value': self.value}
         return self._obs(), {a: {} for a in self.agents}
 
-    def _step_integer(self, u, g_on, g_day, tradable, rf):
+    def _step_integer(self, u, g_on, g_day, tradable, rf, no_sell):
         t, t1 = self.t, self.t + 1
         cf, of = self.px['close'], self.px['open']
         w_prev = self.w
@@ -167,8 +168,9 @@ class MarlPortfolioEnv(ParallelEnv):
         p_exec = np.where(np.isfinite(p_exec), p_exec, 1.0)  # listelenmemis: adet 0, fiyat onemsiz
         v_pre = cash + float(np.dot(self.holdings, p_exec))
         w_tilde = np.concatenate([[cash], self.holdings * p_exec]) / v_pre
-        w_star, rep = project(u, w_tilde, tradable, self.constraints, self.groups)
-        dec, summ = rebalance_orders(w_star, p_exec, self.holdings, cash, self.cost, self.symbols, tradable)
+        w_star, rep = project(u, w_tilde, tradable, self.constraints, self.groups, no_sell)
+        dec, summ = rebalance_orders(w_star, p_exec, self.holdings, cash, self.cost, self.symbols, tradable,
+                                     no_sell=no_sell)
         h, cash = apply_to_holdings(dec, self.holdings, cash)
         comm = np.array([d['commission'] for d in dec])
         p_close = np.where(np.isfinite(cf[t1]), cf[t1], p_exec)
@@ -187,12 +189,14 @@ class MarlPortfolioEnv(ParallelEnv):
         t = self.t
         rf = float(self.rf[t + 1])
         g_on, g_day, tradable = step_growth(self.px, t)
+        no_sell = self.px['no_sell'][t + 1]
         info = {'date': str(self.dates[t + 1]), 'rf': rf}
         if self.integer_shares:
-            R, X, k, tau, rep, gap, dec = self._step_integer(u, g_on, g_day, tradable, rf)
+            R, X, k, tau, rep, gap, dec = self._step_integer(u, g_on, g_day, tradable, rf, no_sell)
             info.update(weight_gap=gap, n_orders=sum(d['executed'] for d in dec))
         else:
-            res = step_fractional(self.w, u, g_on, g_day, tradable, rf, self.cost, self.constraints, self.groups)
+            res = step_fractional(self.w, u, g_on, g_day, tradable, rf, self.cost, self.constraints, self.groups,
+                                  no_sell)
             R, X, k, tau, rep = res.R, res.X, res.k, res.turnover, res.projection
             self.w = res.w_next
             self.value *= 1.0 + R
@@ -225,6 +229,7 @@ class MarlPortfolioEnv(ParallelEnv):
             'norm_stats': self.norm_stats, 'logit_bound': self.bound,
             'risk_projection': self.constraints.to_dict(), 'cost_one_way': self.cost,
             'execution': 'close_t_decision__open_t+1_execution', 'listing_lockout': self.listing_lockout,
+            'limit_down_no_sell_gap': self.limit_down_gap,
             'price_basis': 'yfinance auto_adjust (bolunme + temettu duzeltilmis)', 'reward': {
                 'alpha': self.alpha, 'term': self.reward_term, 'scale': self.scale,
                 'dsr_eta': self.dsr.eta, 'risk_free': 'A8 funding_rate per_period (t-1)'},
