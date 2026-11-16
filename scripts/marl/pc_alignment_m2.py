@@ -207,7 +207,7 @@ def main():
     ap.add_argument('--extra-seeds', default=None, help='or. 1-8: betimsel tohum yayilimi (birincil karar degismez)')
     ap.add_argument('--seeds-out', default=None)
     ap.add_argument('--limit-rule', default='fixed', choices=['fixed', 'schedule', 'off'],
-                    help="satis engeli: fixed = 0,095 (§9.1 on kaydindaki), schedule = v0.7 donem bagimli marj, off
+                    help="satis engeli: fixed = 0,095 (§9.1 on kaydindaki), schedule = v0.7 donem bagimli marj, off")
     a = ap.parse_args()
     from marl import accounting as A
     from marl import panel as PN
