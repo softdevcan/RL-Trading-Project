@@ -7,6 +7,8 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - Saf cekirdek (`weights`, `accounting`, `orders`, `obs_spec`, `panel`): numpy/pandas. Ana `venv/` (canli
   karar) ve `venv-marl/` (egitim) ikisi de import eder. Buraya pettingzoo/torchrl/benchmarl import'u KOYMA.
 - `env.py`: PettingZoo. YALNIZ `venv-marl/`. `app/` ve `dashboard/` bunu import etmez.
+- `benchmarl_task.py` (M3): BenchMARL gorevi; YALNIZ `venv-marl/`. Tohum bit-esligi icin `OMP_NUM_THREADS=1`
+  `MKL_NUM_THREADS=1` torch import'undan ONCE (`torch.set_num_threads` surec ortasinda yetmiyor).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
 - Eski ortam `env/trading_env.py` ve state space'i DEGISMEZ; yeni ortam oraya konmadi (tasarim §1).
 
@@ -38,3 +40,4 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 ## Test
 - `python tests/test_marl_core.py` (61, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
+- `venv-marl\Scripts\python tests/test_marl_m3.py` (12, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum)
