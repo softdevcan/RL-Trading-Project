@@ -150,8 +150,13 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 - F = min(2.000.000, ⌊8 × 60 / saniye_kare⌋), 60.000'e (10 parti) aşağı yuvarlanır.
 - **Alt sınır F_min = 600.000** (~100 parti ≈ 1000 Adam adımı; hakem-rl ikinci okuma #3, ölçümden ÖNCE sabitlendi). F < F_min çıkarsa M3a **koşulmaz**; süre kararı kullanıcıya döner. Tohum sayısı 3'ün altına inmez, S1 kontrolü korunur. `run_m3a.py` F < F_min'i reddeder.
 - Saniye/kare: `train_m3.py --frames 30000 --train-device cuda --parallel` ölçümü. GPU başka işle meşgul değilken; `nvidia-smi` kontrolü, `run_m3a.py` de her koşudan önce bakar.
-- **Ölçüm:** — *(doldurulacak; eğitim sonucu görülmeden ayrı commit)*
-- **F:** — *(doldurulacak)*
+- **Ölçüm (2026-11-16, eğitim sonucu yok):** `measurements/phase10-m3/timing_gpu.json`
+  - 30.000 kare 34,4 sn → 1,147 ms/kare (229,4 sn / 200 bin)
+  - RTX 4060, paralel toplama, 10 ortam, MAPPO, parti 6000 × 10 epoch
+  - Ölçüm sırasında GPU'da `cs2.exe` açıktı (%36 kullanım), yani süre kötümser olabilir.
+- **Kural uygulaması:** 8 dk sınırıyla F = ⌊480 / 0,001147⌋ = 418.604 → 360.000. Bu, **F_min = 600.000'in altında → M3a bu bütçeyle koşulmaz;** süre kararı kullanıcıya döndü.
+  - F_min için koşu başına ~11,5 dk eğitim gerekir; 6 koşu ~69 dk eğitim + ~10 dk değerlendirme.
+- **F:** — *(kullanıcı kararı bekleniyor)*
 - Toplam süre ön kayda yazılmadan önce kullanıcıya sunulur.
 - Sıra: A1 s0..s2, sonra S1 s0..s2 (`run_m3a.py`). Yarıda kalırsa eksik kol okunmaz.
 

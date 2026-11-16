@@ -1,0 +1,57 @@
+{
+ "note": "egitim kaydi; performans sayisi YOK (degerlendirme eval_m3, okuma M3 on kaydi)",
+ "commit": "2ef73d32593ae85c52252d2766f433a1982ef582",
+ "git_status_porcelain": "?? docs/apispec.json",
+ "script_sha256": "ad4aeb0c34ecec15c5e3ca6fc43bde4cb34f1efabdf98fc428e2aada3ddd3b0f",
+ "args": {
+  "algo": "mappo",
+  "frames": 30000,
+  "frames_per_batch": 6000,
+  "epochs": 10,
+  "n_envs": 10,
+  "parallel": true,
+  "episode_len": 252,
+  "alpha": 0.25,
+  "cost_bps": 20.0,
+  "init_std": 0.12,
+  "lr": 0.0005,
+  "use_state": false,
+  "pred_path": null,
+  "train_device": "cuda",
+  "sampling_device": "cpu",
+  "seed": 0,
+  "threads": 1,
+  "save_dir": null,
+  "out": "docs/development/measurements/phase10-m3/timing_gpu.json"
+ },
+ "build": {
+  "algo": "mappo",
+  "seed": 0,
+  "frames": 30000,
+  "frames_per_batch": 6000,
+  "epochs": 10,
+  "n_envs": 10,
+  "parallel": true,
+  "init_std": 0.12,
+  "lr": 0.0005
+ },
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "pred_sha256": null,
+ "train_window": [
+  "2013-08-27",
+  "2018-12-31"
+ ],
+ "wall_seconds": 34.4,
+ "frames": 30000,
+ "seconds_per_200k": 229.4,
+ "policy_params": 77826,
+ "policy_sha256": "41c17d41323af0e4e7acde31661907b967e9bde16db2bb6d37b54077509ad8da",
+ "env": {
+  "python": "3.12.5",
+  "os": "Windows-11-10.0.26300-SP0",
+  "torch": "2.6.0+cu124",
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "threads": 1,
+  "omp": "1"
+ }
+}
