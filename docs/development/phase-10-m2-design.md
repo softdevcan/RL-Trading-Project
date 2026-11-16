@@ -135,7 +135,7 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 
     **Doğrulanmış kapsam** 2020-12-31'de biter. Bu tarihten sonraki satırlarda takvim kullanılırsa kod hata verir. 2021+ pencerelerinden (M8) önce marj geçmişi kaynakla doğrulanıp takvim uzatılır.
 
-    **Uygulandı (`815a8e7`).** Ortam penceresinde engelli hücre sayısı 38'den **2**'ye indi: TAVHL 2018-07-11 (−%19,9) ve PGSUS 2020-02-28 (−%21,4, bant dışı, muhtemel veri hatası). Kaynak: `open_gap_audit.json` → `no_sell_env_cells`. `obs_health.json`'daki `market.no_sell_cells*` (38 / 18 / 20) eski sabit kurala aittir; tarihsel olarak kalır.
+    **Uygulandı (`815a8e7`).** Ortam penceresinde engelli hücre sayısı 38'den **2**'ye indi: TAVHL 2018-07-11 (−%19,9) ve PGSUS 2020-02-28 (−%21,4, bant dışı, muhtemel veri hatası). Kaynak: `open_gap_audit.json` → `no_sell_env_cells`. `obs_health.json`'daki `market.no_sell_cells*` (38 / 18 / 20) eski sabit kurala aittir; tarihsel olarak kalır. **Beyan (hakem-2 ikinci okuma K2):** bant dışı açılış (PGSUS 2020-02-28, −%21,4) de taban sayılır ve yürütme fiyatı olarak kullanılır; veri hatası düzeltilmedi (veri bütünlüğü V / M1 kapsamı), etkisi tek hücre.
 
     **Duyarlılık:** sabit 0,095 kuralı ve engelsiz kol aynı ölçümlerde ayrı satır olarak raporlanır (`pc_alignment_*`). Sabit kural `LIMIT_DOWN_GAP_FIXED` adıyla yalnız duyarlılık ve testler için kalır. Kod: `accounting.limit_down_gaps(dates)`, ortam varsayılanı `limit_down_gap='schedule'`.
 - **Nakit ve takas.** Nakit getirisi brüt TCMB ağırlıklı ortalama fonlama maliyeti (TP.APIFON4, A8); stopaj ve repo spread'i yok. Satış geliri aynı açılışta yeniden kullanılır (T+2 takas modellenmez). Tek yön c açılış mezatı kaymasını da kapsıyor sayılır; ayrı kayma modeli yok. Sonuçlar D4 maliyet ızgarasıyla (0/10/20/25/50 bps) raporlanır.
@@ -327,7 +327,7 @@ ev = MarlPortfolioEnv(arrays, s, e, norm_stats=tr.norm_stats, mode='eval', ...)
 
 | # | Madde | Neden açık | Sıradaki |
 |---|---|---|---|
-| 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `a5dcf9a6…` (`npz.sha256`); rf 1902 satırın 1901'inde sonlu, satır 0 tanım gereği yok (`risk_free`). Gerçek panelde eğitim + doğrulama ortamı uçtan uca koştu (duman, performans sayısı değil): `venv-marl\Scripts\python scripts/marl/smoke_real_panel_m2.py` → doğrulama 500 adım, kesirli ve tam sayı modunda R sonlu, gözlem boyutu 44, satış engeli 10 / 9 kez (hakem-2 H10) | — |
+| 1 | ~~**Gerçek panelde ölçüm**~~ **yapıldı (2026-11-16, ev makinesi)** | `measurements/phase10-m2/obs_health.json` (kaynak CSV SHA `3aec450d…`). T = 1902, N = 30, 92 eksik günlü satır, eksik hücre %0,20. **Gözlem sağlığı:** 11 özelliğin hiçbiri sabit değil. Eğitim satırlarında (2013-08-27..2018-12-31) kırpma ≤ %0,45 (`range`). Eğitim istatistiğiyle doğrulama satırlarında (2019-01-02..2020-12-31) ≤ %1,12 (`range`), `macd_rel` %1,05, diğerleri ≤ %0,74. M2 için önceden yazılmış bir kırpma eşiği yoktu; sayı beyan edilir, sonradan eşik konmaz. Kilit, açılış-geçerli/kapanış-eksik ve fiyat limiti §2.3 ve §2.5'te. **rf ve panel:** `data/marl/panel_m2.npz` (git dışı), SHA `a5dcf9a6…` (`npz.sha256`); rf 1902 satırın 1901'inde sonlu, satır 0 tanım gereği yok (`risk_free`). Gerçek panelde eğitim + doğrulama ortamı uçtan uca koştu (duman, performans sayısı değil): `venv-marl\Scripts\python scripts/marl/smoke_real_panel_m2.py` → doğrulama 500 adım, kesirli ve tam sayı modunda R sonlu, gözlem boyutu 44, satış engeli v0.7 kuralıyla 0 / 1 kez (sabit 0,095 kuralıyla 10 / 9 idi; hakem-2 H10, ikinci okuma K1'de betik düzeltilip yeniden koşuldu) | — |
 | 2 | ~~**S-obs ufuk hizası**~~ **ölçüldü (§9.1)** | PC060 (kapanış → kapanış) K12'de E1 net ΔSR +0,10 < 0,17 | Gerçek tahmin hedefinin K12 ufkuna (açılış → açılış) taşınması: plana eklenecek madde önerisi (P paketi; kullanıcı kararı) |
 | 3 | ~~**PC060 yeni ortamda**~~ **karar (ön kayıt §9.1)** | M3 pozitif kontrolü **PC060-K12** (E1 net ΔSR +0,36, SE 0,09) | M3: PC060-K12 P tablosu (`positive_control_table`, etiket 1[Ofₜ₊₂ > Ofₜ₊₁]) + S-obs kolu |
 | 4 | **BenchMARL görevi + eğitim betiği** | M3 kapsamı | `scripts/spike_m1/benchmarl_glue.py` kalıbıyla `marl/benchmarl_task.py` |
@@ -483,6 +483,11 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 | H8 | KÜÇÜK | Koşum kirli ağaçta, iz yok | JSON'a git durumu + betik SHA; temiz yeniden koşum bit-eş |
 | H9 | KÜÇÜK | Dondurmanın yan etkisi beyan edilmemiş | §3.2 e |
 | H10 | KÜÇÜK | Duman koşusu izsiz | `smoke_real_panel_m2.py` + çıktı (§9 #1) |
+
+**İkinci okuma (SendMessage, yalnız `git diff 5d81571..9078664`; ~122 bin token önceki bağlamla / 6 araç / ~0,8 dk): Kabul.** H1–H10 kapandı; hakem duyarlılık tablosunu ve 42 = 27 + 15 hücre sayımını kendi ölçümüyle doğruladı.
+- K1 (KÜÇÜK): duman betiği anahtar yeniden adlandırması sonrası çöküyordu → düzeltildi, yeniden koşuldu.
+- K2 (KÜÇÜK): bant dışı açılış taban sayılıyor → §2.5 beyanı.
+- Bilgi: `limit_down_gaps` panelin tüm tarihlerini denetler; panel 2021'e uzatılınca ortam kurulmaz. Bu kasıtlı (§9 #9, M8 öncesi doğrulama).
 
 ---
 

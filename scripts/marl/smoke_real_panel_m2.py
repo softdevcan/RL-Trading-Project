@@ -24,4 +24,4 @@ for integer in (False, True):
         blocked += ev.last_info['n_sell_blocked']; Rs.append(ev.last_info['R'])
     print('tam sayi' if integer else 'kesirli', 'adim', len(Rs), 'sn %.1f' % (time.time() - t0),
           'n_sell_blocked toplam', blocked, 'sonlu R', np.all(np.isfinite(Rs)), 'obs dim', ev.spec.local_dim)
-print('meta limit', tr.model_meta()['limit_down_no_sell_gap'], 'train_range', tr.model_meta()['train_range'])
+print('meta limit', tr.model_meta()['limit_down_no_sell']['rule'], 'train_range', tr.model_meta()['train_range'])
