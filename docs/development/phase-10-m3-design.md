@@ -156,7 +156,7 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
   - Ölçüm sırasında GPU'da `cs2.exe` açıktı (%36 kullanım), yani süre kötümser olabilir.
 - **Kural uygulaması:** 8 dk sınırıyla F = ⌊480 / 0,001147⌋ = 418.604 → 360.000. Bu, **F_min = 600.000'in altında → M3a bu bütçeyle koşulmaz;** süre kararı kullanıcıya döndü.
   - F_min için koşu başına ~11,5 dk eğitim gerekir; 6 koşu ~69 dk eğitim + ~10 dk değerlendirme.
-- **F:** — *(kullanıcı kararı bekleniyor)*
+- **F:** — **Ertelendi (kullanıcı kararı, 2026-11-16).** M3a GPU boşken F = 600.000 ile koşulacak: ~80 dk; koşu başına ~11,5 dk eğitim. Hazırlık tamam: `venv-marl\Scripts\python scripts/marl/run_m3a.py --frames 600000`. Başlatmadan önce toplam süre kullanıcıya yeniden sunulur.
 - Toplam süre ön kayda yazılmadan önce kullanıcıya sunulur.
 - Sıra: A1 s0..s2, sonra S1 s0..s2 (`run_m3a.py`). Yarıda kalırsa eksik kol okunmaz.
 
