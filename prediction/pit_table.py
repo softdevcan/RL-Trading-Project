@@ -47,6 +47,12 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 TABLE_VERSION = 'pit-v1'
+# P5a (Faz 10 §3.1.3; M2 tasarimi §9.1): hedef ufku. 'close_to_close' = pit-v1 (DONDURULMUS, M0' ona bagli):
+# y = C_{i+h} / C_i. 'open_to_open' = pit-v2, MARL yurutme ufku (K12): karar i kapanisinda, yurutme i+1
+# acilisinda, pozisyon i+1+h acilisina kadar -> y = O_{i+1+h} / O_{i+1}; etiket i+1+h acilisinda gerceklesir
+# (label_date), arindirma ufku h+1 seans. Girdiler iki hedefte AYNI (<= i kapanisi).
+TARGETS = ('close_to_close', 'open_to_open')
+TABLE_VERSIONS = {'close_to_close': 'pit-v1', 'open_to_open': 'pit-v2'}
 V1_MODELS = ('xgboost', 'lightgbm', 'catboost')
 PIT_DATA_START = '2009-09-01'   # 2009-08-04 MGROS sicramasindan sonra (data/integrity taramasi)
 FIRST_ANCHOR = '2012-01-01'     # ilk blok; meta ~1 yil sonra (RL penceresi 2013-06 oncesi) dolar
@@ -64,6 +70,9 @@ T_BOUNDS = (0.05, 20.0)
 # (etiketi capadan SONRA gerceklesen satirlar da girer; B0 kirilmali).
 PURGE_BASE = True
 PURGE_META = True
+# Yalniz test mutasyonu (P5a kabul (i)): open_to_open'da etiket tarihi + arindirma araliklari bu kadar
+# seansa indirilir (None = dogru deger h+1). 1 -> "purge 1 seans": etiket siniri testi KIRILMALI.
+PURGE_STEPS_OVERRIDE: Optional[int] = None
 
 MASK_REASONS = ('ok', 'no_data', 'no_features', 'insufficient_history', 'model_failed',
                 'meta_insufficient')
@@ -73,6 +82,80 @@ def horizon_steps(horizon: str) -> int:
     if horizon not in ('daily', 'weekly'):
         raise ValueError("horizon 'daily' veya 'weekly'")
     return 1 if horizon == 'daily' else 5
+
+
+def _check_target(target: str) -> str:
+    if target not in TARGETS:
+        raise ValueError(f"target {TARGETS} icinden olmali: {target!r}")
+    return target
+
+
+def table_version(target: str = 'close_to_close') -> str:
+    return TABLE_VERSIONS[_check_target(target)]
+
+
+def label_steps(horizon: str, target: str = 'close_to_close') -> int:
+    """Satir i'nin etiketinin gerceklestigi seans farki = arindirma ufku (h; open_to_open'da h+1)."""
+    h = horizon_steps(horizon)
+    if _check_target(target) == 'close_to_close':
+        return h
+    return PURGE_STEPS_OVERRIDE if PURGE_STEPS_OVERRIDE is not None else h + 1
+
+
+def open_band_flags(d: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
+    """P5a (iii): fiyat marji disindaki acilislar (M2 `open_gap_audit_m2.py` kurali).
+
+    Bosluk = O_j / C_{j-1} (sembolun onceki SEANSI, duzeltilmis fiyat). Bant disi = |bosluk - 1| >
+    marj_j + tolerans. Marj takvimi tek kaynaktan: `marl.accounting.PRICE_MARGIN_SCHEDULE`
+    (BISTECH oncesi %20 DOGRULANMADI; beyan). Dogrulanmis kapsamin (PRICE_MARGIN_VERIFIED_UNTIL)
+    sonrasinda son bilinen marj kullanilir ve satir `unverified` isaretlenir (rapora sayilir; sessiz
+    degil). Sifir/NaN acilis ya da onceki kapanis -> bant disi sayilir (etiket kurulamaz).
+    Doner: (bant_disi, marj_dogrulanmamis) — ikisi de d.index uzerinde bool.
+    """
+    from marl import accounting as A
+    keys = pd.Index([str(x)[:10] for x in d.index])
+    margin = np.full(len(d), A.PRICE_MARGIN_PRE_BISTECH)
+    for start, m in A.PRICE_MARGIN_SCHEDULE:
+        margin[np.asarray(keys >= start)] = m
+    first_verified = A.PRICE_MARGIN_SCHEDULE[0][0]
+    unverified = np.asarray((keys < first_verified) | (keys > A.PRICE_MARGIN_VERIFIED_UNTIL))
+    o, pc = d['open'].to_numpy(dtype=np.float64), d['close'].shift(1).to_numpy(dtype=np.float64)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        gap = o / pc
+    bad = ~(np.isfinite(gap) & (o > 0)) | (np.abs(gap - 1.0) > margin + A.LIMIT_TOLERANCE)
+    bad[0] = not (np.isfinite(o[0]) and o[0] > 0)   # ilk seansin onceki kapanisi yok: bosluk denetlenemez
+    return pd.Series(bad, index=d.index), pd.Series(unverified, index=d.index)
+
+
+def _labels(d: pd.DataFrame, horizon: str, target: str) -> pd.DataFrame:
+    """Sembolun KENDI seanslarinda etiket: label_date, y_ret, y_up, tie (+ open_to_open'da band_masked).
+
+    close_to_close (pit-v1, degismez): y_up = 1[C_{i+h} > C_i], y_ret = log(C_{i+h}/C_i), label_date = i+h.
+    open_to_open (pit-v2): giris = O_{i+1}, cikis = O_{i+1+h}; label_date = i + label_steps. Giris ya da
+    cikis acilisi bant disiysa etiket NaN (`band_masked`). Esit fiyat DOWN (0) tarafina; `tie` ayrica.
+    """
+    h = horizon_steps(horizon)
+    idx = pd.Series(d.index, index=d.index)
+    if _check_target(target) == 'close_to_close':
+        raw, fut = d['close'], d['close'].shift(-h)
+        out = pd.DataFrame({'label_date': idx.shift(-h)}, index=d.index)
+        out['y_ret'] = np.log(fut / raw)
+        out['y_up'] = (fut > raw).astype(float).where(fut.notna())
+        out['tie'] = (fut == raw)
+        return out
+    bad, unver = open_band_flags(d)
+    o = d['open'].where(~bad)
+    ent, ext = o.shift(-1), o.shift(-(1 + h))
+    in_range = np.arange(len(d)) < len(d) - 1 - h          # etiket konumca tanimli (cikis seansi var)
+    masked = (bad.shift(-1, fill_value=False) | bad.shift(-(1 + h), fill_value=False)) & in_range
+    out =pd.DataFrame({'label_date': idx.shift(-label_steps(horizon, target))}, index=d.index)
+    okv = ent.notna() & ext.notna()
+    out['y_ret'] = np.log(ext / ent).where(okv)
+    out['y_up'] = (ext > ent).astype(float).where(okv)
+    out['tie'] = (ext == ent) & okv
+    out['band_masked'] = masked.astype(bool)
+    out['band_unverified'] = (unver.shift(-1, fill_value=False) | unver.shift(-(1 + h), fill_value=False))
+    return out
 
 
 def make_anchors(calendar, first_anchor: str = FIRST_ANCHOR,
@@ -93,16 +176,15 @@ def _block_of(dates: pd.DatetimeIndex, anchors: pd.DatetimeIndex) -> np.ndarray:
 # Sembol cercevesi
 # ----------------------------------------------------------------------------
 
-def symbol_frame(df_sym: pd.DataFrame, symbol: str, horizon: str):
-    """Ozellik matrisi + ham kapanistan etiket ve etiket tarihi (sembolun KENDI seanslari).
+def symbol_frame(df_sym: pd.DataFrame, symbol: str, horizon: str, target: str = 'close_to_close'):
+    """Ozellik matrisi + ham fiyattan etiket ve etiket tarihi (sembolun KENDI seanslari; `_labels`).
 
-    Ozellikler cikarim yolundan (`build_inference_features`: son h etiketsiz satir tutulur).
-    Etiket: y_up = 1[kapanis_{i+h} > kapanis_i], y_ret = log(kapanis_{i+h} / kapanis_i);
-    label_date = sembolun i+h. seansi (etiketin GERCEKLESTIGI gun).
+    Ozellikler cikarim yolundan (`build_inference_features`: son h etiketsiz satir tutulur); hedeften
+    BAGIMSIZ. close_to_close: y = C_{i+h}/C_i, label_date = i+h. open_to_open: y = O_{i+1+h}/O_{i+1},
+    label_date = i+h+1 (etiketin GERCEKLESTIGI seans), bant disi acilista etiket NaN.
     """
     from prediction.feature_engineer import PredictionFeatureEngineer
 
-    h = horizon_steps(horizon)
     d = df_sym[['open', 'high', 'low', 'close', 'volume']].copy()
     d.index = pd.to_datetime(d.index).tz_localize(None) if getattr(
         pd.to_datetime(d.index), 'tz', None) is not None else pd.to_datetime(d.index)
@@ -110,14 +192,13 @@ def symbol_frame(df_sym: pd.DataFrame, symbol: str, horizon: str):
     fe = PredictionFeatureEngineer(horizon)
     feat = fe.build_inference_features(d, symbol, target_type='log_return')
     cols = fe.get_feature_columns(feat)
-    raw = d['close']
-    fut = raw.shift(-h)
-    ldate = pd.Series(raw.index, index=raw.index).shift(-h)
+    lab = _labels(d, horizon, target)
     fr = pd.DataFrame(index=feat.index)
-    fr['label_date'] = ldate.reindex(feat.index)
-    fr['y_ret'] = np.log(fut / raw).reindex(feat.index)
-    fr['y_up'] = (fut > raw).astype(float).where(fut.notna()).reindex(feat.index)
-    X = np.nan_to_num(feat[cols].to_numpy(dtype=np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    for c in ('label_date', 'y_ret', 'y_up'):
+        fr[c] = lab[c].reindex(feat.index)
+    if 'band_masked' in lab:
+        fr['band_masked'] = lab['band_masked'].reindex(feat.index).fillna(False).astype(bool)
+    X =np.nan_to_num(feat[cols].to_numpy(dtype=np.float32), nan=0.0, posinf=0.0, neginf=0.0)
     return fr, X, cols
 
 
@@ -141,11 +222,14 @@ def _model(model_type: str, horizon: str, seed: Optional[int], params_override: 
 
 def base_predictions(df_sym: pd.DataFrame, symbol: str, anchors: pd.DatetimeIndex,
                      horizon: str = 'daily', models: Sequence[str] = V1_MODELS,
-                     seed: Optional[int] = None, params_override: Optional[dict] = None
-                     ) -> Tuple[pd.DataFrame, List[dict]]:
-    """Asama 1: blok basina taban modeller, blok satirlarinda orneklem disi getiri tahmini."""
-    h = horizon_steps(horizon)
-    fr, X, cols = symbol_frame(df_sym, symbol, horizon)
+                     seed: Optional[int] = None, params_override: Optional[dict] = None,
+                     target: str = 'close_to_close') -> Tuple[pd.DataFrame, List[dict]]:
+    """Asama 1: blok basina taban modeller, blok satirlarinda orneklem disi getiri tahmini.
+
+    Erken durdurma dogrulamasi ile egitim arasinda `label_steps` satir arindirma (etiket ufku)."""
+    h = label_steps(horizon, target)
+    ver = table_version(target)
+    fr, X, cols = symbol_frame(df_sym, symbol, horizon, target)
     dates = fr.index
     y = fr['y_ret'].to_numpy(dtype=np.float64)
     out = fr[['label_date', 'y_up']].copy()
@@ -192,7 +276,7 @@ def base_predictions(df_sym: pd.DataFrame, symbol: str, anchors: pd.DatetimeInde
             out.loc[pm, f'ret_{mt}'] = v
         out.loc[pm, 'train_end'] = dates[idx[-1]]
         out.loc[pm, 'label_end'] = fr['label_date'].iloc[idx].max()
-        out.loc[pm, 'model_version'] = f"{TABLE_VERSION}:{a.date()}"
+        out.loc[pm, 'model_version'] = f"{ver}:{a.date()}"
         out.loc[pm, 'base_reason'] = 'ok'
         log.append({**entry, 'status': 'ok', 'train_end': str(dates[idx[-1]].date())})
     return out, log
@@ -207,12 +291,14 @@ def _ret_cols(models: Sequence[str]) -> List[str]:
 
 
 def meta_layer(base: Dict[str, pd.DataFrame], anchors: pd.DatetimeIndex, horizon: str = 'daily',
-               models: Sequence[str] = V1_MODELS, ci_boot: int = 1000) -> Tuple[Dict[str, pd.DataFrame], List[dict]]:
-    """Capa basina: sembol basina lojistik (gecmis OOF ilk yari), havuzlu T (ikinci yari)."""
+               models: Sequence[str] = V1_MODELS, ci_boot: int = 1000,
+               target: str = 'close_to_close') -> Tuple[Dict[str, pd.DataFrame], List[dict]]:
+    """Capa basina: sembol basina lojistik (gecmis OOF ilk yari), havuzlu T (ikinci yari).
+    Yarilar arasinda `label_steps` satir arindirma."""
     from sklearn.linear_model import LogisticRegression
     from evaluation import calibration as cal
 
-    h = horizon_steps(horizon)
+    h = label_steps(horizon, target)
     rc = _ret_cols(models)
     res = {}
     for s, b in base.items():
@@ -328,25 +414,35 @@ def build_pit_table(panel: pd.DataFrame, symbols: Optional[Sequence[str]] = None
                     horizon: str = 'daily', first_anchor: str = FIRST_ANCHOR,
                     every: int = RETRAIN_EVERY, models: Sequence[str] = V1_MODELS,
                     seed: Optional[int] = None, params_override: Optional[dict] = None,
-                    ci_boot: int = 1000, progress: bool = False) -> Tuple[pd.DataFrame, dict]:
-    """Temiz panelden (MultiIndex date, symbol) tam izgara PIT tablosu + rapor (P2 kapsami)."""
+                    ci_boot: int = 1000, progress: bool = False,
+                    target: str = 'close_to_close') -> Tuple[pd.DataFrame, dict]:
+    """Temiz panelden (MultiIndex date, symbol) tam izgara PIT tablosu + rapor (P2 kapsami).
+
+    target='open_to_open' -> pit-v2 (P5a); varsayilan pit-v1 bit-es (cikti sutunlari ayni)."""
     t0 = time.time()
+    _check_target(target)
     syms = list(symbols) if symbols is not None else sorted(set(panel.index.get_level_values('symbol')))
     cal_dates = pd.DatetimeIndex(sorted(set(pd.to_datetime(panel.index.get_level_values('date')))))
     if getattr(cal_dates, 'tz', None) is not None:
         cal_dates = cal_dates.tz_localize(None)
     anchors = make_anchors(cal_dates, first_anchor, every)
-    base, base_log, ohlcv_dates, secs = {}, {}, {}, {}
+    base, base_log, ohlcv_dates, secs, band = {}, {}, {}, {}, {}
     for s in syms:
         ts = time.time()
         d = _symbol_ohlcv(panel, s)
         ohlcv_dates[s] = d.index
-        base[s], base_log[s] = base_predictions(d, s, anchors, horizon, models, seed, params_override)
+        base[s], base_log[s] = base_predictions(d, s, anchors, horizon, models, seed, params_override,
+                                                target)
+        if target == 'open_to_open':
+            lab = _labels(d, horizon, target)
+            band[s] = {'n_label_masked': int(lab['band_masked'].sum()),
+                       'n_label_unverified_margin': int((lab['band_unverified'] & lab['y_up'].notna()).sum()),
+                       'masked_dates': [str(x.date()) for x in lab.index[lab['band_masked']]]}
         secs[s] = round(time.time() - ts, 1)
         if progress:
             print(f"  [P] {s}: {secs[s]} sn, {sum(e['status'] == 'ok' for e in base_log[s])}"
                   f"/{len(base_log[s])} blok", flush=True)
-    meta, meta_log = meta_layer(base, anchors, horizon, models, ci_boot=ci_boot)
+    meta, meta_log = meta_layer(base, anchors, horizon, models, ci_boot=ci_boot, target=target)
 
     grid_dates = cal_dates[cal_dates >= anchors[0]]
     rc = _ret_cols(models)
@@ -355,7 +451,7 @@ def build_pit_table(panel: pd.DataFrame, symbols: Optional[Sequence[str]] = None
         b = base[s].join(meta[s])
         g = pd.DataFrame(index=grid_dates)
         g.index.name = 'date'
-        g = g.join(b.drop(columns=['y_up', 'block']), how='left')
+        g = g.join(b.drop(columns=['y_up', 'block', 'band_masked'], errors='ignore'), how='left')
         has_row = grid_dates.isin(ohlcv_dates[s])
         has_feat = grid_dates.isin(b.index)
         reason = np.where(~has_row, 'no_data', np.where(~has_feat, 'no_features', None)).astype(object)
@@ -379,15 +475,19 @@ def build_pit_table(panel: pd.DataFrame, symbols: Optional[Sequence[str]] = None
             'temperature', 'base_rate_asof', 'informative_asof', 'base_ok', 'meta_ok', 'mask_reason']
     table = pd.concat(frames, ignore_index=True)[cols].sort_values(['date', 'symbol']).reset_index(drop=True)
     report = {
-        'table_version': TABLE_VERSION, 'horizon': horizon, 'models': list(models),
+        'table_version': table_version(target), 'target': target, 'horizon': horizon, 'models': list(models),
         'seed': seed, 'params_override': params_override,
         'design': {'first_anchor': first_anchor, 'retrain_every': every,
                    'min_train_rows': MIN_TRAIN_ROWS, 'val_frac': VAL_FRAC,
                    'meta_window': META_WINDOW, 'min_half': MIN_HALF, 'T_bounds': list(T_BOUNDS),
                    'pred_logret': 'esit agirlikli taban ortalamasi',
                    'temperature': 'capa basina havuzlu (tum semboller)',
-                   'purge': f'label_date < capa (h={horizon_steps(horizon)})'},
+                   'purge': f'label_date < capa (h={label_steps(horizon, target)})'},
         'anchors': [str(a.date()) for a in anchors],
+        **({'open_band_mask': {'rule': 'M2 open_gap_audit: |O_j/C_{j-1} - 1| > marj_j + tolerans -> etiket NaN',
+                               'per_symbol': band,
+                               'n_label_masked': int(sum(v['n_label_masked'] for v in band.values()))}}
+           if target == 'open_to_open' else {}),
         'base_log': base_log, 'meta_log': meta_log, 'seconds_per_symbol': secs,
         'wall_seconds': round(time.time() - t0, 1),
     }
@@ -417,20 +517,19 @@ def coverage_report(table: pd.DataFrame, window_start: str = '2013-06-01',
             'per_symbol': per}
 
 
-def realized_labels(panel: pd.DataFrame, horizon: str = 'daily') -> pd.DataFrame:
-    """(date, symbol) -> y_up (sembolun kendi h. sonraki seansi) + tie (esit kapanis). Yalniz degerlendirme icin.
+def realized_labels(panel: pd.DataFrame, horizon: str = 'daily',
+                    target: str = 'close_to_close') -> pd.DataFrame:
+    """(date, symbol) -> y_up (sembolun kendi seanslari) + tie (esit fiyat). Yalniz degerlendirme icin.
 
-    y_up = 1[kapanis_{t+h} > kapanis_t]: esit kapanis 0 sayilir (DOWN tarafina; hakem-finans I3 #2 ->
-    `tie_rate` raporlanir).
+    Egitimle AYNI etiket (`_labels`). close_to_close: y_up = 1[C_{t+h} > C_t]; open_to_open:
+    y_up = 1[O_{t+1+h} > O_{t+1}], bant disi acilista NaN. Esit fiyat 0 sayilir (DOWN tarafina;
+    hakem-finans I3 #2 -> `tie_rate` raporlanir).
     """
-    h = horizon_steps(horizon)
     out = []
     for s in sorted(set(panel.index.get_level_values('symbol'))):
-        c = _symbol_ohlcv(panel, s)['close']
-        fut = c.shift(-h)
-        out.append(pd.DataFrame({'date': c.index, 'symbol': s,
-                                 'y_up': (fut > c).astype(float).where(fut.notna()).to_numpy(),
-                                 'tie': (fut == c).to_numpy()}))
+        lab = _labels(_symbol_ohlcv(panel, s), horizon, target)
+        out.append(pd.DataFrame({'date': lab.index, 'symbol': s, 'y_up': lab['y_up'].to_numpy(),
+                                 'tie': lab['tie'].to_numpy()}))
     return pd.concat(out, ignore_index=True)
 
 
@@ -710,6 +809,7 @@ def load_table(run_id: str, directory: Optional[str] = None) -> Tuple[pd.DataFra
             side = json.load(fh)
     return pd.read_parquet(path), {'run_id': run_id, 'sha256': sha,
                                    'table_version': side.get('table_version', TABLE_VERSION),
+                                   'target': side.get('target', 'close_to_close'),
                                    'seed': side.get('seed'), 'models': side.get('models')}
 
 
@@ -799,7 +899,8 @@ def write_table(table: pd.DataFrame, report: dict, run_id: Optional[str] = None,
         m.record_symbol(s, {'models_trained': list(report.get('models', V1_MODELS)) if ok else [],
                             'n_models': len(report.get('models', V1_MODELS)) if ok else 0},
                         seconds=report['seconds_per_symbol'].get(s))
-    m.extra = {'table_path': path, 'table_sha256': sha, 'table_version': TABLE_VERSION,
-               'coverage': report.get('coverage')}
+    m.extra = {'table_path': path, 'table_sha256': sha,
+               'table_version': report.get('table_version', TABLE_VERSION),
+               'target': report.get('target', 'close_to_close'), 'coverage': report.get('coverage')}
     mpath = m.finalize()
     return {'table': path, 'sidecar': os.path.join(directory, f'{run_id}.json'), 'manifest': mpath}

@@ -7,6 +7,8 @@ Tablo calisma alanina (`results_dir()/predictions_pit/<run_id>.parquet`, git dis
     python scripts/build_pit_table.py                       # tum panel, varsayilan tohum
     python scripts/build_pit_table.py --seed 7 --out docs/development/measurements/phase9-p/pit_v1_seed7.json
     python scripts/build_pit_table.py --user-id <id>        # kullanici calisma alanina yaz
+    python scripts/build_pit_table.py --target open_to_open --out docs/development/measurements/phase10-p5/pit_v2.json
+                                                            # P5a: pit-v2, K12 yurutme ufku O_{t+1} -> O_{t+2}
 """
 
 import argparse
@@ -28,11 +30,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--symbols', default=None, help='virgulle; bos = paneldeki tum semboller')
     ap.add_argument('--horizon', default='daily')
+    ap.add_argument('--target', default='close_to_close', choices=['close_to_close', 'open_to_open'],
+                    help='close_to_close = pit-v1 (dondurulmus); open_to_open = pit-v2 (P5a)')
     ap.add_argument('--seed', type=int, default=None, help='bos = model varsayilani (GLOBAL_SEED)')
     ap.add_argument('--user-id', default=None)
     ap.add_argument('--run-id', default=None)
-    ap.add_argument('--out', default='docs/development/measurements/phase9-p/pit_v1.json')
+    ap.add_argument('--out', default=None,
+                    help='bos = phase9-p/pit_v1.json (close_to_close) ya da phase10-p5/pit_v2.json')
     a = ap.parse_args()
+    if a.out is None:
+        a.out = ('docs/development/measurements/phase9-p/pit_v1.json' if a.target == 'close_to_close'
+                 else 'docs/development/measurements/phase10-p5/pit_v2.json')
 
     import logging
     logging.disable(logging.WARNING)
@@ -50,14 +58,15 @@ def main():
         t0 = time.time()
         panel, prep = P.load_panel()
         syms = a.symbols.split(',') if a.symbols else None
-        table, rep = P.build_pit_table(panel, syms, horizon=a.horizon, seed=a.seed, progress=True)
+        table, rep = P.build_pit_table(panel, syms, horizon=a.horizon, seed=a.seed, progress=True,
+                                       target=a.target)
         rep['coverage'] = P.coverage_report(table)
         rep['integrity'] = {k: prep.get(k) for k in ('window_start', 'window_end', 'rows_in_window', 'rows_after', 'n_artifacts', 'n_ghost_days', 'n_stale_cells_dropped', 'missing_cell_frac',
                                                      'artifacts_in_window') if k in prep}
         snap = {'name': 'pit_input_panel', 'sha256': frame_sha256(panel), 'file': panel_path,
                 'file_sha256': panel_sha}
         paths = P.write_table(table, rep, run_id=a.run_id, snapshot=snap)
-        labels = P.realized_labels(panel, a.horizon)
+        labels = P.realized_labels(panel, a.horizon, a.target)
         gate = P.evaluate_gate(table, labels)
         with open(paths['table'], 'rb') as fh:
             tsha = hashlib.sha256(fh.read()).hexdigest()
@@ -67,6 +76,8 @@ def main():
         'panel': panel_path, 'panel_sha256': panel_sha, 'panel_frame_sha256': snap['sha256'],
         'table_sha256': tsha, 'table_rows': int(len(table)),
         'seed': a.seed if a.seed is not None else GLOBAL_SEED, 'horizon': a.horizon,
+        'target': a.target, 'table_version': rep['table_version'],
+        **({'open_band_mask': rep['open_band_mask']} if 'open_band_mask' in rep else {}),
         'design': rep['design'], 'models': rep['models'], 'n_anchors': len(rep['anchors']),
         'anchors_first_last': [rep['anchors'][0], rep['anchors'][-1]],
         'integrity': rep['integrity'],
@@ -80,7 +91,7 @@ def main():
         'wall_seconds': round(time.time() - t0, 1),
         'note': ('K11 v1 (3 GBM + lojistik meta), yalniz fiyat/hacim ozellikleri; T capa basina '
                  'havuzlu; bilgi kapisi DEV_WINDOW (wf-v1 ilk dogrulama yili 2020 oncesi). '
-                 'Tablo calisma alaninda (git disi): ' + paths['table']),
+                 'Tablo calisma alaninda (git disi): ' + os.path.relpath(paths['table'], ROOT).replace(os.sep, '/')),
     }
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, 'w', encoding='utf-8') as fh:

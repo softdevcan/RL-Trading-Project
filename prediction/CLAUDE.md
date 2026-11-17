@@ -38,6 +38,11 @@
 - Uretim: `python scripts/build_pit_table.py` -> `results_dir()/predictions_pit/<run_id>.parquet` + yan JSON + manifest;
   olcum `docs/development/measurements/phase9-p/`. Test `tests/test_pit_table.py`. Ensemble'in 'calibrated' modu
   (sembol basina T, %60 OOF) tek model egitimi icin kalir; tez/MARL sinyali P tablosundan.
+- **Hedef ufku (P5a, Faz 10 §3.1.3):** `target='close_to_close'` (varsayilan) = **pit-v1, DONDURULMUS** (M0' ona
+  bagli; main ile bit-es testli). `target='open_to_open'` = **pit-v2**, MARL yurutme ufku K12: y = O_{t+1+h}/O_{t+1},
+  `label_date` = t+h+1, arindirma ufku `label_steps` = h+1 (taban erken durdurma + meta yarilari dahil). Bant disi
+  acilis (M2 `open_gap_audit` kurali, marj takvimi `marl.accounting`) etikette NaN; 2020 sonrasi marj dogrulanmamis,
+  raporda `n_label_unverified_margin`. Ozellikler iki hedefte ayni. Canli hat ve golden bu parametreyi kullanmaz.
 - **P4 (eski env, Milestone 0' DTF):** `env_prediction_features(table, symbols, dates)` -> `TradingEnv(prediction_features=)`.
   Her (gun, sembol) hucresi ACIKCA doldurulur; maskeli hucre notr (env'de 0). Env'in kendi varsayilani eksik hucrede
   yonu -1 (DOWN) yapar -> P tablosunu env'e elle sozluk kurarak verme, adaptoru kullan. Yon ikili (+-1), getiri/guven

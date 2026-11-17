@@ -313,5 +313,123 @@ check("duyarlilik: ana alanlar degismez; blok63/kume/tie disi/Bonferroni/MDE dag
            'mde_family_block63', 'auc_within_block_per_symbol'} <= set(se_)
       and se_['ties_excluded']['n_rows'] <= gs['n_rows'], str(list(se_)))
 
+print("\n[P5a] pit-v2: hedef K12 yurutme ufku (O_{t+1} -> O_{t+2}; Faz 10 §3.1.3)")
+OO = 'open_to_open'
+sym0 = SYMS[0]
+d0 = P._symbol_ohlcv(panel, sym0)
+sess0 = d0.index
+# (a) etiket tanimi: ham acilislardan bagimsiz hesap
+lo = P.realized_labels(panel, target=OO)
+l0 = lo[lo.symbol == sym0].set_index('date')['y_up']
+o_ = d0['open']
+exp_oo = (o_.shift(-2) > o_.shift(-1)).astype(float).where(o_.shift(-2).notna())
+fr0, _, _ = P.symbol_frame(d0, sym0, 'daily', OO)
+k_lab = fr0['label_date'].dropna()
+check("etiket: y_up = 1[O_{t+2} > O_{t+1}] (ham acilistan), label_date = sembolun t+2. seansi",
+      bool(((l0 == exp_oo) | (l0.isna() & exp_oo.isna())).all())
+      and bool((k_lab.index.map(lambda x: sess0[sess0.get_loc(x) + 2]) == pd.DatetimeIndex(k_lab)).all())
+      and np.allclose(fr0['y_ret'].dropna(), np.log(o_.shift(-2) / o_.shift(-1)).reindex(fr0['y_ret'].dropna().index)))
+lc = P.realized_labels(panel)
+c_ = d0['close']
+exp_cc = (c_.shift(-1) > c_).astype(float).where(c_.shift(-1).notna())
+check("close_to_close (pit-v1) etiketi degismedi: 1[C_{t+1} > C_t]",
+      bool(((lc[lc.symbol == sym0].set_index('date')['y_up'] == exp_cc)
+            | exp_cc.isna()).all()))
+try:
+    P.label_steps('daily', 'open_to_close')
+    bad_target = False
+except ValueError:
+    bad_target = True
+check("taninmayan hedef -> ValueError (sessiz varsayilan yok)", bad_target)
+
+# (b) varsayilan yol main'deki koda gore bit-es (pit-v1 dondurulmus; M0' ona bagli)
+import subprocess  # noqa: E402
+import importlib.util  # noqa: E402
+ref = next((r for r in ('origin/main', 'main') if subprocess.run(
+    ['git', 'rev-parse', '--verify', '-q', r], capture_output=True).returncode == 0), None)
+src = subprocess.run(['git', 'show', f'{ref}:prediction/pit_table.py'], capture_output=True, text=True,
+                     encoding='utf-8').stdout if ref else ''
+if 'open_to_open' in src or not src:
+    check("varsayilan yol main ile bit-es (main zaten P5a'li ya da main yok; yerine pit-v1 surum etiketi)",
+          rep['table_version'] == 'pit-v1' and full['model_version'].dropna().str.startswith('pit-v1:').all())
+else:
+    tmpd = tempfile.mkdtemp(prefix='pit_main_')
+    try:
+        mp = os.path.join(tmpd, 'pit_table_main.py')
+        with open(mp, 'w', encoding='utf-8') as fh:
+            fh.write(src)
+        spec = importlib.util.spec_from_file_location('pit_table_main', mp)
+        PM = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(PM)
+        fm, _ = PM.build_pit_table(panel, SYMS, params_override=SMALL, ci_boot=100)
+    finally:
+        shutil.rmtree(tmpd, ignore_errors=True)
+    ok, col = same_upto(full, fm, full['date'].max())
+    check(f"varsayilan yol (close_to_close) {ref} ile bit-es (tum sutunlar)", ok, col)
+    lm = PM.realized_labels(panel)
+    check(f"realized_labels varsayilan {ref} ile bit-es",
+          lm.equals(lc), '')
+
+# (c) pit-v2 tablosu, B0
+oo, orep = P.build_pit_table(panel, SYMS, params_override=SMALL, ci_boot=100, target=OO)
+check("pit-v2: rapor table_version/target, model_version oneki, purge h=2",
+      orep['table_version'] == 'pit-v2' and orep['target'] == OO and orep['design']['purge'].endswith('(h=2)')
+      and oo['model_version'].dropna().str.startswith('pit-v2:').all() and list(oo.columns) == list(full.columns))
+oo_ok = sorted({pd.Timestamp(v.split(':')[1]) for v in oo.loc[oo.meta_ok, 'model_version']})
+to = cal_dates[cal_dates.get_loc(oo_ok[1]) + 20]
+oop, _ = P.build_pit_table(perturb_after(panel, to), SYMS, params_override=SMALL, ci_boot=100, target=OO)
+ok, col = same_upto(oo, oop, to)
+check(f"pit-v2 B0: t={to.date()} (capa + 20) kadar bit-es; sonrasi farkli", ok and differs_after(oo, oop, to), col)
+to2 = cal_dates[cal_dates.get_loc(oo_ok[-1]) - 1]
+oop2, _ = P.build_pit_table(perturb_after(panel, to2), SYMS, params_override=SMALL, ci_boot=100, target=OO)
+ok, col = same_upto(oo, oop2, to2)
+check(f"pit-v2 B0: t = capa - 1 ({to2.date()})", ok, col)
+
+
+# (d) etiket siniri: egitimin son satirinin GERCEK etiketi (t+2 acilisi) capadan once; bagimsiz seans sayimi
+def label_boundary(tab):
+    viol, n = [], 0
+    for s, g in tab[tab.base_ok].groupby('symbol'):
+        ss = P._symbol_ohlcv(panel, s).index
+        for mv, te, le in g[['model_version', 'train_end', 'label_end']].drop_duplicates().itertuples(index=False):
+            a = pd.Timestamp(mv.split(':')[1])
+            real = ss[ss.get_loc(pd.Timestamp(te)) + 2]
+            n += 1
+            if not (real < a and pd.Timestamp(le) == real):
+                viol.append((s, str(a.date()), str(pd.Timestamp(te).date()), str(real.date())))
+    return n, viol
+
+
+nb, vb = label_boundary(oo)
+check(f"etiket siniri: {nb} (sembol, capa) blogunda label_end = train_end + 2 seans < capa", nb > 0 and not vb,
+      str(vb[:3]))
+P.PURGE_STEPS_OVERRIDE = 1
+try:
+    om, _ = P.build_pit_table(panel, SYMS, params_override=SMALL, ci_boot=100, target=OO)
+finally:
+    P.PURGE_STEPS_OVERRIDE = None
+nm, vm = label_boundary(om)
+check(f"mutasyon purge 1 seans -> etiket siniri testi KIRILIR ({len(vm)}/{nm} blok ihlal)", len(vm) > 0)
+
+# (e) bant disi acilis etiket maskesine girer (M2 open_gap_audit kurali), sessizce kullanilmaz
+dd = sess0[300]
+pb = panel.copy()
+mk = (pb.index.get_level_values('symbol') == sym0) & (pd.to_datetime(pb.index.get_level_values('date')) == dd)
+pb.loc[mk, 'open'] = pb.loc[mk, 'open'] * 1.5          # BISTECH oncesi %20 marjin disi
+lb = P.realized_labels(pb, target=OO)
+lb0 = lb[lb.symbol == sym0].set_index('date')['y_up']
+i_d = sess0.get_loc(dd)
+hit = [sess0[i_d - 1], sess0[i_d - 2]]                 # giris = dd (t = dd-1), cikis = dd (t = dd-2)
+others = lb0.drop(hit)
+check("bant disi acilis: giris/cikis o gun olan iki etiket NaN, digerleri degismez",
+      bool(lb0.loc[hit].isna().all() and l0.loc[hit].notna().all()
+           and ((others == l0.drop(hit)) | (others.isna() & l0.drop(hit).isna())).all()))
+frb, _, _ = P.symbol_frame(P._symbol_ohlcv(pb, sym0), sym0, 'daily', OO)
+_, rb = P.build_pit_table(pb, [sym0], params_override=SMALL, ci_boot=100, target=OO)
+check("bant disi: egitim cercevesinde maskeli + y_ret NaN; raporda sayili",
+      bool(frb.loc[hit, 'band_masked'].all() and frb.loc[hit, 'y_ret'].isna().all())
+      and str(hit[0].date()) in rb['open_band_mask']['per_symbol'][sym0]['masked_dates']
+      and rb['open_band_mask']['n_label_masked'] >= 2, str(rb['open_band_mask']['per_symbol'][sym0]))
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)
