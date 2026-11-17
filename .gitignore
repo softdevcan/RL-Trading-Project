@@ -107,3 +107,6 @@ docs/reference/papers/**/*.pdf
 # Kaynakca uretiminin ara ciktilari (scripts/literature/build.py her calismada yeniden yazar)
 scripts/literature/data/final_body.md
 scripts/literature/data/bib.md
+
+# Faz 10 M2 paneli (scripts/marl/prepare_panel_m2.py; SHA olcum JSON unda)
+data/marl/

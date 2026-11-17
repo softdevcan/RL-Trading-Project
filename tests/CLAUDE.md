@@ -100,6 +100,12 @@ python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut ell
 python tests/test_rl_walk_forward.py       # Faz 9/R1 + P4 + M8 secim kurali: wf-v1 katlari, kat sinirinda B0 (purge 0
                                            #          kaniti), test secime sizmiyor, geri cagri
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit; rota P tablosuyla (DTF), argmax + son nokta iki test kaydi (98, ~1 dk)
+python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri 5+ln N, projeksiyon (500 rastgele), muhasebe
+                                           #          elle hesap + maliyet bir kez + katki, K5 emir + apply_decisions gidis-donus,
+                                           #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel (61, ~5 sn; ana venv)
+venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
+                                           #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
+                                           #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

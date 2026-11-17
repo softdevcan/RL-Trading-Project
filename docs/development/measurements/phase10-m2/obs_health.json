@@ -1,0 +1,366 @@
+{
+ "source_csv": "data/bist/stock_data_with_indicators.csv",
+ "source_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "commit": "89c6103561a3d5a47c3a603d54397b1a22b20ae7",
+ "market": {
+  "listing_lockout_sessions": 20,
+  "listing_lockout_cells": 60,
+  "listing_lockout_symbols": [
+   "EKGYO.IS",
+   "ODAS.IS",
+   "PGSUS.IS"
+  ],
+  "open_gap_limit_cells": {
+   "0.095": {
+    "open_gap_up_cells": 35,
+    "open_gap_down_cells": 42,
+    "frac_of_valid": 0.001352918438345574,
+    "frac_up": 0.0006149629265207154,
+    "frac_down": 0.0007379555118248585,
+    "up_in_health_rows": 25,
+    "down_in_health_rows": 18
+   },
+   "0.195": {
+    "open_gap_up_cells": 1,
+    "open_gap_down_cells": 2,
+    "frac_of_valid": 5.27111079874899e-05,
+    "frac_up": 1.7570369329163297e-05,
+    "frac_down": 3.5140738658326595e-05,
+    "up_in_health_rows": 1,
+    "down_in_health_rows": 1
+   }
+  },
+  "post_lockout_first10_gaps": {
+   "EKGYO.IS": {
+    "first_tradable": "2013-07-08",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   },
+   "ODAS.IS": {
+    "first_tradable": "2013-07-25",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   },
+   "PGSUS.IS": {
+    "first_tradable": "2013-09-26",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   }
+  },
+  "open_valid_close_missing_cells": 0,
+  "limit_down_gap": 0.095,
+  "no_sell_cells": 38,
+  "no_sell_cells_health_rows": 18,
+  "no_sell_cells_val_rows": 20,
+  "price_basis": "yfinance history() auto_adjust varsayilani (bolunme + temettu duzeltilmis)"
+ },
+ "window": [
+  "2013-06-03",
+  "2020-12-31"
+ ],
+ "T": 1902,
+ "N": 30,
+ "symbols": [
+  "AKBNK.IS",
+  "ARCLK.IS",
+  "ASELS.IS",
+  "BIMAS.IS",
+  "EKGYO.IS",
+  "ENKAI.IS",
+  "EREGL.IS",
+  "FROTO.IS",
+  "GARAN.IS",
+  "HALKB.IS",
+  "ISCTR.IS",
+  "KCHOL.IS",
+  "KRDMD.IS",
+  "MGROS.IS",
+  "ODAS.IS",
+  "PETKM.IS",
+  "PGSUS.IS",
+  "SAHOL.IS",
+  "SASA.IS",
+  "SISE.IS",
+  "SKBNK.IS",
+  "TAVHL.IS",
+  "TCELL.IS",
+  "THYAO.IS",
+  "TKFEN.IS",
+  "TOASO.IS",
+  "TSKB.IS",
+  "TUPRS.IS",
+  "VAKBN.IS",
+  "YKBNK.IS"
+ ],
+ "incomplete_days": 92,
+ "missing_cell_frac": 0.002032947774272653,
+ "obs_spec": "marl-obs-v1",
+ "health_rows": [
+  "2013-08-27",
+  "2018-12-31"
+ ],
+ "health": {
+  "r1": {
+   "clip_frac": 0.0016410562434730717,
+   "constant": false,
+   "n": 40218
+  },
+  "r5": {
+   "clip_frac": 0.0012183599383360684,
+   "constant": false,
+   "n": 40218
+  },
+  "r20": {
+   "clip_frac": 0.0008702570988114775,
+   "constant": false,
+   "n": 40218
+  },
+  "range": {
+   "clip_frac": 0.004475607936744741,
+   "constant": false,
+   "n": 40218
+  },
+  "gap": {
+   "clip_frac": 0.004351285494057387,
+   "constant": false,
+   "n": 40218
+  },
+  "vol20": {
+   "clip_frac": 0.0018897011288477796,
+   "constant": false,
+   "n": 40218
+  },
+  "rsi": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 40218
+  },
+  "cci": {
+   "clip_frac": 2.4864488537470783e-05,
+   "constant": false,
+   "n": 40218
+  },
+  "adx": {
+   "clip_frac": 0.00012432244268735393,
+   "constant": false,
+   "n": 40218
+  },
+  "macd_rel": {
+   "clip_frac": 0.0007459346561241235,
+   "constant": false,
+   "n": 40218
+  },
+  "vlog_z": {
+   "clip_frac": 0.00012432244268735393,
+   "constant": false,
+   "n": 40218
+  }
+ },
+ "val_rows": [
+  "2019-01-02",
+  "2020-12-31"
+ ],
+ "health_val": {
+  "r1": {
+   "clip_frac": 0.0019333333333333333,
+   "constant": false,
+   "n": 15000
+  },
+  "r5": {
+   "clip_frac": 0.006466666666666667,
+   "constant": false,
+   "n": 15000
+  },
+  "r20": {
+   "clip_frac": 0.0074,
+   "constant": false,
+   "n": 15000
+  },
+  "range": {
+   "clip_frac": 0.0112,
+   "constant": false,
+   "n": 15000
+  },
+  "gap": {
+   "clip_frac": 0.005333333333333333,
+   "constant": false,
+   "n": 15000
+  },
+  "vol20": {
+   "clip_frac": 0.0066,
+   "constant": false,
+   "n": 15000
+  },
+  "rsi": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 15000
+  },
+  "cci": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 15000
+  },
+  "adx": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 15000
+  },
+  "macd_rel": {
+   "clip_frac": 0.010466666666666668,
+   "constant": false,
+   "n": 15000
+  },
+  "vlog_z": {
+   "clip_frac": 0.00013333333333333334,
+   "constant": false,
+   "n": 15000
+  }
+ },
+ "norm_stats": {
+  "version": "marl-obs-v1",
+  "n_cells": 40218,
+  "features": {
+   "r1": {
+    "mean": 0.0004431189946086964,
+    "std": 0.021260924740078974
+   },
+   "r5": {
+    "mean": 0.002127845907831749,
+    "std": 0.046420843067635956
+   },
+   "r20": {
+    "mean": 0.007928938423835479,
+    "std": 0.0903014897692711
+   },
+   "range": {
+    "mean": 0.02469072693588691,
+    "std": 0.01638646009006825
+   },
+   "gap": {
+    "mean": 0.001441194453532562,
+    "std": 0.01179179276844794
+   },
+   "vol20": {
+    "mean": 0.01945830405854062,
+    "std": 0.007378382374589901
+   },
+   "rsi": {
+    "mean": 0.01590568618573355,
+    "std": 0.12099700682001752
+   },
+   "cci": {
+    "mean": 0.04855164255973771,
+    "std": 0.5623786110563129
+   },
+   "adx": {
+    "mean": 0.24965285064053963,
+    "std": 0.10477101548022731
+   },
+   "macd_rel": {
+    "mean": 0.001283585484090209,
+    "std": 0.022685572809621635
+   },
+   "vlog_z": {
+    "mean": 0.009547899393401395,
+    "std": 1.0822212557550612
+   }
+  }
+ },
+ "gate": {
+  "window_start": "2013-06-01",
+  "window_end": "2020-12-31",
+  "rows_in_window": 59004,
+  "rows_after": 56944,
+  "n_artifacts": 0,
+  "ghost_threshold": 0.9,
+  "n_ghost_days": 66,
+  "ghost_days": [
+   "2013-08-08",
+   "2013-08-09",
+   "2013-08-30",
+   "2013-10-15",
+   "2013-10-16",
+   "2013-10-17",
+   "2013-10-18",
+   "2013-10-29",
+   "2014-01-01",
+   "2014-04-23",
+   "2014-05-01",
+   "2014-05-19",
+   "2014-07-28",
+   "2014-07-29",
+   "2014-07-30",
+   "2014-10-06",
+   "2014-10-07",
+   "2014-10-29",
+   "2015-01-01",
+   "2015-04-23",
+   "2015-05-01",
+   "2015-05-19",
+   "2015-07-17",
+   "2015-09-24",
+   "2015-09-25",
+   "2015-10-29",
+   "2016-01-01",
+   "2016-01-22",
+   "2016-05-19",
+   "2016-07-05",
+   "2016-07-06",
+   "2016-07-07",
+   "2016-08-30",
+   "2016-09-12",
+   "2016-09-13",
+   "2016-09-14",
+   "2016-09-15",
+   "2017-05-01",
+   "2017-05-19",
+   "2017-06-26",
+   "2017-06-27",
+   "2017-08-30",
+   "2017-09-01",
+   "2017-09-04",
+   "2018-01-01",
+   "2018-04-23",
+   "2018-05-01",
+   "2018-06-15",
+   "2018-08-21",
+   "2018-08-22",
+   "2018-08-23",
+   "2018-08-24",
+   "2018-08-30",
+   "2018-10-29",
+   "2019-01-01",
+   "2019-04-23",
+   "2019-05-01",
+   "2019-06-04",
+   "2019-06-05",
+   "2019-06-06",
+   "2019-07-15",
+   "2019-08-12",
+   "2019-08-13",
+   "2019-08-14",
+   "2019-08-30",
+   "2020-03-11"
+  ],
+  "n_stale_cells_dropped": 39,
+  "n_symbols": 30,
+  "n_dates": 1902,
+  "missing_cell_frac": 0.002032947774272653
+ },
+ "risk_free": {
+  "finite_rows": 1901,
+  "rows": 1902,
+  "first_nan_rows": 1,
+  "per_period_mean": 0.00044187416578081185,
+  "per_period_max": 0.0033820448994468233
+ },
+ "npz": {
+  "path": "data/marl/panel_m2.npz",
+  "sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+  "T": 1902,
+  "N": 30,
+  "first": "2013-06-03",
+  "last": "2020-12-31"
+ }
+}

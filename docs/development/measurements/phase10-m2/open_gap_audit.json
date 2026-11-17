@@ -1,0 +1,528 @@
+{
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "regimes": {
+  "pre_bistech": {
+   "from": "0000-00-00",
+   "to": "2015-11-29",
+   "margin": null,
+   "valid_cells": 18597,
+   "down_le_0.905": 15,
+   "up_ge_1.095": 24,
+   "down_le_0.805": 0,
+   "up_ge_1.195": 1
+  },
+  "bistech_20": {
+   "from": "2015-11-30",
+   "to": "2020-03-12",
+   "margin": 0.2,
+   "valid_cells": 32287,
+   "down_le_0.905": 27,
+   "up_ge_1.095": 5,
+   "down_le_0.805": 2,
+   "up_ge_1.195": 0,
+   "beyond_band": [
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS",
+     "gap": 0.7864521298584494
+    }
+   ]
+  },
+  "margin_10": {
+   "from": "2020-03-13",
+   "to": "9999-12-31",
+   "margin": 0.1,
+   "valid_cells": 6030,
+   "down_le_0.905": 0,
+   "up_ge_1.095": 6,
+   "down_le_0.805": 0,
+   "up_ge_1.195": 0,
+   "beyond_band": []
+  }
+ },
+ "down_0.095_cells": [
+  {
+   "date": "2013-06-20",
+   "symbol": "SAHOL.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8976742844707114,
+   "open_to_close": 1.0
+  },
+  {
+   "date": "2013-06-20",
+   "symbol": "VAKBN.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8916967849798505,
+   "open_to_close": 1.0
+  },
+  {
+   "date": "2013-06-20",
+   "symbol": "YKBNK.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8964801580910744,
+   "open_to_close": 1.0
+  },
+  {
+   "date": "2013-08-23",
+   "symbol": "TKFEN.IS",
+   "regime": "pre_bistech",
+   "gap": 0.886792159176842,
+   "open_to_close": 0.9723405015150235
+  },
+  {
+   "date": "2013-12-27",
+   "symbol": "KRDMD.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8921559689016961,
+   "open_to_close": 1.0549451871656808
+  },
+  {
+   "date": "2013-12-27",
+   "symbol": "SASA.IS",
+   "regime": "pre_bistech",
+   "gap": 0.898742436834844,
+   "open_to_close": 1.0624848898814967
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "ASELS.IS",
+   "regime": "pre_bistech",
+   "gap": 0.872727290813253,
+   "open_to_close": 1.0500000317891438
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "EKGYO.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8848919244130315,
+   "open_to_close": 1.0325202936851645
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "HALKB.IS",
+   "regime": "pre_bistech",
+   "gap": 0.893129759588639,
+   "open_to_close": 1.0042735206452968
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "KRDMD.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8963416375790761,
+   "open_to_close": 1.0068027144684555
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "ODAS.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8940770922973091,
+   "open_to_close": 0.9936306736398042
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "SKBNK.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8839779476683339,
+   "open_to_close": 1.031250416253542
+  },
+  {
+   "date": "2015-06-08",
+   "symbol": "VAKBN.IS",
+   "regime": "pre_bistech",
+   "gap": 0.8973214958717562,
+   "open_to_close": 0.9925373205144005
+  },
+  {
+   "date": "2015-08-10",
+   "symbol": "SASA.IS",
+   "regime": "pre_bistech",
+   "gap": 0.9043544630693128,
+   "open_to_close": 0.9422952388498116
+  },
+  {
+   "date": "2015-08-19",
+   "symbol": "SASA.IS",
+   "regime": "pre_bistech",
+   "gap": 0.89999164284956,
+   "open_to_close": 1.0724340075893257
+  },
+  {
+   "date": "2016-06-24",
+   "symbol": "MGROS.IS",
+   "regime": "bistech_20",
+   "gap": 0.9036146517506753,
+   "open_to_close": 1.0620000203450521
+  },
+  {
+   "date": "2017-03-29",
+   "symbol": "HALKB.IS",
+   "regime": "bistech_20",
+   "gap": 0.8938639983016115,
+   "open_to_close": 0.95918371138382
+  },
+  {
+   "date": "2017-05-29",
+   "symbol": "SASA.IS",
+   "regime": "bistech_20",
+   "gap": 0.834328250886542,
+   "open_to_close": 1.1357039635841282
+  },
+  {
+   "date": "2017-10-09",
+   "symbol": "PGSUS.IS",
+   "regime": "bistech_20",
+   "gap": 0.8930770378136346,
+   "open_to_close": 1.0499568108306352
+  },
+  {
+   "date": "2017-10-09",
+   "symbol": "THYAO.IS",
+   "regime": "bistech_20",
+   "gap": 0.8902046442365513,
+   "open_to_close": 1.0193470179632103
+  },
+  {
+   "date": "2018-06-07",
+   "symbol": "ASELS.IS",
+   "regime": "bistech_20",
+   "gap": 0.8834458825647602,
+   "open_to_close": 1.0296367512893065
+  },
+  {
+   "date": "2018-07-11",
+   "symbol": "TAVHL.IS",
+   "regime": "bistech_20",
+   "gap": 0.8013756967795533,
+   "open_to_close": 1.2875536902285627
+  },
+  {
+   "date": "2019-11-07",
+   "symbol": "ODAS.IS",
+   "regime": "bistech_20",
+   "gap": 0.8806825507671895,
+   "open_to_close": 1.0064507017571749
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "AKBNK.IS",
+   "regime": "bistech_20",
+   "gap": 0.862068898044201,
+   "open_to_close": 1.08
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "ASELS.IS",
+   "regime": "bistech_20",
+   "gap": 0.889679619396476,
+   "open_to_close": 1.1063999938964846
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "EKGYO.IS",
+   "regime": "bistech_20",
+   "gap": 0.857142983144839,
+   "open_to_close": 1.1031746001710936
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "EREGL.IS",
+   "regime": "bistech_20",
+   "gap": 0.8531468636430127,
+   "open_to_close": 1.1366119535125474
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "GARAN.IS",
+   "regime": "bistech_20",
+   "gap": 0.8593751627405702,
+   "open_to_close": 1.0840908812589887
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "HALKB.IS",
+   "regime": "bistech_20",
+   "gap": 0.8976000213623047,
+   "open_to_close": 1.0641710602690704
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "KRDMD.IS",
+   "regime": "bistech_20",
+   "gap": 0.8827837660915454,
+   "open_to_close": 1.0829874697685749
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "MGROS.IS",
+   "regime": "bistech_20",
+   "gap": 0.843722458325365,
+   "open_to_close": 1.1664932818554277
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "ODAS.IS",
+   "regime": "bistech_20",
+   "gap": 0.8243899169478863,
+   "open_to_close": 1.1656808475500535
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "PGSUS.IS",
+   "regime": "bistech_20",
+   "gap": 0.7864521298584494,
+   "open_to_close": 1.1918604826226575
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "SASA.IS",
+   "regime": "bistech_20",
+   "gap": 0.8149812299499488,
+   "open_to_close": 1.179731270159573
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "SISE.IS",
+   "regime": "bistech_20",
+   "gap": 0.8777119002465895,
+   "open_to_close": 1.0786517744879465
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "SKBNK.IS",
+   "regime": "bistech_20",
+   "gap": 0.8474577867232713,
+   "open_to_close": 1.1299991174757116
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "TAVHL.IS",
+   "regime": "bistech_20",
+   "gap": 0.8775877236160495,
+   "open_to_close": 1.0471794910919974
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "THYAO.IS",
+   "regime": "bistech_20",
+   "gap": 0.8394458424998009,
+   "open_to_close": 1.1456310652643766
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "TKFEN.IS",
+   "regime": "bistech_20",
+   "gap": 0.8111888643482662,
+   "open_to_close": 1.1857366648156218
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "TSKB.IS",
+   "regime": "bistech_20",
+   "gap": 0.8571428374654536,
+   "open_to_close": 1.0980392408939292
+  },
+  {
+   "date": "2020-02-28",
+   "symbol": "YKBNK.IS",
+   "regime": "bistech_20",
+   "gap": 0.8861788492850005,
+   "open_to_close": 1.0642201202745136
+  },
+  {
+   "date": "2020-03-12",
+   "symbol": "ODAS.IS",
+   "regime": "bistech_20",
+   "gap": 0.8720934791042639,
+   "open_to_close": 0.8733331184650259
+  }
+ ],
+ "no_sell_env_cells": {
+  "fixed_0.095": {
+   "n": 38,
+   "cells": [
+    {
+     "date": "2013-12-27",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2013-12-27",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "EKGYO.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "SKBNK.IS"
+    },
+    {
+     "date": "2015-06-08",
+     "symbol": "VAKBN.IS"
+    },
+    {
+     "date": "2015-08-10",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2015-08-19",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2016-06-24",
+     "symbol": "MGROS.IS"
+    },
+    {
+     "date": "2017-03-29",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2017-05-29",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2017-10-09",
+     "symbol": "PGSUS.IS"
+    },
+    {
+     "date": "2017-10-09",
+     "symbol": "THYAO.IS"
+    },
+    {
+     "date": "2018-06-07",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2018-07-11",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2019-11-07",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "AKBNK.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ASELS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "EKGYO.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "EREGL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "GARAN.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "HALKB.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "KRDMD.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "MGROS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ODAS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SASA.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SISE.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SKBNK.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "THYAO.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TKFEN.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TSKB.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "YKBNK.IS"
+    },
+    {
+     "date": "2020-03-12",
+     "symbol": "ODAS.IS"
+    }
+   ]
+  },
+  "schedule_v0.7": {
+   "n": 2,
+   "cells": [
+    {
+     "date": "2018-07-11",
+     "symbol": "TAVHL.IS"
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS"
+    }
+   ]
+  }
+ },
+ "schedule": {
+  "rule": "no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)",
+  "tolerance": 0.005,
+  "pre_bistech_assumed_unverified": 0.2,
+  "schedule": [
+   [
+    "2015-11-30",
+    0.2
+   ],
+   [
+    "2020-03-13",
+    0.1
+   ]
+  ],
+  "verified_until": "2020-12-31",
+  "preregistration": "phase-10-m2-design.md §2.5 v0.7 (b8e310e)"
+ }
+}

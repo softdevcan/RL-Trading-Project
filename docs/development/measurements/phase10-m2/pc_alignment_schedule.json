@@ -1,0 +1,361 @@
+{
+ "preregistration": "phase-10-m2-design.md §9.1, commit 0232f11 (sonuctan once)",
+ "commit": "849c36f5a288862e0aa282482eea9b1101ff3c6c",
+ "git_status_porcelain": "M docs/development/measurements/phase10-m2/open_gap_audit.json\n?? docs/apispec.json",
+ "script_sha256": "f6ebeab0c7004b515af798694e3f410ed63b58b0a6f80d02fec09205f8c4d0ed",
+ "panel": "data/marl/panel_m2.npz",
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "table": "pc_auc060",
+ "table_sha256": "0ceb5c7a60a9307cc7b3da4e0f5d310b25a6dd0d02e87ebae3d00fc74d610651",
+ "cost_one_way": 0.001,
+ "limit_rule": "schedule",
+ "threshold": 0.17,
+ "windows": {
+  "train": [
+   "2013-08-27",
+   "2018-12-31"
+  ],
+  "val": [
+   "2019-01-02",
+   "2020-12-31"
+  ],
+  "pooled": [
+   "2013-08-27",
+   "2020-12-31"
+  ]
+ },
+ "primary_window": "pooled",
+ "results": {
+  "PC060": {
+   "train": {
+    "n_days": 1343,
+    "first": "2013-08-27",
+    "last": "2018-12-31",
+    "sharpe_annual": {
+     "E0_S": 0.5934738256809561,
+     "E0_EW": 0.31282761261536723,
+     "E0_S_gross": 1.905884797659591,
+     "E0_EW_gross": 0.3282604245837571,
+     "E1_S": 0.2507169687669096,
+     "E1_EW": 0.3392255005940568,
+     "E1_S_gross": 1.5816937628422807,
+     "E1_EW_gross": 0.35453976668951215
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": -0.08854150203943884,
+      "se_annual": 0.11405306603498626,
+      "p_value": 0.4375609685522228
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.2276111218889267,
+      "se_annual": 0.12239323414048307,
+      "p_value": 1.1245160265406127e-23
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.2807507562664827,
+      "se_annual": 0.10701032458679163,
+      "p_value": 0.008700955482763196
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.5782120521325647,
+      "se_annual": 0.12049166281367173,
+      "p_value": 3.3759601816726094e-39
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": 0.0002502111568998503,
+     "D_day_mean_daily": 0.00110387366571153,
+     "intraday_share": 0.8152175161247928,
+     "D_on_next_mean_daily": -6.64632458887816e-05,
+     "intraday_share_k12_horizon": 1.0640664915435663,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.1189149564696468,
+     "E1_EW": 0.01275198771122358
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "val": {
+    "n_days": 500,
+    "first": "2019-01-02",
+    "last": "2020-12-31",
+    "sharpe_annual": {
+     "E0_S": 1.3129936505676456,
+     "E0_EW": 0.7941325209086799,
+     "E0_S_gross": 2.3926442041254337,
+     "E0_EW_gross": 0.8073163719659331,
+     "E1_S": 1.31118120415783,
+     "E1_EW": 0.8249714020321816,
+     "E1_S_gross": 2.4020587904290394,
+     "E1_EW_gross": 0.8391075914421968
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.4866967424601331,
+      "se_annual": 0.1951589727757729,
+      "p_value": 0.012636677547047932
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.5645164985268563,
+      "se_annual": 0.22078409180754238,
+      "p_value": 1.3786139400090605e-12
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.519380770379746,
+      "se_annual": 0.19624006660338994,
+      "p_value": 0.008129099545898884
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.586915541953677,
+      "se_annual": 0.2232776396705923,
+      "p_value": 1.1827987055166812e-12
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": 0.0002559348626189973,
+     "D_day_mean_daily": 0.0014094463093981928,
+     "intraday_share": 0.8463205499621468,
+     "D_on_next_mean_daily": 0.0001945091487168731,
+     "intraday_share_k12_horizon": 0.8787315771564779,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.12092767465935,
+     "E1_EW": 0.014436689159093543
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "pooled": {
+    "n_days": 1843,
+    "first": "2013-08-27",
+    "last": "2020-12-31",
+    "sharpe_annual": {
+     "E0_S": 0.8145656810923012,
+     "E0_EW": 0.46118042865083286,
+     "E0_S_gross": 2.049137509066123,
+     "E0_EW_gross": 0.47587110691862106,
+     "E1_S": 0.5799473705083104,
+     "E1_EW": 0.4893332002232801,
+     "E1_S_gross": 1.8299496534184523,
+     "E1_EW_gross": 0.5042220841905749
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.09063876362794061,
+      "se_annual": 0.09467099277562549,
+      "p_value": 0.338361373967767
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.3260873813037732,
+      "se_annual": 0.10489712439578858,
+      "p_value": 1.2419454045587778e-36
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.3534811637615793,
+      "se_annual": 0.09512407020181114,
+      "p_value": 0.0002024005806867912
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.5736933980576981,
+      "se_annual": 0.10882225428386152,
+      "p_value": 2.13249542785238e-47
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": 0.000251763979938143,
+     "D_day_mean_daily": 0.0011867745457133376,
+     "intraday_share": 0.8249862791654293,
+     "D_on_next_mean_daily": 4.3377293162251134e-06,
+     "intraday_share_k12_horizon": 0.9963582531998358,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.1194610004711938,
+     "E1_EW": 0.013209041820792208
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "alignment_gate": {
+    "rule": "E0 brut S_yon 1/N'in acikca ustunde (dSR > 0, p < 0,01); degilse olcum durur",
+    "passed": true,
+    "delta_sharpe_annual": 1.5736933980576981,
+    "se_annual": 0.10882225428386152,
+    "p_value": 2.13249542785238e-47
+   },
+   "primary_delta": 0.09063876362794061,
+   "primary_exceeds_threshold": false
+  },
+  "PC060_K12": {
+   "train": {
+    "n_days": 1343,
+    "first": "2013-08-27",
+    "last": "2018-12-31",
+    "sharpe_annual": {
+     "E0_S": 0.17793865626454103,
+     "E0_EW": 0.31282761261536723,
+     "E0_S_gross": 1.4657965317982924,
+     "E0_EW_gross": 0.3282604245837571,
+     "E1_S": 0.5483307460491161,
+     "E1_EW": 0.3392255005940568,
+     "E1_S_gross": 1.864859332382069,
+     "E1_EW_gross": 0.35453976668951215
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.20918313901166496,
+      "se_annual": 0.1204708965978964,
+      "p_value": 0.08249683698296253
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.5108821731122168,
+      "se_annual": 0.13208560918378148,
+      "p_value": 2.6799734967683975e-30
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": -0.1349392036821838,
+      "se_annual": 0.11035286752734745,
+      "p_value": 0.22140621339967936
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.1379598494930487,
+      "se_annual": 0.12166874264312118,
+      "p_value": 8.524857756701599e-21
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": -7.369726925376168e-05,
+     "D_day_mean_daily": 0.001058249174914308,
+     "intraday_share": 1.074853614959302,
+     "D_on_next_mean_daily": 0.00021629515713175647,
+     "intraday_share_k12_horizon": 0.8302960895957763,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.1050294802981477,
+     "E1_EW": 0.01275198771122358
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "val": {
+    "n_days": 500,
+    "first": "2019-01-02",
+    "last": "2020-12-31",
+    "sharpe_annual": {
+     "E0_S": 1.1284431959298005,
+     "E0_EW": 0.7941325209086799,
+     "E0_S_gross": 2.1990768931231437,
+     "E0_EW_gross": 0.8073163719659331,
+     "E1_S": 1.471884400527888,
+     "E1_EW": 0.8249714020321816,
+     "E1_S_gross": 2.562134592191554,
+     "E1_EW_gross": 0.8391075914421968
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.6475608834838175,
+      "se_annual": 0.19876088095884006,
+      "p_value": 0.0011220451752181047
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.7247526166057263,
+      "se_annual": 0.22772798810284042,
+      "p_value": 3.6262928860800834e-14
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.33464548799939614,
+      "se_annual": 0.19451317645042995,
+      "p_value": 0.08535506982788967
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.3931543728046505,
+      "se_annual": 0.2241443948768583,
+      "p_value": 5.118344923162918e-10
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": 6.023247369195207e-05,
+     "D_day_mean_daily": 0.0014096997923457048,
+     "intraday_share": 0.9590236400114446,
+     "D_on_next_mean_daily": 0.0003540420991268606,
+     "intraday_share_k12_horizon": 0.7992664908405236,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.1184921374565164,
+     "E1_EW": 0.014436689159093543
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "pooled": {
+    "n_days": 1843,
+    "first": "2013-08-27",
+    "last": "2020-12-31",
+    "sharpe_annual": {
+     "E0_S": 0.47240033124143166,
+     "E0_EW": 0.46118042865083286,
+     "E0_S_gross": 1.6872549998419473,
+     "E0_EW_gross": 0.47587110691862106,
+     "E1_S": 0.8335316381620625,
+     "E1_EW": 0.4893332002232801,
+     "E1_S_gross": 2.073550106223987,
+     "E1_EW_gross": 0.5042220841905749
+    },
+    "tests": {
+     "E1 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.34429185589081834,
+      "se_annual": 0.09322840501407656,
+      "p_value": 0.0002216300439398353
+     },
+     "E1 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.5697539490386851,
+      "se_annual": 0.10593061547999091,
+      "p_value": 1.109111351126719e-49
+     },
+     "E0 net S_yon - 1/N": {
+      "delta_sharpe_annual": 0.011222947753523869,
+      "se_annual": 0.09276634742622915,
+      "p_value": 0.9037062357834301
+     },
+     "E0 brut S_yon - 1/N": {
+      "delta_sharpe_annual": 1.211712671296302,
+      "se_annual": 0.10374347210393904,
+      "p_value": 1.614983709399835e-31
+     }
+    },
+    "decomposition_gross": {
+     "D_on_mean_daily": -3.73625587421736e-05,
+     "D_day_mean_daily": 0.0011535966023238024,
+     "intraday_share": 1.0334719756640727,
+     "D_on_next_mean_daily": 0.0002536654615254364,
+     "intraday_share_k12_horizon": 0.8197453992104404,
+     "note": "intraday_share = D_day/(D_on+D_day): PC060 (kapanis->kapanis) ufku icin; K12 ufku (acilis->acilis) icin intraday_share_k12_horizon = D_day/(D_day+D_on_next)"
+    },
+    "turnover_mean": {
+     "E1_S": 1.108681856087179,
+     "E1_EW": 0.013209041820792208
+    },
+    "sell_blocked_steps_E1_S": 0
+   },
+   "alignment_gate": {
+    "rule": "E0 brut S_yon 1/N'in acikca ustunde (dSR > 0, p < 0,01); degilse olcum durur",
+    "passed": true,
+    "delta_sharpe_annual": 1.211712671296302,
+    "se_annual": 0.10374347210393904,
+    "p_value": 1.614983709399835e-31
+   },
+   "primary_delta": 0.34429185589081834,
+   "primary_exceeds_threshold": true,
+   "generator": {
+    "target_auc": 0.6,
+    "seed": 20261115,
+    "achieved_auc_meta_ok": 0.5951580578428247,
+    "n_labeled": 54659
+   },
+   "label": "1[Of_{t+2} > Of_{t+1}], t+1 ve t+2 gecerli; yalniz 2013-06..2020-12 (panel)"
+  }
+ },
+ "reading": "PC060 E1 net dSR < 0,17 -> yeni ortamda gecerli pozitif kontrol DEGIL. PC060-K12 >= 0,17 -> M3 pozitif kontrolu PC060-K12.",
+ "warning": "sinyal bilerek gelecekten; ust sinir, strateji onerisi degil; tez sonucu degil"
+}

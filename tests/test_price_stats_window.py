@@ -249,7 +249,7 @@ FROZEN_DIGESTS = {
 _HELD_OUT = re.compile(r"(^|_)(test|val|valid|validation|eval|holdout|oos)(_|$)", re.IGNORECASE)
 _ENV_CALLEE = re.compile(r"env", re.IGNORECASE)
 _LEGACY_MARK = "B9-legacy"
-_SKIP_DIRS = {"venv", ".git", "docs", "workspaces", "node_modules", "__pycache__",
+_SKIP_DIRS = {"venv", "venv-marl", ".git", "docs", "workspaces", "node_modules", "__pycache__",
               "results", "models", "logs", ".claude"}
 
 
