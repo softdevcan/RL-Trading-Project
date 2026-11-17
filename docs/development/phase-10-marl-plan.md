@@ -234,6 +234,37 @@ M2 §9.1'de aynı üreteç ve AUC'yle (0,60) yalnız ufuk kaydırıldığında R
 - M0' ve eski ortamın sonuçları kapanış → kapanış hedefine bağlı kalır; MARL ↔ SARL karşılaştırmasında iki hedefin farkı beyan edilir ya da SARL kolu da `pit_v2` ile koşulur (M8 ön kaydında karar).
 - Canlı MARL kararı (§3.3) `pit_v2` hedefiyle eğitilmiş modelin tahminini kullanır. Ortamla aynı hedef kullanılır (K2 ilkesi).
 
+**P5 durumu (2026-11-17, dal `feat/phase10-p5`).**
+- **P5a bitti** (`ecba21c`). `prediction/pit_table.py` `target='open_to_open'`. Arındırma ufku `label_steps` = h+1; taban modelin erken durdurma boşluğu ve meta yarıları arasındaki boşluk da buna dahil. Bant dışı açılış etiket maskesine giriyor; kural M2 `open_gap_audit_m2.py` ile aynı, marj takvimi `marl.accounting`'den. `test_pit_table` 45/45; kabul ölçütleri:
+  - (i) Bağımsız seans sayımıyla `label_end` = `train_end` + 2 seans < çapa. Purge 1 seansa indirilince bu test 18/18 blokta kırılıyor.
+  - (ii) B0, çapa + 20 ve çapa − 1'de.
+  - (iii) Enjekte edilen bant dışı açılışta iki etiket NaN, raporda sayılı.
+  - Varsayılan yol (`pit_v1`) `origin/main` koduyla bit-eş (test `git show` ile karşılaştırıyor).
+- **P5b bitti.** Ayrı örnek ölçüm yapılmadı: aynı hattın `pit_v1` tam kurulumu 1258,5 sn sürmüştü (`measurements/phase9-p/pit_v1.json`), yani 15–20 dk sınırının içindeydi. Tam `pit_v2` kurulumu CPU'da 1395,0 sn sürdü (`measurements/phase10-p5/pit_v2.json`; GBM'ler CPU'da, kurulum oyun açıkken düşük öncelikle koştu). JSON'daki `commit` alanı `0e9d374`; bu commit'teki `pit_table.py`, `ecba21c`'dekiyle aynı.
+  - Tablo `results/predictions_pit/pit_v2_seed42.parquet` (git dışı), 111.690 satır.
+  - RL penceresinde `meta_ok` 0,9758 (`pit_v1` ile aynı).
+  - Bant maskesi toplam 67 etiket. 56'sı 2023-02-09 açılışından: 28 sembol × 2; Şubat 2023 depremi sonrası işlem durdurma dönemiyle aynı zamana denk geliyor, bu yalnız bir gözlem, kaynakla doğrulanmadı. Gerisi tekil (ör. PGSUS 2020-02-28, M2 denetimindeki bant dışı kayıtla aynı).
+  - **Beyan:** 88.320 etiketin marjı doğrulanmamış (BISTECH öncesi %20 varsayımı ve 2020 sonrası son bilinen %10), raporda `n_label_unverified_margin`.
+  - Havuzlu T 60 çapanın 40'ında sınırda (`pit_v1`'de 32).
+- **P5c bitti.** Kapı İ3 aynı pencerede (DEV_WINDOW 2013-06..2020-01, 47.199 satır; pencerede maskeli etiket yok). JSON'lar: `measurements/phase9-p/gate_v2_sensitivity.json` (`pit_v1`) ve `measurements/phase10-p5/gate_pit_v2_sensitivity.json` (`pit_v2`).
+
+| Ölçüt | `pit_v1` (Cₜ → Cₜ₊₁) | `pit_v2` (Oₜ₊₁ → Oₜ₊₂) |
+|---|---|---|
+| Bilgili sembol / BH reddi (30 sembol) | 0 / 0 | 0 / 0 |
+| Havuzlu AUC [%95 GA], tek yönlü p (tarih bloğu 20) | 0,5107 [0,5037; 0,5175], 0,004 | 0,5044 [0,4983; 0,5105], 0,090 |
+| Blok içi AUC [%95 GA], p | 0,5007 [0,4963; 0,5067], 0,293 | 0,5043 [0,4984; 0,5090], 0,078 |
+| Blok içi AUC p, duyarlılık (blok 63 / çapa kümesi) | 0,349 / 0,399 | 0,040 / 0,028 |
+| Havuzlu BSS / ECE | −0,0018 / 0,0090 | +0,0041 / 0,0005 |
+| Eşit fiyat oranı | 0,0631 | 0,0126 |
+| Sembol başına MDE (AUC) medyanı, tek / aile | 0,5353 / 0,5537 | 0,5343 / 0,5520 |
+| İki yönlü p < 0,05 sembol sayısı | 3 | 2 |
+
+  - **Okuma:**
+    - İki tablo da kapıdan geçmiyor. Birincil testte (tarih bloğu 20) hiçbir havuzlu ölçüt `pit_v2` lehine anlamlı değil; duyarlılık bootstrap'lerindeki p < 0,05 ikincil.
+    - `pit_v1`'in havuzlu AUC'si blok içine inince kayboluyor (çapa seviye farkı, İ3 #2). `pit_v2`'de havuzlu ile blok içi aynı düzeyde (~0,504).
+    - Her iki gerçek sinyal sembol başına MDE'nin (~0,535) ve M3 pozitif kontrolünün sentetik AUC'sinin (0,60) çok altında.
+  - **Sonuç:** M2 §9.1'deki ufuk hizası kazancı (E1 net ΔSR 0,09 → 0,20–0,36) AUC 0,60 sentetik bir üst sınırdı. Bu ölçüm gerçek modelin o bölgeye ulaşmadığını gösteriyor. §3.1.3 kuralı gereği bu, M5 ön kaydında **sonuçtan önce** yazılır: gerçek sinyal kollarının (S-obs, S-msg) neyi sınadığı ve kapıyı geçmeyen sinyalde boş sonucun nasıl okunacağı.
+
 **Sinyal yolları:**
 
 | Yol | Vision karşılığı | Tasarım |
@@ -589,3 +620,4 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
 - **2026-11-16 (§3.2.7, M1 spike):** BenchMARL + TorchRL 7/7 ölçütte geçti (Windows, CPU tekrar üretim, paralel toplama, ajan ekseni). 30 ajan × attn × 200K ≈ 391 sn (RTX 4060 + paralel toplama). Öneri: RLlib denenmeden BenchMARL seçilsin (kullanıcı kararı). M2 girdileri: nakit üst sınırı %83, eksik hücre maskesi, M4 parametre eşitliği. Performans sayısı yok (S1).
 - **2026-11-16 (M2 çekirdeği, dal `feat/phase10-m2-core`):** Tasarım belgesi [phase-10-m2-design.md](phase-10-m2-design.md) v0.1. Belge §8 #13'ün zaman indeksli muhasebe denklemini, §3.2.1'deki nakit faizini ve G2'yi, §3.2.2'deki projeksiyonu ve tam sayı emri (K5), §3.2.3'teki `obs_spec` v1'i (K18/K26 ölçeksiz özellikler, S-obs maskesi) ve K2 paritesini koda bağlıyor. Kullanıcı kararı: logit sınırı 5 + ln N (§3.2.2). Kod `marl/` paketinde; `env/` dışında tutulmasının nedeni tasarım §1. Testler 49 + 27. Aynı gün hakem-rl + hakem-finans ilk okuması (tasarım §10, v0.3); kullanıcı kararları: birincil ödül `'excess'` (`'differential'` yalnız α = 0 ablasyonu; §3.2.2 α ön elemesi yalnız `'excess'`), geç listelemede 20 seans işlem kilidi, fiyat limiti önce ölçülür, düzeltilmiş fiyat + beyan, evren için mutlak performans iddiası yok. Testler 53 + 31. İkinci okuma: iki hakem Kabul; fiyat limiti karar kuralı ölçümden önce yazıldı (taban %0,05 → satış engeli, tavan %0,1 → alım engeli; tasarım §9 #9). Testler 54 + 31. Performans sayısı yok. Açık maddeler tasarım §9'da: gerçek panel ölçümü, S-obs ufuk hizası, PC060 yeni ortamda, hakem incelemesi.
 - **2026-11-16 (M2 kapanışı, v2.4.0, PR #34):** Tasarım v0.7. Gerçek panel ölçüldü; satış engeli dönem bağımlı fiyat marjıyla (ön kayıt v0.7; 2021+ marjı M8'den önce doğrulanır). S-obs ufuk hizası (tasarım §9.1): PC060 yeni ortamda pozitif kontrol değil, M3 pozitif kontrolü PC060-K12. Hakem-2 kapanış: Küçük revizyon → Kabul. **§3.1.3'e P5 eklendi** (kullanıcı onayı): tahmin hedefi K12 yürütme ufkuna (Oₜ₊₁ → Oₜ₊₂) hizalanır; `pit_v2`, purge ≥ 2 seans; M3'ü bloklamaz, gerçek sinyalli MARL koşumlarından önce gelir.
+- **2026-11-17 (P5a–P5c, dal `feat/phase10-p5`):** `pit_v2` (hedef Oₜ₊₁ → Oₜ₊₂, purge h+1, bant dışı açılış maskesi) kuruldu ve kapı `pit_v1` ile yan yana ölçüldü (§3.1.3 "P5 durumu"). İki tablo da kapıdan geçmiyor (0/30 bilgili). `pit_v2` havuzlu AUC 0,5044, blok içi 0,5043 (birincil testte anlamsız). `pit_v1` bit-eş kaldı. Sıradaki: M5 ön kaydı bu sonucu sonuçtan önce okuma kuralına bağlar.

@@ -1,6 +1,6 @@
 # Sistem akış haritası
 
-**Son güncelleme:** 2026-11-17 · `v2.4.0` · Faz 10 P5a: P tablosuna hedef ufku parametresi (`pit_v2`, O_{t+1} → O_{t+2}); `pit_v1` dondurulmuş, bit-eş. Önceki (2026-11-16) Faz 10 M2: `marl/` çekirdeği + PettingZoo ortamı; hakem-rl + hakem-finans Kabul; gerçek 30 sembollü panelde gözlem sağlığı ölçüldü, taban açılışta satış engeli (ön kayıtlı kural) uygulandı. S-obs ufuk hizası ölçüldü: PC060 yeni ortamda pozitif kontrol değil, M3 kontrolü PC060-K12 (§9.1). Hakem-2 kapanışı Küçük revizyon, işlendi; satış engeli dönem bağımlı fiyat marjı (v0.7). M2 çekirdeği kapandı, sırada M3 ([M2 tasarımı](phase-10-m2-design.md) §9).
+**Son güncelleme:** 2026-11-17 · `v2.4.0` · Faz 10 P5: `pit_v2` (hedef O_{t+1} → O_{t+2}) kuruldu, kapı `pit_v1` ile yan yana; ikisi de geçmiyor (0/30). `pit_v1` dondurulmuş, bit-eş. Önceki (2026-11-16) Faz 10 M2: `marl/` çekirdeği + PettingZoo ortamı; hakem-rl + hakem-finans Kabul; gerçek 30 sembollü panelde gözlem sağlığı ölçüldü, taban açılışta satış engeli (ön kayıtlı kural) uygulandı. S-obs ufuk hizası ölçüldü: PC060 yeni ortamda pozitif kontrol değil, M3 kontrolü PC060-K12 (§9.1). Hakem-2 kapanışı Küçük revizyon, işlendi; satış engeli dönem bağımlı fiyat marjı (v0.7). M2 çekirdeği kapandı, sırada M3 ([M2 tasarımı](phase-10-m2-design.md) §9).
 
 Bu belge sistemin **canlı haritasıdır**: hangi bileşen var, veri nereden nereye akıyor, hangi aşama bitti, hangisi sürüyor, hangisi planlı. Diyagramlar Mermaid metni olduğu için GitHub'da çizilir ve PR'da fark olarak okunur.
 
@@ -191,7 +191,7 @@ flowchart TB
 | Makale 2 (B5 + K0–K4) | planlı | plan §4 "Makale 2 deney tasarımı", §9.14 | B5 nedensel ICEEMDAN, sonra kollar |
 | Faz 10 M1 çerçeve spike'ı | **bitti**: BenchMARL + TorchRL seçildi (K9, 2026-11-16) | Faz 10 plan §3.2.7; `measurements/phase10-m1/` | M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği) |
 | Faz 10 M2 ortam + karar çekirdeği | **sürüyor**: `marl/` (muhasebe, projeksiyon, K5, `obs_spec` v1, K2) + PettingZoo ortamı; logit sınırı 5 + ln N; hakem-rl + hakem-finans Kabul; gerçek panel ölçüldü; taban açılışta satış engeli | [phase-10-m2-design.md](phase-10-m2-design.md); `test_marl_core` 61, `test_marl_env` 36; `measurements/phase10-m2/obs_health.json` | M3: BenchMARL görevi + PC060-K12 P tablosu; 2021+ öncesi fiyat marjı geçmişi doğrulaması (tasarım §2.5, §9) |
-| Faz 10 P5: tahmin hedefi K12 yürütme ufkuna (`pit_v2`) | **sürüyor**: P5a bitti (`target='open_to_open'`, purge h+1, bant dışı açılış maskesi; `pit_v1` bit-eş) | Faz 10 plan §3.1.3; `test_pit_table` 45 | P5b tam `pit_v2` üretimi (CPU, ~21 dk) → P5c kapı raporu `pit_v1` ile yan yana |
+| Faz 10 P5: tahmin hedefi K12 yürütme ufkuna (`pit_v2`) | **bitti**: `target='open_to_open'`, purge h+1, bant dışı açılış maskesi; `pit_v1` bit-eş. Kapı: 0/30 bilgili (`pit_v1` gibi); havuzlu AUC 0,5044 | Faz 10 plan §3.1.3 "P5 durumu"; `test_pit_table` 45; `measurements/phase10-p5/` | M5 ön kaydı: kapıyı geçmeyen gerçek sinyalin okuma kuralı (sonuçtan önce) |
 | Faz 10 M3–M8, nihai koşumlar | planlı | Faz 10 plan §3, §4 | M2'den sonra |
 | K27 pano: ajan türü seçimi + karşılaştırma | planlı (karar 2026-11-15) | Faz 10 plan §6 K27 | M2 + karar katmanından (K1–K10) sonra |
 | Canlı karar paritesi (K13) | açık | Faz 10 plan §6 | Karar katmanında |
