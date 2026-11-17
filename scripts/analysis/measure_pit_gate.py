@@ -5,6 +5,8 @@ kapanis orani; havuzlu AUC icin tarih blogu bootstrap GA/p. Var olan PIT tablosu
     python scripts/analysis/measure_pit_gate.py                 # gate_v2.json (arsiv)
     python scripts/analysis/measure_pit_gate.py --sensitivity   # gate_v2_sensitivity.json (I3 ikinci okuma)
     python scripts/analysis/measure_pit_gate.py --exposed --sensitivity   # gate_v2_exposed.json (acik pencere)
+    python scripts/analysis/measure_pit_gate.py --target open_to_open --sensitivity
+                                    # P5c: pit-v2 (O_{t+1} -> O_{t+2}) -> phase10-p5/gate_pit_v2_sensitivity.json
 """
 
 import hashlib
@@ -19,14 +21,24 @@ sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 warnings.filterwarnings('ignore')
 
-TABLE = os.path.join('results', 'predictions_pit', 'pit_v1_seed42.parquet')
 SENS = '--sensitivity' in sys.argv
 # --exposed: zaten okunmus pencere (EXPOSED_EVAL_WINDOWS birlesimi; 2021 haric) -> hakem-2 kapanis #9
 EXPOSED = '--exposed' in sys.argv
+TARGET = sys.argv[sys.argv.index('--target') + 1] if '--target' in sys.argv else 'close_to_close'
+if TARGET not in ('close_to_close', 'open_to_open'):
+    raise SystemExit(f'--target close_to_close | open_to_open: {TARGET}')
+if EXPOSED and TARGET != 'close_to_close':
+    raise SystemExit('--exposed yalniz pit-v1 icin (pit-v2 acik pencerede okunmaz)')
 WINDOW = ('2022-07-18', '2026-08-29') if EXPOSED else None
-OUT = os.path.join('docs', 'development', 'measurements', 'phase9-p',
-                   'gate_v2_exposed.json' if EXPOSED else
-                   ('gate_v2_sensitivity.json' if SENS else 'gate_v2.json'))
+if TARGET == 'close_to_close':
+    TABLE = os.path.join('results', 'predictions_pit', 'pit_v1_seed42.parquet')
+    OUT = os.path.join('docs', 'development', 'measurements', 'phase9-p',
+                       'gate_v2_exposed.json' if EXPOSED else
+                       ('gate_v2_sensitivity.json' if SENS else 'gate_v2.json'))
+else:
+    TABLE = os.path.join('results', 'predictions_pit', 'pit_v2_seed42.parquet')
+    OUT = os.path.join('docs', 'development', 'measurements', 'phase10-p5',
+                       'gate_pit_v2_sensitivity.json' if SENS else 'gate_pit_v2.json')
 
 
 def main():
@@ -39,11 +51,12 @@ def main():
     with open(TABLE, 'rb') as fh:
         tsha = hashlib.sha256(fh.read()).hexdigest()
     panel, _ = P.load_panel()
-    labels = P.realized_labels(panel)
+    labels = P.realized_labels(panel, target=TARGET)
     g = (P.evaluate_gate(table, labels, window=WINDOW, sensitivity=SENS) if WINDOW
          else P.evaluate_gate(table, labels, sensitivity=SENS))
     out = {'commit': subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode().strip(),
-           'table': TABLE, 'table_sha256': tsha, 'gate_dev_window': g}
+           'table': TABLE.replace(os.sep, '/'), 'table_sha256': tsha, 'target': TARGET, 'gate_dev_window': g}
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8') as fh:
         json.dump(out, fh, indent=1, default=float)
     po = g['pooled']
