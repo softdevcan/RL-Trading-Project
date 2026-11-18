@@ -1,4 +1,4 @@
-"""Faz 10 M3b okuma betigi (ana venv) — M3 tasarim §6 ON KAYDI v1.0'daki kural; sonuctan ONCE yazildi.
+"""Faz 10 M3b okuma betigi (ana venv) — M3 tasarim §6 ON KAYDI v1.1'deki kural; sonuctan ONCE yazildi.
 
 Tum seriler 20 bps gidis-donus maliyet sonrasi fazla getiri X. SR yillik. Girdi: <root>/<kol>/s<k>/eval_<pencere>.npz.
 
@@ -9,11 +9,12 @@ ASAMA 1 (A1c PC060-K12 <-> S1c karistirilmis PC). GECTI = uc kosulun HEPSI (M3a 
 KISMI = (i)'de D > 0 ve p < 0,05 var ama GECTI degil. Aksi GOZLENMEDI. GECTI degilse asama 2 kosulmaz.
 
 ASAMA 2 (referans A1c; adaylar IPPO, STATE, A05; A00 yalniz ablasyon, SECILEMEZ: plan §2.3 alfa > 0).
-Aday UYGUN = dorduu birden (D = aday - referans):
+Aday UYGUN = besi birden (D = aday - referans):
   (a) dogrulama: D >= 0,3
   (b) dogrulama: ortak HAC tek yonlu p, 3 aday uzerinde Holm duzeltmeli, < 0,05
-  (c) dogrulama: en az 2/3 tohumda Delta > 0
+  (c) dogrulama: 3/3 tohumda Delta > 0
   (d) egitim: D > 0 (isaret tutarliligi)
+  (e) dogrulama: D > referansin tohumlar arasi SR araligi (max - min; tohum gurultusu, hakem-rl M3b #1)
 Secilen = uygun adaylar icinde en buyuk dogrulama D'si; uygun aday yoksa referans kalir. Etkenler birlestirilmez.
 
   python scripts/marl/analyze_m3b.py --stage 1 --out docs/development/measurements/phase10-m3/m3b_stage1.json
@@ -39,7 +40,7 @@ from analyze_m3 import ALPHA, D_MIN, SEEDS, load_arm, pooled, sr  # noqa: E402
 REF, CTRL = 'A1c', 'S1c'
 SELECTABLE = ('IPPO', 'STATE', 'A05')
 ABLATION = ('A00',)
-PREREG = 'phase-10-m3-design.md §6 v1.0'
+PREREG = 'phase-10-m3-design.md §6 v1.1'
 
 
 def provenance() -> dict:
@@ -100,6 +101,15 @@ def stage1(root) -> dict:
             'label': label, 'gate_passed': label == 'GECTI'}
 
 
+def candidate_conditions(train: dict, val: dict, p_holm: float) -> dict:
+    """Aday - referans ciftinin on kayitli bes kosulu; val['sharpe_b'] referansin tohum basina SR'si."""
+    seed_range = max(val['sharpe_b']) - min(val['sharpe_b'])
+    return {'a_val_D_ge_0.3': bool(val['D_annual'] >= D_MIN), 'b_val_holm_p_lt_0.05': bool(p_holm < ALPHA),
+            'c_val_3of3_seeds': bool(all(d > 0 for d in val['delta_per_seed'])),
+            'd_train_D_gt_0': bool(train['D_annual'] > 0),
+            'e_val_D_gt_ref_seed_range': bool(val['D_annual'] > seed_range)}
+
+
 def stage2(root) -> dict:
     arms = {}
     for arm in SELECTABLE + ABLATION:
@@ -110,10 +120,7 @@ def stage2(root) -> dict:
     adj = holm([arms[a]['val']['p_one_sided'] for a in SELECTABLE])
     eligible = []
     for arm, p_holm in zip(SELECTABLE, adj):
-        tr, va = arms[arm]['train'], arms[arm]['val']
-        cond = {'a_val_D_ge_0.3': bool(va['D_annual'] >= D_MIN), 'b_val_holm_p_lt_0.05': bool(p_holm < ALPHA),
-                'c_val_2of3_seeds': bool(sum(d > 0 for d in va['delta_per_seed']) >= 2),
-                'd_train_D_gt_0': bool(tr['D_annual'] > 0)}
+        cond = candidate_conditions(arms[arm]['train'], arms[arm]['val'], p_holm)
         arms[arm].update(p_holm=p_holm, conditions=cond, eligible=all(cond.values()))
         if all(cond.values()):
             eligible.append(arm)
@@ -153,6 +160,15 @@ def self_test() -> bool:
 
     both = lambda v: {'train': v, 'val': v}   # noqa: E731
     check('holm bilinen deger', np.allclose(holm([0.01, 0.04, 0.03]), [0.03, 0.06, 0.06]))
+    val0 = {'D_annual': 0.5, 'delta_per_seed': [0.4, 0.5, 0.6], 'sharpe_b': [1.0, 1.1, 1.2]}
+    check('aday: bes kosul saglaninca uygun', all(candidate_conditions({'D_annual': 0.1}, val0, 0.01).values()))
+    for key, tr, va, p in (('a_val_D_ge_0.3', 0.1, {'D_annual': 0.25}, 0.01),
+                           ('b_val_holm_p_lt_0.05', 0.1, {}, 0.06),
+                           ('c_val_3of3_seeds', 0.1, {'delta_per_seed': [0.9, 0.9, -0.3]}, 0.01),
+                           ('d_train_D_gt_0', -0.1, {}, 0.01),
+                           ('e_val_D_gt_ref_seed_range', 0.1, {'sharpe_b': [0.5, 1.0, 1.2]}, 0.01)):
+        cond = candidate_conditions({'D_annual': tr}, {**val0, **va}, p)
+        check(f'aday: yalniz {key} eler', [k for k, v in cond.items() if not v] == [key])
     check('asama 1 sinyal: GECTI', stage1(build({REF: both(0.003), CTRL: both(0.0)}))['label'] == 'GECTI')
     check('asama 1 bos: GOZLENMEDI', stage1(build({REF: both(0.0), CTRL: both(0.0)}))['label'] == 'GOZLENMEDI')
     check('asama 1 eksik kol: EKSIK', stage1(build({REF: both(0.003)}))['label'] == 'EKSIK')

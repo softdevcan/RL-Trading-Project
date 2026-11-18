@@ -1,4 +1,4 @@
-"""Faz 10 M3b duzenleyicisi (M3 tasarim §6 ON KAYDI v1.0): 20 bps, 3 tohum, kol basina F = 600.000 kare.
+"""Faz 10 M3b duzenleyicisi (M3 tasarim §6 ON KAYDI v1.1): 20 bps, 3 tohum, kol basina F = 600.000 kare.
 
 Asama 1: A1c (PC060-K12) <-> S1c (karistirilmis PC), referans yapilandirma.
 Asama 2: referansa (A1c) karsi tek etken: IPPO, STATE (elestirmen state()), A05 (alfa 0,5), A00 (alfa 0, ablasyon).
@@ -27,6 +27,7 @@ os.chdir(ROOT)
 PY = sys.executable
 FRAMES = 600_000                                                 # M3a ile ayni butce (§6.2)
 COST_BPS = 20
+PREREG = 'phase-10-m3-design.md §6 v1.1'
 STAGE1_JSON = os.path.join('docs', 'development', 'measurements', 'phase10-m3', 'm3b_stage1.json')
 ARMS = {
     1: {'A1c': {}, 'S1c': {'suffix': '_shuf'}},
@@ -62,9 +63,12 @@ def require_stage1_pass():
     if not os.path.exists(STAGE1_JSON):
         raise SystemExit(f'asama 2 kosulmaz: {STAGE1_JSON} yok (once asama 1 okumasi)')
     with open(STAGE1_JSON, encoding='utf-8') as fh:
-        label = json.load(fh).get('label')
-    if label != 'GECTI':
-        raise SystemExit(f'asama 2 kosulmaz: asama 1 etiketi {label} (on kayit §6.3)')
+        rec = json.load(fh)
+    if rec.get('preregistration') != PREREG or rec.get('stage') != 1:
+        raise SystemExit(f"asama 2 kosulmaz: {STAGE1_JSON} bu on kayda ait degil ({rec.get('preregistration')}, "
+                         f"asama {rec.get('stage')})")
+    if rec.get('label') != 'GECTI':
+        raise SystemExit(f"asama 2 kosulmaz: asama 1 etiketi {rec.get('label')} (on kayit §6.3)")
 
 
 def main():

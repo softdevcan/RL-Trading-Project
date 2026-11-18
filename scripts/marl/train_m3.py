@@ -40,6 +40,13 @@ def policy_digest(exp) -> str:
     return h.hexdigest()
 
 
+def critic_summary(exp) -> dict:
+    """Elestirmen kapasitesi (hakem-rl M3b #2): MAPPO, IPPO ve state() kollarinda boyut esit DEGIL, kayda gecer."""
+    params = dict(exp.losses['agent'].critic_network_params.flatten_keys('.').items())
+    first = next(v for k, v in params.items() if k.endswith('weight'))
+    return {'params': int(sum(v.numel() for v in params.values())), 'input_dim': int(first.shape[-1])}
+
+
 def provenance() -> dict:
     git = lambda *c: subprocess.run(['git', *c], capture_output=True, text=True).stdout.strip()   # noqa: E731
     with open(os.path.abspath(__file__), 'rb') as fh:
@@ -104,7 +111,8 @@ def main():
         'train_window': [str(dates[OS.WARMUP_ROWS]), str(dates[end_row])],
         'wall_seconds': round(wall, 1), 'frames': exp.total_frames,
         'seconds_per_200k': round(wall / max(exp.total_frames, 1) * 200_000, 1),
-        'policy_params': sum(p.numel() for p in exp.policy.parameters()), 'policy_sha256': policy_digest(exp),
+        'policy_params': sum(p.numel() for p in exp.policy.parameters()), 'critic': critic_summary(exp),
+        'policy_sha256': policy_digest(exp),
         'env': {'python': platform.python_version(), 'os': platform.platform(), 'torch': torch.__version__,
                 'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
                 'threads': torch.get_num_threads(), 'omp': os.environ.get('OMP_NUM_THREADS')},
