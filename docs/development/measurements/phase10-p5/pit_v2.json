@@ -1,0 +1,1597 @@
+{
+ "commit": "0e9d374",
+ "panel": "data\\bist\\stock_data_with_indicators.csv",
+ "panel_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "panel_frame_sha256": "06c541006d2eb220147c114db80dceb31a5ebd5f19c9b3bd5b82ccf99105b0ba",
+ "table_sha256": "9116c571c47445174c37bb037166382a1717401da3acab522a0eb792785bde10",
+ "table_rows": 111690,
+ "seed": 42,
+ "horizon": "daily",
+ "target": "open_to_open",
+ "table_version": "pit-v2",
+ "open_band_mask": {
+  "rule": "M2 open_gap_audit: |O_j/C_{j-1} - 1| > marj_j + tolerans -> etiket NaN",
+  "per_symbol": {
+   "AKBNK.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "ARCLK.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "ASELS.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "BIMAS.IS": {
+    "n_label_masked": 0,
+    "n_label_unverified_margin": 3031,
+    "masked_dates": []
+   },
+   "EKGYO.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 2704,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "ENKAI.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3018,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "EREGL.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3018,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "FROTO.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3026,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "GARAN.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "HALKB.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3022,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "ISCTR.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 2914,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "KCHOL.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3026,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "KRDMD.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "MGROS.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 2896,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "ODAS.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 2092,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "PETKM.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "PGSUS.IS": {
+    "n_label_masked": 5,
+    "n_label_unverified_margin": 2048,
+    "masked_dates": [
+     "2013-04-26",
+     "2020-02-26",
+     "2020-02-27",
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "SAHOL.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "SASA.IS": {
+    "n_label_masked": 4,
+    "n_label_unverified_margin": 3027,
+    "masked_dates": [
+     "2022-11-28",
+     "2022-11-29",
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "SISE.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "SKBNK.IS": {
+    "n_label_masked": 8,
+    "n_label_unverified_margin": 3023,
+    "masked_dates": [
+     "2011-06-28",
+     "2011-06-29",
+     "2023-02-07",
+     "2023-02-08",
+     "2024-05-31",
+     "2024-06-03",
+     "2026-10-15",
+     "2026-10-16"
+    ]
+   },
+   "TAVHL.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3014,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "TCELL.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3028,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "THYAO.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "TKFEN.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3026,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "TOASO.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "TSKB.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3028,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "TUPRS.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "VAKBN.IS": {
+    "n_label_masked": 2,
+    "n_label_unverified_margin": 3029,
+    "masked_dates": [
+     "2023-02-07",
+     "2023-02-08"
+    ]
+   },
+   "YKBNK.IS": {
+    "n_label_masked": 0,
+    "n_label_unverified_margin": 3031,
+    "masked_dates": []
+   }
+  },
+  "n_label_masked": 67
+ },
+ "design": {
+  "first_anchor": "2012-01-01",
+  "retrain_every": 63,
+  "min_train_rows": 504,
+  "val_frac": 0.15,
+  "meta_window": 504,
+  "min_half": 100,
+  "T_bounds": [
+   0.05,
+   20.0
+  ],
+  "pred_logret": "esit agirlikli taban ortalamasi",
+  "temperature": "capa basina havuzlu (tum semboller)",
+  "purge": "label_date < capa (h=2)"
+ },
+ "models": [
+  "xgboost",
+  "lightgbm",
+  "catboost"
+ ],
+ "n_anchors": 60,
+ "anchors_first_last": [
+  "2012-01-02",
+  "2026-11-02"
+ ],
+ "integrity": {
+  "window_start": "2009-09-01",
+  "window_end": null,
+  "rows_in_window": 129860,
+  "rows_after": 126732,
+  "n_artifacts": 9,
+  "n_ghost_days": 96,
+  "n_stale_cells_dropped": 340,
+  "missing_cell_frac": 0.019860788863109047,
+  "artifacts_in_window": [
+   {
+    "symbol": "TUPRS.IS",
+    "date": "2012-02-06",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "TKFEN.IS",
+    "date": "2012-07-13",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "FROTO.IS",
+    "date": "2012-07-18",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "ENKAI.IS",
+    "date": "2012-07-26",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "KCHOL.IS",
+    "date": "2012-12-14",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "MGROS.IS",
+    "date": "2012-12-14",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "SAHOL.IS",
+    "date": "2012-12-14",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "SKBNK.IS",
+    "date": "2013-04-25",
+    "reason": "ohlc_inconsistent"
+   },
+   {
+    "symbol": "PGSUS.IS",
+    "date": "2013-07-23",
+    "reason": "extreme_return"
+   }
+  ]
+ },
+ "coverage_rl_window": {
+  "window": [
+   "2013-06-01",
+   null
+  ],
+  "n_calendar_days": 3365,
+  "meta_ok_rate": 0.9758,
+  "base_ok_rate": 0.9849,
+  "mask_reasons": {
+   "ok": 98507,
+   "insufficient_history": 1097,
+   "meta_insufficient": 915,
+   "no_features": 356,
+   "no_data": 75
+  },
+  "per_symbol": {
+   "AKBNK.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "ARCLK.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "ASELS.IS": {
+    "n_days": 3365,
+    "has_data": 0.9967,
+    "base_ok": 0.9967,
+    "meta_ok": 0.9967,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "BIMAS.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "EKGYO.IS": {
+    "n_days": 3365,
+    "has_data": 0.9964,
+    "base_ok": 0.992,
+    "meta_ok": 0.9192,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2014-07-04"
+   },
+   "ENKAI.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0579,
+    "first_meta_ok": "2013-06-03"
+   },
+   "EREGL.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2013-06-03"
+   },
+   "FROTO.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2013-06-03"
+   },
+   "GARAN.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2013-06-03"
+   },
+   "HALKB.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "ISCTR.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 0.9753,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-10-01"
+   },
+   "KCHOL.IS": {
+    "n_days": 3365,
+    "has_data": 0.9955,
+    "base_ok": 0.9955,
+    "meta_ok": 0.9955,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "KRDMD.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "MGROS.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 0.9753,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-10-01"
+   },
+   "ODAS.IS": {
+    "n_days": 3365,
+    "has_data": 0.9997,
+    "base_ok": 0.8068,
+    "meta_ok": 0.7319,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2017-01-06"
+   },
+   "PETKM.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0392,
+    "first_meta_ok": "2013-06-03"
+   },
+   "PGSUS.IS": {
+    "n_days": 3365,
+    "has_data": 0.9893,
+    "base_ok": 0.7881,
+    "meta_ok": 0.7132,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2017-04-05"
+   },
+   "SAHOL.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "SASA.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 0.9667,
+    "meta_ok": 0.9667,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "SISE.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0018,
+    "first_meta_ok": "2013-06-03"
+   },
+   "SKBNK.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TAVHL.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TCELL.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2013-06-03"
+   },
+   "THYAO.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0187,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TKFEN.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TOASO.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TSKB.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "TUPRS.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "VAKBN.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   },
+   "YKBNK.IS": {
+    "n_days": 3365,
+    "has_data": 1.0,
+    "base_ok": 1.0,
+    "meta_ok": 1.0,
+    "informative_asof": 0.0,
+    "first_meta_ok": "2013-06-03"
+   }
+  }
+ },
+ "temperature_pooled": {
+  "per_anchor": {
+   "2012-01-02": null,
+   "2012-03-29": null,
+   "2012-06-28": null,
+   "2012-09-28": null,
+   "2013-01-02": null,
+   "2013-04-01": 19.999889976956965,
+   "2013-07-01": 8.53756299035745,
+   "2013-10-01": 19.999866961920794,
+   "2014-01-06": 13.894390071146484,
+   "2014-04-03": 14.28479080115782,
+   "2014-07-04": 19.999868427831476,
+   "2014-10-08": 19.999885566107846,
+   "2015-01-07": 19.99989033879258,
+   "2015-04-06": 19.99986953352658,
+   "2015-07-07": 15.89579702387327,
+   "2015-10-07": 19.999867517916456,
+   "2016-01-06": 19.99986631086084,
+   "2016-04-05": 19.999886304636316,
+   "2016-07-04": 19.99986921866756,
+   "2016-10-11": 19.999885555522756,
+   "2017-01-06": 19.99992873197446,
+   "2017-04-05": 19.999917721316905,
+   "2017-07-07": 19.999888536320032,
+   "2017-10-09": 19.999883615591024,
+   "2018-01-05": 19.99990494916883,
+   "2018-04-04": 19.999915665856545,
+   "2018-07-05": 19.99990824789569,
+   "2018-10-09": 19.9998951537563,
+   "2019-01-08": 19.99987401571232,
+   "2019-04-05": 19.99989342020099,
+   "2019-07-10": 19.999872474093603,
+   "2019-10-14": 19.999893048379718,
+   "2020-01-13": 15.697398157176128,
+   "2020-04-10": 13.980335756707426,
+   "2020-07-16": 19.99991669818945,
+   "2020-10-15": 19.999887020849236,
+   "2021-01-14": 19.999885983344107,
+   "2021-04-13": 19.999908914286777,
+   "2021-07-16": 19.999888616766434,
+   "2021-10-20": 19.999922750795353,
+   "2022-01-18": 19.99990691578901,
+   "2022-04-15": 19.99990123779592,
+   "2022-07-22": 19.99991205241223,
+   "2022-10-20": 19.999889870011483,
+   "2023-01-17": 19.999890506042604,
+   "2023-04-20": 19.089042133438294,
+   "2023-07-26": 11.67870971973256,
+   "2023-10-24": 19.99988359822958,
+   "2024-01-22": 19.999925941169536,
+   "2024-04-25": 7.574101045176412,
+   "2024-07-30": 10.485128889535648,
+   "2024-10-28": 15.331147573097645,
+   "2025-01-27": 14.357768452784407,
+   "2025-04-29": 19.999893349167717,
+   "2025-08-01": 19.99990467160046,
+   "2025-10-30": 19.99992430062678,
+   "2026-01-28": 19.999871320843138,
+   "2026-04-29": 10.242285547315745,
+   "2026-08-04": 16.333951399339977,
+   "2026-11-02": 10.384435962889544
+  },
+  "n_at_bound": 40,
+  "min": 7.574101045176412,
+  "max": 19.99992873197446
+ },
+ "n_informative_asof_per_anchor": {
+  "2012-01-02": null,
+  "2012-03-29": null,
+  "2012-06-28": null,
+  "2012-09-28": null,
+  "2013-01-02": null,
+  "2013-04-01": 0,
+  "2013-07-01": 0,
+  "2013-10-01": 0,
+  "2014-01-06": 1,
+  "2014-04-03": 0,
+  "2014-07-04": 0,
+  "2014-10-08": 0,
+  "2015-01-07": 0,
+  "2015-04-06": 0,
+  "2015-07-07": 2,
+  "2015-10-07": 0,
+  "2016-01-06": 0,
+  "2016-04-05": 0,
+  "2016-07-04": 0,
+  "2016-10-11": 0,
+  "2017-01-06": 0,
+  "2017-04-05": 0,
+  "2017-07-07": 0,
+  "2017-10-09": 0,
+  "2018-01-05": 0,
+  "2018-04-04": 0,
+  "2018-07-05": 0,
+  "2018-10-09": 0,
+  "2019-01-08": 0,
+  "2019-04-05": 0,
+  "2019-07-10": 0,
+  "2019-10-14": 0,
+  "2020-01-13": 1,
+  "2020-04-10": 1,
+  "2020-07-16": 0,
+  "2020-10-15": 0,
+  "2021-01-14": 0,
+  "2021-04-13": 0,
+  "2021-07-16": 0,
+  "2021-10-20": 0,
+  "2022-01-18": 0,
+  "2022-04-15": 0,
+  "2022-07-22": 0,
+  "2022-10-20": 0,
+  "2023-01-17": 0,
+  "2023-04-20": 0,
+  "2023-07-26": 2,
+  "2023-10-24": 0,
+  "2024-01-22": 0,
+  "2024-04-25": 1,
+  "2024-07-30": 1,
+  "2024-10-28": 0,
+  "2025-01-27": 0,
+  "2025-04-29": 0,
+  "2025-08-01": 0,
+  "2025-10-30": 0,
+  "2026-01-28": 0,
+  "2026-04-29": 1,
+  "2026-08-04": 2,
+  "2026-11-02": 3
+ },
+ "gate_dev_window": {
+  "window": [
+   "2013-06-01",
+   "2020-01-01"
+  ],
+  "n_rows": 47199,
+  "per_symbol": {
+   "AKBNK.IS": {
+    "n": 1651,
+    "auc": 0.5060051069824778,
+    "auc_ci": [
+     0.476209527339861,
+     0.5331637846634985
+    ],
+    "p_auc_gt_half": 0.3646353646353646,
+    "p_two_sided": 0.7292707292707292,
+    "auc_se_boot": 0.014739345811252663,
+    "mde_auc_single": 0.5366490128202551,
+    "mde_auc_family": 0.5556678664003557,
+    "auc_within_block": 0.5007997152039965,
+    "tie_rate": 0.0018170805572380376,
+    "brier_skill": 0.003800936517068365,
+    "ece": 0.0013644710565505864,
+    "accuracy": 0.5045427013930951,
+    "base_rate": 0.4966686856450636,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "ARCLK.IS": {
+    "n": 1651,
+    "auc": 0.4898521819019692,
+    "auc_ci": [
+     0.4654350592738148,
+     0.5142136496014418
+    ],
+    "p_auc_gt_half": 0.7972027972027972,
+    "p_two_sided": 0.4075924075924076,
+    "auc_se_boot": 0.012713840101382677,
+    "mde_auc_single": 0.5316126437928148,
+    "mde_auc_family": 0.548017894502409,
+    "auc_within_block": 0.4976468387316124,
+    "tie_rate": 0.004239854633555421,
+    "brier_skill": 0.006125363237338921,
+    "ece": 0.012956620084368983,
+    "accuracy": 0.4912174439733495,
+    "base_rate": 0.49485160508782555,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "ASELS.IS": {
+    "n": 1640,
+    "auc": 0.49372468009922726,
+    "auc_ci": [
+     0.46267380673486286,
+     0.525530718919722
+    ],
+    "p_auc_gt_half": 0.6163836163836164,
+    "p_two_sided": 0.7692307692307693,
+    "auc_se_boot": 0.01594395234382532,
+    "mde_auc_single": 0.5396442366803205,
+    "mde_auc_family": 0.56021744929087,
+    "auc_within_block": 0.5211215592790646,
+    "tie_rate": 0.007926829268292683,
+    "brier_skill": 0.005109772224501707,
+    "ece": 0.013350954079495568,
+    "accuracy": 0.4945121951219512,
+    "base_rate": 0.501219512195122,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "BIMAS.IS": {
+    "n": 1651,
+    "auc": 0.5251496012590583,
+    "auc_ci": [
+     0.5036412200192323,
+     0.5499519755468654
+    ],
+    "p_auc_gt_half": 0.011988011988011988,
+    "p_two_sided": 0.023976023976023976,
+    "auc_se_boot": 0.011721631741563673,
+    "mde_auc_single": 0.5291455426497228,
+    "mde_auc_family": 0.544270501427911,
+    "auc_within_block": 0.5148193159889904,
+    "tie_rate": 0.0012113870381586917,
+    "brier_skill": -0.0001727225659191589,
+    "ece": 0.024785725750522056,
+    "accuracy": 0.5275590551181102,
+    "base_rate": 0.48940036341611143,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "EKGYO.IS": {
+    "n": 1379,
+    "auc": 0.4994730531364382,
+    "auc_ci": [
+     0.4736283726737547,
+     0.5311182550921086
+    ],
+    "p_auc_gt_half": 0.44655344655344653,
+    "p_two_sided": 0.8931068931068931,
+    "auc_se_boot": 0.014712917105185448,
+    "mde_auc_single": 0.5365832985070228,
+    "mde_auc_family": 0.5555680499161423,
+    "auc_within_block": 0.5026150973688228,
+    "tie_rate": 0.016678752719361856,
+    "brier_skill": 0.0012453510014015512,
+    "ece": 0.001216035194980786,
+    "accuracy": 0.5018129079042785,
+    "base_rate": 0.4960116026105874,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "ENKAI.IS": {
+    "n": 1651,
+    "auc": 0.49912655479123996,
+    "auc_ci": [
+     0.4716544142066513,
+     0.5247573773385178
+    ],
+    "p_auc_gt_half": 0.5644355644355644,
+    "p_two_sided": 0.8731268731268731,
+    "auc_se_boot": 0.013986925461108891,
+    "mde_auc_single": 0.5347781385350757,
+    "mde_auc_family": 0.5528261096449958,
+    "auc_within_block": 0.5146779840445869,
+    "tie_rate": 0.005451241671714113,
+    "brier_skill": 0.0034987635965684216,
+    "ece": 0.006716509799332672,
+    "accuracy": 0.4984857662023016,
+    "base_rate": 0.5172622652937614,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "EREGL.IS": {
+    "n": 1651,
+    "auc": 0.49675829799248283,
+    "auc_ci": [
+     0.4720858113938327,
+     0.5230315401966151
+    ],
+    "p_auc_gt_half": 0.5954045954045954,
+    "p_two_sided": 0.8111888111888111,
+    "auc_se_boot": 0.012999508470961443,
+    "mde_auc_single": 0.5323229510122194,
+    "mde_auc_family": 0.5490968127146663,
+    "auc_within_block": 0.5109731826994836,
+    "tie_rate": 0.004239854633555421,
+    "brier_skill": 0.008723772018767506,
+    "ece": 0.00997139469629332,
+    "accuracy": 0.4942459115687462,
+    "base_rate": 0.5227135069654755,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "FROTO.IS": {
+    "n": 1651,
+    "auc": 0.5065268085832164,
+    "auc_ci": [
+     0.4773282897938358,
+     0.533546041277546
+    ],
+    "p_auc_gt_half": 0.34865134865134867,
+    "p_two_sided": 0.6973026973026973,
+    "auc_se_boot": 0.014604441700647484,
+    "mde_auc_single": 0.536313577140654,
+    "mde_auc_family": 0.5551583577625778,
+    "auc_within_block": 0.5129795711895161,
+    "tie_rate": 0.004845548152634767,
+    "brier_skill": -0.0008045547762023375,
+    "ece": 0.017969473431806254,
+    "accuracy": 0.5215021199273168,
+    "base_rate": 0.5221078134463961,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "GARAN.IS": {
+    "n": 1651,
+    "auc": 0.5076902193851346,
+    "auc_ci": [
+     0.480228391845481,
+     0.5329695520201505
+    ],
+    "p_auc_gt_half": 0.3096903096903097,
+    "p_two_sided": 0.6193806193806194,
+    "auc_se_boot": 0.013409873132527082,
+    "mde_auc_single": 0.53334331242685,
+    "mde_auc_family": 0.550646686464017,
+    "auc_within_block": 0.5195455894704741,
+    "tie_rate": 0.0024227740763173833,
+    "brier_skill": 0.005307242087464581,
+    "ece": 0.0020272439384357854,
+    "accuracy": 0.5051483949121744,
+    "base_rate": 0.5003028467595396,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "HALKB.IS": {
+    "n": 1651,
+    "auc": 0.4977206258038373,
+    "auc_ci": [
+     0.46666466711677346,
+     0.5258773982279348
+    ],
+    "p_auc_gt_half": 0.6073926073926074,
+    "p_two_sided": 0.7872127872127872,
+    "auc_se_boot": 0.015110536364185675,
+    "mde_auc_single": 0.5375719687985873,
+    "mde_auc_family": 0.5570697865652231,
+    "auc_within_block": 0.5058842007161374,
+    "tie_rate": 0.009691096305269533,
+    "brier_skill": 0.00691589986774066,
+    "ece": 0.008678768404192905,
+    "accuracy": 0.4954572986069049,
+    "base_rate": 0.4887946698970321,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "ISCTR.IS": {
+    "n": 1568,
+    "auc": 0.5301127387094517,
+    "auc_ci": [
+     0.5073280090882225,
+     0.5543450188247486
+    ],
+    "p_auc_gt_half": 0.007992007992007992,
+    "p_two_sided": 0.015984015984015984,
+    "auc_se_boot": 0.012316715808220535,
+    "mde_auc_single": 0.5306252042213636,
+    "mde_auc_family": 0.5465180272505525,
+    "auc_within_block": 0.5256111367126788,
+    "tie_rate": 0.0012755102040816326,
+    "brier_skill": 0.004484196395043161,
+    "ece": 0.014561944485606758,
+    "accuracy": 0.5178571428571429,
+    "base_rate": 0.5044642857142857,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "KCHOL.IS": {
+    "n": 1636,
+    "auc": 0.49187027715337894,
+    "auc_ci": [
+     0.467753982579986,
+     0.5127044817428814
+    ],
+    "p_auc_gt_half": 0.7842157842157842,
+    "p_two_sided": 0.43356643356643354,
+    "auc_se_boot": 0.0114926630136869,
+    "mde_auc_single": 0.5285762176640109,
+    "mde_auc_family": 0.5434057275962547,
+    "auc_within_block": 0.4929875952445139,
+    "tie_rate": 0.004889975550122249,
+    "brier_skill": 0.001611242669872226,
+    "ece": 0.002378708527475917,
+    "accuracy": 0.5030562347188264,
+    "base_rate": 0.5036674816625917,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "KRDMD.IS": {
+    "n": 1651,
+    "auc": 0.498847763824631,
+    "auc_ci": [
+     0.46591609649310356,
+     0.5257712867991295
+    ],
+    "p_auc_gt_half": 0.6353646353646354,
+    "p_two_sided": 0.7312687312687313,
+    "auc_se_boot": 0.015509909128337412,
+    "mde_auc_single": 0.5385649991366287,
+    "mde_auc_family": 0.5585781458888619,
+    "auc_within_block": 0.49950721598742137,
+    "tie_rate": 0.029073288915808602,
+    "brier_skill": 0.006994960349696155,
+    "ece": 0.026124275425978546,
+    "accuracy": 0.47728649303452453,
+    "base_rate": 0.485160508782556,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "MGROS.IS": {
+    "n": 1568,
+    "auc": 0.48891668335963495,
+    "auc_ci": [
+     0.4611781065954924,
+     0.52251454108635
+    ],
+    "p_auc_gt_half": 0.7202797202797203,
+    "p_two_sided": 0.5614385614385614,
+    "auc_se_boot": 0.01575402016402842,
+    "mde_auc_single": 0.539171975090051,
+    "mde_auc_family": 0.5595001095021537,
+    "auc_within_block": 0.4876491800229279,
+    "tie_rate": 0.004464285714285714,
+    "brier_skill": 0.009586399049513972,
+    "ece": 0.012378028987481296,
+    "accuracy": 0.49107142857142855,
+    "base_rate": 0.5159438775510204,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "ODAS.IS": {
+    "n": 749,
+    "auc": 0.5140479312354312,
+    "auc_ci": [
+     0.4727585203757207,
+     0.5578079334275655
+    ],
+    "p_auc_gt_half": 0.24275724275724275,
+    "p_two_sided": 0.4855144855144855,
+    "auc_se_boot": 0.022356873771309405,
+    "mde_auc_single": 0.5555898045922778,
+    "mde_auc_family": 0.5844379037013105,
+    "auc_within_block": 0.4871769115341853,
+    "tie_rate": 0.05874499332443257,
+    "brier_skill": -0.013439789523952195,
+    "ece": 0.07217696065162382,
+    "accuracy": 0.57543391188251,
+    "base_rate": 0.4272363150867824,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "PETKM.IS": {
+    "n": 1651,
+    "auc": 0.526469483071919,
+    "auc_ci": [
+     0.4991533984625457,
+     0.5504715456520342
+    ],
+    "p_auc_gt_half": 0.029970029970029972,
+    "p_two_sided": 0.059940059940059943,
+    "auc_se_boot": 0.013371636933526443,
+    "mde_auc_single": 0.5332482390792729,
+    "mde_auc_family": 0.5505022751960488,
+    "auc_within_block": 0.5278142871381204,
+    "tie_rate": 0.023622047244094488,
+    "brier_skill": 0.00465060627696845,
+    "ece": 0.008174367708168874,
+    "accuracy": 0.5124167171411266,
+    "base_rate": 0.5075711689884919,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "PGSUS.IS": {
+    "n": 686,
+    "auc": 0.4653316656456334,
+    "auc_ci": [
+     0.4283432099453753,
+     0.5070953004972958
+    ],
+    "p_auc_gt_half": 0.957042957042957,
+    "p_two_sided": 0.08791208791208792,
+    "auc_se_boot": 0.019743302950156062,
+    "mde_auc_single": 0.54909122644928,
+    "mde_auc_family": 0.5745669153166865,
+    "auc_within_block": 0.47222994729491385,
+    "tie_rate": 0.01020408163265306,
+    "brier_skill": 0.008414195453963269,
+    "ece": 0.030827143562237005,
+    "accuracy": 0.4752186588921283,
+    "base_rate": 0.5160349854227405,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "SAHOL.IS": {
+    "n": 1651,
+    "auc": 0.5106177351179993,
+    "auc_ci": [
+     0.4845042957545305,
+     0.5386053577033876
+    ],
+    "p_auc_gt_half": 0.2077922077922078,
+    "p_two_sided": 0.4155844155844156,
+    "auc_se_boot": 0.013675143652207303,
+    "mde_auc_single": 0.5340029009052731,
+    "mde_auc_family": 0.5516485656544922,
+    "auc_within_block": 0.49557773629327295,
+    "tie_rate": 0.0030284675953967293,
+    "brier_skill": 0.0035843704735317727,
+    "ece": 0.004154338915730745,
+    "accuracy": 0.5051483949121744,
+    "base_rate": 0.5057540884312538,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "SASA.IS": {
+    "n": 1651,
+    "auc": 0.488590732173019,
+    "auc_ci": [
+     0.46100362443526754,
+     0.5141151577872407
+    ],
+    "p_auc_gt_half": 0.7982017982017982,
+    "p_two_sided": 0.40559440559440557,
+    "auc_se_boot": 0.013995213331898676,
+    "mde_auc_single": 0.5347987461174418,
+    "mde_auc_family": 0.5528574114469738,
+    "auc_within_block": 0.4756756971745581,
+    "tie_rate": 0.047244094488188976,
+    "brier_skill": 0.011884786879932885,
+    "ece": 0.00595281233329058,
+    "accuracy": 0.4996971532404603,
+    "base_rate": 0.485160508782556,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "SISE.IS": {
+    "n": 1651,
+    "auc": 0.4896759777521177,
+    "auc_ci": [
+     0.46402124470940787,
+     0.5146745317544457
+    ],
+    "p_auc_gt_half": 0.7922077922077922,
+    "p_two_sided": 0.4175824175824176,
+    "auc_se_boot": 0.01317887917022078,
+    "mde_auc_single": 0.5327689517466424,
+    "mde_auc_family": 0.54977426368504,
+    "auc_within_block": 0.4886630340080267,
+    "tie_rate": 0.005451241671714113,
+    "brier_skill": 0.005501253206004142,
+    "ece": 0.016610195989570347,
+    "accuracy": 0.4875832828588734,
+    "base_rate": 0.516656571774682,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "SKBNK.IS": {
+    "n": 1651,
+    "auc": 0.4955275839640492,
+    "auc_ci": [
+     0.4699706489774622,
+     0.5212533095604107
+    ],
+    "p_auc_gt_half": 0.6013986013986014,
+    "p_two_sided": 0.7992007992007992,
+    "auc_se_boot": 0.013289887505863672,
+    "mde_auc_single": 0.5330449711825271,
+    "mde_auc_family": 0.5501935222652394,
+    "auc_within_block": 0.5317610158035528,
+    "tie_rate": 0.05027256208358571,
+    "brier_skill": -0.0018337078093408898,
+    "ece": 0.031777285404668454,
+    "accuracy": 0.536038764385221,
+    "base_rate": 0.4572986069049061,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TAVHL.IS": {
+    "n": 1651,
+    "auc": 0.4940328801083275,
+    "auc_ci": [
+     0.4659884187177592,
+     0.5196718044958166
+    ],
+    "p_auc_gt_half": 0.6903096903096904,
+    "p_two_sided": 0.6213786213786214,
+    "auc_se_boot": 0.013934031967033788,
+    "mde_auc_single": 0.5346466201917727,
+    "mde_auc_family": 0.5526263404015486,
+    "auc_within_block": 0.4930650104694762,
+    "tie_rate": 0.0018170805572380376,
+    "brier_skill": 0.0007358152404359775,
+    "ece": 0.006578774756105096,
+    "accuracy": 0.49788007268322226,
+    "base_rate": 0.5142337976983646,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TCELL.IS": {
+    "n": 1651,
+    "auc": 0.5015843778436611,
+    "auc_ci": [
+     0.47682921263647615,
+     0.5274997529128631
+    ],
+    "p_auc_gt_half": 0.4405594405594406,
+    "p_two_sided": 0.8811188811188811,
+    "auc_se_boot": 0.01272211654507717,
+    "mde_auc_single": 0.5316332229619958,
+    "mde_auc_family": 0.548049153146297,
+    "auc_within_block": 0.49252217987501945,
+    "tie_rate": 0.013930950938824955,
+    "brier_skill": 0.009675215693697226,
+    "ece": 0.010393446847646093,
+    "accuracy": 0.49364021804966685,
+    "base_rate": 0.5063597819503332,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "THYAO.IS": {
+    "n": 1651,
+    "auc": 0.48541264907290815,
+    "auc_ci": [
+     0.46022265292570086,
+     0.5089106612888413
+    ],
+    "p_auc_gt_half": 0.8921078921078921,
+    "p_two_sided": 0.2177822177822178,
+    "auc_se_boot": 0.012699671014137642,
+    "mde_auc_single": 0.5315774127135835,
+    "mde_auc_family": 0.5479643804003673,
+    "auc_within_block": 0.4991350286777033,
+    "tie_rate": 0.0024227740763173833,
+    "brier_skill": 0.011710892357999603,
+    "ece": 0.011195002979562996,
+    "accuracy": 0.49364021804966685,
+    "base_rate": 0.5051483949121744,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TKFEN.IS": {
+    "n": 1651,
+    "auc": 0.4923356967748565,
+    "auc_ci": [
+     0.4625157615201322,
+     0.5175920393253622
+    ],
+    "p_auc_gt_half": 0.7562437562437563,
+    "p_two_sided": 0.48951048951048953,
+    "auc_se_boot": 0.013723700312146108,
+    "mde_auc_single": 0.5341236358195219,
+    "mde_auc_family": 0.5518319554529905,
+    "auc_within_block": 0.5071379802981245,
+    "tie_rate": 0.0024227740763173833,
+    "brier_skill": 0.005851116220577546,
+    "ece": 0.011781014853006429,
+    "accuracy": 0.4924288310115082,
+    "base_rate": 0.5093882495457298,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TOASO.IS": {
+    "n": 1651,
+    "auc": 0.48833983566565975,
+    "auc_ci": [
+     0.4612203100165915,
+     0.5144801162606836
+    ],
+    "p_auc_gt_half": 0.8101898101898102,
+    "p_two_sided": 0.38161838161838163,
+    "auc_se_boot": 0.014252138256307294,
+    "mde_auc_single": 0.535437583483026,
+    "mde_auc_family": 0.553827770820453,
+    "auc_within_block": 0.4856310595798877,
+    "tie_rate": 0.005451241671714113,
+    "brier_skill": 0.0008673727664759712,
+    "ece": 0.014061983775224494,
+    "accuracy": 0.4900060569351908,
+    "base_rate": 0.5075711689884919,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TSKB.IS": {
+    "n": 1651,
+    "auc": 0.4855625810635538,
+    "auc_ci": [
+     0.4607103806861843,
+     0.5107698423980763
+    ],
+    "p_auc_gt_half": 0.8701298701298701,
+    "p_two_sided": 0.26173826173826176,
+    "auc_se_boot": 0.012877443361746347,
+    "mde_auc_single": 0.5320194391868089,
+    "mde_auc_family": 0.5486357946831372,
+    "auc_within_block": 0.4930414699404545,
+    "tie_rate": 0.05330102967898243,
+    "brier_skill": -0.001417890503025987,
+    "ece": 0.004779762518621278,
+    "accuracy": 0.49788007268322226,
+    "base_rate": 0.46698970321017563,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "TUPRS.IS": {
+    "n": 1651,
+    "auc": 0.5172389203050058,
+    "auc_ci": [
+     0.4929332671276267,
+     0.5390170339638882
+    ],
+    "p_auc_gt_half": 0.10589410589410589,
+    "p_two_sided": 0.21178821178821178,
+    "auc_se_boot": 0.012103793944070901,
+    "mde_auc_single": 0.5300957793588996,
+    "mde_auc_family": 0.5457138595460302,
+    "auc_within_block": 0.5162443803207925,
+    "tie_rate": 0.0060569351907934586,
+    "brier_skill": 0.005168385079236004,
+    "ece": 0.020470368849109806,
+    "accuracy": 0.5257419745608722,
+    "base_rate": 0.5221078134463961,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "VAKBN.IS": {
+    "n": 1651,
+    "auc": 0.5128156015252789,
+    "auc_ci": [
+     0.48369360298099257,
+     0.5401767671291552
+    ],
+    "p_auc_gt_half": 0.1998001998001998,
+    "p_two_sided": 0.3996003996003996,
+    "auc_se_boot": 0.014721208173065624,
+    "mde_auc_single": 0.5366039140388738,
+    "mde_auc_family": 0.5555993637929575,
+    "auc_within_block": 0.5109474085113018,
+    "tie_rate": 0.01029678982434888,
+    "brier_skill": 0.0026873392359841874,
+    "ece": 0.011658190022995835,
+    "accuracy": 0.514839491217444,
+    "base_rate": 0.49303452453058755,
+    "T_at_bound_any": true,
+    "informative": false
+   },
+   "YKBNK.IS": {
+    "n": 1651,
+    "auc": 0.5083283414671388,
+    "auc_ci": [
+     0.4820594398719772,
+     0.5350722087939199
+    ],
+    "p_auc_gt_half": 0.2707292707292707,
+    "p_two_sided": 0.5414585414585414,
+    "auc_se_boot": 0.013838233190023568,
+    "mde_auc_single": 0.5344084189410678,
+    "mde_auc_family": 0.552264525597268,
+    "auc_within_block": 0.5181425239969932,
+    "tie_rate": 0.009691096305269533,
+    "brier_skill": -0.00013575749040728446,
+    "ece": 0.008070168113732725,
+    "accuracy": 0.5105996365838885,
+    "base_rate": 0.4887946698970321,
+    "T_at_bound_any": true,
+    "informative": false
+   }
+  },
+  "bh": {
+   "alpha": 0.05,
+   "method": "fdr_bh",
+   "family_size": 30,
+   "results": {
+    "AKBNK.IS": {
+     "p": 0.3646353646353646,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "ARCLK.IS": {
+     "p": 0.7972027972027972,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "ASELS.IS": {
+     "p": 0.6163836163836164,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "BIMAS.IS": {
+     "p": 0.011988011988011988,
+     "p_adj": 0.1798201798201798,
+     "reject": false
+    },
+    "EKGYO.IS": {
+     "p": 0.44655344655344653,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "ENKAI.IS": {
+     "p": 0.5644355644355644,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "EREGL.IS": {
+     "p": 0.5954045954045954,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "FROTO.IS": {
+     "p": 0.34865134865134867,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "GARAN.IS": {
+     "p": 0.3096903096903097,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "HALKB.IS": {
+     "p": 0.6073926073926074,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "ISCTR.IS": {
+     "p": 0.007992007992007992,
+     "p_adj": 0.1798201798201798,
+     "reject": false
+    },
+    "KCHOL.IS": {
+     "p": 0.7842157842157842,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "KRDMD.IS": {
+     "p": 0.6353646353646354,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "MGROS.IS": {
+     "p": 0.7202797202797203,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "ODAS.IS": {
+     "p": 0.24275724275724275,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "PETKM.IS": {
+     "p": 0.029970029970029972,
+     "p_adj": 0.2997002997002997,
+     "reject": false
+    },
+    "PGSUS.IS": {
+     "p": 0.957042957042957,
+     "p_adj": 0.957042957042957,
+     "reject": false
+    },
+    "SAHOL.IS": {
+     "p": 0.2077922077922078,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "SASA.IS": {
+     "p": 0.7982017982017982,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "SISE.IS": {
+     "p": 0.7922077922077922,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "SKBNK.IS": {
+     "p": 0.6013986013986014,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "TAVHL.IS": {
+     "p": 0.6903096903096904,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "TCELL.IS": {
+     "p": 0.4405594405594406,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "THYAO.IS": {
+     "p": 0.8921078921078921,
+     "p_adj": 0.9228702332150608,
+     "reject": false
+    },
+    "TKFEN.IS": {
+     "p": 0.7562437562437563,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "TOASO.IS": {
+     "p": 0.8101898101898102,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "TSKB.IS": {
+     "p": 0.8701298701298701,
+     "p_adj": 0.9228702332150608,
+     "reject": false
+    },
+    "TUPRS.IS": {
+     "p": 0.10589410589410589,
+     "p_adj": 0.7942057942057942,
+     "reject": false
+    },
+    "VAKBN.IS": {
+     "p": 0.1998001998001998,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    },
+    "YKBNK.IS": {
+     "p": 0.2707292707292707,
+     "p_adj": 0.9002109002109002,
+     "reject": false
+    }
+   }
+  },
+  "sensitivity": null,
+  "n_informative": 0,
+  "n_bh_reject": 0,
+  "expected_false_pass_one_sided_2_5pct": 0.75,
+  "power": 0.8,
+  "mde_auc_family_median": 0.5520482405251292,
+  "mde_auc_single_median": 0.5342660273802948,
+  "pooled": {
+   "auc": {
+    "value": 0.5044399971940781,
+    "ci": [
+     0.49832650399529294,
+     0.5104772472696191
+    ],
+    "se_boot": 0.0030308288815834574,
+    "p_gt_half": 0.08982035928143713,
+    "p_two_sided": 0.17964071856287425,
+    "n_boot": 500
+   },
+   "auc_within_block": {
+    "value": 0.5043251002152045,
+    "ci": [
+     0.49837265419477444,
+     0.508994478829284
+    ],
+    "se_boot": 0.0026016586895052235,
+    "p_gt_half": 0.07784431137724551,
+    "p_two_sided": 0.15568862275449102,
+    "n_boot": 500
+   },
+   "ece": 0.0005095603859106377,
+   "brier_skill": 0.004140768979160714,
+   "tie_rate": 0.012627386173435878
+  },
+  "note": "havuzlu GA tarih blogu bootstrap (20 seans, ayni gunun sembolleri birlikte); MDE = 0,5 + (z_{1-a} + z_guc) * SE_boot, a = alpha ya da alpha/m"
+ },
+ "seconds_per_symbol": {
+  "AKBNK.IS": 38.9,
+  "ARCLK.IS": 33.8,
+  "ASELS.IS": 32.5,
+  "BIMAS.IS": 30.0,
+  "EKGYO.IS": 31.4,
+  "ENKAI.IS": 38.4,
+  "EREGL.IS": 33.1,
+  "FROTO.IS": 32.8,
+  "GARAN.IS": 37.3,
+  "HALKB.IS": 35.3,
+  "ISCTR.IS": 33.7,
+  "KCHOL.IS": 32.4,
+  "KRDMD.IS": 32.8,
+  "MGROS.IS": 33.1,
+  "ODAS.IS": 24.7,
+  "PETKM.IS": 31.8,
+  "PGSUS.IS": 25.3,
+  "SAHOL.IS": 35.0,
+  "SASA.IS": 34.9,
+  "SISE.IS": 35.9,
+  "SKBNK.IS": 36.9,
+  "TAVHL.IS": 30.4,
+  "TCELL.IS": 34.0,
+  "THYAO.IS": 29.6,
+  "TKFEN.IS": 26.7,
+  "TOASO.IS": 30.0,
+  "TSKB.IS": 28.3,
+  "TUPRS.IS": 28.0,
+  "VAKBN.IS": 35.1,
+  "YKBNK.IS": 32.5
+ },
+ "wall_seconds": 1395.0,
+ "note": "K11 v1 (3 GBM + lojistik meta), yalniz fiyat/hacim ozellikleri; T capa basina havuzlu; bilgi kapisi DEV_WINDOW (wf-v1 ilk dogrulama yili 2020 oncesi). Tablo calisma alaninda (git disi): results/predictions_pit/pit_v2_seed42.parquet"
+}
