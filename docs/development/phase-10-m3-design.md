@@ -1,12 +1,12 @@
 # Faz 10 M3 — Algoritma katmanı: tasarım ve M3a ön kaydı
 
-**Sürüm:** v0.2 · 2026-11-16 · dal `feat/phase10-m3` (taban: M2, PR #34)
+**Sürüm:** v0.3 · 2026-11-18 · dal `feat/phase10-p5` (ön kayıt v0.2 değişmedi; v0.3 yalnız sonucu ekler, §5.2)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2, §4
 - Faz 9 planı §M3 (IPPO, MAPPO, parametre paylaşımı + ajan kimliği, MAPPO önerileri)
 - [phase-10-m2-design.md](phase-10-m2-design.md): §9 #4, #10, #11 ve §9.1 (pozitif kontrol PC060-K12)
 
-**Durum:** kod ve testler hazır. **M3a ön kaydı v0.2** (hakem-rl okuması + kullanıcının ~1 saatlik bütçe kararı) commit'lenir, ilk eğitim koşusundan ÖNCE. Tek açık alan eğitim bütçesi (kare sayısı, §5.1). Bütçe süre ölçümünden sonra, hiçbir eğitim sonucu görülmeden ayrı bir commit'le doldurulur. Performans sayısı yok.
+**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Sırada M3b ön kaydı (§6). Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi.
 
 Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
@@ -160,6 +160,41 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 - Toplam süre ön kayda yazılmadan önce kullanıcıya sunulur.
 - Sıra: A1 s0..s2, sonra S1 s0..s2 (`run_m3a.py`). Yarıda kalırsa eksik kol okunmaz.
 
+### 5.2 Sonuç (2026-11-18): GEÇTİ
+
+**Kaynak:** `measurements/phase10-m3/m3a_results.json`; komut `python scripts/marl/analyze_m3.py --root results/marl_m3 --out docs/development/measurements/phase10-m3/m3a_results.json`. Aşağıdaki sayılar bu dosyadan yuvarlanmıştır.
+
+**Koşu izi:** 6/6 koşu, F = 600.000, commit `b20b7f3`, temiz çalışma ağacı (`results/marl_m3/*/s*/train.json`). Koşu başına eğitim 455–495 sn; RTX 4060. S1 s1 eğitiminin son dakikalarında GPU'da `cs2` açıldı; süre 495 sn'ye çıktı, sonuca etkisi ayrıca ölçülmedi.
+
+| Tohum | Eğitim SR A1 | Eğitim SR S1 | Eğitim Δ | Doğrulama SR A1 | Doğrulama SR S1 | Doğrulama Δ |
+|---|---|---|---|---|---|---|
+| 0 | 1,84 | 0,95 | +0,88 | 2,10 | 1,30 | +0,80 |
+| 1 | 1,13 | 0,89 | +0,24 | 1,32 | 0,75 | +0,57 |
+| 2 | 1,86 | 0,70 | +1,16 | 2,22 | 1,14 | +1,08 |
+
+**Ön kayıt koşulları:**
+
+| Koşul | Eşik | Ölçüm | Sonuç |
+|---|---|---|---|
+| (i) Eğitim büyüklüğü ve ortak HAC | D ≥ 0,3 ve tek yönlü p < 0,05 | D = 0,76 (SE 0,08), p ≈ 9e-24 | sağlandı |
+| (ii) Eğitim sıralaması | min A1 > max S1 | 1,13 > 0,95 (kesin permütasyon p = 1/20) | sağlandı |
+| (iii) Doğrulama işareti | D > 0 ve en az 2/3 tohumda Δ > 0 | D = 0,82, 3/3 tohum | sağlandı |
+
+**Okuma (ön kayıt cümlesi):** Eğitim penceresinde, aynı kapasite ve parmak izine sahip kontrole karşı, maliyetsiz koşulda sinyal aktarımı gözlendi; doğrulamada işaret çelişmiyor. M3b ve M4 açılır.
+
+**Betimsel (kararı değiştirmez):**
+- Ortalama günlük devir: A1 0,66, S1 0,33 (eğitim); A1 0,67, S1 0,34 (doğrulama). Nakit ağırlığı iki kolda da ~%2–3.
+- Tohum ortalamalı serinin 1/N'e karşı ΔSR'si: A1 +1,30 (eğitim, SE 0,11), +1,11 (doğrulama, SE 0,21). S1 +0,47 (eğitim, SE 0,12), +0,23 (doğrulama, SE 0,18; p = 0,20).
+- RL'siz brüt referans: PC060-K12 E1 brüt +1,58 (M2 §9.1). A1'in 1/N'e karşı farkı bu büyüklüğün altında kalıyor.
+
+**Sınırlar:**
+- Sinyal gelecekten türetilmiştir ve koşu maliyetsizdir. Sonuç "RL piyasayı yener" ya da "tahmin katkı verir" anlamına gelmez.
+- Ortak HAC p'si yalnız gün gürültüsünü ölçer. Tohum varyansına karşı kanıt (ii) kuralıdır ve 3 tohumla ulaşılabilecek en küçük p = 0,05'tir.
+- Tohum 1'de eğitim Δ'sı 0,24; 0,3 eşiği tohum başına değil ortalamaya uygulanır.
+- Doğrulama yalnız işaret kontrolüdür, genelleme kanıtı değildir.
+- Sinyalsiz S1 eğitim penceresinde 1/N'in üstünde kaldı, doğrulamada fark belirsiz. Kaynağı (pencereye uyum ya da ezber) bu koşuda ayrıştırılmadı.
+- A1'in devri S1'in iki katıdır; değerin maliyet altında kalıp kalmadığı M3b'nin sorusudur (§6).
+
 ---
 
 ## 6. M3b (M3a geçerse; ayrı ön kayıt)
@@ -202,6 +237,8 @@ M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
 Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüzünden 3 tohum ile #1'in kesin permütasyon ölçütü kullanıldı; 3'e 3'te en küçük p tam 0,05. Bu bir **güç sınırlamasıdır**, beyan edilir. İkinci okuma: SendMessage ile, yalnız v0.1 → v0.2 farkı.
 
 ## Versiyon geçmişi
+
+- **v0.3 (2026-11-18):** M3a koşuldu (F = 600.000, 6/6 koşu); etiket GEÇTİ (§5.2). Ön kayıt metni ve eşikleri değişmedi.
 
 - **v0.2 (2026-11-16):** Ön kayıt eğitimden önce yeniden yazıldı (§5): A1 ↔ karıştırılmış PC (S1), 3 tohum, maliyetsiz, lr 5e-4. GEÇTİ = (i) D ≥ 0,3 ve p < 0,05, (ii) min A1 > max S1, (iii) doğrulamada işaret. Bütçe toplam ~1 saat (kullanıcı kararı); 20 bps çifti ve tahminsiz kol M3b'ye. Hakem-rl tablosu §8.
 
