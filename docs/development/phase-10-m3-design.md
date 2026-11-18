@@ -316,6 +316,8 @@ Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüz�
 | 4 | KÜÇÜK | Öz test koşulları tek tek eletmiyor | Beş koşul için tek tek eleme testi, 16/16 |
 | 5 | KÜÇÜK | Aşama 2 kapısı JSON'un ön kaydını denetlemiyor | `preregistration` ve `stage` denetimi eklendi |
 
+**İkinci okuma** (SendMessage, yalnız `2462853..3dff3a5` farkı): **Kabul**, 5/5 karşılandı, yeni BÜYÜK bulgu yok. Hakemin notu: (e) koşulundaki 3 tohumluk aralık kendisi gürültülü bir tahmindir; (a) ve (c) ile birlikte uygulandığı için kabul edilebilir.
+
 ## Versiyon geçmişi
 
 - **v0.5 (2026-11-18):** M3b ön kaydı v1.1: hakem-rl bulguları işlendi (§8). Koşu yok.

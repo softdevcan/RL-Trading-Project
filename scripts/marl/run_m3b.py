@@ -1,7 +1,7 @@
 """Faz 10 M3b duzenleyicisi (M3 tasarim §6 ON KAYDI v1.1): 20 bps, 3 tohum, kol basina F = 600.000 kare.
 
 Asama 1: A1c (PC060-K12) <-> S1c (karistirilmis PC), referans yapilandirma.
-Asama 2: referansa (A1c) karsi tek etken: IPPO, STATE (elestirmen state()), A05 (alfa 0,5), A00 (alfa 0, ablasyon).
+Asama 2: referansa (A1c) karsi tek yapilandirma secimi: IPPO, STATE (elestirmen state()), A05 (alfa 0,5), A00 (alfa 0, ablasyon).
 Asama 2 yalniz asama 1 okumasi GECTI ise baslar (`m3b_stage1.json`).
 
 Her egitimden once GPU bos mu bakar; doluysa bekler. Biten kosular (eval_val.npz var) atlanir.
