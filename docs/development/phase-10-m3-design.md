@@ -1,12 +1,12 @@
 # Faz 10 M3 — Algoritma katmanı: tasarım ve M3a ön kaydı
 
-**Sürüm:** v0.5 · 2026-11-18 · dal `feat/phase10-m3b` (M3a ön kaydı v0.2 değişmedi; M3b ön kaydı §6)
+**Sürüm:** v0.6 · 2026-11-19 · dal `feat/phase10-m3b` (M3a ön kaydı v0.2 ve M3b ön kaydı v1.1 değişmedi; v0.6 yalnız Aşama 1 sonucunu ekler, §6.7)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2, §4
 - Faz 9 planı §M3 (IPPO, MAPPO, parametre paylaşımı + ajan kimliği, MAPPO önerileri)
 - [phase-10-m2-design.md](phase-10-m2-design.md): §9 #4, #10, #11 ve §9.1 (pozitif kontrol PC060-K12)
 
-**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi. **M3b ön kaydı v1.1 yazıldı (§6); M3b koşusu henüz yok.**
+**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi. **M3b Aşama 1 koşuldu, etiket KISMİ (2026-11-19, §6.7); ön kayıt gereği Aşama 2 koşulmadı.**
 
 Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
@@ -280,6 +280,33 @@ M3b'nin seçimi yalnız M4'ün temelini belirler. Plan §2.3 gereği IPPO ve MAP
 - **Aktarılabilirlik.** Yapılandırma sentetik PC060-K12 sinyaliyle seçilir. Gerçek `pit_v2` sinyali kapıyı geçmedi (0/30, havuzlu AUC 0,5044; plan §3.1.3); seçimin gerçek sinyale taşınacağı varsayılmaz.
 - **Süren sapmalar.** Değer normalizasyonu yok (§2). GPU'da bit-eşlik iddia edilmez (§1).
 
+### 6.7 Aşama 1 sonucu (2026-11-19): KISMİ, Aşama 2 koşulmadı
+
+**Kaynak:** `measurements/phase10-m3/m3b_stage1.json`; komut `python scripts/marl/analyze_m3b.py --stage 1 --out docs/development/measurements/phase10-m3/m3b_stage1.json`. Aşağıdaki sayılar bu dosyadan yuvarlanmıştır.
+
+**Koşu izi:** 6/6 koşu, F = 600.000, 20 bps, commit `2f43f62`, temiz çalışma ağacı (`results/marl_m3b/*/s*/train.json`). Koşu başına eğitim 454–473 sn.
+
+| Tohum | Eğitim SR A1c | Eğitim SR S1c | Eğitim Δ | Doğrulama SR A1c | Doğrulama SR S1c | Doğrulama Δ |
+|---|---|---|---|---|---|---|
+| 0 | 1,43 | 0,78 | +0,65 | 1,64 | 0,82 | +0,82 |
+| 1 | 0,79 | 0,70 | +0,08 | 0,78 | 0,73 | +0,05 |
+| 2 | 0,76 | 0,30 | +0,46 | 1,34 | 0,75 | +0,58 |
+
+| Koşul | Eşik | Ölçüm | Sonuç |
+|---|---|---|---|
+| (i) Eğitim büyüklüğü ve ortak HAC | D ≥ 0,3 ve tek yönlü p < 0,05 | D = 0,40 (SE 0,09), p ≈ 1e-5 | sağlandı |
+| (ii) Eğitim sıralaması | min A1c > max S1c | 0,76 > 0,78 değil | **sağlanmadı** |
+| (iii) Doğrulama işareti | D > 0 ve en az 2/3 tohumda Δ > 0 | D = 0,49 (SE 0,12), 3/3 tohum | sağlandı |
+
+**Okuma (ön kayıt):** Etiket KISMİ. 20 bps ile yeniden eğitilen politikada eğitim penceresinde anlamlı pozitif fark var, ama tohum varyansına karşı konan sıralama koşulu sağlanmadı. §6.3 durma kuralı gereği **Aşama 2 koşulmadı** ve M4 temel yapılandırması için kanıt üretilmedi. Eşikler sonuçtan sonra değiştirilmedi; (ii)'deki farkın küçük olması etiketi değiştirmez.
+
+**Betimsel (kararı değiştirmez):**
+- Ortalama günlük devir: A1c 0,48, S1c 0,31 (eğitim); A1c 0,50, S1c 0,31 (doğrulama). M3a'nın maliyetsiz A1'inde eğitim devri 0,66 idi.
+- Aynı maliyetli baseline SR'leri: 1/N 0,38 (eğitim), 0,83 (doğrulama); al-tut 0,66 (eğitim), 0,81 (doğrulama).
+- Tohum 1'de fark iki pencerede de küçük (+0,08 ve +0,05); bu tohumda A1c'nin doğrulama SR'si (0,78) 1/N'in altında.
+
+**Sınırlar:** Sinyal gelecekten türetilmiştir; sonuç tez bulgusu değildir. Ortak HAC p'si tohum varyansını içermez. Aynı kapı ek tohumlarla yeniden denenmez; yeni bir deney ayrı ön kayıt gerektirir.
+
 ---
 
 ## 7. Testler
@@ -319,6 +346,8 @@ Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüz�
 **İkinci okuma** (SendMessage, yalnız `2462853..3dff3a5` farkı): **Kabul**, 5/5 karşılandı, yeni BÜYÜK bulgu yok. Hakemin notu: (e) koşulundaki 3 tohumluk aralık kendisi gürültülü bir tahmindir; (a) ve (c) ile birlikte uygulandığı için kabul edilebilir.
 
 ## Versiyon geçmişi
+
+- **v0.6 (2026-11-19):** M3b Aşama 1 koşuldu (6/6 koşu); etiket KISMİ, (ii) sıralama koşulu sağlanmadı (§6.7). Aşama 2 koşulmadı. Ön kayıt metni ve eşikleri değişmedi.
 
 - **v0.5 (2026-11-18):** M3b ön kaydı v1.1: hakem-rl bulguları işlendi (§8). Koşu yok.
 
