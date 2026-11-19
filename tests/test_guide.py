@@ -13,6 +13,9 @@ Kontroller:
      (mutasyon: sade'ye yasakli ifade eklenince yakalanir).
   6. Tazelik: docs/sozluk.md ureticinin ciktisiyla bit-es ve `build_guide.py --check` 0 doner (mutasyon: degisen terim
      baska bir cikti uretir).
+  7. Pano sayfasi (R2): `guide.layout()` hatasiz kurulur, uc bolum + sozluk; arama 'sharpe' -> Sharpe karti, 'zzz' ->
+     bos durum, Turkce harfe duyarsiz ('ogrenme' ~ 'öğrenme'), kategori suzgeci; rehber metnindeki terim baglantilari
+     sozlukte var ve yasakli ifade yok (mutasyon); menu 'Analiz' grubunda ve ROUTE_INDEX'te; kategori listesi uretici ile ayni.
 
     python tests/test_guide.py
 """
@@ -22,6 +25,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 
 import build_guide as BG  # noqa: E402
@@ -105,6 +109,70 @@ r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_guide.p
 changed = BG.render(mutated(lambda t: t[0].update(teknik=t[0]['teknik'] + ' (degisti)')))
 check("docs/sozluk.md uretilmis hal ile bit-es, --check 0 doner; degisen terim farkli cikti uretir",
       BG.render(terms) == on_disk and r.returncode == 0 and changed != on_disk, r.stdout + r.stderr)
+
+# ---------------------------------------------------------------------------------------------
+print("\n[7] Pano sayfasi (R2)")
+from dashboard.components.sidebar import NAV_GROUPS  # noqa: E402
+from dashboard.components.topbar import ROUTE_INDEX  # noqa: E402
+from dashboard.pages import guide as GP  # noqa: E402
+
+
+def ids(node, acc=None):
+    acc = [] if acc is None else acc
+    if isinstance(getattr(node, 'id', None), str):
+        acc.append(node.id)
+    kids = getattr(node, 'children', None)
+    for k in (kids if isinstance(kids, (list, tuple)) else [kids] if kids is not None else []):
+        if hasattr(k, 'children') or hasattr(k, 'id'):
+            ids(k, acc)
+    return acc
+
+
+lay_ids = ids(GP.layout())
+gtext, gterms = GP.load_content()
+names = {t['id']: t['terim'] for t in gterms}
+hit = [t['id'] for t in GP.filter_terms(gterms, 'sharpe', GP.ALL)]
+empty = GP.term_list(GP.filter_terms(gterms, 'zzz', GP.ALL), names)
+folded = [t['id'] for t in GP.filter_terms(gterms, 'ogrenme', GP.ALL)]
+marl_only = GP.filter_terms(gterms, '', 'marl')
+check("layout kurulur: 4 bolum + her terim karti; arama sharpe -> Sharpe, zzz -> bos durum, Turkce harfe duyarsiz, "
+      "kategori suzgeci",
+      all(f'rehber-{a}' in lay_ids for a in ('ne-yapar', 'akis', 'ne-degildir', 'sozluk'))
+      and all(f"terim-{t['id']}" in lay_ids for t in gterms) and 'sharpe' in hit
+      and 'state-block' in (getattr(empty, 'className', '') or '') and 'marl' in folded
+      and bool(marl_only) and all(t['kategori'] == 'marl' for t in marl_only), f"{hit[:3]} {folded[:3]}")
+
+
+def guide_refs(g):
+    refs = list(g['ne_yapar'].get('terimler', []))
+    refs += [a['terim'] for a in g['akis']['adimlar'] if a.get('terim')]
+    refs += [m['terim'] for m in g['ne_degildir']['maddeler'] if m.get('terim')]
+    return refs
+
+
+def guide_texts(g):
+    out = [g['ne_yapar']['baslik'], *g['ne_yapar']['paragraflar'], g['akis']['baslik'], g['akis']['aciklama'],
+           g['ne_degildir']['baslik'], g['ne_degildir']['aciklama']]
+    out += [x for a in g['akis']['adimlar'] for x in (a['ad'], a['metin'])]
+    out += [x for m in g['ne_degildir']['maddeler'] for x in (m['baslik'], m['metin'])]
+    return out
+
+
+def forbidden(texts):
+    import re
+    return [p for x in texts for p in BG.FORBIDDEN if re.search(p, x, re.I)]
+
+
+bad_refs = [r for r in guide_refs(gtext) if r not in names]
+bad_txt = forbidden(guide_texts(gtext))
+mut = copy.deepcopy(gtext)
+mut['ne_degildir']['maddeler'][0]['metin'] += ' Bu testte sızıntı yok.'
+analiz = dict(NAV_GROUPS).get('Analiz', [])
+check("rehber metni: terim baglantilari sozlukte, yasakli ifade yok (eklenince yakalanir); menu Analiz'de, "
+      "ROUTE_INDEX'te; kategori listesi uretici ile ayni",
+      not bad_refs and not bad_txt and bool(forbidden(guide_texts(mut)))
+      and any(i['href'] == '/dash/guide' for i in analiz) and ROUTE_INDEX.get('/dash/guide') == ('Analiz', 'Rehber')
+      and GP.CATEGORIES == BG.CATEGORIES, f"{bad_refs} {bad_txt}")
 
 print("\n" + "=" * 60)
 print(f"Sonuc: {passed} gecti, {failed} kaldi")

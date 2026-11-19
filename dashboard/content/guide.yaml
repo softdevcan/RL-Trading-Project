@@ -1,0 +1,76 @@
+# Sistem rehberi — bölüm metinleri, TEK KAYNAK (K28 R2; plan docs/development/system-guide-plan.md §5).
+# Elle yazılır; pano sayfası dashboard/pages/guide.py yalnız bunu ve glossary.yaml'ı okur (çalışma anında docs/ yok).
+# Kural: bu dosyada deney SONUCU sayısı yok. Sayılar R3'te snapshot.json'dan kaynaklarıyla gelir (bölüm 3-4).
+# Yasaklı ifade taraması glossary.yaml ile aynı (tests/test_guide.py [5], [7]).
+
+ne_yapar:
+  baslik: Bu sistem ne yapar?
+  paragraflar:
+    - >-
+      Borsa İstanbul'un en büyük 30 hissesi (BIST-30) için her akşam kapanıştan sonra bir portföy kararı üretir:
+      ertesi sabah hangi hisseye ne kadar para ayrılacağını. Karar, ertesi günün açılışında uygulanır.
+    - >-
+      Kararı tek bir model değil, her hisse için bir "ajan" verir. Ajanlar geçmiş veride deneme-yanılmayla (pekiştirmeli
+      öğrenme) öğrenir: iyi sonuç veren davranış ödüllendirilir. Ajanlar birbirine mesaj da gönderebilir.
+    - >-
+      Ayrı bir tahmin hattı, her hisse için ertesi günün yönüne dair bir olasılık üretir. Bu tahminin ajanlara bir şey
+      katıp katmadığı, kullanılmadan önce ayrı bir testle (bilgi kapısı) sınanır.
+  terimler: [bist30, ajan, marl, odul, k12, bilgi-kapisi]
+
+akis:
+  baslik: Veri nasıl akar?
+  aciklama: >-
+    Her adım bir öncekinin çıktısını kullanır. Geçmişe dönük testlerde her gün yalnız o gün bilinebilecek veri kullanılır.
+  adimlar:
+    - ad: Veri
+      metin: Günlük fiyat ve göstergeler, risksiz faiz ve makro seriler indirilir ve tarih × hisse tablosuna konur.
+      terim: panel
+    - ad: Tahmin
+      metin: Her hisse için ertesi günün yönüne dair bir olasılık, yalnız o güne kadarki veriyle üretilir.
+      terim: pit-tablosu
+    - ad: Ajanlar
+      metin: Her hisseye bir ajan bakar; gözlemine (ve varsa komşularından gelen mesajlara) göre bir ağırlık ister.
+      terim: ajan
+    - ad: Portföy
+      metin: İstenen ağırlıklar sınırlar ve kurallarla (işlem yapılamayan hisse, maliyet) gerçek bir portföye çevrilir.
+      terim: devir
+    - ad: Değerlendirme
+      metin: Sonuç, risksiz faizin üstündeki getiriyle ve basit stratejilerle (eşit ağırlık, al-tut) karşılaştırılır.
+      terim: sharpe
+    - ad: Günlük karar
+      metin: Eğitilmiş model her akşam o günün verisiyle ertesi sabahın kararını üretir; kâğıt portföyde izlenir.
+      terim: k12
+
+ne_degildir:
+  baslik: Bu sistem ne değildir?
+  aciklama: >-
+    Sonuçları okurken bu sınırlar akılda tutulmalı. Her biri ilgili tasarım belgesinde ayrıntılı.
+  maddeler:
+    - baslik: Para kazandırma iddiası değildir.
+      metin: >-
+        Bütün sonuçlar geçmiş veride üretildi. Geçmişte iyi çalışan bir kural gelecekte aynı sonucu vermeyebilir.
+      terim: pencereler
+    - baslik: Gerçek tahmin sinyalinde yön bilgisi tespit edilmedi.
+      metin: >-
+        Tahmin hattının bugünkü sinyali bilgi kapısından hiçbir hissede geçmedi; yön tahmini yazı-turadan ayırt
+        edilemiyor. Bu yüzden "kalibre güven" ifadesi kullanılmıyor.
+      terim: bilgi-kapisi
+    - baslik: Sahte ipucuyla yapılan denetimler performans sonucu değildir.
+      metin: >-
+        Sistemin bir ipucunu kullanıp kullanamadığı, cevabı bilerek konmuş sahte bir ipucuyla (pozitif kontrol)
+        sınanıyor. Bu ipucu gelecekten bilgi taşır; ondan elde edilen getiri gerçek bir başarı değildir.
+      terim: pozitif-kontrol
+    - baslik: Geliştirme kapıları tezin bulgusu değildir.
+      metin: >-
+        Aşamaların ara denetimleri az tohumla koşulan pilotlardır. "İşaret var" ya da "gözlenmedi" sonucu, büyük ve ön
+        kayıtlı bir deneyin yerini tutmaz.
+      terim: gelistirme-kapisi
+    - baslik: Son sınav dönemine bakılmadı.
+      metin: >-
+        2021 ve sonrası son sınav için ayrıldı; geliştirme sırasında bu dönemin başarımı okunmuyor.
+      terim: pencereler
+    - baslik: Geçmiş testlerin bilinen açıkları var.
+      metin: >-
+        Geçmişe dönük testlerde gelecekten bilgi taşıyabilen bilinen metodolojik açıklar yol haritasında listeli ve
+        kapatılmaları planlı. Sonuçlar bu açıklarla birlikte okunur.
+      terim: nokta-zamanlilik

@@ -116,7 +116,7 @@ venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (at
 venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle agirlikli dikkat: conf_mode='none' 62b4023 ile bit-es, guven terimi (prob/zlogodds),
                                            #          gat maskesi + guven, beta>0 dikkati arttirir, karistirilmis guven, gecit, H3 bulgusu (zlogodds sicakligi siler), kisa MAPPO (17, ~1 dk; YALNIZ venv-marl)
 python tests/test_guide.py                 # K28 R1 sistem sozlugu: sema, ilgili + kisaltma baglantisi, kod/belge yollari, kaynak
-                                           #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla (6, ~2 sn; ana venv)
+                                           #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla; R2 Rehber sayfasi kurulus + arama + menu (8, ~5 sn; ana venv)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

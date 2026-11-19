@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.3 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11); sıradaki iş R2.
+**Sürüm:** v0.4 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 kodu bitti** (§12; görsel denetim ve konteyner açılışı bekliyor); sonra R3.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -166,10 +166,20 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Plandan sapmalar (beyan):** (a) §6 [5]'teki "ilk" yasağı tek kelime değil özgünlük kalıbı olarak uygulandı (`ilk kez|defa|çalışma`, `literatürde yok|ilk`); "ilk gün" gibi olağan kullanımlar engellenmez. (b) Yasaklı ifade taraması `uyari` alanını atlar, çünkü o alan yasaklı ifadeyi "denmez" diye anmak için var. (c) Sözlükte deney sonucu (etiket, ölçülen sayı) yok; yalnız tanım ve tasarım parametresi. Sonuçlar R3'teki deney kartlarına (`snapshot.json`) kalır. (d) M5 kol kodları (G0/GL/GLS/GLM/GD) M5 mekanizma ön kaydına göre yazıldı (GLG yok).
 - **Açık:** üretilmiş dosyanın elle düzenlenmesini engelleyen guard hook'u (§2, isteğe bağlı) eklenmedi; `--check` + test [6] bayatlığı yakalıyor. Bakım kuralı (§7) kök `CLAUDE.md`'ye R4'te girer.
 
+## 12. R2 durumu (2026-11-19)
+
+- **Sayfa:** `dashboard/pages/guide.py` → `/dash/guide`, menüde "Analiz" grubunda Dashboard'un altında "Rehber" (`bi bi-book`). Bölümler: 1 (ne yapar), 2 (veri akışı; token renkli HTML/CSS kutu-ok şeması, ≤ 820px'te oklar gizlenir), 5 (ne değildir), 6 (sözlük: arama + kategori süzgeci, sade tanım görünür, teknik ayrıntı `<details>` ile açılır). Yalnız okur; API ucu ve `dcc.Interval` yok.
+- **İçerik:** `dashboard/content/guide.yaml` (bölüm 1, 2, 5; sayı yok) + `glossary.yaml`. Arama Türkçe harfe duyarsız ("ogrenme" ~ "öğrenme").
+- **Stil:** `custom.css` `guide-` ailesi, yalnız token; `test_theme_contrast` [10] artık `guide-` önekini de tarıyor.
+- **Test:** `test_guide` 8/8 ([7] iki kontrol: kuruluş + arama + bağlantı + yasaklı ifade mutasyonu + menü/rota); `test_theme_contrast` 92/92, `test_dash_props` 4/4, `test_topbar` 39/39.
+- **Plandan sapma (beyan):** terim çapası `#terim-<id>` (planda `#<id>`), çünkü kısa terim id'leri (ör. `panel`, `kol`) sayfa bileşen id'leriyle çakışabilir. R4'teki üst çubuk araması bu çapayı kullanır. Sayfa yüklenirken URL'deki çapaya kaydırma yok (içerik Dash ile sonradan çiziliyor); R4'te istemci tarafı bir geri çağrıyla eklenir.
+- **Açık (kabul ölçütünün kalanı):** iki temada (açık/koyu) görsel denetim ve konteynerde açılış. Bu oturumda Docker çalışmıyordu ve tarayıcı aracı yoktu; ölçülmedi.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-19):** R2 kodu (§12): Rehber sayfası, `guide.yaml`, CSS, menü/rota, test 8/8. Görsel denetim ve konteyner bekliyor.
 - **v0.3 (2026-11-19):** R1 bitti (§11): 73 terim, üretici, test 6/6, `docs/sozluk.md`. Plandan sapmalar beyan edildi.
 - **v0.2 (2026-11-19):** Kullanıcı onayı: plan ve R-K1..R-K7 öneri yönünde. Sıradaki iş R1.
 - **v0.1 (2026-11-19):** İlk plan (kullanıcı isteği). Ölçülmüş kısıtlar, tek kaynak mimarisi, şema, envanter, sayfa bölümleri, doğrulama, iş paketleri R1–R4, kararlar R-K1..R-K7. Kod yok.

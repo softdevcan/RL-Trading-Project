@@ -76,6 +76,12 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   `tests/test_dash_props.py` tüm çağrıları gerçek prop listesiyle karşılaştırır
 - Plotly'ye `TEXT`/`BLUE` gibi DOM sabitlerini verme (bunlar `var()` dizesi, grafik siyah çizer)
 
+### Rehber sayfasi ve sozluk (K28)
+- Icerik TEK KAYNAK `dashboard/content/guide.yaml` + `glossary.yaml` (imaja girer; `docs/` girmez). Sayfa
+  `pages/guide.py` yalniz bunlari okur. `docs/sozluk.md` URETILIR: YAML degisince `python scripts/build_guide.py`
+  kos; `tests/test_guide.py` bayatligi yakalar. Icerikte deney sonucu sayisi yok (R3: snapshot.json).
+- Terim capasi `#terim-<id>`; sinif ailesi `guide-` (custom.css, tema testinde taranir).
+
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
 - `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
   **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat
