@@ -1,6 +1,6 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.10 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.11 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
@@ -342,9 +342,9 @@ Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
 
 **Deneme kaydı:** H2 ve H3 birer deneme (H3 SINANMADI olarak), GD betimsel (§4.5).
 
-## 5. Gerçek sinyal kolları ön kaydı (TASLAK v0.10) — sonuçtan önce
+## 5. Gerçek sinyal kolları ön kaydı (v0.11; okuma kuralı DONDURULDU, kol seti onay bekliyor) — sonuçtan önce
 
-**Durum:** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
+**Durum (v0.11):** Okuma kuralı, eşikler ve kodu **DONDURULDU** (hakem-finans 2. okuma Kabul, hakem-rl 2. okuma Küçük rev. yalnız KÜÇÜK notlarla; §5.9). Kol seti kullanıcı onayı bekliyor: 8 kol onaylanırsa bu bölüm değişmeden koşulur. Başka bir set seçilirse §5 güncellenir ve hakemler yeniden okur. **Durum (v0.9):** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
 
 ### 5.1 Soru
 
@@ -380,7 +380,7 @@ AQ2-gerçek (§2.3): yön bilgisi tespit edilemeyen gerçek bir tahmin sinyali g
 
 Her yol y ∈ {SO, SB} için, ortak HAC ile, maliyetli X, SR yıllık, eşli tohum ve tarih. Kollar: gerçek (R), karıştırılmış (S), karıştırılmış-2 (S2), tahminsiz (T0).
 - **Birincil, R ↔ S, "fark var" = üçü birden:** (a) eğitimde iki yönlü ortak HAC p, iki yol üzerinde Holm, < 0,05. (b) **Sıralama tabanı (v0.10):** eğitimde her tohumda SR(R), iki karıştırılmış kolun ikisinden de büyük (ya da ikisinden de küçük). (c) Doğrulamada D aynı işaretli ve en az m = ⌈2k/3⌉ tohumda aynı işaret.
-  - **(b)'nin gerekçesi (hakem-finans #1, hakem-rl #3):** v0.9'daki |D(R, S)| > |D(S, S2)| tek çekimdi ve bilgi yokken ~%50 geçerdi. Aynı mimari, aynı girdi boyutu ve aynı tohumda aynı başlangıçla R, S, S2 bilgi yokken değiştirilebilir sayılırsa, her tohumda R'nin en üstte olma olasılığı 1/3'tür. k = 3'te yön başına (1/3)³ ≈ 0,037 (yaklaşık; zamansal yapı ve oynaklık hizası farkı §5.6'da).
+  - **(b)'nin gerekçesi (hakem-finans #1, hakem-rl #3):** v0.9'daki |D(R, S)| > |D(S, S2)| tek çekimdi ve bilgi yokken ~%50 geçerdi. Aynı mimari, aynı girdi boyutu ve aynı tohumda aynı başlangıçla R, S, S2 bilgi yokken değiştirilebilir sayılırsa, her tohumda R'nin en üstte olma olasılığı 1/3'tür. k = 3'te yön başına (1/3)³ ≈ 0,037; (b) iki yönde de kullanıldığı için **iki yönlü ≈ 0,074 (yol başına)**, iki yolda Holm öncesi ≈ 0,14. (b) tek başına değil (a) ve (c) ile birlikte okunur (hakem-finans 2. okuma N1, hakem-rl 2. okuma N2). Bu değer **alt sınırdır**: gerçek blok üç tohumda ortak olduğu için üç sıralama bağımsız değildir. Ayrıca "yön bilgisi yok ve oynaklık/zamansal hiza etkisi yok" varsayımına dayanır (§5.6).
 - **İkincil, R ↔ T0 ve S ↔ T0 (dört test Holm), tabansız:** (a′) Holm p < 0,05, (b′) eğitimde tüm tohumlarda aynı işaret, (c) doğrulama. Geçerli bir boş dağılım yoktur (§5.3). Bu karşılaştırmalara dayanan okumalar (O4_kesifsel'in ikinci koşulu, O3_girdi, O2_tahminsize_gore) **"ikincil, karışık"** etiketiyle raporlanır.
 - **Boyut tanısı (betimsel):** D(S, S2)'nin ortak HAC p'si < 0,05 ise, bu düzende ortak HAC'ın kalibre olmadığına dair işaret olarak raporlanır. İki bilgisiz kol arasında "anlamlı" fark beklenmez.
 
@@ -388,7 +388,7 @@ Her yol y ∈ {SO, SB} için, ortak HAC ile, maliyetli X, SR yıllık, eşli toh
 
 | Sıra | Koşul | Okuma | Anahtar |
 |---|---|---|---|
-| 1 | Gerçek ↔ karıştırılmış fark var, D < 0 | O2: bilgisi tespit edilemeyen sinyal politikayı bozuyor (sağlamlık bulgusu; canlı kullanım uyarısı) | `O2_bozma` |
+| 1 | Gerçek ↔ karıştırılmış fark var, D < 0 | O2: bilgisi tespit edilemeyen sinyal politikayı bozuyor (sağlamlık bulgusu; canlı kullanım uyarısı). Kaynak yön bilgisi ya da oynaklık/zamansal hiza farkı olabilir; ayrılmaz | `O2_bozma` |
 | 2 | Gerçek ↔ karıştırılmış fark var, D > 0, ve gerçek ↔ tahminsiz de fark var ve pozitif | O4 keşifsel: kapının ölçmediği bir bilgi (büyüklük ya da dağılım) olası. Doğrulama yeni ön kayıt ister; §2.4 O4 (c) bu turda koşulmaz | `O4_kesifsel` |
 | 3 | Gerçek ↔ karıştırılmış fark var, D > 0, ama O4 koşulları eksik | Kapı sonucuyla çelişen ve tekrar etmeyen bir işaret; bulgu değil | `O4_eksik` |
 | 4 | Gerçek ↔ karıştırılmış fark yok; gerçek ↔ tahminsiz ve karıştırılmış ↔ tahminsiz ikisi de fark var ve aynı işaretli | O3: etki bilgiden değil, girdi boyutundan ya da kapasiteden | `O3_girdi` |
@@ -397,6 +397,7 @@ Her yol y ∈ {SO, SB} için, ortak HAC ile, maliyetli X, SR yıllık, eşli toh
 
 - **Kapsanmayan ikincil bileşimler (hakem-rl #4):** R ↔ T0 pozitif ve fark var ama R ↔ S fark yok ise, ya da R ↔ T0 ile S ↔ T0 zıt işaretli fark verirse, okuma O1'dir. İkincil sonuç `secondary_note` ile betimsel yazılır.
 - **O3 işareti negatifse (hakem-rl #5):** "ek girdi öğrenmeyi bozuyor (bilgiden bağımsız)" notu eklenir (§5.1).
+- **Kanıt düzeyi (hakem-finans 2. okuma N3):** O3_girdi ve O2_tahminsize_gore yalnız tabansız ikincil koşullara (HAC + tohum işareti + doğrulama) dayanır; raporda **"olası"** etiketiyle verilir (`evidence_level` = `ikincil_olasi`). Birincil okumalar (O2_bozma, O4_*) sıralama tabanına dayanır.
 
 Eksik kol ya da eğitim kaydı → `EKSIK` (okunmaz). Yazılmayacaklar §2.4'teki tablodadır.
 
@@ -407,7 +408,7 @@ Tohum başına β (SB, SB-S, SB-S2), z_scale, devir, kapsam, sıralama tabanın�
 ### 5.6 Sınırlar (beyan)
 
 - Tek bir tahmin tablosu (model tohumu 42). Sonuç başka bir tahmin hattına genellenmez.
-- 3 tohum; ortak HAC p'si tohum varyansını taşımaz (M5 §4.11). Asıl yanlış pozitif kontrolü (b) sıralama tabanı ve (c) doğrulamadan gelir. (b)'nin ≈ 0,037'lik boş olasılığı R, S ve S2'nin değiştirilebilir olduğu varsayımına dayanır ve yaklaşıktır.
+- 3 tohum; ortak HAC p'si tohum varyansını taşımaz (M5 §4.11). Asıl yanlış pozitif kontrolü (b) sıralama tabanı ve (c) doğrulamadan gelir. (b)'nin boş olasılığı (iki yönlü ≈ 0,074/yol) bir **alt sınırdır**: R bloğu tohumlar arasında ortaktır, üç sıralama bağımsız değildir (etkin tohum sayısı 3'ün altında; hakem-rl 2. okuma N1). Ayrıca R ile S'nin oynaklık hizası bilinen biçimde farklıdır (0,07 ↔ ~0,02); değiştirilebilirlik yalnız "yön bilgisi yok **ve** hiza etkisi yok" altında geçerlidir (hakem-finans 2. okuma N2).
 - **Karıştırma yalnız yönü değil, zamansal yapıyı da kırar:** tahminlerin günden güne düzgünlüğünü (otokorelasyon) ve oynaklık hizasını kırar (ölçülen |pred_logret| korelasyonu 0,07 ↔ ~0,02). R ↔ S farkı yön bilgisinden değil bunlardan da gelebilir. O2_bozma "bilgisi tespit edilemeyen sinyal bozuyor" diye okunur, "yön tahmini bozuyor" diye okunmaz. O4'ün "büyüklük ya da dağılım" okuması bu yüzdendir (hakem-finans #3).
 - **İkincil (tahminsiz) karşılaştırmaların tabanı yok:** girdi boyutu, başlangıç ağırlıkları ve SB yolunda GL mimarisi farklıdır (§5.3; hakem-rl #1, #2, #6).
 - **Deneme kaydı (hakem-finans #5):** 24 koşu; 2 birincil ve 4 ikincil test deneme sayısına (N) girer. DSR gerekmez, mutlak bir SR iddiası yoktur.
@@ -446,12 +447,15 @@ hakem-finans (20 bps, gerçek sinyal, Sharpe çıkarımı) + hakem-rl (kollar, g
 | R6 | hakem-rl | KÜÇÜK | Farklı boyutta başlangıç/RNG eşleşmez | **Kabul, beyan** (§5.3) |
 | F6 | hakem-finans | KÜÇÜK | Maliyet tek yön/gidiş-dönüş tutarlı | Değişiklik yok |
 
-Maliyet: hakem-finans ~36 bin token, 8 araç, ~1,3 dk; hakem-rl ~36 bin, 6 araç, ~0,9 dk. İkinci okuma: aşağıda.
+Maliyet: hakem-finans ~36 bin token, 8 araç, ~1,3 dk; hakem-rl ~36 bin, 6 araç, ~0,9 dk.
+
+**İkinci okuma (SendMessage, aynı hakemler):** hakem-finans **Kabul** (3 KÜÇÜK: iki yönlü olasılık ≈ 0,074; değiştirilebilirlik hiza varsayımına bağlı; tabansız ikincil "olası"). hakem-rl **Küçük rev.**, yalnız KÜÇÜK (tohumlar arası bağımlılık → (1/3)³ alt sınır; iki yönlü olasılık); kural–kod uyumu temiz, öncelik sırası aynı. Hepsi v0.11'de beyanla işlendi; kural değişmedi. Kural gereği üçüncü okuma yapılmadı (yalnız KÜÇÜK). Maliyet: hakem-finans ~46 bin token (önceki bağlamla), 4 araç, ~0,6 dk; hakem-rl kayıt `review-panel.md`'de.
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.11 (2026-11-19):** §5 ikinci okumalar (hakem-finans Kabul; hakem-rl Küçük rev., yalnız KÜÇÜK) beyanla işlendi: iki yönlü ≈ 0,074, alt sınır (tohumlar arası bağımlılık), hiza varsayımı, ikincil okumalar "olası". Okuma kuralı DONDURULDU; kol seti kullanıcı onayı bekliyor. Koşu yok.
 - **v0.10 (2026-11-19):** §5 hakem-finans + hakem-rl 1. okuma (ikisi Küçük rev.) işlendi: pencere içi permütasyon, sıralama tabanı, tabansız ikincil, boyut tanısı, brüt SR betimsel, oynaklık hizası ölçüldü. Koşu yok.
 - **v0.9 (2026-11-19):** §5 gerçek sinyal kolları ön kaydı TASLAK: 8 kol (T0-N, SO, SO-S, SO-S2, T0-G, SB, SB-S, SB-S2), 20 bps, tohum 9–11, gürültü tabanı karıştırılmış ↔ karıştırılmış-2, okuma O1–O4 öncelik sırasıyla. Kod `build_pred_m5real.py`, `run_m5real.py`, `analyze_m5real.py` (self-test 7/7); bloklar arşivlendi. Koşu yok.
 - **v0.8 (2026-11-19):** §4.11 sonuç: H2 KISMİ (`gurultu_tabani`; (i)–(iv) sağlandı, (v) D(GL, G0) 0,13 ≤ |D(GD, G0)| 0,18), H3 SINANMADI. β güvene özgü öğrenildi (GLS'de ~0), betimsel. Gürültü tabanının kendisi eğitimde p ≈ 0,001: uzun koşu ön kaydına girdi. Ön kayıt değişmedi.

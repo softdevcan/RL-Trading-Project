@@ -9,7 +9,8 @@ Birincil (R <-> S), "fark var" = uc kosul birden:
   (a) egitim D(R, S) iki yonlu ortak HAC p, iki yol uzerinde Holm, < 0,05
   (b) SIRALAMA TABANI: her tohumda SR(R) iki karistirilmis kolun ikisinden de buyuk (ya da ikisinden de kucuk), egitimde.
       Bilgi yokken R, S, S2 degistirilebilir sayilirsa (ayni mimari, ayni girdi boyutu, ayni tohumda ayni baslangic)
-      tohum basina olasilik 1/3, k = 3'te yon basina (1/3)^3 ~ 0,037 (yaklasik; zamansal yapi farki beyan, §5.6).
+      tohum basina olasilik 1/3, k = 3'te yon basina (1/3)^3 ~ 0,037, IKI YONLU ~ 0,074/yol. ALT SINIR: gercek blok
+      tohumlar arasinda ortak (siralamalar bagimsiz degil); 'yon bilgisi yok VE hiza etkisi yok' varsayimi (§5.6).
   (c) dogrulamada D(R, S) ayni isaretli ve en az m tohumda ayni isaret
 Ikincil (R <-> T0, S <-> T0; dort test Holm): TABANI YOK (girdi boyutu ve SB yolunda GL mimarisi farkli; baslangic
   agirliklari eslesmez). "fark var" = (a') Holm p < 0,05, (b') egitimde tum tohumlarda ayni isaret, (c) dogrulama.
@@ -47,7 +48,7 @@ from analyze_m4b import load, pair  # noqa: E402
 from analyze_m5 import need  # noqa: E402
 
 SEEDS = (9, 10, 11)
-PREREG = 'phase-10-m5-design.md §5 v0.10'
+PREREG = 'phase-10-m5-design.md §5 v0.11 (okuma kurali DONDURULDU)'
 COST_ONE_WAY = 20 / 2 / 1e4
 PATHS = {'SO': {'real': 'SO', 'shuf': 'SO-S', 'shuf2': 'SO-S2', 't0': 'T0-N'},
          'SB': {'real': 'SB', 'shuf': 'SB-S', 'shuf2': 'SB-S2', 't0': 'T0-G'}}
@@ -62,7 +63,8 @@ def rank_floor(root, arms, seeds) -> dict:
     above = [sr_of['real'][s] > max(sr_of['shuf'][s], sr_of['shuf2'][s]) for s in seeds]
     below = [sr_of['real'][s] < min(sr_of['shuf'][s], sr_of['shuf2'][s]) for s in seeds]
     return {'above_both_per_seed': above, 'below_both_per_seed': below, 'all_above': all(above), 'all_below': all(below),
-            'null_prob_per_side_approx': (1 / 3) ** len(seeds)}
+            'null_prob_per_side_approx': (1 / 3) ** len(seeds), 'null_prob_two_sided_approx': 2 * (1 / 3) ** len(seeds),
+            'note': 'alt sinir: gercek blok tohumlar arasinda ortak; hiza etkisi yok varsayimi'}
 
 
 def gross_sharpe(root, arm, seeds) -> list:
@@ -133,6 +135,8 @@ def read(root, seeds=SEEDS) -> dict:
                                                  'hac_uncalibrated_flag': bool(ss['p_two_sided'] < ALPHA)},
                   'min_detectable_D_betimsel': (1.96 + 0.84) * tr['se_annual'],
                   'gross_sharpe_betimsel': {a: gross_sharpe(root, arms[a], seeds) for a in ('real', 'shuf', 'shuf2', 't0')}}
+        out[y]['evidence_level'] = ('ikincil_olasi' if key in ('O3_girdi', 'O2_tahminsize_gore') else
+                                    ('birincil' if key != 'O1_fark_yok' else None))
         reading[y] = key
     return {**res, 'paths': out, 'reading': reading, 'betas': _betas(root, seeds)}
 
