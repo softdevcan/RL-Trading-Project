@@ -1,13 +1,13 @@
 # Faz 10 M4 — İletişim kolları: tasarım ve M4a ön kaydı
 
-**Sürüm:** v0.3 · 2026-11-19 · dal `feat/phase10-m5-prereg`
+**Sürüm:** v0.4 · 2026-11-19 · dal `feat/phase10-m5-prereg`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2.5 (kollar, eşit bütçe, GAT grafı), §8 hakem-2 #14 (kenar kuralı M4 öncesi sabitlenir) ve #15 (`obs_spec` sabit)
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M4 (AQ1, G1; eşit bütçe)
 - [phase-10-m3-design.md](phase-10-m3-design.md) §2 (hiperparametreler), §5 (M3a kalıbı), §6.8 (M4 temeli: MAPPO, tüm yerel gözlemler, α = 0,25; varsayılan, kanıta dayanmaz)
 - [phase-10-m5-design.md](phase-10-m5-design.md) §2.6 (mekanizma iddiaları yalnız bilgili sinyalde)
 
-**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Koşu yok.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
+**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Aşama 1 koşuldu (§3.6): gat Aşama 2'ye geçti, attn GÖZLENMEDİ → Aşama 1b. Ön kayıt metni ve eşikleri sonuçtan sonra değişmedi.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
 
 Kod ile belge farklıysa kod hatalıdır.
 
@@ -138,6 +138,33 @@ Kaynak: `docs/development/measurements/phase10-m4/timing_{none,attn,gat}.json`. 
 
 30 bin kareden ölçeklemek başlangıç yükünü de çarptığı için süreyi abartıyor (M3a'da `none` gerçekte ~7,8 dk sürdü). **Toplam duvar süresi (3 tohum, sıralı):** Aşama 1 (9 koşu) ~1,4 saat. Aşama 1b en çok 9 koşu (~1,4 saat), yalnız bir kol geçmezse. Aşama 2 en çok 9 koşu (~1,4 saat), yalnız bir kol geçerse. En kötü durum ~4,2 saat; her aşama ayrı başlatılır.
 
+### 3.6 Aşama 1 sonucu (2026-11-19): gat → Aşama 2, attn GÖZLENMEDİ → Aşama 1b
+
+**Kaynak:** `docs/development/measurements/phase10-m4/m4a_stage1.json`; komut `python scripts/marl/analyze_m4a.py --stage 1 --out …`. Sayılar bu dosyadan yuvarlanmıştır.
+
+**Koşu izi:** 9/9 koşu, F = 600.000, maliyetsiz, lr 5e-4. Hepsi commit `96ba332`'den, temiz çalışma ağacıyla (`results/marl_m4a/*/s*/train.json`). Eğitim süresi none 461–477 sn, attn 573–591 sn, gat 583–592 sn.
+
+| Kol | Eğitim D (SE) | Holm p | SR k-X (s0, s1, s2) | SR N-X | (i) | (ii) | (iii) | Etiket |
+|---|---|---|---|---|---|---|---|---|
+| attn | 0,07 (0,13) | 0,31 | 0,87 / 1,07 / 1,18 | 1,07 / 0,98 / 0,88 | hayır | hayır | hayır | GÖZLENMEDİ |
+| gat | 0,35 (0,14) | 0,010 | 1,21 / 1,33 / 1,43 | 1,07 / 0,98 / 0,88 | evet | evet | evet | Aşama 2'ye |
+
+Doğrulamada gat D = 0,34 (tohum farkları +0,25 / +0,81 / −0,03; 2/3 pozitif). attn D = −0,05 (−0,04 / +0,34 / −0,46).
+
+**Okuma (ön kayıt):**
+- **gat:** (i)–(iii) sağlandı. Ön kayıt gereği nihai etiket Aşama 2'deki (iv) kontrolüne bağlı. Kontrol, avantajın taşınan bilgiden mi, iletişimin kendisinden mi geldiğini ayırır. Aşama 2: G-S ve N-S, lr 5e-4, 6 koşu.
+- **attn:** GÖZLENMEDİ: "bu bütçe ve lr'de iletişimle bilgi taşınması gözlenmedi". Ön kayıt gereği durma kararından önce Aşama 1b koşulur: A-X ve N-X, lr 2e-4, 6 koşu. Holm ailesi 4 test.
+- Etiketler sonuçtan sonra değiştirilmedi. gat'ın D'si (0,35) δ'ya (0,25) yakın ve doğrulamada tohum 2'nin farkı negatif. Bu, (iii)'ün 2/3 koşuluyla uyumludur.
+
+**Betimsel (kararı değiştirmez):**
+- **Öğrenme oldu mu (hakem-rl #1):** Dokuz koşunun hepsinde eğitim ödülü (ilerleme çubuğu "mean return", rastlantısal eylem) yükseliyor. Son 10 güncellemenin ortalaması ilk 10'unkinden yüksek: attn 6,4–9,9 → 15,0–23,3; gat 7,6–10,6 → 19,8–28,0; none 8,5–11,5 → 17,0–23,0. Kaynak `m4a_stage1_curves.json`, `scripts/marl/curves_m4a.py`. Bu bir deterministik SR değildir; attn'in eğitim ödülünü artırdığını, ama deterministik politikada `none`'ın önüne geçmediğini gösterir.
+- **Tavan:** Kendi sinyalli M3a A1'in eğitim SR'si 1,84 / 1,13 / 1,86 (`ceiling_m3a_A1`). gat-X, `none`'ın vekiliyle A1 arasında kalıyor.
+- **Devir (eğitim, günlük ortalama):** gat-X 0,81, attn-X 0,70, N-X 0,36. Maliyetsiz koşuda iletişim kolları iki katın üzerinde işlem yapıyor; 20 bps altında bu fark aleyhte işler (M3b'deki devir 0,48 idi).
+- **Nakit ağırlığı:** üç kolda da %1–3.
+- **Baseline'lar (maliyetsiz):** 1/N eğitim SR 0,39, doğrulama 0,85; al-tut 0,66 ve 0,82.
+
+**Sınırlar:** Sinyal gelecekten türetilmiştir; sonuç tez bulgusu değildir. σ grafa hizalı olduğundan gat ile attn sıralanmaz (§3.1). Ortak HAC tohum varyansını içermez.
+
 ## 4. Kararlar
 
 Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı.
@@ -169,6 +196,7 @@ Hakemin soru yanıtları: (1) sızıntı kontrolü bozmaz, `none` ve iletişim k
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-19):** Aşama 1 koşuldu (9/9). gat (i)–(iii)'ü sağladı → Aşama 2; attn GÖZLENMEDİ → Aşama 1b (§3.6). Ön kayıt v0.3 metni ve eşikleri değişmedi. Betimsel eğri tanısı (`curves_m4a.py`).
 - **v0.3 (2026-11-19):** hakem-rl ilk okuması (Büyük revizyon) işlendi (§5): Aşama 1b lr duyarlılığı, (iv) z testi, δ ulaşılamazsa okuma, attn ↔ gat okuması, mimari ve eleştirmen beyanları, betimsel tavan. `analyze_m4a.py --self-test` 17/17. hakem-rl ikinci okuması Kabul; üç KÜÇÜK not metne işlendi, ön kayıt DONDURULDU. Koşu yok.
 - **v0.2 (2026-11-19):** Kullanıcı kararları K-M4-1..4 (öneri yönünde). Koşucu `run_m4a.py` ve ön kayıtlı okuma betiği `analyze_m4a.py` (`--self-test` 11/11) eklendi. Koşu yok.
 - **v0.1 (2026-11-19):** Kollar ve eşit bütçe (§1), graf kenar kuralı ölçümü (§2), M4a ön kaydı taslağı (§3). Koşu yok.
