@@ -1,6 +1,6 @@
 {
  "note": "M5 gercek sinyal bloklari (pit_v2); kapidan gecmedi, saglamlik sorusu",
- "commit": "d1bc4686282b3cdd3faf61e4ae522817e7137fa3",
+ "commit": "c5da3335196690669919a3971156d857c448be57",
  "git_status_porcelain": "",
  "script_sha256": "22cf6a4bed88debc3a1d7476829664fb219ee4efb9de04c7dc6030f2a6e96b4b",
  "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
@@ -23,67 +23,88 @@
    "coverage_all": 0.9591482649842271,
    "coverage_train_rows": 0.9494911888806156,
    "auc_vs_k12_all": 0.5041351980327328,
-   "auc_vs_k12_train": 0.5027679557084648
+   "auc_vs_k12_train": 0.5027679557084648,
+   "corr_abs_logret_abs_ret_train": 0.07049822704001951
   },
   {
    "kind": "shuf",
    "seed": 9,
    "path": "data/marl/pred_pitv2_g9_shuf.npz",
-   "sha256": "5abda8f7e554505c5a1c6c405fdca07ed8a8e5cfb786dfd20e5645f4e6b50205",
+   "sha256": "f4c3e0380f26ecc514db66a4b1fcff91f0cadcdcc351a8b69e9e8e22bb34c67e",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.9594192107222635,
-   "auc_vs_k12_all": 0.5001882448995625,
-   "auc_vs_k12_train": 0.501744131251917
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.5050606110589652,
+   "auc_vs_k12_train": 0.5040954222055697,
+   "corr_abs_logret_abs_ret_train": 0.02495650502976963
   },
   {
    "kind": "shuf2",
    "seed": 9,
    "path": "data/marl/pred_pitv2_g9_shuf2.npz",
-   "sha256": "06f969ffac6865be6b01da26bdbaca3e7b6db1707a753095fae10b2a81b03243",
+   "sha256": "536e6635a5b0eba95092797f194cc1e60c027ef7732a95d343b8e02cc9f9ae0c",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.9588483494663689,
-   "auc_vs_k12_all": 0.502436299809663,
-   "auc_vs_k12_train": 0.5024711898286588
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.5052092254766372,
+   "auc_vs_k12_train": 0.5040607846877635,
+   "corr_abs_logret_abs_ret_train": 0.016972268508855397
   },
   {
    "kind": "shuf",
    "seed": 10,
    "path": "data/marl/pred_pitv2_g10_shuf.npz",
-   "sha256": "c33e8d6c0741f70b6a1ebdbb3828362402988ded77c06ab1dd5a1ed55984ed1e",
+   "sha256": "bb897e4b04aa0ee10e3ce5f204956a27ae40b4f06cfa03a5e3bd50ea0cc4b307",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.95825266815587,
-   "auc_vs_k12_all": 0.5052742742334967,
-   "auc_vs_k12_train": 0.5081888043469391
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.504739765299321,
+   "auc_vs_k12_train": 0.5000963636878872,
+   "corr_abs_logret_abs_ret_train": 0.012914714371598954
   },
   {
    "kind": "shuf2",
    "seed": 10,
    "path": "data/marl/pred_pitv2_g10_shuf2.npz",
-   "sha256": "1a0e506cc045f5b7f246ad1366d683b1904394fbe5db46b0499deae59613217e",
+   "sha256": "4d8551adbdd2c6f02f9d8db905e40139078c74eec616636dc10e36d325183f92",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.959493670886076,
-   "auc_vs_k12_all": 0.5011621301574825,
-   "auc_vs_k12_train": 0.505538098947719
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.5090606191077638,
+   "auc_vs_k12_train": 0.5090653882218569,
+   "corr_abs_logret_abs_ret_train": 0.02332593861563061
   },
   {
    "kind": "shuf",
    "seed": 11,
    "path": "data/marl/pred_pitv2_g11_shuf.npz",
-   "sha256": "4d3ff4903a6901e0de2a5931f9bf63ebcd628c37608beb77d7259c32d69c58b4",
+   "sha256": "74e8e6cc05db18de646fab04b469eec37fafa00ebb992bd2d841526bed09e7bd",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.9588731695209729,
-   "auc_vs_k12_all": 0.506240588543401,
-   "auc_vs_k12_train": 0.5069414155012757
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.5056967073682213,
+   "auc_vs_k12_train": 0.5026430961346097,
+   "corr_abs_logret_abs_ret_train": 0.004562208876163758
   },
   {
    "kind": "shuf2",
    "seed": 11,
    "path": "data/marl/pred_pitv2_g11_shuf2.npz",
-   "sha256": "7d6b38772174e808811b8b02330b3fa9242310a4a14be71b2c818e626d5c1c95",
+   "sha256": "64b4644b5e122918b695f4b4df0d847660eb12da45bb468a2e2aa0a63797794f",
    "coverage_all": 0.9591482649842271,
-   "coverage_train_rows": 0.9597915115413254,
-   "auc_vs_k12_all": 0.5068848715118075,
-   "auc_vs_k12_train": 0.5044320224382979
+   "coverage_train_rows": 0.9494911888806156,
+   "auc_vs_k12_all": 0.5007386631909269,
+   "auc_vs_k12_train": 0.5018455555385767,
+   "corr_abs_logret_abs_ret_train": 0.009129669862744693
   }
+ ],
+ "permutation_segments": [
+  [
+   "2013-06-03",
+   "2013-08-26"
+  ],
+  [
+   "2013-08-27",
+   "2018-12-31"
+  ],
+  [
+   "2019-01-02",
+   "2020-12-31"
+  ]
  ]
 }
