@@ -18,7 +18,8 @@ ASAMA 2 (kontrol). Gecen kol k icin (kolun gectigi lr ile):
   (iv)  egitim: G = D_k - D_k^S >= DELTA/2 VE z = G / sqrt(se_X^2 + se_S^2) >= 1,645 (tek yonlu %5)
         D_k^S = ort_s [SR(k-S_s) - SR(N-S_s)]; se'ler ortak HAC'tan. X ve S kosulari ayri bloklarla oldugundan
         bagimsizlik varsayilir; ortak piyasa gunleri pozitif korelasyon verir -> varsayim SE'yi buyutur (tutucu).
-(iv) saglanirsa k GECTI; saglanmazsa KISMI (iletisim avantaji tasinan bilgiye baglanamadi).
+(iv) saglanirsa k GECTI; saglanmazsa KISMI (iletisim avantaji tasinan bilgiye baglanamadi). Betimsel: tohum basina
+G_s = Delta_X,s - Delta_S,s (`gap_per_seed`; HAC SE tohum varyansini icermez, z yaklasiktir).
 gat GECTI ve attn GECTI degilse: attn sonucu "bu butcede gondericiyi tanimlayamadi" diye okunur (sigma grafa hizali);
 attn'in M5'te kosulup kosulmayacagi kullanici karari.
 
@@ -167,6 +168,7 @@ def stage2(root, s1: dict, s1b=None) -> dict:
             res['arms'][k] = {'label': 'EKSIK', 'lr': src['lr'], 'missing': f'{k}-S / {CTRL}-S'}
             continue
         cond = control_condition(src['train'], tr)
+        cond['gap_per_seed'] = [float(x - s) for x, s in zip(src['train']['delta_per_seed'], tr['delta_per_seed'])]
         res['arms'][k] = {'train_S': tr, 'D_X_train': src['train']['D_annual'], 'lr': src['lr'], 'conditions': cond,
                           'label': 'GECTI' if cond['iv_gap_ge_half_delta_and_z'] else 'KISMI'}
     labels = {k: v['label'] for k, v in res['arms'].items()}

@@ -7,7 +7,7 @@
 - [phase-10-m3-design.md](phase-10-m3-design.md) §2 (hiperparametreler), §5 (M3a kalıbı), §6.8 (M4 temeli: MAPPO, tüm yerel gözlemler, α = 0,25; varsayılan, kanıta dayanmaz)
 - [phase-10-m5-design.md](phase-10-m5-design.md) §2.6 (mekanizma iddiaları yalnız bilgili sinyalde)
 
-**Durum:** **Tasarım + M4a ön kaydı v0.3: hakem-rl ilk okuması (Büyük revizyon) işlendi, ikinci okuma bekliyor. Koşu yok.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). İkinci okuma Kabul verirse ön kayıt bu hâliyle dondurulur ve Aşama 1 başlar.
+**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Koşu yok.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
 
 Kod ile belge farklıysa kod hatalıdır.
 
@@ -89,7 +89,7 @@ Tablonun tamamı (thr 0,4, topk 2 ve 5, sector + topk 2 ve 5) JSON'dadır.
 | N-S, A-S, G-S | aynı üç politika | aynı permütasyon, satırları karıştırılmış blok (`pred_m4nb_g{s}_shuf.npz`; M3 S1 kalıbı) |
 
 - **Aşama 1:** N-X, A-X, G-X, lr 5e-4 (M3 §2) (9 koşu).
-- **Aşama 1b — lr duyarlılığı (hakem-rl M4a #1):** Aşama 1'de (i)–(iii)'ü sağlamayan her iletişim kolu, durma kararından **önce** N-X ile birlikte lr = 2e-4'te yeniden koşulur (`results/marl_m4a/lr2e-4/`; en çok 9 koşu). Gerekçe: dikkat modeli MLP'nin lr'siyle ayar yapılmadan eğitiliyor. Tek bir lr noktası, "öğrenemedi" ile "lr artefaktı"nı ayıramaz (M3a #4 ile aynı hata biçimi). 2e-4 seçimi önceden yapıldı: dikkat modelleri için yaygın aralığın içinde, 5e-4'ün altında. Bu bir **tasarım varsayımıdır**, kaynak taranmadı. Okuma aynı (i)–(iii). Holm ailesi, Aşama 1 ve 1b'deki tüm D_k testleridir (en çok 4). Aşama 1 kararları değişmez. 1b'de geçen kol Aşama 2'ye o lr ile gider.
+- **Aşama 1b — lr duyarlılığı (hakem-rl M4a #1):** Aşama 1'de (i)–(iii)'ü sağlamayan her iletişim kolu, durma kararından **önce** N-X ile birlikte lr = 2e-4'te yeniden koşulur (`results/marl_m4a/lr2e-4/`; en çok 9 koşu). Gerekçe: dikkat modeli MLP'nin lr'siyle ayar yapılmadan eğitiliyor. Tek bir lr noktası, "öğrenemedi" ile "lr artefaktı"nı ayıramaz (M3a #4 ile aynı hata biçimi). 2e-4 seçimi önceden yapıldı: dikkat modelleri için yaygın aralığın içinde, 5e-4'ün altında. Bu bir **tasarım varsayımıdır**, kaynak taranmadı. 1b yalnız aşağı yönlü tek bir lr'yi dener: 1b'den sonra GÖZLENMEDİ, "bu yönde lr duyarlılığı yok" diye okunur, "hiçbir lr'de yok" diye okunmaz (hakem-rl M4a ikinci okuma #2). Okuma aynı (i)–(iii). Holm ailesi, Aşama 1 ve 1b'deki tüm D_k testleridir (en çok 4). Aşama 1 kararları değişmez. 1b'de geçen kol Aşama 2'ye o lr ile gider. **Bedel (ikinci okuma #1):** 1b, geçmeyen kola ikinci bir atış verir ve kapıyı geçme olasılığını artırır. Holm yalnız (i)'in p'sini düzeltir; (ii) ve (iii) düzeltilmez. M4a'nın GEÇTİ'si bu yüzden yalnız bir geliştirme kapısı kararıdır, tez bulgusu sayılmaz.
 - **Aşama 2:** Aşama 1 ya da 1b'de (i)–(iii)'ü sağlayan iletişim kolunun S'si ve aynı lr'de N-S. Hiçbir kol sağlamazsa Aşama 2 koşulmaz (`run_m4a.py` reddeder).
 
 Tohumlar s ∈ {0, 1, 2}, üreteç g_s ∈ {20261115, 1, 2} (M3 §5 ile aynı eşleme). Kare bütçesi F = 600.000 (M3 F_min). Son ağırlıklar kullanılır; kontrol noktası seçimi ve erken durdurma yoktur. Değerlendirme deterministik ve tam pencere: eğitim 1343 gün, doğrulama 500 gün; 2021+ yok (M3 §3).
@@ -102,7 +102,7 @@ Her iletişim kolu k ∈ {A, G} için Δ_{k,s} = SR(k-X_s) − SR(N-X_s) ve D_k 
   - (ii) Eğitimde min_s SR(k-X_s) > max_s SR(N-X_s).
   - (iii) Doğrulamada D_k > 0 ve en az 2/3 tohumda Δ_{k,s} > 0.
 - (i)–(iii) sağlanırsa kol Aşama 2'ye geçer. Nihai GEÇTİ için ayrıca:
-  - **(iv) Kontrol, Aşama 2 (hakem-rl M4a #3):** D_k^S = ort_s[SR(k-S_s) − SR(N-S_s)], eğitimde. Fark G = D_k − D_k^S ≥ δ/2 **ve** z = G / √(se_X² + se_S²) ≥ 1,645 (tek yönlü %5). se'ler ortak HAC'tan alınır. X ve S koşuları ayrı bloklarla yapıldığından bağımsızlık varsayılır. Ortak piyasa günleri iki fark arasında pozitif korelasyon verdiği için bu varsayım SE'yi büyütür, yani tutucudur. Koşul, iletişim kolunun avantajının taşınan bilgiden geldiğini, iletişimin kendisinden (ör. kesitsel teknik özellik birleştirme) gelmediğini sınar. Sağlanmazsa etiket KISMİ olur: avantaj var ama taşınan bilgiye bağlanamadı.
+  - **(iv) Kontrol, Aşama 2 (hakem-rl M4a #3):** D_k^S = ort_s[SR(k-S_s) − SR(N-S_s)], eğitimde. Fark G = D_k − D_k^S ≥ δ/2 **ve** z = G / √(se_X² + se_S²) ≥ 1,645 (tek yönlü %5). se'ler ortak HAC'tan alınır. X ve S koşuları ayrı bloklarla yapıldığından bağımsızlık varsayılır. Ortak piyasa günleri iki fark arasında pozitif korelasyon verdiği için bu varsayım SE'yi büyütür, yani tutucudur. Koşul, iletişim kolunun avantajının taşınan bilgiden geldiğini, iletişimin kendisinden (ör. kesitsel teknik özellik birleştirme) gelmediğini sınar. Sağlanmazsa etiket KISMİ olur: avantaj var ama taşınan bilgiye bağlanamadı. HAC SE'leri tohum varyansını içermez (bilinen açık), bu yüzden 3 tohumla z yaklaşıktır. Tohum başına G_s = Δ_{X,s} − Δ_{S,s} betimsel olarak raporlanır (`gap_per_seed`; ikinci okuma #3).
 - **KISMİ / GÖZLENMEDİ:** M3a §5 ile aynı tanımlar. GÖZLENMEDİ "bu bütçede iletişimle bilgi taşınması gözlenmedi" diye okunur, "iletişim çalışmaz" diye okunmaz. **δ'ya ulaşılamazsa** ama D_k > 0 ve Holm p < 0,05 ise etiket KISMİ olur ve karar kullanıcıya döner (hakem-rl M4a #2; kod `analyze_m4a.py::_read_arm`).
 - **attn ↔ gat (hakem-rl M4a #5):** σ grafa hizalı olduğu için gat GEÇTİ alıp attn almazsa boru hattı çalışıyor demektir. attn'in sonucu "bu bütçede göndericiyi tanımlayamadı" diye okunur (ajan kimliği gözlemde olduğu için tanımlama olanaklı ama zor). attn'in M5'te koşulup koşulmayacağı kullanıcı kararıdır; otomatik elenmez. Grafa hizalı olmayan bir σ ile ek gat kolu kurulmadı (hakemin isteğe bağlı önerisi).
 - **Durma kuralı:** Aşama 1b'den sonra da GEÇTİ alamayan kol için gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz; karar kullanıcıya döner.
@@ -163,10 +163,12 @@ Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı
 
 Hakemin soru yanıtları: (1) sızıntı kontrolü bozmaz, `none` ve iletişim kolu aynı vekili alır; tavan kolu M3a A1 olarak zaten var. (5) eleştirmen her kolda aynı; beyan yeterli.
 
+**İkinci okuma** (SendMessage, yalnız `88a1709..fa04db2` farkı): **Kabul.** #1–#5 karşılandı; `m3a_results.json`'da `ceiling()` için gereken alanlar var. Üç yeni KÜÇÜK madde metne işlendi: 1b'nin kapıyı geçme olasılığını artırması ve (ii)/(iii)'ün düzeltilmemesi (geliştirme kapısı, tez bulgusu değil); 1b'nin yalnız aşağı yönlü lr denemesi; tohum başına G'nin betimsel raporu.
+
 ---
 
 ## Versiyon geçmişi
 
-- **v0.3 (2026-11-19):** hakem-rl ilk okuması (Büyük revizyon) işlendi (§5): Aşama 1b lr duyarlılığı, (iv) z testi, δ ulaşılamazsa okuma, attn ↔ gat okuması, mimari ve eleştirmen beyanları, betimsel tavan. `analyze_m4a.py --self-test` 17/17. Koşu yok.
+- **v0.3 (2026-11-19):** hakem-rl ilk okuması (Büyük revizyon) işlendi (§5): Aşama 1b lr duyarlılığı, (iv) z testi, δ ulaşılamazsa okuma, attn ↔ gat okuması, mimari ve eleştirmen beyanları, betimsel tavan. `analyze_m4a.py --self-test` 17/17. hakem-rl ikinci okuması Kabul; üç KÜÇÜK not metne işlendi, ön kayıt DONDURULDU. Koşu yok.
 - **v0.2 (2026-11-19):** Kullanıcı kararları K-M4-1..4 (öneri yönünde). Koşucu `run_m4a.py` ve ön kayıtlı okuma betiği `analyze_m4a.py` (`--self-test` 11/11) eklendi. Koşu yok.
 - **v0.1 (2026-11-19):** Kollar ve eşit bütçe (§1), graf kenar kuralı ölçümü (§2), M4a ön kaydı taslağı (§3). Koşu yok.
