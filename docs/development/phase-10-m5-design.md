@@ -1,12 +1,12 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.6 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.7 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum (v0.6):** §4 mekanizma kolları ön kaydı (PİLOT); hakem-rl 1. okuma Küçük rev., bulgular işlendi (§4.10); koşu yok. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
+**Durum (v0.7):** §4 mekanizma kolları ön kaydı **DONDURULDU** (PİLOT; hakem-rl 1. okuma Küçük rev., 2. okuma Kabul, §4.10). Koşu sırada. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
 
 **Durum (v0.3):** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
 
@@ -175,7 +175,7 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 
 ---
 
-## 4. Mekanizma kolları ön kaydı (v0.6, PİLOT) — sonuçtan önce
+## 4. Mekanizma kolları ön kaydı (v0.7, PİLOT, DONDURULDU) — sonuçtan önce
 
 ### 4.1 Soru ve kapsam
 
@@ -241,7 +241,7 @@ Her sonuç bileşimi §4.4'teki öncelik sırasıyla aşağıdaki satırlardan *
 
 | Etiket / okuma anahtarı | Okuma | Yazılmayacak olan |
 |---|---|---|
-| H2 PİLOT_İŞARETİ / `bilgi_isareti` | "Sentetik pozitif kontrolde güvenle ağırlıklı dikkatin gat'a göre, güven bilgisinden gelen ve gürültü tabanını aşan bir işareti var." Uzun koşu ön kaydına aday | "H2 doğrulandı", gerçek tahmin hattına genelleme |
+| H2 PİLOT_İŞARETİ / `bilgi_isareti` | "Sentetik pozitif kontrolde güvenle ağırlıklı dikkatin gat'a göre, güven bilgisinden gelen ve tek bir GD gerçekleşmesinin tabanını aşan bir işareti var." (v) bir gürültü dağılımı testi değildir. β_GLS de m tohumda ≥ 0,04 ise (`beta_GLS_ge_min_m_of_k`) (iv) güvene özgü değildir, bu yanına yazılır Uzun koşu ön kaydına aday | "H2 doğrulandı", gerçek tahmin hattına genelleme |
 | H2 KISMİ / `guvenden_bagimsiz` ((iv) yok) | Getiri farkı var ama β mekanizma eşiğine ulaşmadı. Fark güvenden bağımsız; yörünge gürültüsü olası | "Güven işe yarıyor" |
 | H2 KISMİ / `ek_serbestlik` ((iv) var, (ii) yok) | Avantaj karıştırılmış güvende de var. Kaynak güven bilgisi değil, ek serbestlik ya da öğrenme dinamiği | "Güven bilgisi işe yarıyor" |
 | H2 KISMİ / `gurultu_tabani` ((iv), (ii) var, (v) yok) | Fark, neredeyse etkisiz kolun (GD) ürettiği farktan büyük değil. Yörünge gürültüsünden ayırt edilemedi | Mekanizmaya dair yön |
@@ -301,12 +301,17 @@ hakem-rl (sonnet), koşudan önce, 2026-11-19. Paket: kollar, okuma kuralı, sı
 | 5 | KÜÇÜK | Okuma tablosunda eksik bileşimler, EKSİK tanımsız | **Kabul.** Öncelik sıralı tek okuma anahtarı ve 14 satırlık tablo (§4.5) |
 | 6 | KÜÇÜK | Kod ↔ metin: betimsel çift eksikse birincil EKSİK oluyor, ≥ 2 sabit, self-test kapsamı, tohum gereksinimi yalnız (i) | **Kabul.** Birincil/betimsel ayrımı, m = ⌈2k/3⌉, self-test 10/10, (ii) için tohum gereksinimi |
 
-Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı). İkinci okuma: aşağıda.
+Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
+
+**İkinci okuma (SendMessage, aynı hakem): Kabul.** İki KÜÇÜK not işlendi: `bilgi_isareti` ifadesi "tek bir GD gerçekleşmesinin tabanını aşan" diye daraltıldı ((v) bir dağılım testi değil). β, Adam kaymasıyla da 0,04'e ulaşabilir; ayırıcı referans GLS'nin β'sı. `beta_GLS_ge_min_m_of_k` betimsel bayrağı eklendi ve okumada yanına yazılır, etiket değişmez. Maliyet ~48 bin token (önceki bağlamla), 5 araç, ~0,4 dk.
+
+**DONDURULDU (v0.7, 2026-11-19).** Eşikler, kollar ve okuma bundan sonra değişmez; değişiklik = yeni ön kayıt.
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.7 (2026-11-19):** hakem-rl 2. okuma Kabul; iki KÜÇÜK not işlendi (`bilgi_isareti` ifadesi daraltıldı, `beta_GLS_ge_min_m_of_k` betimsel). **DONDURULDU.** Koşu yok.
 - **v0.6 (2026-11-19):** hakem-rl 1. okuma (Küçük rev., 2 BÜYÜK) işlendi: (iv) β ≥ 0,04 en az m tohumda, (v) gürültü tabanı GD (aynı tohumlu GPU tekrarı bit-eş), öncelik sıralı tek okuma ve 14 satırlık tablo, EKSİK tanımı, m = ⌈2k/3⌉. Tasarım ölçümü (`design_checks.json`). Kullanıcı kararı: GLM sıcaklık aralığı [0,25; 4]. Koşu yok.
 - **v0.5 (2026-11-19):** §3.6 kararlar (K-i δ'sız; GLG çıkarıldı; GLM bozması yalnız güven teriminde; G0 yeni tohumlarla). §4 mekanizma kolları ön kaydı (PİLOT): G0/GL/GLS/GLM/GD, tohum 6–8, H2 (i)–(iii), H3 sabit sıra, β denetimi, sınırlar. Kod `run_m5.py`, `analyze_m5.py` (self-test 5/5), eğitici bayrakları, `conf_temp`; keşif ölçümü arşivlendi (`conf_informative.json`). Koşu yok.
 - **v0.4 (2026-11-19):** Kullanıcı kararları: K-d..K-h öneri yönünde; taban gat (M4b PİLOT_İŞARETİ, kullanıcı kararı); K-i'nin biçimi ön kayıtta yeniden sunulacak (§3.5). Koşu yok.

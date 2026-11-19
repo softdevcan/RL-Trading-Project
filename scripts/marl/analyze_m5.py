@@ -24,7 +24,8 @@ H3 (ikincil, daraltilmis: guvenin gondericiler arasi karsilastirilabilirligi), S
   iken etiketlenir; aksi SINANMADI ('h2_isareti_yok'), sayilar betimsel. (i) egitim D(GL, GLM) > 0 VE p < 0,05;
   (ii) dogrulama D(GL, GLM) > 0 VE en az m tohum. PILOT_ISARETI = ikisi ('karsilastirilabilirlik_isareti');
   KISMI = yalniz (i) ('dogrulamada_tutmuyor'); GOZLENMEDI ('bozma_avantaji_silmedi'); GLM eksikse EKSIK.
-BETIMSEL (kararlari degistirmez): D(GLS, G0), D(GD, G0) dogrulama, devir, tohum basina beta (GL, GLS, GLM), z_scale,
+BETIMSEL (kararlari degistirmez): D(GLS, G0), D(GD, G0) dogrulama, devir, tohum basina beta (GL, GLS, GLM) ve
+  beta_GLS_ge_min_m_of_k (GLS de esigi geciyorsa (iv) guvene ozgu degildir; hakem-rl 2. okuma #2), z_scale,
   egitim kaydi git izi, GLM bozma gucu (design_checks.json), tohum gereksinimi (M4b formulu; (i) ve (ii) icin).
 
   python scripts/marl/analyze_m5.py --out docs/development/measurements/phase10-m5/m5_results.json
@@ -49,7 +50,7 @@ from analyze_m4b import pair, seeds_needed  # noqa: E402
 
 SEEDS = (6, 7, 8)
 ARMS = ('G0', 'GL', 'GLS', 'GLM', 'GD')
-PREREG = 'phase-10-m5-design.md §4 v0.6'
+PREREG = 'phase-10-m5-design.md §4 v0.7 (DONDURULDU)'
 BETA_MIN = 0.04
 BETA_ADAM_BOUND = 5e-4 * (600_000 // 6000) * 10
 DESIGN_CHECKS = os.path.join('docs', 'development', 'measurements', 'phase10-m5', 'design_checks.json')
@@ -126,8 +127,11 @@ def read(root, seeds=SEEDS, design_checks: str | None = DESIGN_CHECKS) -> dict:
           'iv_beta_GL_ge_min': sum(b >= BETA_MIN for b in betas['GL']) >= need(k),
           'v_train_GL_G0_gt_noise_floor': bool(gl['D_annual'] > abs(gd['D_annual']))}
     h2 = 'PILOT_ISARETI' if all(c2.values()) else ('KISMI' if c2['i_train_GL_gt_G0_p'] else 'GOZLENMEDI')
+    gls_b = [b for b in betas['GLS'] if b is not None]
     out = {**res, 'conditions_H2': c2, 'label_H2': h2, 'reading_H2': h2_reading(h2, c2),
            'noise_floor_D_GD_G0': gd['D_annual'],
+           # betimsel (hakem-rl M5 2. okuma #2): GLS de esigi geciyorsa (iv) guvene ozgu degildir
+           'beta_GLS_ge_min_m_of_k': (sum(b >= BETA_MIN for b in gls_b) >= need(k)) if len(gls_b) == k else None,
            'sizing_betimsel': {'seeds_for_80pct_i_observed': seeds_needed(gl['D_annual'], gl['se_annual'], k),
                                'seeds_for_80pct_i_ci_low': seeds_needed(gl['D_annual'] - 1.96 * gl['se_annual'],
                                                                         gl['se_annual'], k),
