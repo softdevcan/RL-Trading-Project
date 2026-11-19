@@ -199,6 +199,31 @@ deneyler:
       belge: docs/development/phase-10-m4-design.md
       terimler: [etiket-pilot, iletisim-kollari, komsu-sinyali, gelistirme-kapisi]
 
+    - id: m5-mekanizma
+      baslik: "M5: Mesajı göndericinin güvenine göre ağırlıklandırmak işe yarıyor mu?"
+      soru: >-
+        Komşudan gelen mesaja, gönderici ne kadar eminse o kadar çok kulak veren ajanlar (GL), güveni hiç kullanmayan
+        ajanlardan (G0) daha iyi karar veriyor mu? Kontrol için güveni karıştırılmış ve güveni neredeyse hiç ayırmayan kollar da
+        koşuldu.
+      etiket: {kaynak: docs/development/measurements/phase10-m5/m5_results.json, alan: label_H2}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (güvenli − düz iletişim)
+          kaynak: docs/development/measurements/phase10-m5/m5_results.json
+          alan: pairs.GL_G0_train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Gürültü tabanı (güveni neredeyse hiç kullanmayan kol − düz iletişim)
+          kaynak: docs/development/measurements/phase10-m5/m5_results.json
+          alan: noise_floor_D_GD_G0
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Güvenli kol önde ve ajanlar güveni yalnız güven gerçekken kullanmayı öğrendi. Ama güveni neredeyse hiç kullanmayan
+        kontrol kolu da aynı ölçüde önde çıktı; fark eğitimin rastlantısal sapmasından ayırt edilemedi. Kalibrasyon sorusu
+        (H3) bu yüzden sınanmadı.
+      belge: docs/development/phase-10-m5-design.md
+      terimler: [kol-kodlari-m5, s-msg, beta, etiket-kismi, tohum]
+
 sss:
   baslik: Sık sorulanlar
   sorular:
