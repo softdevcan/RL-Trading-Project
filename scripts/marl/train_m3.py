@@ -55,6 +55,20 @@ def provenance() -> dict:
             'script_sha256': sha}
 
 
+def comm_model(a, symbols: list):
+    """M4 iletisim kolu -> CommPolicyConfig alanlari (None = MLP). gat kenarlari graf JSON'undaki sembol
+    ciftlerinden panel sirasiyla indekslenir; graf dosyasinin SHA'si kayda gecer."""
+    if a.comm == 'none':
+        return None
+    spec = dict(kind=a.comm, hidden=a.hidden, heads=a.heads, rounds=a.rounds, edges=None)
+    if a.comm == 'gat':
+        with open(a.graph, encoding='utf-8') as fh:
+            g = json.load(fh)
+        idx = {s: i for i, s in enumerate(symbols)}
+        spec['edges'] = [[idx[u], idx[v]] for u, v in g['edges'][a.graph_rule]]
+    return spec
+
+
 def train_task_cfg(a, end_row: int, warmup: int) -> dict:
     return dict(panel_path=PANEL, start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
                 cost_bps_roundtrip=a.cost_bps, reward_term='excess', reward_scale=100.0, episode_len=a.episode_len,
@@ -80,6 +94,14 @@ def main():
     ap.add_argument('--sampling-device', default='cpu')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--threads', type=int, default=1, help='OMP/MKL/torch is parcacigi (bit-eslik icin 1)')
+    ap.add_argument('--comm', choices=('none', 'attn', 'gat', 'self'), default='none',
+                    help='M4 iletisim kolu; none = BenchMARL MLP (M3 ile ayni); self = mimari-es iletisimsiz (M4b)')
+    ap.add_argument('--hidden', type=int, default=110, help='attn/gat gizli boyut (M4 esit butce, tasarim §1)')
+    ap.add_argument('--heads', type=int, default=5)
+    ap.add_argument('--rounds', type=int, default=1)
+    ap.add_argument('--graph', default=os.path.join('docs', 'development', 'measurements', 'phase10-m4',
+                                                    'graph_rules.json'), help='gat kenar kaynagi (graph_m4.py)')
+    ap.add_argument('--graph-rule', default='sector+mst')
     ap.add_argument('--save-dir', default=None)
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
@@ -99,7 +121,8 @@ def main():
     end_row = int(np.flatnonzero(dates <= TRAIN_END)[-1])
     tcfg = train_task_cfg(a, end_row, OS.WARMUP_ROWS)
     build = dict(algo=a.algo, seed=a.seed, frames=a.frames, frames_per_batch=a.frames_per_batch, epochs=a.epochs,
-                 n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std, lr=a.lr)
+                 n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std, lr=a.lr,
+                 model=comm_model(a, [str(s) for s in arrays['symbols']]))
     exp = build_experiment(tcfg, train_device=a.train_device, sampling_device=a.sampling_device, **build)
     t0 = time.perf_counter()
     exp.run()
@@ -112,6 +135,7 @@ def main():
         'wall_seconds': round(wall, 1), 'frames': exp.total_frames,
         'seconds_per_200k': round(wall / max(exp.total_frames, 1) * 200_000, 1),
         'policy_params': sum(p.numel() for p in exp.policy.parameters()), 'critic': critic_summary(exp),
+        'graph_sha256': (hashlib.sha256(open(a.graph, 'rb').read()).hexdigest() if a.comm == 'gat' else None),
         'policy_sha256': policy_digest(exp),
         'env': {'python': platform.python_version(), 'os': platform.platform(), 'torch': torch.__version__,
                 'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,

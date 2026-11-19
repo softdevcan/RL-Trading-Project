@@ -1,0 +1,75 @@
+{
+ "note": "egitim kaydi; performans sayisi YOK (degerlendirme eval_m3, okuma M3 on kaydi)",
+ "commit": "ef2f5cb3b54bf550ec4ed7ff55fef8d7dd947419",
+ "git_status_porcelain": "?? docs/development/measurements/phase10-m4/timing_none.json\n?? scripts/marl/build_pred_m4.py",
+ "script_sha256": "d7e232a2b1121a7da8ee0627439b2b3575dfd34fd50cfca30f75a54c1c77c161",
+ "args": {
+  "algo": "mappo",
+  "frames": 30000,
+  "frames_per_batch": 6000,
+  "epochs": 10,
+  "n_envs": 10,
+  "parallel": true,
+  "episode_len": 252,
+  "alpha": 0.25,
+  "cost_bps": 0.0,
+  "init_std": 0.12,
+  "lr": 0.0005,
+  "use_state": false,
+  "pred_path": "data/marl/pred_pc060_k12_g1.npz",
+  "train_device": "cuda",
+  "sampling_device": "cpu",
+  "seed": 0,
+  "threads": 1,
+  "comm": "attn",
+  "hidden": 110,
+  "heads": 5,
+  "rounds": 1,
+  "graph": "docs\\development\\measurements\\phase10-m4\\graph_rules.json",
+  "graph_rule": "sector+mst",
+  "save_dir": null,
+  "out": "docs/development/measurements/phase10-m4/timing_attn.json"
+ },
+ "build": {
+  "algo": "mappo",
+  "seed": 0,
+  "frames": 30000,
+  "frames_per_batch": 6000,
+  "epochs": 10,
+  "n_envs": 10,
+  "parallel": true,
+  "init_std": 0.12,
+  "lr": 0.0005,
+  "model": {
+   "kind": "attn",
+   "hidden": 110,
+   "heads": 5,
+   "rounds": 1,
+   "edges": null
+  }
+ },
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "pred_sha256": "6bffc1510f81cab22c8e4262be361cd7212f3de104c7fe48ac40a657963c013d",
+ "train_window": [
+  "2013-08-27",
+  "2018-12-31"
+ ],
+ "wall_seconds": 31.5,
+ "frames": 30000,
+ "seconds_per_200k": 209.9,
+ "policy_params": 78982,
+ "critic": {
+  "params": 434945,
+  "input_dim": 1440
+ },
+ "graph_sha256": null,
+ "policy_sha256": "7baf04055304f080ab28c230d23af6001756f657d2278795fb4736c1e5660ed6",
+ "env": {
+  "python": "3.12.5",
+  "os": "Windows-11-10.0.26300-SP0",
+  "torch": "2.6.0+cu124",
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "threads": 1,
+  "omp": "1"
+ }
+}
