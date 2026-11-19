@@ -9,8 +9,11 @@ karistirilmis bloklara da uygulanir. BILEREK GELECEKTEN: boru hatti kontrolu, te
 
 sigma: graf JSON'undaki kurala (varsayilan sector+mst) gore iki parcali eslemeyle (Hopcroft-Karp; dugumler panel
 sirasiyla) bulunur, sabit noktasi yoktur ve `neighbor_map.json`'a yazilir; kosular o dosyayi kullanir.
+DIKKAT: eslesme surecler arasi deterministik DEGIL (dizgi hash'i). Ilk kurulumdan sonraki her uretim
+`--sigma-from docs/development/measurements/phase10-m4/neighbor_map.json` ile dondurulmus sigma'yi kullanir.
 
     python scripts/marl/build_pred_m4.py --seeds 20261115,1,2 --out-dir data/marl
+    python scripts/marl/build_pred_m4.py --seeds 3,4,5 --sigma-from docs/development/measurements/phase10-m4/neighbor_map.json         --json docs/development/measurements/phase10-m4/neighbor_map_m4b.json      # M4b
 """
 from __future__ import annotations
 
@@ -68,6 +71,7 @@ def main():
     ap.add_argument('--rule', default='sector+mst')
     ap.add_argument('--out-dir', default=os.path.join('data', 'marl'))
     ap.add_argument('--json', default=os.path.join(MEAS, 'neighbor_map.json'), help='M4b: neighbor_map_m4b.json')
+    ap.add_argument('--sigma-from', default=None, help='dondurulmus sigma (M4b: neighbor_map.json, M4a ile ayni)')
     a = ap.parse_args()
     from evaluation.calibration import auc as _auc
     from marl import accounting as A
@@ -80,7 +84,19 @@ def main():
         raise SystemExit(f"panel SHA {arrays['sha256']} != {PANEL_SHA}")
     symbols = [str(s) for s in arrays['symbols']]
     g = json.load(open(GRAPH, encoding='utf-8'))
-    sigma = neighbor_bijection(symbols, g['edges'][a.rule])
+    if a.sigma_from:
+        # Hopcroft-Karp sonucu surecler arasi DETERMINISTIK DEGIL (dizgi hash'i PYTHONHASHSEED ile rastgele);
+        # tekrar uretim icin sigma dondurulmus JSON'dan okunur ve kenar/bijeksiyon kosulu yeniden denetlenir.
+        with open(a.sigma_from, encoding='utf-8') as fh:
+            frozen = json.load(fh)['sigma']
+        idx = {s: i for i, s in enumerate(symbols)}
+        sigma = [idx[frozen[s]] for s in symbols]
+        es = {frozenset(e) for e in g['edges'][a.rule]}
+        if sorted(sigma) != list(range(len(symbols))) or not all(
+                j != sigma[j] and frozenset((symbols[j], symbols[sigma[j]])) in es for j in range(len(symbols))):
+            raise SystemExit(f'{a.sigma_from}: sigma bu grafta gecerli bir komsu bijeksiyonu degil')
+    else:
+        sigma = neighbor_bijection(symbols, g['edges'][a.rule])
     graph_sha = hashlib.sha256(open(GRAPH, 'rb').read()).hexdigest()
 
     px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, A.limit_down_gaps(arrays['dates']))
