@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.5 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
+**Sürüm:** v0.6 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -184,10 +184,16 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Plandan sapmalar (beyan):** (a) Planda "değer + kaynak yol + alan + commit" yazıyor. Dosyanın son git commit'i yerine üretim commit'i ve SHA kullanıldı; kaynak ile snapshot aynı commit'e girince son git commit'i kendini bayatlatırdı. M3a JSON'u provenance taşımadığı için onun commit alanı boş. (b) P5 kartının etiketi bir kuraldan türetilir: BH reddi 0 ise "GEÇMEDİ". Kaynak alanı kartta gösterilir. (c) Haritanın M2 satırı bayattı ("sürüyor"); kanıtıyla birlikte "bitti" yapıldı (`review-panel.md`, M2 kapanış ikinci okuması Kabul). "Faz 10 M4–M8" satırı M5 sonucuyla M5 PR'ında güncellenecek.
 - **Bakım kuralı:** kök `CLAUDE.md`'ye eklendi: harita tablosu ya da kart kaynağı değişince `python scripts/build_guide.py` koşulur.
 
+## 14. R4 durumu (kısmi, 2026-11-19)
+
+- **Yapıldı:** Sık sorulanlar (bölüm 7; `guide.yaml` → `sss`, 6 soru, terim bağlantılı, yasaklı ifade ve bağlantı denetimine dahil). Sayfa açılırken URL'deki çapaya (`#terim-<id>`, `#deney-<id>`) bir kez kaydırma (istemci tarafı geri çağrı; arama yeniden çizince kaydırmaz).
+- **Kalan:** ~110 terim (tek ajan RL, tahmin, veri, yazılım ve ürün); üst çubuk aramasına sözlük terimleri. Bu ikincisi `go_to_page` geri çağrısına `url.hash` çıktısı eklemeyi ve `test_topbar` [5]'in çıktı imzasını güncellemeyi gerektirir, ayrı yapılacak.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-19):** R4 kısmi (§14): SSS bölümü, çapaya kaydırma. Kalan: terimler, üst çubuk araması.
 - **v0.5 (2026-11-19):** R3 kodu (§13): `snapshot.json`, 5 deney kartı, aşama çizelgesi, test 9/9; bakım kuralı CLAUDE.md'de.
 - **v0.4 (2026-11-19):** R2 kodu (§12): Rehber sayfası, `guide.yaml`, CSS, menü/rota, test 8/8. Görsel denetim ve konteyner bekliyor.
 - **v0.3 (2026-11-19):** R1 bitti (§11): 73 terim, üretici, test 6/6, `docs/sozluk.md`. Plandan sapmalar beyan edildi.

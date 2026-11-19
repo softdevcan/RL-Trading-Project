@@ -198,3 +198,37 @@ deneyler:
         hattının bilgi taşıdığına dair bir işaret. Kanıt değil: 3 tekrarlık pilot ve ipucu bilerek gelecekten.
       belge: docs/development/phase-10-m4-design.md
       terimler: [etiket-pilot, iletisim-kollari, komsu-sinyali, gelistirme-kapisi]
+
+sss:
+  baslik: Sık sorulanlar
+  sorular:
+    - soru: Bu sistem para kazandırıyor mu?
+      cevap: >-
+        Bunu bilmiyoruz ve böyle bir iddiamız yok. Sonuçlar geçmiş veride üretildi ve çoğu, cevabı bilerek konmuş sahte
+        bir ipucuyla yapılan denetimlerden geliyor. Son sınav dönemi (2021 ve sonrası) henüz açılmadı.
+      terimler: [pozitif-kontrol, pencereler]
+    - soru: Neden sahte bir ipucu kullanılıyor?
+      cevap: >-
+        Gerçek tahmin sinyalinde şu an yön bilgisi tespit edilmedi. Bilgi taşımayan bir sinyalle, sistemin bir ipucunu
+        kullanıp kullanamadığı sınanamaz. Sahte ipucu, hattın çalıştığını göstermek için var: öğrenciye kopya kâğıdı verip
+        okuyabiliyor mu diye bakmak gibi.
+      terimler: [pozitif-kontrol, bilgi-kapisi]
+    - soru: Ara denetimlerde neden yalnız 3 tohum var?
+      cevap: >-
+        Ara denetimler pilottur: hızlı bir "işaret var mı" sorusu, birkaç saatlik bir koşuya sığar. Kesin bir sonuç çok daha
+        fazla tohum ister; gereken sayı her pilottan sonra betimsel olarak hesaplanır ve uzun koşular M8'den önce yapılır.
+      terimler: [tohum, guc, etiket-pilot]
+    - soru: "\"Gözlenmedi\" etki yok demek mi?"
+      cevap: >-
+        Hayır. Deneyin küçük olduğu ve var olan bir etkiyi yakalayacak gücü olmadığı anlamına da gelebilir.
+      terimler: [etiket-gozlenmedi, guc, mde]
+    - soru: Kurallar neden deneyden önce yazılıp donduruluyor?
+      cevap: >-
+        Sonucu gördükten sonra kuralı değiştirmek, şans eseri bir sonucu bulgu gibi göstermeyi kolaylaştırır. Bu yüzden
+        başarı ölçütü ve okuma kuralı koşudan önce yazılır, hakem okur ve dondurulur.
+      terimler: [on-kayit, hakem-paneli, deneme-kaydi]
+    - soru: Eğitim sırasında ekran kartı neden az çalışıyor?
+      cevap: >-
+        Zamanın çoğu işlemcide çalışan piyasa simülasyonunda geçiyor. Ağ küçük olduğu için ekran kartı işini kısa sürede
+        bitirip bir sonraki veriyi bekliyor. Uzun koşulardan önce simülasyonu hızlandırmak planda.
+      terimler: [kare, ajan]

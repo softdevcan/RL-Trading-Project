@@ -203,7 +203,7 @@ def render(terms: list) -> str:
 # ------------------------------------------------------------------ R3: rehber anlik goruntusu (snapshot.json)
 GUIDE = os.path.join(ROOT, 'dashboard', 'content', 'guide.yaml')
 SNAPSHOT = os.path.join(ROOT, 'dashboard', 'content', 'snapshot.json')
-GUIDE_SECTIONS = ('ne_yapar', 'akis', 'neredeyiz', 'deneyler', 'ne_degildir')
+GUIDE_SECTIONS = ('ne_yapar', 'akis', 'neredeyiz', 'deneyler', 'ne_degildir', 'sss')
 LABELS = {'GECTI': 'GEÇTİ', 'KISMI': 'KISMİ', 'GOZLENMEDI': 'GÖZLENMEDİ', 'PILOT_ISARETI': 'PİLOT_İŞARETİ'}
 MAX_CARD_NUMBERS = 2          # R-K4
 BADGE = 'Tez bulgusu değil'   # R-K4: her kartta zorunlu
@@ -288,10 +288,12 @@ def check_guide(guide: dict, terms: list, root: str = ROOT) -> list:
         return err
     refs = list(guide['ne_yapar'].get('terimler', [])) + [a.get('terim') for a in guide['akis']['adimlar']]
     refs += [m.get('terim') for m in guide['ne_degildir']['maddeler']]
+    refs += [t for q in guide['sss']['sorular'] for t in q.get('terimler', [])]
     texts = [guide['ne_yapar']['baslik'], *guide['ne_yapar']['paragraflar'], guide['akis']['aciklama'],
              guide['ne_degildir']['aciklama'], guide['deneyler']['aciklama'], guide['neredeyiz']['aciklama']]
     texts += [x for a in guide['akis']['adimlar'] for x in (a['ad'], a['metin'])]
     texts += [x for m in guide['ne_degildir']['maddeler'] for x in (m['baslik'], m['metin'])]
+    texts += [x for q in guide['sss']['sorular'] for x in (q['soru'], q['cevap'])]
     if not os.path.isfile(os.path.join(root, *guide['neredeyiz']['kaynak'].split('/'))):
         err.append(f"neredeyiz: kaynak yok: {guide['neredeyiz']['kaynak']}")
     seen = set()

@@ -210,6 +210,17 @@ def section_experiments(g: dict, snap: dict, names: dict) -> dbc.Card:
                     "deneyler")
 
 
+def section_faq(g: dict, names: dict) -> dbc.Card:
+    s = g["sss"]
+    items = []
+    for q in s["sorular"]:
+        body = [html.P(q["cevap"].strip(), className="guide-faq-a")]
+        if q.get("terimler"):
+            body.append(html.Div([_term_link(t, names, "guide-chip") for t in q["terimler"]], className="guide-chips"))
+        items.append(html.Details([html.Summary(q["soru"])] + body, className="guide-faq"))
+    return _section(s["baslik"], items, "sss")
+
+
 def section_glossary(terms: list, names: dict) -> dbc.Card:
     options = [{"label": "Hepsi", "value": ALL}] + [
         {"label": label, "value": key} for key, label in CATEGORIES.items() if any(t["kategori"] == key for t in terms)]
@@ -243,11 +254,31 @@ def layout():
         section_stages(guide, snap),
         section_experiments(guide, snap, names),
         section_limits(guide, names),
+        section_faq(guide, names),
         section_glossary(terms, names),
+        # sayfa acilisinda URL'deki capaya (#terim-<id>, #deney-<id>) bir kez kaydir; icerik Dash ile sonradan ciziliyor
+        dcc.Store(id="guide-scroll-trigger", data=1),
+        dcc.Store(id="guide-scroll-done"),
     ])
 
 
+SCROLL_TO_HASH_JS = """
+function(_trigger) {
+    var h = window.location.hash;
+    if (h && h.length > 1) {
+        var el = document.getElementById(decodeURIComponent(h.slice(1)));
+        if (el) { el.scrollIntoView({block: "start"}); }
+    }
+    return window.dash_clientside.no_update;
+}
+"""
+
+
 def register_callbacks(app):
+    # Yalniz acilista (tetik deposu bir kez cizilir); aramayla yeniden cizimde kaydirmaz.
+    app.clientside_callback(SCROLL_TO_HASH_JS, Output("guide-scroll-done", "data"),
+                            Input("guide-scroll-trigger", "data"))
+
     @app.callback(Output("guide-terms", "children"), Output("guide-count", "children"),
                   Input("guide-search", "value"), Input("guide-category", "value"))
     def _filter(query, category):

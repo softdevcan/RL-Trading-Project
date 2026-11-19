@@ -141,9 +141,9 @@ hit = [t['id'] for t in GP.filter_terms(gterms, 'sharpe', GP.ALL)]
 empty = GP.term_list(GP.filter_terms(gterms, 'zzz', GP.ALL), names)
 folded = [t['id'] for t in GP.filter_terms(gterms, 'ogrenme', GP.ALL)]
 marl_only = GP.filter_terms(gterms, '', 'marl')
-check("layout kurulur: 6 bolum + her deney ve terim karti; arama sharpe -> Sharpe, zzz -> bos durum, Turkce harfe duyarsiz, "
+check("layout kurulur: 7 bolum + her deney ve terim karti; arama sharpe -> Sharpe, zzz -> bos durum, Turkce harfe duyarsiz, "
       "kategori suzgeci",
-      all(f'rehber-{a}' in lay_ids for a in ('ne-yapar', 'akis', 'neredeyiz', 'deneyler', 'ne-degildir', 'sozluk'))
+      all(f'rehber-{a}' in lay_ids for a in ('ne-yapar', 'akis', 'neredeyiz', 'deneyler', 'ne-degildir', 'sss', 'sozluk'))
       and all(f"deney-{c['id']}" in lay_ids for c in gtext['deneyler']['kartlar'])
       and all(f"terim-{t['id']}" in lay_ids for t in gterms) and 'sharpe' in hit
       and 'state-block' in (getattr(empty, 'className', '') or '') and 'marl' in folded
