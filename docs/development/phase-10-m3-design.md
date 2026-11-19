@@ -1,12 +1,12 @@
 # Faz 10 M3 — Algoritma katmanı: tasarım ve M3a ön kaydı
 
-**Sürüm:** v0.6 · 2026-11-19 · dal `feat/phase10-m3b` (M3a ön kaydı v0.2 ve M3b ön kaydı v1.1 değişmedi; v0.6 yalnız Aşama 1 sonucunu ekler, §6.7)
+**Sürüm:** v0.7 · 2026-11-19 · dal `feat/phase10-m3b` (M3a ön kaydı v0.2 ve M3b ön kaydı v1.1 değişmedi; v0.6 Aşama 1 sonucunu, v0.7 M4 geçiş kararını ekler, §6.7–§6.8)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2, §4
 - Faz 9 planı §M3 (IPPO, MAPPO, parametre paylaşımı + ajan kimliği, MAPPO önerileri)
 - [phase-10-m2-design.md](phase-10-m2-design.md): §9 #4, #10, #11 ve §9.1 (pozitif kontrol PC060-K12)
 
-**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi. **M3b Aşama 1 koşuldu, etiket KISMİ (2026-11-19, §6.7); ön kayıt gereği Aşama 2 koşulmadı.**
+**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi. **M3b Aşama 1 koşuldu, etiket KISMİ (2026-11-19, §6.7); ön kayıt gereği Aşama 2 koşulmadı. Kullanıcı kararı: M4'e referans yapılandırmayla geçilir (§6.8).**
 
 Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
@@ -307,6 +307,17 @@ M3b'nin seçimi yalnız M4'ün temelini belirler. Plan §2.3 gereği IPPO ve MAP
 
 **Sınırlar:** Sinyal gelecekten türetilmiştir; sonuç tez bulgusu değildir. Ortak HAC p'si tohum varyansını içermez. Aynı kapı ek tohumlarla yeniden denenmez; yeni bir deney ayrı ön kayıt gerektirir.
 
+### 6.8 M4'e geçiş kararı (2026-11-19, kullanıcı)
+
+Kullanıcı, §6.3 durma kuralının bıraktığı kararı **M4'e referans yapılandırmayla geçmek** yönünde verdi: MAPPO, eleştirmen = tüm yerel gözlemler, α = 0,25 (§6.2 A1c). Bu seçim **kanıta değil varsayılana dayanır**. Aşama 2 koşulmadığı için IPPO, `state()` eleştirmeni ve α seçenekleri arasında bir karşılaştırma yoktur.
+
+**M4 ve sonraki raporlarda beyan edilecekler:**
+- M3b Aşama 1 etiketi KISMİ'dir. 20 bps'de sinyalli kol kontrolün önünde kaldı (eğitim D 0,40, doğrulama D 0,49), ama tohum sıralama koşulu sağlanmadı (§6.7).
+- Temel yapılandırma ön kayıtlı bir seçimle değil, varsayılanla belirlenmiştir. M4 iletişim kollarının karşılaştırması bu temel üzerinde yapılır; temelin kendisi için en iyilik iddiası kurulmaz.
+- Alternatif (ayrı ön kayıtlı yeni bir 20 bps deneyi) seçilmedi. Aynı kapı ek tohumla kurtarılmaz.
+
+**Sıradaki:** M4 ön kaydından önce M5 ön kaydına P5c okuma kuralı yazılır (plan §3.1.3, "P5 durumu").
+
 ---
 
 ## 7. Testler
@@ -346,6 +357,8 @@ Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüz�
 **İkinci okuma** (SendMessage, yalnız `2462853..3dff3a5` farkı): **Kabul**, 5/5 karşılandı, yeni BÜYÜK bulgu yok. Hakemin notu: (e) koşulundaki 3 tohumluk aralık kendisi gürültülü bir tahmindir; (a) ve (c) ile birlikte uygulandığı için kabul edilebilir.
 
 ## Versiyon geçmişi
+
+- **v0.7 (2026-11-19):** Kullanıcı kararı: M4'e referans yapılandırmayla geçilir; seçim varsayılandır, kanıta dayanmaz (§6.8). Koşu yok.
 
 - **v0.6 (2026-11-19):** M3b Aşama 1 koşuldu (6/6 koşu); etiket KISMİ, (ii) sıralama koşulu sağlanmadı (§6.7). Aşama 2 koşulmadı. Ön kayıt metni ve eşikleri değişmedi.
 
