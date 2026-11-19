@@ -26,7 +26,7 @@ def parse(text: str) -> dict:
     for chunk in re.split(r"(?=> \S*python\S* )", text):
         m = TRAIN.search(chunk)
         if m:
-            cur = m.group(1).replace('\\', '/').split('marl_m4a/')[-1]
+            cur = re.split(r'marl_m4[ab]/', m.group(1).replace('\\', '/'))[-1]
             runs[cur] = {}
         if cur is None:
             continue

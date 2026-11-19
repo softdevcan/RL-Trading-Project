@@ -221,7 +221,7 @@ Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı
 - **Tohumlar** s ∈ {3, 4, 5}, üreteç g = s. Bloklar: `pred_blocks_m4b*.json`, `neighbor_map_m4b.json`. Kendi sinyalinin AUC'si 0,600–0,602, komşu vekili 0,530–0,533, karıştırılmış 0,496–0,500.
 - **Hiperparametreler** M4a ile aynı: F = 600.000, lr 5e-4, maliyetsiz, MAPPO, eleştirmen MLP, son ağırlıklar, deterministik tam pencere değerlendirme.
 - **`self` kolunun doğruluğu** (`test_marl_m4` [2], [3]): parametre sayısı gat ile aynı. Başka ajanların gözlemi ajan i'nin çıktısını bit-eş bırakıyor.
-- **Süre:** 12 koşu, ~2 saat.
+- **Süre:** 12 koşu. Aynı anda iki koşu (`run_m4b.py --jobs 2`) ile ~1,25 saat. Ölçüm (30 bin kare, gat): tek koşu 30,7 sn; iki eş zamanlı koşu 38,3 sn (verim ~1,6×); üç koşu 64–70 sn (~1,3×). Darboğaz CPU ortam süreçleri; GPU üç koşuda bile %28. Eş zamanlı koşu eğitim matematiğini değiştirmez (ayrı süreçler); GPU bit-eşliği zaten iddia edilmez (M3 §1). Her koşunun logu kendi dizininde (`run.log`).
 - **Kod:** `scripts/marl/run_m4b.py`, `scripts/marl/analyze_m4b.py` (`--self-test` 5/5).
 
 ### 6.2 Okuma kuralı
