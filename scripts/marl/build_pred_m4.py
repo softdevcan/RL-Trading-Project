@@ -12,7 +12,7 @@ sirasiyla) bulunur, sabit noktasi yoktur ve `neighbor_map.json`'a yazilir; kosul
 DIKKAT: eslesme surecler arasi deterministik DEGIL (dizgi hash'i). Ilk kurulumdan sonraki her uretim
 `--sigma-from docs/development/measurements/phase10-m4/neighbor_map.json` ile dondurulmus sigma'yi kullanir.
 
-    python scripts/marl/build_pred_m4.py --seeds 20261115,1,2 --out-dir data/marl
+    python scripts/marl/build_pred_m4.py --seeds 20261115,1,2 --new-sigma   # yalniz ilk kurulum (M4a, 2026-11-19)
     python scripts/marl/build_pred_m4.py --seeds 3,4,5 --sigma-from docs/development/measurements/phase10-m4/neighbor_map.json         --json docs/development/measurements/phase10-m4/neighbor_map_m4b.json      # M4b
 """
 from __future__ import annotations
@@ -72,6 +72,7 @@ def main():
     ap.add_argument('--out-dir', default=os.path.join('data', 'marl'))
     ap.add_argument('--json', default=os.path.join(MEAS, 'neighbor_map.json'), help='M4b: neighbor_map_m4b.json')
     ap.add_argument('--sigma-from', default=None, help='dondurulmus sigma (M4b: neighbor_map.json, M4a ile ayni)')
+    ap.add_argument('--new-sigma', action='store_true', help='yeni sigma uret (yalniz ilk kurulum; sonuc JSONa yazilir)')
     a = ap.parse_args()
     from evaluation.calibration import auc as _auc
     from marl import accounting as A
@@ -95,8 +96,11 @@ def main():
         if sorted(sigma) != list(range(len(symbols))) or not all(
                 j != sigma[j] and frozenset((symbols[j], symbols[sigma[j]])) in es for j in range(len(symbols))):
             raise SystemExit(f'{a.sigma_from}: sigma bu grafta gecerli bir komsu bijeksiyonu degil')
-    else:
+    elif a.new_sigma:
         sigma = neighbor_bijection(symbols, g['edges'][a.rule])
+    else:
+        raise SystemExit('--sigma-from <dondurulmus JSON> gerekli (eslesme surecler arasi deterministik degil); '
+                         'yeni bir sigma bilerek uretilecekse --new-sigma (hakem-rl M4b #4)')
     graph_sha = hashlib.sha256(open(GRAPH, 'rb').read()).hexdigest()
 
     px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, A.limit_down_gaps(arrays['dates']))
@@ -111,7 +115,9 @@ def main():
 
     rec = {'note': 'M4a komsu sinyali bloklari; BILEREK GELECEKTEN, tez sonucu degil', **provenance(),
            'panel_sha256': arrays['sha256'], 'graph': GRAPH.replace(os.sep, '/'), 'graph_sha256': graph_sha,
-           'rule': a.rule, 'sigma': {symbols[j]: symbols[sigma[j]] for j in range(len(symbols))}, 'blocks': []}
+           'rule': a.rule, 'sigma': {symbols[j]: symbols[sigma[j]] for j in range(len(symbols))},
+           'sigma_sha256': hashlib.sha256(json.dumps([symbols[j] for j in sigma]).encode()).hexdigest(),
+           'sigma_from': a.sigma_from.replace(os.sep, '/') if a.sigma_from else None, 'blocks': []}
     os.makedirs(a.out_dir, exist_ok=True)
     for sd in [int(s) for s in a.seeds.split(',')]:
         for suffix in ('', '_shuf'):

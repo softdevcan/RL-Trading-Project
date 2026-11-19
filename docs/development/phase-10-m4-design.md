@@ -208,7 +208,7 @@ Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı
 
 **Neden ayrı bir deney.** M4a'nın gat etiketi KISMİ'dir ve değişmez (§3.7). M4a'da bilgisiz blokla da gat `none`'dan 0,18 öndeydi. Bu, önceden beyan edilen "fark = iletişim + mimari" karışmasıyla tutarlıdır (hakem-rl #4). M4b aynı kapıyı tekrar etmez; **kontrolü değiştirir**: gat'ın karşısına, aynı katmanlara ve aynı parametre sayısına sahip, ama yalnız kendine dikkat eden bir kol (`self`) konur. **Yeni tohumlar** kullanılır; M4a'nın koşuları yeniden kullanılmaz. Böylece M4b'yi koşma nedeni olan sonuçtan gelecek bir seçim yanlılığı oluşmaz.
 
-**Pilot (kullanıcı kararı 2026-11-19).** Bu tur bilerek küçük tutuldu. Uzun ve güçlü koşular, sistem olgunlaşınca gerçek simülasyondan (M8) önce yapılacak. Kaba güç: etki M4a'daki bilgi payı kadarsa (G ≈ 0,17, SE ≈ 0,19), 3 tohumla tek yönlü %5'te yakalama olasılığı ~%35. **GÖZLENMEDİ "etki yok" diye okunmaz.** Pilotun ikinci çıktısı, uzun koşunun tohum sayısını belirleyecek betimsel güç hesabıdır.
+**Pilot (kullanıcı kararı 2026-11-19).** Bu tur bilerek küçük tutuldu. Uzun ve güçlü koşular, sistem olgunlaşınca gerçek simülasyondan (M8) önce yapılacak. Kaba güç: etki M4a'daki bilgi payı kadarsa (G ≈ 0,17, SE ≈ 0,19), 3 tohumla tek yönlü %5'te yalnız (ii)'nin yakalama olasılığı ~%35. Üç koşulun birlikte sağlanma olasılığı (bileşik güç) bunun da altındadır (hakem-rl M4b #3). **GÖZLENMEDİ "etki yok" diye okunmaz.** Pilotun ikinci çıktısı, uzun koşunun tohum sayısını belirleyecek betimsel güç hesabıdır.
 
 ### 6.1 Tasarım
 
@@ -230,21 +230,23 @@ D_X = ort_s[SR(G-X_s) − SR(Z-X_s)], D_S aynı tanımla S kollarında, G = D_X 
 - **(i)** Eğitimde D_X > 0 ve ortak HAC tek yönlü p < 0,05.
 - **(ii)** Eğitimde G > 0 ve z = G / √(se_X² + se_S²) ≥ 1,645. Bağımsızlık varsayılır; bu SE'yi büyütür, yani tutucudur.
 - **(iii)** Doğrulamada D_X > 0 ve en az 2/3 tohumda Δ > 0.
-- **Etiketler:** TAŞIMA_GÖZLENDİ = üçü birden. KISMİ = (i) var ama üçü birden değil. Aksi GÖZLENMEDİ.
+- **Etiketler:** PİLOT_İŞARETİ = üçü birden. Bu bir karar kapısı değil, işarettir (hakem-rl M4b #1). KISMİ = (i) var ama üçü birden değil. Aksi GÖZLENMEDİ.
 - **δ yok.** Etki büyüklüğü eşiği bu pilotta kullanılmaz. M4a'daki δ'nın dayanağı zayıftı (hakem-rl #2) ve M4a'nın gözlenen farkları görülmüştür; sonuç görüldükten sonra yeni bir δ koymak sonuca uydurma olurdu. Soru evet/hayırdır: mimari sabitken iletişim, komşudaki bilgiyi taşıyor mu?
-- **Betimsel, kararı değiştirmez:** uzun koşu için tek yönlü %5 ve %80 güçte gereken tohum sayısı. Formül k = 3·((1,645 + 0,842)·SE / etki)², G ve D_X için. HAC SE tohum varyansını içermez; tahmin kabadır. Ayrıca devir.
+- **Betimsel, kararı değiştirmez:** uzun koşu için tek yönlü %5 ve %80 güçte gereken tohum sayısı, k = 3·((1,645 + 0,842)·SE / etki)². Dört biçimde verilir: gözlenen G, G'nin %95 GA uçları, M4a çapası (G 0,171, SE 0,188 → k = 23) ve D_X. Hesap SE'nin tohumla 1/√k küçüldüğünü varsayar. HAC SE ağırlıkla piyasa günü gürültüsü taşıdığı için bu varsayım iyimserdir (hakem-rl M4b #2). Ayrıca G'nin %95 GA'sı ve devir raporlanır.
 - **Sonuçla ne yapılır:**
-  - TAŞIMA_GÖZLENDİ → M5 mekanizma kolları gat tabanıyla koşulabilir (kullanıcı onayıyla).
-  - Diğer etiketler → M5 mekanizma kolları, sistem olgunlaştıktan sonraki uzun M4b koşusunu bekler. Kullanıcı kararı.
+  - Hiçbir etiket M5 mekanizma kollarının tabanını tek başına seçmez. Karar kullanıcıdadır ve işaret ile uzun koşu sonucuna birlikte dayanır (hakem-rl M4b #1).
+  - PİLOT_İŞARETİ, M5 mekanizma kollarının gat tabanıyla bir pilot olarak koşulmasını *destekler*. Diğer etiketlerde M5 mekanizma kolları uzun M4b koşusunu bekler.
   - Her durumda M4a'nın KISMİ etiketi değişmez.
 
 ### 6.3 Beyanlar
 
-- **σ'nın tekrar üretimi:** İlk M4b blok kurulumu, Hopcroft–Karp eşlemesinin süreçler arası deterministik olmaması yüzünden (dizgi hash'i) farklı bir σ üretti. Commit `1b34a37`'nin mesajı bu yüzden yanlıştı. Düzeltme `--sigma-from`: M4b blokları M4a'nın dondurulmuş σ'sıyla yeniden üretildi. M4a'nın koşularda kullanılan altı bloğu bu σ'dan birebir yeniden üretiliyor (ana oturum denetimi).
+- **σ'nın tekrar üretimi:** İlk M4b blok kurulumu, Hopcroft–Karp eşlemesinin süreçler arası deterministik olmaması yüzünden (dizgi hash'i) farklı bir σ üretti. Commit `1b34a37`'nin mesajı bu yüzden yanlıştı. Düzeltme `--sigma-from`: M4b blokları M4a'nın dondurulmuş σ'sıyla yeniden üretildi. Betik artık `--sigma-from` (ya da bilerek `--new-sigma`) olmadan çalışmaz ve σ'nın SHA'sını JSON'a yazar (hakem-rl M4b #4). M4a'nın koşularda kullanılan altı bloğu bu σ'dan birebir yeniden üretiliyor (ana oturum denetimi).
 - **`self` ile `none` farklı kollardır:** `none` [256, 256] MLP'dir; `self` gat'ın mimarisidir. M4b `none`'ı kullanmaz.
 - **Kalan karışma:** G-X ↔ Z-X farkı yalnız iletişimdir. Ama iletişim, komşuların teknik özelliklerini de taşır. (ii)'deki S kontrolü, bilgisiz blokta da ortaya çıkan iletişim kazancını çıkarır.
 
 ## 5. Hakem incelemesi
+
+**hakem-rl, M4b pilot ön kaydı v0.6 (2026-11-19, SendMessage, `2ef263a~5..68cdb37` farkı):** **Küçük revizyon**, BÜYÜK yok. `self` kolu geçerli mimari-eş kontrol (kendine dikkat = ek doğrusal katman); δ'nın kaldırılması savunulur (z ≥ 1,645 örtük ~0,3 eşik getirir). 4 KÜÇÜK madde işlendi: etiket PİLOT_İŞARETİ + M5 kararı kullanıcıda; tohum gereksinimi çapa ve GA uçlarıyla, 1/√k varsayımı iyimser; bileşik güç < %35; σ `--sigma-from` zorunlu + SHA.
 
 **hakem-rl, M4a ön kaydı v0.2 (2026-11-19, uç `88a1709`).** Paket ~1,5 bin kelime; komut koşmadı. ~39 bin token / 9 araç / ~1,3 dk. **Büyük revizyon:** iki BÜYÜK bulgu da ön kayıt metniyle ilgili; kod ya da koşu gerektirmiyor.
 

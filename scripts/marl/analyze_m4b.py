@@ -6,12 +6,14 @@ Maliyetsiz X, SR yillik; tohumlar 3, 4, 5. D_X = ort_s [SR(G-X_s) - SR(Z-X_s)], 
   (i)   egitim: D_X > 0 VE ortak HAC tek yonlu p < 0,05
   (ii)  egitim: G > 0 VE z = G / sqrt(se_X^2 + se_S^2) >= 1,645 (bagimsizlik varsayimi, tutucu)
   (iii) dogrulama: D_X > 0 VE en az 2/3 tohumda Delta > 0
-TASIMA_GOZLENDI = ucu birden. KISMI = (i) var, ama ucu birden degil. Aksi GOZLENMEDI.
-PILOT: guc dusuk (3 tohum; G ~ 0,17 ise ~%35). GOZLENMEDI "etki yok" diye okunmaz.
+PILOT_ISARETI = ucu birden (hakem-rl M4b #1: karar kapisi degil, isaret). KISMI = (i) var, ama ucu birden degil.
+Aksi GOZLENMEDI. PILOT: guc dusuk ((ii) tek basina ~%35; uc kosulun bileşik gucu daha dusuk). GOZLENMEDI
+"etki yok" diye okunmaz. Hicbir etiket M5 tabanini tek basina secmez; karar kullanicida.
 
 BETIMSEL (kararlari degistirmez): uzun kosu icin gereken tohum sayisi (tek yonlu %5, guc %80):
-  k = 3 * ((1,645 + 0,842) * se / |etki|)^2, G ve D_X icin (gozlenen SE ve etkiyle; etki <= 0 ise None).
-SE'ler ortak HAC'tan ve tohum varyansini icermez; tahmin kabadir.
+  k = 3 * ((1,645 + 0,842) * se / etki)^2; G ve D_X icin gozlenen etkiyle, G'nin %95 GA uclariyla ve M4a capasiyla
+  (G = 0,17, SE = 0,19; M4 tasarimi §3.7). Etki <= 0 ise None. Varsayim: SE tohumla 1/sqrt(k) kuculur; HAC SE
+  agirlikla piyasa gunu gurultusu tasidigindan bu varsayim iyimserdir (hakem-rl M4b #2). Tahmin kabadir.
 
   python scripts/marl/analyze_m4b.py --out docs/development/measurements/phase10-m4/m4b_results.json
   python scripts/marl/analyze_m4b.py --self-test
@@ -36,6 +38,7 @@ SEEDS = (3, 4, 5)
 Z_ONE_SIDED = 1.645
 Z_POWER80 = 0.842
 PREREG = 'phase-10-m4-design.md §6 v0.6'
+M4A_ANCHOR = {'G': 0.171, 'se_G': 0.188}   # m4a_stage2.json -> arms.G.conditions (gap, se_gap)
 
 
 def load(root, arm, window, seeds=SEEDS):
@@ -79,12 +82,16 @@ def read(root) -> dict:
     cond = {'i_train_DX_gt_0_p': bool(tx['D_annual'] > 0 and tx['p_one_sided'] < ALPHA),
             'ii_train_G_gt_0_z': bool(gap > 0 and z >= Z_ONE_SIDED),
             'iii_val_DX_gt_0_2of3': bool(vx['D_annual'] > 0 and sum(d > 0 for d in vx['delta_per_seed']) >= 2)}
-    label = ('TASIMA_GOZLENDI' if all(cond.values()) else ('KISMI' if cond['i_train_DX_gt_0_p'] else 'GOZLENMEDI'))
+    label = ('PILOT_ISARETI' if all(cond.values()) else ('KISMI' if cond['i_train_DX_gt_0_p'] else 'GOZLENMEDI'))
+    lo, hi = gap - 1.96 * se_gap, gap + 1.96 * se_gap
     return {**res, 'train_X': tx, 'train_S': ts, 'val_X': vx, 'G': gap, 'se_G': se_gap, 'z_G': z,
-            'conditions': cond, 'label': label,
-            'sizing_betimsel': {'seeds_for_80pct_G': seeds_needed(gap, se_gap),
-                                'seeds_for_80pct_DX': seeds_needed(tx['D_annual'], tx['se_annual']),
-                                'note': 'HAC SE tohum varyansini icermez; kaba tahmin'}}
+            'G_ci95': [lo, hi], 'conditions': cond, 'label': label,
+            'sizing_betimsel': {'seeds_for_80pct_G_observed': seeds_needed(gap, se_gap),
+                                'seeds_for_80pct_G_ci_low': seeds_needed(lo, se_gap),
+                                'seeds_for_80pct_G_ci_high': seeds_needed(hi, se_gap),
+                                'seeds_for_80pct_G_m4a_anchor': seeds_needed(M4A_ANCHOR['G'], M4A_ANCHOR['se_G']),
+                                'seeds_for_80pct_DX_observed': seeds_needed(tx['D_annual'], tx['se_annual']),
+                                'note': 'SE tohumla 1/sqrt(k) kuculur varsayimi iyimser (HAC gun gurultusu); kaba'}}
 
 
 def self_test() -> bool:
@@ -111,8 +118,9 @@ def self_test() -> bool:
         return root
 
     r = read(build({'G-X': 0.003, 'Z-X': 0.0, 'G-S': 0.0, 'Z-S': 0.0}))
-    check('bilgi tasiniyor: TASIMA_GOZLENDI, tohum gereksinimi hesaplanir',
-          r['label'] == 'TASIMA_GOZLENDI' and r['sizing_betimsel']['seeds_for_80pct_G'] is not None)
+    check('bilgi tasiniyor: PILOT_ISARETI, tohum gereksinimi (gozlenen + capa) hesaplanir',
+          r['label'] == 'PILOT_ISARETI' and r['sizing_betimsel']['seeds_for_80pct_G_observed'] is not None
+          and r['sizing_betimsel']['seeds_for_80pct_G_m4a_anchor'] == 23)
     r = read(build({'G-X': 0.003, 'Z-X': 0.0, 'G-S': 0.003, 'Z-S': 0.0}))
     check('avantaj karistirilmis sinyalde de var: KISMI ((ii) eler)',
           r['label'] == 'KISMI' and not r['conditions']['ii_train_G_gt_0_z'])
