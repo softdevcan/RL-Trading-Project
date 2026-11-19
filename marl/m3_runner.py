@@ -33,7 +33,9 @@ from marl.benchmarl_task import MarlTask, make_env
 def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames: int = 30_000,
                      frames_per_batch: int = 6000, epochs: int = 10, n_envs: int = 10, parallel: bool = False,
                      train_device: str = 'cpu', sampling_device: str = 'cpu', init_std: float = 0.12,
-                     lr: Optional[float] = None, save_folder: Optional[str] = None):
+                     lr: Optional[float] = None, save_folder: Optional[str] = None, model: Optional[dict] = None):
+    """`model`: None -> BenchMARL MLP politikasi (M3, M4 `none` kolu); dict -> M4 iletisim kolu
+    (`marl.comm_models.CommPolicyConfig` alanlari: kind, hidden, heads, rounds, edges). Elestirmen her zaman MLP."""
     from benchmarl.algorithms import IppoConfig, MappoConfig
     from benchmarl.experiment import Experiment, ExperimentConfig
     from benchmarl.models.mlp import MlpConfig
@@ -59,7 +61,12 @@ def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames:
     algo_cfg = (MappoConfig if algo == 'mappo' else IppoConfig).get_from_yaml()
     algo_cfg.scale_mapping = f'biased_softplus_{init_std}'
     task = MarlTask.PORTFOLIO.update_config(dict(task_cfg))
-    return Experiment(task=task, algorithm_config=algo_cfg, model_config=MlpConfig.get_from_yaml(),
+    if model is None:
+        policy_cfg = MlpConfig.get_from_yaml()
+    else:
+        from marl.comm_models import CommPolicyConfig
+        policy_cfg = CommPolicyConfig(**model)
+    return Experiment(task=task, algorithm_config=algo_cfg, model_config=policy_cfg,
                       critic_model_config=MlpConfig.get_from_yaml(), seed=seed, config=cfg)
 
 
@@ -84,7 +91,7 @@ def load_policy(run_dir: str):
     b = meta['build']
     exp = build_experiment(meta['task_cfg'], algo=b['algo'], seed=b['seed'], frames=b['frames_per_batch'],
                            frames_per_batch=b['frames_per_batch'], epochs=b['epochs'], n_envs=1,
-                           init_std=b['init_std'], lr=b.get('lr'))
+                           init_std=b['init_std'], lr=b.get('lr'), model=b.get('model'))
     exp.policy.load_state_dict(torch.load(os.path.join(run_dir, 'policy.pt'), map_location='cpu'))
     return exp, meta
 

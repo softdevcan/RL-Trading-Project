@@ -110,6 +110,9 @@ venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: 
                                            #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)
 venv-marl\Scripts\python tests/test_marl_m3.py  # Faz 10/M3 BenchMARL gorevi: tek grup, bolum sonu terminated=False +
                                            #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu (18, ~2 dk)
+venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (attn, gat): graf maskesi, esit butce (formul, attn = gat,
+                                           #          M4 boyutlarinda none'a gore <= %10), gat'te komsu olmayan ajan etkisiz + attn'de etkili,
+                                           #          kisa MAPPO + tohum bit-es + kaydet/yukle (14, ~1 dk; YALNIZ venv-marl)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

@@ -1,0 +1,1528 @@
+{
+ "note": "M4 gat graf kenar kurali olcumu; yalniz egitim penceresi; performans sayisi YOK",
+ "commit": "6d6e57c6e968610554be6edd0990455aeb72712d",
+ "git_status_porcelain": "",
+ "script_sha256": "770d30b60446c94d1d4af7639fa592b35bc4e3909e759c35632675225ce7d268",
+ "sectors_csv_sha256": "b27d94774964b2cecfadb539b1423e531f544085dc14c6acf424413c2581860f",
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "window": [
+  "2013-08-27",
+  "2018-12-31"
+ ],
+ "n_return_days": 1342,
+ "halves": [
+  [
+   "2013-08-28",
+   "2016-04-28"
+  ],
+  [
+   "2016-04-29",
+   "2018-12-31"
+  ]
+ ],
+ "pair_days_min": 1313,
+ "rho": {
+  "mean": 0.3827,
+  "median": 0.3565,
+  "min": 0.0997,
+  "max": 0.8912
+ },
+ "sector_groups": {
+  "ANA METAL SANAYİ": [
+   "EREGL.IS",
+   "KRDMD.IS"
+  ],
+  "BANKALAR": [
+   "AKBNK.IS",
+   "GARAN.IS",
+   "HALKB.IS",
+   "ISCTR.IS",
+   "SKBNK.IS",
+   "TSKB.IS",
+   "VAKBN.IS",
+   "YKBNK.IS"
+  ],
+  "DIGER": [
+   "ASELS.IS",
+   "EKGYO.IS",
+   "ENKAI.IS",
+   "ODAS.IS",
+   "TCELL.IS"
+  ],
+  "HOLDİNGLER VE YATIRIM ŞİRKETLERİ": [
+   "KCHOL.IS",
+   "SAHOL.IS",
+   "SISE.IS",
+   "TAVHL.IS",
+   "TKFEN.IS"
+  ],
+  "KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": [
+   "PETKM.IS",
+   "SASA.IS",
+   "TUPRS.IS"
+  ],
+  "METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": [
+   "ARCLK.IS",
+   "FROTO.IS",
+   "TOASO.IS"
+  ],
+  "PERAKENDE TİCARET": [
+   "BIMAS.IS",
+   "MGROS.IS"
+  ],
+  "ULAŞTIRMA VE DEPOLAMA": [
+   "PGSUS.IS",
+   "THYAO.IS"
+  ]
+ },
+ "rules": {
+  "sector": {
+   "n_edges": 47,
+   "density": 0.108,
+   "n_components": 12,
+   "n_isolated": 5,
+   "degree_min": 0,
+   "degree_median": 2.0,
+   "degree_max": 7,
+   "frac_edges_in_sector": 1.0,
+   "stability_jaccard_halves": 1.0
+  },
+  "mst": {
+   "n_edges": 29,
+   "density": 0.0667,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 1,
+   "degree_median": 1.0,
+   "degree_max": 8,
+   "frac_edges_in_sector": 0.3793,
+   "stability_jaccard_halves": 0.2083
+  },
+  "thr_0.3": {
+   "n_edges": 311,
+   "density": 0.7149,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 2,
+   "degree_median": 22.0,
+   "degree_max": 28,
+   "frac_edges_in_sector": 0.1415,
+   "stability_jaccard_halves": 0.629
+  },
+  "thr_0.4": {
+   "n_edges": 160,
+   "density": 0.3678,
+   "n_components": 6,
+   "n_isolated": 5,
+   "degree_min": 0,
+   "degree_median": 10.5,
+   "degree_max": 22,
+   "frac_edges_in_sector": 0.2188,
+   "stability_jaccard_halves": 0.4064
+  },
+  "thr_0.5": {
+   "n_edges": 77,
+   "density": 0.177,
+   "n_components": 14,
+   "n_isolated": 12,
+   "degree_min": 0,
+   "degree_median": 1.0,
+   "degree_max": 13,
+   "frac_edges_in_sector": 0.3247,
+   "stability_jaccard_halves": 0.4921
+  },
+  "topk_2": {
+   "n_edges": 55,
+   "density": 0.1264,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 2,
+   "degree_median": 2.0,
+   "degree_max": 13,
+   "frac_edges_in_sector": 0.3273,
+   "stability_jaccard_halves": 0.1505
+  },
+  "topk_3": {
+   "n_edges": 82,
+   "density": 0.1885,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 3,
+   "degree_median": 3.0,
+   "degree_max": 19,
+   "frac_edges_in_sector": 0.3171,
+   "stability_jaccard_halves": 0.229
+  },
+  "topk_5": {
+   "n_edges": 133,
+   "density": 0.3057,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 5,
+   "degree_median": 6.0,
+   "degree_max": 25,
+   "frac_edges_in_sector": 0.2707,
+   "stability_jaccard_halves": 0.3989
+  },
+  "sector+mst": {
+   "n_edges": 65,
+   "density": 0.1494,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 1,
+   "degree_median": 3.0,
+   "degree_max": 12,
+   "frac_edges_in_sector": 0.7231,
+   "stability_jaccard_halves": 0.6494
+  },
+  "sector+topk_2": {
+   "n_edges": 84,
+   "density": 0.1931,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 2,
+   "degree_median": 4.0,
+   "degree_max": 15,
+   "frac_edges_in_sector": 0.5595,
+   "stability_jaccard_halves": 0.4732
+  },
+  "sector+topk_3": {
+   "n_edges": 103,
+   "density": 0.2368,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 3,
+   "degree_median": 5.0,
+   "degree_max": 19,
+   "frac_edges_in_sector": 0.4563,
+   "stability_jaccard_halves": 0.4375
+  },
+  "sector+topk_5": {
+   "n_edges": 144,
+   "density": 0.331,
+   "n_components": 1,
+   "n_isolated": 0,
+   "degree_min": 5,
+   "degree_median": 7.0,
+   "degree_max": 25,
+   "frac_edges_in_sector": 0.3264,
+   "stability_jaccard_halves": 0.4847
+  }
+ },
+ "edges": {
+  "sector": [
+   [
+    "AKBNK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "HALKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "FROTO.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "TOASO.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "EREGL.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "FROTO.IS",
+    "TOASO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "HALKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TSKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "GARAN.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "HALKB.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "TSKB.IS"
+   ],
+   [
+    "HALKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "HALKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "TSKB.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "PETKM.IS",
+    "SASA.IS"
+   ],
+   [
+    "PETKM.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SASA.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "SISE.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SISE.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "VAKBN.IS",
+    "YKBNK.IS"
+   ]
+  ],
+  "mst": [
+   [
+    "AKBNK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TCELL.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "ASELS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "HALKB.IS"
+   ],
+   [
+    "EREGL.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "FROTO.IS",
+    "TOASO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "GARAN.IS",
+    "MGROS.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TSKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "HALKB.IS",
+    "PETKM.IS"
+   ],
+   [
+    "HALKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "SASA.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ODAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "SISE.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "THYAO.IS"
+   ],
+   [
+    "THYAO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TKFEN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "VAKBN.IS",
+    "YKBNK.IS"
+   ]
+  ],
+  "topk_3": [
+   [
+    "AKBNK.IS",
+    "BIMAS.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "HALKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TCELL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ASELS.IS",
+    "GARAN.IS"
+   ],
+   [
+    "ASELS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "ASELS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "HALKB.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "HALKB.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "EREGL.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "EREGL.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "EREGL.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "FROTO.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "FROTO.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "FROTO.IS",
+    "TOASO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "HALKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "GARAN.IS",
+    "MGROS.IS"
+   ],
+   [
+    "GARAN.IS",
+    "PETKM.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TCELL.IS"
+   ],
+   [
+    "GARAN.IS",
+    "THYAO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TSKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "GARAN.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "HALKB.IS",
+    "PETKM.IS"
+   ],
+   [
+    "HALKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "ODAS.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "PGSUS.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "TSKB.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "SASA.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "MGROS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "MGROS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ODAS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ODAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "PETKM.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "SASA.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TCELL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "SASA.IS",
+    "THYAO.IS"
+   ],
+   [
+    "SISE.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "THYAO.IS"
+   ],
+   [
+    "THYAO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TKFEN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TUPRS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "VAKBN.IS",
+    "YKBNK.IS"
+   ]
+  ],
+  "sector+mst": [
+   [
+    "AKBNK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "HALKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TCELL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "FROTO.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "TOASO.IS"
+   ],
+   [
+    "ASELS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "HALKB.IS"
+   ],
+   [
+    "EREGL.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "FROTO.IS",
+    "TOASO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "HALKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "GARAN.IS",
+    "MGROS.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TSKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "GARAN.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "HALKB.IS",
+    "PETKM.IS"
+   ],
+   [
+    "HALKB.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "TSKB.IS"
+   ],
+   [
+    "HALKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "HALKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "TSKB.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "SASA.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ODAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "PETKM.IS",
+    "SASA.IS"
+   ],
+   [
+    "PETKM.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SASA.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "SISE.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SISE.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SISE.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "THYAO.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "THYAO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TKFEN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "VAKBN.IS",
+    "YKBNK.IS"
+   ]
+  ],
+  "sector+topk_3": [
+   [
+    "AKBNK.IS",
+    "BIMAS.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "HALKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TCELL.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "AKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "FROTO.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "GARAN.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "TOASO.IS"
+   ],
+   [
+    "ARCLK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ASELS.IS",
+    "GARAN.IS"
+   ],
+   [
+    "ASELS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "ASELS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "MGROS.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "BIMAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "HALKB.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "EKGYO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "HALKB.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "ENKAI.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "EREGL.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "EREGL.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "EREGL.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "FROTO.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "FROTO.IS",
+    "KCHOL.IS"
+   ],
+   [
+    "FROTO.IS",
+    "TOASO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "HALKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "GARAN.IS",
+    "MGROS.IS"
+   ],
+   [
+    "GARAN.IS",
+    "PETKM.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "GARAN.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TCELL.IS"
+   ],
+   [
+    "GARAN.IS",
+    "THYAO.IS"
+   ],
+   [
+    "GARAN.IS",
+    "TSKB.IS"
+   ],
+   [
+    "GARAN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "GARAN.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "ISCTR.IS"
+   ],
+   [
+    "HALKB.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "HALKB.IS",
+    "PETKM.IS"
+   ],
+   [
+    "HALKB.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "HALKB.IS",
+    "TSKB.IS"
+   ],
+   [
+    "HALKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "HALKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "KRDMD.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "ODAS.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "PGSUS.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "SKBNK.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "TSKB.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ISCTR.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SAHOL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "KCHOL.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "SASA.IS"
+   ],
+   [
+    "KRDMD.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "MGROS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "MGROS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "ODAS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "ODAS.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "PETKM.IS",
+    "SASA.IS"
+   ],
+   [
+    "PETKM.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "PETKM.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "SASA.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "THYAO.IS"
+   ],
+   [
+    "PGSUS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "SISE.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TCELL.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TOASO.IS"
+   ],
+   [
+    "SAHOL.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "SASA.IS",
+    "THYAO.IS"
+   ],
+   [
+    "SASA.IS",
+    "TUPRS.IS"
+   ],
+   [
+    "SISE.IS",
+    "TAVHL.IS"
+   ],
+   [
+    "SISE.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "SISE.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "TSKB.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "SKBNK.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "THYAO.IS"
+   ],
+   [
+    "TAVHL.IS",
+    "TKFEN.IS"
+   ],
+   [
+    "THYAO.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TKFEN.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "TSKB.IS",
+    "YKBNK.IS"
+   ],
+   [
+    "TUPRS.IS",
+    "VAKBN.IS"
+   ],
+   [
+    "VAKBN.IS",
+    "YKBNK.IS"
+   ]
+  ]
+ }
+}
