@@ -43,7 +43,7 @@ PREREG = 'phase-10-m5-design.md §4 v0.5'
 BETA_ADAM_BOUND = 5e-4 * (600_000 // 6000) * 10
 
 
-def label3(train, val) -> tuple[str, dict]:
+def label3(train, val) -> tuple[bool, bool]:
     """(i) egitim D > 0 ve p < ALPHA; (iii) dogrulama D > 0 ve >= 2/3 tohum. (ii) cagirana ait."""
     i = bool(train['D_annual'] > 0 and train['p_one_sided'] < ALPHA)
     v = bool(val['D_annual'] > 0 and sum(d > 0 for d in val['delta_per_seed']) >= 2)
