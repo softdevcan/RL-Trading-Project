@@ -1,12 +1,14 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.4 · 2026-11-19 · dal `feat/phase10-m5-arms` (worktree; M4a koşuları sürerken ana ağaca dokunulmadı)
+**Sürüm:** v0.5 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum:** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
+**Durum (v0.5):** §4 mekanizma kolları ön kaydı yazıldı (PİLOT; hakem-rl okuması bekleniyor, koşu yok). §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
+
+**Durum (v0.3):** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
 
 ---
 
@@ -110,7 +112,7 @@ Bu bölüm M4a sonucu (M4 tasarımı §3.6; Aşama 2 ve 1b sürüyor) gelmeden y
 
 ### 3.2 Koşudan önce yapılan iki ölçüm (keşif; arşivlenecek)
 
-Betik henüz commit'lenmedi (scratchpad `conf_informative.py`). Etiket yaklaşık: ham açılıştan 1[O_{t+2} > O_{t+1}]. M4a sonrası depoya alınıp temiz ağaçtan yeniden koşulacak, JSON'u arşivlenecek.
+Betik henüz commit'lenmedi (scratchpad `conf_informative.py`). Etiket yaklaşık: ham açılıştan 1[O_{t+2} > O_{t+1}]. M4a sonrası depoya alınıp temiz ağaçtan yeniden koşulacak, JSON'u arşivlenecek. **v0.5:** arşivlendi: `scripts/marl/conf_informative_m5.py` → `measurements/phase10-m5/conf_informative.json`; sayılar aynı çıktı (§4.3).
 - **Güven, isabetle ilişkili (PC060-K12):** |p − 0,5|'in beşliklerine göre yön isabeti, en düşükten en yükseğe 0,51 → 0,53 → 0,56 → 0,59 → 0,65 (üç üreteçte aynı; corr(güven, isabet) ≈ +0,10). Karıştırılmış bloklarda 0,49–0,51, corr ≈ 0. Mekanizma kolları sınanabilir bir güven sinyali alıyor.
 - **`prob` biçiminin dinamik aralığı çok dar:** |p − 0,5|'in medyanı 0,008. Böylece b_j = log c_j neredeyse sabit (≈ log 0,508). β = 1 (DebUnc) kolunda göndericiler arası terim farkı ~0,01–0,1 düzeyinde kalır ve dikkat puanlarına göre ihmal edilebilir. Bu, hakem-2 #10'un "kalibre güvenin dinamik aralığı dar" bulgusunun sayısal karşılığıdır. **Öneri:** birincil biçim `zlogodds`; `prob` yalnız DebUnc'a sadık betimsel kol.
 
@@ -162,10 +164,122 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 | K-h | ADMAC'tan esinlenen kol | Ertelenir; GL ve GLG sonucu varsa eklenir |
 | K-i | Eşikler | M4a kalıbı (D ≥ δ, ortak HAC + Holm, sıralama, doğrulama işareti, kontrol koşulu). δ M4a'nın gözlenen gat farkı görülmeden önce değil, M5 mekanizma kolları koşulmadan önce sabitlenir |
 
+### 3.6 Ön kayıt öncesi kararlar (2026-11-19, kullanıcı)
+
+Üçü de mekanizma kollarının koşusundan önce, hiçbir M5 sonucu görülmeden alındı.
+- **K-i: δ yok, M4b kalıbı.** Soru evet/hayırdır. Etki büyüklüğü eşiği kullanılmaz, çünkü M4a'da δ'nın dayanağı zayıftı (hakem-rl M4a #2) ve şimdi konacak bir δ da keyfi olurdu. Gereken tohum sayısı yalnız betimsel verilir (§4.6).
+- **GLG (alıcı öz-güven geçidi) bu turdan çıkarıldı.** Komşu sinyali düzeninde ajan i'nin gözlemindeki sinyal kendi hissesine değil, komşusu σ(i)'ye aittir. Geçidin girdisi olan "öz-güven" bu yüzden ajanın kendi kararıyla ilgisizdir. En iyi geçit "hep açık" olur ve GLG ≈ GL beklenir; kol bir şey sınamaz. Geçidi sınamak için ajanın hem kendi hem komşusunun sinyalini taşıdığı bir düzen gerekir. Bu ayrı bir ön kayıttır ve deneme sayısına (N) girmez.
+- **GLM'de bozma yalnız güven teriminde.** Gönderici başına sıcaklık T_j yalnız dikkat puanına giren güven terimini bozar. Gözlemdeki olasılık ve mesajın içeriği GL ile aynı kalır. Gözlem bozulsaydı GL ↔ GLM farkı "bozuk girdi politikayı bozar" etkisini de taşırdı. Bu kol mekanizma etkisini ayırır; gerçek bir kalibresiz tahmin hattının toplam etkisini ölçmez (§4.7).
+- **Not:** §3.4'teki "G0 için yeni koşu gerekmez" notu geçersizdir. G0 yeni tohumlarla (6–8) yeniden koşulur (§4.2).
+
+---
+
+## 4. Mekanizma kolları ön kaydı (v0.5, PİLOT) — sonuçtan önce
+
+### 4.1 Soru ve kapsam
+
+**H2 (mekanizma, sentetik):** Göndericinin tahmin güveni dikkat puanına eklendiğinde (güvenle ağırlıklı dikkat), gat, komşudaki bilgiyi güvensiz dikkatten daha iyi taşıyor mu? Taşıyorsa avantaj güvenin **bilgisinden** mi geliyor, yoksa ek serbestlikten mi?
+
+**H3 (daraltılmış, §3.3):** Güven göndericiler arasında karşılaştırılabilir olmazsa (gönderici başına farklı sıcaklık) avantaj kayboluyor mu?
+
+- Sinyal sentetik pozitif kontroldür (PC060-K12, AUC ≈ 0,60, **bilerek gelecekten**). Sonuçlar "sentetik" etiketiyle raporlanır. Gerçek tahmin hattı ya da onun kalibrasyonu hakkında iddia kurulmaz (§2.6, K-b).
+- Bu bir **pilottur**: 3 tohum, ön eleme bütçesi. Etiketler karar kapısı değil işarettir (M4b ile aynı dil). Uzun koşu (M8 öncesi) ayrı bir ön kayıttır.
+- Gerçek sinyal kolları (§3.4 b) bu ön kayda **girmez**. Kendi ön kaydı olur ve hakem-finans da okur.
+- Taban kol gat'tir. Bu seçim M4b PİLOT_İŞARETİ'ne dayanan bir **kullanıcı kararıdır**, GEÇTİ kuralının sonucu değildir (K-f, §3.5).
+
+### 4.2 Düzen (M4a/M4b ile aynı)
+
+- **Komşu sinyali:** Ajan j'nin gözlemindeki tahmin bloğu kendi hissesine değil, gat grafında komşusu σ(j)'ye aittir. σ, M4a'da donduruldu (`measurements/phase10-m4/neighbor_map.json`). Hisse i'nin bilgisi yalnız komşu ajanın gözlemindedir; bu yüzden onu ancak iletişim taşıyabilir.
+- **Bloklar:** `data/marl/pred_m4nb_g{6,7,8}.npz`, kayıt `measurements/phase10-m5/neighbor_map_m5.json` (kaynak bloklar `pred_blocks_m5.json`; karıştırılmışlar `pred_blocks_m5_shuf.json` yalnız `build_pred_m4` girdisi, bu ön kayıtta kol yok). Kaynak AUC 0,598 / 0,600 / 0,600. Sızıntı: komşu bloğunun ajanın kendi etiketiyle AUC'si 0,527 / 0,530 / 0,528. Yani iletişimsiz politika da komşu sinyalinden kısmi değer alabilir; bu GL ↔ G0 farkını küçültür, tutucudur.
+- **Yeni tohumlar 6, 7, 8**, üreteç = tohum. M4b'nin 3–5'i yeniden kullanılmaz: onların sonucu görüldü ve taban seçimi o sonuca dayandı (seçim yanlılığı).
+- **Sabitler:** gat (sector+mst, 65 kenar), hidden 110, heads 5, 1 tur; MAPPO, eleştirmen MLP (tüm yerel gözlem), α 0,25, **maliyetsiz** (K-c), F = 600.000, lr 5e-4, `init_std` 0,12, son ağırlıklar, deterministik tam pencere değerlendirme. Eğitim 2013-06..2018-12, doğrulama 2019–2020; 2021+ okunmaz.
+- **Eşleşme:** Aynı tohumda GL, GLS ve GLM, G0 ile **birebir aynı başlangıç ağırlıklarından** (politika ve eleştirmen) başlar ve β = 0 olduğu için başlangıçta aynı işlevi görür (2026-11-19, sentetik panelde ölçüldü). Kollar arasındaki fark yalnız öğrenilen β'dan doğar. GPU bit-eşliği iddia edilmez (M3 §1), dolayısıyla yörüngeler bu yüzden de ayrışır.
+
+### 4.3 Kollar (5 kol × 3 tohum = 15 koşu)
+
+Güven terimi b_j göndericiye aittir, alıcıdan bağımsızdır: puan_ij = q_i·k_j/√d + β·b_j (§3.1).
+
+| Kol | Açık ad | Yapılandırma | Parametre | Soru |
+|---|---|---|---|---|
+| G0 | güvensiz gat | `--comm gat` (= M4a/M4b G-X) | 78.982 | taban |
+| GL | güvenle ağırlıklı gat | + `zlogodds`, β öğrenilen (0'dan) | 78.983 | H2 |
+| GLS | karıştırılmış güvenli gat | GL + güven sabit bir derangement ile göndericiler arasında karıştırılmış (tohum = eğitim tohumu) | 78.983 | H2 kontrolü: avantaj güven bilgisinden mi |
+| GLM | bozuk kalibrasyonlu gat | GL + yalnız güven teriminde p_j ← σ(T_j·logit p_j), T_j ~ log-tekdüze [0,5; 2], üreteç = eğitim tohumu | 78.983 | H3 (daraltılmış) |
+| GD | DebUnc gat | `prob`, β = 1 sabit | 78.982 | betimsel; aralık dar (§3.2) → ≈ G0 beklenir |
+
+- **z_scale** (zlogodds ölçeği): eğitim satırlarında, tahmini olan hücrelerde |logit p|'nin std'si. Eğitici hesaplar ve kayda yazar. GLM'de bozulmuş terimden (|T_j·logit p|) ölçülür, böylece küresel ölçek GL ile aynı kalır ve fark yalnız göndericiler arası sıradan gelir. Duman testinde (tohum 6) GL 0,0288, GLM 0,0373.
+- **Keşif ölçümü** (§3.2, arşiv `measurements/phase10-m5/conf_informative.json`, M4a blokları, eğitim satırları): güvenin beşliklerine göre isabet 0,51 → 0,65; corr(güven, isabet) ≈ +0,10; karıştırılmış bloklarda ~0,50 ve ≈ 0. Terim aralığı (p90 − p10): `prob` 0,036, `zlogodds` 2,5. Mekanizma sınanabilir bir güven sinyali alıyor; `prob` biçimi göndericileri neredeyse ayırmıyor.
+
+### 4.4 Okuma kuralı (önceden sabit; `scripts/marl/analyze_m5.py`)
+
+D(a, b) = ort_s[SR(a_s) − SR(b_s)], ortak HAC ile (`sharpe_diff_hac_pooled`), maliyetsiz X, SR yıllık, aynı tohum ve tarihler eşlenir.
+
+**H2 (birincil):**
+- **(i)** Eğitimde D(GL, G0) > 0 ve tek yönlü p < 0,05.
+- **(ii)** Eğitimde D(GL, GLS) > 0 ve tek yönlü p < 0,05. Bu, fark farkına eşittir: D(GL, G0) − D(GLS, G0), aynı G0 koşularıyla. Doğrudan eşlenik test edildiği için M4b'deki bağımsızlık varsayımı gerekmez.
+- **(iii)** Doğrulamada D(GL, G0) > 0 ve en az 2/3 tohumda Δ > 0.
+- **Etiketler:** PİLOT_İŞARETİ = üçü birden. KISMİ = (i) var ama üçü birden değil. Aksi GÖZLENMEDİ. δ yok (§3.6).
+
+**H3 (ikincil), sabit sıra:** Yalnız H2 = PİLOT_İŞARETİ iken etiketlenir. Mekanizma güveni kullanmıyorsa kalibrasyonun değeri ölçülemez. Aksi durumda etiket SINANMADI'dır ve sayılar betimsel raporlanır. Sabit sıra (H2 → H3) aile hata oranını Holm'suz korur.
+- **(i)** Eğitimde D(GL, GLM) > 0 ve p < 0,05. **(ii)** Doğrulamada D(GL, GLM) > 0 ve en az 2/3 tohum.
+- PİLOT_İŞARETİ = ikisi. KISMİ = yalnız (i). Aksi GÖZLENMEDİ.
+
+**Manipülasyon denetimi (betimsel, okumayı yönlendirir):** Eğitim sonu β (GL, GLS, GLM) kayda geçer (`conf_scalars_final`). β_GL'nin tohum ortalaması ≤ 0 ise "GL güvene ağırlık vermedi" okunur.
+
+**p'nin sınırı:** Ortak HAC p'si piyasa günü gürültüsünü taşır, eğitim tohumu varyansını taşımaz. Etiketin işaret olması ve (iii)'teki tohum koşulu bu yüzdendir.
+
+### 4.5 Önceden yazılan okumalar
+
+| Sonuç | Okuma | Yazılmayacak olan |
+|---|---|---|
+| H2 PİLOT_İŞARETİ | "Sentetik pozitif kontrolde güvenle ağırlıklı dikkatin gat'a göre, güven bilgisinden gelen bir işareti var." Uzun koşu ön kaydına aday | "H2 doğrulandı", gerçek tahmin hattına genelleme |
+| H2 KISMİ, (ii) yok | Avantaj karıştırılmış güvende de var. Kaynak güven bilgisi değil, ek serbestlik ya da öğrenme dinamiği | "Güven bilgisi işe yarıyor" |
+| H2 KISMİ, (iii) yok | Eğitimde var, doğrulamada tutmuyor; aşırı uyum olası | Genel bir H2 hükmü |
+| H2 GÖZLENMEDİ, β_GL ≤ 0 | Mekanizma güveni kullanmadı (β öğrenilmedi ya da ters yönde öğrenildi) | "Güvenle ağırlık işe yaramaz" |
+| H2 GÖZLENMEDİ, β_GL > 0 | Güven kullanıldı ama getiri farkı bu güçle tespit edilmedi | "Etki yok" |
+| H3 PİLOT_İŞARETİ | "Sentetik kontrolde güvenin göndericiler arası karşılaştırılabilirliği avantajı taşıyor" | "Kalibrasyon MARL'a değer katar" (sentetik ve daraltılmış) |
+| H3 SINANMADI | H2 işareti olmadan H3 okunmaz; sayılar betimsel | H3 hakkında herhangi bir yön |
+| GD ≈ G0 | Beklenen: `prob` terimi göndericileri ayırmıyor (aralık 0,036) | "DebUnc ölçeklemesi işe yaramaz" (yalnız bu sinyal aralığında) |
+
+Her sonuç raporlanır ve deneme kaydına girer: H2 ve H3 birer deneme, GD betimsel.
+
+### 4.6 Betimsel çıktılar (kararı değiştirmez)
+
+D(GD, G0), D(GLS, G0), devir, β, z_scale, eğitim kaydının git izi (`train_runs_all_clean`), eğitim eğrileri (`curves_m4a.py`, her koşunun `run.log`'u). Tohum gereksinimi M4b formülüyle verilir (k = 3·((1,645 + 0,842)·SE / etki)²; gözlenen D ve %95 GA uçları). SE'nin 1/√k ile küçüldüğü varsayımı iyimserdir.
+
+### 4.7 Sınırlar (beyan)
+
+- **β'nın öğrenme hızı:** Adam bir skalere adım başına ≈ lr kadar adım attırır. 600.000 kare / 6.000 = 100 parti × 10 epoch = 1.000 güncelleme, yani |β| ≲ 0,5. b_j standartlaştırıldığı için (p90 − p10 ≈ 2,5) β = 0,5 göndericiler arasında ~1,25 logitlik puan farkı, yani ~3,5 kat dikkat oranı demektir. Mekanizmanın ifade gücü bu sınır içinde anlamlıdır, ama β yavaş öğrenilirse etki küçük kalır. Bu yüzden β manipülasyon denetimi olarak raporlanır. Duman testinde 20 güncellemede |β| ≈ 0,001–0,003.
+- **Alıcıdan bağımsız terim:** Güvenli bir gönderici yalnız ilgili alıcıda değil, bütün komşularında öne çıkar (plan tanımı). İlgisiz alıcıda bu gürültüdür.
+- **GLM mekanizmayı ayırır:** Gerçek bir kalibresiz tahminde içerik de bozulur. Bu kol o toplam etkiyi ölçmez (§3.6).
+- **Komşu sızıntısı** (AUC ~0,53) G0'a da kısmi değer verir. Fark küçülür; okuma tutucudur.
+- **Güç düşük:** M4b'nin tohum gereksinimi, GA alt ucuyla ~16. GÖZLENMEDİ "etki yok" diye okunmaz.
+
+### 4.8 Yasak kurtarma yolları
+
+Sonuç görüldükten sonra şunlar yapılmaz: ek tohum, eşik ya da testin değişmesi, β için ayrı öğrenme hızı ya da yeniden parametreleme, F'nin değişmesi, kol eklenmesi ya da çıkarılması, birincil karşılaştırmanın değişmesi. Gerekirse yeni bir ön kayıt yazılır ve deneme sayısına eklenir.
+
+### 4.9 Süre ve komutlar
+
+15 koşu, iki eş zamanlı (`--jobs 2`). M4b'de 12 koşu ~1,25 saat sürdü, buradan **~1,6 saat** beklenir. Duman testi (12 bin kare, 5 kol, tohum 6) uçtan uca geçti: eğitim + iki değerlendirme.
+
+```
+venv-marl\Scripts\python scripts/marl/run_m5.py --jobs 2          # arka planda; GPU dış yükte bekler
+python scripts/marl/analyze_m5.py --out docs/development/measurements/phase10-m5/m5_results.json
+python scripts/marl/curves_m4a.py --log results/marl_m5/*/s*/run.log --out docs/development/measurements/phase10-m5/m5_curves.json
+```
+
+Koşu sürerken ana ağaca commit atılmaz (eğitim kaydındaki git izi kirlenir).
+
+### 4.10 Hakem okuması
+
+hakem-rl, koşudan önce (paket: kollar, okuma kuralı, sınırlar). Sonuç bu alt bölüme eklenir.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.5 (2026-11-19):** §3.6 kararlar (K-i δ'sız; GLG çıkarıldı; GLM bozması yalnız güven teriminde; G0 yeni tohumlarla). §4 mekanizma kolları ön kaydı (PİLOT): G0/GL/GLS/GLM/GD, tohum 6–8, H2 (i)–(iii), H3 sabit sıra, β denetimi, sınırlar. Kod `run_m5.py`, `analyze_m5.py` (self-test 5/5), eğitici bayrakları, `conf_temp`; keşif ölçümü arşivlendi (`conf_informative.json`). Koşu yok.
 - **v0.4 (2026-11-19):** Kullanıcı kararları: K-d..K-h öneri yönünde; taban gat (M4b PİLOT_İŞARETİ, kullanıcı kararı); K-i'nin biçimi ön kayıtta yeniden sunulacak (§3.5). Koşu yok.
 - **v0.3 (2026-11-19):** §3 TASLAK: S-msg kodu (`conf_mode` prob/zlogodds, β sabit/öğrenilen, alıcı geçidi, karıştırılmış güven), iki keşif ölçümü (güven isabetle ilişkili; `prob` aralığı dar), H3 tasarım bulgusu (standartlaştırma sıcaklığı siler), kol taslağı ve açık kararlar K-d..K-i. Ön kayıt değil; koşu yok.
 - **v0.2 (2026-11-19):** Kullanıcı kararları K-a (gerçek sinyal kolları 3 tohumla koşulur), K-b (H3 pozitif kontrolde, bozulmuş kalibrasyonla), K-c (mekanizma kolları maliyetsiz birincil) (§2.7). Okuma kuralı (§2.1–§2.5) değişmedi. Koşu yok.
