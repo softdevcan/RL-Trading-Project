@@ -1,0 +1,111 @@
+"""
+K28 R1: sistem sozlugu (`dashboard/content/glossary.yaml` -> `docs/sozluk.md`, `scripts/build_guide.py`). Ana venv, ag yok.
+Plan: docs/development/system-guide-plan.md §6. Her kontrol gercek sozlugun gectigini VE bozulmus bir kopyanin
+yakalandigini (mutasyon) birlikte sinar.
+
+Kontroller:
+  1. Sema: zorunlu alanlar, id bicimi + tekil, kategori listede, sade en fazla 2 cumle (mutasyon: cift id, bos sade).
+  2. Baglantilar: ilgili var olan id'ye gidiyor; sade tanimda gecen sozluk kisaltmasi ilgili'de (mutasyon: baglantisiz
+     kisaltma, olmayan id).
+  3. Yollar: kodda/belgede dosyalari var; `::ad` dosyada tanimli (mutasyon: olmayan ad, olmayan dosya).
+  4. Kaynaklar: her kaynak dizesi literature-table.md'de birebir (mutasyon: uydurma kaynak).
+  5. Yasakli ifadeler (tez kurallari): "sizinti yok", "diferansiyel Sharpe", ozgunluk iddialari; `uyari` alani taranmaz
+     (mutasyon: sade'ye yasakli ifade eklenince yakalanir).
+  6. Tazelik: docs/sozluk.md ureticinin ciktisiyla bit-es ve `build_guide.py --check` 0 doner (mutasyon: degisen terim
+     baska bir cikti uretir).
+
+    python tests/test_guide.py
+"""
+import copy
+import os
+import subprocess
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'scripts'))
+
+import build_guide as BG  # noqa: E402
+
+passed = failed = 0
+
+
+def check(name, condition, detail=""):
+    global passed, failed
+    if condition:
+        passed += 1
+        print(f"  [OK]   {name}")
+    else:
+        failed += 1
+        print(f"  [FAIL] {name}  {detail}")
+
+
+terms = BG.load()
+
+
+def mutated(fn):
+    t = copy.deepcopy(terms)
+    fn(t)
+    return t
+
+
+print(f"\nSozluk: {len(terms)} terim, kategoriler {sorted({t['kategori'] for t in terms})}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[1] Sema")
+e0 = BG.check_schema(terms)
+e_dup = BG.check_schema(mutated(lambda t: t.append(dict(t[0]))))
+e_empty = BG.check_schema(mutated(lambda t: t[1].update(sade='  ')))
+e_long = BG.check_schema(mutated(lambda t: t[2].update(sade='Bir. Iki. Uc.')))
+check("sema gecerli; cift id, bos sade ve 3 cumlelik sade yakalanir",
+      e0 == [] and any('tekil' in x for x in e_dup) and any('sade' in x for x in e_empty)
+      and any('cumle' in x for x in e_long), f"{e0[:3]}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[2] Baglantilar")
+e0 = BG.check_links(terms)
+e_abbr = BG.check_links(mutated(lambda t: next(x for x in t if x['id'] == 'sharpe').update(
+    sade='Belirsizligi HAC ile olculen bir oran.')))
+e_dead = BG.check_links(mutated(lambda t: t[0].setdefault('ilgili', []).append('yok-boyle-terim')))
+check("ilgili baglantilari gecerli; baglantisiz kisaltma (HAC) ve olmayan id yakalanir",
+      e0 == [] and any("'HAC'" in x for x in e_abbr) and any('yok-boyle-terim' in x for x in e_dead), f"{e0[:3]}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[3] Yollar")
+e0 = BG.check_paths(terms)
+e_sym = BG.check_paths(mutated(lambda t: next(x for x in t if x['id'] == 'sharpe').update(
+    kodda=['scripts/marl/analyze_m3.py::olmayan_fonksiyon'])))
+e_file = BG.check_paths(mutated(lambda t: t[0].update(belgede=['docs/olmayan.md'])))
+n_refs = sum(len(t.get('kodda', [])) + len(t.get('belgede', [])) for t in terms)
+check(f"{n_refs} kod/belge yolu var ve adlar tanimli; olmayan ad ve dosya yakalanir",
+      e0 == [] and any('olmayan_fonksiyon' in x for x in e_sym) and any('olmayan.md' in x for x in e_file), f"{e0[:3]}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[4] Kaynaklar")
+e0 = BG.check_sources(terms)
+e_fake = BG.check_sources(mutated(lambda t: t[0].update(kaynak=['Kimse vd. (2099)'])))
+n_src = sum(len(t.get('kaynak', [])) for t in terms)
+check(f"{n_src} kaynak dizesi literature-table.md'de; uydurma kaynak yakalanir",
+      e0 == [] and n_src > 0 and any('2099' in x for x in e_fake), f"{e0[:3]}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[5] Yasakli ifadeler")
+e0 = BG.check_forbidden(terms)
+uyari_has_forbidden = any('sızıntı yok' in (t.get('uyari') or '').lower() for t in terms)
+e_inj = [BG.check_forbidden(mutated(lambda t, p=p: t[3].update(sade=t[3]['sade'] + ' ' + p)))
+         for p in ('Bu hatta sızıntı yok.', 'Odul diferansiyel Sharpe kullanir.', 'Literatürde ilk kez yapildi.')]
+check("yasakli ifade yok (uyari haric, orada 'denmez' diye anilabiliyor); eklenen uc ifade yakalanir",
+      e0 == [] and uyari_has_forbidden and all(e_inj), f"{e0[:3]}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[6] Tazelik")
+with open(BG.OUT_MD, encoding='utf-8') as fh:
+    on_disk = fh.read()
+r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_guide.py'), '--check'], capture_output=True,
+                   text=True, encoding='utf-8')
+changed = BG.render(mutated(lambda t: t[0].update(teknik=t[0]['teknik'] + ' (degisti)')))
+check("docs/sozluk.md uretilmis hal ile bit-es, --check 0 doner; degisen terim farkli cikti uretir",
+      BG.render(terms) == on_disk and r.returncode == 0 and changed != on_disk, r.stdout + r.stderr)
+
+print("\n" + "=" * 60)
+print(f"Sonuc: {passed} gecti, {failed} kaldi")
+sys.exit(1 if failed else 0)

@@ -1,0 +1,860 @@
+# Sistem sözlüğü — TEK KAYNAK (K28 R1; plan docs/development/system-guide-plan.md §3).
+# Elle yazılır. docs/sozluk.md bu dosyadan `python scripts/build_guide.py` ile ÜRETİLİR; onu elle düzenleme.
+# Kurallar (§3): sade en fazla 2 cümle, kısaltma kullanıyorsa o terim `ilgili`'de; teknik tanım koddaki tanımla aynı,
+# `kodda` o tanımın yeri; sözlükte deney SONUCU (etiket, ölçülen sayı) yok, yalnız tanım ve tasarım parametresi;
+# kaynak yalnız docs/thesis/literature-table.md'de geçen "Yazar (yıl)" dizesiyle. Denetim: tests/test_guide.py.
+
+# ------------------------------------------------------------------ sistem ve aşamalar
+- id: faz
+  terim: Faz
+  kategori: sistem
+  sade: >-
+    Projenin büyük geliştirme aşamaları. Her faz bir iş paketini (örneğin tahmin sistemi, kimlik, arayüz, araştırma geçerliliği) tamamlar.
+  teknik: >-
+    Tamamlananlar: Faz 1 (kavram kanıtı), 2 (tahmin sistemi), 3 (üretim iyileştirmeleri), 6 (performans), 7 (kimlik ve
+    çok kullanıcı), 8 (arayüz), 9 (araştırma geçerliliği). Faz 10 (çok ajanlı öğrenme) sürüyor. Bileşen ve aşama durumu
+    sistem haritasında tutulur.
+  belgede: [docs/development/system-map.md, docs/README.md]
+  ilgili: [m-asamalari, milestone-0p]
+
+- id: milestone-0p
+  terim: Milestone 0'
+  kategori: sistem
+  sade: >-
+    Tek ajanlı modellerin, önceden dondurulmuş bir protokolle yeniden koşulduğu kıyas aşaması. Sonradan kural değiştirilemez.
+  teknik: >-
+    Protokol m0p-v2 dondurulmuş (git etiketi m0-protocol-v2); koşumlar scripts/run_milestone0.py, analiz
+    scripts/analyze_milestone0.py. Protokol JSON'u ve belgesi değiştirilmez; değişiklik yeni sürüm (m0p-v3) ister.
+  kodda: [scripts/run_milestone0.py, scripts/analyze_milestone0.py]
+  belgede: [docs/development/milestone0-protocol-v2.md]
+  ilgili: [on-kayit, faz]
+
+- id: m-asamalari
+  terim: M1–M8 (Faz 10 aşamaları)
+  kategori: sistem
+  sade: >-
+    Çok ajanlı sistemin adım adım kurulduğu aşamalar. Her aşama bir öncekinin üstüne bir parça ekler ve kendi denetimiyle kapanır.
+  teknik: >-
+    M1 çerçeve denemesi (BenchMARL/TorchRL), M2 ortam ve muhasebe çekirdeği, M3 öğrenme ve pozitif kontrol, M4 iletişim
+    kolları, M5 tahmin sinyali ve güvenle ağırlıklı iletişim. M6–M8 Faz 10 planında tanımlı sonraki aşamalardır; uzun
+    koşular M8'den önce yapılır.
+  belgede: [docs/development/phase-10-marl-plan.md]
+  ilgili: [m3, m4, m5, gelistirme-kapisi]
+
+- id: m3
+  terim: M3a / M3b
+  kategori: sistem
+  sade: >-
+    Çok ajanlı sistemin, cevabı bilerek konmuş sahte bir ipucunu kullanmayı öğrenip öğrenemediğinin sınandığı aşama. M3a maliyetsiz, M3b işlem maliyetli koşulur.
+  teknik: >-
+    M3a: A1 (pozitif kontrol bloğu gözlemde) ↔ S1 (aynı bloğun karıştırılmış hâli), maliyetsiz, ön kayıtlı eşiklerle.
+    M3b: aynı karşılaştırma 20 bps gidiş-dönüş maliyetle (A1c ↔ S1c).
+  belgede: [docs/development/phase-10-m3-design.md]
+  ilgili: [pozitif-kontrol, karistirilmis-kontrol, kol-kodlari-m3, islem-maliyeti, gelistirme-kapisi]
+
+- id: m4
+  terim: M4a / M4b
+  kategori: sistem
+  sade: >-
+    İletişimin, bir ajanın elindeki bilgiyi ihtiyacı olan komşusuna taşıyıp taşımadığının sınandığı aşama.
+  teknik: >-
+    Komşu sinyali düzeninde. M4a: iletişimsiz (none), tam bağlı dikkat (attn) ve graf maskeli dikkat (gat) kolları.
+    M4b: gat ↔ mimari-eş iletişimsiz kol (self) pilotu. İkisi de geliştirme kapısıdır.
+  kodda: [marl/comm_models.py::CommPolicy]
+  belgede: [docs/development/phase-10-m4-design.md]
+  ilgili: [komsu-sinyali, iletisim-kollari, kol-kodlari-m4, gelistirme-kapisi]
+
+- id: m5
+  terim: M5
+  kategori: sistem
+  sade: >-
+    Tahmin sinyalinin ajanlara gözlem ya da mesaj olarak verilmesinin ve mesajları tahminin güvenine göre ağırlıklandırmanın neyi değiştirdiğinin sınandığı aşama.
+  teknik: >-
+    Gerçek sinyal kolları (S-obs, S-msg, ikisi birden) sağlamlık sorusunu sınar. Güven mekanizması (güvenle ağırlıklı
+    dikkat, karşılaştırılabilir güven) yalnız sentetik pozitif kontrolde, komşu sinyali düzeninde sınanır. Okuma kuralı
+    sonuçtan önce yazılır.
+  kodda: [marl/comm_models.py::confidence_term]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [s-obs, s-msg, beta, kol-kodlari-m5, pozitif-kontrol, komsu-sinyali]
+
+- id: k-kararlari
+  terim: K-kararları
+  kategori: sistem
+  sade: >-
+    Plan belgelerinde numaralanmış ve kullanıcının onayladığı tasarım kararları.
+  teknik: >-
+    Faz 9 ve Faz 10 planlarının karar tablolarında "K" ve bir sayıyla anılır (Faz 10 §6; ör. K12 yürütme ufku, K24
+    parametre paylaşımı). Aynı numara farklı tablolarda farklı bir karar olabilir; hangi tablo olduğu bağlamdan okunur.
+  belgede: [docs/development/phase-10-marl-plan.md, docs/development/phase-9-research-validity-plan.md]
+  ilgili: [k12, parametre-paylasimi]
+
+- id: k12
+  terim: K12 yürütme ufku
+  kisaltma: K12
+  kategori: sistem
+  sade: >-
+    Akşam kapanışta karar ver, ertesi sabah açılışta işlem yap, pozisyonu bir sonraki sabaha kadar tut.
+  teknik: >-
+    Karar t kapanışında, yürütme t+1 açılışında; kararın kazandığı getiri Oₜ₊₁ → Oₜ₊₂. Pozitif kontrolün etiketi aynı
+    ufukta: 1[Oₜ₊₂ > Oₜ₊₁]. Eski tek ajan ortamı değişmedi (orada karar ve yürütme aynı kapanışta).
+  kodda: [scripts/marl/pc_alignment_m2.py::k12_labels]
+  belgede: [docs/development/phase-10-marl-plan.md]
+  ilgili: [k-kararlari, pozitif-kontrol]
+
+- id: on-kayit
+  terim: Ön kayıt
+  kategori: sistem
+  sade: >-
+    Deneyi koşmadan önce neyin başarı sayılacağını ve sonucun nasıl okunacağını yazıp dondurmak. Sonuca bakıp kural değiştirmeyi önler.
+  teknik: >-
+    Kollar, tohumlar, eşikler ve okuma tablosu koşudan önce commit'lenir ve DONDURULDU diye işaretlenir. Sonradan her
+    değişiklik yeni bir ön kayıt ister ve deneme sayısına eklenir. Yasak kurtarma yolları (ek tohum, eşik değişimi,
+    birincil karşılaştırmanın değişmesi) ön kayıtta listelenir.
+  belgede: [docs/development/phase-10-m5-design.md, docs/development/phase-10-m4-design.md]
+  ilgili: [deneme-kaydi, hakem-paneli, tohum]
+
+- id: hakem-paneli
+  terim: Hakem paneli
+  kategori: sistem
+  sade: >-
+    Bir deney ya da önemli bir kod değişikliği koşulmadan önce onu eleştirel gözle okuyan yapay zekâ hakemleri.
+  teknik: >-
+    hakem-finans ve hakem-rl dar kapsamlı uzmanlardır ve pahalı bir işin girdisinde çağrılır; hakem-2 faz kapanışında son
+    kapıdır. Ana oturum ~5 bin token'lık bir inceleme paketi yazar ve uzun ölçümleri kendisi yapar; ikinci okuma yalnız
+    BÜYÜK bulguda yapılır. Maliyet kaydı review-panel.md'de.
+  belgede: [docs/development/review-panel.md]
+  ilgili: [on-kayit]
+
+- id: gelistirme-kapisi
+  terim: Geliştirme kapısı
+  kategori: sistem
+  sade: >-
+    Sistemin bir parçası beklendiği gibi çalışıyor mu diye bakılan ara denetim. Tezin bulgusu değildir.
+  teknik: >-
+    Faz 10 §3.2.5: gerçek sinyalli koşulardan önce sentetik bir pozitif kontrolle ve pilot büyüklükte (az tohum) koşulur.
+    Sonuç bir sonraki aşamanın tasarımına girdi olur; uzun koşu sistem olgunlaşınca M8'den önce yapılır.
+  belgede: [docs/development/phase-10-marl-plan.md]
+  ilgili: [pozitif-kontrol, etiket-pilot, m-asamalari]
+
+- id: deneme-kaydi
+  terim: Deneme kaydı (N)
+  kategori: sistem
+  sade: >-
+    Yapılan her deneyin, sonucu ne olursa olsun kaydedildiği defter. Çok deneme yapıp yalnız iyi çıkanı göstermeyi engeller.
+  teknik: >-
+    Deneme sayısı N, çoklu deneme düzeltmelerine (ör. Deflated Sharpe) girer. Ön kayıt hangi karşılaştırmaların deneme
+    sayıldığını yazar; değerlendirme protokolünün açık maddeleri kayıtta etiketlenir.
+  kodda: [evaluation/trial_registry.py]
+  ilgili: [dsr, on-kayit]
+
+# ------------------------------------------------------------------ deney kodları ve etiketler
+- id: pozitif-kontrol
+  terim: Pozitif kontrol (PC060-K12)
+  kisaltma: PC060-K12
+  kategori: deney
+  sade: >-
+    Cevabı bilerek içine konmuş sahte bir ipucu. Sistemin gerçek bir ipucunu kullanabilip kullanamadığını sınamak içindir; gerçek bir tahmin değildir.
+  benzetme: >-
+    Sınavdan önce öğrenciye kopya kâğıdı verip kopyayı okuyabiliyor mu diye bakmak.
+  teknik: >-
+    Etiketten (geleceği bilerek) üretilmiş, hedef AUC'si 0,60 olan sentetik p_up_cal; taban tablonun maskesi ve ölçeği
+    korunur. Etiket K12 ufkunda 1[Oₜ₊₂ > Oₜ₊₁]. Üreteç tohumu bloğu belirler. Yalnız boru hattı kontrolüdür.
+  kodda: [prediction/pit_table.py::positive_control_table, scripts/marl/build_pred_m3.py]
+  belgede: [docs/development/phase-10-m3-design.md]
+  ilgili: [k12, auc, karistirilmis-kontrol]
+  uyari: >-
+    Bilerek gelecekten bilgi taşır; performans sonucu ya da tez bulgusu olarak raporlanmaz.
+
+- id: karistirilmis-kontrol
+  terim: Karıştırılmış kontrol
+  kategori: deney
+  sade: >-
+    Aynı ipucunun günleri karıştırılmış hâli. Biçimi aynıdır ama doğru güne ait değildir, yani bilgi taşımaz.
+  teknik: >-
+    Tahmin bloğunun satırları (günler) üreteç tohumuyla permüte edilir; üç alan ve maske birlikte. Kesit yapısı ve
+    marjinal dağılım korunur, zaman hizası kopar. İpucunun bilgisini girdi boyutundan ve kapasiteden ayırır.
+  kodda: [scripts/marl/build_pred_m3.py]
+  belgede: [docs/development/phase-10-m3-design.md]
+  ilgili: [pozitif-kontrol, kol]
+
+- id: komsu-sinyali
+  terim: Komşu sinyali (σ)
+  kisaltma: σ
+  kategori: deney
+  sade: >-
+    Her ajanın elindeki ipucu kendi hissesine değil, bir komşu hisseye aittir. O bilgi ancak iletişimle ihtiyacı olan ajana ulaşır.
+  teknik: >-
+    σ, gat grafında sabit noktasız bir komşu eşlemesidir (iki parçalı eşleme, Hopcroft–Karp); ajan j'nin gözlemine
+    σ(j)'nin pozitif kontrol bloğu konur. σ M4a'da donduruldu (neighbor_map.json) ve sonraki üretimler onu okur. Komşular
+    korele olduğundan iletişimsiz politika da komşu sinyalinden kısmi değer alabilir; bu sızıntı koşudan önce ölçülür.
+  kodda: [scripts/marl/build_pred_m4.py::neighbor_bijection]
+  belgede: [docs/development/phase-10-m4-design.md]
+  ilgili: [pozitif-kontrol, graf, iletisim-kollari]
+
+- id: kol
+  terim: Kol
+  kategori: deney
+  sade: >-
+    Bir deneyde karşılaştırılan yapılandırmalardan her biri. İlaç denemesindeki "ilaç grubu" ve "plasebo grubu" gibi.
+  teknik: >-
+    Aynı bütçe, aynı tohumlar ve aynı değerlendirmeyle koşulan, yalnız sınanan öğede farklı yapılandırma. Kodlar aşamaya
+    özgüdür (M3: A1/S1; M4: N/A/G/Z × X/S; M5: G0/GL/GLS/GLM/GD).
+  ilgili: [kol-kodlari-m3, kol-kodlari-m4, kol-kodlari-m5, tohum]
+
+- id: kol-kodlari-m3
+  terim: A1 / S1 / A1c / S1c
+  kategori: deney
+  sade: >-
+    M3'ün kolları: A1 sahte ipucuyla, S1 aynı ipucunun karıştırılmış hâliyle eğitilir. Sondaki "c" işlem maliyetli sürümü belirtir.
+  teknik: >-
+    A1: pozitif kontrol bloğu gözlemde; S1: karıştırılmış blok; A0: tahminsiz. "c" son eki 20 bps gidiş-dönüş maliyetli
+    kol (M3b).
+  belgede: [docs/development/phase-10-m3-design.md]
+  ilgili: [m3, pozitif-kontrol, karistirilmis-kontrol, islem-maliyeti]
+
+- id: kol-kodlari-m4
+  terim: N / A / G / Z × X / S
+  kategori: deney
+  sade: >-
+    M4'ün kolları: ilk harf iletişim türü (N yok, A herkesle, G yalnız komşularla, Z yalnız kendine), ikinci harf ipucu (X gerçek komşu ipucu, S karıştırılmış).
+  teknik: >-
+    N = none (BenchMARL MLP), A = attn, G = gat (graf maskeli dikkat), Z = self (aynı katmanlar, dikkat yalnız kendine:
+    mimari-eş iletişimsiz kontrol). X = komşu sinyali bloğu, S = karıştırılmış komşu bloğu.
+  kodda: [marl/comm_models.py::CommPolicy]
+  belgede: [docs/development/phase-10-m4-design.md]
+  ilgili: [m4, iletisim-kollari, komsu-sinyali, karistirilmis-kontrol]
+
+- id: kol-kodlari-m5
+  terim: G0 / GL / GLS / GLM / GD
+  kategori: deney
+  sade: >-
+    M5 mekanizma kolları: G0 güvensiz, GL güvenle ağırlıklı, GLS güveni karıştırılmış, GLM güveni göndericiler arasında bozulmuş, GD sabit güven ölçeklemeli iletişim. Hepsi komşularla sınırlı iletişim kullanır.
+  teknik: >-
+    Hepsi gat + komşu sinyali. GL: zlogodds güven terimi, β öğrenilen (0'dan); GLS: güven terimi sabit bir derangement ile
+    göndericiler arasında karıştırılmış; GLM: yalnız güven teriminde gönderici başına sıcaklık; GD: prob terimi, β = 1
+    sabit (DebUnc ölçeklemesi).
+  kodda: [marl/comm_models.py::confidence_term]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [m5, s-msg, beta, komsu-sinyali]
+
+- id: etiket-gecti
+  terim: GEÇTİ
+  kategori: deney
+  sade: >-
+    Ön kayıttaki bütün koşullar sağlandı. Aşama bir sonrakine girdi verebilir.
+  teknik: >-
+    Ön kayıtlı kapının koşulları birlikte: etki yönü, tek yönlü p < 0,05, tohum sıralaması ve doğrulama penceresinde
+    işaret. Geliştirme kapısı sonucudur, tez bulgusu değildir.
+  ilgili: [on-kayit, gelistirme-kapisi, tek-yonlu-p]
+
+- id: etiket-kismi
+  terim: KISMİ
+  kategori: deney
+  sade: >-
+    Birincil koşul sağlandı ama diğerlerinden en az biri sağlanmadı. Kaynağı belirsiz bir işaret.
+  teknik: >-
+    Birincil fark ve testi var; kontrol, sıralama ya da doğrulama koşullarından biri yok. Aynı kapı ek tohumla
+    kurtarılmaz; yeni deney yeni ön kayıt ister.
+  ilgili: [on-kayit, tohum]
+
+- id: etiket-gozlenmedi
+  terim: GÖZLENMEDİ
+  kategori: deney
+  sade: >-
+    Beklenen fark bu deneyde görülmedi. "Etki yok" demek değildir; deney küçük olabilir.
+  teknik: >-
+    Birincil koşul (fark > 0 ve tek yönlü p < 0,05) sağlanmadı. Güç düşükse okunuşu "bu güçle tespit edilmedi"dir.
+  ilgili: [guc, tek-yonlu-p]
+
+- id: etiket-pilot
+  terim: PİLOT_İŞARETİ
+  kategori: deney
+  sade: >-
+    Küçük bir ön denemede beklenen yönde bir işaret görüldü. Karar vermek için değil, büyük deneyi tasarlamak içindir.
+  teknik: >-
+    Pilot ön kayıtlarında (M4b, M5) tüm koşullar sağlandığında verilen etiket; karar kapısı değil, işarettir. Uzun koşu
+    ayrı bir ön kayıt ister.
+  ilgili: [on-kayit, guc, tohum]
+
+- id: tohum
+  terim: Tohum
+  kategori: deney
+  sade: >-
+    Rastgeleliğin başlangıç numarası; aynı tohumla aynı deney aynı sonucu verir. Farklı tohumlar, sonucun şansa ne kadar bağlı olduğunu gösterir.
+  teknik: >-
+    Ağırlık başlangıcı, veri toplama ve sentetik sinyal üretecinin tohumu. Yeni bir ön kayıt, sonucu görülmüş tohumları
+    yeniden kullanmaz (seçim yanlılığı). CPU'da bit-eşlik için OMP_NUM_THREADS ve MKL_NUM_THREADS = 1, torch import
+    edilmeden önce.
+  kodda: [marl/benchmarl_task.py]
+  ilgili: [guc, kol]
+
+# ------------------------------------------------------------------ değerlendirme ve istatistik
+- id: sharpe
+  terim: Sharpe oranı
+  kisaltma: SR
+  kategori: degerlendirme
+  sade: >-
+    Alınan her birim risk için ne kadar kazanıldığı. Yüksek olması, aynı dalgalanmayla daha çok kazanmak demektir.
+  teknik: >-
+    Fazla getirinin (X = R − rf) günlük ortalaması / standart sapması (ddof 1), √252 ile yıllıklandırılmış.
+  kodda: [scripts/marl/analyze_m3.py::sr]
+  ilgili: [fazla-getiri, d-farki, risksiz-faiz]
+  kaynak: ["Sharpe (1966)"]
+
+- id: fazla-getiri
+  terim: Fazla getiri
+  kategori: degerlendirme
+  sade: >-
+    Portföyün getirisinin, para risksiz faizde dursaydı kazanacağının üstündeki kısmı.
+  teknik: >-
+    X = R − rf, R = g₁(1 − c·τ)g₂ − 1 (gece kayması, maliyet, seans içi). Ödül ve seçim metriği aynı seriyi kullanır.
+  kodda: [marl/accounting.py::step_fractional]
+  ilgili: [risksiz-faiz, islem-maliyeti, devir, odul]
+
+- id: risksiz-faiz
+  terim: Risksiz faiz (A8)
+  kategori: degerlendirme
+  sade: >-
+    Parayı hiç risk almadan tutsaydık kazanacağımız faiz. Bir stratejinin gerçekten değer katıp katmadığı bunun üstünden ölçülür.
+  teknik: >-
+    Tek kaynak: TCMB ağırlıklı ortalama fonlama maliyeti (EVDS'ten data/macro/risk_free.csv), seans başına dönem başı
+    getiriye çevrilir. Seri yoksa hata verir; 0 ya da sabit bir değere sessizce düşülmez.
+  kodda: [evaluation/risk_free.py::risk_free_series, marl/panel.py::risk_free_for]
+  ilgili: [fazla-getiri, sharpe]
+
+- id: d-farki
+  terim: D (Sharpe farkı)
+  kisaltma: D
+  kategori: degerlendirme
+  sade: >-
+    İki kolun Sharpe oranları arasındaki farkın tohumlar üzerinden ortalaması. Pozitifse ilk kol daha iyidir.
+  teknik: >-
+    D = (1/K) Σₖ [SR(aₖ) − SR(bₖ)], eşli tohumlar ve aynı tarihler; standart hatası ortak HAC ile, yıllık. Eşleşme ve
+    tarih uyumu okuma betiğinde denetlenir.
+  kodda: [evaluation/sharpe_tests.py::sharpe_diff_hac_pooled]
+  ilgili: [sharpe, hac, tohum, kol]
+
+- id: hac
+  terim: Ortak HAC
+  kisaltma: HAC
+  kategori: degerlendirme
+  sade: >-
+    Günlük getirilerin birbirine bağımlı olmasını hesaba katan bir belirsizlik (standart hata) hesabı.
+  teknik: >-
+    Heteroskedasticity and autocorrelation consistent: her çiftin Ledoit–Wolf Sharpe farkı serileri birlikte (ortak) bir
+    HAC kovaryansıyla; D'nin etki fonksiyonunun HAC varyansı. K = 1'de tek çift testiyle aynı sonucu verir.
+  kodda: [evaluation/sharpe_tests.py::sharpe_diff_hac_pooled]
+  ilgili: [d-farki, tek-yonlu-p]
+  kaynak: ["Newey & West (1987)", "Ledoit & Wolf (2008)"]
+  uyari: >-
+    p değeri piyasa günü gürültüsünü taşır, eğitim tohumları arasındaki değişkenliği taşımaz.
+
+- id: tek-yonlu-p
+  terim: Tek yönlü p
+  kategori: degerlendirme
+  sade: >-
+    Gerçekte fark yokken, yalnız şansla en az bu kadar olumlu bir fark görme olasılığı. Küçükse sonucu şansa bağlamak zorlaşır.
+  teknik: >-
+    H0: D ≤ 0'a karşı tek taraflı; iki taraflı p'den D > 0 ise p/2, değilse 1 − p/2. Ön kayıtlarda eşik 0,05.
+  kodda: [scripts/marl/analyze_m3.py::pooled]
+  ilgili: [d-farki, holm, guc]
+
+- id: holm
+  terim: Holm düzeltmesi
+  kategori: degerlendirme
+  sade: >-
+    Birden çok karşılaştırma yapınca şansla "bir şey bulma" riskini sınırlayan düzeltme.
+  teknik: >-
+    Holm–Bonferroni: p'ler küçükten büyüğe sıralanır, r'inci (0 tabanlı) p (m − r) ile çarpılır, kümülatif en büyük
+    alınır ve 1'de kırpılır; aile hata oranını korur. Sabit sıralı testlerde (önce birincil, sonra ikincil) gerekmez.
+  kodda: [scripts/marl/analyze_m3b.py::holm]
+  ilgili: [tek-yonlu-p, bh-fdr]
+
+- id: bh-fdr
+  terim: Benjamini–Hochberg (BH-FDR)
+  kisaltma: BH
+  kategori: degerlendirme
+  sade: >-
+    Çok sayıda test yapınca "bulduklarımın ne kadarı yanlış alarm" oranını sınırlayan yöntem.
+  teknik: >-
+    Yanlış keşif oranını (FDR) q düzeyinde tutan adım-yukarı yöntem. Tahmin bilgi kapısında 30 sembol tek aile.
+  kodda: [evaluation/multiple_testing.py::benjamini_hochberg]
+  ilgili: [bilgi-kapisi, holm]
+  kaynak: ["Benjamini & Hochberg (1995)"]
+
+- id: guc
+  terim: Güç
+  kategori: degerlendirme
+  sade: >-
+    Gerçekten bir fark varsa deneyin onu yakalama olasılığı. Az tohumlu küçük deneylerin gücü düşüktür.
+  teknik: >-
+    Tip II hata olasılığının tümleyeni. Ön kayıtlarda tek yönlü %5 ve %80 güç için gereken tohum sayısı betimsel verilir:
+    k = 3·((1,645 + 0,842)·SE / etki)²; SE'nin tohumla 1/√k küçüldüğü varsayımı iyimserdir.
+  kodda: [scripts/marl/analyze_m4b.py::seeds_needed]
+  ilgili: [mde, tohum, etiket-gozlenmedi]
+
+- id: mde
+  terim: En küçük tespit edilebilir etki (MDE)
+  kisaltma: MDE
+  kategori: degerlendirme
+  sade: >-
+    Bu deneyin güvenle yakalayabileceği en küçük etki. Bundan küçük bir etki varsa bile görülmeyebilir.
+  teknik: >-
+    Bilgi kapısında AUC için 0,5 + (z₁₋α + z_güç)·SE_boot; tek test için α, aile için α/m (BH'de ilk reddin Bonferroni
+    sınırı).
+  kodda: [prediction/pit_table.py::evaluate_gate]
+  ilgili: [guc, auc, bilgi-kapisi]
+
+- id: guven-araligi
+  terim: Güven aralığı (GA)
+  kisaltma: GA
+  kategori: degerlendirme
+  sade: >-
+    Gerçek değerin büyük olasılıkla içinde olduğu aralık. Dar olması tahminin kesin olduğunu gösterir.
+  teknik: >-
+    %95 GA: tahmin ± 1,96·SE (normal yaklaşım) ya da blok bootstrap yüzdelikleri (bilgi kapısı, havuzlu AUC).
+  ilgili: [hac, guc]
+
+- id: pencereler
+  terim: Eğitim / doğrulama / test penceresi
+  kategori: degerlendirme
+  sade: >-
+    Verinin üç dilimi: model eğitimde öğrenir, doğrulamada kontrol edilir. Son dilime (2021 ve sonrası) geliştirme sırasında bakılmaz.
+  teknik: >-
+    MARL: eğitim 2013-06 .. 2018-12-31, doğrulama 2019–2020; 2021+ m0p-v2 doğrulayıcı penceresidir ve M2–M5
+    geliştirmesinde başarımla okunmaz. Değerlendirme deterministik ve tam penceredir; normalizasyon yalnız eğitim
+    satırlarından.
+  kodda: [scripts/marl/train_m3.py::TRAIN_END]
+  ilgili: [nokta-zamanlilik, milestone-0p]
+
+- id: baseline-1n
+  terim: 1/N (eşit ağırlık)
+  kategori: degerlendirme
+  sade: >-
+    Parayı bütün hisselere eşit bölen en basit strateji. Her modelin en azından bunu geçmesi beklenir.
+  teknik: >-
+    MARL kıyasında her gün, tek ajan kıyasında aylık olarak geçerli sembollere eşit ağırlık; ortamın aynı muhasebesi,
+    fiyat dolgusu, projeksiyonu ve maliyetiyle.
+  kodda: [marl/m3_runner.py::rule_series, evaluation/baselines.py::equal_weight]
+  ilgili: [al-tut, islem-maliyeti]
+
+- id: al-tut
+  terim: Al-tut
+  kategori: degerlendirme
+  sade: >-
+    İlk gün parayı eşit bölüp sonra hiç işlem yapmamak.
+  teknik: >-
+    İlk gün 1/N, sonra hedef = kaymış ağırlık (işlem yok; yalnız zorunlu dondurma), ortamın muhasebesiyle.
+  kodda: [marl/m3_runner.py::rule_series]
+  ilgili: [baseline-1n]
+
+- id: devir
+  terim: Devir
+  kategori: degerlendirme
+  sade: >-
+    Bir günde portföyün ne kadarının alınıp satıldığı. Yüksek devir, yüksek işlem maliyeti demektir.
+  teknik: >-
+    τ = Σᵢ |w*ᵢ − w̃ᵢ|, yalnız hisseler (nakit devre girmez); w* hedef, w̃ gece kaymış ağırlık. Maliyet bir kez sayılır.
+  kodda: [marl/accounting.py::step_fractional]
+  ilgili: [islem-maliyeti, fazla-getiri]
+
+- id: islem-maliyeti
+  terim: İşlem maliyeti (bps)
+  kategori: degerlendirme
+  sade: >-
+    Her alım-satımda ödenen komisyon ve fiyat kayması. Baz puanla (bps, on binde bir) ölçülür.
+  teknik: >-
+    Gidiş-dönüş bps verilir; tek yön c = bps / 2 / 10⁴ (evaluation/baselines.py D4 ile aynı) ve devire uygulanır.
+    Mekanizma kolları maliyetsiz, gerçek sinyal kolları 20 bps ile koşulur.
+  kodda: [marl/accounting.py::one_way_cost]
+  ilgili: [devir, fazla-getiri]
+
+- id: dsr
+  terim: Deflated Sharpe (DSR)
+  kisaltma: DSR
+  kategori: degerlendirme
+  sade: >-
+    Çok sayıda deneme yapıldığında en iyi Sharpe oranının şansla ne kadar şişebileceğini düzelten ölçü.
+  teknik: >-
+    Deneme sayısı, getirinin çarpıklığı ve basıklığıyla düzeltilmiş Sharpe olasılığı.
+  kodda: [evaluation/sharpe.py::deflated_sharpe_ratio]
+  ilgili: [sharpe, deneme-kaydi]
+  kaynak: ["Bailey & López de Prado (2014)"]
+  uyari: >-
+    Eski uygulama yanlıştı ve düzeltildi; eski raporlarda eski fonksiyonla verilmiş bir DSR varsa yeniden hesaplanmalıdır.
+
+# ------------------------------------------------------------------ çok ajanlı öğrenme
+- id: marl
+  terim: Çok ajanlı pekiştirmeli öğrenme (MARL)
+  kisaltma: MARL
+  kategori: marl
+  sade: >-
+    Birden çok karar vericinin (ajanın) aynı ortamda deneme-yanılmayla birlikte öğrenmesi.
+  teknik: >-
+    Faz 10: hisse başına bir ajan (30 ajan, K6 seçenek A), ortak portföy. PettingZoo ortamı marl/env.py; eğitim
+    BenchMARL/TorchRL ile ayrı sanal ortamda (venv-marl, K9).
+  kodda: [marl/env.py, marl/benchmarl_task.py]
+  belgede: [docs/development/phase-10-m2-design.md]
+  ilgili: [ajan, mappo, ctde]
+
+- id: ajan
+  terim: Ajan
+  kategori: marl
+  sade: >-
+    Kendi gözlemine bakıp karar veren, öğrenen program. Burada her hisseye bir ajan düşer.
+  teknik: >-
+    Ajan i hisse i için bir logit üretir; logitler hedef ağırlığa softmax([0, kırp(z, −B, B)]) ile çevrilir (0 = nakit).
+    Politika parametreleri ajanlar arasında paylaşılır; ajan kimliği gözlemde one-hot.
+  kodda: [marl/weights.py::target_weights]
+  ilgili: [parametre-paylasimi, logit-siniri, politika, gozlem]
+
+- id: mappo
+  terim: MAPPO
+  kisaltma: MAPPO
+  kategori: marl
+  sade: >-
+    Ajanların eğitim sırasında ortak bir "eleştirmen"den yararlanarak öğrendiği yaygın bir çok ajanlı öğrenme yöntemi.
+  teknik: >-
+    Multi-Agent PPO: merkezi eleştirmen (varsayılan girdi tüm yerel gözlemler) + paylaşılan aktör. Ayarlar: mini-parti
+    bölünmez, en fazla 10 epoch, clip 0,2, lr 5e-4 (M3a ön kaydı); BenchMARL 1.4 varsayılanları.
+  kodda: [marl/m3_runner.py::build_experiment]
+  ilgili: [ippo, elestirmen, ctde, ppo]
+  kaynak: ["Yu vd. (2022)"]
+
+- id: ippo
+  terim: IPPO
+  kisaltma: IPPO
+  kategori: marl
+  sade: >-
+    Her ajanın eleştirmeninin yalnız kendi gözlemine baktığı sürüm.
+  teknik: >-
+    Independent PPO: eleştirmen yerel gözlemle; eğitici seçeneği --algo ippo. Eleştirmen kapasitesi MAPPO ile eşit
+    değildir ve kayda geçer.
+  kodda: [scripts/marl/train_m3.py::critic_summary]
+  ilgili: [mappo, elestirmen]
+  kaynak: ["de Witt vd. (2020)"]
+
+- id: ctde
+  terim: Merkezi eğitim, merkezi olmayan yürütme (CTDE)
+  kisaltma: CTDE
+  kategori: marl
+  sade: >-
+    Eğitimde ajanlar her şeyi görebilir, ama işlem anında her ajan yalnız kendi gözlemiyle karar verir.
+  teknik: >-
+    Centralised training, decentralised execution: eleştirmen eğitimde merkezi girdi alır; politika yalnız yerel
+    gözlemi (iletişim kolunda ayrıca mesajları) kullanır. Canlı karar eleştirmeni kullanmaz.
+  ilgili: [elestirmen, mappo]
+  kaynak: ["Lowe vd. (2017)"]
+
+- id: elestirmen
+  terim: Eleştirmen
+  kategori: marl
+  sade: >-
+    Eğitim sırasında "bu durum ne kadar iyi" diye puan veren yardımcı ağ. İşlem anında kullanılmaz.
+  teknik: >-
+    Değer fonksiyonu; MAPPO'da girdi tüm yerel gözlemler (varsayılan) ya da ortamın state()'i (--use-state). Bütün
+    kollarda aynı BenchMARL MLP; parametre sayısı ve girdi boyutu kayda geçer.
+  kodda: [scripts/marl/train_m3.py::critic_summary]
+  ilgili: [ctde, mappo]
+
+- id: parametre-paylasimi
+  terim: Parametre paylaşımı (K24)
+  kategori: marl
+  sade: >-
+    Bütün ajanlar aynı "beyni" kullanır. Hangi hisseye baktığını gözlemindeki kimlikten bilir.
+  teknik: >-
+    Tam paylaşım + ajan kimliği one-hot (K24); share_policy_params = True. Sektör başına seçici paylaşım ablasyon
+    olarak planda.
+  kodda: [marl/m3_runner.py::build_experiment]
+  ilgili: [ajan, k-kararlari]
+
+- id: iletisim-kollari
+  terim: İletişim kolları (none / attn / gat / self)
+  kategori: marl
+  sade: >-
+    Ajanların birbirine mesaj gönderip göndermediğini ve kime gönderdiğini belirleyen seçenekler.
+  teknik: >-
+    none: iletişimsiz MLP; attn: tam bağlı çok başlı öz-dikkat (TarMAC tipi); gat: aynı katmanlar, dikkat yalnız graf
+    komşuları ve kendisiyle sınırlı; self: aynı katmanlar, dikkat yalnız kendine (mimari-eş iletişimsiz kontrol).
+    attn, gat ve self'in parametre sayısı eşittir.
+  kodda: [marl/comm_models.py::CommPolicy, marl/comm_models.py::graph_mask]
+  belgede: [docs/development/phase-10-m4-design.md]
+  ilgili: [graf, kol-kodlari-m4, dikkat]
+  kaynak: ["Das vd. (2019)", "Veličković vd. (2018)"]
+
+- id: dikkat
+  terim: Dikkat (attention)
+  kategori: marl
+  sade: >-
+    Bir ajanın gelen mesajların hangisine ne kadar kulak vereceğini öğrendiği mekanizma.
+  teknik: >-
+    puanᵢⱼ = qᵢ·kⱼ/√d (+ β·bⱼ güven terimi); softmax ağırlıklarıyla mesajlar toplanır, artık bağlantı ve LayerNorm.
+    Çıktı başı [kendi kod ‖ mesaj sonrası] alır.
+  kodda: [marl/comm_models.py::CommPolicy]
+  ilgili: [iletisim-kollari, beta, s-msg]
+
+- id: graf
+  terim: Graf (sektör + MST)
+  kategori: marl
+  sade: >-
+    Hangi hisselerin "komşu" sayılacağını gösteren bağlantı haritası: aynı sektördekiler ve fiyatları en çok birlikte hareket edenler.
+  teknik: >-
+    sector+mst kuralı: KAP sektör grupları + eğitim penceresi log getiri korelasyonundan (Pearson, çift bazında tam
+    gözlemli günler) minimum yayılan ağaç. Kararlılık eğitim penceresinin iki yarısındaki grafların Jaccard'ıyla ölçülür.
+  kodda: [scripts/marl/graph_m4.py::pairwise_corr]
+  belgede: [docs/development/phase-10-m4-design.md]
+  ilgili: [iletisim-kollari, komsu-sinyali]
+
+- id: alfa
+  terim: α (ödül karışımı)
+  kisaltma: α
+  kategori: marl
+  sade: >-
+    Bir ajanın ödülünde kendi hissesinin katkısıyla bütün portföyün başarısının hangi oranda karıştırılacağı.
+  teknik: >-
+    rᵢ = ölçek·(α·kᵢ + (1 − α)·G); kᵢ ajanın fazla getiri katkısı, G portföy terimi, α ∈ [0, 1). Referans yapılandırma
+    α = 0,25, ölçek 100. 'differential' ödülü yalnız α = 0 ablasyonunda.
+  kodda: [marl/accounting.py::agent_rewards]
+  ilgili: [odul, fazla-getiri]
+
+- id: logit-siniri
+  terim: Logit sınırı (5 + ln N)
+  kategori: marl
+  sade: >-
+    Bir ajanın tek bir hisseye ne kadar uç bir ağırlık isteyebileceğinin üst sınırı.
+  teknik: >-
+    Eylem logitleri [−B, B] aralığına kırpılır, B = 5 + ln N (kullanıcı kararı 2026-11-16); nakit logiti sabit 0.
+  kodda: [marl/weights.py::logit_bound]
+  ilgili: [ajan]
+
+- id: s-obs
+  terim: S-obs
+  kategori: marl
+  sade: >-
+    Tahmin sinyalini ajanın kendi gözlemine eklemek.
+  teknik: >-
+    Gözlem bloğu [p_up_cal − 0,5, z(pred_logret), z(model_disagreement), pred_ok]; eksik tahmin maskelenir, 0,5'e
+    düşülmez. Ölçek yalnız eğitim satırlarından.
+  kodda: [marl/obs_spec.py::pred_block]
+  ilgili: [s-msg, pit-tablosu, gozlem]
+
+- id: s-msg
+  terim: S-msg
+  kategori: marl
+  sade: >-
+    Tahminin güvenini mesajlaşmada kullanmak: kendinden emin olan göndericinin mesajına daha çok kulak verilir.
+  teknik: >-
+    puanᵢⱼ = qᵢ·kⱼ/√d + β·bⱼ; bⱼ göndericinin güven terimi, alıcıdan bağımsız: prob = log kırp(0,5 + |p − 0,5|),
+    zlogodds = |logit p| / z_scale. Güven gözlemden okunur; gözlem tanımı değişmez (K2).
+  kodda: [marl/comm_models.py::confidence_term]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [beta, dikkat, s-obs, kol-kodlari-m5]
+  kaynak: ["Yoffe vd. (2025)"]
+
+- id: beta
+  terim: β (güven ağırlığı)
+  kisaltma: β
+  kategori: marl
+  sade: >-
+    Güvenin dikkate ne kadar karışacağını belirleyen ayar. Sıfırsa güven hiç kullanılmaz.
+  teknik: >-
+    Sabit (0 = güvensiz dikkat, 1 = DebUnc ölçeklemesi) ya da öğrenilen bir skaler (0'dan başlar). Eğitim sonu değeri
+    kayda geçer ve mekanizmanın kullanılıp kullanılmadığının denetimidir.
+  kodda: [marl/comm_models.py::CommPolicy]
+  ilgili: [s-msg, dikkat]
+
+- id: guven-gecidi
+  terim: Güven geçidi
+  kategori: marl
+  sade: >-
+    Ajan kendi tahmininden emin değilse gelen mesajlara daha çok ağırlık veren anahtar.
+  teknik: >-
+    gᵢ = σ(a·dᵢ + b), dᵢ alıcının kendi güvensizliği; mesaj gᵢ ile ölçeklenir. Başlangıç a = 0, b = 4,6 (g ≈ 0,99).
+    Komşu sinyali düzeninde sınanamaz, çünkü orada ajanın kendi güveni başka bir hisseye aittir.
+  kodda: [marl/comm_models.py::CommPolicy]
+  ilgili: [s-msg, beta, komsu-sinyali]
+
+- id: kare
+  terim: Kare (frame)
+  kategori: marl
+  sade: >-
+    Eğitimde ortamla yapılan tek bir adım. Eğitim bütçesi kare sayısıyla ölçülür.
+  teknik: >-
+    BenchMARL max_n_frames; M3–M5 koşularında 600.000 kare, parti 6.000 kare, partide 10 epoch.
+  kodda: [scripts/marl/train_m3.py]
+  ilgili: [bolum]
+
+- id: bolum
+  terim: Bölüm (episode)
+  kategori: marl
+  sade: >-
+    Eğitimde baştan sona oynanan bir dönem. Burada yaklaşık bir yıl (252 işlem günü).
+  teknik: >-
+    episode_len 252; bölüm sonu terminated = False ve GAE bootstrap (kesik bölüm, gerçek son değil).
+  kodda: [marl/benchmarl_task.py]
+  ilgili: [kare]
+
+# ------------------------------------------------------------------ tek ajan ve genel RL
+- id: politika
+  terim: Politika
+  kategori: rl
+  sade: >-
+    Ajanın gözlemden karara giden kuralı. Öğrenilen şey budur.
+  teknik: >-
+    MARL'da TanhNormal aktör; eğitimde başlangıç gürültüsü tanh öncesi std 0,12, değerlendirmede deterministik (mod).
+  kodda: [marl/m3_runner.py::deterministic_rollout]
+  ilgili: [ajan, gozlem, odul]
+
+- id: gozlem
+  terim: Gözlem
+  kategori: rl
+  sade: >-
+    Ajanın karar anında gördüğü bilgiler.
+  teknik: >-
+    marl-obs-v1: 11 z-ölçekli özellik, feat_ok, kendi ağırlığı, nakit ağırlığı, ajan kimliği (N), isteğe bağlı tahmin
+    bloğu. Normalizasyon yalnız eğitim satırlarından (norm_stats); t+1 geçerliliği gözleme konmaz.
+  kodda: [marl/obs_spec.py::build_obs_at]
+  ilgili: [s-obs, nokta-zamanlilik, politika]
+
+- id: odul
+  terim: Ödül
+  kategori: rl
+  sade: >-
+    Ajana "ne kadar iyi yaptın" diye verilen sayı. Öğrenme bunu artırmaya çalışır.
+  teknik: >-
+    MARL birincil ödülü 'excess' (fazla getiri katkısı ve portföy terimi, α karışımı). Tek ajan ortamında varsayılan
+    Sharpe terimi EMA Sharpe düzeyidir; ödül tanımının tek kaynağı reward-definition.md.
+  kodda: [marl/accounting.py::agent_rewards, env/reward_functions.py]
+  belgede: [docs/thesis/reward-definition.md]
+  ilgili: [fazla-getiri, alfa, ema-sharpe]
+
+- id: ema-sharpe
+  terim: EMA Sharpe düzeyi
+  kategori: rl
+  sade: >-
+    Tek ajanlı modelin ödülünde, son dönem getirilerinin üstel ortalamasından hesaplanan Sharpe benzeri terim.
+  teknik: >-
+    Varsayılan sharpe_term = 'ema_level'. Moody–Saffell'in Dₜ türevi değildir; o seçimli olarak sharpe_term =
+    'differential' ile (Faz 9 G1). Komisyon ödülde iki kez sayılıyor (beyan).
+  kodda: [env/reward_functions.py]
+  belgede: [docs/thesis/reward-definition.md]
+  ilgili: [odul]
+  kaynak: ["Moody & Saffell (2001)"]
+  uyari: >-
+    Bu terime "diferansiyel Sharpe" denmez (tez kuralı, docs/thesis/CLAUDE.md).
+
+- id: ppo
+  terim: PPO
+  kisaltma: PPO
+  kategori: rl
+  sade: >-
+    Politikayı küçük ve güvenli adımlarla güncelleyen yaygın bir öğrenme yöntemi.
+  teknik: >-
+    Proximal Policy Optimization: kırpılmış olasılık oranı amacı (clip ε = 0,2). MAPPO ve IPPO bunun çok ajanlı
+    sürümleridir.
+  ilgili: [mappo, ippo, politika]
+  kaynak: ["Schulman vd. (2017)"]
+
+# ------------------------------------------------------------------ tahmin hattı
+- id: auc
+  terim: AUC
+  kisaltma: AUC
+  kategori: tahmin
+  sade: >-
+    Bir tahminin yükselen ve düşen günleri ne kadar iyi ayırdığı. 0,5 yazı-tura, 1 kusursuz demektir.
+  teknik: >-
+    ROC eğrisi altındaki alan; p_up_cal ile yön etiketi arasında.
+  kodda: [evaluation/calibration.py::auc]
+  ilgili: [bilgi-kapisi, pozitif-kontrol]
+
+- id: pit-tablosu
+  terim: P tablosu (pit_v1 / pit_v2)
+  kategori: tahmin
+  sade: >-
+    Her gün için, yalnız o gün bilinebilecek veriyle üretilmiş tahminlerin tablosu.
+  teknik: >-
+    Nokta-zamanlı ve örneklem dışı tahmin tablosu. pit_v1 kapanıştan kapanışa (Cₜ → Cₜ₊₁) yönü, pit_v2 (P5) K12
+    ufkundaki açılıştan açılışa (Oₜ₊₁ → Oₜ₊₂) yönü tahmin eder.
+  kodda: [prediction/pit_table.py]
+  ilgili: [nokta-zamanlilik, k12, bilgi-kapisi]
+
+- id: bilgi-kapisi
+  terim: Bilgi kapısı (İ3)
+  kategori: tahmin
+  sade: >-
+    Bir tahmin sinyalinin gerçekten bilgi taşıyıp taşımadığını, kullanılmadan önce sınayan test.
+  teknik: >-
+    Sembol başına: AUC için tek taraflı yüzdelik blok bootstrap p (H0: AUC ≤ 0,5), 30 sembol tek aile BH; BSS (taban
+    oranı test dışından) ve MDE raporlanır. Kapıyı geçmeyen sinyalin güveni "sıcaklık ölçekli, ayırt edici değil" diye
+    anılır, "kalibre" denmez.
+  kodda: [prediction/pit_table.py::evaluate_gate]
+  ilgili: [auc, bh-fdr, mde, kalibrasyon]
+
+- id: kalibrasyon
+  terim: Kalibrasyon (sıcaklık)
+  kategori: tahmin
+  sade: >-
+    Tahminin söylediği olasılığın gerçekleşen sıklığa uyması: "%60" denen günlerin yaklaşık %60'ı gerçekten yükselmeli.
+  teknik: >-
+    Sıcaklık ölçekleme: tek parametre T > 0, doğrulama kümesinde NLL en küçüklenir, p = σ(z / T). ECE ve Brier ile
+    ölçülür.
+  kodda: [evaluation/calibration.py::fit_temperature, evaluation/calibration.py::apply_temperature]
+  ilgili: [bilgi-kapisi, auc]
+
+# ------------------------------------------------------------------ veri
+- id: bist30
+  terim: BIST-30
+  kategori: veri
+  sade: >-
+    Borsa İstanbul'un en büyük 30 şirketinin hissesinden oluşan endeks. Sistem bu hisselerde işlem yapar.
+  teknik: >-
+    Sembol evreni tek kaynaktan okunur; panel sırası bu kaynağın sırasıdır (sorted() uygulanmaz). Üyelik değişimleri ve
+    KAP sektör grupları ayrıca izlenir.
+  kodda: [data/bist30_symbols.py]
+  ilgili: [panel]
+
+- id: panel
+  terim: Panel
+  kategori: veri
+  sade: >-
+    Bütün hisselerin günlük fiyat ve göstergelerinin tarih × hisse tablosu.
+  teknik: >-
+    data/marl/panel_m2.npz (SHA sabit); build_arrays [T, N] diziler + risksiz faiz. Eksik hücre atılmaz: fiyat taşınır
+    ve hisse o gün dondurulur. Fiyatlar yfinance düzeltilmiş.
+  kodda: [marl/panel.py::build_arrays, marl/accounting.py::fill_prices]
+  ilgili: [risksiz-faiz, listeleme-kilidi, bist30]
+
+- id: listeleme-kilidi
+  terim: Listeleme kilidi
+  kategori: veri
+  sade: >-
+    Borsaya yeni giren bir hissede ilk haftalarda işlem yapılmaması kuralı.
+  teknik: >-
+    LISTING_LOCKOUT = 20 seans; ortam ve canlı karar aynı işlem yapılabilirlik maskesini kullanır.
+  kodda: [marl/accounting.py::LISTING_LOCKOUT]
+  ilgili: [panel, satis-engeli]
+
+- id: satis-engeli
+  terim: Satış engeli (taban açılış)
+  kategori: veri
+  sade: >-
+    Bir hisse güne en düşük fiyat sınırından (taban) açılırsa o gün satılamayacağını varsayan kural.
+  teknik: >-
+    limit_down_gaps(dates): dönem bağımlı fiyat marjı − 0,005. Marj takvimi 2020-12-31'e kadar doğrulandı; sonrası için
+    hata verir (önce kaynakla doğrulanmalı). Tavan alım engeli yoktur.
+  kodda: [marl/accounting.py::limit_down_gaps]
+  belgede: [docs/development/phase-10-m2-design.md]
+  ilgili: [listeleme-kilidi, panel]
+
+- id: nokta-zamanlilik
+  terim: Nokta-zamanlılık (B0)
+  kategori: veri
+  sade: >-
+    Geçmişteki bir gün için yalnız o gün gerçekten bilinebilecek veriyi kullanmak.
+  teknik: >-
+    B0 kesme değişmezliği: t'den sonraki veri bozulduğunda t'deki özellik ya da tahmin değişmemelidir; testlerde mutasyonla
+    denetlenir. Bilinen metodolojik açıklar roadmap'te listelidir.
+  belgede: [docs/development/roadmap.md]
+  ilgili: [pit-tablosu, pencereler]
+  uyari: >-
+    "Sızıntı yok" denmez; doğrulanmış sızıntı kaynakları var (roadmap "Bilinen Metodolojik Açıklar").

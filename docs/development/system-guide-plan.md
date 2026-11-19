@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.2 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** Sıradaki iş R1. Kod yok.
+**Sürüm:** v0.3 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11); sıradaki iş R2.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -159,9 +159,17 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Kapsam şişmesi:** ~170 terim tek seferde yazılırsa kalite düşer. Önlem: R1'de ~60 terim; kalan R4'te.
 - **Konteyner farkı:** `dashboard/content/` imaja girmezse sayfa boş kalır. Önlem: R2 kabul ölçütünde konteyner açılışı; `.dockerignore` `*.md` kuralı YAML ve JSON'u etkilemez, R2'de doğrulanır.
 
+## 11. R1 durumu (2026-11-19)
+
+- **Sözlük:** `dashboard/content/glossary.yaml`, 73 terim, 7 kategori (yazılım ve ürün kategorisi R4'te). Üretilmiş [`docs/sozluk.md`](../sozluk.md) (`python scripts/build_guide.py`; `--check` bayatlığı yakalar).
+- **Test:** `tests/test_guide.py` 6/6 ([1]–[6]; her kontrol mutasyonla birlikte). 93 kod/belge yolu ve 13 kaynak dizesi denetleniyor.
+- **Plandan sapmalar (beyan):** (a) §6 [5]'teki "ilk" yasağı tek kelime değil özgünlük kalıbı olarak uygulandı (`ilk kez|defa|çalışma`, `literatürde yok|ilk`); "ilk gün" gibi olağan kullanımlar engellenmez. (b) Yasaklı ifade taraması `uyari` alanını atlar, çünkü o alan yasaklı ifadeyi "denmez" diye anmak için var. (c) Sözlükte deney sonucu (etiket, ölçülen sayı) yok; yalnız tanım ve tasarım parametresi. Sonuçlar R3'teki deney kartlarına (`snapshot.json`) kalır. (d) M5 kol kodları (G0/GL/GLS/GLM/GD) M5 mekanizma ön kaydına göre yazıldı (GLG yok).
+- **Açık:** üretilmiş dosyanın elle düzenlenmesini engelleyen guard hook'u (§2, isteğe bağlı) eklenmedi; `--check` + test [6] bayatlığı yakalıyor. Bakım kuralı (§7) kök `CLAUDE.md`'ye R4'te girer.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.3 (2026-11-19):** R1 bitti (§11): 73 terim, üretici, test 6/6, `docs/sozluk.md`. Plandan sapmalar beyan edildi.
 - **v0.2 (2026-11-19):** Kullanıcı onayı: plan ve R-K1..R-K7 öneri yönünde. Sıradaki iş R1.
 - **v0.1 (2026-11-19):** İlk plan (kullanıcı isteği). Ölçülmüş kısıtlar, tek kaynak mimarisi, şema, envanter, sayfa bölümleri, doğrulama, iş paketleri R1–R4, kararlar R-K1..R-K7. Kod yok.
