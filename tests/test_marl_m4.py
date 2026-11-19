@@ -103,6 +103,11 @@ pa = sum(p.numel() for p in ca.parameters())
 pg = sum(p.numel() for p in cg.parameters())
 check("parametre sayisi = formul", pa == comm_param_count(n_in, 2, 16), f"{pa} vs {comm_param_count(n_in, 2, 16)}")
 check("attn = gat parametre sayisi", pa == pg, f"{pa} vs {pg}")
+es = R.build_experiment(CFG, seed=0, model=model_spec('self'), **BUILD)
+cs = comm_module(es)
+check("self (M4b mimari-es kontrol) = gat parametre sayisi", sum(p.numel() for p in cs.parameters()) == pg)
+check("self'e kenar -> hata", raises(lambda: R.build_experiment(CFG, seed=0, model=dict(model_spec('self'), edges=EDGES),
+                                                                **BUILD)))
 none_m4, comm_m4 = mlp_param_count(48, 2), comm_param_count(48, 2, 110)
 check("M4 boyutlari: |comm/none - 1| <= %10", abs(comm_m4 / none_m4 - 1) <= 0.10, f"{comm_m4} / {none_m4}")
 
@@ -127,6 +132,12 @@ x_nb[0, 1] += 3.0      # 1, 0'in komsusu
 check("gat: komsu olmayanin gozlemi degisince ajan 0 ciktisi bit-es", torch.equal(out(cg, obs)[0], out(cg, x_far)[0]))
 check("gat: komsunun gozlemi degisince ajan 0 ciktisi degisir", not torch.equal(out(cg, obs)[0], out(cg, x_nb)[0]))
 check("attn: herhangi bir ajanin gozlemi ajan 0'i etkiler", not torch.equal(out(ca, obs)[0], out(ca, x_far)[0]))
+es.policy.load_state_dict(ea.policy.state_dict(), strict=False)
+x_all = obs.clone()
+x_all[0, 1:] += 3.0    # ajan 0 disindaki herkes
+check("self: diger ajanlarin gozlemi ajan 0 ciktisini degistirmez (iletisim yok)",
+      torch.equal(out(cs, obs)[0], out(cs, x_all)[0]))
+check("self: ajanin kendi gozlemi kendi ciktisini degistirir (ajan 1)", not torch.equal(out(cs, obs)[1], out(cs, x_nb)[1]))
 
 # ---------------------------------------------------------------------------------------------
 print("\n[4] Kisa MAPPO, tohum, kaydet/yukle")

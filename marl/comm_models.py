@@ -7,6 +7,8 @@ Kollar (plan §3.2.5; M4 tasarimi `docs/development/phase-10-m4-design.md` §1):
   gat  : attn ile AYNI katmanlar ve AYNI parametre sayisi; dikkat yalniz graf komsulari + kendisi ile sinirli
          (sabit ikili maske; graf egitim penceresinden, `scripts/marl/graph_m4.py`). Iki kol arasindaki tek fark
          graf onculudur (plan §2 Y-tablosu #3: "fark graf onculunden gelir").
+  self : attn/gat ile AYNI katmanlar ve AYNI parametre; dikkat yalniz kendine (maske = birim) -> ajanlar arasi bilgi
+         akisi YOK. M4b mimari-es iletisimsiz kontrol (M4 tasarimi §6; hakem-rl M4a #4): gat - self farki yalniz iletisim.
 
 M5 S-msg (plan §3.1 sinyal yollari; Faz 9 M5; M5 tasarimi §3 TASLAK): guvenle agirlikli dikkat
   puan_ij = q_i k_j / sqrt(d) + beta * b_j,  b_j gondericinin guven terimi (alicidan bagimsiz)
@@ -37,7 +39,7 @@ from torch import nn
 
 from benchmarl.models.common import Model, ModelConfig
 
-KINDS = ('attn', 'gat')
+KINDS = ('attn', 'gat', 'self')
 CONF_MODES = ('none', 'prob', 'zlogodds')
 BETA_MODES = ('fixed', 'learned')
 
@@ -101,8 +103,10 @@ class CommPolicy(Model):
             raise ValueError('CommPolicy yalniz ajan eksenli, tam paylasimli, merkezi olmayan politika (K24)')
         if kind == 'gat' and not edges:
             raise ValueError("gat kolu kenar listesi ister")
-        if kind == 'attn' and edges:
-            raise ValueError("attn kolu tam baglidir; kenar listesi verilmez")
+        if kind in ('attn', 'self') and edges:
+            raise ValueError(f"{kind} kolu kenar listesi almaz")
+        if kind == 'self' and conf_mode != 'none':
+            raise ValueError("self kolu iletisimsizdir; guven terimi anlamsiz")
         if hidden % heads:
             raise ValueError(f"hidden ({hidden}) heads'e ({heads}) bolunmeli")
         if conf_mode not in CONF_MODES or beta_mode not in BETA_MODES:
@@ -125,7 +129,12 @@ class CommPolicy(Model):
                                   for _ in range(rounds))
         self.norm = nn.ModuleList(nn.LayerNorm(hidden, device=self.device) for _ in range(rounds))
         self.head = nn.Sequential(nn.Linear(2 * hidden, hidden), nn.Tanh(), nn.Linear(hidden, n_out)).to(self.device)
-        mask = graph_mask(self.n_agents, edges) if kind == 'gat' else None
+        if kind == 'gat':
+            mask = graph_mask(self.n_agents, edges)
+        elif kind == 'self':
+            mask = graph_mask(self.n_agents, [])      # yalniz kendine dikkat: iletisim yok, katmanlar ayni
+        else:
+            mask = None
         self.register_buffer('attn_mask', None if mask is None else mask.to(self.device), persistent=False)
         if uses_conf:
             beta = torch.tensor(float(beta_init), device=self.device)

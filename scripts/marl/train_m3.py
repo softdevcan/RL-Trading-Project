@@ -94,8 +94,8 @@ def main():
     ap.add_argument('--sampling-device', default='cpu')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--threads', type=int, default=1, help='OMP/MKL/torch is parcacigi (bit-eslik icin 1)')
-    ap.add_argument('--comm', choices=('none', 'attn', 'gat'), default='none',
-                    help='M4 iletisim kolu; none = BenchMARL MLP (M3 ile ayni)')
+    ap.add_argument('--comm', choices=('none', 'attn', 'gat', 'self'), default='none',
+                    help='M4 iletisim kolu; none = BenchMARL MLP (M3 ile ayni); self = mimari-es iletisimsiz (M4b)')
     ap.add_argument('--hidden', type=int, default=110, help='attn/gat gizli boyut (M4 esit butce, tasarim §1)')
     ap.add_argument('--heads', type=int, default=5)
     ap.add_argument('--rounds', type=int, default=1)

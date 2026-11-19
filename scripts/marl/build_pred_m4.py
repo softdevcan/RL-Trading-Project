@@ -67,6 +67,7 @@ def main():
     ap.add_argument('--seeds', default='20261115,1,2')
     ap.add_argument('--rule', default='sector+mst')
     ap.add_argument('--out-dir', default=os.path.join('data', 'marl'))
+    ap.add_argument('--json', default=os.path.join(MEAS, 'neighbor_map.json'), help='M4b: neighbor_map_m4b.json')
     a = ap.parse_args()
     from evaluation.calibration import auc as _auc
     from marl import accounting as A
@@ -115,8 +116,7 @@ def main():
             rec['blocks'].append(row)
             print(f"tohum {sd}{suffix}: kendi {row['auc_source_vs_own_label']:.4f}  komsu->kendi etiketi "
                   f"{row['auc_holder_vs_own_label']:.4f}  sha {sha[:8]}")
-    out = os.path.join(MEAS, 'neighbor_map.json')
-    with open(out, 'w', encoding='utf-8') as fh:
+    with open(a.json, 'w', encoding='utf-8') as fh:
         json.dump(rec, fh, indent=1, ensure_ascii=False)
 
 
