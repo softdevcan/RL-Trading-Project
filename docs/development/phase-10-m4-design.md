@@ -1,13 +1,13 @@
 # Faz 10 M4 — İletişim kolları: tasarım ve M4a ön kaydı
 
-**Sürüm:** v0.1 · 2026-11-19 · dal `feat/phase10-m5-prereg`
+**Sürüm:** v0.2 · 2026-11-19 · dal `feat/phase10-m5-prereg`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2.5 (kollar, eşit bütçe, GAT grafı), §8 hakem-2 #14 (kenar kuralı M4 öncesi sabitlenir) ve #15 (`obs_spec` sabit)
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M4 (AQ1, G1; eşit bütçe)
 - [phase-10-m3-design.md](phase-10-m3-design.md) §2 (hiperparametreler), §5 (M3a kalıbı), §6.8 (M4 temeli: MAPPO, tüm yerel gözlemler, α = 0,25; varsayılan, kanıta dayanmaz)
 - [phase-10-m5-design.md](phase-10-m5-design.md) §2.6 (mekanizma iddiaları yalnız bilgili sinyalde)
 
-**Durum:** **Tasarım + M4a ön kaydı TASLAĞI. Koşu yok.** Kod ve ölçümler commit'lendi (§1, §2). M4a'nın kol sayısı ve bütçesi kullanıcı kararına bağlı (§4); ön kayıt bu kararla ve hakem-rl okumasıyla dondurulur, ilk eğitim koşusundan önce.
+**Durum:** **Tasarım + M4a ön kaydı v0.2 (hakem-rl okuması bekliyor). Koşu yok.** Kod, ölçümler ve okuma betiği commit'lendi. Kullanıcı kararları K-M4-1..4 alındı (§4). Ön kayıt hakem-rl okumasından sonra v0.3 olarak dondurulur; okuma betiği bu sürümü (`PREREG = 'phase-10-m4-design.md §3 v0.3'`) taşır ve ilk eğitim koşusundan önce commit'lenir.
 
 Kod ile belge farklıysa kod hatalıdır.
 
@@ -17,6 +17,7 @@ Kod ile belge farklıysa kod hatalıdır.
 
 | Madde | Burada | Kod / ölçüm |
 |---|---|---|
+| Koşucu ve ön kayıtlı okuma (`--self-test` 11/11) | §3 | `scripts/marl/run_m4a.py`, `scripts/marl/analyze_m4a.py` |
 | `attn` ve `gat` politika modelleri, eşit bütçe | §1 | `marl/comm_models.py`, `tests/test_marl_m4.py` (14) |
 | GAT graf kenar kuralı (hakem-2 #14) | §2 | `scripts/marl/graph_m4.py` → `measurements/phase10-m4/graph_rules.json` |
 | **M4a ön kaydı: iletişim boru hattı kapısı** (komşu sinyali pozitif kontrolü) | §3 | `scripts/marl/build_pred_m4.py` → `measurements/phase10-m4/neighbor_map.json` |
@@ -40,7 +41,7 @@ Kod ile belge farklıysa kod hatalıdır.
 - **Mekanizma testi:** `gat`'ta komşu olmayan bir ajanın gözlemi değişince ajan i'nin çıktısı bit-eş kalıyor, komşununki değişince değişiyor. `attn`'de herhangi bir ajan etkiliyor (`test_marl_m4` [3]).
 - **Hiperparametreler** M3 §2 ile aynı: MAPPO, lr 5e-4, 10 epoch, bölünmeyen parti 6000, başlangıç std 0,12, `'excess'`, α = 0,25, ölçek 100, 252 adımlık bölüm.
 
-**K-M4-1 (tasarım seçimi, kullanıcı onayı bekliyor):** `gat` kolu Veličković vd.'nin toplamsal puanını (LeakyReLU(aᵀ[Whᵢ ‖ Whⱼ])) değil, `attn` ile aynı ölçekli nokta çarpımı puanını graf maskesiyle kullanır. **Öneri: bu biçim.** Gerekçe: plan §2'deki karşılaştırmanın iddiası "`attn` ile `gat` arasındaki fark graf öncülünden gelir". Puan fonksiyonu da değişirse iki etken birlikte değişir ve parametre sayısı ayrıca eşlenmek zorunda kalır. Bedel: kol, özgün GAT'ın birebir uygulaması değildir. Metinde "graf maskeli dikkat (GAT tipi)" diye adlandırılır, toplamsal puan bir ablasyon olarak kalır.
+**K-M4-1 (KARAR 2026-11-19, kullanıcı; öneri yönünde):** `gat` kolu Veličković vd.'nin toplamsal puanını (LeakyReLU(aᵀ[Whᵢ ‖ Whⱼ])) değil, `attn` ile aynı ölçekli nokta çarpımı puanını graf maskesiyle kullanır. **Öneri: bu biçim.** Gerekçe: plan §2'deki karşılaştırmanın iddiası "`attn` ile `gat` arasındaki fark graf öncülünden gelir". Puan fonksiyonu da değişirse iki etken birlikte değişir ve parametre sayısı ayrıca eşlenmek zorunda kalır. Bedel: kol, özgün GAT'ın birebir uygulaması değildir. Metinde "graf maskeli dikkat (GAT tipi)" diye adlandırılır, toplamsal puan bir ablasyon olarak kalır.
 
 ## 2. GAT graf kenar kuralı
 
@@ -60,7 +61,7 @@ Ortalama çiftli ρ 0,383 (medyan 0,357, aralık 0,10–0,89). Hakem-2 #14'teki 
 
 Tablonun tamamı (thr 0,4, topk 2 ve 5, sector + topk 2 ve 5) JSON'dadır.
 
-**Öneri: `sector + mst`** (plan §3.2.5'teki "E2 sektör kenarları ∪ korelasyon kenarları" tanımının MST biçimi).
+**Öneri ve KARAR (K-M4-3, 2026-11-19, kullanıcı): `sector + mst`** (plan §3.2.5'teki "E2 sektör kenarları ∪ korelasyon kenarları" tanımının MST biçimi).
 - **Bağlantılı:** Her ajanın en az bir komşusu var. Yalnız sektör grafında 5 `DIGER` sembolü yalıtık kalıyor (12 bileşen).
 - **Seyrek:** Yoğunluk %14,9. Böylece `attn` (tam bağlı) ile `gat` arasında gerçek bir öncül farkı oluşur. Eşik 0,3'te graf %71,5 dolu, yani `attn`'e çok yakın (hakem-2 #14).
 - **Ayar parametresi yok:** τ ya da k seçmek bir hiperparametre olur ve deneme sayısına (N) girer. MST'de seçilecek bir değer yoktur.
@@ -78,7 +79,7 @@ Tablonun tamamı (thr 0,4, topk 2 ve 5, sector + topk 2 ve 5) JSON'dadır.
 - **Graf `gat` lehine hizalı:** σ kenarlar boyunca seçildiği için `gat` doğru göndericiyi graf öncülünden bilir. `attn` ise onu 29 ajan içinden öğrenmek zorundadır. M4a bu yüzden **`attn` ile `gat`'ı sıralamaz.** Yalnız her iletişim kolunun bilgiyi taşıyıp taşıyamadığını sınar.
 - **Maliyet:** maliyetsiz (M3a ve M5 K-c ile aynı gerekçe). 20 bps yalnız betimsel olarak sonradan uygulanır.
 
-### 3.2 Kollar (K-M4-2'ye bağlı)
+### 3.2 Kollar ve aşamalar (K-M4-2: iki aşama)
 
 | Kol | Politika | Tahmin bloğu |
 |---|---|---|
@@ -87,16 +88,20 @@ Tablonun tamamı (thr 0,4, topk 2 ve 5, sector + topk 2 ve 5) JSON'dadır.
 | G-X | `gat` | aynı |
 | N-S, A-S, G-S | aynı üç politika | aynı permütasyon, satırları karıştırılmış blok (`pred_m4nb_g{s}_shuf.npz`; M3 S1 kalıbı) |
 
-Tohumlar s ∈ {0, 1, 2}, üreteç g_s ∈ {20261115, 1, 2} (M3 §5 ile aynı eşleme). Kare bütçesi F = 600.000 (M3 F_min).
+- **Aşama 1:** N-X, A-X, G-X (9 koşu).
+- **Aşama 2:** yalnız Aşama 1'de (i)–(iii)'ü sağlayan iletişim kolunun S'si ve N-S. Hiçbir kol sağlamazsa Aşama 2 koşulmaz (`run_m4a.py` reddeder).
 
-### 3.3 Okuma kuralı (eşikler §3.4 ölçümünden sonra, koşudan önce sabitlenir)
+Tohumlar s ∈ {0, 1, 2}, üreteç g_s ∈ {20261115, 1, 2} (M3 §5 ile aynı eşleme). Kare bütçesi F = 600.000 (M3 F_min). Son ağırlıklar kullanılır; kontrol noktası seçimi ve erken durdurma yoktur. Değerlendirme deterministik ve tam pencere: eğitim 1343 gün, doğrulama 500 gün; 2021+ yok (M3 §3).
+
+### 3.3 Okuma kuralı (δ = 0,25, K-M4-4; kod `analyze_m4a.py`)
 
 Her iletişim kolu k ∈ {A, G} için Δ_{k,s} = SR(k-X_s) − SR(N-X_s) ve D_k = ort_s Δ_{k,s}. SR yıllık, maliyetsiz X üzerinde. Kalıp M3a §5 ile aynı:
 - **GEÇTİ = üçü birden:**
   - (i) Eğitimde D_k ≥ δ ve ortak HAC tek yönlü p < 0,05. p, iki kol üzerinde Holm düzeltmesiyle.
   - (ii) Eğitimde min_s SR(k-X_s) > max_s SR(N-X_s).
   - (iii) Doğrulamada D_k > 0 ve en az 2/3 tohumda Δ_{k,s} > 0.
-- **Kontrol koşulu (S kolları koşulursa, K-M4-2):** (iv) Eğitimde D_k^S = ort_s[SR(k-S_s) − SR(N-S_s)] < D_k − δ/2. Bu koşul, iletişim kolunun avantajının taşınan bilgiden geldiğini, iletişimin kendisinden (ör. kesitsel teknik özellik birleştirme) gelmediğini sınar.
+- (i)–(iii) sağlanırsa kol Aşama 2'ye geçer. Nihai GEÇTİ için ayrıca:
+  - **(iv) Kontrol, Aşama 2:** Eğitimde D_k^S = ort_s[SR(k-S_s) − SR(N-S_s)] < D_k − δ/2. Bu koşul, iletişim kolunun avantajının taşınan bilgiden geldiğini, iletişimin kendisinden (ör. kesitsel teknik özellik birleştirme) gelmediğini sınar. (iv) sağlanmazsa etiket KISMİ olur: avantaj var ama taşınan bilgiye bağlanamadı.
 - **KISMİ / GÖZLENMEDİ:** M3a §5 ile aynı tanımlar. GÖZLENMEDİ "bu bütçede iletişimle bilgi taşınması gözlenmedi" diye okunur, "iletişim çalışmaz" diye okunmaz.
 - **Durma kuralı:** GEÇTİ alamayan kol için gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz; karar kullanıcıya döner.
 
@@ -113,7 +118,7 @@ Kaynak: `docs/development/measurements/phase10-m4/neighbor_map.json` (komut `pyt
 
 Sızıntı payı = (komşu AUC − 0,5) / (kendi AUC − 0,5). Ortalaması ~0,33: `none`, hissesinin yön bilgisinin yaklaşık üçte birine komşu korelasyonu üzerinden erişiyor.
 
-**δ önerisi: 0,25.** Kaba tavan: M3a'nın eğitim farkı 0,76 (A1 ↔ S1, M3 §5.2), sızıntıdan sonra kalan pay ~0,67, yani tam taşımada D_k ≈ 0,5. Bu hesap, SR farkının AUC fazlasıyla doğrusal ölçeklendiğini varsayar. Bu bir **tasarım varsayımıdır**, ölçülmedi. δ = 0,25 bu tavanın yarısıdır: iletişim kolunun komşudaki bilginin en az yaklaşık yarısını taşımasını ister. M3b'de eğitim D'nin SE'si ~0,09 idi (M3 §6.7). Bu düzeyde 0,25'lik bir fark tek yönlü p < 0,05'e ulaşır. δ, hakem-rl okumasından sonra ve ilk eğitimden önce dondurulur.
+**δ = 0,25 (KARAR K-M4-4, 2026-11-19, kullanıcı; öneri yönünde).** Kaba tavan: M3a'nın eğitim farkı 0,76 (A1 ↔ S1, M3 §5.2), sızıntıdan sonra kalan pay ~0,67, yani tam taşımada D_k ≈ 0,5. Bu hesap, SR farkının AUC fazlasıyla doğrusal ölçeklendiğini varsayar. Bu bir **tasarım varsayımıdır**, ölçülmedi. δ = 0,25 bu tavanın yarısıdır: iletişim kolunun komşudaki bilginin en az yaklaşık yarısını taşımasını ister. M3b'de eğitim D'nin SE'si ~0,09 idi (M3 §6.7). Bu düzeyde 0,25'lik bir fark tek yönlü p < 0,05'e ulaşır. δ, hakem-rl okumasından sonra ve ilk eğitimden önce v0.3'te dondurulur.
 
 ### 3.5 Süre
 
@@ -127,9 +132,11 @@ Kaynak: `docs/development/measurements/phase10-m4/timing_{none,attn,gat}.json`. 
 
 30 bin kareden ölçeklemek başlangıç yükünü de çarptığı için süreyi abartıyor (M3a'da `none` gerçekte ~7,8 dk sürdü). **Toplam duvar süresi (3 tohum, sıralı):** X kolları (9 koşu) ~1,4 saat, S kolları dahil (18 koşu) ~2,9 saat.
 
-## 4. Açık kararlar
+## 4. Kararlar
 
-| # | Karar | Öneri |
+Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı.
+
+| # | Karar | Sonuç |
 |---|---|---|
 | K-M4-1 | `gat` puan fonksiyonu | Nokta çarpımı + graf maskesi (§1) |
 | K-M4-2 | M4a'da S kolları (kontrol koşulu iv) | **İki aşamalı:** Aşama 1 X kolları (9 koşu, ~1,4 sa). (i)–(iii)'ü sağlayan bir iletişim kolu varsa Aşama 2'de o kolun S'si ve N-S koşulur (6 koşu, ~1 sa) ve (iv) okunur. Hiçbir kol sağlamazsa S koşulmaz (M3b durma kuralı kalıbı) |
@@ -140,4 +147,5 @@ Kaynak: `docs/development/measurements/phase10-m4/timing_{none,attn,gat}.json`. 
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-19):** Kullanıcı kararları K-M4-1..4 (öneri yönünde). Koşucu `run_m4a.py` ve ön kayıtlı okuma betiği `analyze_m4a.py` (`--self-test` 11/11) eklendi. Koşu yok.
 - **v0.1 (2026-11-19):** Kollar ve eşit bütçe (§1), graf kenar kuralı ölçümü (§2), M4a ön kaydı taslağı (§3). Koşu yok.
