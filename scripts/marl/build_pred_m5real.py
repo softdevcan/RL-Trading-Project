@@ -6,7 +6,8 @@ Bicim `build_pred_m3.to_arrays` ile ayni (uc alan + meta_ok maskesi; maskeli huc
 
 Bloklar (panel tarih/sembol sirasiyla [T, N]):
   pred_pitv2.npz                  gercek blok (tum tohumlar ayni blogu okur; tablo tek)
-  pred_pitv2_g{s}_shuf.npz        satirlar (gunler) tohum s ile permute: karistirilmis kontrol (M3 S1 yontemi)
+  pred_pitv2_g{s}_shuf.npz        satirlar (gunler) tohum s ile PENCERE ICINDE permute (isinma | egitim | dogrulama |
+                                  2021+ ayri; v0.10, hakem-finans #2): karistirilmis kontrol
   pred_pitv2_g{s}_shuf2.npz       ikinci, bagimsiz permutasyon (tohum 1000 + s): gurultu tabani (iki bilgisiz kol)
 Kayit JSON'u: tablo SHA, blok SHA'lari, kapsam (egitim satirlarinda), K12 etiketiyle AUC (betimsel).
 
@@ -30,6 +31,7 @@ os.chdir(ROOT)
 RUN_ID = 'pit_v2_seed42'
 TABLE_SHA = '9116c571c474'   # gate_pit_v2_sensitivity.json -> table_sha256 oneki (P5; M5 §2.1)
 TRAIN_END = '2018-12-31'
+VAL_END = '2020-12-31'
 SHUF2_OFFSET = 1000
 
 
@@ -83,11 +85,31 @@ def main():
         print(f"{name}: kapsam egitim {row['coverage_train_rows']:.3f}  AUC egitim {row['auc_vs_k12_train']:.4f}  "
               f"sha {row['sha256'][:8]}")
 
+    # Pencere ici permutasyon (hakem-finans M5-gercek #2, hakem-rl #7): gunler yalniz kendi diliminde karisir
+    # (isinma | egitim | dogrulama | 2021+). 2021+ degerleri egitime tasinmaz; egitim satirlarinda kapsam gercekle ayni.
+    val_end = int(np.flatnonzero(dates <= VAL_END)[-1])
+    cuts = [0, OS.WARMUP_ROWS, end_row + 1, val_end + 1, len(dates)]
+    rec['permutation_segments'] = [[str(dates[lo]), str(dates[hi - 1])] for lo, hi in zip(cuts[:-1], cuts[1:]) if hi > lo]
+    vol_rows = rows & np.r_[np.ones(len(dates) - 2, dtype=bool), False, False]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        abs_ret = np.abs(np.log(arrays['open'][2:] / arrays['open'][1:-1]))   # K12: O_{t+1} -> O_{t+2}, satir t
+    abs_ret = np.vstack([abs_ret, np.full((2, abs_ret.shape[1]), np.nan)])
+
+    def vol_corr(blk):
+        """Betimsel (hakem-finans #2): |pred_logret| ile ayni ufukta gerceklesen |getiri| korelasyonu, egitim satirlari."""
+        x, y = np.abs(blk['pred_logret'])[vol_rows], abs_ret[vol_rows]
+        m = np.isfinite(x) & np.isfinite(y)
+        return float(np.corrcoef(x[m], y[m])[0, 1])
+
     write('pred_pitv2.npz', base, 'real', None)
+    rec['blocks'][-1]['corr_abs_logret_abs_ret_train'] = vol_corr(base)
     for sd in [int(s) for s in a.seeds.split(',')]:
         for suffix, gen in (('_shuf', sd), ('_shuf2', SHUF2_OFFSET + sd)):
-            perm = np.random.default_rng(gen).permutation(len(dates))
-            write(f'pred_pitv2_g{sd}{suffix}.npz', {k: v[perm] for k, v in base.items()}, suffix[1:], sd)
+            rng = np.random.default_rng(gen)
+            perm = np.concatenate([lo + rng.permutation(hi - lo) for lo, hi in zip(cuts[:-1], cuts[1:]) if hi > lo])
+            blk = {k: v[perm] for k, v in base.items()}
+            write(f'pred_pitv2_g{sd}{suffix}.npz', blk, suffix[1:], sd)
+            rec['blocks'][-1]['corr_abs_logret_abs_ret_train'] = vol_corr(blk)
     if a.json:
         os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
         with open(a.json, 'w', encoding='utf-8') as fh:
