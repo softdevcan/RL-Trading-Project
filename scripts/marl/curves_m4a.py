@@ -50,8 +50,7 @@ def main():
     text = ''
     for path in a.log:
         with open(path, encoding='utf-8', errors='replace') as fh:
-            text += fh.read() + '
-'
+            text += fh.read() + '\n'
     curves = parse(text)
     git = lambda *c: subprocess.run(['git', *c], capture_output=True, text=True).stdout.strip()   # noqa: E731
     with open(os.path.abspath(__file__), 'rb') as fh:
