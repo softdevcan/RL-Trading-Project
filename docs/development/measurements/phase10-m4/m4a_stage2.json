@@ -1,0 +1,64 @@
+{
+ "preregistration": "phase-10-m4-design.md §3 v0.3",
+ "stage": 2,
+ "delta": 0.25,
+ "arms": {
+  "A": {
+   "label": "GOZLENMEDI",
+   "lr": "lr2e-4",
+   "note": "asama 2 kosulmadi"
+  },
+  "G": {
+   "train_S": {
+    "D_annual": 0.17761337916383743,
+    "se_annual": 0.13049667389757127,
+    "p_one_sided": 0.08674787765771191,
+    "p_two_sided": 0.17349575531542383,
+    "n_days": 1342,
+    "k_pairs": 3,
+    "sharpe_a": [
+     0.9709114722519541,
+     1.0888420088958175,
+     1.3139313683501748
+    ],
+    "sharpe_b": [
+     1.0947102622516791,
+     0.8835624377359934,
+     0.8627705736569186
+    ],
+    "delta_per_seed": [
+     -0.12379878999972505,
+     0.2052795711598241,
+     0.4511607946932562
+    ],
+    "turnover_mean": {
+     "G-S": 0.7200614593464075,
+     "N-S": 0.3978796187812417
+    },
+    "cash_mean": {
+     "G-S": 0.011597036643601503,
+     "N-S": 0.035169402888483976
+    }
+   },
+   "D_X_train": 0.34902854967549063,
+   "lr": "base",
+   "conditions": {
+    "gap": 0.1714151705116532,
+    "se_gap": 0.18789014446334973,
+    "z": 0.912315922696466,
+    "iv_gap_ge_half_delta_and_z": false,
+    "gap_per_seed": [
+     0.26700528399901535,
+     0.1436828388565219,
+     0.10336575628538891
+    ]
+   },
+   "label": "KISMI"
+  }
+ },
+ "provenance": {
+  "commit": "62b4023637e3883921c2d938189942056b31c67b",
+  "git_status_porcelain": "?? docs/development/measurements/phase10-m4/m4a_stage1b.json",
+  "script_sha256": "85641ec75b6fe85019f814485b87742bd87106a137caf38054a639945d5a26d3"
+ }
+}

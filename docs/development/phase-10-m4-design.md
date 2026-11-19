@@ -1,13 +1,13 @@
 # Faz 10 M4 — İletişim kolları: tasarım ve M4a ön kaydı
 
-**Sürüm:** v0.4 · 2026-11-19 · dal `feat/phase10-m5-prereg`
+**Sürüm:** v0.5 · 2026-11-19 · dal `feat/phase10-m5-prereg`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2.5 (kollar, eşit bütçe, GAT grafı), §8 hakem-2 #14 (kenar kuralı M4 öncesi sabitlenir) ve #15 (`obs_spec` sabit)
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M4 (AQ1, G1; eşit bütçe)
 - [phase-10-m3-design.md](phase-10-m3-design.md) §2 (hiperparametreler), §5 (M3a kalıbı), §6.8 (M4 temeli: MAPPO, tüm yerel gözlemler, α = 0,25; varsayılan, kanıta dayanmaz)
 - [phase-10-m5-design.md](phase-10-m5-design.md) §2.6 (mekanizma iddiaları yalnız bilgili sinyalde)
 
-**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Aşama 1 koşuldu (§3.6): gat Aşama 2'ye geçti, attn GÖZLENMEDİ → Aşama 1b. Ön kayıt metni ve eşikleri sonuçtan sonra değişmedi.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
+**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Aşama 1, 1b ve 2 koşuldu (§3.6, §3.7). **Nihai etiketler: gat KISMİ, attn GÖZLENMEDİ.** Ön kayıt gereği gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz; karar kullanıcıda. Ön kayıt metni ve eşikleri sonuçtan sonra değişmedi.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
 
 Kod ile belge farklıysa kod hatalıdır.
 
@@ -165,6 +165,34 @@ Doğrulamada gat D = 0,34 (tohum farkları +0,25 / +0,81 / −0,03; 2/3 pozitif)
 
 **Sınırlar:** Sinyal gelecekten türetilmiştir; sonuç tez bulgusu değildir. σ grafa hizalı olduğundan gat ile attn sıralanmaz (§3.1). Ortak HAC tohum varyansını içermez.
 
+### 3.7 Aşama 1b ve 2 sonucu (2026-11-19): gat KISMİ, attn GÖZLENMEDİ
+
+**Kaynak:** `docs/development/measurements/phase10-m4/m4a_stage1b.json`, `m4a_stage2.json`; komutlar `python scripts/marl/analyze_m4a.py --stage 1b|2 --out …`.
+
+**Koşu izi:** 12/12 koşu, F = 600.000, maliyetsiz. Hepsi commit `62b4023`'ten, temiz ağaçla. Aşama 2 (G-S, N-S) lr 5e-4, Aşama 1b (A-X, N-X) lr 2e-4. Aşama 2 JSON'unun `git_status` alanında yalnız henüz commit'lenmemiş 1b JSON'u görünür; okuma kodu commit'liydi.
+
+**Aşama 1b, attn lr 2e-4'te:** eğitim D 0,07 (SE 0,11), Holm p (aile 4) 0,53. SR A-X 0,77 / 0,75 / 1,25 ↔ N-X 0,99 / 0,82 / 0,75. Doğrulama D −0,04. (i)–(iii) sağlanmadı → **GÖZLENMEDİ**. Okuma: "bu bütçede ve iki lr'de (5e-4, 2e-4) attn ile bilgi taşınması gözlenmedi". 1b yalnız aşağı yönlü lr'yi denedi; "hiçbir lr'de yok" denmez.
+
+**Aşama 2, gat kontrolü:**
+
+| | Eğitim D (SE) | SR k (s0, s1, s2) | SR N |
+|---|---|---|---|
+| X (komşu sinyali) | 0,35 (0,14) | 1,21 / 1,33 / 1,43 | 1,07 / 0,98 / 0,88 |
+| S (karıştırılmış) | 0,18 (0,13) | 0,97 / 1,09 / 1,31 | 1,09 / 0,88 / 0,86 |
+
+G = D_X − D_S = 0,17 ≥ δ/2 = 0,125. Ama z = 0,17 / 0,19 = 0,91 < 1,645 → (iv) sağlanmadı → **KISMİ**. Okuma (ön kayıt): "gat'ın iletişimsiz kola avantajı var, ama bu avantaj taşınan bilgiye bağlanamadı". Bilgisiz (karıştırılmış) blokla da gat `none`'dan 0,18 önde. Tohum başına G 0,27 / 0,14 / 0,10 (üçü de pozitif; betimsel, kararı değiştirmez).
+
+**Okuma ve durma kuralı:**
+- Nihai etiketler: **gat KISMİ, attn GÖZLENMEDİ.** Hiçbir kol GEÇTİ almadı.
+- §3.3 durma kuralı gereği gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz. Karar kullanıcıya döner.
+- Aynı kapı ek tohumla ya da eşik değişikliğiyle yeniden denenmez. Yeni bir deney ayrı ön kayıt gerektirir.
+
+**Betimsel (kararı değiştirmez):**
+- D_S = 0,18 (SE 0,13) önceden beyan edilen mimari karışmasıyla tutarlı (§3.3 "fark = iletişim + mimari", hakem-rl #4). `none` [256, 256] MLP, iletişim kolları ise 110 genişlikli kodlayıcı + dikkat + başlık. Bilgisiz girdide de aradaki fark, mimarinin ya da iletişimin kendisinin bir etkisi olabilir. İkisi bu tasarımda ayrılamaz.
+- Bu sonuç, kodlayıcı ve başlığı aynı olan ama dikkati olmayan (`rounds = 0`) bir kontrol kolunun eksik olduğunu gösteriyor. Hakem-rl #4 bunu "ileride düşünülebilir" diye not etmişti.
+
+**Sınırlar:** Sinyal gelecekten türetilmiştir; tez bulgusu değildir. (iv)'teki SE bağımsızlık varsayımıyla tutucudur ve tohum varyansını içermez.
+
 ## 4. Kararlar
 
 Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı.
@@ -196,6 +224,7 @@ Hakemin soru yanıtları: (1) sızıntı kontrolü bozmaz, `none` ve iletişim k
 
 ## Versiyon geçmişi
 
+- **v0.5 (2026-11-19):** Aşama 1b ve 2 koşuldu (12/12). attn lr 2e-4'te de GÖZLENMEDİ; gat (iv)'te z 0,91 < 1,645 → KISMİ (§3.7). Hiçbir kol GEÇTİ almadı; durma kuralı gereği M5 S-msg başlamaz, karar kullanıcıda. Ön kayıt değişmedi.
 - **v0.4 (2026-11-19):** Aşama 1 koşuldu (9/9). gat (i)–(iii)'ü sağladı → Aşama 2; attn GÖZLENMEDİ → Aşama 1b (§3.6). Ön kayıt v0.3 metni ve eşikleri değişmedi. Betimsel eğri tanısı (`curves_m4a.py`).
 - **v0.3 (2026-11-19):** hakem-rl ilk okuması (Büyük revizyon) işlendi (§5): Aşama 1b lr duyarlılığı, (iv) z testi, δ ulaşılamazsa okuma, attn ↔ gat okuması, mimari ve eleştirmen beyanları, betimsel tavan. `analyze_m4a.py --self-test` 17/17. hakem-rl ikinci okuması Kabul; üç KÜÇÜK not metne işlendi, ön kayıt DONDURULDU. Koşu yok.
 - **v0.2 (2026-11-19):** Kullanıcı kararları K-M4-1..4 (öneri yönünde). Koşucu `run_m4a.py` ve ön kayıtlı okuma betiği `analyze_m4a.py` (`--self-test` 11/11) eklendi. Koşu yok.
