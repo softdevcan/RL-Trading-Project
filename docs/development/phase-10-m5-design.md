@@ -1,6 +1,6 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.3 · 2026-11-19 · dal `feat/phase10-m5-arms` (worktree; M4a koşuları sürerken ana ağaca dokunulmadı)
+**Sürüm:** v0.4 · 2026-11-19 · dal `feat/phase10-m5-arms` (worktree; M4a koşuları sürerken ana ağaca dokunulmadı)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
@@ -146,10 +146,15 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 
 7 kol × 3 tohum = 21 koşu → **~3,2 saat**. Maliyet koşulu K-g.
 
-### 3.5 Açık kararlar (M4a okumasından sonra)
+### 3.5 Kararlar
 
-| # | Karar | Öneri |
+**KARAR (2026-11-19, kullanıcı):** M4b pilotu PİLOT_İŞARETİ verdi (M4 tasarımı §6.4). Kullanıcı, M5 mekanizma ön kaydının yazılmasını ve K-d..K-i'nin öneri yönünde kapanmasını onayladı. Uygulamada iki nokta var:
+- **K-f:** M4a'da GEÇTİ alan kol olmadı. Taban, M4b PİLOT_İŞARETİ'ne dayanarak **gat** seçildi. Bu bir kullanıcı kararıdır; GEÇTİ kuralının sonucu değildir ve ön kayıtta öyle beyan edilir.
+- **K-i:** Öneri metni M4a kalıbını (δ eşikli) söylüyor. M4a'da δ'nın dayanağı zayıf çıktı (hakem-rl M4a #2) ve M4b δ'sız kalıpla ön kaydedildi. M5 ön kaydı yazılırken iki biçim (δ'lı / M4b gibi δ'sız) kullanıcıya **yeniden sunulacak**; bu not sonuçtan önce yazıldı.
+
+| # | Karar | Öneri (kapandı) |
 |---|---|---|
+
 | K-d | Güven biçimi | `zlogodds` birincil; `prob` yalnız GD (DebUnc) kolu (§3.2) |
 | K-e | H3'ün bozması | Sembol başına sıcaklık, log-tekdüze [0,5; 2], tohumlu ve önceden sabit (§3.3) |
 | K-f | Taban iletişim kolu | M4a'da GEÇTİ alan kol; ikisi de alırsa gat (graf öncülü, daha ucuz). Hiçbiri almazsa mekanizma kolları koşulmaz (M4a durma kuralı) |
@@ -161,6 +166,7 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-19):** Kullanıcı kararları: K-d..K-h öneri yönünde; taban gat (M4b PİLOT_İŞARETİ, kullanıcı kararı); K-i'nin biçimi ön kayıtta yeniden sunulacak (§3.5). Koşu yok.
 - **v0.3 (2026-11-19):** §3 TASLAK: S-msg kodu (`conf_mode` prob/zlogodds, β sabit/öğrenilen, alıcı geçidi, karıştırılmış güven), iki keşif ölçümü (güven isabetle ilişkili; `prob` aralığı dar), H3 tasarım bulgusu (standartlaştırma sıcaklığı siler), kol taslağı ve açık kararlar K-d..K-i. Ön kayıt değil; koşu yok.
 - **v0.2 (2026-11-19):** Kullanıcı kararları K-a (gerçek sinyal kolları 3 tohumla koşulur), K-b (H3 pozitif kontrolde, bozulmuş kalibrasyonla), K-c (mekanizma kolları maliyetsiz birincil) (§2.7). Okuma kuralı (§2.1–§2.5) değişmedi. Koşu yok.
 - **v0.1 (2026-11-19):** §2 P5c okuma kuralı: gerçek sinyal (`pit_v2`) İ3 kapısından geçmiyor (0/30). Bu yüzden "kalibre" sıfatı kullanılmıyor, H3 gerçek sinyalde koşulmuyor ve gerçek sinyal kolları sağlamlık sorusuna (AQ2-gerçek) indiriliyor. Okuma tablosu O1–O4, yasak kurtarma yolları ve üç açık karar (K-a, K-b, K-c). Koşu yok.

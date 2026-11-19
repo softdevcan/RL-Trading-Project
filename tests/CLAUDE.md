@@ -112,7 +112,9 @@ venv-marl\Scripts\python tests/test_marl_m3.py  # Faz 10/M3 BenchMARL gorevi: te
                                            #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu (18, ~2 dk)
 venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (attn, gat): graf maskesi, esit butce (formul, attn = gat,
                                            #          M4 boyutlarinda none'a gore <= %10), gat'te komsu olmayan ajan etkisiz + attn'de etkili,
-                                           #          kisa MAPPO + tohum bit-es + kaydet/yukle (14, ~1 dk; YALNIZ venv-marl)
+                                           #          self (M4b mimari-es kontrol: ayni parametre, iletisim yok), kisa MAPPO + tohum bit-es + kaydet/yukle (18, ~1 dk; YALNIZ venv-marl)
+venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle agirlikli dikkat: conf_mode='none' 62b4023 ile bit-es, guven terimi (prob/zlogodds),
+                                           #          gat maskesi + guven, beta>0 dikkati arttirir, karistirilmis guven, gecit, H3 bulgusu (zlogodds sicakligi siler), kisa MAPPO (17, ~1 dk; YALNIZ venv-marl)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

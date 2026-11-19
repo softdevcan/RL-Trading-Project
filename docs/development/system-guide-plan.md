@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.1 · 2026-11-19 · **Durum:** ÖNERİ, kullanıcı onayı bekliyor. Kod yok.
+**Sürüm:** v0.2 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** Sıradaki iş R1. Kod yok.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -138,7 +138,9 @@ Kök `CLAUDE.md`'ye, sistem haritası kuralının yanına bir kural eklenir: **y
 
 Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözlük). R2–R3 sayfayı getirir.
 
-## 9. Kararlar (öneriyle; onayda kapanır)
+## 9. Kararlar
+
+**KARAR (2026-11-19, kullanıcı):** plan onaylandı; aşağıdaki yedi karar öneri yönünde kapandı. R1'den başlanır.
 
 | # | Karar | Öneri |
 |---|---|---|
@@ -161,4 +163,5 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-19):** Kullanıcı onayı: plan ve R-K1..R-K7 öneri yönünde. Sıradaki iş R1.
 - **v0.1 (2026-11-19):** İlk plan (kullanıcı isteği). Ölçülmüş kısıtlar, tek kaynak mimarisi, şema, envanter, sayfa bölümleri, doğrulama, iş paketleri R1–R4, kararlar R-K1..R-K7. Kod yok.
