@@ -378,6 +378,19 @@ Vision §3.5'in F2 (RLlib) tavsiyesi bu yüzden spike sonucuna bağlanır (§6 K
 - **Sürüm:** TorchRL 0.7.2 PettingZoo 1.24.3 ile test edilmiş; 1.27 uyarı veriyor → 1.24.3 sabit.
 - **S-obs (Faz 9 §9.37–9.39; keşifsel):** eski ortamda PC060'ın RL'siz değeri MDE'yi aşıyor, ama politikalar tahmin bloğundan değer üretmiyor. Bloğa eşit boyutlu bir teknik blok kadar duyarlılar; bilgi karıştırılınca ΔSR ≈ 0. Yeni ortamda sinyal ajan başına yerel gözlemde ve normalize edilmiş biçimde verilmeli. Sinyal ufku ile ödül hizası (t → t+1, K12'de t+1 açılış yürütme sinyali kaydırır) ve öğrenme bütçesi tasarımda ayrıca sınanmalı; pozitif kontrol (PC060) yeni ortamda da kurulmalı.
 
+#### 3.2.8 Ortam hızı — uzun koşulardan önce (eklendi 2026-11-19, kullanıcı kararı; kod yok)
+
+**Olgu (ölçüldü).** MARL eğitiminde darboğaz GPU değil, CPU'daki ortam süreçleridir. M4b süre ölçümü ([M4 tasarımı](phase-10-m4-design.md) §6.1; 30 bin kare, gat): tek koşu 30,7 sn, iki eş zamanlı koşu 38,3 sn (verim ~1,6×), üç koşu 64–70 sn (~1,3×); GPU üç koşuda bile %28. Her koşu 10 paralel ortam süreci çalıştırır (`parallel_collection`). Ağ küçük (~79 bin parametre), GPU güncellemeyi kısa sürede bitirip ortamı bekler.
+
+**Neden şimdi plana giriyor.** M8 öncesi uzun koşuların tohum gereksinimi M4b'nin %95 GA alt ucuyla ~16'dır (`measurements/phase10-m4/m4b_results.json` → `sizing_betimsel.seeds_for_80pct_G_ci_low`; betimsel ve iyimser). Örnek hesap: 5 kol × 16 tohum = 80 koşu. Koşu başı ~9,7 dk ([M5 tasarımı](phase-10-m5-design.md) §3.4) ve iki eş zamanlı koşunun 1,6× verimiyle bu ~8 saat eder. Süreyi ortam simülasyonunun hızı belirler.
+
+**İş (sırayla; her adım bir öncekinin sonucuna bağlı):**
+1. **Profil (15–20 dk ölçüm, arşivlenir).** Tek koşuda adım başı sürenin dağılımı: ortam adımı (muhasebe `accounting.step_fractional`, projeksiyon `weights.project`, gözlem `obs_spec.build_obs_at`), PettingZoo/TorchRL sarmalayıcısı, süreçler arası iletişim, politika ileri geçişi, eğitim güncellemesi. JSON `measurements/phase10-m*/` altında.
+2. **Karar (kullanıcı).** Profil sonucuna göre: (a) CPU tarafında hızlandırma (sarmalayıcı yükü, toplu numpy adımı, ortam süreci sayısı). Toplama düzenini (`n_envs`, `frames_per_batch`) değiştirmek eğitim dinamiğini değiştirir; bu yüzden yalnız M8 ön kaydından önce ve donmuş bir yapılandırmayla yapılır. (b) Ortamın GPU'da toplu (vektörleştirilmiş, B ortam × 30 ajan tek tensörde) bir torch sürümü.
+3. **Kabul ölçütü.** Yeni yol eski ortamla aynı tohumda aynı ödül, ağırlık ve getiri dizisini verir. (b)'de float32/GPU nedeniyle bit-eşlik yerine tolerans gerekir, bu da K2/K5/K6'nın "ortam ve canlı karar aynı fonksiyonu çağırır, parite bit-eş" kuralına bir istisna demektir (`marl/CLAUDE.md`). İstisna kullanıcı kararı ister; canlı karar numpy çekirdeğinde kalır. Ölçülen hız kazancı raporlanır.
+
+**Sınır.** M5'i ve devam eden pilotları bloklamaz. M8 uzun koşu ön kaydından önce yapılır. Hiçbir sonuç ya da eşik bu maddeye göre değiştirilmez.
+
 ### 3.3 Karar mekanizması
 
 **Bugünkü akış:**
@@ -634,3 +647,4 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
 - **2026-11-19 (M4b pilotu; kullanıcı kararı):** gat ↔ mimari-eş iletişimsiz `self`, 3 yeni tohum. PİLOT_İŞARETİ: gerçek komşu ipucuyla eğitim D 0,30 (p 5e-7), karıştırılmış ipucuyla 0,04; fark G 0,26 (z 3,05). Mimari sabitken iletişim bilgi taşıyor işareti; M4a'nın 'bilgisiz blokta da önde' sonucu bu düzende yok ([M4 tasarımı](phase-10-m4-design.md) §6.4). Pilot, tez bulgusu değil; M5 mekanizma tabanı kullanıcı kararı.
 - **2026-11-19 (K28, öneri):** Kullanıcı isteğiyle sistem rehberi ve sözlük planı yazıldı ([system-guide-plan.md](system-guide-plan.md) v0.1). Onay bekliyor. **Kod değişikliği yok.**
 - **2026-11-19 (K28 onayı + M5 kararları; kullanıcı):** K28 planı onaylandı (R-K1..R-K7 öneri yönünde). M5 mekanizma ön kaydı yazılacak; açık kararlar K-d..K-h öneri yönünde kapandı, taban kol gat (M4b PİLOT_İŞARETİ). K-i (eşik biçimi) ön kayıtta yeniden sunulacak ([M5 tasarımı](phase-10-m5-design.md) §3.5).
+- **2026-11-19 (§3.2.8 ortam hızı; kullanıcı kararı):** Uzun koşulardan (M8 öncesi, ~16 tohum) önce ortam hızı maddesi eklendi: profil → kullanıcı kararı (CPU hızlandırma ya da GPU'da toplu torch ortamı) → parite kabul ölçütü. Dayanak M4b süre ölçümü (darboğaz CPU). **Kod değişikliği yok.**

@@ -16,6 +16,7 @@ from dashboard.theme import BLUE, BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
 NAV_GROUPS = [
     ("Analiz", [
         {"label": "Dashboard", "icon": "bi bi-speedometer2", "href": "/dash/"},
+        {"label": "Rehber", "icon": "bi bi-book", "href": "/dash/guide"},
         {"label": "Modeller", "icon": "bi bi-diagram-3", "href": "/dash/models"},
         {"label": "Akademik", "icon": "bi bi-journal-bookmark", "href": "/dash/academic"},
     ]),

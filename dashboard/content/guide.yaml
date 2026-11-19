@@ -1,0 +1,234 @@
+# Sistem rehberi — bölüm metinleri, TEK KAYNAK (K28 R2; plan docs/development/system-guide-plan.md §5).
+# Elle yazılır; pano sayfası dashboard/pages/guide.py yalnız bunu ve glossary.yaml'ı okur (çalışma anında docs/ yok).
+# Kural: bu dosyada deney SONUCU sayısı yok. Sayılar R3'te snapshot.json'dan kaynaklarıyla gelir (bölüm 3-4).
+# Yasaklı ifade taraması glossary.yaml ile aynı (tests/test_guide.py [5], [7]).
+
+ne_yapar:
+  baslik: Bu sistem ne yapar?
+  paragraflar:
+    - >-
+      Borsa İstanbul'un en büyük 30 hissesi (BIST-30) için her akşam kapanıştan sonra bir portföy kararı üretir:
+      ertesi sabah hangi hisseye ne kadar para ayrılacağını. Karar, ertesi günün açılışında uygulanır.
+    - >-
+      Kararı tek bir model değil, her hisse için bir "ajan" verir. Ajanlar geçmiş veride deneme-yanılmayla (pekiştirmeli
+      öğrenme) öğrenir: iyi sonuç veren davranış ödüllendirilir. Ajanlar birbirine mesaj da gönderebilir.
+    - >-
+      Ayrı bir tahmin hattı, her hisse için ertesi günün yönüne dair bir olasılık üretir. Bu tahminin ajanlara bir şey
+      katıp katmadığı, kullanılmadan önce ayrı bir testle (bilgi kapısı) sınanır.
+  terimler: [bist30, ajan, marl, odul, k12, bilgi-kapisi]
+
+akis:
+  baslik: Veri nasıl akar?
+  aciklama: >-
+    Her adım bir öncekinin çıktısını kullanır. Geçmişe dönük testlerde her gün yalnız o gün bilinebilecek veri kullanılır.
+  adimlar:
+    - ad: Veri
+      metin: Günlük fiyat ve göstergeler, risksiz faiz ve makro seriler indirilir ve tarih × hisse tablosuna konur.
+      terim: panel
+    - ad: Tahmin
+      metin: Her hisse için ertesi günün yönüne dair bir olasılık, yalnız o güne kadarki veriyle üretilir.
+      terim: pit-tablosu
+    - ad: Ajanlar
+      metin: Her hisseye bir ajan bakar; gözlemine (ve varsa komşularından gelen mesajlara) göre bir ağırlık ister.
+      terim: ajan
+    - ad: Portföy
+      metin: İstenen ağırlıklar sınırlar ve kurallarla (işlem yapılamayan hisse, maliyet) gerçek bir portföye çevrilir.
+      terim: devir
+    - ad: Değerlendirme
+      metin: Sonuç, risksiz faizin üstündeki getiriyle ve basit stratejilerle (eşit ağırlık, al-tut) karşılaştırılır.
+      terim: sharpe
+    - ad: Günlük karar
+      metin: Eğitilmiş model her akşam o günün verisiyle ertesi sabahın kararını üretir; kâğıt portföyde izlenir.
+      terim: k12
+
+ne_degildir:
+  baslik: Bu sistem ne değildir?
+  aciklama: >-
+    Sonuçları okurken bu sınırlar akılda tutulmalı. Her biri ilgili tasarım belgesinde ayrıntılı.
+  maddeler:
+    - baslik: Para kazandırma iddiası değildir.
+      metin: >-
+        Bütün sonuçlar geçmiş veride üretildi. Geçmişte iyi çalışan bir kural gelecekte aynı sonucu vermeyebilir.
+      terim: pencereler
+    - baslik: Gerçek tahmin sinyalinde yön bilgisi tespit edilmedi.
+      metin: >-
+        Tahmin hattının bugünkü sinyali bilgi kapısından hiçbir hissede geçmedi; yön tahmini yazı-turadan ayırt
+        edilemiyor. Bu yüzden "kalibre güven" ifadesi kullanılmıyor.
+      terim: bilgi-kapisi
+    - baslik: Sahte ipucuyla yapılan denetimler performans sonucu değildir.
+      metin: >-
+        Sistemin bir ipucunu kullanıp kullanamadığı, cevabı bilerek konmuş sahte bir ipucuyla (pozitif kontrol)
+        sınanıyor. Bu ipucu gelecekten bilgi taşır; ondan elde edilen getiri gerçek bir başarı değildir.
+      terim: pozitif-kontrol
+    - baslik: Geliştirme kapıları tezin bulgusu değildir.
+      metin: >-
+        Aşamaların ara denetimleri az tohumla koşulan pilotlardır. "İşaret var" ya da "gözlenmedi" sonucu, büyük ve ön
+        kayıtlı bir deneyin yerini tutmaz.
+      terim: gelistirme-kapisi
+    - baslik: Son sınav dönemine bakılmadı.
+      metin: >-
+        2021 ve sonrası son sınav için ayrıldı; geliştirme sırasında bu dönemin başarımı okunmuyor.
+      terim: pencereler
+    - baslik: Geçmiş testlerin bilinen açıkları var.
+      metin: >-
+        Geçmişe dönük testlerde gelecekten bilgi taşıyabilen bilinen metodolojik açıklar yol haritasında listeli ve
+        kapatılmaları planlı. Sonuçlar bu açıklarla birlikte okunur.
+      terim: nokta-zamanlilik
+
+neredeyiz:
+  baslik: Neredeyiz?
+  aciklama: >-
+    Aşamaların bugünkü durumu. Çizelge sistem haritasının durum tablosundan üretilir; harita değişince yeniden üretilmesi
+    gerekir (test bayatlığı yakalar).
+  kaynak: docs/development/system-map.md
+
+deneyler:
+  baslik: "Deneyler: ne sorduk, ne bulduk?"
+  aciklama: >-
+    Her kart bir geliştirme kapısıdır: sistemin bir parçasının çalışıp çalışmadığına bakılan ara denetim. Etiket ve sayılar
+    ölçüm dosyasından okunur ve kaynağıyla gösterilir. Hiçbiri tez bulgusu değildir.
+  kartlar:
+    - id: p5-kapi
+      baslik: "P5: Gerçek tahmin sinyali bilgi taşıyor mu?"
+      soru: >-
+        Tahmin hattının gerçek sinyali, ertesi günün yönünü yazı-turadan daha iyi biliyor mu? Her hisse ayrı ayrı ve çoklu
+        test düzeltmesiyle sınandı.
+      etiket: {kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json,
+               alan: gate_dev_window.n_bh_reject, esit: 0, evet: GEÇMEDİ, hayir: GEÇTİ}
+      sayilar:
+        - ad: Kapıyı geçen hisse sayısı
+          kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json
+          alan: gate_dev_window.n_bh_reject
+          ondalik: 0
+        - ad: Bütün hisselerde birlikte AUC (0,5 = yazı-tura)
+          kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json
+          alan: gate_dev_window.pooled.auc.value
+          ondalik: 3
+      okuma: >-
+        Bu güçle yön bilgisi tespit edilmedi. "Sinyalde hiç bilgi yok" denmez: kapı yalnız yönü ölçer ve küçük bir etkiyi
+        kaçırabilir. Bu yüzden gerçek sinyalin kolları yalnız sağlamlık sorusunu sınar.
+      belge: docs/development/phase-10-m5-design.md
+      terimler: [bilgi-kapisi, auc, pit-tablosu, mde]
+
+    - id: m3a
+      baslik: "M3a: Sistem bir ipucunu kullanmayı öğrenebiliyor mu?"
+      soru: >-
+        Ajanlara cevabı bilerek konmuş bir ipucu verildiğinde, aynı ipucunun karıştırılmış (bilgisiz) hâlini alan ajanlardan
+        daha iyi karar veriyorlar mı? İşlem maliyeti yok.
+      etiket: {kaynak: docs/development/measurements/phase10-m3/m3a_results.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (ipucu − karıştırılmış)
+          kaynak: docs/development/measurements/phase10-m3/m3a_results.json
+          alan: train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Sharpe farkı, doğrulama
+          kaynak: docs/development/measurements/phase10-m3/m3a_results.json
+          alan: val.D_annual
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Öğrenme hattı bir ipucunu kullanabiliyor. İpucu bilerek gelecekten alındığı için bu getiri gerçek bir başarı
+        değildir; yalnız hattın çalıştığını gösterir.
+      belge: docs/development/phase-10-m3-design.md
+      terimler: [pozitif-kontrol, karistirilmis-kontrol, d-farki, etiket-gecti]
+
+    - id: m3b
+      baslik: "M3b: İpucu işlem maliyetiyle de kullanılabiliyor mu?"
+      soru: >-
+        Aynı karşılaştırma, her alım-satımda maliyet ödenerek tekrarlandı.
+      etiket: {kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (ipucu − karıştırılmış)
+          kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json
+          alan: train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Sharpe farkı, doğrulama
+          kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json
+          alan: val.D_annual
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Fark var, ama bir tohumda çok küçük kaldı ve ön kayıttaki sıralama koşulu sağlanmadı. Kural gereği ikinci aşama
+        koşulmadı; sonuç ek tohumla kurtarılmadı.
+      belge: docs/development/phase-10-m3-design.md
+      terimler: [islem-maliyeti, etiket-kismi, tohum]
+
+    - id: m4a
+      baslik: "M4a: İletişim komşudaki bilgiyi taşıyor mu?"
+      soru: >-
+        Her ajanın ipucu komşusuna ait. Komşularıyla konuşabilen ajanlar (gat), hiç konuşamayanlardan daha iyi karar veriyor
+        mu?
+      etiket: {kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json, alan: arms.G.label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (gat − iletişimsiz)
+          kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json
+          alan: arms.G.D_X_train
+          ondalik: 2
+          isaret: true
+        - ad: Kontrol farkının z değeri (eşik 1,645)
+          kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json
+          alan: arms.G.conditions.z
+          ondalik: 2
+      okuma: >-
+        gat önde, ama ipucu karıştırıldığında da önde kaldı. Avantajın bir kısmı bilgiden değil mimari farkından geliyor
+        olabilir; bu yüzden mimari-eş bir kontrolle M4b kuruldu.
+      belge: docs/development/phase-10-m4-design.md
+      terimler: [iletisim-kollari, komsu-sinyali, kol-kodlari-m4, etiket-kismi]
+
+    - id: m4b
+      baslik: "M4b: Fark gerçekten iletişimden mi geliyor?"
+      soru: >-
+        Aynı mimaride, komşularını dinleyebilen ajanlar (gat) yalnız kendini dinleyenlerle (self) karşılaştırıldı.
+      etiket: {kaynak: docs/development/measurements/phase10-m4/m4b_results.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (gat − self, gerçek ipucu)
+          kaynak: docs/development/measurements/phase10-m4/m4b_results.json
+          alan: train_X.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Farkın farkı (gerçek − karıştırılmış ipucu)
+          kaynak: docs/development/measurements/phase10-m4/m4b_results.json
+          alan: G
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Komşunun ipucu varken dinleyebilen grup belirgin biçimde daha iyi; ipucu karıştırılınca fark kalmadı. İletişim
+        hattının bilgi taşıdığına dair bir işaret. Kanıt değil: 3 tekrarlık pilot ve ipucu bilerek gelecekten.
+      belge: docs/development/phase-10-m4-design.md
+      terimler: [etiket-pilot, iletisim-kollari, komsu-sinyali, gelistirme-kapisi]
+
+sss:
+  baslik: Sık sorulanlar
+  sorular:
+    - soru: Bu sistem para kazandırıyor mu?
+      cevap: >-
+        Bunu bilmiyoruz ve böyle bir iddiamız yok. Sonuçlar geçmiş veride üretildi ve çoğu, cevabı bilerek konmuş sahte
+        bir ipucuyla yapılan denetimlerden geliyor. Son sınav dönemi (2021 ve sonrası) henüz açılmadı.
+      terimler: [pozitif-kontrol, pencereler]
+    - soru: Neden sahte bir ipucu kullanılıyor?
+      cevap: >-
+        Gerçek tahmin sinyalinde şu an yön bilgisi tespit edilmedi. Bilgi taşımayan bir sinyalle, sistemin bir ipucunu
+        kullanıp kullanamadığı sınanamaz. Sahte ipucu, hattın çalıştığını göstermek için var: öğrenciye kopya kâğıdı verip
+        okuyabiliyor mu diye bakmak gibi.
+      terimler: [pozitif-kontrol, bilgi-kapisi]
+    - soru: Ara denetimlerde neden yalnız 3 tohum var?
+      cevap: >-
+        Ara denetimler pilottur: hızlı bir "işaret var mı" sorusu, birkaç saatlik bir koşuya sığar. Kesin bir sonuç çok daha
+        fazla tohum ister; gereken sayı her pilottan sonra betimsel olarak hesaplanır ve uzun koşular M8'den önce yapılır.
+      terimler: [tohum, guc, etiket-pilot]
+    - soru: "\"Gözlenmedi\" etki yok demek mi?"
+      cevap: >-
+        Hayır. Deneyin küçük olduğu ve var olan bir etkiyi yakalayacak gücü olmadığı anlamına da gelebilir.
+      terimler: [etiket-gozlenmedi, guc, mde]
+    - soru: Kurallar neden deneyden önce yazılıp donduruluyor?
+      cevap: >-
+        Sonucu gördükten sonra kuralı değiştirmek, şans eseri bir sonucu bulgu gibi göstermeyi kolaylaştırır. Bu yüzden
+        başarı ölçütü ve okuma kuralı koşudan önce yazılır, hakem okur ve dondurulur.
+      terimler: [on-kayit, hakem-paneli, deneme-kaydi]
+    - soru: Eğitim sırasında ekran kartı neden az çalışıyor?
+      cevap: >-
+        Zamanın çoğu işlemcide çalışan piyasa simülasyonunda geçiyor. Ağ küçük olduğu için ekran kartı işini kısa sürede
+        bitirip bir sonraki veriyi bekliyor. Uzun koşulardan önce simülasyonu hızlandırmak planda.
+      terimler: [kare, ajan]

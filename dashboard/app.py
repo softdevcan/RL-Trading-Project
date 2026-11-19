@@ -109,7 +109,7 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     # Lazy-import pages to avoid circular imports at module load time
     from dashboard.pages import (
         home, training, data as data_page, models,
-        daily_trading, prediction, academic, hyperopt, users, account,
+        daily_trading, prediction, academic, hyperopt, users, account, guide,
     )
     from dashboard.auth_context import is_admin
 
@@ -181,6 +181,8 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
             return hyperopt.layout()
         elif path == "/account":
             return account.layout()
+        elif path == "/guide":
+            return guide.layout()
         elif path == "/users":
             # Kullanici yonetimi yalnizca admin. URL'i elle yazan kullanici
             # icin de kapali — API tarafi ayrica RequireAdmin ile korunur.
@@ -212,6 +214,7 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
     hyperopt.register_callbacks(dash_app)
     users.register_callbacks(dash_app)
     account.register_callbacks(dash_app)
+    guide.register_callbacks(dash_app)
     topbar.register_callbacks(dash_app)
 
     return dash_app
