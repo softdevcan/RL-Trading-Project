@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.4 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 kodu bitti** (§12; görsel denetim ve konteyner açılışı bekliyor); sonra R3.
+**Sürüm:** v0.5 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -175,10 +175,20 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Plandan sapma (beyan):** terim çapası `#terim-<id>` (planda `#<id>`), çünkü kısa terim id'leri (ör. `panel`, `kol`) sayfa bileşen id'leriyle çakışabilir. R4'teki üst çubuk araması bu çapayı kullanır. Sayfa yüklenirken URL'deki çapaya kaydırma yok (içerik Dash ile sonradan çiziliyor); R4'te istemci tarafı bir geri çağrıyla eklenir.
 - **Açık (kabul ölçütünün kalanı):** iki temada (açık/koyu) görsel denetim ve konteynerde açılış. Bu oturumda Docker çalışmıyordu ve tarayıcı aracı yoktu; ölçülmedi.
 
+## 13. R3 durumu (2026-11-19)
+
+- **Anlık görüntü:** `dashboard/content/snapshot.json` (üretilir, elle düzenlenmez). Deney kartları `guide.yaml` → `deneyler.kartlar` içinde tanımlanır. Her kartın etiketi ve en fazla 2 sayısı üretici tarafından kaynak JSON'un belirtilen alanından okunur ve değer, kaynak yolu ve alan adıyla birlikte yazılır. Kaynak özeti SHA-256'dır; varsa ölçümü üreten kodun commit'i (JSON'daki `provenance.commit` ya da `commit`) eklenir. Sayılar Türkçe ondalık virgülle biçimlenir.
+- **Kartlar (5):** P5 bilgi kapısı, M3a, M3b, M4a, M4b. Her kartta etiket, zorunlu "Tez bulgusu değil" rozeti, sade soru, okuma cümlesi (tasarım belgesindeki okuma paragrafından) ve belge yolu var. M5 kartı sonuç gelince eklenir.
+- **Aşama çizelgesi:** `system-map.md` "Durum tablosu"ndan; durum kalın baş ya da ilk ayraç öncesi; sınıf anahtar sözcükle (sürüyor / bitti / planlı ya da açık). Yalnız tablonun özeti kaydedilir, haritanın başka bir satırı rehberi bayatlatmaz.
+- **Test:** `test_guide` 9/9 ([6] snapshot tazeliği; [8] her sayı kaynak alanına eşit, etiket kaynaktan, rozet; mutasyon: çözülmeyen alan, 3 sayılı kart, değiştirilmiş kaynak JSON, değiştirilmiş harita satırı). Tema 92, props 4, üst çubuk 39.
+- **Plandan sapmalar (beyan):** (a) Planda "değer + kaynak yol + alan + commit" yazıyor. Dosyanın son git commit'i yerine üretim commit'i ve SHA kullanıldı; kaynak ile snapshot aynı commit'e girince son git commit'i kendini bayatlatırdı. M3a JSON'u provenance taşımadığı için onun commit alanı boş. (b) P5 kartının etiketi bir kuraldan türetilir: BH reddi 0 ise "GEÇMEDİ". Kaynak alanı kartta gösterilir. (c) Haritanın M2 satırı bayattı ("sürüyor"); kanıtıyla birlikte "bitti" yapıldı (`review-panel.md`, M2 kapanış ikinci okuması Kabul). "Faz 10 M4–M8" satırı M5 sonucuyla M5 PR'ında güncellenecek.
+- **Bakım kuralı:** kök `CLAUDE.md`'ye eklendi: harita tablosu ya da kart kaynağı değişince `python scripts/build_guide.py` koşulur.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.5 (2026-11-19):** R3 kodu (§13): `snapshot.json`, 5 deney kartı, aşama çizelgesi, test 9/9; bakım kuralı CLAUDE.md'de.
 - **v0.4 (2026-11-19):** R2 kodu (§12): Rehber sayfası, `guide.yaml`, CSS, menü/rota, test 8/8. Görsel denetim ve konteyner bekliyor.
 - **v0.3 (2026-11-19):** R1 bitti (§11): 73 terim, üretici, test 6/6, `docs/sozluk.md`. Plandan sapmalar beyan edildi.
 - **v0.2 (2026-11-19):** Kullanıcı onayı: plan ve R-K1..R-K7 öneri yönünde. Sıradaki iş R1.

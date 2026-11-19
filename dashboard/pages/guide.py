@@ -3,8 +3,9 @@ Rehber sayfasi (K28 R2; plan docs/development/system-guide-plan.md §5): sistem 
 sozluk aramasi. YALNIZ OKUR: API ucu yok, yoklama (dcc.Interval) yok; giris yapmis her rol gorur.
 
 Icerik tek kaynak `dashboard/content/guide.yaml` + `glossary.yaml` (imaja girer; calisma aninda `docs/` YOK, .dockerignore).
-`docs/sozluk.md` ayni YAML'dan `scripts/build_guide.py` ile uretilir. Bolum 3-4 (asama cizelgesi, deney kartlari) R3'te
-`snapshot.json`'dan gelecek; SSS (bolum 7) R4'te. Terim capasi `#terim-<id>` (sayfa bilesen id'leriyle cakismasin diye onekli).
+`docs/sozluk.md` ve `snapshot.json` ayni kaynaklardan `scripts/build_guide.py` ile uretilir. Bolum 3 (asama cizelgesi,
+system-map.md'den) ve 4 (deney kartlari: etiket + en fazla 2 sayi, her biri kaynak JSON + alan) YALNIZ snapshot.json'dan
+okunur; sayfa olcum dosyasi acmaz. SSS (bolum 7) R4'te. Terim capasi `#terim-<id>` (sayfa bilesen id'leriyle cakismasin diye onekli).
 """
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ import os
 from functools import lru_cache
 
 import dash_bootstrap_components as dbc
+import json
+
 import yaml
 from dash import Input, Output, dcc, html
 
@@ -42,6 +45,18 @@ def load_content() -> tuple[dict, list]:
     with open(os.path.join(CONTENT_DIR, "glossary.yaml"), encoding="utf-8") as fh:
         glossary = yaml.safe_load(fh)
     return guide, glossary
+
+
+@lru_cache(maxsize=1)
+def load_snapshot() -> dict:
+    with open(os.path.join(CONTENT_DIR, "snapshot.json"), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+STAGE_GROUPS = (("suruyor", "Sürüyor", "bi bi-play-circle"), ("bitti", "Bitti", "bi bi-check-circle"),
+                ("planli", "Planlı ya da açık", "bi bi-circle"))
+LABEL_CLASS = {"GEÇTİ": "gecti", "KISMİ": "kismi", "GÖZLENMEDİ": "gozlenmedi", "PİLOT_İŞARETİ": "pilot",
+               "GEÇMEDİ": "gecmedi"}
 
 
 def fold(text: str) -> str:
@@ -150,6 +165,51 @@ def section_limits(g: dict, names: dict) -> dbc.Card:
                                   html.Ul(items, className="guide-limits")], "ne-degildir")
 
 
+def section_stages(g: dict, snap: dict) -> dbc.Card:
+    s = g["neredeyiz"]
+    cols = []
+    for key, title, icon in STAGE_GROUPS:
+        rows = [a for a in snap["asamalar"] if a["sinif"] == key]
+        if not rows:
+            continue
+        items = []
+        for a in rows:
+            body = [html.Div(a["ad"], className="guide-stage-name"), html.Div(a["durum"], className="guide-stage-status")]
+            if a.get("siradaki"):
+                body.append(html.Div("Sıradaki: " + a["siradaki"], className="guide-stage-next"))
+            items.append(html.Li(body, className=f"guide-stage guide-stage-{key}"))
+        cols.append(html.Div([html.Div([html.I(className=f"{icon} me-1"), f"{title} ({len(rows)})"],
+                                       className=f"guide-stage-head guide-stage-head-{key}"),
+                              html.Ul(items, className="guide-stage-list")], className="guide-stage-col"))
+    return _section(s["baslik"], [html.P(s["aciklama"].strip(), className="guide-muted mb-3"),
+                                  html.Div(cols, className="guide-stages"),
+                                  html.P(f"Kaynak: {s['kaynak']}", className="guide-meta mt-2")], "neredeyiz")
+
+
+def experiment_card(c: dict, names: dict) -> html.Div:
+    head = html.Div([html.Span(c["etiket"], className=f"guide-label guide-label-{LABEL_CLASS.get(c['etiket'], 'kismi')}"),
+                     html.Span(c["rozet"], className="guide-badge")], className="guide-exp-tags")
+    nums = [html.Div([html.Div(n["deger"], className="guide-num-value"), html.Div(n["ad"], className="guide-num-name"),
+                      html.Div(f"{n['kaynak'].rsplit('/', 1)[-1]} · {n['alan']}", className="guide-num-src",
+                               title=n["kaynak"])], className="guide-num") for n in c["sayilar"]]
+    links = [_term_link(t, names, "guide-chip") for t in c.get("terimler", [])]
+    return html.Div([
+        html.Div(c["baslik"], className="guide-exp-title"), head,
+        html.P(c["soru"], className="guide-exp-q"),
+        html.Div(nums, className="guide-nums"),
+        html.P([html.Strong("Okuma: "), c["okuma"]], className="guide-exp-read"),
+        html.Div(links, className="guide-chips"),
+        html.P(f"Belge: {c['belge']}", className="guide-meta mt-2"),
+    ], id=f"deney-{c['id']}", className="guide-exp")
+
+
+def section_experiments(g: dict, snap: dict, names: dict) -> dbc.Card:
+    s = g["deneyler"]
+    return _section(s["baslik"], [html.P(s["aciklama"].strip(), className="guide-muted mb-3"),
+                                  html.Div([experiment_card(c, names) for c in snap["kartlar"]], className="guide-exps")],
+                    "deneyler")
+
+
 def section_glossary(terms: list, names: dict) -> dbc.Card:
     options = [{"label": "Hepsi", "value": ALL}] + [
         {"label": label, "value": key} for key, label in CATEGORIES.items() if any(t["kategori"] == key for t in terms)]
@@ -173,11 +233,15 @@ def section_glossary(terms: list, names: dict) -> dbc.Card:
 
 def layout():
     guide, terms = load_content()
+    snap = load_snapshot()
     names = {t["id"]: t["terim"] for t in terms}
     return html.Div([
-        create_page_header("Rehber", "Sistemin ne yaptığı, verinin nasıl aktığı, sınırları ve terimler sözlüğü"),
+        create_page_header("Rehber", "Sistemin ne yaptığı, verinin nasıl aktığı, neredeyiz, deneyler ne buldu, "
+                                     "sınırlar ve terimler sözlüğü"),
         section_intro(guide, names),
         section_flow(guide, names),
+        section_stages(guide, snap),
+        section_experiments(guide, snap, names),
         section_limits(guide, names),
         section_glossary(terms, names),
     ])

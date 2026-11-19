@@ -74,3 +74,127 @@ ne_degildir:
         Geçmişe dönük testlerde gelecekten bilgi taşıyabilen bilinen metodolojik açıklar yol haritasında listeli ve
         kapatılmaları planlı. Sonuçlar bu açıklarla birlikte okunur.
       terim: nokta-zamanlilik
+
+neredeyiz:
+  baslik: Neredeyiz?
+  aciklama: >-
+    Aşamaların bugünkü durumu. Çizelge sistem haritasının durum tablosundan üretilir; harita değişince yeniden üretilmesi
+    gerekir (test bayatlığı yakalar).
+  kaynak: docs/development/system-map.md
+
+deneyler:
+  baslik: "Deneyler: ne sorduk, ne bulduk?"
+  aciklama: >-
+    Her kart bir geliştirme kapısıdır: sistemin bir parçasının çalışıp çalışmadığına bakılan ara denetim. Etiket ve sayılar
+    ölçüm dosyasından okunur ve kaynağıyla gösterilir. Hiçbiri tez bulgusu değildir.
+  kartlar:
+    - id: p5-kapi
+      baslik: "P5: Gerçek tahmin sinyali bilgi taşıyor mu?"
+      soru: >-
+        Tahmin hattının gerçek sinyali, ertesi günün yönünü yazı-turadan daha iyi biliyor mu? Her hisse ayrı ayrı ve çoklu
+        test düzeltmesiyle sınandı.
+      etiket: {kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json,
+               alan: gate_dev_window.n_bh_reject, esit: 0, evet: GEÇMEDİ, hayir: GEÇTİ}
+      sayilar:
+        - ad: Kapıyı geçen hisse sayısı
+          kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json
+          alan: gate_dev_window.n_bh_reject
+          ondalik: 0
+        - ad: Bütün hisselerde birlikte AUC (0,5 = yazı-tura)
+          kaynak: docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json
+          alan: gate_dev_window.pooled.auc.value
+          ondalik: 3
+      okuma: >-
+        Bu güçle yön bilgisi tespit edilmedi. "Sinyalde hiç bilgi yok" denmez: kapı yalnız yönü ölçer ve küçük bir etkiyi
+        kaçırabilir. Bu yüzden gerçek sinyalin kolları yalnız sağlamlık sorusunu sınar.
+      belge: docs/development/phase-10-m5-design.md
+      terimler: [bilgi-kapisi, auc, pit-tablosu, mde]
+
+    - id: m3a
+      baslik: "M3a: Sistem bir ipucunu kullanmayı öğrenebiliyor mu?"
+      soru: >-
+        Ajanlara cevabı bilerek konmuş bir ipucu verildiğinde, aynı ipucunun karıştırılmış (bilgisiz) hâlini alan ajanlardan
+        daha iyi karar veriyorlar mı? İşlem maliyeti yok.
+      etiket: {kaynak: docs/development/measurements/phase10-m3/m3a_results.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (ipucu − karıştırılmış)
+          kaynak: docs/development/measurements/phase10-m3/m3a_results.json
+          alan: train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Sharpe farkı, doğrulama
+          kaynak: docs/development/measurements/phase10-m3/m3a_results.json
+          alan: val.D_annual
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Öğrenme hattı bir ipucunu kullanabiliyor. İpucu bilerek gelecekten alındığı için bu getiri gerçek bir başarı
+        değildir; yalnız hattın çalıştığını gösterir.
+      belge: docs/development/phase-10-m3-design.md
+      terimler: [pozitif-kontrol, karistirilmis-kontrol, d-farki, etiket-gecti]
+
+    - id: m3b
+      baslik: "M3b: İpucu işlem maliyetiyle de kullanılabiliyor mu?"
+      soru: >-
+        Aynı karşılaştırma, her alım-satımda maliyet ödenerek tekrarlandı.
+      etiket: {kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (ipucu − karıştırılmış)
+          kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json
+          alan: train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Sharpe farkı, doğrulama
+          kaynak: docs/development/measurements/phase10-m3/m3b_stage1.json
+          alan: val.D_annual
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Fark var, ama bir tohumda çok küçük kaldı ve ön kayıttaki sıralama koşulu sağlanmadı. Kural gereği ikinci aşama
+        koşulmadı; sonuç ek tohumla kurtarılmadı.
+      belge: docs/development/phase-10-m3-design.md
+      terimler: [islem-maliyeti, etiket-kismi, tohum]
+
+    - id: m4a
+      baslik: "M4a: İletişim komşudaki bilgiyi taşıyor mu?"
+      soru: >-
+        Her ajanın ipucu komşusuna ait. Komşularıyla konuşabilen ajanlar (gat), hiç konuşamayanlardan daha iyi karar veriyor
+        mu?
+      etiket: {kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json, alan: arms.G.label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (gat − iletişimsiz)
+          kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json
+          alan: arms.G.D_X_train
+          ondalik: 2
+          isaret: true
+        - ad: Kontrol farkının z değeri (eşik 1,645)
+          kaynak: docs/development/measurements/phase10-m4/m4a_stage2.json
+          alan: arms.G.conditions.z
+          ondalik: 2
+      okuma: >-
+        gat önde, ama ipucu karıştırıldığında da önde kaldı. Avantajın bir kısmı bilgiden değil mimari farkından geliyor
+        olabilir; bu yüzden mimari-eş bir kontrolle M4b kuruldu.
+      belge: docs/development/phase-10-m4-design.md
+      terimler: [iletisim-kollari, komsu-sinyali, kol-kodlari-m4, etiket-kismi]
+
+    - id: m4b
+      baslik: "M4b: Fark gerçekten iletişimden mi geliyor?"
+      soru: >-
+        Aynı mimaride, komşularını dinleyebilen ajanlar (gat) yalnız kendini dinleyenlerle (self) karşılaştırıldı.
+      etiket: {kaynak: docs/development/measurements/phase10-m4/m4b_results.json, alan: label}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (gat − self, gerçek ipucu)
+          kaynak: docs/development/measurements/phase10-m4/m4b_results.json
+          alan: train_X.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Farkın farkı (gerçek − karıştırılmış ipucu)
+          kaynak: docs/development/measurements/phase10-m4/m4b_results.json
+          alan: G
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Komşunun ipucu varken dinleyebilen grup belirgin biçimde daha iyi; ipucu karıştırılınca fark kalmadı. İletişim
+        hattının bilgi taşıdığına dair bir işaret. Kanıt değil: 3 tekrarlık pilot ve ipucu bilerek gelecekten.
+      belge: docs/development/phase-10-m4-design.md
+      terimler: [etiket-pilot, iletisim-kollari, komsu-sinyali, gelistirme-kapisi]

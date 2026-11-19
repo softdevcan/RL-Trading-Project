@@ -1160,3 +1160,40 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .guide-meta { color: var(--rlt-muted); font-size: 12px; margin: 2px 0; }
 .guide-meta code { color: var(--rlt-text); background: transparent; font-size: 12px; padding: 0; }
 .guide-warn { color: var(--rlt-warn); font-size: 12px; margin: 6px 0 0; }
+/* Rehber R3: asama cizelgesi + deney kartlari (snapshot.json) */
+.guide-stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.guide-stage-col  { min-width: 0; }
+.guide-stage-head { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.guide-stage-head-suruyor { color: var(--rlt-info); }
+.guide-stage-head-bitti   { color: var(--rlt-profit); }
+.guide-stage-head-planli  { color: var(--rlt-muted); }
+.guide-stage-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.guide-stage { background: var(--rlt-surface-2); border: 1px solid var(--rlt-border); border-left-width: 3px;
+               border-radius: var(--rlt-radius-sm); padding: 6px 10px; }
+.guide-stage-suruyor { border-left-color: var(--rlt-info); }
+.guide-stage-bitti   { border-left-color: var(--rlt-profit); }
+.guide-stage-planli  { border-left-color: var(--rlt-border-strong); }
+.guide-stage-name   { color: var(--rlt-text); font-size: 13px; font-weight: 600; }
+.guide-stage-status { color: var(--rlt-muted); font-size: 12px; }
+.guide-stage-next   { color: var(--rlt-muted); font-size: 12px; margin-top: 2px; }
+.guide-exps { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.guide-exp  { background: var(--rlt-surface-2); border: 1px solid var(--rlt-border); border-radius: var(--rlt-radius-sm);
+              padding: 12px 14px; display: flex; flex-direction: column; }
+.guide-exp-title { font-weight: 600; color: var(--rlt-text); font-size: 15px; margin-bottom: 6px; }
+.guide-exp-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.guide-label { font-size: 12px; font-weight: 600; border: 1px solid currentColor; border-radius: 4px; padding: 0 6px; }
+.guide-label-gecti      { color: var(--rlt-profit); }
+.guide-label-kismi      { color: var(--rlt-warn); }
+.guide-label-gozlenmedi { color: var(--rlt-muted); }
+.guide-label-pilot      { color: var(--rlt-info); }
+.guide-label-gecmedi    { color: var(--rlt-loss); }
+.guide-badge { font-size: 12px; color: var(--rlt-muted); border: 1px dashed var(--rlt-border-strong); border-radius: 4px;
+               padding: 0 6px; }
+.guide-exp-q { color: var(--rlt-text); font-size: 13px; line-height: 1.5; margin: 0 0 8px; }
+.guide-nums  { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+.guide-num   { flex: 1 1 130px; border: 1px solid var(--rlt-border); border-radius: var(--rlt-radius-sm); padding: 6px 8px;
+               background: var(--rlt-surface); }
+.guide-num-value { font-size: 20px; font-weight: 650; color: var(--rlt-text); line-height: 1.2; }
+.guide-num-name  { font-size: 12px; color: var(--rlt-text); }
+.guide-num-src   { font-size: 11px; color: var(--rlt-muted); word-break: break-all; margin-top: 2px; }
+.guide-exp-read  { color: var(--rlt-text); font-size: 13px; line-height: 1.5; margin: 0 0 6px; }

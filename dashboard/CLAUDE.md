@@ -79,7 +79,8 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
 ### Rehber sayfasi ve sozluk (K28)
 - Icerik TEK KAYNAK `dashboard/content/guide.yaml` + `glossary.yaml` (imaja girer; `docs/` girmez). Sayfa
   `pages/guide.py` yalniz bunlari okur. `docs/sozluk.md` URETILIR: YAML degisince `python scripts/build_guide.py`
-  kos; `tests/test_guide.py` bayatligi yakalar. Icerikte deney sonucu sayisi yok (R3: snapshot.json).
+  kos; `tests/test_guide.py` bayatligi yakalar. Elle yazilan icerikte deney sonucu sayisi YOK: kart sayilari
+  `snapshot.json`'dan (uretilir; kaynak JSON + alan). Sayfa olcum dosyasi acmaz (imajda `docs/` yok).
 - Terim capasi `#terim-<id>`; sinif ailesi `guide-` (custom.css, tema testinde taranir).
 
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)

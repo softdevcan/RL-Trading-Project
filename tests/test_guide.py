@@ -11,11 +11,14 @@ Kontroller:
   4. Kaynaklar: her kaynak dizesi literature-table.md'de birebir (mutasyon: uydurma kaynak).
   5. Yasakli ifadeler (tez kurallari): "sizinti yok", "diferansiyel Sharpe", ozgunluk iddialari; `uyari` alani taranmaz
      (mutasyon: sade'ye yasakli ifade eklenince yakalanir).
-  6. Tazelik: docs/sozluk.md ureticinin ciktisiyla bit-es ve `build_guide.py --check` 0 doner (mutasyon: degisen terim
-     baska bir cikti uretir).
+  6. Tazelik: docs/sozluk.md ve dashboard/content/snapshot.json ureticinin ciktisiyla bit-es ve `build_guide.py --check`
+     0 doner (mutasyon: degisen terim baska bir cikti uretir).
   7. Pano sayfasi (R2): `guide.layout()` hatasiz kurulur, uc bolum + sozluk; arama 'sharpe' -> Sharpe karti, 'zzz' ->
      bos durum, Turkce harfe duyarsiz ('ogrenme' ~ 'öğrenme'), kategori suzgeci; rehber metnindeki terim baglantilari
      sozlukte var ve yasakli ifade yok (mutasyon); menu 'Analiz' grubunda ve ROUTE_INDEX'te; kategori listesi uretici ile ayni.
+  8. Deney kartlari ve asama cizelgesi (R3): her kartta 1-2 sayi, her sayi kaynak JSON'daki alanin degeriyle ayni, etiket
+     kaynaktan, 'Tez bulgusu degil' rozeti; check_guide gercek rehberde temiz (mutasyon: cozulmeyen alan, 3 sayili kart);
+     kaynak JSON degisince ya da system-map satiri degisince snapshot degisir (bayatlik yakalanir).
 
     python tests/test_guide.py
 """
@@ -107,8 +110,11 @@ with open(BG.OUT_MD, encoding='utf-8') as fh:
 r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'build_guide.py'), '--check'], capture_output=True,
                    text=True, encoding='utf-8')
 changed = BG.render(mutated(lambda t: t[0].update(teknik=t[0]['teknik'] + ' (degisti)')))
-check("docs/sozluk.md uretilmis hal ile bit-es, --check 0 doner; degisen terim farkli cikti uretir",
-      BG.render(terms) == on_disk and r.returncode == 0 and changed != on_disk, r.stdout + r.stderr)
+with open(BG.SNAPSHOT, encoding='utf-8') as fh:
+    snap_disk = fh.read()
+check("docs/sozluk.md ve snapshot.json uretilmis hal ile bit-es, --check 0 doner; degisen terim farkli cikti uretir",
+      BG.render(terms) == on_disk and BG.snapshot_text(BG.build_snapshot(BG.load_guide())) == snap_disk
+      and r.returncode == 0 and changed != on_disk, r.stdout + r.stderr)
 
 # ---------------------------------------------------------------------------------------------
 print("\n[7] Pano sayfasi (R2)")
@@ -135,9 +141,10 @@ hit = [t['id'] for t in GP.filter_terms(gterms, 'sharpe', GP.ALL)]
 empty = GP.term_list(GP.filter_terms(gterms, 'zzz', GP.ALL), names)
 folded = [t['id'] for t in GP.filter_terms(gterms, 'ogrenme', GP.ALL)]
 marl_only = GP.filter_terms(gterms, '', 'marl')
-check("layout kurulur: 4 bolum + her terim karti; arama sharpe -> Sharpe, zzz -> bos durum, Turkce harfe duyarsiz, "
+check("layout kurulur: 6 bolum + her deney ve terim karti; arama sharpe -> Sharpe, zzz -> bos durum, Turkce harfe duyarsiz, "
       "kategori suzgeci",
-      all(f'rehber-{a}' in lay_ids for a in ('ne-yapar', 'akis', 'ne-degildir', 'sozluk'))
+      all(f'rehber-{a}' in lay_ids for a in ('ne-yapar', 'akis', 'neredeyiz', 'deneyler', 'ne-degildir', 'sozluk'))
+      and all(f"deney-{c['id']}" in lay_ids for c in gtext['deneyler']['kartlar'])
       and all(f"terim-{t['id']}" in lay_ids for t in gterms) and 'sharpe' in hit
       and 'state-block' in (getattr(empty, 'className', '') or '') and 'marl' in folded
       and bool(marl_only) and all(t['kategori'] == 'marl' for t in marl_only), f"{hit[:3]} {folded[:3]}")
@@ -173,6 +180,53 @@ check("rehber metni: terim baglantilari sozlukte, yasakli ifade yok (eklenince y
       not bad_refs and not bad_txt and bool(forbidden(guide_texts(mut)))
       and any(i['href'] == '/dash/guide' for i in analiz) and ROUTE_INDEX.get('/dash/guide') == ('Analiz', 'Rehber')
       and GP.CATEGORIES == BG.CATEGORIES, f"{bad_refs} {bad_txt}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[8] Deney kartlari ve asama cizelgesi (R3)")
+import json  # noqa: E402
+import shutil  # noqa: E402
+import tempfile  # noqa: E402
+
+guide_y = BG.load_guide()
+snap = BG.build_snapshot(guide_y)
+ok_cards = True
+for c in snap['kartlar']:
+    ok_cards &= 1 <= len(c['sayilar']) <= BG.MAX_CARD_NUMBERS and c['rozet'] == BG.BADGE
+    for n in c['sayilar']:
+        src = json.load(open(os.path.join(ROOT, *n['kaynak'].split('/')), encoding='utf-8'))
+        ok_cards &= bool(n['kaynak'] and n['alan'] and n['deger']) and float(BG.field(src, n['alan'])) == n['ham']
+    lab_src = json.load(open(os.path.join(ROOT, *c['etiket_kaynak']['kaynak'].split('/')), encoding='utf-8'))
+    ok_cards &= BG.field(lab_src, c['etiket_kaynak']['alan']) == c['etiket_kaynak']['ham']
+e_clean = BG.check_guide(guide_y, terms)
+g_bad = copy.deepcopy(guide_y)
+g_bad['deneyler']['kartlar'][1]['sayilar'][0]['alan'] = 'train.olmayan_alan'
+g_three = copy.deepcopy(guide_y)
+g_three['deneyler']['kartlar'][1]['sayilar'] *= 2
+e_bad, e_three = BG.check_guide(g_bad, terms), BG.check_guide(g_three, terms)
+
+tmp = tempfile.mkdtemp(prefix='guide_r3_')
+for rel in list(snap['kaynaklar']):
+    dst = os.path.join(tmp, *rel.split('/'))
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copyfile(os.path.join(ROOT, *rel.split('/')), dst)
+same_copy = BG.build_snapshot(guide_y, tmp) == snap
+c0 = guide_y['deneyler']['kartlar'][1]['sayilar'][0]
+jp = os.path.join(tmp, *c0['kaynak'].split('/'))
+js = json.load(open(jp, encoding='utf-8'))
+node = js
+for part in c0['alan'].split('.')[:-1]:
+    node = node[part]
+node[c0['alan'].split('.')[-1]] = 9.99
+json.dump(js, open(jp, 'w', encoding='utf-8'))
+json_changes = BG.build_snapshot(guide_y, tmp) != snap
+mp = os.path.join(tmp, *guide_y['neredeyiz']['kaynak'].split('/'))
+md = open(mp, encoding='utf-8').read()
+open(mp, 'w', encoding='utf-8').write(md.replace('| Faz 1–3, 6–8 | bitti |', '| Faz 1–3, 6–8 | sürüyor |', 1))
+stages_change = [a['sinif'] for a in BG.parse_status_table(open(mp, encoding='utf-8').read())][0] == 'suruyor'
+check(f"{len(snap['kartlar'])} kart: 1-2 sayi, her sayi kaynak alanina esit, etiket kaynaktan, rozet var; check_guide temiz; "
+      "cozulmeyen alan ve 3 sayili kart yakalanir; kaynak JSON ya da harita degisince snapshot degisir",
+      ok_cards and e_clean == [] and any('olmayan_alan' in x for x in e_bad) and any('1-2 sayi' in x for x in e_three)
+      and same_copy and json_changes and stages_change and len(snap['asamalar']) > 0, f"{e_clean[:3]}")
 
 print("\n" + "=" * 60)
 print(f"Sonuc: {passed} gecti, {failed} kaldi")

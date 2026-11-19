@@ -1,0 +1,338 @@
+{
+ "not": "URETILDI: scripts/build_guide.py <- dashboard/content/guide.yaml + kaynaklar. ELLE DUZENLEME.",
+ "kartlar": [
+  {
+   "id": "p5-kapi",
+   "baslik": "P5: Gerçek tahmin sinyali bilgi taşıyor mu?",
+   "soru": "Tahmin hattının gerçek sinyali, ertesi günün yönünü yazı-turadan daha iyi biliyor mu? Her hisse ayrı ayrı ve çoklu test düzeltmesiyle sınandı.",
+   "okuma": "Bu güçle yön bilgisi tespit edilmedi. \"Sinyalde hiç bilgi yok\" denmez: kapı yalnız yönü ölçer ve küçük bir etkiyi kaçırabilir. Bu yüzden gerçek sinyalin kolları yalnız sağlamlık sorusunu sınar.",
+   "etiket": "GEÇMEDİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json",
+    "alan": "gate_dev_window.n_bh_reject",
+    "ham": 0
+   },
+   "sayilar": [
+    {
+     "ad": "Kapıyı geçen hisse sayısı",
+     "deger": "0",
+     "ham": 0.0,
+     "kaynak": "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json",
+     "alan": "gate_dev_window.n_bh_reject"
+    },
+    {
+     "ad": "Bütün hisselerde birlikte AUC (0,5 = yazı-tura)",
+     "deger": "0,504",
+     "ham": 0.5044399971940781,
+     "kaynak": "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json",
+     "alan": "gate_dev_window.pooled.auc.value"
+    }
+   ],
+   "belge": "docs/development/phase-10-m5-design.md",
+   "terimler": [
+    "bilgi-kapisi",
+    "auc",
+    "pit-tablosu",
+    "mde"
+   ],
+   "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m3a",
+   "baslik": "M3a: Sistem bir ipucunu kullanmayı öğrenebiliyor mu?",
+   "soru": "Ajanlara cevabı bilerek konmuş bir ipucu verildiğinde, aynı ipucunun karıştırılmış (bilgisiz) hâlini alan ajanlardan daha iyi karar veriyorlar mı? İşlem maliyeti yok.",
+   "okuma": "Öğrenme hattı bir ipucunu kullanabiliyor. İpucu bilerek gelecekten alındığı için bu getiri gerçek bir başarı değildir; yalnız hattın çalıştığını gösterir.",
+   "etiket": "GEÇTİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m3/m3a_results.json",
+    "alan": "label",
+    "ham": "GECTI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (ipucu − karıştırılmış)",
+     "deger": "+0,76",
+     "ham": 0.7638420300013953,
+     "kaynak": "docs/development/measurements/phase10-m3/m3a_results.json",
+     "alan": "train.D_annual"
+    },
+    {
+     "ad": "Sharpe farkı, doğrulama",
+     "deger": "+0,82",
+     "ham": 0.8172805457867447,
+     "kaynak": "docs/development/measurements/phase10-m3/m3a_results.json",
+     "alan": "val.D_annual"
+    }
+   ],
+   "belge": "docs/development/phase-10-m3-design.md",
+   "terimler": [
+    "pozitif-kontrol",
+    "karistirilmis-kontrol",
+    "d-farki",
+    "etiket-gecti"
+   ],
+   "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m3b",
+   "baslik": "M3b: İpucu işlem maliyetiyle de kullanılabiliyor mu?",
+   "soru": "Aynı karşılaştırma, her alım-satımda maliyet ödenerek tekrarlandı.",
+   "okuma": "Fark var, ama bir tohumda çok küçük kaldı ve ön kayıttaki sıralama koşulu sağlanmadı. Kural gereği ikinci aşama koşulmadı; sonuç ek tohumla kurtarılmadı.",
+   "etiket": "KISMİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m3/m3b_stage1.json",
+    "alan": "label",
+    "ham": "KISMI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (ipucu − karıştırılmış)",
+     "deger": "+0,40",
+     "ham": 0.399391036329663,
+     "kaynak": "docs/development/measurements/phase10-m3/m3b_stage1.json",
+     "alan": "train.D_annual"
+    },
+    {
+     "ad": "Sharpe farkı, doğrulama",
+     "deger": "+0,49",
+     "ham": 0.48577399262387216,
+     "kaynak": "docs/development/measurements/phase10-m3/m3b_stage1.json",
+     "alan": "val.D_annual"
+    }
+   ],
+   "belge": "docs/development/phase-10-m3-design.md",
+   "terimler": [
+    "islem-maliyeti",
+    "etiket-kismi",
+    "tohum"
+   ],
+   "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m4a",
+   "baslik": "M4a: İletişim komşudaki bilgiyi taşıyor mu?",
+   "soru": "Her ajanın ipucu komşusuna ait. Komşularıyla konuşabilen ajanlar (gat), hiç konuşamayanlardan daha iyi karar veriyor mu?",
+   "okuma": "gat önde, ama ipucu karıştırıldığında da önde kaldı. Avantajın bir kısmı bilgiden değil mimari farkından geliyor olabilir; bu yüzden mimari-eş bir kontrolle M4b kuruldu.",
+   "etiket": "KISMİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m4/m4a_stage2.json",
+    "alan": "arms.G.label",
+    "ham": "KISMI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (gat − iletişimsiz)",
+     "deger": "+0,35",
+     "ham": 0.34902854967549063,
+     "kaynak": "docs/development/measurements/phase10-m4/m4a_stage2.json",
+     "alan": "arms.G.D_X_train"
+    },
+    {
+     "ad": "Kontrol farkının z değeri (eşik 1,645)",
+     "deger": "0,91",
+     "ham": 0.912315922696466,
+     "kaynak": "docs/development/measurements/phase10-m4/m4a_stage2.json",
+     "alan": "arms.G.conditions.z"
+    }
+   ],
+   "belge": "docs/development/phase-10-m4-design.md",
+   "terimler": [
+    "iletisim-kollari",
+    "komsu-sinyali",
+    "kol-kodlari-m4",
+    "etiket-kismi"
+   ],
+   "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m4b",
+   "baslik": "M4b: Fark gerçekten iletişimden mi geliyor?",
+   "soru": "Aynı mimaride, komşularını dinleyebilen ajanlar (gat) yalnız kendini dinleyenlerle (self) karşılaştırıldı.",
+   "okuma": "Komşunun ipucu varken dinleyebilen grup belirgin biçimde daha iyi; ipucu karıştırılınca fark kalmadı. İletişim hattının bilgi taşıdığına dair bir işaret. Kanıt değil: 3 tekrarlık pilot ve ipucu bilerek gelecekten.",
+   "etiket": "PİLOT_İŞARETİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m4/m4b_results.json",
+    "alan": "label",
+    "ham": "PILOT_ISARETI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (gat − self, gerçek ipucu)",
+     "deger": "+0,30",
+     "ham": 0.30284119872125015,
+     "kaynak": "docs/development/measurements/phase10-m4/m4b_results.json",
+     "alan": "train_X.D_annual"
+    },
+    {
+     "ad": "Farkın farkı (gerçek − karıştırılmış ipucu)",
+     "deger": "+0,26",
+     "ham": 0.26073150599905814,
+     "kaynak": "docs/development/measurements/phase10-m4/m4b_results.json",
+     "alan": "G"
+    }
+   ],
+   "belge": "docs/development/phase-10-m4-design.md",
+   "terimler": [
+    "etiket-pilot",
+    "iletisim-kollari",
+    "komsu-sinyali",
+    "gelistirme-kapisi"
+   ],
+   "rozet": "Tez bulgusu değil"
+  }
+ ],
+ "asamalar": [
+  {
+   "ad": "Faz 1–3, 6–8",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Faz 9 A, C, V, B, K18, R1, E0, E2",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Faz 9 kapanış 1–6 (G, B6, F, sampler, P, D)",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Faz 9 kapanış 7: E1 tarihsel üyelik",
+   "durum": "beyanla kapandı",
+   "sinif": "bitti",
+   "siradaki": "Üretim KAP erişimi olursa 2013–2022 dönem içi olaylar"
+  },
+  {
+   "ad": "P4: P tablosu → eski RL ortamı",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Rota DTF + M8 son nokta test kaydı + koşum betiği",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Faz 9 kapanış 8: Milestone 0' protokolü",
+   "durum": "donduruldu",
+   "sinif": "bitti",
+   "siradaki": "— (değişiklik = m0p-v2)"
+  },
+  {
+   "ad": "Golden yenileme (K1)",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": "— (yeniden yenileme yalnız bilinçli davranış değişikliğinde)"
+  },
+  {
+   "ad": "Milestone 0' koşumları",
+   "durum": "bitti, ara karar",
+   "sinif": "bitti",
+   "siradaki": "İleri veri; S-obs girdisi Faz 10 §3.2.7"
+  },
+  {
+   "ad": "Makale 2 (B5 + K0–K4)",
+   "durum": "planlı",
+   "sinif": "planli",
+   "siradaki": "B5 nedensel ICEEMDAN, sonra kollar"
+  },
+  {
+   "ad": "Faz 10 M1 çerçeve spike'ı",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": "M2 ortam (spike girdileri: nakit üst sınırı, eksik hücre maskesi, M4 parametre eşitliği)"
+  },
+  {
+   "ad": "Faz 10 M2 ortam + karar çekirdeği",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": "M3: BenchMARL görevi + PC060-K12 P tablosu; 2021+ öncesi fiyat marjı geçmişi doğrulaması (tasarım §2.5, §9)"
+  },
+  {
+   "ad": "Faz 10 P5: tahmin hedefi K12 yürütme ufkuna (pit_v2)",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": "M5 ön kaydı §2'de okuma kuralı yazıldı (phase-10-m5-design.md, v0.1)"
+  },
+  {
+   "ad": "Faz 10 M3a boru hattı kapısı",
+   "durum": "bitti, GEÇTİ",
+   "sinif": "bitti",
+   "siradaki": null
+  },
+  {
+   "ad": "Faz 10 M3b 20 bps kapısı",
+   "durum": "Aşama 1 bitti, KISMİ",
+   "sinif": "bitti",
+   "siradaki": "M4 temeli referans yapılandırma (kullanıcı kararı 2026-11-19, §6.8)"
+  },
+  {
+   "ad": "Sistem rehberi ve sözlük (K28)",
+   "durum": "R1 bitti, R2 kodu bitti (2026-11-19)",
+   "sinif": "bitti",
+   "siradaki": "R2 görsel denetim + konteyner; sonra R3 (deney kartları, aşama çizelgesi)"
+  },
+  {
+   "ad": "Faz 10 M4–M8, nihai koşumlar",
+   "durum": "planlı",
+   "sinif": "planli",
+   "siradaki": "M4a bitti (gat KISMİ, attn GÖZLENMEDİ); M4b pilotu PİLOT_İŞARETİ (§6.4); M5 mekanizma tabanı kullanıcı kararı (phase-10-m4-design.md)"
+  },
+  {
+   "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
+   "durum": "planlı",
+   "sinif": "planli",
+   "siradaki": "M2 + karar katmanından (K1–K10) sonra"
+  },
+  {
+   "ad": "Canlı karar paritesi (K13)",
+   "durum": "açık",
+   "sinif": "planli",
+   "siradaki": "Karar katmanında"
+  },
+  {
+   "ad": "Y30 SHAP ucu, Y31 altın birimi",
+   "durum": "açık",
+   "sinif": "planli",
+   "siradaki": "Tez sonucu değil"
+  },
+  {
+   "ad": "Tez Milestone 1 (literatür)",
+   "durum": "kısmen",
+   "sinif": "planli",
+   "siradaki": "Dört 2026 tam metni, YÖK taraması"
+  }
+ ],
+ "kaynaklar": {
+  "docs/development/measurements/phase10-m3/m3a_results.json": {
+   "sha256": "0a258a78adfa47d1113149d0f57249be7a675af30acd13e9ec4629ecb31b21b6",
+   "uretim_commit": null
+  },
+  "docs/development/measurements/phase10-m3/m3b_stage1.json": {
+   "sha256": "da6956d35e08237a44ee9a1056989220a7d7a399bd1dc2a57d0dc238cf290a9e",
+   "uretim_commit": "2f43f622d829d628a0644feed53d92e609146013"
+  },
+  "docs/development/measurements/phase10-m4/m4a_stage2.json": {
+   "sha256": "5678148614f7608d456f92a19a62fb23ffb004e443aa979be6479412a8b221dc",
+   "uretim_commit": "62b4023637e3883921c2d938189942056b31c67b"
+  },
+  "docs/development/measurements/phase10-m4/m4b_results.json": {
+   "sha256": "793d48a5593571e896e7dccfc5609685a0d447a94304a09cb1f394ac245aa350",
+   "uretim_commit": "8ea46ec1ac65548c979cde21f657a91ef4367c70"
+  },
+  "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
+   "sha256": "bb061084871e060b3ec6fa14a60ce7f8807cbaf8ff8f97b3563103cf3ee82a0d",
+   "uretim_commit": "0e9d374"
+  },
+  "docs/development/system-map.md": {
+   "tablo_sha256": "bcdb6c12c5e0e5f627e405f5f338c260fb6658a620e15cba2d98cfc8270e54af",
+   "uretim_commit": null
+  }
+ }
+}
