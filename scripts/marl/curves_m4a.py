@@ -44,17 +44,21 @@ def summary(vals: list) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--log', required=True)
+    ap.add_argument('--log', required=True, nargs='+', help='bir ya da daha fazla log (M4b: her kosunun run.log u)')
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
-    with open(a.log, encoding='utf-8', errors='replace') as fh:
-        text = fh.read()
+    text = ''
+    for path in a.log:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            text += fh.read() + '
+'
     curves = parse(text)
     git = lambda *c: subprocess.run(['git', *c], capture_output=True, text=True).stdout.strip()   # noqa: E731
     with open(os.path.abspath(__file__), 'rb') as fh:
         sha = hashlib.sha256(fh.read()).hexdigest()
     rec = {'note': 'BETIMSEL egitim egrisi (ilerleme cubugu mean return); okuma kuralini degistirmez',
-           'log': a.log.replace(os.sep, '/'), 'log_sha256': hashlib.sha256(text.encode('utf-8', 'replace')).hexdigest(),
+           'log': [p.replace(os.sep, '/') for p in a.log],
+           'log_sha256': hashlib.sha256(text.encode('utf-8', 'replace')).hexdigest(),
            'commit': git('rev-parse', 'HEAD'), 'git_status_porcelain': git('status', '--porcelain'),
            'script_sha256': sha, 'runs': {k: summary(v) for k, v in sorted(curves.items())}}
     for k, s in rec['runs'].items():
