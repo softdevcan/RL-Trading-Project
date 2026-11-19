@@ -1,12 +1,12 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.8 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.9 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum (v0.8):** §4 mekanizma kolları KOŞULDU: **H2 KISMİ (`gurultu_tabani`), H3 SINANMADI** (§4.11). Ön kayıt (v0.7, DONDURULDU) değişmedi. Sırada gerçek sinyal kolları (§2.3, K-a), kullanıcı kararıyla. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
+**Durum (v0.8):** §4 mekanizma kolları KOŞULDU: **H2 KISMİ (`gurultu_tabani`), H3 SINANMADI** (§4.11). Ön kayıt (v0.7, DONDURULDU) değişmedi. Gerçek sinyal kolları ön kaydı §5 TASLAK (v0.9; kol seti kullanıcı onayı bekliyor, koşu kullanıcı takviminde). §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
 
 **Durum (v0.3):** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
 
@@ -342,10 +342,95 @@ Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
 
 **Deneme kaydı:** H2 ve H3 birer deneme (H3 SINANMADI olarak), GD betimsel (§4.5).
 
+## 5. Gerçek sinyal kolları ön kaydı (TASLAK v0.9) — sonuçtan önce
+
+**Durum:** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
+
+### 5.1 Soru
+
+AQ2-gerçek (§2.3): yön bilgisi tespit edilemeyen gerçek bir tahmin sinyali gözleme ya da gözlem + mesaja eklendiğinde politika iyileşiyor mu, bozuluyor mu, değişmiyor mu? Bu bir **sağlamlık** sorusudur. Önsel beklenti, bilgi kaynaklı etkinin ≈ 0 olmasıdır (§2.2 #3). Ek girdi öğrenmeyi yavaşlatabileceği için negatif bir etki de beklenen sonuçlar arasındadır.
+
+### 5.2 Düzen
+
+- **Sinyal:** `pit_v2_seed42.parquet` (SHA-256 `9116c571…`, P5; hedef K12 ufku Oₜ₊₁ → Oₜ₊₂). Bilgi kapısından geçmedi (0/30, §2.1). **Komşu sinyali yok:** her ajan kendi hissesinin sinyalini görür.
+- **Bloklar** (`scripts/marl/build_pred_m5real.py`, kayıt `measurements/phase10-m5/pred_blocks_real.json`): gerçek blok tek (tablo tek), karıştırılmış blok tohum s ile, ikinci karıştırma tohum 1000 + s ile (gürültü tabanı). Biçim M3 ile aynı (`build_pred_m3.to_arrays`).
+- **Koşudan önce ölçülen (betimsel):** eğitim satırlarında K12 etiketiyle AUC gerçek 0,503, karıştırılmış 0,502–0,508. Kapsam (tahmini olan hücre payı) gerçek 0,949, karıştırılmış ~0,959. Permütasyon pencere dışındaki günleri pencereye taşıdığı için pay biraz farklıdır; bu küçük bir girdi farkıdır ve beyan edilir.
+- **Sabitler:** 20 bps gidiş-dönüş (K-g; sağlamlık ve canlı kullanım sorusu), α 0,25, MAPPO, eleştirmen MLP (tüm yerel gözlemler), F = 600.000, lr 5e-4, `init_std` 0,12, son ağırlıklar, deterministik tam pencere değerlendirme. Eğitim 2013-06..2018-12, doğrulama 2019–2020; 2021+ okunmaz.
+- **Tohumlar 9, 10, 11** (yeni). 3–5 M4b'de, 6–8 M5 mekanizma kollarında kullanıldı ve sonuçları görüldü.
+
+### 5.3 Kollar (öneri: 8 kol × 3 tohum = 24 koşu)
+
+| Kol | Politika | Tahmin bloğu | Rol |
+|---|---|---|---|
+| T0-N | none (MLP) | yok | gözlem yolunun tahminsiz karşılığı |
+| SO | none | gerçek | S-obs |
+| SO-S | none | karıştırılmış (tohum s) | S-obs kontrolü |
+| SO-S2 | none | ikinci karıştırma (1000 + s) | S-obs gürültü tabanı |
+| T0-G | gat (sector+mst) | yok | ikisi-birden yolunun tahminsiz karşılığı |
+| SB | gat + GL (`zlogodds`, β öğrenilen) | gerçek | ikisi birden (gözlem + güvenli mesaj) |
+| SB-S | gat + GL | karıştırılmış | ikisi-birden kontrolü |
+| SB-S2 | gat + GL | ikinci karıştırma | ikisi-birden gürültü tabanı |
+
+- K-g gereği "yalnız S-msg" kolu yok: güven gözlemden okunduğu için S-msg bu kodda ikisi birdenin içindedir (S-msg ⊂ ikisi birden).
+- SB, GL yapılandırmasını kullanır. M5 mekanizma sonucu KISMİ'dir (§4.11). Bu kol mekanizmanın değerini sınamaz; yalnız gerçek sinyal bu yoldan verildiğinde ne olduğunu sınar.
+- Alternatifler (kullanıcıya sunuldu, karar bekliyor): gürültü tabansız 6 kol (18 koşu), ya da yalnız gözlem yolu (4 kol, 12 koşu).
+
+### 5.4 Okuma kuralı (önceden sabit; `scripts/marl/analyze_m5real.py`)
+
+Her yol y ∈ {SO, SB} için, ortak HAC ile, maliyetli X, SR yıllık, eşli tohum ve tarih:
+- **Birincil:** Dᵧ = D(gerçek, karıştırılmış) eğitimde; iki yönlü p, iki yol üzerinde Holm.
+- **Gürültü tabanı:** Nᵧ = |D(karıştırılmış, karıştırılmış-2)| eğitimde. İki bilgisiz kol arasındaki fark yörünge ve girdi gürültüsünü ölçer (M5 §4.11 dersi).
+- **"Fark var" (A, B karşılaştırmasında):** (a) Holm düzeltmeli iki yönlü p < 0,05, (b) |D(A, B)| > Nᵧ, (c) doğrulamada D aynı işaretli ve en az m = ⌈2k/3⌉ tohumda aynı işaret. Üçü birden.
+- **İkincil:** D(gerçek, tahminsiz) ve D(karıştırılmış, tahminsiz), her yolda; dört test üzerinde Holm, aynı (a)–(c).
+
+**Okuma, yol başına, öncelik sırasıyla (§2.4):**
+
+| Sıra | Koşul | Okuma | Anahtar |
+|---|---|---|---|
+| 1 | Gerçek ↔ karıştırılmış fark var, D < 0 | O2: bilgisi tespit edilemeyen sinyal politikayı bozuyor (sağlamlık bulgusu; canlı kullanım uyarısı) | `O2_bozma` |
+| 2 | Gerçek ↔ karıştırılmış fark var, D > 0, ve gerçek ↔ tahminsiz de fark var ve pozitif | O4 keşifsel: kapının ölçmediği bir bilgi (büyüklük ya da dağılım) olası. Doğrulama yeni ön kayıt ister; §2.4 O4 (c) bu turda koşulmaz | `O4_kesifsel` |
+| 3 | Gerçek ↔ karıştırılmış fark var, D > 0, ama O4 koşulları eksik | Kapı sonucuyla çelişen ve tekrar etmeyen bir işaret; bulgu değil | `O4_eksik` |
+| 4 | Gerçek ↔ karıştırılmış fark yok; gerçek ↔ tahminsiz ve karıştırılmış ↔ tahminsiz ikisi de fark var ve aynı işaretli | O3: etki bilgiden değil, girdi boyutundan ya da kapasiteden | `O3_girdi` |
+| 5 | Gerçek ↔ karıştırılmış fark yok; gerçek ↔ tahminsiz fark var ve D < 0 (karıştırılmış ↔ tahminsiz değil) | O2 (tahminsiz maddesi): sinyal tahminsize göre bozuyor | `O2_tahminsize_gore` |
+| 6 | Hiçbiri | O1: bu sinyal ve bu güçle bilgi kaynaklı fark tespit edilmedi; MDE ve tohum gereksinimiyle raporlanır | `O1_fark_yok` |
+
+Eksik kol ya da eğitim kaydı → `EKSIK` (okunmaz). Yazılmayacaklar §2.4'teki tablodadır.
+
+### 5.5 Betimsel (kararı değiştirmez)
+
+Tohum başına β (SB, SB-S, SB-S2), z_scale, devir, kapsam, Nᵧ'nin tohum farkları, eğitim eğrileri, tohum gereksinimi (M4b formülü). Gerçek ↔ karıştırılmış için MDE yerine gözlenen SE ile "en küçük tespit edilebilir D" (1,96 + 0,84)·SE betimsel verilir.
+
+### 5.6 Sınırlar (beyan)
+
+- Tek bir tahmin tablosu (model tohumu 42). Sonuç başka bir tahmin hattına genellenmez.
+- 3 tohum; ortak HAC p'si tohum varyansını taşımaz. Gürültü tabanı her yolda tohum başına bir gerçekleşmedir (3 çekim). Dağılım değildir, ama M5'teki tek kola göre daha iyidir.
+- Kapsam farkı (gerçek 0,949, karıştırılmış ~0,959): küçük bir girdi farkı; karıştırılmış ↔ karıştırılmış-2 arasında yoktur.
+- SB, mekanizması KISMİ olan GL yapılandırmasını taşır; "güvenli mesaj işe yarıyor" okunmaz.
+- 20 bps'de pozitif kontrol bile KISMİ kalmıştı (M3 §6.7); bu düzenin gücü düşüktür.
+
+### 5.7 Yasak kurtarma
+
+§2.5 geçerli. Ek olarak: ek tohum, başka bir P tablosu, maliyetin değişmesi, kolların sonuca bakılarak çıkarılması, gürültü tabanının sonradan yeniden tanımlanması yapılmaz.
+
+### 5.8 Süre ve komutlar
+
+24 koşu, iki eş zamanlı. M5 mekanizma kolları (gat, 15 koşu) 102 dakikada bitti (~6,8 dk/koşu); `none` kolları daha hızlıdır (M4 süre ölçümü: 200 bin karede none 172 sn, gat 205 sn). Tahmin **≤ ~2,7 saat**. Koşu öncesi GPU/CPU boş olmalı.
+
+```
+python scripts/marl/build_pred_m5real.py --seeds 9,10,11 --json docs/development/measurements/phase10-m5/pred_blocks_real.json
+venv-marl\Scripts\python scripts/marl/run_m5real.py --jobs 2
+python scripts/marl/analyze_m5real.py --out docs/development/measurements/phase10-m5/m5real_results.json
+```
+
+### 5.9 Hakem okuması
+
+hakem-finans (20 bps, gerçek sinyal, Sharpe çıkarımı) + hakem-rl (kollar, gürültü tabanı, okuma kodu), koşudan önce. Sonuç bu alt bölüme eklenir.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.9 (2026-11-19):** §5 gerçek sinyal kolları ön kaydı TASLAK: 8 kol (T0-N, SO, SO-S, SO-S2, T0-G, SB, SB-S, SB-S2), 20 bps, tohum 9–11, gürültü tabanı karıştırılmış ↔ karıştırılmış-2, okuma O1–O4 öncelik sırasıyla. Kod `build_pred_m5real.py`, `run_m5real.py`, `analyze_m5real.py` (self-test 7/7); bloklar arşivlendi. Koşu yok.
 - **v0.8 (2026-11-19):** §4.11 sonuç: H2 KISMİ (`gurultu_tabani`; (i)–(iv) sağlandı, (v) D(GL, G0) 0,13 ≤ |D(GD, G0)| 0,18), H3 SINANMADI. β güvene özgü öğrenildi (GLS'de ~0), betimsel. Gürültü tabanının kendisi eğitimde p ≈ 0,001: uzun koşu ön kaydına girdi. Ön kayıt değişmedi.
 - **v0.7 (2026-11-19):** hakem-rl 2. okuma Kabul; iki KÜÇÜK not işlendi (`bilgi_isareti` ifadesi daraltıldı, `beta_GLS_ge_min_m_of_k` betimsel). **DONDURULDU.** Koşu yok.
 - **v0.6 (2026-11-19):** hakem-rl 1. okuma (Küçük rev., 2 BÜYÜK) işlendi: (iv) β ≥ 0,04 en az m tohumda, (v) gürültü tabanı GD (aynı tohumlu GPU tekrarı bit-eş), öncelik sıralı tek okuma ve 14 satırlık tablo, EKSİK tanımı, m = ⌈2k/3⌉. Tasarım ölçümü (`design_checks.json`). Kullanıcı kararı: GLM sıcaklık aralığı [0,25; 4]. Koşu yok.
