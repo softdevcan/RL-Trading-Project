@@ -1,12 +1,12 @@
 # Faz 10 M3 — Algoritma katmanı: tasarım ve M3a ön kaydı
 
-**Sürüm:** v0.3 · 2026-11-18 · dal `feat/phase10-p5` (ön kayıt v0.2 değişmedi; v0.3 yalnız sonucu ekler, §5.2)
+**Sürüm:** v0.7 · 2026-11-19 · dal `feat/phase10-m3b` (M3a ön kaydı v0.2 ve M3b ön kaydı v1.1 değişmedi; v0.6 Aşama 1 sonucunu, v0.7 M4 geçiş kararını ekler, §6.7–§6.8)
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2, §4
 - Faz 9 planı §M3 (IPPO, MAPPO, parametre paylaşımı + ajan kimliği, MAPPO önerileri)
 - [phase-10-m2-design.md](phase-10-m2-design.md): §9 #4, #10, #11 ve §9.1 (pozitif kontrol PC060-K12)
 
-**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Sırada M3b ön kaydı (§6). Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi.
+**Durum:** **M3a koşuldu, etiket GEÇTİ (2026-11-18, §5.2).** Bu bir boru hattı kapısıdır, tez bulgusu değildir; sinyal bilerek gelecekten türetilmiştir. Ön kayıt v0.2 ilk eğitim koşusundan önce commit'lendi ve sonuçtan sonra değiştirilmedi. **M3b Aşama 1 koşuldu, etiket KISMİ (2026-11-19, §6.7); ön kayıt gereği Aşama 2 koşulmadı. Kullanıcı kararı: M4'e referans yapılandırmayla geçilir (§6.8).**
 
 Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 
@@ -22,7 +22,7 @@ Bu belge M3'ün yapısını tanımlar. Kod ile belge farklıysa kod hatalıdır.
 | Baseline'lar aynı muhasebeyle (M2 §9 #11) | §3 | `m3_runner.rule_series` |
 | Pozitif kontrol PC060-K12 + karıştırılmış kontrol (M2 §9.1; hakem-rl M3a #2) | §4, §5 | `scripts/marl/build_pred_m3.py` (`--shuffle`) |
 | **M3a ön kaydı: boru hattı kapısı** | §5 | `train_m3.py`, `eval_m3.py`, `analyze_m3.py` (ön kayıttan sonra) |
-| M3b: algoritma ve eleştirmen seçimleri (IPPO ↔ MAPPO, R4, R5) | §6 | ayrı ön kayıt, M3a geçince |
+| **M3b ön kaydı:** 20 bps kapısı ve M4 temel yapılandırması (IPPO, R5, α) | §6 | `run_m3b.py`, `analyze_m3b.py` |
 
 **M3'ün sorusu.** M0' ve Faz 9 §9.37–9.39'daki boş sonucun en güçlü açıklaması şuydu: öğrenme, bilinen bir sinyali bile ayıklayamıyor. Yeni ortam bu açıklamanın kaynaklarını değiştirdi:
 - yerel, normalize gözlem
@@ -197,18 +197,126 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 
 ---
 
-## 6. M3b (M3a geçerse; ayrı ön kayıt)
+## 6. ÖN KAYIT v1.1 — M3b maliyet kapısı ve M4 temel yapılandırması (2026-11-18, ilk M3b eğitiminden ÖNCE)
 
-M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
+Kapsam ve toplam süre kullanıcıya sunuldu ve onaylandı (2026-11-18). M3a'nın okuma kuralı ve eşikleri değiştirilmedi. v1.0 (`2462853`) hiç koşulmadan hakem-rl okumasıyla v1.1'e güncellendi (§8).
 
-- **Seçimler:**
-  - tahminsiz kol (A0) ve 20 bps çifti (v0.1'den ertelendi): maliyet altında değer, ayrı küçük soru
-  - IPPO ↔ MAPPO
-  - eleştirmen: gözlemler ↔ `state()` (R5)
-  - yerel gözleme piyasa bağlamı: kesitsel ortalama z, geçerli oran (R4)
-  - α ∈ {0; 0,25; 0,5} ön elemesi (M2 §2.2)
-- **Seçim kuralı ve pencere:** doğrulama penceresi; hepsi M3b ön kaydında.
-- **Zorunlu öğrenen baseline'lar** (Faz 9 §M3): tek ajan ve SARL-ağırlık kolu (§3.2.4) aynı ortam ve sınırlarla.
+### 6.1 Sorular
+
+1. **Aşama 1:** MAPPO, 20 bps maliyetle yeniden eğitildiğinde bilinen sinyalden kontrole göre değer üretebiliyor mu?
+2. **Aşama 2:** M4'ün temel yapılandırması ne olmalı: referans mı, tek etkeni değiştirilmiş bir aday mı?
+
+Sinyal bilerek gelecekten türetilmiştir (§4). M3b sayıları **tez bulgusu değildir**; geliştirme kararı üretir.
+
+### 6.2 Ortak yapılandırma
+
+- §2'deki hiperparametreler, aşağıda değişen etken dışında aynen. lr 5e-4, F = 600.000 kare, son ağırlıklar; kontrol noktası seçimi ve erken durdurma yok.
+- **Maliyet:** 20 bps gidiş-dönüş hem eğitimde hem değerlendirmede (`--cost-bps 20`).
+- **Tohumlar:** s ∈ {0, 1, 2}, üreteç g_s ∈ {20261115, 1, 2} (§5 ile aynı eşleme).
+- **Değerlendirme:** deterministik, tam pencere. Eğitim 1343 gün, doğrulama 500 gün; 2021+ yok.
+- **Süre:** koşu başına ~8 dk (M3a'da eğitim 455–495 sn, RTX 4060). Aşama 1 ~50 dk, Aşama 2 ~1,6 saat, toplam ~2,4 saat.
+- **Kod:** `scripts/marl/run_m3b.py`, `scripts/marl/analyze_m3b.py` (`--self-test` 16/16).
+
+### 6.3 Aşama 1: maliyet kapısı (6 koşu)
+
+| Kol | Gözlemdeki tahmin bloğu | Rol |
+|---|---|---|
+| A1c | PC060-K12 (g_s) | sinyalli, **referans yapılandırma** (MAPPO, eleştirmen = tüm yerel gözlemler, α = 0,25) |
+| S1c | aynı blok, günleri permüte (§5) | kontrol |
+
+SR yıllık, 20 bps sonrası X üzerinde. Δ_s = SR(A1c_s) − SR(S1c_s), D = ort_s Δ_s.
+
+- **GEÇTİ = üçü birden:**
+  - (i) Eğitim: D ≥ **0,3** ve ortak HAC tek yönlü p < 0,05.
+  - (ii) Eğitim: min_s SR(A1c_s) > max_s SR(S1c_s).
+  - (iii) Doğrulama, işaret kontrolü: D > 0 ve en az 2/3 tohumda Δ_s > 0.
+
+  Okuma: "Eğitim penceresinde, aynı kapasite ve parmak izine sahip kontrole karşı, 20 bps ile yeniden eğitilen politikada sinyal aktarımı gözlendi; doğrulamada işaret çelişmiyor."
+- **KISMİ:** eğitimde D > 0 ve p < 0,05 var, ama GEÇTİ koşullarından biri eksik.
+- **GÖZLENMEDİ:** "Bu bütçe, lr ve 20 bps'de maliyet sonrası aktarım gözlenmedi." Kanıt yokluğudur; "aktaramıyor" denmez.
+- **Durma kuralı:** GEÇTİ dışındaki her etikette **Aşama 2 koşulmaz** (`run_m3b.py` reddeder), M4'e geçilip geçilmeyeceği kullanıcı kararına döner. M4'e yine de geçilirse temel referanstır (MAPPO, tüm yerel gözlemler, α = 0,25); bu seçim kanıta dayanmaz, varsayılandır.
+
+### 6.4 Aşama 2: temel yapılandırma (12 koşu; yalnız Aşama 1 GEÇTİ ise)
+
+Her aday referanstan (A1c) **tek yapılandırma seçimiyle** ayrılır; sinyal, maliyet ve tohumlar aynıdır. IPPO ve STATE'te bu seçim eleştirmenin bilgi kümesini ve **kapasitesini birlikte** değiştirir, kapasite eşlenmez. Sonuç "merkezileştirmenin etkisi" diye değil, "bu eleştirmen yapılandırmasının etkisi" diye okunur. Eleştirmen boyutu her koşunun `train.json` → `critic` alanına yazılır.
+
+| Aday | Değişen seçim | Eleştirmen girişi / parametre | Seçilebilir mi |
+|---|---|---|---|
+| Referans (A1c) | — | 1440 / 434.945 | — |
+| IPPO | Algoritma: ajan başına yerel eleştirmen (plan §2.3, §3.2.4) | 48 / 78.593 | evet |
+| STATE | Eleştirmen girdisi: ortam `state()` (R5) | 43 / 77.313 | evet |
+| A05 | α = 0,5 (M2 §2.2) | referansla aynı | evet |
+| A00 | α = 0 (M2 §2.2) | referansla aynı | **hayır:** yalnız ablasyon. Plan §2.3 α > 0 seçimini şart koşar |
+
+D_j = ort_s [SR(aday_j,s) − SR(A1c_s)].
+
+**Aday UYGUN = beşi birden:**
+- (a) Doğrulama: D_j ≥ **0,3**.
+- (b) Doğrulama: ortak HAC tek yönlü p, seçilebilir 3 aday üzerinde **Holm** düzeltmesiyle < 0,05.
+- (c) Doğrulama: **3/3 tohumda** fark > 0.
+- (d) Eğitim: D_j > 0 (işaret tutarlılığı).
+- (e) Doğrulama: D_j > referansın tohumlar arası SR aralığı (max_s − min_s SR(A1c_s)). (b) yalnız gün gürültüsünü ölçtüğü için tohum gürültüsüne karşı koşul budur.
+
+**Seçim:** Uygun adaylar içinde doğrulama D_j'si en büyük olan seçilir. Uygun aday yoksa **referans kalır**. Etkenler birleştirilmez; seçilen yapılandırma her zaman fiilen koşulmuş bir yapılandırmadır.
+
+M3b'nin seçimi yalnız M4'ün temelini belirler. Plan §2.3 gereği IPPO ve MAPPO nihai raporda ikisi birden yer alır.
+
+**Betimsel, kararı değiştirmez:** tohum başına SR ve fark, devir, nakit ağırlığı, A00 ablasyonu, aynı maliyetli 1/N ve al-tut SR'si.
+
+### 6.5 §6'nın önceki taslağından sapmalar (kullanıcı kararı, 2026-11-18)
+
+| Madde | Karar | Gerekçe |
+|---|---|---|
+| Tahminsiz kol (A0) | M5'e | Sinyal sorusunu aynı kapasiteli S1c yanıtlıyor; tahminin katkısı gerçek sinyalle M5'in sorusu |
+| Yerel gözleme piyasa bağlamı (R4) | Ayrı paket | `marl-obs-v1` gözlem sürümünü ve canlı karar paritesini (K2) değiştirir |
+| Tek ajan ve SARL-ağırlık baseline'ları | M8'den önce ayrı paket | Kodları yok; birincil MAPPO ↔ SARL-eşmimari karşıtlığı M8 ön kaydında (plan §2.3) |
+
+### 6.6 Beyanlar
+
+- **Ön kayıttan önce görülen ölçüm.** M3a'nın maliyetsiz eğitilmiş politikalarına 20 bps sonradan uygulandı (`measurements/phase10-m3/m3a_expost_cost.json`, `scripts/marl/expost_cost_m3a.py`): net D eğitimde 0,41, doğrulamada 0,52; tohum 1'in eğitim farkı 0,07. Bu ölçüm yeniden eğitim sonucu değildir. Eşikler buna göre ayarlanmadı, M3a'dan aynen alındı. Net fark eşiğe yakın ve tohum 1'in farkı küçük olduğu için Aşama 1'in GEÇTİ dışında bir etiket vermesi kurala uygun, olası bir sonuçtur.
+- **Doğrulama penceresi yeniden kullanılıyor.** Pencere M3a'da maliyetsiz okundu ve Aşama 2'de seçim için kullanılıyor. Seçilen adayın doğrulama SR'si seçim nedeniyle iyimserdir ve başarım sayısı olarak raporlanmaz.
+- **Güç.** 3 tohumla sıralama kuralının ulaşabileceği en küçük p 1/20'dir. Ortak HAC ve Holm yalnız gün gürültüsünü denetler, tohum varyansını içermez. Aşama 2 kuralı bilerek tutucudur: gerçek ama küçük bir üstünlük seçilmeyebilir, bu durumda referans kalır.
+- **Tek seçim tasarımı.** Etkileşimler ölçülmez.
+- **Aktarılabilirlik.** Yapılandırma sentetik PC060-K12 sinyaliyle seçilir. Gerçek `pit_v2` sinyali kapıyı geçmedi (0/30, havuzlu AUC 0,5044; plan §3.1.3); seçimin gerçek sinyale taşınacağı varsayılmaz.
+- **Süren sapmalar.** Değer normalizasyonu yok (§2). GPU'da bit-eşlik iddia edilmez (§1).
+
+### 6.7 Aşama 1 sonucu (2026-11-19): KISMİ, Aşama 2 koşulmadı
+
+**Kaynak:** `measurements/phase10-m3/m3b_stage1.json`; komut `python scripts/marl/analyze_m3b.py --stage 1 --out docs/development/measurements/phase10-m3/m3b_stage1.json`. Aşağıdaki sayılar bu dosyadan yuvarlanmıştır.
+
+**Koşu izi:** 6/6 koşu, F = 600.000, 20 bps, commit `2f43f62`, temiz çalışma ağacı (`results/marl_m3b/*/s*/train.json`). Koşu başına eğitim 454–473 sn.
+
+| Tohum | Eğitim SR A1c | Eğitim SR S1c | Eğitim Δ | Doğrulama SR A1c | Doğrulama SR S1c | Doğrulama Δ |
+|---|---|---|---|---|---|---|
+| 0 | 1,43 | 0,78 | +0,65 | 1,64 | 0,82 | +0,82 |
+| 1 | 0,79 | 0,70 | +0,08 | 0,78 | 0,73 | +0,05 |
+| 2 | 0,76 | 0,30 | +0,46 | 1,34 | 0,75 | +0,58 |
+
+| Koşul | Eşik | Ölçüm | Sonuç |
+|---|---|---|---|
+| (i) Eğitim büyüklüğü ve ortak HAC | D ≥ 0,3 ve tek yönlü p < 0,05 | D = 0,40 (SE 0,09), p ≈ 1e-5 | sağlandı |
+| (ii) Eğitim sıralaması | min A1c > max S1c | 0,76 > 0,78 değil | **sağlanmadı** |
+| (iii) Doğrulama işareti | D > 0 ve en az 2/3 tohumda Δ > 0 | D = 0,49 (SE 0,12), 3/3 tohum | sağlandı |
+
+**Okuma (ön kayıt):** Etiket KISMİ. 20 bps ile yeniden eğitilen politikada eğitim penceresinde anlamlı pozitif fark var, ama tohum varyansına karşı konan sıralama koşulu sağlanmadı. §6.3 durma kuralı gereği **Aşama 2 koşulmadı** ve M4 temel yapılandırması için kanıt üretilmedi. Eşikler sonuçtan sonra değiştirilmedi; (ii)'deki farkın küçük olması etiketi değiştirmez.
+
+**Betimsel (kararı değiştirmez):**
+- Ortalama günlük devir: A1c 0,48, S1c 0,31 (eğitim); A1c 0,50, S1c 0,31 (doğrulama). M3a'nın maliyetsiz A1'inde eğitim devri 0,66 idi.
+- Aynı maliyetli baseline SR'leri: 1/N 0,38 (eğitim), 0,83 (doğrulama); al-tut 0,66 (eğitim), 0,81 (doğrulama).
+- Tohum 1'de fark iki pencerede de küçük (+0,08 ve +0,05); bu tohumda A1c'nin doğrulama SR'si (0,78) 1/N'in altında.
+
+**Sınırlar:** Sinyal gelecekten türetilmiştir; sonuç tez bulgusu değildir. Ortak HAC p'si tohum varyansını içermez. Aynı kapı ek tohumlarla yeniden denenmez; yeni bir deney ayrı ön kayıt gerektirir.
+
+### 6.8 M4'e geçiş kararı (2026-11-19, kullanıcı)
+
+Kullanıcı, §6.3 durma kuralının bıraktığı kararı **M4'e referans yapılandırmayla geçmek** yönünde verdi: MAPPO, eleştirmen = tüm yerel gözlemler, α = 0,25 (§6.2 A1c). Bu seçim **kanıta değil varsayılana dayanır**. Aşama 2 koşulmadığı için IPPO, `state()` eleştirmeni ve α seçenekleri arasında bir karşılaştırma yoktur.
+
+**M4 ve sonraki raporlarda beyan edilecekler:**
+- M3b Aşama 1 etiketi KISMİ'dir. 20 bps'de sinyalli kol kontrolün önünde kaldı (eğitim D 0,40, doğrulama D 0,49), ama tohum sıralama koşulu sağlanmadı (§6.7).
+- Temel yapılandırma ön kayıtlı bir seçimle değil, varsayılanla belirlenmiştir. M4 iletişim kollarının karşılaştırması bu temel üzerinde yapılır; temelin kendisi için en iyilik iddiası kurulmaz.
+- Alternatif (ayrı ön kayıtlı yeni bir 20 bps deneyi) seçilmedi. Aynı kapı ek tohumla kurtarılmaz.
+
+**Sıradaki:** M4 ön kaydından önce M5 ön kaydına P5c okuma kuralı yazılır (plan §3.1.3, "P5 durumu").
 
 ---
 
@@ -236,7 +344,27 @@ M3a geçerse açılır, ayrı bir ön kayıtla koşulur.
 
 Hakem 25 koşu önermişti (5 tohum). Kullanıcının ~1 saatlik sınırı yüzünden 3 tohum ile #1'in kesin permütasyon ölçütü kullanıldı; 3'e 3'te en küçük p tam 0,05. Bu bir **güç sınırlamasıdır**, beyan edilir. İkinci okuma: SendMessage ile, yalnız v0.1 → v0.2 farkı.
 
+**hakem-rl, M3b ön kaydı v1.0 (2026-11-18, uç `2462853`).** ~51 bin token / 17 araç / ~1,3 dk. **Küçük revizyon.**
+
+| # | Cid. | Bulgu | Sonuç (v1.1) |
+|---|---|---|---|
+| 1 | BÜYÜK | Aşama 2 kuralı tohum gürültüsüne karşı kalibresiz; boş hipotezde "≥ 2/3 tohum" olasılığı 0,5 | (c) 3/3 tohum; yeni (e) D_j > referansın tohumlar arası SR aralığı |
+| 2 | KÜÇÜK | IPPO ve STATE'te eleştirmen kapasitesi de değişiyor; "tek etken" fazla güçlü | Metin düzeltildi; eleştirmen boyutu `train.json`'a yazılıyor |
+| 3 | KÜÇÜK | Aşama 1 geçmezse M4 temeli yazılı değil | §6.3: referans, kanıta dayanmayan varsayılan |
+| 4 | KÜÇÜK | Öz test koşulları tek tek eletmiyor | Beş koşul için tek tek eleme testi, 16/16 |
+| 5 | KÜÇÜK | Aşama 2 kapısı JSON'un ön kaydını denetlemiyor | `preregistration` ve `stage` denetimi eklendi |
+
+**İkinci okuma** (SendMessage, yalnız `2462853..3dff3a5` farkı): **Kabul**, 5/5 karşılandı, yeni BÜYÜK bulgu yok. Hakemin notu: (e) koşulundaki 3 tohumluk aralık kendisi gürültülü bir tahmindir; (a) ve (c) ile birlikte uygulandığı için kabul edilebilir.
+
 ## Versiyon geçmişi
+
+- **v0.7 (2026-11-19):** Kullanıcı kararı: M4'e referans yapılandırmayla geçilir; seçim varsayılandır, kanıta dayanmaz (§6.8). Koşu yok.
+
+- **v0.6 (2026-11-19):** M3b Aşama 1 koşuldu (6/6 koşu); etiket KISMİ, (ii) sıralama koşulu sağlanmadı (§6.7). Aşama 2 koşulmadı. Ön kayıt metni ve eşikleri değişmedi.
+
+- **v0.5 (2026-11-18):** M3b ön kaydı v1.1: hakem-rl bulguları işlendi (§8). Koşu yok.
+
+- **v0.4 (2026-11-18):** M3b ön kaydı v1.0 (§6): Aşama 1 20 bps'de A1c ↔ S1c, Aşama 2 referansa karşı IPPO, STATE, A05 ve A00 ablasyonu. A0, R4 ve SARL baseline'ları §6.5'teki kararla kapsam dışına alındı. Koşu yok.
 
 - **v0.3 (2026-11-18):** M3a koşuldu (F = 600.000, 6/6 koşu); etiket GEÇTİ (§5.2). Ön kayıt metni ve eşikleri değişmedi.
 
