@@ -10,6 +10,8 @@ birakildi; golden K1 yenilendi, v2.0.0; kosumlar `scripts/run_milestone0.py`; pr
 `docs/development/phase-10-marl-plan.md`. Dokuman indeksi `docs/README.md`.
 **Sistem haritasi** `docs/development/system-map.md`: bir bilesenin ya da asamanin DURUMUNU degistiren PR
 ayni PR'da haritayi da gunceller (dugum sinifi + durum tablosu + 'Son guncelleme' satiri).
+Haritanin durum tablosu ya da bir deney karti kaynagi degisince `python scripts/build_guide.py` kos (pano Rehber sayfasi
+`dashboard/content/snapshot.json`; `tests/test_guide.py` bayatligi yakalar). Sozluk: `dashboard/content/glossary.yaml` -> `docs/sozluk.md`.
 
 Kullanici hangi dilde yazarsa o dilde yanit ver.
 

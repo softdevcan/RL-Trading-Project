@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.2 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** Sıradaki iş R1. Kod yok.
+**Sürüm:** v0.6 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -159,9 +159,43 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Kapsam şişmesi:** ~170 terim tek seferde yazılırsa kalite düşer. Önlem: R1'de ~60 terim; kalan R4'te.
 - **Konteyner farkı:** `dashboard/content/` imaja girmezse sayfa boş kalır. Önlem: R2 kabul ölçütünde konteyner açılışı; `.dockerignore` `*.md` kuralı YAML ve JSON'u etkilemez, R2'de doğrulanır.
 
+## 11. R1 durumu (2026-11-19)
+
+- **Sözlük:** `dashboard/content/glossary.yaml`, 73 terim, 7 kategori (yazılım ve ürün kategorisi R4'te). Üretilmiş [`docs/sozluk.md`](../sozluk.md) (`python scripts/build_guide.py`; `--check` bayatlığı yakalar).
+- **Test:** `tests/test_guide.py` 6/6 ([1]–[6]; her kontrol mutasyonla birlikte). 93 kod/belge yolu ve 13 kaynak dizesi denetleniyor.
+- **Plandan sapmalar (beyan):** (a) §6 [5]'teki "ilk" yasağı tek kelime değil özgünlük kalıbı olarak uygulandı (`ilk kez|defa|çalışma`, `literatürde yok|ilk`); "ilk gün" gibi olağan kullanımlar engellenmez. (b) Yasaklı ifade taraması `uyari` alanını atlar, çünkü o alan yasaklı ifadeyi "denmez" diye anmak için var. (c) Sözlükte deney sonucu (etiket, ölçülen sayı) yok; yalnız tanım ve tasarım parametresi. Sonuçlar R3'teki deney kartlarına (`snapshot.json`) kalır. (d) M5 kol kodları (G0/GL/GLS/GLM/GD) M5 mekanizma ön kaydına göre yazıldı (GLG yok).
+- **Açık:** üretilmiş dosyanın elle düzenlenmesini engelleyen guard hook'u (§2, isteğe bağlı) eklenmedi; `--check` + test [6] bayatlığı yakalıyor. Bakım kuralı (§7) kök `CLAUDE.md`'ye R4'te girer.
+
+## 12. R2 durumu (2026-11-19)
+
+- **Sayfa:** `dashboard/pages/guide.py` → `/dash/guide`, menüde "Analiz" grubunda Dashboard'un altında "Rehber" (`bi bi-book`). Bölümler: 1 (ne yapar), 2 (veri akışı; token renkli HTML/CSS kutu-ok şeması, ≤ 820px'te oklar gizlenir), 5 (ne değildir), 6 (sözlük: arama + kategori süzgeci, sade tanım görünür, teknik ayrıntı `<details>` ile açılır). Yalnız okur; API ucu ve `dcc.Interval` yok.
+- **İçerik:** `dashboard/content/guide.yaml` (bölüm 1, 2, 5; sayı yok) + `glossary.yaml`. Arama Türkçe harfe duyarsız ("ogrenme" ~ "öğrenme").
+- **Stil:** `custom.css` `guide-` ailesi, yalnız token; `test_theme_contrast` [10] artık `guide-` önekini de tarıyor.
+- **Test:** `test_guide` 8/8 ([7] iki kontrol: kuruluş + arama + bağlantı + yasaklı ifade mutasyonu + menü/rota); `test_theme_contrast` 92/92, `test_dash_props` 4/4, `test_topbar` 39/39.
+- **Plandan sapma (beyan):** terim çapası `#terim-<id>` (planda `#<id>`), çünkü kısa terim id'leri (ör. `panel`, `kol`) sayfa bileşen id'leriyle çakışabilir. R4'teki üst çubuk araması bu çapayı kullanır. Sayfa yüklenirken URL'deki çapaya kaydırma yok (içerik Dash ile sonradan çiziliyor); R4'te istemci tarafı bir geri çağrıyla eklenir.
+- **Açık (kabul ölçütünün kalanı):** iki temada (açık/koyu) görsel denetim ve konteynerde açılış. Bu oturumda Docker çalışmıyordu ve tarayıcı aracı yoktu; ölçülmedi.
+
+## 13. R3 durumu (2026-11-19)
+
+- **Anlık görüntü:** `dashboard/content/snapshot.json` (üretilir, elle düzenlenmez). Deney kartları `guide.yaml` → `deneyler.kartlar` içinde tanımlanır. Her kartın etiketi ve en fazla 2 sayısı üretici tarafından kaynak JSON'un belirtilen alanından okunur ve değer, kaynak yolu ve alan adıyla birlikte yazılır. Kaynak özeti SHA-256'dır; varsa ölçümü üreten kodun commit'i (JSON'daki `provenance.commit` ya da `commit`) eklenir. Sayılar Türkçe ondalık virgülle biçimlenir.
+- **Kartlar (5):** P5 bilgi kapısı, M3a, M3b, M4a, M4b. Her kartta etiket, zorunlu "Tez bulgusu değil" rozeti, sade soru, okuma cümlesi (tasarım belgesindeki okuma paragrafından) ve belge yolu var. M5 kartı sonuç gelince eklenir.
+- **Aşama çizelgesi:** `system-map.md` "Durum tablosu"ndan; durum kalın baş ya da ilk ayraç öncesi; sınıf anahtar sözcükle (sürüyor / bitti / planlı ya da açık). Yalnız tablonun özeti kaydedilir, haritanın başka bir satırı rehberi bayatlatmaz.
+- **Test:** `test_guide` 9/9 ([6] snapshot tazeliği; [8] her sayı kaynak alanına eşit, etiket kaynaktan, rozet; mutasyon: çözülmeyen alan, 3 sayılı kart, değiştirilmiş kaynak JSON, değiştirilmiş harita satırı). Tema 92, props 4, üst çubuk 39.
+- **Plandan sapmalar (beyan):** (a) Planda "değer + kaynak yol + alan + commit" yazıyor. Dosyanın son git commit'i yerine üretim commit'i ve SHA kullanıldı; kaynak ile snapshot aynı commit'e girince son git commit'i kendini bayatlatırdı. M3a JSON'u provenance taşımadığı için onun commit alanı boş. (b) P5 kartının etiketi bir kuraldan türetilir: BH reddi 0 ise "GEÇMEDİ". Kaynak alanı kartta gösterilir. (c) Haritanın M2 satırı bayattı ("sürüyor"); kanıtıyla birlikte "bitti" yapıldı (`review-panel.md`, M2 kapanış ikinci okuması Kabul). "Faz 10 M4–M8" satırı M5 sonucuyla M5 PR'ında güncellenecek.
+- **Bakım kuralı:** kök `CLAUDE.md`'ye eklendi: harita tablosu ya da kart kaynağı değişince `python scripts/build_guide.py` koşulur.
+
+## 14. R4 durumu (kısmi, 2026-11-19)
+
+- **Yapıldı:** Sık sorulanlar (bölüm 7; `guide.yaml` → `sss`, 6 soru, terim bağlantılı, yasaklı ifade ve bağlantı denetimine dahil). Sayfa açılırken URL'deki çapaya (`#terim-<id>`, `#deney-<id>`) bir kez kaydırma (istemci tarafı geri çağrı; arama yeniden çizince kaydırmaz).
+- **Kalan:** ~110 terim (tek ajan RL, tahmin, veri, yazılım ve ürün); üst çubuk aramasına sözlük terimleri. Bu ikincisi `go_to_page` geri çağrısına `url.hash` çıktısı eklemeyi ve `test_topbar` [5]'in çıktı imzasını güncellemeyi gerektirir, ayrı yapılacak.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-19):** R4 kısmi (§14): SSS bölümü, çapaya kaydırma. Kalan: terimler, üst çubuk araması.
+- **v0.5 (2026-11-19):** R3 kodu (§13): `snapshot.json`, 5 deney kartı, aşama çizelgesi, test 9/9; bakım kuralı CLAUDE.md'de.
+- **v0.4 (2026-11-19):** R2 kodu (§12): Rehber sayfası, `guide.yaml`, CSS, menü/rota, test 8/8. Görsel denetim ve konteyner bekliyor.
+- **v0.3 (2026-11-19):** R1 bitti (§11): 73 terim, üretici, test 6/6, `docs/sozluk.md`. Plandan sapmalar beyan edildi.
 - **v0.2 (2026-11-19):** Kullanıcı onayı: plan ve R-K1..R-K7 öneri yönünde. Sıradaki iş R1.
 - **v0.1 (2026-11-19):** İlk plan (kullanıcı isteği). Ölçülmüş kısıtlar, tek kaynak mimarisi, şema, envanter, sayfa bölümleri, doğrulama, iş paketleri R1–R4, kararlar R-K1..R-K7. Kod yok.
