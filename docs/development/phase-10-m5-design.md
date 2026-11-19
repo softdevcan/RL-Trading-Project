@@ -1,12 +1,12 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.5 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.6 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum (v0.5):** §4 mekanizma kolları ön kaydı yazıldı (PİLOT; hakem-rl okuması bekleniyor, koşu yok). §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
+**Durum (v0.6):** §4 mekanizma kolları ön kaydı (PİLOT); hakem-rl 1. okuma Küçük rev., bulgular işlendi (§4.10); koşu yok. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
 
 **Durum (v0.3):** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
 
@@ -171,10 +171,11 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 - **GLG (alıcı öz-güven geçidi) bu turdan çıkarıldı.** Komşu sinyali düzeninde ajan i'nin gözlemindeki sinyal kendi hissesine değil, komşusu σ(i)'ye aittir. Geçidin girdisi olan "öz-güven" bu yüzden ajanın kendi kararıyla ilgisizdir. En iyi geçit "hep açık" olur ve GLG ≈ GL beklenir; kol bir şey sınamaz. Geçidi sınamak için ajanın hem kendi hem komşusunun sinyalini taşıdığı bir düzen gerekir. Bu ayrı bir ön kayıttır ve deneme sayısına (N) girmez.
 - **GLM'de bozma yalnız güven teriminde.** Gönderici başına sıcaklık T_j yalnız dikkat puanına giren güven terimini bozar. Gözlemdeki olasılık ve mesajın içeriği GL ile aynı kalır. Gözlem bozulsaydı GL ↔ GLM farkı "bozuk girdi politikayı bozar" etkisini de taşırdı. Bu kol mekanizma etkisini ayırır; gerçek bir kalibresiz tahmin hattının toplam etkisini ölçmez (§4.7).
 - **Not:** §3.4'teki "G0 için yeni koşu gerekmez" notu geçersizdir. G0 yeni tohumlarla (6–8) yeniden koşulur (§4.2).
+- **GLM sıcaklık aralığı [0,25; 4]** (v0.6; hakem-rl M5 #4'ün istediği ölçümden sonra, koşudan önce). K-e'deki [0,5; 2] göndericilerin güven sırasını az bozuyordu: günlük kesitsel Spearman(b_GL, b_GLM) 0,87 / 0,88 / 0,91 (tohum 6 / 7 / 8). [0,25; 4] ile 0,68 / 0,71 / 0,76 (`measurements/phase10-m5/design_checks.json`). Sabit tek kaynakta: `marl/comm_models.py::GLM_TEMP_RANGE`.
 
 ---
 
-## 4. Mekanizma kolları ön kaydı (v0.5, PİLOT) — sonuçtan önce
+## 4. Mekanizma kolları ön kaydı (v0.6, PİLOT) — sonuçtan önce
 
 ### 4.1 Soru ve kapsam
 
@@ -193,7 +194,8 @@ Not: S-msg'de güven gözlemden okunduğu için "yalnız S-msg" ile "ikisi birde
 - **Bloklar:** `data/marl/pred_m4nb_g{6,7,8}.npz`, kayıt `measurements/phase10-m5/neighbor_map_m5.json` (kaynak bloklar `pred_blocks_m5.json`; karıştırılmışlar `pred_blocks_m5_shuf.json` yalnız `build_pred_m4` girdisi, bu ön kayıtta kol yok). Kaynak AUC 0,598 / 0,600 / 0,600. Sızıntı: komşu bloğunun ajanın kendi etiketiyle AUC'si 0,527 / 0,530 / 0,528. Yani iletişimsiz politika da komşu sinyalinden kısmi değer alabilir; bu GL ↔ G0 farkını küçültür, tutucudur.
 - **Yeni tohumlar 6, 7, 8**, üreteç = tohum. M4b'nin 3–5'i yeniden kullanılmaz: onların sonucu görüldü ve taban seçimi o sonuca dayandı (seçim yanlılığı).
 - **Sabitler:** gat (sector+mst, 65 kenar), hidden 110, heads 5, 1 tur; MAPPO, eleştirmen MLP (tüm yerel gözlem), α 0,25, **maliyetsiz** (K-c), F = 600.000, lr 5e-4, `init_std` 0,12, son ağırlıklar, deterministik tam pencere değerlendirme. Eğitim 2013-06..2018-12, doğrulama 2019–2020; 2021+ okunmaz.
-- **Eşleşme:** Aynı tohumda GL, GLS ve GLM, G0 ile **birebir aynı başlangıç ağırlıklarından** (politika ve eleştirmen) başlar ve β = 0 olduğu için başlangıçta aynı işlevi görür (2026-11-19, sentetik panelde ölçüldü). Kollar arasındaki fark yalnız öğrenilen β'dan doğar. GPU bit-eşliği iddia edilmez (M3 §1), dolayısıyla yörüngeler bu yüzden de ayrışır.
+- **Eşleşme:** Aynı tohumda GL, GLS ve GLM, G0 ile **birebir aynı başlangıç ağırlıklarından** (politika ve eleştirmen) başlar ve β = 0 olduğu için başlangıçta aynı işlevi görür (2026-11-19, sentetik panelde ölçüldü). Kollar arasındaki fark yalnız öğrenilen β'dan doğar.
+- **GPU tekrarı bit-eş (v0.6):** G0 yapılandırması aynı tohumla GPU'da iki kez koşuldu (30 bin kare). Politika özeti birebir aynı çıktı (`measurements/phase10-m5/gpu_repeat_g0.json`). Bu yüzden aynı tohumlu tekrar koşu bir gürültü tabanı vermez. Taban, işlevi G0'a çok yakın ama yörüngesi farklı olan GD kolundan alınır (§4.4 (v)). Genel GPU bit-eşliği yine iddia edilmez (M3 §1); ölçüm yalnız bu yapılandırma ve sürücü içindir.
 
 ### 4.3 Kollar (5 kol × 3 tohum = 15 koşu)
 
@@ -204,48 +206,61 @@ Güven terimi b_j göndericiye aittir, alıcıdan bağımsızdır: puan_ij = q_i
 | G0 | güvensiz gat | `--comm gat` (= M4a/M4b G-X) | 78.982 | taban |
 | GL | güvenle ağırlıklı gat | + `zlogodds`, β öğrenilen (0'dan) | 78.983 | H2 |
 | GLS | karıştırılmış güvenli gat | GL + güven sabit bir derangement ile göndericiler arasında karıştırılmış (tohum = eğitim tohumu) | 78.983 | H2 kontrolü: avantaj güven bilgisinden mi |
-| GLM | bozuk kalibrasyonlu gat | GL + yalnız güven teriminde p_j ← σ(T_j·logit p_j), T_j ~ log-tekdüze [0,5; 2], üreteç = eğitim tohumu | 78.983 | H3 (daraltılmış) |
-| GD | DebUnc gat | `prob`, β = 1 sabit | 78.982 | betimsel; aralık dar (§3.2) → ≈ G0 beklenir |
+| GLM | bozuk kalibrasyonlu gat | GL + yalnız güven teriminde p_j ← σ(T_j·logit p_j), T_j ~ log-tekdüze [0,25; 4] (v0.6), üreteç = eğitim tohumu | 78.983 | H3 (daraltılmış) |
+| GD | DebUnc gat | `prob`, β = 1 sabit | 78.982 | DebUnc'a sadık kol ve **gürültü tabanı** (§4.4 (v)); aralık dar (§3.2) → ≈ G0 beklenir |
+
+- **Tasarım ölçümü** (v0.6, `measurements/phase10-m5/design_checks.json`, koşudan önce): GLS derangement'ı tohum 6 / 7 / 8'de 30 göndericinin 6 / 4 / 4'ünü bir gat komşusuna eşliyor; rastgele beklenti %14,9 (≈ 4,5). Karıştırma graf komşuluğuyla belirgin ilişkili değil. GLM bozması: günlük kesitsel Spearman(b_GL, b_GLM) 0,68 / 0,71 / 0,76 (ön kayıt kuralı: > 0,9 ise H3'ün gücü baştan düşük beyan edilir; geçmedi).
 
 - **z_scale** (zlogodds ölçeği): eğitim satırlarında, tahmini olan hücrelerde |logit p|'nin std'si. Eğitici hesaplar ve kayda yazar. GLM'de bozulmuş terimden (|T_j·logit p|) ölçülür, böylece küresel ölçek GL ile aynı kalır ve fark yalnız göndericiler arası sıradan gelir. Duman testinde (tohum 6) GL 0,0288, GLM 0,0373.
 - **Keşif ölçümü** (§3.2, arşiv `measurements/phase10-m5/conf_informative.json`, M4a blokları, eğitim satırları): güvenin beşliklerine göre isabet 0,51 → 0,65; corr(güven, isabet) ≈ +0,10; karıştırılmış bloklarda ~0,50 ve ≈ 0. Terim aralığı (p90 − p10): `prob` 0,036, `zlogodds` 2,5. Mekanizma sınanabilir bir güven sinyali alıyor; `prob` biçimi göndericileri neredeyse ayırmıyor.
 
 ### 4.4 Okuma kuralı (önceden sabit; `scripts/marl/analyze_m5.py`)
 
-D(a, b) = ort_s[SR(a_s) − SR(b_s)], ortak HAC ile (`sharpe_diff_hac_pooled`), maliyetsiz X, SR yıllık, aynı tohum ve tarihler eşlenir.
+D(a, b) = ort_s[SR(a_s) − SR(b_s)], ortak HAC ile (`sharpe_diff_hac_pooled`), maliyetsiz X, SR yıllık, aynı tohum ve tarihler eşlenir. k = tohum sayısı, m = ⌈2k/3⌉ (3 tohumda 2).
 
 **H2 (birincil):**
 - **(i)** Eğitimde D(GL, G0) > 0 ve tek yönlü p < 0,05.
 - **(ii)** Eğitimde D(GL, GLS) > 0 ve tek yönlü p < 0,05. Bu, fark farkına eşittir: D(GL, G0) − D(GLS, G0), aynı G0 koşularıyla. Doğrudan eşlenik test edildiği için M4b'deki bağımsızlık varsayımı gerekmez.
-- **(iii)** Doğrulamada D(GL, G0) > 0 ve en az 2/3 tohumda Δ > 0.
-- **Etiketler:** PİLOT_İŞARETİ = üçü birden. KISMİ = (i) var ama üçü birden değil. Aksi GÖZLENMEDİ. δ yok (§3.6).
+- **(iii)** Doğrulamada D(GL, G0) > 0 ve en az m tohumda Δ > 0.
+- **(iv) Mekanizma kullanıldı** (v0.6, hakem-rl M5 #2): en az m tohumda eğitim sonu β_GL ≥ 0,04. Dayanak, sonuçtan önce ölçülen terim aralığıdır: `zlogodds` teriminin p90 − p10'u ≈ 2,5 (`conf_informative.json`), exp(0,04 × 2,5) ≈ 1,105. Yani en güvenli ve en güvensiz gönderici arasında en az %10 dikkat oranı farkı. Eşik bir mekanizma kullanım eşiğidir, getiri etkisi eşiği (δ) değildir.
+- **(v) Gürültü tabanı** (v0.6, hakem-rl M5 #1): eğitimde D(GL, G0) > |D(GD, G0)|. GD'nin terimi göndericileri ~0,036 ayırır, işlevi G0'a çok yakındır ama yörüngesi farklıdır. D(GD, G0), "neredeyse etkisiz bir dokunuşun" aynı testte ne kadar fark üretebildiğini gösterir. GD'nin gerçek bir küçük etkisi varsa bu koşul tutucu kalır.
+- **Etiketler:** PİLOT_İŞARETİ = (i)–(v) birden. KISMİ = (i) var ama hepsi değil. GÖZLENMEDİ = (i) yok. EKSİK = birincil kollardan biri (G0, GL, GLS, GD; eğitim ya da doğrulama) ya da GL'nin eğitim kaydındaki β eksik; o zaman etiket okunmaz. Betimsel bir çiftin eksikliği etiketi etkilemez. δ yok (§3.6).
+- **Tek okuma (öncelik sırası; kod `reading_H2`):** KISMİ'de sağlanmayan ilk koşul okumayı belirler: (iv) → `guvenden_bagimsiz`, (ii) → `ek_serbestlik`, (v) → `gurultu_tabani`, (iii) → `dogrulamada_tutmuyor`. GÖZLENMEDİ'de (iv) varsa `guven_kullanildi_fark_yok`, yoksa `guven_kullanilmadi`. PİLOT_İŞARETİ'nde `bilgi_isareti`.
 
 **H3 (ikincil), sabit sıra:** Yalnız H2 = PİLOT_İŞARETİ iken etiketlenir. Mekanizma güveni kullanmıyorsa kalibrasyonun değeri ölçülemez. Aksi durumda etiket SINANMADI'dır ve sayılar betimsel raporlanır. Sabit sıra (H2 → H3) aile hata oranını Holm'suz korur.
-- **(i)** Eğitimde D(GL, GLM) > 0 ve p < 0,05. **(ii)** Doğrulamada D(GL, GLM) > 0 ve en az 2/3 tohum.
-- PİLOT_İŞARETİ = ikisi. KISMİ = yalnız (i). Aksi GÖZLENMEDİ.
+- **(i)** Eğitimde D(GL, GLM) > 0 ve p < 0,05. **(ii)** Doğrulamada D(GL, GLM) > 0 ve en az m tohum.
+- PİLOT_İŞARETİ = ikisi. KISMİ = yalnız (i). Aksi GÖZLENMEDİ. H2 PİLOT_İŞARETİ iken GLM eksikse EKSİK.
 
-**Manipülasyon denetimi (betimsel, okumayı yönlendirir):** Eğitim sonu β (GL, GLS, GLM) kayda geçer (`conf_scalars_final`). β_GL'nin tohum ortalaması ≤ 0 ise "GL güvene ağırlık vermedi" okunur.
+**Betimsel:** Tohum başına β (GL, GLS, GLM; `conf_scalars_final`), ortalaması değil işaretleri de raporlanır.
 
-**p'nin sınırı:** Ortak HAC p'si piyasa günü gürültüsünü taşır, eğitim tohumu varyansını taşımaz. Etiketin işaret olması ve (iii)'teki tohum koşulu bu yüzdendir.
+**p'nin sınırı:** Ortak HAC p'si piyasa günü gürültüsünü taşır, eğitim tohumu varyansını taşımaz. Etiketin işaret olması, (iii)'teki tohum koşulu ve (v)'teki gürültü tabanı bu yüzdendir.
 
 ### 4.5 Önceden yazılan okumalar
 
-| Sonuç | Okuma | Yazılmayacak olan |
+Her sonuç bileşimi §4.4'teki öncelik sırasıyla aşağıdaki satırlardan **tek birine** düşer.
+
+| Etiket / okuma anahtarı | Okuma | Yazılmayacak olan |
 |---|---|---|
-| H2 PİLOT_İŞARETİ | "Sentetik pozitif kontrolde güvenle ağırlıklı dikkatin gat'a göre, güven bilgisinden gelen bir işareti var." Uzun koşu ön kaydına aday | "H2 doğrulandı", gerçek tahmin hattına genelleme |
-| H2 KISMİ, (ii) yok | Avantaj karıştırılmış güvende de var. Kaynak güven bilgisi değil, ek serbestlik ya da öğrenme dinamiği | "Güven bilgisi işe yarıyor" |
-| H2 KISMİ, (iii) yok | Eğitimde var, doğrulamada tutmuyor; aşırı uyum olası | Genel bir H2 hükmü |
-| H2 GÖZLENMEDİ, β_GL ≤ 0 | Mekanizma güveni kullanmadı (β öğrenilmedi ya da ters yönde öğrenildi) | "Güvenle ağırlık işe yaramaz" |
-| H2 GÖZLENMEDİ, β_GL > 0 | Güven kullanıldı ama getiri farkı bu güçle tespit edilmedi | "Etki yok" |
-| H3 PİLOT_İŞARETİ | "Sentetik kontrolde güvenin göndericiler arası karşılaştırılabilirliği avantajı taşıyor" | "Kalibrasyon MARL'a değer katar" (sentetik ve daraltılmış) |
-| H3 SINANMADI | H2 işareti olmadan H3 okunmaz; sayılar betimsel | H3 hakkında herhangi bir yön |
-| GD ≈ G0 | Beklenen: `prob` terimi göndericileri ayırmıyor (aralık 0,036) | "DebUnc ölçeklemesi işe yaramaz" (yalnız bu sinyal aralığında) |
+| H2 PİLOT_İŞARETİ / `bilgi_isareti` | "Sentetik pozitif kontrolde güvenle ağırlıklı dikkatin gat'a göre, güven bilgisinden gelen ve gürültü tabanını aşan bir işareti var." Uzun koşu ön kaydına aday | "H2 doğrulandı", gerçek tahmin hattına genelleme |
+| H2 KISMİ / `guvenden_bagimsiz` ((iv) yok) | Getiri farkı var ama β mekanizma eşiğine ulaşmadı. Fark güvenden bağımsız; yörünge gürültüsü olası | "Güven işe yarıyor" |
+| H2 KISMİ / `ek_serbestlik` ((iv) var, (ii) yok) | Avantaj karıştırılmış güvende de var. Kaynak güven bilgisi değil, ek serbestlik ya da öğrenme dinamiği | "Güven bilgisi işe yarıyor" |
+| H2 KISMİ / `gurultu_tabani` ((iv), (ii) var, (v) yok) | Fark, neredeyse etkisiz kolun (GD) ürettiği farktan büyük değil. Yörünge gürültüsünden ayırt edilemedi | Mekanizmaya dair yön |
+| H2 KISMİ / `dogrulamada_tutmuyor` (yalnız (iii) yok) | Eğitimde var, doğrulamada tutmuyor; aşırı uyum olası | Genel bir H2 hükmü |
+| H2 GÖZLENMEDİ / `guven_kullanilmadi` ((iv) yok) | Mekanizma güveni kullanmadı (β öğrenilmedi ya da ters yönde öğrenildi) | "Güvenle ağırlık işe yaramaz" |
+| H2 GÖZLENMEDİ / `guven_kullanildi_fark_yok` ((iv) var) | Güven kullanıldı ama getiri farkı bu güçle tespit edilmedi | "Etki yok" |
+| H2 EKSİK | Birincil kol ya da β kaydı eksik; okunmaz, eksik koşu tamamlanır (ek tohum değil, aynı tohum) | Kısmi sonuçtan okuma |
+| H3 PİLOT_İŞARETİ / `karsilastirilabilirlik_isareti` | "Sentetik kontrolde güvenin göndericiler arası karşılaştırılabilirliği avantajı taşıyor" | "Kalibrasyon MARL'a değer katar" (sentetik ve daraltılmış) |
+| H3 KISMİ / `dogrulamada_tutmuyor` | Bozma eğitimde avantajı azaltıyor, doğrulamada tutmuyor | H3 hakkında yön |
+| H3 GÖZLENMEDİ / `bozma_avantaji_silmedi` | Gönderici sırası bozulunca (Spearman ~0,7) avantaj kaybolmadı: avantaj sıradan değil, ya da bu güçle tespit edilmedi | "Kalibrasyon önemsiz" |
+| H3 SINANMADI / `h2_isareti_yok` | H2 işareti olmadan H3 okunmaz; sayılar betimsel | H3 hakkında herhangi bir yön |
+| H3 EKSİK | H2 işareti var ama GLM eksik; tamamlanır | — |
+| GD ≈ G0 (betimsel) | Beklenen: `prob` terimi göndericileri ayırmıyor (aralık 0,036) | "DebUnc ölçeklemesi işe yaramaz" (yalnız bu sinyal aralığında) |
 
 Her sonuç raporlanır ve deneme kaydına girer: H2 ve H3 birer deneme, GD betimsel.
 
 ### 4.6 Betimsel çıktılar (kararı değiştirmez)
 
-D(GD, G0), D(GLS, G0), devir, β, z_scale, eğitim kaydının git izi (`train_runs_all_clean`), eğitim eğrileri (`curves_m4a.py`, her koşunun `run.log`'u). Tohum gereksinimi M4b formülüyle verilir (k = 3·((1,645 + 0,842)·SE / etki)²; gözlenen D ve %95 GA uçları). SE'nin 1/√k ile küçüldüğü varsayımı iyimserdir.
+D(GLS, G0), doğrulamada D(GD, G0), devir, tohum başına β, z_scale, eğitim kaydının git izi (`train_runs_all_clean`), GLM bozma gücü (`design_checks.json`), eğitim eğrileri (`curves_m4a.py`, her koşunun `run.log`'u). Tohum gereksinimi M4b formülüyle verilir (k = 3·((1,645 + 0,842)·SE / etki)²): (i) için gözlenen D ve %95 GA alt ucu, (ii) için gözlenen D(GL, GLS). Bağlayıcı olan çoğunlukla (ii)'dir, çünkü fark daha küçüktür. SE'nin 1/√k ile küçüldüğü varsayımı iyimserdir.
 
 ### 4.7 Sınırlar (beyan)
 
@@ -253,7 +268,9 @@ D(GD, G0), D(GLS, G0), devir, β, z_scale, eğitim kaydının git izi (`train_ru
 - **Alıcıdan bağımsız terim:** Güvenli bir gönderici yalnız ilgili alıcıda değil, bütün komşularında öne çıkar (plan tanımı). İlgisiz alıcıda bu gürültüdür.
 - **GLM mekanizmayı ayırır:** Gerçek bir kalibresiz tahminde içerik de bozulur. Bu kol o toplam etkiyi ölçmez (§3.6).
 - **Komşu sızıntısı** (AUC ~0,53) G0'a da kısmi değer verir. Fark küçülür; okuma tutucudur.
-- **Güç düşük:** M4b'nin tohum gereksinimi, GA alt ucuyla ~16. GÖZLENMEDİ "etki yok" diye okunmaz.
+- **Güç düşük:** M4b'nin tohum gereksinimi, GA alt ucuyla ~16. (iv) ve (v) koşulları gücü daha da düşürür. GÖZLENMEDİ "etki yok" diye okunmaz.
+- **GLS tek çekim:** Her tohumda tek bir derangement çekilir (3 çekim). Hangi göndericiye hangi güvenin gittiği bu çekimlerle sınırlıdır. Komşuluk oranı rastgele beklentiye yakın (§4.3). Ayrıca GL'nin terimi alıcıdan bağımsız olduğu için GL ile GLS arasındaki fark küçülebilir ve (ii) güç yitirir.
+- **Gürültü tabanı tek kol:** (v) GD'nin tek bir yörünge farkına dayanır (tohum başına bir). Bu bir dağılım değil, nokta karşılaştırmasıdır. GD'nin küçük gerçek etkisi tabanı büyütür (tutucu).
 
 ### 4.8 Yasak kurtarma yolları
 
@@ -273,12 +290,24 @@ Koşu sürerken ana ağaca commit atılmaz (eğitim kaydındaki git izi kirlenir
 
 ### 4.10 Hakem okuması
 
-hakem-rl, koşudan önce (paket: kollar, okuma kuralı, sınırlar). Sonuç bu alt bölüme eklenir.
+hakem-rl (sonnet), koşudan önce, 2026-11-19. Paket: kollar, okuma kuralı, sınırlar, `analyze_m5.py`. **Karar: Küçük revizyon** (2 BÜYÜK, 4 KÜÇÜK). Hepsi koşudan önce işlendi (v0.6).
+
+| # | Önem | Bulgu | Durum |
+|---|---|---|---|
+| 1 | BÜYÜK | H2 etiketinin sıfır altındaki yanlış-pozitif oranı bilinmiyor: GL ile G0 aynı başlangıçtan çıkıyor, ayrışan yörünge farkı eğitim gürültüsü olabilir, HAC p'si bunu taşımıyor | **Kabul.** Aynı tohumlu G0 tekrarı ölçüldü ve GPU'da bit-eş çıktı (`gpu_repeat_g0.json`), yani gürültü vermez. Taban GD'den alındı: (v) D(GL, G0) > \|D(GD, G0)\| (§4.4) |
+| 2 | BÜYÜK | β denetimi etikete bağlı değil; eşik 0 | **Kabul.** (iv) en az m tohumda β_GL ≥ 0,04, terim aralığından türetildi; tohum başına β raporlanır; `guvenden_bagimsiz` okuması eklendi |
+| 3 | KÜÇÜK | GLS tek derangement çekimi, grafla ilişkisi bilinmiyor; (ii)'nin gücü | **Kabul.** Komşuluk oranı ölçüldü (6 / 4 / 4 / 30, rastgele ≈ 4,5); sınır olarak beyan (§4.7) |
+| 4 | KÜÇÜK | GLM bozmasının büyüklüğü ölçülmemiş | **Kabul.** Ölçüldü: [0,5; 2] ile Spearman 0,87–0,91 (zayıf). Kullanıcı kararıyla aralık [0,25; 4] (0,68–0,76) (§3.6) |
+| 5 | KÜÇÜK | Okuma tablosunda eksik bileşimler, EKSİK tanımsız | **Kabul.** Öncelik sıralı tek okuma anahtarı ve 14 satırlık tablo (§4.5) |
+| 6 | KÜÇÜK | Kod ↔ metin: betimsel çift eksikse birincil EKSİK oluyor, ≥ 2 sabit, self-test kapsamı, tohum gereksinimi yalnız (i) | **Kabul.** Birincil/betimsel ayrımı, m = ⌈2k/3⌉, self-test 10/10, (ii) için tohum gereksinimi |
+
+Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı). İkinci okuma: aşağıda.
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-19):** hakem-rl 1. okuma (Küçük rev., 2 BÜYÜK) işlendi: (iv) β ≥ 0,04 en az m tohumda, (v) gürültü tabanı GD (aynı tohumlu GPU tekrarı bit-eş), öncelik sıralı tek okuma ve 14 satırlık tablo, EKSİK tanımı, m = ⌈2k/3⌉. Tasarım ölçümü (`design_checks.json`). Kullanıcı kararı: GLM sıcaklık aralığı [0,25; 4]. Koşu yok.
 - **v0.5 (2026-11-19):** §3.6 kararlar (K-i δ'sız; GLG çıkarıldı; GLM bozması yalnız güven teriminde; G0 yeni tohumlarla). §4 mekanizma kolları ön kaydı (PİLOT): G0/GL/GLS/GLM/GD, tohum 6–8, H2 (i)–(iii), H3 sabit sıra, β denetimi, sınırlar. Kod `run_m5.py`, `analyze_m5.py` (self-test 5/5), eğitici bayrakları, `conf_temp`; keşif ölçümü arşivlendi (`conf_informative.json`). Koşu yok.
 - **v0.4 (2026-11-19):** Kullanıcı kararları: K-d..K-h öneri yönünde; taban gat (M4b PİLOT_İŞARETİ, kullanıcı kararı); K-i'nin biçimi ön kayıtta yeniden sunulacak (§3.5). Koşu yok.
 - **v0.3 (2026-11-19):** §3 TASLAK: S-msg kodu (`conf_mode` prob/zlogodds, β sabit/öğrenilen, alıcı geçidi, karıştırılmış güven), iki keşif ölçümü (güven isabetle ilişkili; `prob` aralığı dar), H3 tasarım bulgusu (standartlaştırma sıcaklığı siler), kol taslağı ve açık kararlar K-d..K-i. Ön kayıt değil; koşu yok.
