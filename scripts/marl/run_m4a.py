@@ -1,11 +1,13 @@
 """Faz 10 M4a duzenleyicisi (M4 tasarimi §3 ON KAYDI): komsu sinyali, maliyetsiz, 3 tohum, kol basina F = 600.000.
 
-Asama 1: N-X (none), A-X (attn), G-X (gat); tahmin blogu `pred_m4nb_g{g}.npz` (build_pred_m4.py).
-Asama 2: yalniz asama 1'de (i)-(iii)'u saglayan iletisim kollarinin S'si + N-S (`pred_m4nb_g{g}_shuf.npz`).
-Asama 2 kol listesi `m4a_stage1.json` -> `stage2_arms`'tan okunur; liste bossa kosulmaz (on kayit §3.3).
+Asama 1 : N-X (none), A-X (attn), G-X (gat); tahmin blogu `pred_m4nb_g{g}.npz` (build_pred_m4.py), lr 5e-4.
+Asama 1b: asama 1'de gecmeyen iletisim kollari + N-X, lr 2e-4 (`<root>/lr2e-4/`); liste `m4a_stage1.json` ->
+          `stage1b_arms` (hakem-rl M4a #1: durma kararindan once lr duyarliligi).
+Asama 2 : gecen kollarin S'si + N-S (`pred_m4nb_g{g}_shuf.npz`), kolun gectigi lr ile; liste asama 1 ve 1b
+          JSON'larindaki `stage2_arms` birlesimi. Liste bossa kosulmaz (on kayit §3.3).
 
 Her egitimden once GPU bos mu bakar; doluysa bekler. Biten kosular (eval_val.npz var) atlanir.
-Okuma ayri: `python scripts/marl/analyze_m4a.py --stage <1|2>` (ana venv).
+Okuma ayri: `python scripts/marl/analyze_m4a.py --stage <1|1b|2>` (ana venv).
 
   venv-marl\\Scripts\\python scripts/marl/run_m4a.py --stage 1 --dry-run
   venv-marl\\Scripts\\python scripts/marl/run_m4a.py --stage 1
@@ -28,38 +30,54 @@ PY = sys.executable
 FRAMES = 600_000
 COST_BPS = 0
 PREREG = 'phase-10-m4-design.md §3 v0.3'
-STAGE1_JSON = os.path.join('docs', 'development', 'measurements', 'phase10-m4', 'm4a_stage1.json')
+MEAS = os.path.join('docs', 'development', 'measurements', 'phase10-m4')
+STAGE_JSON = {1: os.path.join(MEAS, 'm4a_stage1.json'), '1b': os.path.join(MEAS, 'm4a_stage1b.json')}
 COMM = {'N': 'none', 'A': 'attn', 'G': 'gat'}
+LR = {'': '5e-4', 'lr2e-4': '2e-4'}
 
 
 def arm_cfg(arm: str) -> dict:
-    """'A-X' -> {'comm': 'attn', 'suffix': ''}; '-S' karistirilmis blok."""
-    k, v = arm.split('-')
-    if k not in COMM or v not in ('X', 'S'):
+    """'A-X' -> attn, lr 5e-4; 'lr2e-4/G-S' -> gat, lr 2e-4, karistirilmis blok."""
+    prefix, _, name = arm.rpartition('/')
+    k, v = name.split('-')
+    if k not in COMM or v not in ('X', 'S') or prefix not in LR:
         raise ValueError(f'bilinmeyen kol {arm}')
-    return {'comm': COMM[k], 'suffix': '_shuf' if v == 'S' else ''}
+    return {'comm': COMM[k], 'suffix': '_shuf' if v == 'S' else '', 'lr': LR[prefix]}
 
 
 def train_cmd(arm: str, seed: int, run_dir: str, device: str) -> list:
     c = arm_cfg(arm)
     pred = os.path.join('data', 'marl', f"pred_m4nb_g{GEN[seed]}{c['suffix']}.npz")
     return [PY, 'scripts/marl/train_m3.py', '--frames', str(FRAMES), '--seed', str(seed), '--cost-bps', str(COST_BPS),
-            '--comm', c['comm'], '--train-device', device, '--parallel', '--save-dir', run_dir,
+            '--comm', c['comm'], '--lr', c['lr'], '--train-device', device, '--parallel', '--save-dir', run_dir,
             '--out', os.path.join(run_dir, 'train.json'), '--pred-path', pred]
 
 
-def stage_arms(stage: int) -> list:
-    if stage == 1:
-        return ['N-X', 'A-X', 'G-X']
-    if not os.path.exists(STAGE1_JSON):
-        raise SystemExit(f'asama 2 kosulmaz: {STAGE1_JSON} yok (once asama 1 okumasi)')
-    with open(STAGE1_JSON, encoding='utf-8') as fh:
+def _load(stage):
+    path = STAGE_JSON[stage]
+    if not os.path.exists(path):
+        raise SystemExit(f'kosulmaz: {path} yok (once asama {stage} okumasi)')
+    with open(path, encoding='utf-8') as fh:
         rec = json.load(fh)
-    if rec.get('preregistration') != PREREG or rec.get('stage') != 1:
-        raise SystemExit(f"asama 2 kosulmaz: {STAGE1_JSON} bu on kayda ait degil ({rec.get('preregistration')})")
-    arms = rec.get('stage2_arms') or []
+    if rec.get('preregistration') != PREREG or rec.get('stage') != stage:
+        raise SystemExit(f"kosulmaz: {path} bu on kayda ait degil ({rec.get('preregistration')})")
+    return rec
+
+
+def stage_arms(stage: str) -> list:
+    if stage == '1':
+        return ['N-X', 'A-X', 'G-X']
+    s1 = _load(1)
+    if stage == '1b':
+        arms = s1.get('stage1b_arms') or []
+        if not arms:
+            raise SystemExit('asama 1b kosulmaz: asama 1de tum iletisim kollari gecti')
+        return arms
+    arms = list(s1.get('stage2_arms') or [])
+    if os.path.exists(STAGE_JSON['1b']):
+        arms += _load('1b').get('stage2_arms') or []
     if not arms:
-        raise SystemExit('asama 2 kosulmaz: asama 1de (i)-(iii)u saglayan iletisim kolu yok (on kayit §3.3)')
+        raise SystemExit('asama 2 kosulmaz: (i)-(iii)u saglayan iletisim kolu yok (on kayit §3.3)')
     return arms
 
 
@@ -80,7 +98,7 @@ def wait_gpu(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--stage', type=int, choices=(1, 2), required=True)
+    ap.add_argument('--stage', choices=('1', '1b', '2'), required=True)
     ap.add_argument('--root', default=os.path.join('results', 'marl_m4a'))
     ap.add_argument('--train-device', default='cuda')
     ap.add_argument('--gpu-busy-pct', type=int, default=50)
@@ -95,7 +113,7 @@ def main():
                  '--out', out], a.dry_run)
     for s in SEEDS:                    # tohum dis dongude: kesilirse her kolun ayni tohumlari biter
         for arm in arms:
-            d = os.path.join(a.root, arm, f's{s}')
+            d = os.path.join(a.root, *arm.split('/'), f's{s}')
             if os.path.exists(os.path.join(d, 'eval_val.npz')):
                 continue
             if not a.dry_run:
