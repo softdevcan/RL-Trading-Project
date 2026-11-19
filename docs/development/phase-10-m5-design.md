@@ -1,12 +1,12 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.7 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.8 · 2026-11-19 · dal `feat/phase10-m5-mech`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum (v0.7):** §4 mekanizma kolları ön kaydı **DONDURULDU** (PİLOT; hakem-rl 1. okuma Küçük rev., 2. okuma Kabul, §4.10). Koşu sırada. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
+**Durum (v0.8):** §4 mekanizma kolları KOŞULDU: **H2 KISMİ (`gurultu_tabani`), H3 SINANMADI** (§4.11). Ön kayıt (v0.7, DONDURULDU) değişmedi. Sırada gerçek sinyal kolları (§2.3, K-a), kullanıcı kararıyla. §3.6 ön kayıt öncesi kararlar. Aşağıdaki satır v0.3 durumudur.
 
 **Durum (v0.3):** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). §3 kollar ve bütçe **TASLAĞI** (v0.3): S-msg kodu yazıldı (`marl/comm_models.py` conf_mode, `tests/test_marl_m5_msg.py` 17/17); eşikler ve açık kararlar M4a Aşama 2 + 1b sonucundan sonra kapanır. **Koşu yok.**
 
@@ -307,10 +307,46 @@ Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
 
 **DONDURULDU (v0.7, 2026-11-19).** Eşikler, kollar ve okuma bundan sonra değişmez; değişiklik = yeni ön kayıt.
 
+### 4.11 Sonuç (2026-11-19): H2 KISMİ (`gurultu_tabani`), H3 SINANMADI
+
+**Sade özet.** Ajanlara, komşudan gelen mesajı göndericinin ne kadar emin olduğuna göre ağırlıklandırma imkânı verdik (GL). Düz iletişimli kola (G0) göre biraz daha iyi karar verdiler. Güven karıştırılınca (GLS) bu avantaj azaldı, ve ajanlar güven ağırlığını yalnız güven gerçekken büyüttü. Ama güveni neredeyse hiç kullanmayan bir kontrol kolu (GD) da G0'ı aynı ölçüde, hatta biraz daha fazla geçti. Yani bu küçük denemede GL'nin avantajı, eğitimin kendi rastlantısal sapmasından ayırt edilemiyor. Ön kayıt bu durumu önceden "gürültü tabanı aşılmadı" diye yazmıştı. İpucu sentetik ve bilerek gelecekten; bu bir tez bulgusu değildir.
+
+**Kaynak:** `docs/development/measurements/phase10-m5/m5_results.json` (okuma kodu `analyze_m5.py`, commit `1cd9d95`, temiz ağaç); eğriler `m5_curves.json` (`curves_m4a.py`, her koşunun `run.log`'u). Aşağıdaki sayılar bu dosyalardan yuvarlanmıştır.
+
+**Koşu izi:** 15/15 koşu, F = 600.000, maliyetsiz, lr 5e-4, tohum 6–8, hepsi commit `1cd9d95`'ten, temiz ağaçla (`train_runs_all_clean`). İki eş zamanlı koşu; koşu başına eğitim 589–819 sn. Koşu sırasında GPU'da dış yük (tarayıcı vb.) ve son yarım saatte bir Docker imaj derlemesi vardı. Ayrı süreçler olduğu için eğitim matematiğini değiştirmez.
+
+| Karşılaştırma (maliyetsiz X) | Pencere | D (SE) | Tek yönlü p | Tohum farkları (6, 7, 8) |
+|---|---|---|---|---|
+| GL ↔ G0 | eğitim | +0,13 (0,07) | 0,039 | +0,26 / +0,12 / −0,00 |
+| GL ↔ GLS | eğitim | +0,09 (0,04) | 0,017 | +0,19 / +0,09 / −0,02 |
+| GL ↔ G0 | doğrulama | +0,17 (0,11) | 0,065 | +0,11 / +0,18 / +0,21 |
+| **GD ↔ G0 (gürültü tabanı)** | eğitim | **+0,18 (0,06)** | 0,001 | +0,16 / +0,27 / +0,11 |
+| GLS ↔ G0 (betimsel) | eğitim | +0,04 (0,06) | 0,26 | +0,07 / +0,03 / +0,01 |
+| GD ↔ G0 (betimsel) | doğrulama | +0,04 (0,10) | 0,33 | +0,04 / +0,18 / −0,09 |
+| GL ↔ GLM (H3; betimsel, SINANMADI) | eğitim / doğrulama | +0,11 / +0,21 | 0,056 / 0,002 | eğitim +0,12 / +0,15 / +0,05 |
+
+**Koşullar (§4.4):** (i) sağlandı (D > 0, p 0,039). (ii) sağlandı (p 0,017). (iii) sağlandı (doğrulamada D > 0, 3/3 tohum). (iv) sağlandı: β_GL 0,026 / 0,069 / 0,040, en az 2 tohumda ≥ 0,04. Üçüncü tohum eşiğin hemen üstünde (0,0403), yani sınırda. (v) **sağlanmadı**: D(GL, G0) 0,13 ≤ |D(GD, G0)| 0,18. Etiket **KISMİ**; öncelik sırasıyla ilk sağlanmayan koşul (v) olduğu için okuma **`gurultu_tabani`**.
+
+**Okuma (§4.5'ten, önceden yazılmış):** Fark, neredeyse etkisiz kolun (GD) ürettiği farktan büyük değil; yörünge gürültüsünden ayırt edilemedi. Mekanizmaya dair bir yön yazılmaz. H3 kural gereği **SINANMADI** (`h2_isareti_yok`); GL ↔ GLM sayıları yalnız betimseldir.
+
+**Betimsel (kararı değiştirmez):**
+- **β güvene özgü öğrenildi:** β_GLS 0,002 / −0,002 / 0,013; `beta_GLS_ge_min_m_of_k` = yanlış. Gradyan β'yı yalnız güven gönderici ile eşleşikken büyüttü. Bu, mekanizmanın güven bilgisini *kullanmaya başladığını* gösterir. Getiri farkının gürültüden ayrıldığını göstermez. GLM'de β 0,046 / 0,003 / 0,006.
+- **Gürültü tabanının kendisi "anlamlı" çıktı:** D(GD, G0) eğitimde p ≈ 0,001, doğrulamada ise +0,04 (p 0,33). İki açıklama bu tasarımla ayrılamaz: (a) GD'nin küçük bir gerçek etkisi var, (b) aynı başlangıçtan ayrışan yörüngeler ortak HAC testinde "anlamlı" bir fark üretebiliyor (§4.4 "p'nin sınırı"). (b), 3 tohumlu pilotlarda ortak HAC p'sinin tek başına okunmaması gerektiğini somutlaştırır. M8 öncesi uzun koşu ön kaydı için bir girdidir: gürültü tabanı tek bir gerçekleşme değil, bir dağılım olmalı (hakem-rl M5 2. okuma #1).
+- **Eğriler:** Aynı tohumdaki kollar ilk 10 partide neredeyse aynı başlıyor (örneğin tohum 6'da 13,6–13,7). Bu, ortak başlangıç ağırlıklarının gözle görülen karşılığıdır. Sonra ayrışıyorlar: tohum 7'de partilerin ortasında G0 8,9, GD 12,8. Ayrışma yörünge gürültüsü okumasıyla tutarlıdır.
+- **Devir:** G0 0,87, GD 0,87, GL 0,80, GLS 0,78 (eğitim, ortalama).
+- **Tohum gereksinimi** (M4b formülü, iyimser): gözlenen etkiyle (i) için 7, (ii) için 5 tohum; (i)'nin GA alt ucu ≤ 0 olduğu için o biçimde hesaplanmaz. Bu sayılar gürültü tabanını hesaba katmaz.
+
+**Yazılmayacak olan:** "Güvenle ağırlıklı iletişim işe yarıyor", "H2 desteklendi", "güven işe yaramaz", H3 hakkında herhangi bir yön, gerçek tahmin hattına genelleme.
+
+**Yasak kurtarma (§4.8):** Aynı karşılaştırma ek tohumla, farklı bir gürültü tabanıyla ya da β için ayrı bir öğrenme hızıyla yeniden koşulmaz. Mekanizma sorusu yeniden sorulacaksa yeni bir ön kayıt yazılır (uzun koşu, gürültü tabanı dağılımı) ve deneme sayısına eklenir.
+
+**Deneme kaydı:** H2 ve H3 birer deneme (H3 SINANMADI olarak), GD betimsel (§4.5).
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.8 (2026-11-19):** §4.11 sonuç: H2 KISMİ (`gurultu_tabani`; (i)–(iv) sağlandı, (v) D(GL, G0) 0,13 ≤ |D(GD, G0)| 0,18), H3 SINANMADI. β güvene özgü öğrenildi (GLS'de ~0), betimsel. Gürültü tabanının kendisi eğitimde p ≈ 0,001: uzun koşu ön kaydına girdi. Ön kayıt değişmedi.
 - **v0.7 (2026-11-19):** hakem-rl 2. okuma Kabul; iki KÜÇÜK not işlendi (`bilgi_isareti` ifadesi daraltıldı, `beta_GLS_ge_min_m_of_k` betimsel). **DONDURULDU.** Koşu yok.
 - **v0.6 (2026-11-19):** hakem-rl 1. okuma (Küçük rev., 2 BÜYÜK) işlendi: (iv) β ≥ 0,04 en az m tohumda, (v) gürültü tabanı GD (aynı tohumlu GPU tekrarı bit-eş), öncelik sıralı tek okuma ve 14 satırlık tablo, EKSİK tanımı, m = ⌈2k/3⌉. Tasarım ölçümü (`design_checks.json`). Kullanıcı kararı: GLM sıcaklık aralığı [0,25; 4]. Koşu yok.
 - **v0.5 (2026-11-19):** §3.6 kararlar (K-i δ'sız; GLG çıkarıldı; GLM bozması yalnız güven teriminde; G0 yeni tohumlarla). §4 mekanizma kolları ön kaydı (PİLOT): G0/GL/GLS/GLM/GD, tohum 6–8, H2 (i)–(iii), H3 sabit sıra, β denetimi, sınırlar. Kod `run_m5.py`, `analyze_m5.py` (self-test 5/5), eğitici bayrakları, `conf_temp`; keşif ölçümü arşivlendi (`conf_informative.json`). Koşu yok.
