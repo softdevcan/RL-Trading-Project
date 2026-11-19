@@ -5,7 +5,7 @@ Kollar (taban gat: M4b PILOT_ISARETI'ne dayali KULLANICI KARARI, GECTI kuralinin
   G0  : gat, guven terimi yok (= M4a/M4b G-X yapilandirmasi; yeni tohumlarla yeniden kosulur)
   GL  : gat + zlogodds, beta ogrenilen (0'dan)                   -> H2
   GLS : GL + karistirilmis guven (derangement, tohum = egitim tohumu) -> H2 kontrolu
-  GLM : GL + gonderici basina sicaklik yalniz guven teriminde (T_j log-tekduze [0,5; 2], uretec = egitim tohumu) -> H3
+  GLM : GL + gonderici basina sicaklik yalniz guven teriminde (T_j log-tekduze [0,25; 4], uretec = egitim tohumu) -> H3
   GD  : gat + prob, beta = 1 sabit (DebUnc'a sadik betimsel kol)
 GLG (alici gecidi) bu turda YOK: komsu sinyali duzeninde ajanin "kendi guveni" baska bir hisseye ait (tasarim §4).
 Bloklar `pred_m4nb_g{6,7,8}.npz` (build_pred_m4.py, neighbor_map_m5.json). Her egitimden once GPU bos mu bakar.

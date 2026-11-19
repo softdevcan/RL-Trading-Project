@@ -70,7 +70,10 @@ def derangement(n: int, seed: int) -> torch.Tensor:
             return p
 
 
-def sender_temperatures(n_agents: int, seed: int, lo: float = 0.5, hi: float = 2.0) -> list:
+GLM_TEMP_RANGE = (0.25, 4.0)   # kullanici karari 2026-11-19 (M5 §4.3): [0,5; 2] gonderici sirasini az bozuyordu (Spearman ~0,88)
+
+
+def sender_temperatures(n_agents: int, seed: int, lo: float = GLM_TEMP_RANGE[0], hi: float = GLM_TEMP_RANGE[1]) -> list:
     """GLM kolu: gonderici basina T_j ~ log-tekduze [lo, hi], numpy PCG64 tohumlu (surecler arasi deterministik)."""
     if not (0 < lo < hi):
         raise ValueError(f"0 < lo < hi olmali: {lo}, {hi}")

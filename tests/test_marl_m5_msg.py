@@ -13,7 +13,7 @@ Kontroller:
      sembol basina farkli sicaklik zlogodds'ta da gondericilerin sirasini degistirir.
   5. Parametre sayisi (+1 ogrenilen beta, +2 gecit); kisa MAPPO (zlogodds + ogrenilen beta + gecit, tahmin
      bloklu ortam) tamamlanir, ayni tohum -> ayni politika ozeti.
-  6. GLM gonderici sicakligi (M5 tasarimi §4; yalniz guven terimi): T_j log-tekduze [0,5; 2] tohumlu ve
+  6. GLM gonderici sicakligi (M5 tasarimi §4; yalniz guven terimi): T_j log-tekduze [0,25; 4] tohumlu ve
      deterministik; b_j = T_j |logit p_j| / z_scale; beta = 0 iken cikti sicakliksiz modelle ayni (icerik
      degismez); egitici (`train_m3.conf_fields`) guven sutunlarini gozlem duzeninden, z_scale'i egitim
      satirlarindan (GLM'de bozulmus terimden) kurar; conf_mode olmadan guven bayragi reddedilir.
@@ -44,8 +44,8 @@ from _marl_fixtures import synth_arrays  # noqa: E402
 from marl import obs_spec as OS  # noqa: E402
 from marl import panel as PN  # noqa: E402
 from marl import m3_runner as R  # noqa: E402
-from marl.comm_models import (CommPolicy, comm_param_count, conf_scale, confidence_term, derangement,  # noqa: E402
-                               sender_temperatures)
+from marl.comm_models import (GLM_TEMP_RANGE, CommPolicy, comm_param_count, conf_scale, confidence_term,  # noqa: E402
+                               derangement, sender_temperatures)
 
 M4A_COMMIT = '62b4023'
 passed = failed = 0
@@ -231,8 +231,8 @@ check("ogrenilen beta egitimde degisti (gradyan akiyor)", beta != 0.0, f"beta = 
 # ---------------------------------------------------------------------------------------------
 print("\n[6] GLM gonderici sicakligi + egitici guven alanlari")
 T = sender_temperatures(N, 6)
-check("sicaklik: log-tekduze [0,5; 2], N uzunlukta, ayni tohum -> ayni vektor, baska tohum -> farkli",
-      len(T) == N and all(0.5 <= t <= 2.0 for t in T) and T == sender_temperatures(N, 6) != sender_temperatures(N, 7))
+check("sicaklik: log-tekduze GLM_TEMP_RANGE [0,25; 4], N uzunlukta, ayni tohum -> ayni vektor, baska tohum -> farkli",
+      len(T) == N and GLM_TEMP_RANGE == (0.25, 4.0) and all(0.25 <= t <= 4.0 for t in T) and T == sender_temperatures(N, 6) != sender_temperatures(N, 7))
 zkw = dict(conf_mode='zlogodds', z_scale=0.7, beta_mode='learned', beta_init=1.0)
 mt = module(R.build_experiment(CFG, seed=0, model=spec('gat', **conf(conf_temp=T, **zkw)), **BUILD))
 mp = module(R.build_experiment(CFG, seed=0, model=spec('gat', **conf(**zkw)), **BUILD))

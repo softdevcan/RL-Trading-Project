@@ -116,7 +116,7 @@ venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (at
 venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle agirlikli dikkat: conf_mode='none' 62b4023 ile bit-es, guven terimi (prob/zlogodds),
                                            #          gat maskesi + guven, beta>0 dikkati arttirir, karistirilmis guven, gecit, H3 bulgusu (zlogodds sicakligi siler), kisa MAPPO,
                                            #          GLM gonderici sicakligi yalniz guven teriminde + egitici conf_fields (z_scale egitim satirlarindan) (20, ~1 dk; YALNIZ venv-marl)
-python scripts/marl/analyze_m5.py --self-test  # M5 mekanizma okumasi: H2 etiketleri, karistirilmis guven kontrolu, H3 sabit sira (SINANMADI), beta denetimi, eksik kol (5, ~5 sn; ana venv)
+python scripts/marl/analyze_m5.py --self-test  # M5 mekanizma okumasi: H2 (i)-(v) etiket + tek okuma (karistirilmis guven, beta esigi, gurultu tabani, dogrulama), H3 sabit sira + KISMI, eksik kol ayrimi, m = ceil(2k/3) (10, ~10 sn; ana venv)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

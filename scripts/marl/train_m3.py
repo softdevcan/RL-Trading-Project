@@ -155,7 +155,7 @@ def main():
     ap.add_argument('--shuffle-conf', action='store_true', help='karistirilmis guven (sabit derangement)')
     ap.add_argument('--shuffle-seed', type=int, default=None, help='derangement tohumu (varsayilan --seed)')
     ap.add_argument('--conf-temp-seed', type=int, default=None,
-                    help='GLM: gonderici basina sicaklik T_j ~ log-tekduze [0,5; 2] ureteci (yalniz guven terimi)')
+                    help='GLM: gonderici basina sicaklik T_j ~ log-tekduze comm_models.GLM_TEMP_RANGE [0,25; 4] ureteci (yalniz guven terimi)')
     ap.add_argument('--save-dir', default=None)
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
