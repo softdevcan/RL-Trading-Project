@@ -329,7 +329,8 @@ def check_guide(guide: dict, terms: list, root: str = ROOT) -> list:
 
 def _source_rec(rel: str, js, root: str) -> dict:
     with open(os.path.join(root, *rel.split('/')), 'rb') as fh:
-        sha = hashlib.sha256(fh.read()).hexdigest()
+        # satir sonu normallesir: git autocrlf Windows'ta CRLF, Linux'ta LF verir; ozet platformdan bagimsiz kalmali
+        sha = hashlib.sha256(fh.read().replace(b'\r\n', b'\n')).hexdigest()
     commit = None
     if isinstance(js, dict):
         commit = (js.get('provenance') or {}).get('commit') if isinstance(js.get('provenance'), dict) else None

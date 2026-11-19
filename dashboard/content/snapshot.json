@@ -274,9 +274,9 @@
   },
   {
    "ad": "Sistem rehberi ve sözlük (K28)",
-   "durum": "R1 bitti, R2 kodu bitti (2026-11-19)",
+   "durum": "R1 bitti; R2 ve R3 kodu bitti (2026-11-19)",
    "sinif": "bitti",
-   "siradaki": "R2 görsel denetim + konteyner; sonra R3 (deney kartları, aşama çizelgesi)"
+   "siradaki": "Görsel denetim + konteyner; R4 (kalan terimler, üst çubuk araması, SSS)"
   },
   {
    "ad": "Faz 10 M4–M8, nihai koşumlar",
@@ -311,27 +311,27 @@
  ],
  "kaynaklar": {
   "docs/development/measurements/phase10-m3/m3a_results.json": {
-   "sha256": "0a258a78adfa47d1113149d0f57249be7a675af30acd13e9ec4629ecb31b21b6",
+   "sha256": "2fc71e9785a767217333d4104cedb2c766003e97783d8ba1b6506e2d1349dcd7",
    "uretim_commit": null
   },
   "docs/development/measurements/phase10-m3/m3b_stage1.json": {
-   "sha256": "da6956d35e08237a44ee9a1056989220a7d7a399bd1dc2a57d0dc238cf290a9e",
+   "sha256": "4d00f273d2e4307b907c1e24264de7ad0ac52268e4a96d68883454f8008f8bfa",
    "uretim_commit": "2f43f622d829d628a0644feed53d92e609146013"
   },
   "docs/development/measurements/phase10-m4/m4a_stage2.json": {
-   "sha256": "5678148614f7608d456f92a19a62fb23ffb004e443aa979be6479412a8b221dc",
+   "sha256": "7e8878844bfbd4ed812c5fc9fbf3d679e1040e70a6b0b3742b42900847ab7f72",
    "uretim_commit": "62b4023637e3883921c2d938189942056b31c67b"
   },
   "docs/development/measurements/phase10-m4/m4b_results.json": {
-   "sha256": "793d48a5593571e896e7dccfc5609685a0d447a94304a09cb1f394ac245aa350",
+   "sha256": "d8758065aa850cec72c7bbda712f9c5edc288f36278fdb0dcbbe681896d0aaf8",
    "uretim_commit": "8ea46ec1ac65548c979cde21f657a91ef4367c70"
   },
   "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
-   "sha256": "bb061084871e060b3ec6fa14a60ce7f8807cbaf8ff8f97b3563103cf3ee82a0d",
+   "sha256": "ba21c3ff7c29ac14b9fdeb5122e4c0dd62a1079d1f424604df3705a1e5202bbb",
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "bcdb6c12c5e0e5f627e405f5f338c260fb6658a620e15cba2d98cfc8270e54af",
+   "tablo_sha256": "473f7e38cf25e666380b29540605fbd387a941b8a86ba1197626d6a2fd9de65f",
    "uretim_commit": null
   }
  }
