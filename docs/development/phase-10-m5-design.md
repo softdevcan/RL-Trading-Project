@@ -1,12 +1,12 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.1 · 2026-11-19 · dal `feat/phase10-m5-prereg`
+**Sürüm:** v0.2 · 2026-11-19 · dal `feat/phase10-m5-prereg`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
 - [phase-10-m3-design.md](phase-10-m3-design.md) §5–§6 (pozitif kontrol PC060-K12, karıştırılmış kontrol, M3b KISMİ), §6.8 (M4 temeli)
 
-**Durum:** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı.** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). Kollar, bütçe, tohumlar ve eşikler (§3) M4'ten sonra yazılır. **Koşu yok.**
+**Durum:** **Yalnız §2 yazıldı: P5c sonucunun okuma kuralı; açık kararlar K-a, K-b, K-c kapandı (§2.7).** Kural, gerçek sinyalli hiçbir MARL koşusu yapılmadan önce commit'lenir (plan §3.1.3: "Kapı geçmezse M5'in nasıl okunacağı M5 ön kaydında, sonuçtan önce yazılır"). Kollar, bütçe, tohumlar ve eşikler (§3) M4'ten sonra yazılır. **Koşu yok.**
 
 ---
 
@@ -86,6 +86,13 @@ Kullanıcı kararı gerektiren üç madde var. Her biri §3'ten önce kapanır.
 | K-b | H3 nerede sınanır? | **Pozitif kontrolde**, kalibrasyonu bilerek bozulmuş bir sentetik güvenle (ör. sıcaklıkla bozulmuş p) | Gerçek sinyalde sınanamıyor (§2.2 #2). Alternatif: H3 makro alt deneyine ertelenir; o tablo da kapıdan geçmezse H3 kanıtsız kalır |
 | K-c | Mekanizma kollarının maliyet koşulu | **Maliyetsiz birincil, 20 bps ikincil** | M3b'de PC060-K12 bile 20 bps'de KISMİ (M3 §6.7). 20 bps'de mekanizma farkı gürültüde kaybolabilir. Ancak birincil metrik (Faz 9 M8) 20 bps sonrası Sharpe; bu ayrım raporda beyan edilir |
 
+### 2.7 Kullanıcı kararları (2026-11-19)
+
+Üç karar da §2.6'daki öneri yönünde verildi.
+- **K-a:** Gerçek sinyal kolları koşulur: S-obs, S-msg ve ikisi birden; her yolda gerçek ↔ karıştırılmış gerçek, ön eleme bütçesiyle 3 tohum. Soru §2.3'teki sağlamlık sorusudur; okuma §2.4'teki tabloya bağlıdır.
+- **K-b:** H3 pozitif kontrolde sınanır. Kalibre kol PC060-K12 ailesinin sentetik güvenini kullanır; kalibresiz kolda aynı sinyalin kalibrasyonu bilerek bozulur (ör. sıcaklıkla). Bozma yöntemi ve büyüklüğü §3'te, koşudan önce sabitlenir. Sonuç sentetik etiketiyle raporlanır ve gerçek tahmin hattının kalibrasyonu hakkında bir iddia kurmaz.
+- **K-c:** Mekanizma kollarında (H2, H3, β/geçit) birincil koşul maliyetsizdir, 20 bps ikincildir. Tezin birincil metriği (Faz 9 M8: 20 bps sonrası Sharpe) ile bu ayrım raporda beyan edilir. Gerçek sinyal kollarının (K-a) maliyet koşulu §3'te belirlenir.
+
 ## 3. Kollar, bütçe ve eşikler (M4'ten sonra)
 
 Yazılmadı. Bu bölüm şunları içerecek: kol listesi (AQ2 dört koşulu × gerçek/karıştırılmış, pozitif kontrol mekanizma kolları), tohumlar, kare bütçesi, A3 güç simülasyonuyla MDE, birincil test ve eşikler, durma kuralı, M4'ün iletişim kolundan devralınan yapılandırma. İnceleme hakem-rl ve hakem-finans tarafından bu bölüm yazılınca yapılır (review-panel.md: uzman okuması pahalı işin girdisinde).
@@ -94,4 +101,5 @@ Yazılmadı. Bu bölüm şunları içerecek: kol listesi (AQ2 dört koşulu × g
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-19):** Kullanıcı kararları K-a (gerçek sinyal kolları 3 tohumla koşulur), K-b (H3 pozitif kontrolde, bozulmuş kalibrasyonla), K-c (mekanizma kolları maliyetsiz birincil) (§2.7). Okuma kuralı (§2.1–§2.5) değişmedi. Koşu yok.
 - **v0.1 (2026-11-19):** §2 P5c okuma kuralı: gerçek sinyal (`pit_v2`) İ3 kapısından geçmiyor (0/30). Bu yüzden "kalibre" sıfatı kullanılmıyor, H3 gerçek sinyalde koşulmuyor ve gerçek sinyal kolları sağlamlık sorusuna (AQ2-gerçek) indiriliyor. Okuma tablosu O1–O4, yasak kurtarma yolları ve üç açık karar (K-a, K-b, K-c). Koşu yok.
