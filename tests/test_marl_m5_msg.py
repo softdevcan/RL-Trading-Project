@@ -13,6 +13,10 @@ Kontroller:
      sembol basina farkli sicaklik zlogodds'ta da gondericilerin sirasini degistirir.
   5. Parametre sayisi (+1 ogrenilen beta, +2 gecit); kisa MAPPO (zlogodds + ogrenilen beta + gecit, tahmin
      bloklu ortam) tamamlanir, ayni tohum -> ayni politika ozeti.
+  6. GLM gonderici sicakligi (M5 tasarimi §4; yalniz guven terimi): T_j log-tekduze [0,5; 2] tohumlu ve
+     deterministik; b_j = T_j |logit p_j| / z_scale; beta = 0 iken cikti sicakliksiz modelle ayni (icerik
+     degismez); egitici (`train_m3.conf_fields`) guven sutunlarini gozlem duzeninden, z_scale'i egitim
+     satirlarindan (GLM'de bozulmus terimden) kurar; conf_mode olmadan guven bayragi reddedilir.
 
     venv-marl\\Scripts\\python tests/test_marl_m5_msg.py
 """
@@ -40,7 +44,8 @@ from _marl_fixtures import synth_arrays  # noqa: E402
 from marl import obs_spec as OS  # noqa: E402
 from marl import panel as PN  # noqa: E402
 from marl import m3_runner as R  # noqa: E402
-from marl.comm_models import CommPolicy, comm_param_count, confidence_term, derangement  # noqa: E402
+from marl.comm_models import (CommPolicy, comm_param_count, conf_scale, confidence_term, derangement,  # noqa: E402
+                               sender_temperatures)
 
 M4A_COMMIT = '62b4023'
 passed = failed = 0
@@ -222,6 +227,48 @@ check("gat + zlogodds + ogrenilen beta + gecit: kosu tamamlandi, ayni tohum -> a
       e1.total_frames >= 400 and digest(e1) == digest(e2))
 beta = module(e1).beta.detach().item()
 check("ogrenilen beta egitimde degisti (gradyan akiyor)", beta != 0.0, f"beta = {beta}")
+
+# ---------------------------------------------------------------------------------------------
+print("\n[6] GLM gonderici sicakligi + egitici guven alanlari")
+T = sender_temperatures(N, 6)
+check("sicaklik: log-tekduze [0,5; 2], N uzunlukta, ayni tohum -> ayni vektor, baska tohum -> farkli",
+      len(T) == N and all(0.5 <= t <= 2.0 for t in T) and T == sender_temperatures(N, 6) != sender_temperatures(N, 7))
+zkw = dict(conf_mode='zlogodds', z_scale=0.7, beta_mode='learned', beta_init=1.0)
+mt = module(R.build_experiment(CFG, seed=0, model=spec('gat', **conf(conf_temp=T, **zkw)), **BUILD))
+mp = module(R.build_experiment(CFG, seed=0, model=spec('gat', **conf(**zkw)), **BUILD))
+mp.load_state_dict(mt.state_dict())
+pq = 0.5 + x[..., CI]
+want = torch.log(pq / (1 - pq)).abs() * torch.tensor(T, dtype=x.dtype) / 0.7
+changed = not torch.allclose(out(mt, x), out(mp, x))
+with torch.no_grad():
+    mt.beta.fill_(0.0)
+    mp.beta.fill_(0.0)
+check("GLM: b_j = T_j |logit p_j| / z (yalniz guven terimi); beta > 0 ciktiyi degistirir, beta = 0 iken "
+      "cikti sicakliksiz modelle ayni (icerik degismez)",
+      torch.allclose(mt.conf_terms(x), want, atol=1e-5) and changed and torch.equal(out(mt, x), out(mp, x)))
+sys.path.insert(0, os.path.join(ROOT, 'scripts', 'marl'))
+import argparse  # noqa: E402
+import train_m3 as TM  # noqa: E402
+
+parr = PN.load_npz(panel_path)
+pr = np.load(pred_path)
+okp = np.isfinite(pr['p_up_cal'])
+ns = dict(comm='gat', pred_path=pred_path, conf_mode='zlogodds', beta_mode='learned', beta_init=0.0, gate=False,
+          shuffle_conf=False, shuffle_seed=None, conf_temp_seed=None, seed=3)
+cf = TM.conf_fields(argparse.Namespace(**ns), parr, 180)
+cm = TM.conf_fields(argparse.Namespace(**{**ns, 'conf_temp_seed': 6}), parr, 180)
+rows = slice(OS.WARMUP_ROWS, 181)
+try:
+    TM.conf_fields(argparse.Namespace(**{**ns, 'conf_mode': 'none', 'gate': True}), parr, 180)
+    rejected = False
+except SystemExit:
+    rejected = True
+check("egitici: conf_index/ok = gozlem sutunlari, z_scale egitim satirlarindan, GLM bozulmus terimden; "
+      "conf_mode'suz bayrak reddedilir",
+      (cf['conf_index'], cf['conf_ok_index']) == (CI, OKI) and cf['shuffle_seed'] == 3 and cf['conf_temp'] is None
+      and abs(cf['z_scale'] - conf_scale(pr['p_up_cal'][rows], okp[rows])) < 1e-12
+      and abs(cm['z_scale'] - conf_scale(pr['p_up_cal'][rows], okp[rows], T)) < 1e-12
+      and cm['conf_temp'] == T and cm['z_scale'] != cf['z_scale'] and rejected)
 
 print("\n" + "=" * 60)
 print(f"Sonuc: {passed} gecti, {failed} kaldi")
