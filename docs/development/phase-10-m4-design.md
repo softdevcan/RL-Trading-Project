@@ -1,13 +1,13 @@
 # Faz 10 M4 — İletişim kolları: tasarım ve M4a ön kaydı
 
-**Sürüm:** v0.5 · 2026-11-19 · dal `feat/phase10-m5-prereg`
+**Sürüm:** v0.6 · 2026-11-19 · dal `feat/phase10-m5-prereg`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2.5 (kollar, eşit bütçe, GAT grafı), §8 hakem-2 #14 (kenar kuralı M4 öncesi sabitlenir) ve #15 (`obs_spec` sabit)
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M4 (AQ1, G1; eşit bütçe)
 - [phase-10-m3-design.md](phase-10-m3-design.md) §2 (hiperparametreler), §5 (M3a kalıbı), §6.8 (M4 temeli: MAPPO, tüm yerel gözlemler, α = 0,25; varsayılan, kanıta dayanmaz)
 - [phase-10-m5-design.md](phase-10-m5-design.md) §2.6 (mekanizma iddiaları yalnız bilgili sinyalde)
 
-**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Aşama 1, 1b ve 2 koşuldu (§3.6, §3.7). **Nihai etiketler: gat KISMİ, attn GÖZLENMEDİ.** Ön kayıt gereği gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz; karar kullanıcıda. Ön kayıt metni ve eşikleri sonuçtan sonra değişmedi.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
+**Durum:** **M4a ön kaydı v0.3 DONDURULDU (2026-11-19): hakem-rl ilk okuma Büyük revizyon, ikinci okuma Kabul (§5). Aşama 1, 1b ve 2 koşuldu (§3.6, §3.7). **Nihai etiketler: gat KISMİ, attn GÖZLENMEDİ.** Ön kayıt gereği gerçek sinyalli iletişim koşuları (M5 S-msg) başlamaz; karar kullanıcıda. Ön kayıt metni ve eşikleri sonuçtan sonra değişmedi.** **Kullanıcı kararı (2026-11-19): ayrı bir ön kayıtla M4b pilotu, mimari-eş iletişimsiz kontrol (§6). Koşu yok.** Kod, ölçümler ve okuma betiği commit'lendi; kullanıcı kararları K-M4-1..4 (§4); hakem tablosu §5. Okuma betiği bu sürümü taşır (`PREREG = 'phase-10-m4-design.md §3 v0.3'`). Eşikler ve okuma kuralı bundan sonra değişmez; değişiklik gerekirse yeni sürüm (v0.4) ve yeni ön kayıt olur.
 
 Kod ile belge farklıysa kod hatalıdır.
 
@@ -204,6 +204,46 @@ Hepsi 2026-11-19'da kullanıcı tarafından öneri yönünde kararlaştırıldı
 | K-M4-4 | δ | 0,25 (§3.4) |
 | K-M4-3 | Graf kenar kuralı | `sector + mst` (§2) |
 
+## 6. ÖN KAYIT v0.6 — M4b pilotu: mimari-eş iletişimsiz kontrol (2026-11-19, ilk M4b eğitiminden ÖNCE)
+
+**Neden ayrı bir deney.** M4a'nın gat etiketi KISMİ'dir ve değişmez (§3.7). M4a'da bilgisiz blokla da gat `none`'dan 0,18 öndeydi. Bu, önceden beyan edilen "fark = iletişim + mimari" karışmasıyla tutarlıdır (hakem-rl #4). M4b aynı kapıyı tekrar etmez; **kontrolü değiştirir**: gat'ın karşısına, aynı katmanlara ve aynı parametre sayısına sahip, ama yalnız kendine dikkat eden bir kol (`self`) konur. **Yeni tohumlar** kullanılır; M4a'nın koşuları yeniden kullanılmaz. Böylece M4b'yi koşma nedeni olan sonuçtan gelecek bir seçim yanlılığı oluşmaz.
+
+**Pilot (kullanıcı kararı 2026-11-19).** Bu tur bilerek küçük tutuldu. Uzun ve güçlü koşular, sistem olgunlaşınca gerçek simülasyondan (M8) önce yapılacak. Kaba güç: etki M4a'daki bilgi payı kadarsa (G ≈ 0,17, SE ≈ 0,19), 3 tohumla tek yönlü %5'te yakalama olasılığı ~%35. **GÖZLENMEDİ "etki yok" diye okunmaz.** Pilotun ikinci çıktısı, uzun koşunun tohum sayısını belirleyecek betimsel güç hesabıdır.
+
+### 6.1 Tasarım
+
+| Kol | Politika | Blok |
+|---|---|---|
+| G-X | gat (`sector + mst`) | komşu sinyali, M4a ile aynı σ (`neighbor_map.json`; `--sigma-from`) |
+| Z-X | `self`: gat ile aynı katmanlar ve parametre (78.982), dikkat maskesi birim | aynı |
+| G-S, Z-S | aynı iki politika | satırları karıştırılmış blok |
+
+- **Tohumlar** s ∈ {3, 4, 5}, üreteç g = s. Bloklar: `pred_blocks_m4b*.json`, `neighbor_map_m4b.json`. Kendi sinyalinin AUC'si 0,600–0,602, komşu vekili 0,530–0,533, karıştırılmış 0,496–0,500.
+- **Hiperparametreler** M4a ile aynı: F = 600.000, lr 5e-4, maliyetsiz, MAPPO, eleştirmen MLP, son ağırlıklar, deterministik tam pencere değerlendirme.
+- **`self` kolunun doğruluğu** (`test_marl_m4` [2], [3]): parametre sayısı gat ile aynı. Başka ajanların gözlemi ajan i'nin çıktısını bit-eş bırakıyor.
+- **Süre:** 12 koşu, ~2 saat.
+- **Kod:** `scripts/marl/run_m4b.py`, `scripts/marl/analyze_m4b.py` (`--self-test` 5/5).
+
+### 6.2 Okuma kuralı
+
+D_X = ort_s[SR(G-X_s) − SR(Z-X_s)], D_S aynı tanımla S kollarında, G = D_X − D_S. SR yıllık, maliyetsiz X.
+- **(i)** Eğitimde D_X > 0 ve ortak HAC tek yönlü p < 0,05.
+- **(ii)** Eğitimde G > 0 ve z = G / √(se_X² + se_S²) ≥ 1,645. Bağımsızlık varsayılır; bu SE'yi büyütür, yani tutucudur.
+- **(iii)** Doğrulamada D_X > 0 ve en az 2/3 tohumda Δ > 0.
+- **Etiketler:** TAŞIMA_GÖZLENDİ = üçü birden. KISMİ = (i) var ama üçü birden değil. Aksi GÖZLENMEDİ.
+- **δ yok.** Etki büyüklüğü eşiği bu pilotta kullanılmaz. M4a'daki δ'nın dayanağı zayıftı (hakem-rl #2) ve M4a'nın gözlenen farkları görülmüştür; sonuç görüldükten sonra yeni bir δ koymak sonuca uydurma olurdu. Soru evet/hayırdır: mimari sabitken iletişim, komşudaki bilgiyi taşıyor mu?
+- **Betimsel, kararı değiştirmez:** uzun koşu için tek yönlü %5 ve %80 güçte gereken tohum sayısı. Formül k = 3·((1,645 + 0,842)·SE / etki)², G ve D_X için. HAC SE tohum varyansını içermez; tahmin kabadır. Ayrıca devir.
+- **Sonuçla ne yapılır:**
+  - TAŞIMA_GÖZLENDİ → M5 mekanizma kolları gat tabanıyla koşulabilir (kullanıcı onayıyla).
+  - Diğer etiketler → M5 mekanizma kolları, sistem olgunlaştıktan sonraki uzun M4b koşusunu bekler. Kullanıcı kararı.
+  - Her durumda M4a'nın KISMİ etiketi değişmez.
+
+### 6.3 Beyanlar
+
+- **σ'nın tekrar üretimi:** İlk M4b blok kurulumu, Hopcroft–Karp eşlemesinin süreçler arası deterministik olmaması yüzünden (dizgi hash'i) farklı bir σ üretti. Commit `1b34a37`'nin mesajı bu yüzden yanlıştı. Düzeltme `--sigma-from`: M4b blokları M4a'nın dondurulmuş σ'sıyla yeniden üretildi. M4a'nın koşularda kullanılan altı bloğu bu σ'dan birebir yeniden üretiliyor (ana oturum denetimi).
+- **`self` ile `none` farklı kollardır:** `none` [256, 256] MLP'dir; `self` gat'ın mimarisidir. M4b `none`'ı kullanmaz.
+- **Kalan karışma:** G-X ↔ Z-X farkı yalnız iletişimdir. Ama iletişim, komşuların teknik özelliklerini de taşır. (ii)'deki S kontrolü, bilgisiz blokta da ortaya çıkan iletişim kazancını çıkarır.
+
 ## 5. Hakem incelemesi
 
 **hakem-rl, M4a ön kaydı v0.2 (2026-11-19, uç `88a1709`).** Paket ~1,5 bin kelime; komut koşmadı. ~39 bin token / 9 araç / ~1,3 dk. **Büyük revizyon:** iki BÜYÜK bulgu da ön kayıt metniyle ilgili; kod ya da koşu gerektirmiyor.
@@ -224,6 +264,7 @@ Hakemin soru yanıtları: (1) sızıntı kontrolü bozmaz, `none` ve iletişim k
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-19):** M4b ön kaydı (§6; kullanıcı kararı: pilot, 3 yeni tohum): gat ↔ `self` (mimari-eş iletişimsiz), δ yok, betimsel tohum gereksinimi. `build_pred_m4 --sigma-from` düzeltmesi (σ tekrar üretimi). Koşu yok.
 - **v0.5 (2026-11-19):** Aşama 1b ve 2 koşuldu (12/12). attn lr 2e-4'te de GÖZLENMEDİ; gat (iv)'te z 0,91 < 1,645 → KISMİ (§3.7). Hiçbir kol GEÇTİ almadı; durma kuralı gereği M5 S-msg başlamaz, karar kullanıcıda. Ön kayıt değişmedi.
 - **v0.4 (2026-11-19):** Aşama 1 koşuldu (9/9). gat (i)–(iii)'ü sağladı → Aşama 2; attn GÖZLENMEDİ → Aşama 1b (§3.6). Ön kayıt v0.3 metni ve eşikleri değişmedi. Betimsel eğri tanısı (`curves_m4a.py`).
 - **v0.3 (2026-11-19):** hakem-rl ilk okuması (Büyük revizyon) işlendi (§5): Aşama 1b lr duyarlılığı, (iv) z testi, δ ulaşılamazsa okuma, attn ↔ gat okuması, mimari ve eleştirmen beyanları, betimsel tavan. `analyze_m4a.py --self-test` 17/17. hakem-rl ikinci okuması Kabul; üç KÜÇÜK not metne işlendi, ön kayıt DONDURULDU. Koşu yok.

@@ -330,6 +330,7 @@ Tüm MARL işleri **yeni** bir ortamda yapılır (`env/marl_trading_env.py`, Pet
 - **Kollar:** `none` / `attn` (TarMAC tipi, Das vd. 2019) / `gat` (Veličković vd. 2018; MAGIC, Niu vd. 2021).
 - **Eşit bütçe:** parametre sayısı ±%10, aynı HPO deneme sayısı, aynı tohumlar, aynı ortam adımı (Faz 9 M4; Fang vd. 2023 finanstaki tek öncül).
 - **GAT grafı:** E2 sektör kenarları ∪ yalnızca eğitim penceresinden kurulan korelasyon kenarları (Mantegna 1999). Graf da B0 mantığına tabi. Varsayılan olarak her eğitim penceresinde sabit; dinamik graf kapsam dışı.
+- **Geliştirme kapıları (eklendi 2026-11-19, kullanıcı kararı; [M4 tasarımı](phase-10-m4-design.md) §3, §6):** gerçek sinyalli iletişim koşularından önce, sentetik bir "komşu sinyali" pozitif kontrolüyle iletişim kollarının başka ajandaki bilgiyi taşıyıp taşımadığı sınanır. M4a (kontrol `none`) ve M4b (kontrol mimari-eş `self`) pilot büyüklüktedir. Uzun koşu, sistem olgunlaşınca M8'den önce yapılır. Sonuçları tez bulgusu değildir; G1 karşılaştırmasının adil olması için **eşit bütçe yalnız parametre sayısı değil, mimari-eş iletişimsiz kontrol de ister** (M4a §3.7 bulgusu).
 
 #### 3.2.6 Çerçeve seçimi (M1 spike'ı)
 
