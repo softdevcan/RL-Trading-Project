@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.7 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.8 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -108,6 +108,41 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 - PC060-K12 pozitif kontrol etiketi ve pit_v2 blokları yalnız panel aralığında kuruldu.
 - Ortam hızı (§3.2.8): M8 tohum gereksinimiyle (~16) uzun koşular ~8 saat mertebesinde.
 
+### 3.3 M7b durumu (2026-11-20): dikkat testleri (betimsel tanı)
+
+**Sade özet.** Ajanların "kime ne kadar kulak verdiği" (dikkat ağırlıkları) neredeyse eşit dağılmış. Ağırlıkları bilerek tamamen eşitlediğimizde karar kalitesi çok az değişti. Yani öğrenilen dikkat ağırlıkları kararların açıklaması olarak okunamaz. Mesajları göndericiler arasında karıştırmak ise (her ajan yine gerçek bir mesaj görüyor, ama yanlış kişiden) gerçek komşu ipuçlu kollarda kararı belirgin bozdu. Hiç tahmin taşımayan kolda bu bozulma, mesajı tamamen kapatmanın yarısı kadardı. Demek ki M7a'daki düşüşün bir kısmı "mesajın bilgisi" değil, "eğitimde görülmemiş girdi" etkisiydi. Tez bulgusu değildir.
+
+**Kod ve ölçüm:**
+- Değerlendirme kipleri (yalnız değerlendirme, kaydedilmez, kapalıyken bit-eş): `CommPolicy.set_uniform_attention`, `set_sender_permutation`, `set_attention_record` (`test_marl_m4` 20/20, `test_marl_m5_msg` 20/20).
+- Ölçüm `scripts/marl/attn_m7b.py`, M7a'nın aynı 21 politikası. Kayıt `measurements/phase10-m7/m7b_train.json` (temiz ağaç `03c52db`) ve `m7b_val.json` (temiz ağaç `8a9e85c`). Tohum benzerliği aynı kayıtlı matrislerden `--rescore` ile yeniden hesaplandı (`cross_seed_rescore`; ölçüm ve provenance değişmedi).
+- **42 temel değerlendirmenin hepsi kayıtlı `eval_*.npz` ile bit-eş.** Eğitim yapılmadı.
+- Karıştırma: 3 sabit derangement (tohum 7000–7002), ortalaması verilir.
+
+**Eğitim penceresi, ΔSR (yıllık, fazla getiri; tohum sırasıyla):**
+
+| Kol | Tek biçimli dikkat | Karıştırılmış mesaj (3 permütasyon ort.) | M7a: tüm mesajlar kapalı | Normalize dikkat entropisi |
+|---|---|---|---|---|
+| M4b G-X (gerçek komşu ipucu) | −0,14 / −0,01 / −0,06 | −0,51 / −0,08 / −0,35 | −0,60 / −0,09 / −0,23 | 0,990–0,994 |
+| M4b G-S (karıştırılmış ipucu) | −0,04 / −0,01 / −0,09 | −0,16 / −0,00 / −0,16 | −0,15 / −0,16 / −0,27 | 0,992–0,996 |
+| M5 G0 (sentetik, güvensiz) | −0,05 / −0,02 / −0,11 | −0,23 / −0,49 / −0,68 | −0,32 / −0,49 / −0,72 | 0,990–0,999 |
+| M5 GL (sentetik, güvenli) | −0,08 / −0,09 / −0,11 | −0,40 / −0,59 / −0,74 | −0,48 / −0,63 / −0,85 | 0,990–0,997 |
+| M5 gerçek T0-G (tahmin yok) | −0,07 / −0,11 / −0,20 | −0,11 / −0,22 / −0,17 | −0,37 / −0,39 / −0,39 | 0,981–0,994 |
+| M5 gerçek SB (gerçek sinyal) | −0,03 / −0,03 / −0,01 | −0,12 / −0,00 / −0,06 | +0,03 / −0,20 / −0,05 | 0,995–0,998 |
+| M5 gerçek SB-S (karıştırılmış) | −0,05 / −0,05 / −0,04 | −0,07 / +0,00 / −0,15 | −0,05 / −0,19 / −0,17 | 0,995–0,998 |
+
+Doğrulama penceresinde etkiler daha küçük. Tek biçimli dikkat −0,10..+0,03. Karıştırılmış mesaj G-X'te −0,42 / −0,07 / −0,07, G0/GL'de −0,22..−0,34, G-S'te ~0. Ayrıntı dosyada.
+
+**Tohumlar arası dikkat benzerliği:** Ham ortalama dikkat matrislerinin tohumlar arası korelasyonu her kolda ≈ 1,00 çıktı. Bu bir ölçüm hatası değil, ama anlamsız: dikkat neredeyse tek biçimli olduğu için matris satır başına ≈ 1/komşu sayısıdır ve korelasyon yalnız graf yapısını ölçer. Anlamlı ölçüt, tek biçimliden sapmanın (Wᵢⱼ − 1/kᵢ) korelasyonudur. Bu sapma çok küçüktür (girdi başına ortalama |sapma| 0,001–0,01, ağırlıklar ~0,1–0,3). Ama tohumlar arasında tutarlıdır: eğitimde kol ortalaması r 0,63 (SB-S) – 0,95 (G-S), doğrulamada 0,69–0,91.
+
+**Okuma (betimsel tanı, tez bulgusu değil):**
+- **Wiegreffe & Pinter tek biçimli baseline testi:** Öğrenilen dikkat ağırlıkları neredeyse tek biçimli (entropi ≥ 0,98). Eşitlenince SR değişimi küçük (eğitimde en fazla −0,20, çoğunlukla −0,1'in altında). Dikkat ağırlıkları bu politikalarda kararın açıklaması olarak okunmaz. Bilgi, ağırlıklardan çok mesajın (değer izdüşümünün) içeriğinden taşınıyor.
+- **Karıştırılmış mesaj, M7a'nın kontrolü:**
+  - Tahmin taşımayan T0-G'de karıştırma kapatmanın yaklaşık yarısı kadar etki yapıyor (−0,11..−0,22 ↔ −0,37..−0,39). M7a'daki düşüşün bir kısmı dağılım dışı girdi etkisidir.
+  - Gerçek komşu ipuçlu G-X'te karıştırma, karıştırılmış ipuçlu G-S'ten belirgin daha çok bozuyor (−0,51 / −0,08 / −0,35 ↔ −0,16 / −0,00 / −0,16). Sentetik komşu sinyalli G0/GL'de karıştırma kapatmaya yakın.
+  - Bu, mesajların kimden geldiğinin bilgi taşıdığı kollarda önemli olduğuyla tutarlıdır. İstatistik testi yoktur; 3 tohum.
+- **Tutarlı ama küçük sapma:** Tek biçimliden sapma tohumlar arasında tekrarlanıyor. Olası bir açıklama, sapmanın öğrenilmiş bir ilgiden değil girdi yapısından gelmesidir; örneğin anahtar izdüşümleri, bazı hisselerin özellik düzeyinden etkilenebilir. Bu ölçümle ayrılmaz.
+- **Sınırlar:** Dikkat nedensel bir açıklama değildir (Jain & Wallace 2019). Karıştırma alıcının kendi yuvasını da değiştirir; alıcının kendi kodu çıkış başına ayrıca girer. Üç permütasyonun ortalaması bir dağılım değildir.
+
 ## 4. Sınırlar
 
 - Rejim etiketi bir **koşullama** değişkenidir; S-reg açıkken aynı etiket ajanın girdisidir (K10 döngüselliği). AQ3 sonucu HMM tanımıyla da tekrarlanır.
@@ -178,6 +213,7 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 
 ## Versiyon geçmişi
 
+- **v0.8 (2026-11-20):** §3.3 M7b ölçümü (betimsel): dikkat neredeyse tek biçimli; tek biçimli baseline'a göre SR değişimi küçük; karıştırılmış mesaj, M7a maskelemenin dağılım dışı payını ayırıyor; tohum benzerliği tek biçimliden sapma üzerinden.
 - **v0.7 (2026-11-20):** §6.1 M6b pilot sonucu: FARK_YOK (eğitim D +0,19, p 0,41; doğrulama −0,28); S-reg ana tasarımda kalır. Ön kayıt değişmedi.
 - **v0.6 (2026-11-20):** K-M6-5 kapandı (HMM iki hücre = `calm_vs_rest`, `PRIMARY_TWO_CELL`). M7b kodu (tek biçimli dikkat, karıştırılmış mesaj, dikkat kaydı; `attn_m7b.py`) yazıldı; ölçüm koşulmadı.
 - **v0.5 (2026-11-20):** §6 M6b kısa pilot ön kaydı DONDURULDU (R0-N ↔ SR-N, tohum 12–14, maliyetsiz; okuma BOZULMA / IYILESME_ISARETI / FARK_YOK). M6b kodu: `build_sreg_m6.py`, `extras_path`.
