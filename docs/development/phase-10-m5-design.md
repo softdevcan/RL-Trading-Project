@@ -342,9 +342,9 @@ Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
 
 **Deneme kaydı:** H2 ve H3 birer deneme (H3 SINANMADI olarak), GD betimsel (§4.5).
 
-## 5. Gerçek sinyal kolları ön kaydı (v0.11; okuma kuralı DONDURULDU, kol seti onay bekliyor) — sonuçtan önce
+## 5. Gerçek sinyal kolları ön kaydı (v0.12; DONDURULDU, kol seti onaylandı) — sonuçtan önce
 
-**Durum (v0.11):** Okuma kuralı, eşikler ve kodu **DONDURULDU** (hakem-finans 2. okuma Kabul, hakem-rl 2. okuma Küçük rev. yalnız KÜÇÜK notlarla; §5.9). Kol seti kullanıcı onayı bekliyor: 8 kol onaylanırsa bu bölüm değişmeden koşulur. Başka bir set seçilirse §5 güncellenir ve hakemler yeniden okur. **Durum (v0.9):** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
+**Durum (v0.12, 2026-11-20):** Kullanıcı önerilen **8 kol × 3 tohum = 24 koşu** setini onayladı; §5 değişmeden koşulur (sonuç §5.10'da). Alternatif setler (§5.3 sonu) koşulmaz. **Durum (v0.11):** Okuma kuralı, eşikler ve kodu **DONDURULDU** (hakem-finans 2. okuma Kabul, hakem-rl 2. okuma Küçük rev. yalnız KÜÇÜK notlarla; §5.9). Kol seti kullanıcı onayı bekliyor: 8 kol onaylanırsa bu bölüm değişmeden koşulur. Başka bir set seçilirse §5 güncellenir ve hakemler yeniden okur. **Durum (v0.9):** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
 
 ### 5.1 Soru
 
@@ -374,7 +374,7 @@ AQ2-gerçek (§2.3): yön bilgisi tespit edilemeyen gerçek bir tahmin sinyali g
 - K-g gereği "yalnız S-msg" kolu yok: güven gözlemden okunduğu için S-msg bu kodda ikisi birdenin içindedir (S-msg ⊂ ikisi birden).
 - SB, GL yapılandırmasını kullanır. M5 mekanizma sonucu KISMİ'dir (§4.11). Bu kol mekanizmanın değerini sınamaz; yalnız gerçek sinyal bu yoldan verildiğinde ne olduğunu sınar.
 - **Tahminsiz kolların eşleşmesi (hakem-rl #1, #2, #6):** T0-N ↔ SO ve T0-G ↔ SB tohum numarasıyla eşlidir, ama girdi boyutu farklı olduğu için başlangıç ağırlıkları ve RNG akışı aynı değildir. SB yolunda T0-G'de GL (güven terimi, öğrenilen β) da yoktur. Gerçek ↔ tahminsiz karşılaştırması bu yüzden yalnız "sinyal var/yok" değil, girdi boyutu, başlangıç ve (SB'de) mimari farkını da taşır. Bu karşılaştırmalar **tabansız ikincil**dir (§5.4).
-- Alternatifler (kullanıcıya sunuldu, karar bekliyor): gürültü tabansız 6 kol (18 koşu), ya da yalnız gözlem yolu (4 kol, 12 koşu).
+- Alternatifler (kullanıcıya sunuldu, 2026-11-20 reddedildi; 8 kol seçildi): gürültü tabansız 6 kol (18 koşu), ya da yalnız gözlem yolu (4 kol, 12 koşu).
 
 ### 5.4 Okuma kuralı (önceden sabit; `scripts/marl/analyze_m5real.py`)
 
