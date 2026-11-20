@@ -9,6 +9,7 @@
  },
  "n_anchors": 31,
  "all_converged": false,
+ "n_not_converged": 1,
  "mean_desc_with_sd_all": true,
  "mean_desc_with_sd_count": 31,
  "fit_log": [
@@ -540,7 +541,7 @@
    "mean_desc_with_sd": true
   }
  ],
- "seconds": 126.7,
+ "seconds": 125.6,
  "windows": {
   "train": [
    "2013-08-27",
@@ -568,6 +569,20 @@
     },
     "_unlabeled_days": 0
    },
+   "calm_vs_rest": {
+    "calm": {
+     "days": 570,
+     "episodes": 57,
+     "episodes_min20": 11
+    },
+    "not_calm": {
+     "days": 773,
+     "episodes": 57,
+     "episodes_min20": 15
+    },
+    "_unlabeled_days": 0
+   },
+   "agreement_calm_vs_rest_with_rule_trend": 0.7416232315711094,
    "state": {
     "s0": {
      "days": 572,
@@ -603,6 +618,20 @@
     },
     "_unlabeled_days": 0
    },
+   "calm_vs_rest": {
+    "calm": {
+     "days": 253,
+     "episodes": 21,
+     "episodes_min20": 5
+    },
+    "not_calm": {
+     "days": 247,
+     "episodes": 20,
+     "episodes_min20": 6
+    },
+    "_unlabeled_days": 0
+   },
+   "agreement_calm_vs_rest_with_rule_trend": 0.702,
    "state": {
     "s0": {
      "days": 254,
@@ -626,10 +655,10 @@
   }
  },
  "provenance": {
-  "commit": "9d8ef1eed5bef737ab53c53dd5599d511871e227",
+  "commit": "264d966046c5d039c4248b8140a9d384c84c337a",
   "git_status_porcelain": "",
-  "script_sha256": "91c9f8e05025ff96735dd292de41cd93650d35452100fda43e88759b86d54404",
-  "module_sha256": "0aed380ae16beb7a6b48b16022d928c40e5d81088343eb6c25847f6d091185b9",
+  "script_sha256": "94b3f7b37e0300a4281167a11b6634547c2ff1614d6a89e537fb71c12022517b",
+  "module_sha256": "38d02693c8ae1b8fc4b0d2827e600067317430c1fea01f41b8a4b8c56403a952",
   "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
   "xu100_sha256": "e4adbef53162df7dff1e6a340377a72d355bf775893365741bece83bcb5a6b37",
   "usdtry_sha256": "5b87b4a80e4f828011f5f34cc4b8d84015471802e0b68336cbb139d1e6cf9227"
