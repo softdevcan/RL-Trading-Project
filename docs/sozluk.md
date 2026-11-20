@@ -4,12 +4,12 @@
 
 Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. Her terimde önce **sade** tanım (konuyu bilmeyen biri için), sonra **teknik** tanım (koddaki karşılığıyla) gelir. Sözlük deney sonucu içermez; sonuçlar ilgili tasarım belgelerindedir.
 
-**Terim sayısı:** 171 · **Tek kaynak:** [`dashboard/content/glossary.yaml`](../dashboard/content/glossary.yaml) · **Plan:** [system-guide-plan.md](development/system-guide-plan.md)
+**Terim sayısı:** 173 · **Tek kaynak:** [`dashboard/content/glossary.yaml`](../dashboard/content/glossary.yaml) · **Plan:** [system-guide-plan.md](development/system-guide-plan.md)
 
 ## İçindekiler
 
 - **[Sistem ve aşamalar](#kat-sistem)** — [Faz](#faz), [Milestone 0'](#milestone-0p), [M1–M8 (Faz 10 aşamaları)](#m-asamalari), [M3a / M3b](#m3), [M4a / M4b](#m4), [M5](#m5), [K-kararları](#k-kararlari), [K12 yürütme ufku](#k12), [Ön kayıt](#on-kayit), [Hakem paneli](#hakem-paneli), [Geliştirme kapısı](#gelistirme-kapisi), [Deneme kaydı (N)](#deneme-kaydi), [Ansari replikasyonu](#ansari-replikasyonu), [Faz 9 paketleri (A–G, P, R)](#faz-9-paketleri), [Bilinen açıklar (Y kodları)](#bilinen-aciklar), [Protokol açık (protocol_open)](#protokol-acik), [Okuma kuralı (okuma tablosu)](#okuma-kurali), [Durma kuralı](#durma-kurali), [Yasak kurtarma yolları](#yasak-kurtarma), [Ölçüm arşivi](#olcum-arsivi)
-- **[Deney kodları ve etiketler](#kat-deney)** — [Pozitif kontrol (PC060-K12)](#pozitif-kontrol), [Karıştırılmış kontrol](#karistirilmis-kontrol), [Komşu sinyali (σ)](#komsu-sinyali), [Kol](#kol), [A1 / S1 / A1c / S1c](#kol-kodlari-m3), [N / A / G / Z × X / S](#kol-kodlari-m4), [G0 / GL / GLS / GLM / GD](#kol-kodlari-m5), [GEÇTİ](#etiket-gecti), [KISMİ](#etiket-kismi), [GÖZLENMEDİ](#etiket-gozlenmedi), [PİLOT_İŞARETİ](#etiket-pilot), [Tohum](#tohum), [Gürültü tabanı](#gurultu-tabani), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4), [Keşifsel ve doğrulayıcı bulgu](#kesifsel)
+- **[Deney kodları ve etiketler](#kat-deney)** — [Pozitif kontrol (PC060-K12)](#pozitif-kontrol), [Karıştırılmış kontrol](#karistirilmis-kontrol), [Komşu sinyali (σ)](#komsu-sinyali), [Kol](#kol), [A1 / S1 / A1c / S1c](#kol-kodlari-m3), [N / A / G / Z × X / S](#kol-kodlari-m4), [G0 / GL / GLS / GLM / GD](#kol-kodlari-m5), [GEÇTİ](#etiket-gecti), [KISMİ](#etiket-kismi), [GÖZLENMEDİ](#etiket-gozlenmedi), [PİLOT_İŞARETİ](#etiket-pilot), [Tohum](#tohum), [Gürültü tabanı](#gurultu-tabani), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4), [Keşifsel ve doğrulayıcı bulgu](#kesifsel), [T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2](#kol-kodlari-m5-gercek), [Sıralama tabanı](#siralama-tabani)
 - **[Değerlendirme ve istatistik](#kat-degerlendirme)** — [Sharpe oranı](#sharpe), [Fazla getiri](#fazla-getiri), [Risksiz faiz (A8)](#risksiz-faiz), [D (Sharpe farkı)](#d-farki), [Ortak HAC](#hac), [Tek yönlü p](#tek-yonlu-p), [Holm düzeltmesi](#holm), [Benjamini–Hochberg (BH-FDR)](#bh-fdr), [Güç](#guc), [En küçük tespit edilebilir etki (MDE)](#mde), [Güven aralığı (GA)](#guven-araligi), [Eğitim / doğrulama / test penceresi](#pencereler), [1/N (eşit ağırlık)](#baseline-1n), [Al-tut](#al-tut), [Devir](#devir), [İşlem maliyeti (bps)](#islem-maliyeti), [Deflated Sharpe (DSR)](#dsr), [Aşırı uyum olasılığı (PBO)](#pbo), [Model güven kümesi (MCS)](#mcs), [Ledoit–Wolf Sharpe farkı testi](#lw-bootstrap), [Blok bootstrap](#blok-bootstrap), [Diebold–Mariano testi](#diebold-mariano), [Sortino ve Calmar oranları](#sortino-calmar), [Getiri birimi (nominal / reel / USD)](#getiri-birimi), [Tohum gereksinimi](#tohum-gereksinimi), [Tohumlar arası özet (IQM, iyileşme olasılığı)](#tohum-ozetleri)
 - **[Çok ajanlı öğrenme](#kat-marl)** — [Çok ajanlı pekiştirmeli öğrenme (MARL)](#marl), [Ajan](#ajan), [MAPPO](#mappo), [IPPO](#ippo), [Merkezi eğitim, merkezi olmayan yürütme (CTDE)](#ctde), [Eleştirmen](#elestirmen), [Parametre paylaşımı (K24)](#parametre-paylasimi), [İletişim kolları (none / attn / gat / self)](#iletisim-kollari), [Dikkat (attention)](#dikkat), [Graf (sektör + MST)](#graf), [α (ödül karışımı)](#alfa), [Logit sınırı (5 + ln N)](#logit-siniri), [S-obs](#s-obs), [S-msg](#s-msg), [β (güven ağırlığı)](#beta), [Güven geçidi](#guven-gecidi), [Kare (frame)](#kare), [Bölüm (episode)](#bolum), [BenchMARL / TorchRL](#benchmarl), [Muhasebe (kesirli adım)](#muhasebe), [Hedef ağırlık izdüşümü (risk projeksiyonu)](#izdusum), [Emir dönüşümü](#emir-donusumu), [zlogodds güven terimi](#zlogodds), [Başlangıç eylem gürültüsü (init_std)](#init-std), [Deterministik değerlendirme](#deterministik-degerlendirme)
 - **[Tek ajan ve genel pekiştirmeli öğrenme](#kat-rl)** — [Politika](#politika), [Gözlem](#gozlem), [Ödül](#odul), [EMA Sharpe düzeyi](#ema-sharpe), [PPO](#ppo), [Eylem](#eylem), [Tek ajan ortamı (TradingEnv)](#tek-ajan-ortami), [Gymnasium](#gymnasium), [Stable-Baselines3](#sb3), [A2C](#a2c), [TD3](#td3), [SAC](#sac), [Hiperparametre optimizasyonu](#hpo), [Kayan pencereli bölme (wf-v1)](#walk-forward), [Kontrol noktası seçimi](#kontrol-noktasi-secimi), [Moody–Saffell Dₜ terimi](#moody-saffell), [PSR ödülü](#psr-odulu), [ATR ve Kelly pozisyon boyutlandırma](#atr-kelly), [Türbülans endeksi](#turbulans), [Gözlem sağlığı (obs_health)](#gozlem-sagligi), [Fiyat ölçeği (price_norm)](#fiyat-olcegi), [Eksik veri modu](#eksik-veri-modu)
@@ -423,6 +423,29 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 - Belgede: [phase-10-marl-plan.md](development/phase-10-marl-plan.md)
 - İlgili: [Ön kayıt](#on-kayit), [Geliştirme kapısı](#gelistirme-kapisi), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4), [Eğitim / doğrulama / test penceresi](#pencereler)
+
+<a id="kol-kodlari-m5-gercek"></a>
+
+### T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2
+
+**Sade:** M5 gerçek sinyal kolları: SO gerçek tahmini gözleme ekler, SB gözleme ve güvenli mesaja ekler; -S ve -S2 sonekli kollar aynı sinyalin günleri karıştırılmış iki kopyasını, T0 kolları hiç tahmin görmeyen karşılıklarını kullanır. N iletişimsiz, G komşularla sınırlı iletişimli mimaridir.
+
+**Teknik:** Sinyal pit_v2, komşu sinyali yok; karıştırma pencere içi (ısınma | eğitim | doğrulama), tohum s ve 1000 + s. SB = gat + GL (zlogodds, β öğrenilen). 20 bps, tohum 9–11. Birincil karşılaştırma gerçek ↔ karıştırılmış, tahminsiz karşılaştırmaları tabansız ikincildir.
+
+- Belgede: [phase-10-m5-design.md](development/phase-10-m5-design.md)
+- İlgili: [M5](#m5), [S-obs](#s-obs), [S-msg](#s-msg), [Karıştırılmış kontrol](#karistirilmis-kontrol), [Sıralama tabanı](#siralama-tabani), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4)
+
+<a id="siralama-tabani"></a>
+
+### Sıralama tabanı
+
+**Sade:** Gerçek sinyalli kolun her tohumda iki karıştırılmış kolun ikisinin de üstünde (ya da altında) kalması koşulu. Sinyal bilgisizse bunun şansla olma olasılığı küçüktür.
+
+**Teknik:** Aynı mimari ve tohumda gerçek, karıştırılmış ve ikinci karıştırma bilgi yokken değiştirilebilir sayılırsa, gerçeğin bir tohumda en üstte olma olasılığı 1/3; k = 3'te yön başına (1/3)³, iki yönlü yaklaşık 2/27. Bu bir alt sınırdır: gerçek blok tohumlar arasında ortaktır. Holm p ve doğrulama koşuluyla birlikte okunur.
+
+- Kodda: [`scripts/marl/analyze_m5real.py`](../scripts/marl/analyze_m5real.py)
+- Belgede: [phase-10-m5-design.md](development/phase-10-m5-design.md)
+- İlgili: [T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2](#kol-kodlari-m5-gercek), [Gürültü tabanı](#gurultu-tabani), [Karıştırılmış kontrol](#karistirilmis-kontrol), [Tohum](#tohum)
 
 <a id="kat-degerlendirme"></a>
 

@@ -216,6 +216,43 @@
     "tohum"
    ],
    "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m5-gercek",
+   "baslik": "M5: Gerçek tahmin sinyali ajanlara bir şey katıyor mu?",
+   "soru": "Tahmin hattının gerçek sinyali ajanların gözlemine (ve ikinci yolda gözlem + güvenli mesaja) eklendiğinde, aynı sinyalin günleri karıştırılmış haline göre politika iyileşiyor ya da bozuluyor mu? Sinyal bilgi kapısından geçmemişti; soru bir sağlamlık sorusudur. İşlem maliyeti 20 baz puan.",
+   "okuma": "İki yolda da gerçek sinyal ile karıştırılmış sinyal arasında fark tespit edilmedi. Bu \"sinyal değersiz\" demek değil: fark, bu üç tohumlu düzenin ayırt edebileceği en küçük farkın çok altında kaldı. Ajanlar güven terimine de tutarlı bir ağırlık vermedi.",
+   "etiket": "GÖZLENMEDİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m5/m5real_results.json",
+    "alan": "reading.SO",
+    "ham": "O1_fark_yok"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (gerçek − karıştırılmış sinyal, gözlem yolu)",
+     "deger": "+0,01",
+     "ham": 0.006524388988738826,
+     "kaynak": "docs/development/measurements/phase10-m5/m5real_results.json",
+     "alan": "paths.SO.real_shuf.D_train"
+    },
+    {
+     "ad": "Bu düzende tespit edilebilecek en küçük fark",
+     "deger": "0,28",
+     "ham": 0.2832261488766969,
+     "kaynak": "docs/development/measurements/phase10-m5/m5real_results.json",
+     "alan": "paths.SO.min_detectable_D_betimsel"
+    }
+   ],
+   "belge": "docs/development/phase-10-m5-design.md",
+   "terimler": [
+    "kol-kodlari-m5-gercek",
+    "s-obs",
+    "karistirilmis-kontrol",
+    "mde",
+    "siralama-tabani"
+   ],
+   "rozet": "Tez bulgusu değil"
   }
  ],
  "asamalar": [
@@ -323,9 +360,9 @@
   },
   {
    "ad": "Faz 10 M5 tahmin sinyali + güvenle ağırlıklı iletişim",
-   "durum": "sürüyor",
-   "sinif": "suruyor",
-   "siradaki": "Gerçek sinyal kolları ön kaydı (§2.3, K-a; 20 bps)"
+   "durum": "bitti (pilot), karar kullanıcıda",
+   "sinif": "bitti",
+   "siradaki": "Kullanıcı kararı: M6/M7'ye geçiş ya da daha bilgili sinyalle yeni ön kayıt; M8 öncesi ortam hızı (§3.2.8)"
   },
   {
    "ad": "Faz 10 M6–M8, nihai koşumlar",
@@ -379,12 +416,16 @@
    "sha256": "1d07619242519840fc9271217cf9e248d77b1a99bfb9069ee5881472c3631c88",
    "uretim_commit": "1cd9d95bc34695c3dc12cfbbed7b6e7671155bcc"
   },
+  "docs/development/measurements/phase10-m5/m5real_results.json": {
+   "sha256": "9e9e4f42890181f8e092b4b7d6ad09b549218bafad9778aee9e6e2841441b390",
+   "uretim_commit": "75c76da00faf9648268a311722c94cc65ab3fb0b"
+  },
   "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
    "sha256": "ba21c3ff7c29ac14b9fdeb5122e4c0dd62a1079d1f424604df3705a1e5202bbb",
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "f38fcd3407e6fa29b82692531c8c308187b8b3bdaa6c7077be504da791383294",
+   "tablo_sha256": "e07034ac8d1432701da1a890354bb44d23d79bd68a06f0a69e7c97f8db130ec0",
    "uretim_commit": null
   }
  }

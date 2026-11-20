@@ -418,6 +418,31 @@
   belgede: [docs/development/phase-10-marl-plan.md]
   ilgili: [on-kayit, gelistirme-kapisi, okuma-o1-o4, pencereler]
 
+- id: kol-kodlari-m5-gercek
+  terim: T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2
+  kategori: deney
+  sade: >-
+    M5 gerçek sinyal kolları: SO gerçek tahmini gözleme ekler, SB gözleme ve güvenli mesaja ekler; -S ve -S2 sonekli kollar aynı sinyalin günleri karıştırılmış iki kopyasını, T0 kolları hiç tahmin görmeyen karşılıklarını kullanır. N iletişimsiz, G komşularla sınırlı iletişimli mimaridir.
+  teknik: >-
+    Sinyal pit_v2, komşu sinyali yok; karıştırma pencere içi (ısınma | eğitim | doğrulama), tohum s ve 1000 + s. SB = gat +
+    GL (zlogodds, β öğrenilen). 20 bps, tohum 9–11. Birincil karşılaştırma gerçek ↔ karıştırılmış, tahminsiz karşılaştırmaları
+    tabansız ikincildir.
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [m5, s-obs, s-msg, karistirilmis-kontrol, siralama-tabani, okuma-o1-o4]
+
+- id: siralama-tabani
+  terim: Sıralama tabanı
+  kategori: deney
+  sade: >-
+    Gerçek sinyalli kolun her tohumda iki karıştırılmış kolun ikisinin de üstünde (ya da altında) kalması koşulu. Sinyal bilgisizse bunun şansla olma olasılığı küçüktür.
+  teknik: >-
+    Aynı mimari ve tohumda gerçek, karıştırılmış ve ikinci karıştırma bilgi yokken değiştirilebilir sayılırsa, gerçeğin bir
+    tohumda en üstte olma olasılığı 1/3; k = 3'te yön başına (1/3)³, iki yönlü yaklaşık 2/27. Bu bir alt sınırdır: gerçek
+    blok tohumlar arasında ortaktır. Holm p ve doğrulama koşuluyla birlikte okunur.
+  kodda: [scripts/marl/analyze_m5real.py]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [kol-kodlari-m5-gercek, gurultu-tabani, karistirilmis-kontrol, tohum]
+
 # ------------------------------------------------------------------ değerlendirme ve istatistik
 - id: sharpe
   terim: Sharpe oranı
