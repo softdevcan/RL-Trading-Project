@@ -9,7 +9,9 @@ Ne dogrular (Faz 8, G):
      sayfada slot bos.
   4. Arama secenekleri role duyarli: admin grubu yalnizca admin'e gorunur.
   5. Aramadan secim url'i degistirip kutuyu bosaltiyor; ayni sayfa secilirse
-     sayfa bosuna yeniden cizilmiyor (no_update).
+     sayfa bosuna yeniden cizilmiyor (no_update). Sozluk terimleri (K28 R4)
+     paletin icinde; secim Rehber'e `#terim-<id>` capasiyla gidiyor, Rehber'deyken
+     yalniz capa degisiyor, baska sayfaya gecis capayi temizliyor.
   6. Yapisal bekci: kenar cubugundaki her menu maddesinin kirinti karsiligi
      var. Menuye madde eklenip buraya eklenmezse ust cubuk sessizce bosalir.
   7. Bildirimler: /api/account/notifications bellekteki calisma durumlarindan
@@ -163,6 +165,24 @@ def main() -> int:
         r = fire(c, "url.pathname", ["/dash/models"], ["/dash/models"])
         check("Ayni sayfa yeniden cizilmiyor", "url" not in r.json()["response"],
               f"(got {r.json()['response']})")
+
+        # Sozluk terimi (K28 R4): paletin icinde, Rehber'e capayla gider. Rehber'deyken
+        # yalniz capa degisir (sayfa yeniden cizilmez); baska sayfaya gecis capayi temizler.
+        from dashboard.pages.guide import load_content  # noqa: E402
+        n_terms = len(load_content()[1])
+        check("Sozluk terimleri paletin icinde", layout.count("Sözlük · ") == n_terms
+              or layout.count("Sözlük · ") == n_terms, f"({n_terms} terim beklendi)")
+        r = fire(c, "url.pathname", ["/dash/guide#terim-sharpe"], ["/dash/models"])
+        url = r.json()["response"].get("url", {})
+        check("Terim secimi Rehber'e capayla gidiyor",
+              url.get("pathname") == "/dash/guide" and url.get("hash") == "#terim-sharpe", f"(got {url})")
+        r = fire(c, "url.pathname", ["/dash/guide#terim-faz"], ["/dash/guide"])
+        url = r.json()["response"].get("url", {})
+        check("Rehber'deyken yalniz capa degisiyor",
+              "pathname" not in url and url.get("hash") == "#terim-faz", f"(got {url})")
+        r = fire(c, "url.pathname", ["/dash/models"], ["/dash/guide"])
+        check("Sayfa secimi capayi temizliyor",
+              r.json()["response"].get("url", {}).get("hash") == "", f"(got {r.json()['response']})")
 
     print("\n6) Arama secenekleri role duyarli")
     with TestClient(app) as c:

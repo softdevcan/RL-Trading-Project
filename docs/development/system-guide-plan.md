@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.6 · 2026-11-19 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
+**Sürüm:** v0.7 · 2026-11-20 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -189,10 +189,17 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Yapıldı:** Sık sorulanlar (bölüm 7; `guide.yaml` → `sss`, 6 soru, terim bağlantılı, yasaklı ifade ve bağlantı denetimine dahil). Sayfa açılırken URL'deki çapaya (`#terim-<id>`, `#deney-<id>`) bir kez kaydırma (istemci tarafı geri çağrı; arama yeniden çizince kaydırmaz).
 - **Kalan:** ~110 terim (tek ajan RL, tahmin, veri, yazılım ve ürün); üst çubuk aramasına sözlük terimleri. Bu ikincisi `go_to_page` geri çağrısına `url.hash` çıktısı eklemeyi ve `test_topbar` [5]'in çıktı imzasını güncellemeyi gerektirir, ayrı yapılacak.
 
+## 15. R4 üst çubuk araması (2026-11-20)
+
+- **Yapıldı:** Komut paletine her sözlük terimi "Sözlük · <terim>" olarak eklendi (`topbar._glossary_options`, tek kaynak `glossary.yaml`, alfabetik). Seçim `/dash/guide#terim-<id>`'ye gider: `go_to_page` yolu ve çapayı ayrı yazar (`url.pathname` + `url.hash`; `dcc.Location` ikisini tek `pushState` ile birleştirir, kaynak `Location.react.js` `updateLocation`). Rehber'deyken yalnız çapa değişir, sayfa yeniden çizilmez; kaydırma geri çağrısı artık `url.hash`'i de dinler. Başka sayfaya geçiş çapayı temizler. `test_topbar` 39 → 43 kontrol.
+- **Bilinen sınır:** Rehber'de sözlük araması bir filtre uygulamışken başka bir terim seçilirse, terim filtrede yoksa kaydırma olmaz (öğe DOM'da yok). Aynı terim art arda seçilirse çapa değişmediği için yeniden kaydırmaz.
+- **Kalan:** ~110 terim; bakım kuralı zaten kök `CLAUDE.md`'de.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.7 (2026-11-20):** R4 üst çubuk araması (§15). Kalan: terimler.
 - **v0.6 (2026-11-19):** R4 kısmi (§14): SSS bölümü, çapaya kaydırma. Kalan: terimler, üst çubuk araması.
 - **v0.5 (2026-11-19):** R3 kodu (§13): `snapshot.json`, 5 deney kartı, aşama çizelgesi, test 9/9; bakım kuralı CLAUDE.md'de.
 - **v0.4 (2026-11-19):** R2 kodu (§12): Rehber sayfası, `guide.yaml`, CSS, menü/rota, test 8/8. Görsel denetim ve konteyner bekliyor.
