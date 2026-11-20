@@ -42,5 +42,5 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `python tests/test_marl_core.py` (61, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
 - `venv-marl\Scripts\python tests/test_marl_m3.py` (18, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7)
-- `venv-marl\Scripts\python tests/test_marl_m4.py` (18, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
+- `venv-marl\Scripts\python tests/test_marl_m4.py` (20, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
 - `venv-marl\Scripts\python tests/test_marl_m5_msg.py` (20, yalniz venv-marl; S-msg conf_mode, beta, gecit, karistirilmis guven, GLM gonderici sicakligi; 'none' M4a ile bit-es)

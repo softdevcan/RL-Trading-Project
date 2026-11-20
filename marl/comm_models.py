@@ -184,6 +184,45 @@ class CommPolicy(Model):
             self.register_buffer('conf_temp', temp, persistent=False)
         # M7a karsi-olgusal mesaj maskeleme (yalniz degerlendirme; kaydedilmez): None iken ileri gecis degismez (bit-es).
         self.register_buffer('sender_block', None, persistent=False)
+        # M7b degerlendirme kipleri (yalniz degerlendirme; kaydedilmez; hepsi kapaliyken ileri gecis bit-es):
+        #   uniform_attention : izinli gondericilerin degerleri esit agirlikla ortalanir (q.k ve beta*b devre disi)
+        #   sender_perm       : anahtar/deger (ve guven terimi) gondericiler arasinda sabit permutasyonla yer degistirir
+        #   record_attention  : her ileri geciste basa gore ortalanmis dikkat agirliklari attention_log'a yazilir
+        self.uniform_attention = False
+        self.record_attention = False
+        self.attention_log: list = []
+        self.register_buffer('sender_perm', None, persistent=False)
+
+    def set_uniform_attention(self, on: bool = True) -> None:
+        """M7b tek bicimli dikkat baseline'i (Wiegreffe & Pinter 2019): alici izinli gondericilerin (graf + gonderici
+        maskesi) deger izdusumlerini esit agirlikla ortalar. Yalniz degerlendirme; `self` kolunda yalniz kendine esit."""
+        self.uniform_attention = bool(on)
+
+    def set_sender_permutation(self, perm=None) -> None:
+        """M7b karistirilmis mesaj (M7a'nin dagilimi koruyan kontrolu): yuva j, gonderici perm[j]'nin mesajini (ve guven
+        terimini) tasir. Her alici yine gercek bir mesaj gorur; mesaj ile gondericinin kimligi arasindaki bag kopar.
+        Alicinin kendi kodu cikis basina ayrica girer. None = kapali."""
+        if perm is None:
+            self.sender_perm = None
+            return
+        p = torch.as_tensor([int(j) for j in perm], dtype=torch.long, device=self.device)
+        if sorted(p.tolist()) != list(range(self.n_agents)):
+            raise ValueError(f"perm 0..{self.n_agents - 1} permutasyonu olmali")
+        self.sender_perm = p
+
+    def set_attention_record(self, on: bool = True) -> None:
+        """M7b: dikkat agirliklarini kaydet (basa gore ortalama, [B, N, N]); acilinca kayit sifirlanir."""
+        self.record_attention = bool(on)
+        self.attention_log = []
+
+    def _uniform_attend(self, att, kv: torch.Tensor) -> torch.Tensor:
+        """Esit agirlikli dikkat: izinli yuvalarin deger izdusumlerinin ortalamasi, sonra cikis izdusumu.
+        Basliklar arasi agirlik ayni oldugu icin bas bolmesi sonucu degistirmez."""
+        H = kv.shape[-1]
+        v = kv @ att.in_proj_weight[2 * H:3 * H].T + att.in_proj_bias[2 * H:3 * H]
+        bm = self._bool_mask()
+        allowed = torch.ones(self.n_agents, self.n_agents, device=kv.device) if bm is None else (~bm).float()
+        return att.out_proj((allowed / allowed.sum(-1, keepdim=True)) @ v)
 
     def set_sender_mask(self, senders=None) -> None:
         """Verilen gondericilerin mesajini diger alicilara kapat (alici kendi kodunu gormeye devam eder). None = kapali.
@@ -246,10 +285,19 @@ class CommPolicy(Model):
             mask, g = self._bool_mask(), None
         else:
             b = self.conf_terms(xf)
+            if self.sender_perm is not None:          # M7b: guven terimi mesajiyla birlikte yer degistirir
+                b = b[..., self.sender_perm]
             mask = self._score_mask(b)
             g = self._gate(xf) if self.gate else None
         for att, ln in zip(self.attn, self.norm):
-            m, _ = att(h, h, h, attn_mask=mask, need_weights=False)
+            kv = h if self.sender_perm is None else h[:, self.sender_perm]
+            if self.uniform_attention:
+                m = self._uniform_attend(att, kv)
+            elif self.record_attention:
+                m, w = att(h, kv, kv, attn_mask=mask, need_weights=True)
+                self.attention_log.append(w.detach().cpu())
+            else:
+                m, _ = att(h, kv, kv, attn_mask=mask, need_weights=False)
             h = ln(h + (m if g is None else g * m))
         out = self.head(torch.cat([own, h], dim=-1))
         tensordict.set(self.out_key, out.reshape(*lead, *out.shape[-2:]))
