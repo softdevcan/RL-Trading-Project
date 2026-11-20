@@ -224,6 +224,31 @@ deneyler:
       belge: docs/development/phase-10-m5-design.md
       terimler: [kol-kodlari-m5, s-msg, beta, etiket-kismi, tohum]
 
+    - id: m5-gercek
+      baslik: "M5: Gerçek tahmin sinyali ajanlara bir şey katıyor mu?"
+      soru: >-
+        Tahmin hattının gerçek sinyali ajanların gözlemine (ve ikinci yolda gözlem + güvenli mesaja) eklendiğinde, aynı
+        sinyalin günleri karıştırılmış haline göre politika iyileşiyor ya da bozuluyor mu? Sinyal bilgi kapısından
+        geçmemişti; soru bir sağlamlık sorusudur. İşlem maliyeti 20 baz puan.
+      etiket: {kaynak: docs/development/measurements/phase10-m5/m5real_results.json, alan: reading.SO,
+               esit: O1_fark_yok, evet: GÖZLENMEDİ, hayir: KISMİ}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (gerçek − karıştırılmış sinyal, gözlem yolu)
+          kaynak: docs/development/measurements/phase10-m5/m5real_results.json
+          alan: paths.SO.real_shuf.D_train
+          ondalik: 2
+          isaret: true
+        - ad: Bu düzende tespit edilebilecek en küçük fark
+          kaynak: docs/development/measurements/phase10-m5/m5real_results.json
+          alan: paths.SO.min_detectable_D_betimsel
+          ondalik: 2
+      okuma: >-
+        İki yolda da gerçek sinyal ile karıştırılmış sinyal arasında fark tespit edilmedi. Bu "sinyal değersiz" demek
+        değil: fark, bu üç tohumlu düzenin ayırt edebileceği en küçük farkın çok altında kaldı. Ajanlar güven terimine de
+        tutarlı bir ağırlık vermedi.
+      belge: docs/development/phase-10-m5-design.md
+      terimler: [kol-kodlari-m5-gercek, s-obs, karistirilmis-kontrol, mde, siralama-tabani]
+
 sss:
   baslik: Sık sorulanlar
   sorular:
