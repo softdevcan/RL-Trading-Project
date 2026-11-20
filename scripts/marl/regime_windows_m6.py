@@ -10,6 +10,12 @@ Tarihler MARL panelinin seanslari (`data/marl/panel_m2.npz`), pencere satirlari 
 Kollar arasi uyusma (ayni gun ayni hucre orani) betimsel. Sonuc yok; yalniz tasarim girdisi.
 
     python scripts/marl/regime_windows_m6.py --out docs/development/measurements/phase10-m6/regime_windows.json
+
+`--test-years` (K-M6-4, kullanici karari 2026-11-20): wf-v1 test yillari (2021..2026-11-01) icin YALNIZ rejim etiketinin
+gun/donem sayimi. Seanslar XU100 serisinin islem gunleri (MARL paneli 2020'de biter). Hicbir politika, getiri ya da
+basarim okunmaz; pencere basarimla acilmis sayilmaz (beyan, M6 tasarimi §2.1).
+
+    python scripts/marl/regime_windows_m6.py --test-years --out docs/development/measurements/phase10-m6/regime_test_years.json
 """
 from __future__ import annotations
 
@@ -38,6 +44,22 @@ def window_dates(dates: pd.DatetimeIndex) -> dict:
     train = dates[WARMUP_ROWS:][dates[WARMUP_ROWS:] <= pd.Timestamp(TRAIN_END)]
     val = dates[(dates > pd.Timestamp(TRAIN_END)) & (dates <= pd.Timestamp(VAL_END))]
     return {'train': train, 'val': val}
+
+
+def test_year_dates() -> dict:
+    """wf-v1 test katlari (evaluation/splits.py WF_V1): XU100 islem gunleri, kat basina + birlesik."""
+    from data.index_fetcher import DEFAULT_INDEX_CSV, load_index_close
+    from evaluation.splits import WF_V1
+    idx = load_index_close(DEFAULT_INDEX_CSV).index
+    idx = pd.DatetimeIndex(idx).tz_localize(None) if getattr(idx, 'tz', None) is not None else pd.DatetimeIndex(idx)
+    out = {}
+    for f in WF_V1.folds:
+        d = idx[(idx >= pd.Timestamp(f.test_start)) & (idx < pd.Timestamp(f.test_end))]
+        if len(d):
+            out[f'test_{f.name}'] = d
+    allv = idx[(idx >= pd.Timestamp(WF_V1.folds[0].test_start)) & (idx < pd.Timestamp(WF_V1.folds[-1].test_end))]
+    out['test_all'] = allv
+    return out
 
 
 def arm_labels() -> dict:
@@ -75,12 +97,17 @@ def _git(*args) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', required=True)
+    ap.add_argument('--test-years', action='store_true', help='wf-v1 test yillari, yalniz etiket sayimi (K-M6-4)')
     a = ap.parse_args()
-    z = np.load(PANEL, allow_pickle=True)
-    dates = pd.DatetimeIndex(pd.to_datetime(z['dates'].astype(str)))
-    win = window_dates(dates)
+    if a.test_years:
+        win = test_year_dates()
+    else:
+        z = np.load(PANEL, allow_pickle=True)
+        dates = pd.DatetimeIndex(pd.to_datetime(z['dates'].astype(str)))
+        win = window_dates(dates)
     arms = arm_labels()
-    res = {'note': 'M6 on olcumu (betimsel tasarim girdisi); performans sayisi YOK',
+    res = {'note': ('M6 on olcumu (betimsel tasarim girdisi); performans sayisi YOK'
+                    + ('; wf-v1 test yillari, YALNIZ etiket sayimi (K-M6-4), basarim okunmadi' if a.test_years else '')),
            'windows': {k: [str(v[0].date()), str(v[-1].date()), int(len(v))] for k, v in win.items()},
            'min_episode_days': R.MIN_EPISODE_DAYS, 'arms': {}, 'agreement': {}}
     on = {}
@@ -99,7 +126,8 @@ def main() -> int:
             res['agreement'][f'birincil_vs_{arm}.{w}'] = float((base[both] == other[both]).mean()) if both.any() else None
     from data.index_fetcher import DEFAULT_INDEX_CSV, DEFAULT_USDTRY_CSV
     res['provenance'] = {'commit': _git('rev-parse', 'HEAD'), 'git_status_porcelain': _git('status', '--porcelain'),
-                         'script_sha256': _sha(os.path.abspath(__file__)), 'panel_sha256': _sha(PANEL),
+                         'script_sha256': _sha(os.path.abspath(__file__)),
+                         'panel_sha256': None if a.test_years else _sha(PANEL),
                          'xu100_sha256': _sha(DEFAULT_INDEX_CSV), 'usdtry_sha256': _sha(DEFAULT_USDTRY_CSV)}
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, 'w', encoding='utf-8') as fh:

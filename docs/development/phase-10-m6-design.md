@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.1 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** TASLAK. Kod: yalnız ön ölçüm betiği. Kararlar K-M6-1..4 kullanıcıda (§5).
+**Sürüm:** v0.2 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -69,7 +69,9 @@ Sıra önerisi: M6a ve M6c (ana venv, GPU gerektirmez) → M7a/M7b (eğitim yok;
 - Geliştirme pencerelerindeki rejime koşullu her okuma betimseldir. Pilot sonuçlarına bakarak rejim tanımı ya da hücre sayısı seçmek **yasak kurtarma** sayılır; tanım bu belgede, sonuçtan önce sabitlenir.
 - M7 analizleri açıklama değil tanıdır: dikkat ağırlığı nedensel bir açıklama sayılmaz (Jain & Wallace 2019).
 
-## 5. Kullanıcı kararları
+## 5. Kullanıcı kararları (2026-11-20: dördü de öneri yönünde KAPANDI)
+
+**Kapanan kararlar:** K-M6-1 = iki hücre (eğilim) birincil, altı hücre betimsel; K-M6-2 = 63 seansta bir genişleyen yeniden uyum, yalnız filtrelenmiş, durum sayısı {2, 3} BIC ile ilk çapada sabit; K-M6-3 = S-reg ana tasarımda (planı izle) + 3 tohumlu maliyetsiz kısa pilot; K-M6-4 = 2021+ test yıllarında yalnız rejim etiketi sayımı (başarım okunmaz, beyan edilir).
 
 - **K-M6-1 — H4'ün rejim çözünürlüğü.** Öneri: **birincil çözünürlük iki hücre (eğilim)**, altı hücre yalnız betimsel. Gerekçe §2: altı hücrede dönem sayısı sıfıra iniyor. Alternatif: üç oynaklık düzeyi (eğilimden bağımsız).
 - **K-M6-2 — HMM uyum protokolü.** Öneri: çapalarda (63 seans) genişleyen pencereyle yeniden uyum, yalnız filtrelenmiş olasılık, durum sayısı {2, 3} BIC ile ilk çapada sabit, girdi USD bazlı XU100 günlük log getirisi. Alternatif: yalnız eğitim penceresinde tek uyum (daha basit, ama test penceresinde parametre bayatlar).
@@ -80,4 +82,5 @@ Sıra önerisi: M6a ve M6c (ana venv, GPU gerektirmez) → M7a/M7b (eğitim yok;
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı.
 - **v0.1 (2026-11-20):** İlk taslak. Ön ölçüm (§2): altı hücreli rejim geliştirme pencerelerinde sınanamaz, eğilim (iki hücre) 3–6 dönem. İş paketleri M6a–c, M7a–b; M8 engelleri beyan; kararlar K-M6-1..4. Kod: yalnız `regime_windows_m6.py`.
