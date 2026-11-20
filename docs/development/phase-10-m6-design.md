@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.2 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.3 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -71,6 +71,16 @@ Kaynak: `measurements/phase10-m6/regime_test_years.json` (`regime_windows_m6.py 
 
 Sıra önerisi: M6a ve M6c (ana venv, GPU gerektirmez) → M7a/M7b (eğitim yok; kayıtlı politikalarla) → M6b (gözlem değişikliği; parite testi) → §3.2.8 ortam hızı profili → M8 ön kaydı.
 
+### 3.1 M6a durumu (2026-11-20): kod + ölçüm
+
+Kod: `evaluation/regimes_hmm.py` (test `tests/test_regimes_hmm.py` 4/4: B0 kesme değişmezliği + düzeltilmiş olasılık mutasyonu, çapa öncesi uyum, deterministik uyum, BIC, kanonik sıra). Ölçüm: `measurements/phase10-m6/hmm_regimes.json` (geliştirme pencereleri, temiz ağaç `d9a9b4f`) ve `hmm_regimes_test_years.json` (wf-v1 test yılları, yalnız etiket, temiz ağaç `9304b3a`). Başarım okunmadı.
+
+- **Tekrar üretim hatası (test yakaladı, düzeltildi):** statsmodels `search_reps` rastgele başlangıçları NumPy'ın küresel üreticisinden çekiyor; tohumsuz uyum aynı veride farklı parametre veriyordu (kesme değişmezliği ~1e-5 ile kırıldı). Uyum artık sabit tohumla (`FIT_SEED`), küresel durum geri yüklenerek yapılıyor. İlk çapa varsayılan 100 iterasyonda yakınsamıyordu; `MAXITER = 500` ile 31 + 54 uyumun hepsi yakınsadı.
+- **Durum sayısı:** ilk çapada (2013-06-03, MARL panelinin ilk seansı) BIC K = 3'ü seçti (K = 2: 8.774, K = 3: 8.738). **Beyan:** ilk çapanın tarihi, scratchpad'deki bir denemede BIC'in çapaya bağlı olduğu (2010 çapasında K = 2) görüldükten sonra "olasılığın gerektiği ilk gün" ilkesine bağlandı; başarım okunmadı.
+- **Kanonik sıra tutarlı:** 85 uyumun hepsinde σ'ya göre artan sıra ortalamaya göre azalan sırayla aynı (`mean_desc_with_sd`): en sakin durumun ortalama getirisi en yüksek, en çalkantılı durumunki en düşük.
+- **İki hücreli eşleme seçimi (öneri, kullanıcı onayı bekliyor):** "en çalkantılı durum ≥ 0,5 → düşüş benzeri" (`two_cell`) K = 3'te dejenere: o durum nadir bir kriz durumu (eğitim 35 gün, ≥ 20 günlük dönem yok; birleşik test 69 gün). **"En sakin durum ≥ 0,5 ↔ geri kalanlar" (`calm_vs_rest`)** dengeli: eğitim 570 / 773 gün (11 / 15 dönem), doğrulama 253 / 247 (5 / 6), birleşik test 670 / 784 (9 / 11).
+- **İkinci tanım birincilin tekrarı değil:** `calm_vs_rest` ile kural tabanlı birincil eğilim etiketinin gün bazında uyuşması geliştirme pencerelerinde 0,74 / 0,70, birleşik testte **0,52** (yıllara göre 0,31–0,66). Test döneminde HMM ikinci tanımı eğilimi değil oynaklık durumunu ölçüyor. Sonuç: M8'de AQ3'ün HMM ile tekrarı "aynı sorunun ikinci etiketle sınanması" diye değil, "oynaklık durumuna koşullu ayrı bir okuma" diye yazılmalı (K10 döngüselliğine ek beyan).
+
 **M8'e giden yolda bilinen engeller (bu belgenin kapsamı dışında, beyan):**
 - MARL paneli (`panel_m2.npz`) 2020-12-31'de bitiyor; 2021+ test pencereleri için panel uzatılmalı.
 - Satış engeli marj takvimi 2020-12-31'den sonra doğrulanmamış; kod o tarihten sonra hata veriyor (`PRICE_MARGIN_VERIFIED_UNTIL`). 2021+ için marj geçmişi kaynakla doğrulanmalı (M2 tasarımı §2.5).
@@ -96,5 +106,6 @@ Sıra önerisi: M6a ve M6c (ana venv, GPU gerektirmez) → M7a/M7b (eğitim yok;
 
 ## Versiyon geçmişi
 
+- **v0.3 (2026-11-20):** §3.1 M6a kod + ölçüm: K = 3, `calm_vs_rest` önerisi, test yıllarında birincil eğilimle uyuşma 0,52 (ikinci tanım oynaklık durumunu ölçüyor). M6c kodu (`evaluation/regime_contrast.py`, test 3/3).
 - **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı. §2.1: wf-v1 test yıllarında yalnız etiket sayımı (birleşik testte eğilim hücresi başına 8–9 dönem, kat başına 1–3).
 - **v0.1 (2026-11-20):** İlk taslak. Ön ölçüm (§2): altı hücreli rejim geliştirme pencerelerinde sınanamaz, eğilim (iki hücre) 3–6 dönem. İş paketleri M6a–c, M7a–b; M8 engelleri beyan; kararlar K-M6-1..4. Kod: yalnız `regime_windows_m6.py`.
