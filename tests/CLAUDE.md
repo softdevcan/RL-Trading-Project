@@ -113,7 +113,7 @@ venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: 
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
                                            #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)
 venv-marl\Scripts\python tests/test_marl_m3.py  # Faz 10/M3 BenchMARL gorevi: tek grup, bolum sonu terminated=False +
-                                           #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu (18, ~2 dk)
+                                           #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu, M6b S-reg yayin blogu (extras_path) (19, ~2 dk)
 venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (attn, gat): graf maskesi, esit butce (formul, attn = gat,
                                            #          M4 boyutlarinda none'a gore <= %10), gat'te komsu olmayan ajan etkisiz + attn'de etkili,
                                            #          self (M4b mimari-es kontrol: ayni parametre, iletisim yok), M7a gonderici maskesi (kapali gonderici etkisiz, None bit-es, durum sozlugunde yok), kisa MAPPO + tohum bit-es + kaydet/yukle (19, ~1 dk; YALNIZ venv-marl)

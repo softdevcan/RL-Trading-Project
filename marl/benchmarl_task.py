@@ -29,7 +29,8 @@ from marl import panel as PN
 from marl.env import MarlPortfolioEnv
 
 TASK_KEYS = ('panel_path', 'start_row', 'end_row', 'mode', 'alpha', 'cost_bps_roundtrip', 'reward_term',
-             'reward_scale', 'episode_len', 'pred_path', 'norm_stats_path', 'use_state', 'limit_down_gap')
+             'reward_scale', 'episode_len', 'pred_path', 'norm_stats_path', 'use_state', 'limit_down_gap',
+             'extras_path')
 
 
 def load_pred(path: Optional[str], panel: dict) -> Optional[dict]:
@@ -40,6 +41,20 @@ def load_pred(path: Optional[str], panel: dict) -> Optional[dict]:
     if not (np.array_equal(d['dates'], panel['dates']) and np.array_equal(d['symbols'], panel['symbols'])):
         raise ValueError(f"tahmin blogu panel ile hizali degil: {path}")
     return {k: d[k] for k in ('p_up_cal', 'pred_logret', 'model_disagreement')}
+
+
+def load_extras(path: Optional[str], panel: dict) -> Optional[np.ndarray]:
+    """Yayin blogu .npz (M6b S-reg) -> extras [T, E]; panel tarih hizasi zorunlu. Blok onceden olceklenmistir
+    (yalniz egitim satirlari, `scripts/marl/build_sreg_m6.py`); ortam olcek uygulamaz."""
+    if not path:
+        return None
+    d = np.load(path, allow_pickle=False)
+    if not np.array_equal(d['dates'], panel['dates']):
+        raise ValueError(f"yayin blogu panel ile hizali degil: {path}")
+    x = np.asarray(d['extras'], dtype=np.float64)
+    if x.ndim != 2 or x.shape[0] != len(panel['dates']) or not np.isfinite(x).all():
+        raise ValueError(f"yayin blogu [T, E] ve sonlu olmali: {path} {x.shape}")
+    return x
 
 
 def make_env(cfg: dict) -> MarlPortfolioEnv:
@@ -57,7 +72,7 @@ def make_env(cfg: dict) -> MarlPortfolioEnv:
         alpha=float(cfg.get('alpha', 0.25)), cost_bps_roundtrip=float(cfg.get('cost_bps_roundtrip', 20.0)),
         reward_term=cfg.get('reward_term', 'excess'), reward_scale=float(cfg.get('reward_scale', 100.0)),
         episode_len=int(cfg.get('episode_len', 252)), pred=load_pred(cfg.get('pred_path'), arrays),
-        limit_down_gap=cfg.get('limit_down_gap', 'schedule'))
+        extras=load_extras(cfg.get('extras_path'), arrays), limit_down_gap=cfg.get('limit_down_gap', 'schedule'))
 
 
 class MarlTask(Task):
