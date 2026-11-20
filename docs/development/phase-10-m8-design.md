@@ -62,6 +62,24 @@
 - Önce **boyut ölçümü** (15–20 dk, GPU): 6 tohum, toplu ortam, 3 eş zamanlı koşu. Çıktı: tohum başına doğrulama Sharpe'ının yayılımı (σ_tohum). Bundan asıl ölçüm için gereken tohum sayısı ve M8 karşıtlığının en küçük saptanabilir etkisi (MDE) hesaplanır. Asıl ölçüm ayrı bir ön kayıtla koşulur.
 - Kullanım: birincil karşıtlığın etkisi boş dağılımın %95 üst ucunu aşmadıkça "fark var" yazılmaz.
 
+### 3.1 Boyut ölçümü — ÖN KAYIT v1.0 (2026-11-21, sonuçtan önce)
+
+**Soru.** Referans MAPPO yapılandırmasının M8 protokolündeki (kontrol noktası seçimi, örneklem dışı yıl) tohumdan tohuma yayılımı ne kadar? Bu ölçüm bir kol karşılaştırması değildir. Çıktısı asıl gürültü tabanı ölçümünün ve M8 tohum sayısının boyutudur (K-M8-3, K-M8-5).
+
+**Kurgu.**
+- Panel `panel_m8`. Sözde kat "2020": eğitim 2013-06..2018-12-31, doğrulama 2019, örneklem dışı yıl 2020. Hepsi M2–M7 geliştirme penceresinde; 2021+ okunmaz.
+- Yapılandırma §1'deki referans MAPPO: F = 600.000, 10 kontrol noktası, toplu toplayıcı (`n_envs` 10), 20 bps, α = 0,25, lr 5e-4.
+- Tohumlar 101–106 (daha önce kullanılmadı). GPU'da 3 eş zamanlı koşu.
+- Düzenleyici `scripts/marl/run_noise_m8.py`, okuma `scripts/marl/analyze_noise_m8.py`. İkisi koşudan önce commit'lenir; koşular temiz ağaçtan yapılır.
+
+**Okuma (betimsel; karar yok).**
+- Tohum başına seçilen noktanın doğrulama Sharpe'ı ve 2020 fazla getiri Sharpe'ı; seçimi tanımsız (degenerate) tohum sayısı.
+- σ_tohum: 2020 Sharpe'larının örnek standart sapması.
+- Boş dağılım ilk bakış: 6 tohumun 3 / 3 bölmelerinde (10 ayrık bölme) grup ortalamaları farkı D. En büyük |D| ve çeyrekleri raporlanır.
+- MDE tablosu: M8 eşli tasarımında k ∈ {6, 8, 12, 16, 24} tohum × 6 kat, tek yönlü %5, güç %80, σ_fark = √2 · σ_tohum. Bağımsız kollar ve katlar arası aynı varyans varsayılır (beyan).
+
+**Sınırlar (önceden).** Tek bir örneklem dışı yıl (2020, COVID oynaklığı) yayılımı tipik olmayan biçimde büyütebilir; okuma bunu beyan eder. Sonuç M8 karar eşiğini değiştirmez, yalnız boyutu belirler. Ek tohum ya da başka bir pencere ancak yeni bir ön kayıtla.
+
 ## 4. Karar bekleyen maddeler (kullanıcı)
 
 | # | Madde | Öneri |
