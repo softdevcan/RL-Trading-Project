@@ -121,9 +121,19 @@ def cross_seed(runs: list) -> dict:
         off = allowed & ~np.eye(len(allowed), dtype=bool)
         mats = [np.array(r['attention']['mean_matrix'])[off] for r in rs]
         corr = [float(np.corrcoef(a, b)[0, 1]) for a, b in itertools.combinations(mats, 2)]
+        # Tek bicimliden sapma: W_ij - 1/k_i. Dikkat neredeyse tek bicimliyken ham korelasyon yalniz graf derecesini
+        # (satir basina 1/k) olcer ve ~1 cikar; anlamli tohum benzerligi sapmalarin korelasyonudur.
+        k = allowed.sum(axis=1, keepdims=True).astype(float)
+        uni = np.broadcast_to(1.0 / k, allowed.shape)[off]
+        res = [m - uni for m in mats]
+        rcorr = [float(np.corrcoef(a, b)[0, 1]) for a, b in itertools.combinations(res, 2)]
         stack = np.stack(mats)
         cv = stack.std(axis=0, ddof=1) / np.maximum(stack.mean(axis=0), 1e-12) if len(mats) > 1 else None
-        out[arm] = {'n_seeds': len(rs), 'pairwise_corr': corr, 'pairwise_corr_mean': float(np.mean(corr)) if corr else None,
+        out[arm] = {'n_seeds': len(rs), 'pairwise_corr_raw': corr,
+                    'pairwise_corr_raw_mean': float(np.mean(corr)) if corr else None,
+                    'pairwise_corr_dev_from_uniform': rcorr,
+                    'pairwise_corr_dev_from_uniform_mean': float(np.mean(rcorr)) if rcorr else None,
+                    'dev_from_uniform_abs_mean': [float(np.mean(np.abs(x))) for x in res],
                     'entry_cv_median': None if cv is None else float(np.median(cv)),
                     'norm_entropy_mean': [r['attention']['norm_entropy_mean'] for r in rs],
                     'delta_uniform': [r['variants']['uniform']['delta_sharpe_X'] for r in rs],
@@ -138,7 +148,20 @@ def main() -> int:
     ap.add_argument('--window', choices=('train', 'val'), default='train')
     ap.add_argument('--n-perm', type=int, default=N_PERM)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--rescore', action='store_true',
+                    help='--out dosyasindaki kayitli dikkat matrislerinden yalniz cross_seed yeniden hesaplanir (kosu yok)')
     a = ap.parse_args()
+    if a.rescore:
+        with open(a.out, encoding='utf-8') as fh:
+            out = json.load(fh)
+        out['cross_seed'] = cross_seed(out['runs'])
+        out['cross_seed_rescore'] = {'commit': _git('rev-parse', 'HEAD'), 'git_status_porcelain': _git('status', '--porcelain'),
+                                     'script_sha256': _sha(os.path.abspath(__file__)),
+                                     'note': 'yalniz cross_seed yeniden hesaplandi (tek bicimliden sapma korelasyonu); '
+                                             'olcum ve provenance degismedi'}
+        with open(a.out, 'w', encoding='utf-8') as fh:
+            json.dump(out, fh, ensure_ascii=False, indent=1)
+        return 0
     from marl import panel as PN
 
     runs = list(a.runs or [])
