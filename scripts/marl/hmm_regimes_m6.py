@@ -51,6 +51,7 @@ def main() -> int:
            'first_anchor': first_anchor, 'refit_every': H.REFIT_EVERY, 'k': h.k,
            'bic_first': {str(k): v for k, v in h.bic_first.items()}, 'n_anchors': len(h.fit_log),
            'all_converged': all(f['converged'] for f in h.fit_log),
+           'n_not_converged': int(sum(not f['converged'] for f in h.fit_log)),
            'mean_desc_with_sd_all': all(f['mean_desc_with_sd'] for f in h.fit_log),
            'mean_desc_with_sd_count': int(sum(f['mean_desc_with_sd'] for f in h.fit_log)),
            'fit_log': h.fit_log, 'seconds': round(secs, 1),
@@ -61,8 +62,12 @@ def main() -> int:
         trend = R.asof_labels(rule, d, 'trend')
         both = two.notna() & trend.notna()
         mapped = two[both].map({'bull_like': 'bull', 'bear_like': 'bear'})
+        cvr = R.asof_labels(lab, d, 'calm_vs_rest')
+        both2 = cvr.notna() & trend.notna()
+        mapped2 = cvr[both2].map({'calm': 'bull', 'not_calm': 'bear'})
         res['by_window'][w] = {
-            'two_cell': summarize(two),
+            'two_cell': summarize(two), 'calm_vs_rest': summarize(cvr),
+            'agreement_calm_vs_rest_with_rule_trend': float((mapped2 == trend[both2]).mean()) if both2.any() else None,
             'state': summarize(state.map(lambda v: f's{int(v)}' if pd.notna(v) else np.nan)),
             'agreement_with_rule_trend': float((mapped == trend[both]).mean()) if both.any() else None,
             'mean_p_high_vol': float(R.asof_labels(lab, d, 'p_high_vol').astype(float).mean())}

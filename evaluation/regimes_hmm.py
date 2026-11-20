@@ -138,13 +138,18 @@ def filtered_regimes(r: pd.Series, first_anchor: str, refit_every: int = REFIT_E
 
 
 def hmm_labels(h: HMMRegimes) -> pd.DataFrame:
-    """Etiketler: 'state' = argmax (kanonik sira), 'two_cell' = en yuksek sigma durumu olasiligi >= 0,5 ise 'bear_like',
+    """Etiketler: 'state' = argmax (kanonik sira); 'calm_vs_rest' = en sakin durum olasiligi >= 0,5 ise 'calm';
+    'two_cell' = en yuksek sigma durumu olasiligi >= 0,5 ise 'bear_like',
     aksi halde 'bull_like' (K-M6-1 iki hucreli okumanin ikinci tanim karsiligi; adlandirma `mean_desc_with_sd`
     olcumune dayanir, olcum tutmazsa adlar yorum tasimaz)."""
     p = h.probs
     hi = p[f'p{h.k - 1}']
-    return pd.DataFrame({'state': p.values.argmax(axis=1), 'p_high_vol': hi,
-                         'two_cell': np.where(hi >= 0.5, 'bear_like', 'bull_like')}, index=p.index)
+    calm = p['p0']
+    return pd.DataFrame({'state': p.values.argmax(axis=1), 'p_high_vol': hi, 'p_calm': calm,
+                         'two_cell': np.where(hi >= 0.5, 'bear_like', 'bull_like'),
+                         # Alternatif iki hucre (M6 tasarimi §3.1): en sakin durum ('calm') <-> geri kalanlar. K = 3'te en yuksek
+                         # sigma durumu nadir bir kriz durumu oldugu icin 'two_cell' neredeyse hep 'bull_like' cikiyor (olculdu).
+                         'calm_vs_rest': np.where(calm >= 0.5, 'calm', 'not_calm')}, index=p.index)
 
 
 def load_primary_returns() -> pd.Series:
