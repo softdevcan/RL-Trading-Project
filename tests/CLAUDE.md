@@ -90,6 +90,8 @@ python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etik
                                            #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet; kayan tercil + USD kolu B0, episodes_min20 (17, ag yok)
 python tests/test_regimes_hmm.py           # Faz 10/M6a: HMM ikinci rejim tanimi — yalniz filtrelenmis olasilik B0 (3 kesim) + duzeltilmis
                                            #          olasilik mutasyonu, capa oncesi uyum, deterministik uyum (search_reps kuresel RNG), BIC, kanonik sira (4, ~5 sn; ana venv)
+python tests/test_regime_contrast.py       # Faz 10/M6c: rejime kosullu kol karsilastirmasi (H4 araci) — hucre D + kontrast elle, guc,
+                                           #          etkisiz seride red orani <= 0,12 (100 seri, dairesel blok bootstrap) (3, ~15 sn; ana venv)
 python tests/test_calibration.py           # Faz 9/F1-F4: ECE (15 kutu) ve Brier elle, sicaklik T~3 bulur; ensemble
                                            #          legacy/calibrated, p_up_raw+p_up_cal, fiyat ayni, kaydet/yukle, test
                                            #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu; AUC/BSS bilgi kapisi (18, ~1 dk)
