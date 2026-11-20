@@ -1,0 +1,47 @@
+{
+ "note": "Faz 10 §3.2.8 adim 2 sure olcumu; basarim okunmaz",
+ "commit": "64db8b445ecd15a6c0a1f343c5cee752bbb2efd1",
+ "git_status_porcelain": "",
+ "frames": 30000,
+ "script_sha256": "d53ab0bfc2c3433f30570a4814b6675d26718e58f324178fdfeac59be9de8a1f",
+ "runs": {
+  "parallel_n10": {
+   "train_wall_s": 29.3,
+   "process_wall_s": 38.6,
+   "policy_sha256": "02a722fc1729afff532346418d81734af336b24b11ddc1f0b66e0139c43f5849"
+  },
+  "batched_n10": {
+   "train_wall_s": 18.9,
+   "process_wall_s": 23.9,
+   "policy_sha256": "90602a5481536af6551a48b705c759a996b9bb9f822227777b8e7309c67433dc"
+  },
+  "batched_n30": {
+   "train_wall_s": 14.2,
+   "process_wall_s": 20.4,
+   "policy_sha256": "f5d8af3b0537bb7e1b172bf4906f5f23c848cf683d2a8ba17e2f4a44bba17e7c"
+  },
+  "batched_n60": {
+   "train_wall_s": 12.9,
+   "process_wall_s": 20.8,
+   "policy_sha256": "81c17242b591f1f226ace2d04ec504ac8e92ef2156c78e5224075be4197b9c78"
+  },
+  "concurrent3_batched_n10": {
+   "total_wall_s": 34.0,
+   "train_wall_s": [
+    28.7,
+    27.6,
+    28.4
+   ]
+  }
+ },
+ "speedup_train_wall_vs_parallel_n10": {
+  "batched_n10": 1.5502645502645505,
+  "batched_n30": 2.063380281690141,
+  "batched_n60": 2.2713178294573644
+ },
+ "throughput_runs_per_hour": {
+  "parallel_n10_one_at_a_time": 93.2642487046632,
+  "batched_n10_one_at_a_time": 150.62761506276152,
+  "batched_n10_three_concurrent": 317.6470588235294
+ }
+}
