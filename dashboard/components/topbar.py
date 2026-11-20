@@ -73,7 +73,21 @@ def _search_options() -> list[dict]:
         for item in items
     ]
     options.append({"label": "Hesap · Hesabim", "value": "/dash/account"})
-    return options
+    return options + _glossary_options()
+
+
+def _glossary_options() -> list[dict]:
+    """Sozluk terimleri (K28 R4): "Sozluk · <terim>" -> Rehber sayfasinda terim capasi.
+
+    Tek kaynak `dashboard/content/glossary.yaml`; capa bicimi Rehber'deki `_anchor` ile ayni
+    (`#terim-<id>`). Ice aktarma burada: sayfa modulu ust cubuktan bagimsiz yuklenebilsin.
+    """
+    from dashboard.pages.guide import GLOSSARY_PATH_PREFIX, load_content
+    _, terms = load_content()
+    return [
+        {"label": f"Sözlük · {t['terim']}", "value": f"{GLOSSARY_PATH_PREFIX}{t['id']}"}
+        for t in sorted(terms, key=lambda t: t["terim"].casefold())
+    ]
 
 
 def create_topbar() -> html.Div:
@@ -93,7 +107,7 @@ def create_topbar() -> html.Div:
             dcc.Dropdown(
                 id="topbar-search",
                 options=_search_options(),
-                placeholder="Sayfa ara...",
+                placeholder="Sayfa ya da terim ara...",
                 className="topbar-search",
                 clearable=False,
                 optionHeight=34,
@@ -219,20 +233,30 @@ def register_callbacks(app):
 
     @app.callback(
         Output("url", "pathname"),
+        Output("url", "hash"),
         Output("topbar-search", "value"),
         Input("topbar-search", "value"),
         State("url", "pathname"),
         prevent_initial_call=True,
     )
     def go_to_page(target, current):
-        """Aramadan secilen sayfaya git ve kutuyu bosalt.
+        """Aramadan secilen sayfaya (ya da sozluk terimine) git ve kutuyu bosalt.
 
         Kutu bosaltilmazsa ayni sayfa ikinci kez secilemez (deger degismedigi
         icin callback tetiklenmez). Bosaltma callback'i tekrar tetikler; None
         gelen tur hicbir sey yapmadan cikar.
+
+        Sozluk secenegi `/dash/guide#terim-<id>`: yol ve capa ayri yazilir
+        (dcc.Location ikisini tek history kaydinda birlestirir). Zaten Rehber'deysek
+        yalniz capa degisir, sayfa yeniden cizilmez; kaydirmayi Rehber'in
+        `url.hash` dinleyen istemci geri cagrisi yapar.
         """
-        if not target or target == current:
-            # no_update: ayni degeri geri yazmak display_page'i bosuna
+        if not target:
+            return no_update, no_update, None
+        path, _, anchor = target.partition("#")
+        new_hash = f"#{anchor}" if anchor else ""
+        if path == current:
+            # no_update: ayni yolu geri yazmak display_page'i bosuna
             # tetikleyip sayfayi yeniden cizerdi.
-            return no_update, None
-        return target, None
+            return no_update, (new_hash if anchor else no_update), None
+        return path, new_hash, None

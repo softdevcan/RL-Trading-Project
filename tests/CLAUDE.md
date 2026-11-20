@@ -54,8 +54,8 @@ python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        CSS siniflarimiz, devre disi
                                            #        varyantlar (92 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
-python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama,
-                                           #          bildirimler (39 kontrol)
+python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama (+ K28 R4 sozluk),
+                                           #          bildirimler (43 kontrol)
 python tests/test_delete_artifacts.py      # Faz 8/I: model + optimizasyon kaydi
                                            #          silme, RBAC (32 kontrol)
 python tests/test_account_profile.py       # Faz 8/F: profil ucu, oturum yonetimi,
