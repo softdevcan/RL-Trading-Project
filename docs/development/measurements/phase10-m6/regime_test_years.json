@@ -1,0 +1,951 @@
+{
+ "note": "M6 on olcumu (betimsel tasarim girdisi); performans sayisi YOK; wf-v1 test yillari, YALNIZ etiket sayimi (K-M6-4), basarim okunmadi",
+ "windows": {
+  "test_2021": [
+   "2021-01-04",
+   "2021-12-31",
+   248
+  ],
+  "test_2022": [
+   "2022-01-03",
+   "2022-12-30",
+   252
+  ],
+  "test_2023": [
+   "2023-01-02",
+   "2023-12-29",
+   248
+  ],
+  "test_2024": [
+   "2024-01-02",
+   "2024-12-31",
+   249
+  ],
+  "test_2025": [
+   "2025-01-02",
+   "2025-12-31",
+   250
+  ],
+  "test_2026": [
+   "2026-01-02",
+   "2026-10-30",
+   207
+  ],
+  "test_all": [
+   "2021-01-04",
+   "2026-10-30",
+   1454
+  ]
+ },
+ "min_episode_days": 20,
+ "arms": {
+  "birincil": {
+   "test_2021": {
+    "regime": {
+     "bear_high": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 3
+     },
+     "bear_low": {
+      "days": 104,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 1,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 23,
+      "episodes": 6,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 18,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 25,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 182,
+      "episodes": 6,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 66,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2022": {
+    "regime": {
+     "bear_high": {
+      "days": 72,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 2,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 42,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 60,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 9,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 67,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 116,
+      "episodes": 4,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 136,
+      "episodes": 4,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2023": {
+    "regime": {
+     "bear_high": {
+      "days": 57,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 188,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 3,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 57,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 191,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2024": {
+    "regime": {
+     "bear_high": {
+      "days": 8,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_low": {
+      "days": 22,
+      "episodes": 8,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 3,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 49,
+      "episodes": 9,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 90,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 107,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 142,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2025": {
+    "regime": {
+     "bear_high": {
+      "days": 60,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 90,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 21,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 60,
+      "episodes": 5,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 19,
+      "episodes": 6,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 171,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 79,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2026": {
+    "regime": {
+     "bear_low": {
+      "days": 18,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 34,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 79,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 76,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 52,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 155,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_all": {
+    "regime": {
+     "bear_high": {
+      "days": 274,
+      "episodes": 20,
+      "episodes_min20": 6
+     },
+     "bear_low": {
+      "days": 236,
+      "episodes": 19,
+      "episodes_min20": 2
+     },
+     "bear_mid": {
+      "days": 175,
+      "episodes": 20,
+      "episodes_min20": 3
+     },
+     "bull_high": {
+      "days": 274,
+      "episodes": 21,
+      "episodes_min20": 4
+     },
+     "bull_low": {
+      "days": 215,
+      "episodes": 20,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 280,
+      "episodes": 26,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 685,
+      "episodes": 41,
+      "episodes_min20": 8
+     },
+     "bull": {
+      "days": 769,
+      "episodes": 41,
+      "episodes_min20": 9
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  },
+  "nominal": {
+   "test_2021": {
+    "regime": {
+     "bear_low": {
+      "days": 50,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 71,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 101,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 26,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 50,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 198,
+      "episodes": 7,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2022": {
+    "regime": {
+     "bull_high": {
+      "days": 177,
+      "episodes": 2,
+      "episodes_min20": 2
+     },
+     "bull_low": {
+      "days": 9,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 66,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bull": {
+      "days": 252,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2023": {
+    "regime": {
+     "bear_high": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 244,
+      "episodes": 2,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull": {
+      "days": 244,
+      "episodes": 2,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2024": {
+    "regime": {
+     "bear_high": {
+      "days": 1,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 48,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 13,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 28,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 159,
+      "episodes": 6,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 49,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 200,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2025": {
+    "regime": {
+     "bear_high": {
+      "days": 56,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 23,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 6,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 6,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 39,
+      "episodes": 5,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 120,
+      "episodes": 3,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 85,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 165,
+      "episodes": 8,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2026": {
+    "regime": {
+     "bear_high": {
+      "days": 2,
+      "episodes": 2,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 29,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 45,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 61,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 70,
+      "episodes": 5,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 31,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 176,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_all": {
+    "regime": {
+     "bear_high": {
+      "days": 63,
+      "episodes": 8,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 73,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 83,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "bull_high": {
+      "days": 556,
+      "episodes": 10,
+      "episodes_min20": 5
+     },
+     "bull_low": {
+      "days": 238,
+      "episodes": 19,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 441,
+      "episodes": 18,
+      "episodes_min20": 7
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 219,
+      "episodes": 19,
+      "episodes_min20": 4
+     },
+     "bull": {
+      "days": 1235,
+      "episodes": 19,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  },
+  "rolling5y": {
+   "test_2021": {
+    "regime": {
+     "bear_high": {
+      "days": 77,
+      "episodes": 7,
+      "episodes_min20": 3
+     },
+     "bear_low": {
+      "days": 91,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 14,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 34,
+      "episodes": 8,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 32,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 182,
+      "episodes": 6,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 66,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2022": {
+    "regime": {
+     "bear_high": {
+      "days": 72,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 44,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 67,
+      "episodes": 6,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_mid": {
+      "days": 65,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 116,
+      "episodes": 4,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 136,
+      "episodes": 4,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2023": {
+    "regime": {
+     "bear_high": {
+      "days": 50,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 7,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_high": {
+      "days": 145,
+      "episodes": 13,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 46,
+      "episodes": 10,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 57,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 191,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2024": {
+    "regime": {
+     "bear_high": {
+      "days": 7,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_low": {
+      "days": 34,
+      "episodes": 14,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 66,
+      "episodes": 11,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 98,
+      "episodes": 10,
+      "episodes_min20": 3
+     },
+     "bull_mid": {
+      "days": 44,
+      "episodes": 8,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 107,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 142,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2025": {
+    "regime": {
+     "bear_high": {
+      "days": 58,
+      "episodes": 1,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 100,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 13,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 71,
+      "episodes": 9,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 8,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 171,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 79,
+      "episodes": 10,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_2026": {
+    "regime": {
+     "bear_low": {
+      "days": 27,
+      "episodes": 5,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 25,
+      "episodes": 4,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 79,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 76,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 52,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull": {
+      "days": 155,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "test_all": {
+    "regime": {
+     "bear_high": {
+      "days": 264,
+      "episodes": 18,
+      "episodes_min20": 6
+     },
+     "bear_low": {
+      "days": 252,
+      "episodes": 31,
+      "episodes_min20": 2
+     },
+     "bear_mid": {
+      "days": 169,
+      "episodes": 31,
+      "episodes_min20": 2
+     },
+     "bull_high": {
+      "days": 246,
+      "episodes": 27,
+      "episodes_min20": 2
+     },
+     "bull_low": {
+      "days": 252,
+      "episodes": 23,
+      "episodes_min20": 5
+     },
+     "bull_mid": {
+      "days": 271,
+      "episodes": 32,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 685,
+      "episodes": 41,
+      "episodes_min20": 8
+     },
+     "bull": {
+      "days": 769,
+      "episodes": 41,
+      "episodes_min20": 9
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  }
+ },
+ "agreement": {
+  "birincil_vs_nominal.test_2021": 0.3588709677419355,
+  "birincil_vs_rolling5y.test_2021": 0.8306451612903226,
+  "birincil_vs_nominal.test_2022": 0.3373015873015873,
+  "birincil_vs_rolling5y.test_2022": 0.9444444444444444,
+  "birincil_vs_nominal.test_2023": 0.7741935483870968,
+  "birincil_vs_rolling5y.test_2023": 0.7983870967741935,
+  "birincil_vs_nominal.test_2024": 0.6385542168674698,
+  "birincil_vs_rolling5y.test_2024": 0.7389558232931727,
+  "birincil_vs_nominal.test_2025": 0.472,
+  "birincil_vs_rolling5y.test_2025": 0.908,
+  "birincil_vs_nominal.test_2026": 0.5265700483091788,
+  "birincil_vs_rolling5y.test_2026": 0.9565217391304348,
+  "birincil_vs_nominal.test_all": 0.517193947730399,
+  "birincil_vs_rolling5y.test_all": 0.8603851444291609
+ },
+ "provenance": {
+  "commit": "37baf97e24413fd8b919736a1b75f7588524d497",
+  "git_status_porcelain": "",
+  "script_sha256": "328fbe05a4f1464240fab1c0bff5ad47b7e1794b6a02f6707cf286ff3840bc56",
+  "panel_sha256": null,
+  "xu100_sha256": "e4adbef53162df7dff1e6a340377a72d355bf775893365741bece83bcb5a6b37",
+  "usdtry_sha256": "5b87b4a80e4f828011f5f34cc4b8d84015471802e0b68336cbb139d1e6cf9227"
+ }
+}

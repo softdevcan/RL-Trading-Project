@@ -45,6 +45,20 @@ Kaynak: `measurements/phase10-m6/regime_windows.json` (`scripts/marl/regime_wind
 - Kollar arası uyuşma altı hücrede düşük (0,51–0,67): "rejim" sonucu etiket seçimine duyarlı olacaktır. Bu, duyarlılık kollarının M8'de neden zorunlu olduğunu gösteriyor.
 - H4'ün kesin sınaması M8'in test pencerelerine (wf-v1, 2021..2026) kalır. Bu pencerelerdeki rejim sayımı **başarım okunmadan** yapılabilir, ama 2021+ m0p-v2 doğrulayıcı penceresi olduğu için bu belgede yapılmadı (karar K-M6-4).
 
+### 2.1 wf-v1 test yılları: yalnız etiket sayımı (K-M6-4)
+
+Kaynak: `measurements/phase10-m6/regime_test_years.json` (`regime_windows_m6.py --test-years`, temiz ağaç). Seanslar XU100 işlem günleri (MARL paneli 2020'de biter); 2021-01-04..2026-10-30, 1.454 seans. **Yalnız endeks etiketi sayıldı; hiçbir politika, getiri ya da başarım okunmadı.** Bu yüzden pencere "başarımla açılmış" sayılmaz; `EXPOSED_EVAL_WINDOWS`'a eklenmedi (beyan).
+
+| Etiket | Birleşik test: bear gün / ≥20 g dönem | bull gün / ≥20 g dönem | Kat (yıl) başına ≥20 g dönem |
+|---|---|---|---|
+| Birincil (USD bazlı) eğilim | 685 / 8 | 769 / 9 | 1–3 |
+| Nominal TL eğilim | 219 / 4 | 1.235 / 4 | 0–2 |
+
+- Altı hücrede birleşik testte hücre başına 2–6 dönem var; kat başına çoğu hücre 0–1.
+- Kollar arası uyuşma (altı hücre, birleşik): birincil ↔ 5 yıllık kayan 0,86, birincil ↔ nominal 0,52. Nominal TL etiketi enflasyonla yükselişe kayıyor (2022'de hiç düşüş günü yok), birincilin USD bazlı seçilme gerekçesiyle tutarlı (evaluation/CLAUDE.md, rejim maddesi).
+
+**Okuma (tasarım girdisi):** M8'de H4 tek tek katlarda sınanamaz (kat başına 1–3 dönem). Çıkarım planın dediği gibi katlar birleştirilerek ve blok bootstrap ile yapılmalı; birleşik testte iki eğilim hücresinin her birinde 8–9 dönem var. Bu da küçük bir sayı: H4 için güç M8 ön kaydında ayrıca hesaplanmalı.
+
 ## 3. İş paketleri (öneri)
 
 | # | İş | Neye hizmet eder | Kaynak | Hesap |
@@ -82,5 +96,5 @@ Sıra önerisi: M6a ve M6c (ana venv, GPU gerektirmez) → M7a/M7b (eğitim yok;
 
 ## Versiyon geçmişi
 
-- **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı.
+- **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı. §2.1: wf-v1 test yıllarında yalnız etiket sayımı (birleşik testte eğilim hücresi başına 8–9 dönem, kat başına 1–3).
 - **v0.1 (2026-11-20):** İlk taslak. Ön ölçüm (§2): altı hücreli rejim geliştirme pencerelerinde sınanamaz, eğilim (iki hücre) 3–6 dönem. İş paketleri M6a–c, M7a–b; M8 engelleri beyan; kararlar K-M6-1..4. Kod: yalnız `regime_windows_m6.py`.
