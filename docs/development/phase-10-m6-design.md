@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.3 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.4 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -81,6 +81,27 @@ Kod: `evaluation/regimes_hmm.py` (test `tests/test_regimes_hmm.py` 4/4: B0 kesme
 - **İki hücreli eşleme seçimi (öneri, kullanıcı onayı bekliyor):** "en çalkantılı durum ≥ 0,5 → düşüş benzeri" (`two_cell`) K = 3'te dejenere: o durum nadir bir kriz durumu (eğitim 35 gün, ≥ 20 günlük dönem yok; birleşik test 69 gün). **"En sakin durum ≥ 0,5 ↔ geri kalanlar" (`calm_vs_rest`)** dengeli: eğitim 570 / 773 gün (11 / 15 dönem), doğrulama 253 / 247 (5 / 6), birleşik test 670 / 784 (9 / 11).
 - **İkinci tanım birincilin tekrarı değil:** `calm_vs_rest` ile kural tabanlı birincil eğilim etiketinin gün bazında uyuşması geliştirme pencerelerinde 0,74 / 0,70, birleşik testte **0,52** (yıllara göre 0,31–0,66). Test döneminde HMM ikinci tanımı eğilimi değil oynaklık durumunu ölçüyor. Sonuç: M8'de AQ3'ün HMM ile tekrarı "aynı sorunun ikinci etiketle sınanması" diye değil, "oynaklık durumuna koşullu ayrı bir okuma" diye yazılmalı (K10 döngüselliğine ek beyan).
 
+### 3.2 M7a durumu (2026-11-20): karşı-olgusal mesaj maskeleme (betimsel tanı)
+
+Kod: `CommPolicy.set_sender_mask` (yalnız değerlendirme; kalıcı değil; None iken bit-eş, `test_marl_m4` 19/19) ve `scripts/marl/mask_m7.py`. Ölçüm: `measurements/phase10-m7/mask_train.json`, `mask_val.json` (temiz ağaç `fc675ef`). 21 kayıtlı iletişimli politika (M4b G-X ve G-S; M5 mekanizma G0 ve GL; M5 gerçek sinyal T0-G, SB, SB-S), her biri için maskesiz, bütün göndericiler kapalı ve 8 sektör grubunun her biri ayrı kapalı. Eğitim yapılmadı. **42 maskesiz değerlendirmenin hepsi kayıtlı `eval_*.npz` serisiyle bit-eş** (doğru politika, doğru kurulum).
+
+Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; tohum sırasıyla):
+
+| Kol | Tahmin / ipucu | ΔSR, tüm mesajlar kapalı | Sektör maskesi ΔSR aralığı |
+|---|---|---|---|
+| M4b G-X | gerçek komşu ipucu | −0,60 / −0,09 / −0,23 | −0,12 .. +0,03 |
+| M4b G-S | karıştırılmış ipucu | −0,15 / −0,16 / −0,27 | −0,09 .. +0,01 |
+| M5 G0 | sentetik, güvensiz | −0,32 / −0,49 / −0,72 | −0,23 .. +0,04 |
+| M5 GL | sentetik, güvenli | −0,48 / −0,63 / −0,85 | −0,32 .. +0,02 |
+| M5 gerçek T0-G | tahmin yok | −0,37 / −0,39 / −0,39 | −0,25 .. +0,03 |
+| M5 gerçek SB | gerçek sinyal | +0,03 / −0,20 / −0,05 | −0,08 .. +0,03 |
+| M5 gerçek SB-S | karıştırılmış | −0,05 / −0,19 / −0,17 | −0,14 .. +0,01 |
+
+**Okuma (betimsel tanı, tez bulgusu değil):**
+- Mesajları kapatmak, tahmin sinyali hiç olmayan kolda (T0-G) bile Sharpe'ı düşürüyor; gerçek ipuçlu G-X ile karıştırılmış G-S arasında belirgin bir fark yok. **Maskeleme, politikanın mesaj kanalına bağımlılığını ölçüyor, mesajın bilgi taşıyıp taşımadığını değil:** kapalı mesaj, politikanın eğitimde görmediği bir girdi dağılımıdır. Bu, Jain & Wallace (2019) sınırlılığının bu düzende ölçülmüş bir örneğidir.
+- Sonuç: M7'de "iletişim bilgi taşıyor" okuması maskelemeyle kurulmaz. Dağılımı koruyan bir kontrol gerekir: göndericilerin mesajlarını ajanlar arasında karıştırmak (M7b ile birlikte önerilir). Bilgi sorusunun asıl sınaması zaten eğitim zamanı kontrolleridir (M4b karıştırılmış ipucu, M5 karıştırılmış güven ve sinyal).
+- Doğrulama penceresinde etkiler daha küçük ve işaret karışık (dosyada).
+
 **M8'e giden yolda bilinen engeller (bu belgenin kapsamı dışında, beyan):**
 - MARL paneli (`panel_m2.npz`) 2020-12-31'de bitiyor; 2021+ test pencereleri için panel uzatılmalı.
 - Satış engeli marj takvimi 2020-12-31'den sonra doğrulanmamış; kod o tarihten sonra hata veriyor (`PRICE_MARGIN_VERIFIED_UNTIL`). 2021+ için marj geçmişi kaynakla doğrulanmalı (M2 tasarımı §2.5).
@@ -106,6 +127,7 @@ Kod: `evaluation/regimes_hmm.py` (test `tests/test_regimes_hmm.py` 4/4: B0 kesme
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-20):** §3.2 M7a ölçümü: maskeleme mesaj kanalına bağımlılığı ölçüyor, bilgiyi değil (tahminsiz kolda da düşüş); dağılımı koruyan karıştırma kontrolü önerisi.
 - **v0.3 (2026-11-20):** §3.1 M6a kod + ölçüm: K = 3, `calm_vs_rest` önerisi, test yıllarında birincil eğilimle uyuşma 0,52 (ikinci tanım oynaklık durumunu ölçüyor). M6c kodu (`evaluation/regime_contrast.py`, test 3/3).
 - **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı. §2.1: wf-v1 test yıllarında yalnız etiket sayımı (birleşik testte eğilim hücresi başına 8–9 dönem, kat başına 1–3).
 - **v0.1 (2026-11-20):** İlk taslak. Ön ölçüm (§2): altı hücreli rejim geliştirme pencerelerinde sınanamaz, eğilim (iki hücre) 3–6 dönem. İş paketleri M6a–c, M7a–b; M8 engelleri beyan; kararlar K-M6-1..4. Kod: yalnız `regime_windows_m6.py`.
