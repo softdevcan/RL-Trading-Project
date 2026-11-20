@@ -41466,12 +41466,23 @@
  "cross_seed": {
   "results/marl_m4b/G-S": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9996405151747958,
     0.9995808818332989,
     0.9996999535058514
    ],
-   "pairwise_corr_mean": 0.9996404501713153,
+   "pairwise_corr_raw_mean": 0.9996404501713153,
+   "pairwise_corr_dev_from_uniform": [
+    0.9474561814726472,
+    0.9284257037530913,
+    0.9600477594594582
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.9453098815617323,
+   "dev_from_uniform_abs_mean": [
+    0.0059351774446671154,
+    0.004466043897620433,
+    0.00552701248190342
+   ],
    "entry_cv_median": 0.009133861658657882,
    "norm_entropy_mean": [
     0.9917929847730544,
@@ -41491,12 +41502,23 @@
   },
   "results/marl_m4b/G-X": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9994606935009355,
     0.9993804881417492,
     0.9997736861283977
    ],
-   "pairwise_corr_mean": 0.9995382892570275,
+   "pairwise_corr_raw_mean": 0.9995382892570275,
+   "pairwise_corr_dev_from_uniform": [
+    0.9214877347225167,
+    0.9072545390620446,
+    0.9598156065182694
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.9295192934342769,
+   "dev_from_uniform_abs_mean": [
+    0.006388193284546008,
+    0.00542866852135516,
+    0.005329474970772535
+   ],
    "entry_cv_median": 0.007777035232497767,
    "norm_entropy_mean": [
     0.9895541792098005,
@@ -41516,12 +41538,23 @@
   },
   "results/marl_m5/G0": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9992025423303151,
     0.9997541063805712,
     0.9987436332996976
    ],
-   "pairwise_corr_mean": 0.9992334273368613,
+   "pairwise_corr_raw_mean": 0.9992334273368613,
+   "pairwise_corr_dev_from_uniform": [
+    0.8246979982924452,
+    0.9692949486159286,
+    0.8532924459970415
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.882428464301805,
+   "dev_from_uniform_abs_mean": [
+    0.004770014563378925,
+    0.0013657029140350515,
+    0.005564232933162423
+   ],
    "entry_cv_median": 0.01139769955252841,
    "norm_entropy_mean": [
     0.9950545662672525,
@@ -41541,12 +41574,23 @@
   },
   "results/marl_m5/GL": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9984698386569888,
     0.9997104403294433,
     0.9986118614495608
    ],
-   "pairwise_corr_mean": 0.9989307134786644,
+   "pairwise_corr_raw_mean": 0.9989307134786644,
+   "pairwise_corr_dev_from_uniform": [
+    0.542838768162448,
+    0.9622370107614292,
+    0.5636644704536288
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.6895800831258353,
+   "dev_from_uniform_abs_mean": [
+    0.0068411639278748125,
+    0.002783670627722061,
+    0.006249326937165834
+   ],
    "entry_cv_median": 0.01420906748418988,
    "norm_entropy_mean": [
     0.9904838837256686,
@@ -41566,12 +41610,23 @@
   },
   "results/marl_m5real/SB": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9996109408039363,
     0.9990569663280134,
     0.9991819524953417
    ],
-   "pairwise_corr_mean": 0.9992832865424305,
+   "pairwise_corr_raw_mean": 0.9992832865424305,
+   "pairwise_corr_dev_from_uniform": [
+    0.6826022751768867,
+    0.804418631515079,
+    0.8706806433461538
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.7859005166793732,
+   "dev_from_uniform_abs_mean": [
+    0.002107899954123175,
+    0.0026351695982287115,
+    0.005244517762711142
+   ],
    "entry_cv_median": 0.008419518312577912,
    "norm_entropy_mean": [
     0.9974842759292502,
@@ -41591,12 +41646,23 @@
   },
   "results/marl_m5real/SB-S": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.9985087920533251,
     0.999351988703963,
     0.9994889999732662
    ],
-   "pairwise_corr_mean": 0.9991165935768515,
+   "pairwise_corr_raw_mean": 0.9991165935768515,
+   "pairwise_corr_dev_from_uniform": [
+    0.38296798933400616,
+    0.836206942318965,
+    0.6791900287322813
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.6327883201284176,
+   "dev_from_uniform_abs_mean": [
+    0.003949176542418233,
+    0.0017703562233160734,
+    0.0031307757830517937
+   ],
    "entry_cv_median": 0.00804320331799041,
    "norm_entropy_mean": [
     0.9948439925029445,
@@ -41616,12 +41682,23 @@
   },
   "results/marl_m5real/T0-G": {
    "n_seeds": 3,
-   "pairwise_corr": [
+   "pairwise_corr_raw": [
     0.999453802782801,
     0.9990700530195993,
     0.9983693738751374
    ],
-   "pairwise_corr_mean": 0.9989644098925125,
+   "pairwise_corr_raw_mean": 0.9989644098925125,
+   "pairwise_corr_dev_from_uniform": [
+    0.9124137571450514,
+    0.9412281426158312,
+    0.8841514803581183
+   ],
+   "pairwise_corr_dev_from_uniform_mean": 0.9125977933730004,
+   "dev_from_uniform_abs_mean": [
+    0.005812823636938601,
+    0.004764837101738678,
+    0.009452345844537
+   ],
    "entry_cv_median": 0.01651037413253556,
    "norm_entropy_mean": [
     0.9931339087017227,
@@ -41646,5 +41723,11 @@
   "script_sha256": "c590d9025ddcae6ecb714f46cc6f1b445e8856754c73e2ee1e348c3ab1a986ae",
   "comm_models_sha256": "c1aee9aef25d199a010f9d7b505ea244542af483aeece122bf8f95b883038034",
   "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b"
+ },
+ "cross_seed_rescore": {
+  "commit": "068997efd3db3faf128ad060b922e867346fb040",
+  "git_status_porcelain": "",
+  "script_sha256": "deb9bd0229c7bc610cc334262066117230394b07af4cbb2e3a8784bfbf213a65",
+  "note": "yalniz cross_seed yeniden hesaplandi (tek bicimliden sapma korelasyonu); olcum ve provenance degismedi"
  }
 }
