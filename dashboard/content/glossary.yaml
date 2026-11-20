@@ -147,6 +147,101 @@
   kodda: [evaluation/trial_registry.py]
   ilgili: [dsr, on-kayit]
 
+- id: ansari-replikasyonu
+  terim: Ansari replikasyonu
+  kategori: sistem
+  sade: >-
+    Projenin başlangıç noktası: yayımlanmış bir tek ajanlı alım-satım çalışmasının BIST-30'a uyarlanmış kopyası. Eski ortam bu çalışmaya sadık tutulur.
+  teknik: >-
+    Ansari vd. (2024) metodolojisi; tek ajan ortamı ve gözlem tanımı (MACD, türbülans, hacim) bu çalışmanın tanımında
+    kalır. Bilinen açıklar düzeltilmez, beyan edilir (K26 = a); yeni tasarım MARL ortamındadır.
+  kodda: [env/trading_env.py::TradingEnv]
+  belgede: [docs/thesis/vision-and-scope.md]
+  ilgili: [tek-ajan-ortami, milestone-0p, faz-9-paketleri]
+  kaynak: ["Ansari vd. (2024)"]
+
+- id: faz-9-paketleri
+  terim: Faz 9 paketleri (A–G, P, R)
+  kategori: sistem
+  sade: >-
+    Araştırma geçerliliği aşamasında yapılan iş paketleri: istatistik, sızıntı kapatma, tekrar üretilebilirlik, baseline, evren, kalibrasyon, ödül tanımı ve tahmin tablosu gibi.
+  teknik: >-
+    A değerlendirme çekirdeği, B sızıntı kapatma, C tekrar üretilebilirlik, D baseline ve raporlama, E evren ve sektör, F
+    tahmin güveni ve kalibrasyon, G ödül tanımı; P nokta-zamanlı tahmin tablosu, R1 tek bölme/panel/evren. Faz 9 kapandı
+    (2026-11-15); durum planın §9 alt bölümlerinde.
+  belgede: [docs/development/phase-9-research-validity-plan.md]
+  ilgili: [faz, bilinen-aciklar, pit-tablosu]
+
+- id: bilinen-aciklar
+  terim: Bilinen açıklar (Y kodları)
+  kategori: sistem
+  sade: >-
+    Kodda ya da yöntemde bulunmuş ve kayda geçmiş sorunların listesi. Bir açık kapanana kadar ilgili sonuçlar ön sonuç sayılır.
+  teknik: >-
+    Faz 9 planında Y ve bir sayıyla anılır (ör. Y13 test ölçeği, Y30 SHAP girdisi, Y31 altın kapanışı); roadmap'te "Bilinen
+    Metodolojik Açıklar". Açık bir madde deneme kaydında protocol_open etiketine dönüşür.
+  belgede: [docs/development/roadmap.md, docs/development/phase-9-research-validity-plan.md]
+  ilgili: [protokol-acik, nokta-zamanlilik, faz-9-paketleri]
+
+- id: protokol-acik
+  terim: Protokol açık (protocol_open)
+  kategori: sistem
+  sade: >-
+    Bilinen bir açıktan etkilenen deneme kaydına konan etiket. Bu etiketi taşıyan sonuçlar kanıt olarak kullanılmaz.
+  teknik: >-
+    Deneme kaydı protokol maddelerini ölçümle taşır (test ölçeği, gösterge bfill, ADX, obs_health, eval_window_unexposed,
+    fundamentals_pit). Açık madde varsa kayıt PROTOCOL_OPEN_TAG alır ve load_trials onu varsayılan dışlar; yine de N'ye
+    sayılır.
+  kodda: [evaluation/trial_registry.py::PROTOCOL_OPEN_TAG, evaluation/trial_registry.py::EXPOSED_EVAL_WINDOWS]
+  belgede: [evaluation/CLAUDE.md]
+  ilgili: [deneme-kaydi, bilinen-aciklar, gozlem-sagligi]
+
+- id: okuma-kurali
+  terim: Okuma kuralı (okuma tablosu)
+  kategori: sistem
+  sade: >-
+    Bir deneyin olası her sonucunun ne anlama geleceğini, koşudan önce yazan tablo. Sonuç görüldükten sonra değiştirilmez.
+  teknik: >-
+    Ön kaydın parçası; eşikler, test ve öncelik sırası okuma betiğinde (analyze_*.py) koddadır ve kendi kendini sınar
+    (--self-test). Her okuma "yazılmayacak olan" ifadeyle birlikte verilir.
+  kodda: [scripts/marl/analyze_m5.py]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [on-kayit, yasak-kurtarma, durma-kurali, okuma-o1-o4]
+
+- id: durma-kurali
+  terim: Durma kuralı
+  kategori: sistem
+  sade: >-
+    Bir deney beklenen eşiği geçemezse sonraki adıma geçilmeyip kararın kullanıcıya bırakılmasını söyleyen kural.
+  teknik: >-
+    Ön kayıtta yazılıdır: hangi etikette sonraki aşamanın koşulacağı ya da koşulmayacağı önceden sabitlenir (M3b ve M4a
+    aşama kuralları). Aynı kapı ek tohumla kurtarılmaz; yeni deney yeni ön kayıt ister.
+  belgede: [docs/development/phase-10-m3-design.md, docs/development/phase-10-m4-design.md]
+  ilgili: [on-kayit, gelistirme-kapisi, yasak-kurtarma]
+
+- id: yasak-kurtarma
+  terim: Yasak kurtarma yolları
+  kategori: sistem
+  sade: >-
+    Bir sonuç beğenilmediğinde başvurulması yasaklanan değişiklikler: ek tohum, eşiği değiştirmek, iyi görünen alt kümeyi seçmek gibi.
+  teknik: >-
+    Ön kayıtta listelenir (M5 §2.5: hedef ufkunu değiştirmek, özellik kümesi, sembol alt kümesi, ek tohum, eşik/test/birincil
+    karşılaştırma). Gerekirse yeni ön kayıt yazılır ve deneme sayısına eklenir.
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [on-kayit, okuma-kurali, deneme-kaydi, durma-kurali]
+
+- id: olcum-arsivi
+  terim: Ölçüm arşivi
+  kategori: sistem
+  sade: >-
+    Metne giren her sayının üretildiği JSON dosyalarının tutulduğu yer. Rakamlar metne elle kopyalanmaz, hangi dosyadan geldiği yazılır.
+  teknik: >-
+    docs/development/measurements/<aşama>/; her JSON betik SHA'sını, commit'i ve git_status'u taşır (kirli ağaç iz bırakır,
+    bu yüzden ölçüm betiği commit'lenmeden koşulmaz). Rehber kartları sayılarını bu dosyalardan okur.
+  kodda: [scripts/build_guide.py]
+  belgede: [docs/development/review-panel.md]
+  ilgili: [rehber-sayfasi, hakem-paneli, deneme-kaydi]
+
 # ------------------------------------------------------------------ deney kodları ve etiketler
 - id: pozitif-kontrol
   terim: Pozitif kontrol (PC060-K12)
@@ -287,6 +382,41 @@
     edilmeden önce.
   kodda: [marl/benchmarl_task.py]
   ilgili: [guc, kol]
+
+- id: gurultu-tabani
+  terim: Gürültü tabanı
+  kategori: deney
+  sade: >-
+    Bilgi açısından aynı olması gereken iki kol arasında, yalnız şans ve donanım yüzünden ortaya çıkan fark. Gerçek bir etkinin bu farktan büyük olması beklenir.
+  teknik: >-
+    M5 mekanizma kollarında |D(GD, G0)|; GL ↔ G0 farkının bunu aşması H2'nin (v) koşuludur. Ortak HAC p'si üç tohumda tohum
+    varyansını taşımadığı için taban, testin kalibrasyonunu da denetler.
+  kodda: [scripts/marl/analyze_m5.py]
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [d-farki, hac, kol-kodlari-m5, karistirilmis-kontrol]
+
+- id: okuma-o1-o4
+  terim: Gerçek sinyal okumaları (O1–O4)
+  kategori: deney
+  sade: >-
+    Gerçek tahmin sinyaliyle yapılan koşuların dört olası sonucunun önceden yazılmış yorumu: fark yok, bozuyor, girdi etkisi ya da keşifsel işaret.
+  teknik: >-
+    O1 gerçek ↔ karıştırılmış fark yok (MDE ile raporlanır); O2 gerçek sinyal karıştırılmıştan ya da tahminsizden kötü
+    (sağlamlık uyarısı); O3 gerçek ≈ karıştırılmış, ikisi de tahminsizden farklı (girdi boyutu ya da kapasite); O4 gerçek >
+    karıştırılmış, yalnız keşifsel ve ek koşullarla.
+  belgede: [docs/development/phase-10-m5-design.md]
+  ilgili: [okuma-kurali, karistirilmis-kontrol, mde, kesifsel]
+
+- id: kesifsel
+  terim: Keşifsel ve doğrulayıcı bulgu
+  kategori: deney
+  sade: >-
+    Önceden yazılmış bir sınamadan geçen bulgu doğrulayıcı, sonuca bakarak fark edilen ama sınanmamış işaret keşifseldir. Keşifsel bir işaret tez bulgusu sayılmaz, yeni bir ön kayıtla sınanır.
+  teknik: >-
+    Geliştirme pilotları (M3–M5) keşifsel ya da geliştirme kapısıdır; doğrulayıcı sınama M8 ön kaydında ve dokunulmamış
+    pencerede (m0p-v2 doğrulayıcı penceresi) yapılır. Rehber kartlarında "tez bulgusu değil" rozeti bu ayrımı gösterir.
+  belgede: [docs/development/phase-10-marl-plan.md]
+  ilgili: [on-kayit, gelistirme-kapisi, okuma-o1-o4, pencereler]
 
 # ------------------------------------------------------------------ değerlendirme ve istatistik
 - id: sharpe
@@ -482,6 +612,114 @@
   kaynak: ["Bailey & López de Prado (2014)"]
   uyari: >-
     Eski uygulama yanlıştı ve düzeltildi; eski raporlarda eski fonksiyonla verilmiş bir DSR varsa yeniden hesaplanmalıdır.
+
+- id: pbo
+  terim: Aşırı uyum olasılığı (PBO)
+  kisaltma: PBO
+  kategori: degerlendirme
+  sade: >-
+    Geçmiş veride en iyi görünen yapılandırmanın, yeni veride ortalamanın altında kalma olasılığı. Yüksekse seçim şansa dayanıyor demektir.
+  teknik: >-
+    Kombinatoryal simetrik çapraz doğrulama (CSCV): (T, N) getiri matrisi S = 16 bloğa bölünür, C(16, 8) birleşimde örneklem
+    içi en iyinin örneklem dışı sırası; PBO ve λ dağılımı.
+  kodda: [evaluation/overfitting.py::probability_of_backtest_overfitting]
+  ilgili: [dsr, mcs, deneme-kaydi]
+  kaynak: ["Bailey vd. (2017)"]
+
+- id: mcs
+  terim: Model güven kümesi (MCS)
+  kisaltma: MCS
+  kategori: degerlendirme
+  sade: >-
+    Çok sayıda model arasından, istatistiksel olarak "en iyiden ayırt edilemeyen" modellerin kümesi. Tek bir kazanan yerine güvenilir bir küme verir.
+  teknik: >-
+    Hansen–Lunde–Nason; kayıp matrisi, durağan bootstrap (reps 2000), T_R istatistiği, varsayılan düzey %10.
+  kodda: [evaluation/model_sets.py::model_confidence_set]
+  ilgili: [pbo, blok-bootstrap]
+  kaynak: ["Hansen vd. (2011)"]
+
+- id: lw-bootstrap
+  terim: Ledoit–Wolf Sharpe farkı testi
+  kategori: degerlendirme
+  sade: >-
+    İki stratejinin Sharpe oranlarının gerçekten farklı olup olmadığını, getirilerin birbirine bağımlılığını hesaba katarak sınayan test.
+  teknik: >-
+    Sharpe farkının delta yöntemiyle HAC standart hatası (ön beyazlatmalı, QS çekirdeği, Andrews bant genişliği) ve
+    studentize dairesel blok bootstrap sürümü (H0: SR1 = SR2, iki yönlü). Çok tohumlu okumada ortak (havuzlu) sürüm kullanılır.
+  kodda: [evaluation/sharpe_tests.py::sharpe_diff_hac, evaluation/sharpe_tests.py::sharpe_diff_bootstrap]
+  ilgili: [hac, sharpe, d-farki, blok-bootstrap]
+  kaynak: ["Ledoit & Wolf (2008)"]
+
+- id: blok-bootstrap
+  terim: Blok bootstrap
+  kategori: degerlendirme
+  sade: >-
+    Zaman serisini tek tek gün yerine ardışık bloklar halinde yeniden örnekleyerek belirsizliği ölçme yöntemi. Günler arası bağımlılık böylece korunur.
+  teknik: >-
+    Durağan bootstrap (rastgele blok uzunluğu, optimal_block_length) ortalama farkı için; bilgi kapısında 20 günlük tarih
+    blokları. Güven aralığı ve tek yönlü p yüzdeliklerden.
+  kodda: [evaluation/paired_tests.py::mean_diff_bootstrap, evaluation/calibration.py::block_bootstrap_ci]
+  ilgili: [guven-araligi, bilgi-kapisi, mcs]
+  kaynak: ["Politis & Romano (1994)"]
+
+- id: diebold-mariano
+  terim: Diebold–Mariano testi
+  kisaltma: DM
+  kategori: degerlendirme
+  sade: >-
+    İki tahmin modelinden hangisinin daha küçük hata yaptığını sınayan test.
+  teknik: >-
+    Kayıp farkının HAC (Newey–West, h − 1 gecikme) varyansı, Harvey–Leybourne–Newbold küçük örneklem düzeltmesi ve t
+    dağılımı. prediction/evaluator.py'deki eski DM buraya yönlendirildi.
+  kodda: [evaluation/forecast_tests.py::diebold_mariano]
+  ilgili: [hac, tahmin-ensemble]
+  kaynak: ["Diebold & Mariano (1995)"]
+
+- id: sortino-calmar
+  terim: Sortino ve Calmar oranları
+  kategori: degerlendirme
+  sade: >-
+    Sharpe'a benzer iki risk ayarlı getiri ölçüsü: Sortino yalnız aşağı yönlü dalgalanmayı, Calmar en büyük düşüşü risk sayar.
+  teknik: >-
+    compute_sortino_ratio (aşağı yönlü sapma), compute_calmar_ratio (yıllık getiri / maksimum düşüş). Tahmin değerlendiricisinde
+    betimsel; tez çıkarımı Sharpe ve fazla getiri üstünden yapılır.
+  kodda: [prediction/evaluator.py]
+  ilgili: [sharpe, fazla-getiri]
+  kaynak: ["Sortino & Price (1994)"]
+
+- id: getiri-birimi
+  terim: Getiri birimi (nominal / reel / USD)
+  kategori: degerlendirme
+  sade: >-
+    Getirinin hangi parayla ölçüldüğü: Türk lirası, enflasyondan arındırılmış lira ya da dolar. Yüksek enflasyonda bu seçim sonucu çok değiştirir.
+  teknik: >-
+    Birincil Sharpe nominal TL, risksiz faiz (A8) üstü fazla getiri. Reel (TÜFE basamağı) ve USD (USDTRY_{t−1}) birimleri
+    sharpe_rf0 ile; TÜFE düzeyi yalnız ex post raporlama birimidir, karar girdisi değildir.
+  kodda: [evaluation/units.py::convert_values, evaluation/units.py::fx_before]
+  ilgili: [fazla-getiri, risksiz-faiz, makro-veri]
+
+- id: tohum-gereksinimi
+  terim: Tohum gereksinimi
+  kategori: degerlendirme
+  sade: >-
+    Gözlenen bir farkın güvenle ayırt edilebilmesi için kaç tohumla koşmak gerektiğinin kaba tahmini. Uzun koşuların boyutu buna göre planlanır.
+  teknik: >-
+    seeds_needed(effect, se, k_now) = ⌈k_now · ((z₀,₉₅ + z₀,₈₀) · SE / etki)²⌉: standart hatanın √k ile küçüldüğü
+    varsayımıyla, tek yönlü %5 düzeyde %80 güç için gereken tohum sayısı. Betimseldir; ön kayıttaki tohum sayısını sonradan
+    değiştirmez.
+  kodda: [scripts/marl/analyze_m4b.py::seeds_needed]
+  ilgili: [tohum, guc, guven-araligi, mde]
+
+- id: tohum-ozetleri
+  terim: Tohumlar arası özet (IQM, iyileşme olasılığı)
+  kategori: degerlendirme
+  sade: >-
+    Birden fazla tohumla koşulan bir kolun sonucunu, tek bir şanslı tohuma kanmadan özetleme yolları.
+  teknik: >-
+    aggregate_with_ci (rliable): medyan, IQM (çeyrekler arası ortalama), ortalama, optimality gap ve katmanlı bootstrap GA;
+    probability_of_improvement: rastgele bir tohumda bir kolun diğerini geçme olasılığı.
+  kodda: [evaluation/seed_stats.py::aggregate_with_ci, evaluation/seed_stats.py::probability_of_improvement]
+  ilgili: [tohum, guven-araligi]
 
 # ------------------------------------------------------------------ çok ajanlı öğrenme
 - id: marl
@@ -694,6 +932,87 @@
   kodda: [marl/benchmarl_task.py]
   ilgili: [kare]
 
+- id: benchmarl
+  terim: BenchMARL / TorchRL
+  kategori: marl
+  sade: >-
+    Çok ajanlı modelleri eğitmek için kullanılan hazır kütüphaneler. Eğitim döngüsü, algoritmalar ve deney kaydı bunlardan gelir.
+  teknik: >-
+    MarlTask (BenchMARL görevi) MARL ortamını sarar; algoritma MAPPO/IPPO, ağlar TorchRL. Yalnız venv-marl'da (K9). Tohum
+    bit-eşliği için OMP_NUM_THREADS = MKL_NUM_THREADS = 1 torch import'undan önce ayarlanır.
+  kodda: [marl/benchmarl_task.py::MarlTask, marl/m3_runner.py]
+  ilgili: [venv-marl, mappo, ippo, kare]
+  kaynak: ["Bettini vd. (2024)"]
+
+- id: muhasebe
+  terim: Muhasebe (kesirli adım)
+  kategori: marl
+  sade: >-
+    Ortamın her gün portföy ağırlıklarını, nakit faizini, işlem maliyetini ve getiriyi nasıl hesapladığını belirleyen kurallar. Ortam ve canlı karar aynı fonksiyonu kullanır.
+  teknik: >-
+    Karar t kapanışında, yürütme t+1 açılışında: gece hisseler Oₜ₊₁/Cₜ ile kayar, nakit rf kazanır; açılışta hedef
+    izdüşürülür ve maliyet c·τ bir kez düşer; seans içi Cₜ₊₁/Oₜ₊₁ (nakit seans içinde faiz kazanmaz). R = g1(1 − cτ)g2 − 1,
+    X = R − rf. rf zorunludur, sabite düşülmez.
+  kodda: [marl/accounting.py::step_fractional, marl/accounting.py::step_growth]
+  belgede: [docs/development/phase-10-m2-design.md]
+  ilgili: [devir, islem-maliyeti, risksiz-faiz, izdusum, k12]
+
+- id: izdusum
+  terim: Hedef ağırlık izdüşümü (risk projeksiyonu)
+  kategori: marl
+  sade: >-
+    Ajanların istediği ağırlıkların, işlem yapılamayan hisseler ve tavan kuralları gibi kısıtlara uyacak şekilde düzeltilmesi.
+  teknik: >-
+    project(u, w_drift, tradable, Constraints): işlem göremeyen hisse kaymış ağırlığında tutulur, satış engeli (no_sell)
+    uygulanır; band (dönüşüm bandı), max_position, max_group parametreleri varsayılan kapalı. Parametreler model meta'sına
+    risk_projection olarak yazılır.
+  kodda: [marl/weights.py::project, marl/weights.py::Constraints]
+  ilgili: [eylem, satis-engeli, listeleme-kilidi, muhasebe]
+
+- id: emir-donusumu
+  terim: Emir dönüşümü
+  kategori: marl
+  sade: >-
+    Hedef ağırlıkların gerçek alım-satım emirlerine, yani tam sayı lot adetlerine çevrilmesi.
+  teknik: >-
+    rebalance_orders(target_w, prices, holdings, cash, commission, ...): ortamın kesirli muhasebesiyle canlı kararın tam sayı
+    emirleri aynı hedef ağırlıktan üretilir (K5); parite testleri bit-eşlik ister.
+  kodda: [marl/orders.py::rebalance_orders, marl/orders.py::apply_to_holdings]
+  ilgili: [izdusum, gunluk-karar, muhasebe]
+
+- id: zlogodds
+  terim: zlogodds güven terimi
+  kategori: marl
+  sade: >-
+    Bir tahminin ne kadar emin olduğunu, olasılığın 0,5'ten uzaklığını ölçeklenmiş log-oran olarak ifade eden biçim.
+  teknik: >-
+    b_j = |log(p / (1 − p))| / z_scale; z_scale = eğitim satırlarında tahminli hücrelerin |logit p| standart sapması
+    (conf_scale). Tahmini olmayan hücrede taban 0. Alternatif biçim 'prob': log(clip(0,5 + |p − 0,5|)).
+  kodda: [marl/comm_models.py::confidence_term, marl/comm_models.py::conf_scale]
+  ilgili: [beta, s-msg, kol-kodlari-m5, p-up-cal]
+
+- id: init-std
+  terim: Başlangıç eylem gürültüsü (init_std)
+  kategori: marl
+  sade: >-
+    Eğitimin başında ajanların ne kadar rastgele davranacağını belirleyen ayar. Çok küçük olursa ajan yeterince denemez.
+  teknik: >-
+    TanhNormal politika, tanh öncesi başlangıç std'si init_std (biased_softplus); M3–M5 koşularında 0,12.
+  kodda: [marl/m3_runner.py, scripts/marl/train_m3.py]
+  ilgili: [politika, eylem, mappo]
+
+- id: deterministik-degerlendirme
+  terim: Deterministik değerlendirme
+  kategori: marl
+  sade: >-
+    Eğitilmiş politikanın rastgelelik olmadan, bütün pencere boyunca tek seferde sınanması.
+  teknik: >-
+    eval_m3.py kayıtlı politikayı deterministic_rollout ile, tam eğitim ya da doğrulama penceresinde koşar ve günlük seriyi (tarih,
+    getiri, fazla getiri, devir, nakit ağırlığı) yazar; baseline serileri aynı muhasebeyle üretilir. Sharpe ve okuma analiz
+    betiğinde.
+  kodda: [scripts/marl/eval_m3.py, marl/m3_runner.py::deterministic_rollout]
+  ilgili: [pencereler, baseline-1n, muhasebe]
+
 # ------------------------------------------------------------------ tek ajan ve genel RL
 - id: politika
   terim: Politika
@@ -755,6 +1074,216 @@
   ilgili: [mappo, ippo, politika]
   kaynak: ["Schulman vd. (2017)"]
 
+- id: eylem
+  terim: Eylem
+  kategori: rl
+  sade: >-
+    Ajanın her adımda verdiği karar. Bu sistemde eylem, paranın hisseler ve nakit arasında nasıl dağıtılacağını söyler.
+  teknik: >-
+    MARL: her ajan kendi hissesi için bir logit üretir; logitler logit sınırında kırpılır, nakit logiti 0 sabit, softmax
+    hedef ağırlığı verir (target_weights), sonra kısıtlara izdüşürülür (project). Tek ajan ortamı: hisse başına [-1, +1]
+    sürekli çıktı, lot sayısına ölçeklenir (max_shares_per_trade).
+  kodda: [marl/weights.py::target_weights, marl/weights.py::project, env/trading_env.py::TradingEnv]
+  ilgili: [politika, logit-siniri, gozlem]
+
+- id: tek-ajan-ortami
+  terim: Tek ajan ortamı (TradingEnv)
+  kategori: rl
+  sade: >-
+    Bütün hisseleri tek bir ajanın yönettiği eski öğrenme ortamı. Ansari replikasyonu ve Milestone 0' bu ortamda koşulur.
+  teknik: >-
+    Gymnasium ortamı; gözlem bakiye + hisse adetleri + OHLCV + göstergeler (5 sembolde 56, 30 sembolde 331 boyut), faz 2
+    tahmin bloğuyla genişler. State space yapısı eğitilmiş modellerle uyum için değiştirilmez; yeni MARL ortamı ayrıdır.
+  kodda: [env/trading_env.py::TradingEnv, env/trading_env.py::make_env]
+  belgede: [env/CLAUDE.md]
+  ilgili: [ansari-replikasyonu, milestone-0p, ohlcv, gymnasium]
+
+- id: gymnasium
+  terim: Gymnasium
+  kategori: rl
+  sade: >-
+    Pekiştirmeli öğrenme ortamları için standart arayüz kütüphanesi. Ortam "gözlem ver, eylem al, ödül döndür" kalıbıyla yazılır.
+  teknik: >-
+    TradingEnv gym.Env alt sınıfıdır (reset/step, observation_space ve action_space Box). MARL ortamı aynı kalıbın çok ajanlı
+    karşılığı PettingZoo ile yazılır ve yalnız venv-marl'da çalışır.
+  kodda: [env/trading_env.py::TradingEnv, marl/env.py]
+  ilgili: [tek-ajan-ortami, venv-marl]
+  kaynak: ["Towers vd. (2024)"]
+
+- id: sb3
+  terim: Stable-Baselines3
+  kisaltma: SB3
+  kategori: rl
+  sade: >-
+    Tek ajanlı modelleri eğitmek için kullanılan hazır algoritma kütüphanesi.
+  teknik: >-
+    Eğitim rotası PPO, A2C, TD3 ve SAC'ı SB3'ten kurar; model .zip olarak kaydedilir, yanına evren ve ölçeği taşıyan
+    model meta dosyası yazılır. MARL tarafı SB3 değil BenchMARL/TorchRL kullanır.
+  kodda: [app/api/routes/trading.py]
+  ilgili: [ppo, a2c, td3, sac, model-meta, benchmarl]
+  kaynak: ["Raffin vd. (2021)"]
+
+- id: a2c
+  terim: A2C
+  kisaltma: A2C
+  kategori: rl
+  sade: >-
+    Politikayı ve değer tahminini aynı anda öğrenen, eşzamanlı çalışan bir öğrenme yöntemi.
+  teknik: >-
+    Advantage Actor-Critic (A3C'nin eşzamanlı sürümü); eğitim rotasında algorithm = 'a2c' ile SB3'ten.
+  kodda: [app/api/routes/trading.py]
+  ilgili: [ppo, sb3, elestirmen]
+  kaynak: ["Mnih vd. (2016)"]
+
+- id: td3
+  terim: TD3
+  kisaltma: TD3
+  kategori: rl
+  sade: >-
+    Sürekli eylemler için, değeri olduğundan yüksek tahmin etme eğilimini azaltan bir öğrenme yöntemi.
+  teknik: >-
+    Twin Delayed DDPG: iki eleştirmenin küçüğü, gecikmeli politika güncellemesi, hedef politika yumuşatma; algorithm =
+    'td3' ile SB3'ten.
+  kodda: [app/api/routes/trading.py]
+  ilgili: [sb3, elestirmen, sac]
+  kaynak: ["Fujimoto vd. (2018)"]
+
+- id: sac
+  terim: SAC
+  kisaltma: SAC
+  kategori: rl
+  sade: >-
+    Ödülle birlikte davranıştaki çeşitliliği de ödüllendiren, sürekli eylemli bir öğrenme yöntemi.
+  teknik: >-
+    Soft Actor-Critic (entropi düzenlemeli, politika dışı); eğitim rotasında algorithm = 'sac' ile SB3'ten seçilebilir.
+  kodda: [app/api/routes/trading.py]
+  ilgili: [sb3, td3]
+
+- id: hpo
+  terim: Hiperparametre optimizasyonu
+  kisaltma: HPO
+  kategori: rl
+  sade: >-
+    Öğrenme hızı gibi ayarların, çok sayıda deneme yapılarak otomatik seçilmesi. Her deneme deneme kaydına sayılır.
+  teknik: >-
+    Optuna, varsayılan TPE örnekleyici (ayar tohumuyla kurulur) ve budayıcı. HPO rotanın yolunu kullanır: panel, kat ve
+    ortam evaluation/rl_folds'tan, pencere wf-v1 katından; arama doğrulama bloğunda yapılır, test okunmaz.
+  kodda: [hyperparameter_optimization/base_optimizer.py, evaluation/rl_folds.py::build_fold]
+  belgede: [env/CLAUDE.md]
+  ilgili: [walk-forward, deneme-kaydi, pencereler]
+  kaynak: ["Akiba vd. (2019)", "Bergstra vd. (2011)"]
+
+- id: walk-forward
+  terim: Kayan pencereli bölme (wf-v1)
+  kategori: rl
+  sade: >-
+    Verinin zamanda ilerleyen katlara bölünmesi: her katta model geçmişle eğitilir, bir sonraki yılda sınanır.
+  teknik: >-
+    wf-v1: 6 kat, test = takvim yılı 2021..2026, doğrulama = bir önceki yıl, eğitim 2013-06'dan genişleyen; purge 0.
+    Tanım değişmez, uzatmak yeni sürümdür (wf-v2). Seçim yalnız doğrulamada (10 kontrol noktası), test seçilen modelle bir
+    kez okunur.
+  kodda: [evaluation/splits.py::get_spec, evaluation/splits.py::fold_frames, evaluation/rl_folds.py::build_fold]
+  ilgili: [pencereler, kontrol-noktasi-secimi, hpo]
+  kaynak: ["López de Prado (2018)"]
+
+- id: kontrol-noktasi-secimi
+  terim: Kontrol noktası seçimi
+  kategori: rl
+  sade: >-
+    Eğitim boyunca kaydedilen ara modellerden hangisinin kullanılacağına karar verme kuralı.
+  teknik: >-
+    Tek ajan: eğitim 10 kontrol noktasına bölünür, doğrulamada fazla getiri Sharpe'ı en yüksek olan seçilir
+    ('argmax_validation'); son nokta ('last_checkpoint') de ayrı kayıt olarak yazılır, ikisi de N'ye sayılır. MARL
+    geliştirme koşularında son ağırlıklar kullanılır.
+  kodda: [evaluation/rl_folds.py::select_checkpoint, evaluation/rl_folds.py::checkpoint_grid]
+  ilgili: [walk-forward, deneme-kaydi, fazla-getiri]
+
+- id: moody-saffell
+  terim: Moody–Saffell Dₜ terimi
+  kategori: rl
+  sade: >-
+    Sharpe oranının her adımdaki değişimini ödül olarak veren klasik yöntem. Bu projede yalnız seçimli bir kol olarak var.
+  teknik: >-
+    Moody–Saffell Dₜ türevi; tek ajan ortamında sharpe_term = 'differential' (yalnız reward_type = 'psr'). MARL'da 'differential' ödül
+    terimi yalnız α = 0 ablasyonu içindir. Varsayılan tek ajan terimi EMA Sharpe düzeyidir.
+  kodda: [env/reward_functions.py::RewardCalculator]
+  belgede: [docs/thesis/reward-definition.md]
+  ilgili: [ema-sharpe, odul, sharpe, alfa]
+  kaynak: ["Moody & Saffell (2001)"]
+  uyari: >-
+    Varsayılan tek ajan terimi (EMA Sharpe düzeyi) bu terim değildir; ona "diferansiyel Sharpe" denmez (tez kuralı).
+
+- id: psr-odulu
+  terim: PSR ödülü
+  kategori: rl
+  sade: >-
+    Tek ajanlı modelde getiriyi, riski ve işlem maliyetini birlikte tartan karma ödül.
+  teknik: >-
+    reward_type = 'psr' (faz 2); ağırlıklar w1–w5, Sharpe terimi sharpe_term ile seçilir. 'simple' ödül portföy değeri
+    değişimidir. Tanımın tek kaynağı reward-definition.md; ödülü değiştiren commit onu da günceller.
+  kodda: [env/reward_functions.py::RewardCalculator, env/reward_functions.py::SimpleRewardCalculator]
+  belgede: [docs/thesis/reward-definition.md]
+  ilgili: [odul, ema-sharpe, moody-saffell]
+
+- id: atr-kelly
+  terim: ATR ve Kelly pozisyon boyutlandırma
+  kategori: rl
+  sade: >-
+    Alınacak hisse miktarını oynaklığa ya da kazanma olasılığına göre ayarlayan seçimli kurallar. Varsayılan olarak kapalıdır.
+  teknik: >-
+    use_atr_sizing (ATR tabanlı lot) ve use_kelly (f* = (p·b − q·a)/(a·b), kesirli Kelly), ikisi de varsayılan False;
+    eğitilmiş modeller bozulmasın diye açılmaz.
+  kodda: [env/trading_env.py::TradingEnv]
+  ilgili: [tek-ajan-ortami]
+  kaynak: ["Kelly (1956)"]
+
+- id: turbulans
+  terim: Türbülans endeksi
+  kategori: rl
+  sade: >-
+    Piyasanın olağandışı çalkantılı olup olmadığını gösteren gösterge. Eski ortamda gözleme girer ama neredeyse hep tavanda kalır.
+  teknik: >-
+    Çok sembollü hesapta kesitsel Mahalanobis uzaklığı, sembol düzeyinde yedek olarak 252 günlük kayan oynaklık × 100.
+    Gözlemde tanh(turbulence/2); bu terim doygun olduğu için eski ortamın her kolunda obs_health açık kalır (K26 = a,
+    beyan).
+  kodda: [data/technical_indicators.py, evaluation/observation_health.py::observation_health]
+  ilgili: [gozlem-sagligi, teknik-gostergeler, tek-ajan-ortami]
+
+- id: gozlem-sagligi
+  terim: Gözlem sağlığı (obs_health)
+  kategori: rl
+  sade: >-
+    Ajanın gördüğü sayıların kırpılıp kırpılmadığını, hep aynı değerde takılıp kalmadığını ve eğitimde görülen aralıkta olup olmadığını ölçen denetim.
+  teknik: >-
+    Kapılı bloklarda kırpma ≤ %1, sabit boyut yok, özellik başına doygunluk ≤ %90; features_in_support (havuzlu) ve
+    dims_in_support (her sembol × özellik boyutu ≤ %1). Ölçülür ve kayda yazılır; geçmeyen kol protocol_open alır.
+  kodda: [evaluation/observation_health.py::observation_health, evaluation/observation_health.py::dims_in_support]
+  ilgili: [turbulans, fiyat-olcegi, protokol-acik, gozlem]
+
+- id: fiyat-olcegi
+  terim: Fiyat ölçeği (price_norm)
+  kategori: rl
+  sade: >-
+    Fiyatların ajana verilmeden önce hangi ortalama ve yayılımla küçültüldüğü. Değerlendirme ortamı eğitim ortamının ölçeğini kullanmak zorundadır.
+  teknik: >-
+    'stats': eğitim ortamından price_stats (held-out ortama verilmesi zorunlu, None reddedilir); 'causal': sembolün ≤ t son
+    252 kapanışının ölçeği (K25 b). Kökeni beyanla değil ölçümle etiketlenir (rl_eval_protocol).
+  kodda: [env/trading_env.py::TradingEnv, evaluation/trial_registry.py]
+  belgede: [env/CLAUDE.md]
+  ilgili: [gozlem-sagligi, nokta-zamanlilik, tek-ajan-ortami]
+
+- id: eksik-veri-modu
+  terim: Eksik veri modu
+  kategori: rl
+  sade: >-
+    Bir hissenin o gün verisi yoksa ortamın ne yapacağını belirleyen ayar.
+  teknik: >-
+    missing_data_mode = 'legacy' (varsayılan, eğitilmiş modeller): eksik hücrede önceki sembolün bloğunu kopyalar ve fiyatı
+    0 sayar (bilinen hata, dondurulmuş). 'own_last': sembolü kendi son gözlemiyle taşır, o hücrede işlem yapmaz; yeni eğitim
+    ve HPO bunu kullanır.
+  kodda: [env/trading_env.py::TradingEnv]
+  ilgili: [eksik-hucre, tek-ajan-ortami, hpo]
+
 # ------------------------------------------------------------------ tahmin hattı
 - id: auc
   terim: AUC
@@ -800,6 +1329,244 @@
     ölçülür.
   kodda: [evaluation/calibration.py::fit_temperature, evaluation/calibration.py::apply_temperature]
   ilgili: [bilgi-kapisi, auc]
+
+- id: tahmin-ensemble
+  terim: Tahmin topluluğu (stacking ensemble)
+  kategori: tahmin
+  sade: >-
+    Birkaç farklı tahmin modelinin çıktısını birleştirip tek bir tahmin üreten yapı. Canlı tahmin sayfası bunu kullanır.
+  teknik: >-
+    StackingEnsemble: taban modeller XGBoost, LightGBM, CatBoost, BiLSTM, TFT; meta-öğrenici bunların örneklem dışı (OOF)
+    tahminleriyle eğitilir. Kronolojik 60/20/20 bölme. MARL ajanlarına giden sinyal bu sınıftan değil P tablosundan gelir.
+  kodda: [prediction/models/ensemble.py::StackingEnsemble]
+  belgede: [prediction/CLAUDE.md]
+  ilgili: [gbm-modelleri, bilstm, tft, meta-ogrenici, oof, pit-tablosu]
+  kaynak: ["Wolpert (1992)"]
+  uyari: >-
+    "Sızıntı yok" denmez: dağıtım öncesi %80 yeniden uyumda meta-öğrenici örneklem içi tahminlerle yeniden uyduruluyor (K19).
+
+- id: gbm-modelleri
+  terim: Gradyan artırma modelleri (XGBoost, LightGBM, CatBoost)
+  kisaltma: GBM
+  kategori: tahmin
+  sade: >-
+    Çok sayıda küçük karar ağacını art arda ekleyerek tahmin yapan modeller. P tablosunun taban modelleri bunlardır.
+  teknik: >-
+    XGBoostModel, LightGBMModel, CatBoostModel (BasePredictionModel alt sınıfları). P tablosunda V1_MODELS = xgboost,
+    lightgbm, catboost; yalnız fiyat/hacim özellikleri, her çapada yeniden eğitim.
+  kodda: [prediction/models/xgboost_model.py::XGBoostModel, prediction/models/lightgbm_model.py::LightGBMModel, prediction/models/catboost_model.py::CatBoostModel, prediction/pit_table.py::V1_MODELS]
+  ilgili: [tahmin-ensemble, pit-tablosu, capa]
+  kaynak: ["Chen & Guestrin (2016)", "Ke vd. (2017)", "Prokhorenkova vd. (2018)"]
+
+- id: bilstm
+  terim: BiLSTM
+  kisaltma: BiLSTM
+  kategori: tahmin
+  sade: >-
+    Zaman serisini hem ileri hem geri yönde okuyan bir derin öğrenme modeli.
+  teknik: >-
+    Çift yönlü LSTM; getiri tahminine ek olarak bir yön başı (_predict_direction_raw) taşır. Eğitim penceresi satır i'yi
+    içerir (B11); yön etiketi ham hedeften.
+  kodda: [prediction/models/lstm_model.py::BiLSTMModel]
+  ilgili: [tft, yon-basi, tahmin-ensemble]
+  kaynak: ["Hochreiter & Schmidhuber (1997)", "Schuster & Paliwal (1997)"]
+
+- id: tft
+  terim: TFT
+  kisaltma: TFT
+  kategori: tahmin
+  sade: >-
+    Hangi girdinin ne zaman önemli olduğunu dikkat mekanizmasıyla seçen bir derin öğrenme tahmin modeli.
+  teknik: >-
+    Temporal Fusion Transformer: geçitli artık ağlar, değişken seçim ağı, dikkat; yön başı taşır. Gruplanmış VSN gibi hız
+    ayarları golden'ı değiştirdiği için varsayılan kapalı.
+  kodda: [prediction/models/tft_model.py::TFTModel]
+  ilgili: [bilstm, yon-basi, tahmin-ensemble, dikkat]
+  kaynak: ["Lim vd. (2021)"]
+
+- id: yon-basi
+  terim: Yön başı
+  kategori: tahmin
+  sade: >-
+    Derin öğrenme modellerinin, fiyat tahminine ek olarak "yükselir mi düşer mi" sorusuna verdiği ayrı çıktı.
+  teknik: >-
+    BiLSTM/TFT _predict_direction_raw. confidence_mode = 'legacy' (varsayılan): yön fiyat işaretinden, güven yön başlarının
+    ortalamasından max(p, 1 − p); ikisi zıt yönü gösterebilir (Y4, head_vs_price_conflict_rate ile ölçülür).
+  kodda: [prediction/models/base.py::BasePredictionModel, prediction/models/ensemble.py::CONFIDENCE_MODES]
+  ilgili: [bilstm, tft, p-up-cal]
+
+- id: meta-ogrenici
+  terim: Meta-öğrenici
+  kategori: tahmin
+  sade: >-
+    Taban modellerin tahminlerini girdi olarak alıp hangisine ne kadar güvenileceğini öğrenen üst model.
+  teknik: >-
+    Topluluk: Ridge ya da XGBoost (meta_learner_type). P tablosu: lojistik meta, yalnız geçmiş blokların örneklem dışı
+    tahminlerinde uydurulur (K19: %80 yeniden uyum ve örneklem içi meta yok).
+  kodda: [prediction/models/ensemble.py::StackingEnsemble, prediction/pit_table.py::meta_layer]
+  ilgili: [tahmin-ensemble, oof, pit-tablosu]
+  kaynak: ["Wolpert (1992)", "Hoerl & Kennard (1970)"]
+
+- id: oof
+  terim: Örneklem dışı tahmin (OOF)
+  kisaltma: OOF
+  kategori: tahmin
+  sade: >-
+    Bir modelin, eğitimde görmediği veriler için ürettiği tahmin. Üst model yalnız bunlarla eğitilirse kendini kandırmaz.
+  teknik: >-
+    Out-of-fold: topluluğun 60/20/20 bölmesinde orta dilim meta-eğitim için ayrılır. P tablosunda taban eğitimi label_date
+    < çapa ile sınırlanır; meta ve sıcaklık yalnız geçmiş blokların OOF tahminlerinde.
+  kodda: [prediction/pit_table.py::base_predictions, prediction/pit_table.py::meta_layer]
+  ilgili: [meta-ogrenici, capa, arindirma]
+
+- id: capa
+  terim: Çapa (yeniden eğitim noktası)
+  kategori: tahmin
+  sade: >-
+    P tablosunda modellerin yeniden eğitildiği tarihler. Her çapada yalnız o tarihe kadar gerçekleşmiş etiketler kullanılır.
+  teknik: >-
+    FIRST_ANCHOR = 2012-01-01, RETRAIN_EVERY = 63 seans; satırın bloğu kendinden önceki son çapadır. Sıcaklık çapa başına 30
+    sembolde havuzlu; informative_asof çapa anındaki bilgi kapısı.
+  kodda: [prediction/pit_table.py::make_anchors, prediction/pit_table.py::RETRAIN_EVERY]
+  ilgili: [pit-tablosu, oof, bilgi-kapisi, kalibrasyon]
+
+- id: arindirma
+  terim: Arındırma ve ambargo (purge / embargo)
+  kategori: tahmin
+  sade: >-
+    Eğitim ile sınama verisi arasına boşluk bırakmak. Etiketi sınama dönemine taşan eğitim satırları böylece dışarıda kalır.
+  teknik: >-
+    Tahmin eğiticisi purge_days = 5, embargo_days = 3 (WalkForwardTrainer). P tablosunda arındırma ufku label_steps: pit_v1'de
+    h, pit_v2'de h + 1 seans (taban erken durdurma ve meta yarıları dahil).
+  kodda: [prediction/trainer.py::WalkForwardTrainer, prediction/pit_table.py::label_steps]
+  ilgili: [oof, nokta-zamanlilik, k12, walk-forward]
+  kaynak: ["López de Prado (2018)"]
+
+- id: tahmin-ufku
+  terim: Tahmin ufku
+  kategori: tahmin
+  sade: >-
+    Tahminin ne kadar ileriyi hedeflediği: bir gün sonrası ya da bir hafta sonrası gibi.
+  teknik: >-
+    horizon 'daily' (h = 1) ya da 'weekly' (h = 5 seans). pit_v1 hedefi Cₜ₊ₕ / Cₜ, pit_v2 (K12) hedefi Oₜ₊₁₊ₕ / Oₜ₊₁; etiket
+    tarihi pit_v2'de t + h + 1.
+  kodda: [prediction/pit_table.py::horizon_steps, prediction/pit_table.py::TARGETS]
+  ilgili: [pit-tablosu, k12, arindirma]
+
+- id: p-up-cal
+  terim: p_up_cal (kalibre edilmiş yükseliş olasılığı)
+  kategori: tahmin
+  sade: >-
+    Tahminin "fiyat yükselecek" olasılığı, sıcaklık ölçeklemesinden geçirilmiş haliyle. Ajanların gördüğü tahmin sinyalinin ana parçasıdır.
+  teknik: >-
+    Meta lojistik p(UP), sıcaklık T ile ölçeklenir; yön = 1[p_cal ≥ 0,5]. P tablosunda PRED_FIELDS'in ilk alanı. Bilgi
+    kapısını geçmeyen bir p_up_cal için "kalibre" denmez, "sıcaklık ölçekli" denir.
+  kodda: [marl/obs_spec.py::PRED_FIELDS, prediction/models/ensemble.py::StackingEnsemble]
+  ilgili: [kalibrasyon, bilgi-kapisi, s-obs, yon-basi]
+
+- id: ece
+  terim: ECE
+  kisaltma: ECE
+  kategori: tahmin
+  sade: >-
+    Söylenen olasılıklarla gerçekleşen sıklıklar arasındaki ortalama uyumsuzluk. Küçük olması iyi kalibrasyon demektir.
+  teknik: >-
+    Expected Calibration Error: 15 kutu, kutu ağırlıklı |ortalama p − gerçekleşen oran|. Tracker'daki 5 kutulu
+    compute_calibration bununla karıştırılmaz.
+  kodda: [evaluation/calibration.py::ece, evaluation/calibration.py::reliability]
+  ilgili: [kalibrasyon, brier]
+  kaynak: ["Naeini vd. (2015)", "Guo vd. (2017)"]
+
+- id: brier
+  terim: Brier skoru ve BSS
+  kisaltma: BSS
+  kategori: tahmin
+  sade: >-
+    Olasılık tahminlerinin ortalama kare hatası ve bunun "hep ortalamayı söylemek"e göre ne kadar iyi olduğu. BSS sıfırın üstündeyse tahmin bir şey katıyordur.
+  teknik: >-
+    Brier = ortalama (p − y)²; BSS = 1 − Brier / Brier(taban oranı), taban oranı test dışından. Bilgi kapısının üç
+    koşulundan biri BSS > 0'dır.
+  kodda: [evaluation/calibration.py::brier, evaluation/calibration.py::brier_skill]
+  ilgili: [ece, bilgi-kapisi, kalibrasyon]
+  kaynak: ["Brier (1950)"]
+
+- id: tats
+  terim: TATS
+  kisaltma: TATS
+  kategori: tahmin
+  sade: >-
+    Bir eğilim sınıflandırıcısının çıktısıyla getiri tahminini düzelten yöntem. Bu projede uyarlanmış haliyle kullanılır.
+  teknik: >-
+    TATSCorrector (correction_factor, flat_threshold); uyum girdileri ham kapanıştan. Uyarlama işareti korur, makaledeki gibi
+    yönü çevirmez; test metriğinde TATS'lı ve TATS'sız sonuç ayrı tutulur.
+  kodda: [prediction/tats.py::TATSCorrector]
+  belgede: [prediction/CLAUDE.md]
+  ilgili: [tda, tahmin-ensemble]
+  kaynak: ["Kazemdehbashi (2026)"]
+
+- id: tda
+  terim: Yön isabeti (TDA ve direction_accuracy)
+  kisaltma: TDA
+  kategori: tahmin
+  sade: >-
+    Tahminin yönü doğru bilme oranı. Kodda iki farklı tanım olduğu için hangisinin kullanıldığı her zaman yazılır.
+  teknik: >-
+    compute_metrics'in direction_accuracy'si fark tabanlıdır (np.diff) ve makaledeki TDA değildir; TATS karşılaştırmasında
+    ensemble_test_metrics['tats'][*]['tda'] kullanılır.
+  kodda: [prediction/models/base.py::BasePredictionModel]
+  belgede: [evaluation/CLAUDE.md]
+  ilgili: [tats]
+
+- id: iceemdan
+  terim: ICEEMDAN gürültü ayrıştırma
+  kisaltma: ICEEMDAN
+  kategori: tahmin
+  sade: >-
+    Fiyat serisini farklı hızlarda dalgalanan bileşenlere ayırıp gürültüyü süzen yöntem.
+  teknik: >-
+    ICEEMDANProcessor.decompose. Mevcut uygulama seriyi bütünüyle ayrıştırdığı için ileriye bakış taşır; tezde katkı olarak
+    sunulmaz (vision-and-scope §5.4).
+  kodda: [prediction/iceemdan_processor.py::ICEEMDANProcessor]
+  belgede: [docs/thesis/vision-and-scope.md]
+  ilgili: [tahmin-ensemble, nokta-zamanlilik]
+  kaynak: ["Colominas vd. (2014)"]
+
+- id: shap
+  terim: SHAP açıklaması
+  kisaltma: SHAP
+  kategori: tahmin
+  sade: >-
+    Bir tahminde hangi girdinin ne kadar pay sahibi olduğunu gösteren açıklama yöntemi.
+  teknik: >-
+    ModelExplainer (explain_prediction, explain_global). SHAP ucu predict_next'ten farklı bir girdi matrisi kuruyor (Y30
+    açık); açıklama canlı tahminle birebir aynı girdiye dayanmayabilir.
+  kodda: [prediction/explainability.py::ModelExplainer]
+  ilgili: [tahmin-ensemble]
+
+- id: tahmin-izleyici
+  terim: Tahmin izleyici (tracker)
+  kategori: tahmin
+  sade: >-
+    Canlı tahminleri kaydedip, gerçekleşen fiyat geldikçe ne kadar isabetli olduklarını izleyen bileşen.
+  teknik: >-
+    PredictionTracker; kurallar tek yerde (tracker_rules). prediction_date = feature_date + h iş günü; gerçekleşen kapanış
+    feature_date'ten sonraki h. gerçek seans. Geçersiz kayıt (invalid_reason) ve bayat özellikli kayıt değerlendirilmez.
+  kodda: [prediction/tracker.py::PredictionTracker, prediction/tracker_rules.py::invalid_reason, prediction/tracker_rules.py::actual_after_sessions]
+  belgede: [prediction/CLAUDE.md]
+  ilgili: [tahmin-ufku, tahmin-ensemble]
+  uyari: >-
+    GOLD_GRAM_TRY'de gerçekleşen kapanış GC=F'ten (ons, USD) çekiliyor; o sembolde isabet anlamsız (Y31 açık).
+
+- id: mask-reason
+  terim: Maske nedeni (mask_reason)
+  kategori: tahmin
+  sade: >-
+    Tahmin tablosunda bir hücre için tahmin olmadığında, nedeninin açıkça yazıldığı alan. Eksik tahmin sessizce yazı-turaya çevrilmez.
+  teknik: >-
+    MASK_REASONS = ok, no_data, no_features, insufficient_history, model_failed, meta_insufficient. MARL gözleminde
+    pred_ok bayrağına dönüşür; tek ajan ortamında env_prediction_features maskeli hücreyi nötr (0) yapar.
+  kodda: [prediction/pit_table.py::MASK_REASONS, prediction/pit_table.py::env_prediction_features]
+  ilgili: [pit-tablosu, eksik-hucre, s-obs]
 
 # ------------------------------------------------------------------ veri
 - id: bist30
@@ -858,3 +1625,422 @@
   ilgili: [pit-tablosu, pencereler]
   uyari: >-
     "Sızıntı yok" denmez; doğrulanmış sızıntı kaynakları var (roadmap "Bilinen Metodolojik Açıklar").
+
+- id: ohlcv
+  terim: OHLCV
+  kisaltma: OHLCV
+  kategori: veri
+  sade: >-
+    Bir hissenin bir gündeki açılış, en yüksek, en düşük ve kapanış fiyatı ile işlem hacmi.
+  teknik: >-
+    Open, High, Low, Close, Volume; yfinance'ten düzeltilmiş (auto_adjust) olarak çekilir. MARL ortamı açılışta yürütür
+    (K12), değerlemeyi kapanışla yapar.
+  kodda: [data/data_fetcher.py::DataFetcher]
+  ilgili: [yfinance, duzeltilmis-fiyat, k12, panel]
+
+- id: yfinance
+  terim: yfinance
+  kategori: veri
+  sade: >-
+    Hisse fiyatlarının ve bazı küresel göstergelerin indirildiği açık veri kaynağı.
+  teknik: >-
+    DataFetcher.fetch_stock_data (yeniden deneme, önbellek, %80 kapsam denetimi) ve fetch_incremental (yalnız eksik günler).
+    Seans kapanmadan dönen OHLC'si boş taslak satır yalnız yeni veride süzülür; diske yazılırsa o seans bir daha çekilmez.
+  kodda: [data/data_fetcher.py::DataFetcher, data/data_fetcher.py::fetch_incremental]
+  belgede: [app/CLAUDE.md]
+  ilgili: [ohlcv, duzeltilmis-fiyat, kuresel-makro]
+
+- id: duzeltilmis-fiyat
+  terim: Düzeltilmiş fiyat
+  kategori: veri
+  sade: >-
+    Temettü ve bölünmelerin etkisi geçmişe yansıtılmış fiyat. Yeni bir temettü geldiğinde geçmiş fiyatların hepsi yeniden ölçeklenebilir.
+  teknik: >-
+    yfinance auto_adjust. Tam yeniden indirme geçmişi değiştirir; bir sonucu yeniden üretirken veri yeniden indirilmez, panel
+    SHA-256'sı ve anlık görüntüyle çalışılır. Düzeltilmiş fiyatla lot ya da fiyat seviyesi iddiası kurulmaz.
+  belgede: [env/CLAUDE.md]
+  ilgili: [ohlcv, yfinance, panel]
+
+- id: teknik-gostergeler
+  terim: Teknik göstergeler (MACD, RSI, CCI, ADX)
+  kategori: veri
+  sade: >-
+    Fiyat geçmişinden hesaplanan, eğilim ve momentum özetleyen sayılar. Ajanın gözleminde fiyatın yanında yer alır.
+  teknik: >-
+    macd (+ sinyal, histogram), rsi, cci, adx ve turbulence. Isınma satırları: eski hat bfill ile doldurur, RL veri kapısı
+    bfill imzalı baş bloğu atar (B7). ADX için ayrı terime bakın.
+  kodda: [data/technical_indicators.py, data/integrity.py::INDICATOR_COLS]
+  ilgili: [adx, turbulans, gozlem, veri-kapisi]
+
+- id: adx
+  terim: ADX (Wilder)
+  kisaltma: ADX
+  kategori: veri
+  sade: >-
+    Bir eğilimin ne kadar güçlü olduğunu ölçen teknik gösterge.
+  teknik: >-
+    Kayıtlı CSV'deki ADX eski hesabın sabit 0'ıdır (indeks hizalama hatası; eski modeller böyle eğitildi). Rota ve MARL
+    paneli ADX'i with_adx(df, 'wilder') ile yeniden hesaplar ve meta'ya indicator_spec yazar; eski ADX build_arrays'te
+    reddedilir (K18).
+  kodda: [data/technical_indicators.py::with_adx, marl/panel.py::build_arrays]
+  ilgili: [teknik-gostergeler, model-meta]
+
+- id: veri-kapisi
+  terim: RL veri kapısı
+  kategori: veri
+  sade: >-
+    Fiyat verisi ajana gitmeden önce bozuk satırları yakalayan ve öğrenme penceresini sabitleyen denetim.
+  teknik: >-
+    prepare_rl_panel: pencere RL_DATA_START = 2013-06-01 (K17); pencere içinde fiyat artefaktı varsa DataIntegrityError
+    (sessizce temizlenmez); hayalet gün ve bayat hücre atılır, hücre eksik sayılır; gösterge ısınması atılır.
+  kodda: [data/integrity.py::prepare_rl_panel, data/integrity.py::RL_DATA_START]
+  belgede: [env/CLAUDE.md]
+  ilgili: [hayalet-gun, eksik-hucre, teknik-gostergeler, pencereler]
+
+- id: hayalet-gun
+  terim: Hayalet gün ve bayat hücre
+  kategori: veri
+  sade: >-
+    Borsanın aslında kapalı olduğu halde veride işlem günü gibi görünen günler ve tek bir hissede donmuş kalmış satırlar.
+  teknik: >-
+    Hayalet gün: aktif satırların ≥ %90'ı düz (volume = 0 ve O = H = L = C). Bayat hücre: tek sembolün düz satırı; atılır ve
+    eksik sayılır. "Önceki kapanışa eşit" şartı aranmaz, çünkü yfinance kapalı günde düzeltilmiş fiyatı farklı yazabiliyor.
+  kodda: [data/integrity.py::find_ghost_days, data/integrity.py::find_stale_cells]
+  ilgili: [veri-kapisi, eksik-hucre]
+
+- id: eksik-hucre
+  terim: Eksik hücre
+  kategori: veri
+  sade: >-
+    Bir hissenin bir gün için verisinin olmaması. Hisse borsaya sonradan girdiyse bu yapısaldır, hata değildir.
+  teknik: >-
+    MARL: hücre atılmaz, fill_prices fiyatı taşır ve hisse o gün dondurulur; gözlemde feat_ok bayrağı. Tahmin tablosunda
+    mask_reason ile işaretlenir (sessiz 0,5 yok). Tek ajan ortamında davranışı eksik veri modu belirler.
+  kodda: [marl/accounting.py::fill_prices, prediction/pit_table.py::MASK_REASONS]
+  ilgili: [panel, eksik-veri-modu, listeleme-kilidi, veri-kapisi]
+
+- id: evds
+  terim: EVDS (TCMB)
+  kisaltma: EVDS
+  kategori: veri
+  sade: >-
+    Türkiye Cumhuriyet Merkez Bankası'nın faiz, enflasyon gibi seriler sunduğu veri sistemi.
+  teknik: >-
+    Politika faizi TP.BISPOLFAIZ.TUR, TÜFE TP.TUKFIY2025.GENEL, ÜFE TP.TUFE1YI.T1, risksiz faiz TP.APIFON4. Tek istekte
+    en fazla 1000 satır (parçalanır). Eski kodlar (TP.YSSK.A01, TP.FG.G0) EVDS'de yoktur.
+  kodda: [data/macro_fetcher.py::MacroDataFetcher]
+  belgede: [data/CLAUDE.md]
+  ilgili: [makro-veri, risksiz-faiz]
+
+- id: makro-veri
+  terim: Makro veri (yurt içi)
+  kategori: veri
+  sade: >-
+    Faiz ve enflasyon gibi ekonominin genel durumunu gösteren seriler. Yalnız açıklandıkları günden sonra kullanılır.
+  teknik: >-
+    Nokta-zamanlı (B3): ay m TÜFE/ÜFE'si m+1'in 6'sından, politika faizi m+1'in 1'inden geçerli; bfill yok (B1). Olay
+    zamanlıdır, vintage değil. Makro seri 2018'de başlar; tek ajan faz 2 ortamı 2013–2017'de makro gözlemi 0 görür (bilinen
+    açık).
+  kodda: [data/macro_fetcher.py::MacroDataFetcher]
+  belgede: [data/CLAUDE.md]
+  ilgili: [evds, nokta-zamanlilik, kuresel-makro]
+
+- id: kuresel-makro
+  terim: Küresel makro (VIX, US10Y, DXY)
+  kategori: veri
+  sade: >-
+    Dünya piyasalarındaki korku, ABD faizi ve dolar gücünü gösteren üç seri. Yalnız tahmin hattına girer, ajanın gözlemine girmez.
+  teknik: >-
+    yfinance'ten (vix, us10y, dxy; ayrıca usd_try, eur_try, bist100_index). RL state space'e eklenmez: eğitilmiş modellerin
+    gözlem boyutu bozulmasın diye macro_features sabit kodlanmaz.
+  kodda: [data/macro_fetcher.py::MacroDataFetcher]
+  ilgili: [makro-veri, yfinance, tahmin-ensemble]
+
+- id: endeks-serileri
+  terim: Endeks serileri (XU100, XU030)
+  kategori: veri
+  sade: >-
+    Borsa İstanbul'un 100 ve 30 hisselik endekslerinin günlük kapanışları. Karşılaştırma ve piyasa dönemi etiketi için kullanılır.
+  teknik: >-
+    XU100 uzun seri data/macro/xu100.csv (2005..; |r| > %15 sıçramada yazılmaz); XU030 fiyat endeksi (temettüsüz) baseline
+    için. İkisi de kaynak JSON ve SHA ile.
+  kodda: [data/index_fetcher.py::fetch_index_close, data/index_fetcher.py::check_index_series, evaluation/baselines.py::load_xu030]
+  ilgili: [rejim, baseline-1n, al-tut]
+
+- id: rejim
+  terim: Piyasa rejimi
+  kategori: veri
+  sade: >-
+    Piyasanın yükselişte, düşüşte ya da yatay olduğu dönemlerin etiketi. Etiket yalnız o güne kadarki veriyle verilir.
+  teknik: >-
+    XU100 200 günlük eğilim × 60 günlük oynaklık, genişleyen tercil, ≤ t (B0 testli). Birincil etiket USD bazlı XU100
+    (XU100 / USDTRY_{t−1}); nominal TL ve 5 yıllık kayan tercil duyarlılık kolları. Gerçekleşen getiriye koşullu rejim
+    yazılmaz.
+  kodda: [evaluation/regimes.py::regime_labels, evaluation/regimes.py::load_primary_labels]
+  ilgili: [endeks-serileri, nokta-zamanlilik, getiri-birimi]
+
+- id: evren
+  terim: Sembol evreni (E0)
+  kategori: veri
+  sade: >-
+    Sistemin işlem yaptığı 30 hissenin dondurulmuş listesi. Bugünkü gerçek BIST-30 üyeliğiyle aynı değildir.
+  teknik: >-
+    Tek kaynak data/universe/bist30_panel.json (RL panelinin 30 hissesi, panel sırasıyla). Elle liste yazılmaz; evren
+    değişirse scripts/freeze_universe.py yeni sürüm adıyla. Tarihsel üyelik (E1) ve sektör grupları (E2) ayrı terimlerdir.
+  kodda: [data/bist30_symbols.py::get_symbols, scripts/freeze_universe.py]
+  belgede: [data/CLAUDE.md]
+  ilgili: [bist30, tarihsel-uyelik, sektor-gruplari]
+
+- id: tarihsel-uyelik
+  terim: Tarihsel üyelik (E1)
+  kategori: veri
+  sade: >-
+    Geçmişte hangi hissenin hangi dönemde BIST-30'da olduğu bilgisi. Bugünkü listeyi geçmişe uygulamak hayatta kalma yanlılığı yaratır.
+  teknik: >-
+    scripts/build_membership.py çeyreklik Borsa İstanbul duyurularından; universe_mask(date, mode) 'strict' (bilinmeyen gün
+    None), 'count_checked' (sezgisel) ya da 'raw'. Dönem içi olaylar KAP'tan izlenir; iş sürüyor.
+  kodda: [data/bist30_symbols.py::universe_mask, scripts/build_membership.py]
+  belgede: [data/CLAUDE.md]
+  ilgili: [evren, bist30, kap]
+
+- id: sektor-gruplari
+  terim: Sektör grupları (E2)
+  kategori: veri
+  sade: >-
+    Hisselerin faaliyet alanına göre gruplanması. Ajanlar arası iletişim grafiği bu gruplardan kurulur.
+  teknik: >-
+    data/universe/sectors.csv, KAP alt sektörlerinden (satır başına URL, erişim tarihi, ham sayfa SHA-256); evrende 2'den az
+    üyesi olanlar DİĞER grubuna düşer. load_sector_groups() ile okunur.
+  kodda: [data/bist30_symbols.py::load_sector_groups, scripts/build_sectors.py]
+  ilgili: [graf, kap, evren]
+
+- id: kap
+  terim: KAP
+  kisaltma: KAP
+  kategori: veri
+  sade: >-
+    Şirketlerin resmi duyurularını yaptığı Kamuyu Aydınlatma Platformu. Sektör bilgisi ve endeks olayları buradan okunur.
+  teknik: >-
+    Sektörler KAP gömülü verisinden; dönem içi endeks olayları VYK API'sinden (data/kap_api.py, .env anahtarı, dakikada 6
+    çağrı). Test geçidinde veri yalnız 2023'ü kapsar.
+  kodda: [data/kap_api.py]
+  belgede: [data/CLAUDE.md]
+  ilgili: [sektor-gruplari, tarihsel-uyelik]
+
+- id: temel-veri
+  terim: Temel veri (fundamentals)
+  kategori: veri
+  sade: >-
+    Şirketlerin bilanço oranları gibi finansal tablolardan gelen bilgiler. Bu sistemde tek bir anlık görüntü olarak tutulur.
+  teknik: >-
+    FundamentalDataFetcher (yfinance); tek ajan faz 2 gözlemine girer. Nokta-zamanlı değildir (tek anlık oran), deneme
+    kaydında fundamentals_pit açık maddesi olarak etiketlenir.
+  kodda: [data/fundamental_fetcher.py::FundamentalDataFetcher]
+  ilgili: [nokta-zamanlilik, protokol-acik, tek-ajan-ortami]
+
+# ------------------------------------------------------------------ yazılım ve ürün
+- id: pano
+  terim: Pano (dashboard)
+  kategori: yazilim
+  sade: >-
+    Sistemin tarayıcıda açılan arayüzü. Veri indirme, eğitim, tahmin, günlük karar ve analiz sayfaları buradadır.
+  teknik: >-
+    Dash uygulaması, FastAPI sunucusunun /dash/ yolunda (python run_server.py → http://localhost:8000). Sayfalar
+    dashboard/pages; menü modeli tek yerde (kenar çubuğu), üst çubuk kırıntıyı ve aramayı ondan üretir.
+  kodda: [dashboard/app.py, dashboard/components/sidebar.py, dashboard/components/topbar.py]
+  belgede: [dashboard/CLAUDE.md]
+  ilgili: [api, rehber-sayfasi, uzun-is]
+
+- id: rehber-sayfasi
+  terim: Rehber sayfası
+  kategori: yazilim
+  sade: >-
+    Panoda sistemin ne yaptığını, nerede olduğumuzu, deneylerin ne bulduğunu ve bu sözlüğü sade dille anlatan sayfa.
+  teknik: >-
+    /dash/guide; içerik dashboard/content (guide.yaml, glossary.yaml elle yazılır; snapshot.json scripts/build_guide.py ile
+    sistem haritası ve ölçüm JSON'larından üretilir). Üst çubuk araması sözlük terimlerine #terim-<id> çapasıyla gider.
+  kodda: [dashboard/pages/guide.py, scripts/build_guide.py]
+  belgede: [docs/development/system-guide-plan.md]
+  ilgili: [pano, sistem-haritasi]
+
+- id: api
+  terim: API
+  kisaltma: API
+  kategori: yazilim
+  sade: >-
+    Panonun ve betiklerin sunucuya istek gönderdiği programlama arayüzü.
+  teknik: >-
+    FastAPI, /api/* altında (trading, prediction, hyperopt, account, admin, config). Yazma uçları RequireWriter ya da
+    RequireAdmin bağımlılığı taşır; /api/* yazma isteklerinde CSRF doğrulanır. Etkileşimli belge /docs (oturumlu).
+  kodda: [app/main.py, app/api/routes/trading.py, app/auth/deps.py::RequireWriter]
+  ilgili: [roller, oturum, pano]
+
+- id: roller
+  terim: Roller (yönetici / kullanıcı / izleyici)
+  kategori: yazilim
+  sade: >-
+    Kimin neyi yapabileceğini belirleyen üç yetki düzeyi. İzleyici yalnız bakar, kullanıcı kendi alanında çalışır, yönetici ayrıca hesapları yönetir.
+  teknik: >-
+    Role.VIEWER / USER / ADMIN; require_role, admin'i her zaman geçirir. Yazma uçları RequireWriter (user + admin),
+    yönetim uçları RequireAdmin. Kayıt yoktur: hesapları yönetici açar. Yeni yazma ucunda bağımlılık atlanmaz.
+  kodda: [app/auth/models.py::Role, app/auth/deps.py::require_role, app/auth/deps.py::RequireAdmin]
+  belgede: [app/CLAUDE.md]
+  ilgili: [calisma-alani, oturum, api, denetim-kaydi]
+
+- id: oturum
+  terim: Oturum ve çerezler
+  kategori: yazilim
+  sade: >-
+    Giriş yapan kişinin tarayıcıda tanınmasını sağlayan kısa ve uzun ömürlü anahtarlar.
+  teknik: >-
+    Çerez tabanlı oturum (Dash WSGI başlık taşıyamaz): erişim ve yenileme JWT'leri, CSRF için double-submit çerezi
+    (X-CSRF-Token başlığıyla eşleşmeli). Kapı middleware /dash/*, /api/* ve /docs'u korur; AUTH_ENABLED=False ile dışarı
+    açılmaz.
+  kodda: [app/auth/security.py::create_access_token, app/auth/security.py::csrf_matches, app/auth/middleware.py, app/auth/cookies.py::set_auth_cookies]
+  belgede: [docs/development/phase-7-auth.md]
+  ilgili: [roller, api]
+
+- id: calisma-alani
+  terim: Çalışma alanı
+  kategori: yazilim
+  sade: >-
+    Her kullanıcının modellerini, sonuçlarını ve kararlarını ayrı tutan kendi klasörü. Piyasa verisi herkes için ortaktır.
+  teknik: >-
+    workspaces/<user_id>/; yollar app/auth/workspace.py çözümleyicisinden (models_dir, results_dir, use_workspace). Arka plan
+    görevi kullanıcı kimliğini use_workspace ile taşır, aksi halde dosyalar yanlış alana yazılır. Yollar koda sabitlenmez.
+  kodda: [app/auth/workspace.py::use_workspace, app/auth/workspace.py::models_dir]
+  belgede: [app/CLAUDE.md]
+  ilgili: [roller, uzun-is, model-meta]
+  uyari: >-
+    OPTUNA_STORAGE çalışma alanına göre çözülmüyor: optimizasyon çalışmaları kullanıcılar arasında ortak (bilinen gedik).
+
+- id: denetim-kaydi
+  terim: Denetim kaydı
+  kategori: yazilim
+  sade: >-
+    Hesap açma, model silme gibi yönetimsel işlemlerin kim tarafından ne zaman yapıldığını tutan kayıt.
+  teknik: >-
+    service.audit; ortak model silme model.delete_shared kaydı düşer. Kullanıcı kendi etkinliğini yalnız user_id ile görür
+    (yöneticinin işlemi yöneticinin kimliğini taşır, sızdırılmaz).
+  kodda: [app/auth/service.py::audit, app/api/routes/admin.py]
+  ilgili: [roller]
+
+- id: uzun-is
+  terim: Uzun iş (arka plan görevi)
+  kategori: yazilim
+  sade: >-
+    Eğitim gibi dakikalar süren ve sayfayı kilitlememek için arka planda çalışan iş. İlerleme panoda ve bildirim zilinde görünür.
+  teknik: >-
+    background_jobs.spawn / spawn_sync (iş parçacığı, adla izlenir); kullanıcı kimliği use_workspace ile taşınır.
+    Bildirimler kalıcı tablo değil, bellekteki çalışma durumlarının özetidir (/api/account/notifications).
+  kodda: [app/services/background_jobs.py::spawn, app/services/background_jobs.py::is_running]
+  belgede: [dashboard/CLAUDE.md]
+  ilgili: [calisma-alani, eta, pano]
+
+- id: eta
+  terim: Eğitim süresi tahmini (ETA)
+  kisaltma: ETA
+  kategori: yazilim
+  sade: >-
+    Bir eğitimin ne kadar süreceğine dair başlamadan önce ve çalışırken verilen tahmin.
+  teknik: >-
+    toplam = hazırlık + total_timesteps × adım maliyeti(algoritma, sembol) + değerlendirme; geçmiş koşuların medyanı
+    (kullanıcı başına training_eta_history.json), geçmiş yoksa yerleşik katsayı. Sembol sayısı yüklenen panelden alınır.
+  kodda: [app/services/training_eta.py::estimate, app/services/training_eta.py::live_eta, app/services/training_eta.py::record_run]
+  ilgili: [uzun-is]
+
+- id: model-meta
+  terim: Model meta dosyası
+  kategori: yazilim
+  sade: >-
+    Kaydedilen her modelin yanında duran ve modelin hangi hisselerle, hangi ölçekle eğitildiğini söyleyen dosya.
+  teknik: >-
+    <model>.meta.json (write_model_meta): sembol evreni ve sırası, price_stats, indicator_spec, tohum. Modelin evreni adından
+    çözülmez; tek gerçek kaynak modelin action_space boyutu ve bu dosyadır. Eski modeller için backfill_model_meta.py.
+  kodda: [app/services/daily_trading.py::write_model_meta, app/services/daily_trading.py::resolve_trade_universe, scripts/backfill_model_meta.py]
+  belgede: [app/CLAUDE.md]
+  ilgili: [gunluk-karar, fiyat-olcegi, adx]
+
+- id: gunluk-karar
+  terim: Günlük karar
+  kategori: yazilim
+  sade: >-
+    Eğitilmiş bir modelin akşam verisine bakıp ertesi gün için alım-satım önerisi üretmesi. Öneri kağıt portföye uygulanabilir.
+  teknik: >-
+    POST /trading/daily-decision; durum build_live_state ile kurulur, tazelik ölçütü takvim günü değil kapanmış olması
+    beklenen son seanstır (last_expected_session). Canlı karar henüz model meta'sındaki ölçeği ve indicator_spec'i okumuyor
+    (K13 açık iş).
+  kodda: [app/services/daily_trading.py::build_live_state, app/services/daily_trading.py::last_expected_session, app/api/routes/trading.py]
+  ilgili: [kagit-portfoy, model-meta]
+
+- id: kagit-portfoy
+  terim: Kağıt portföy
+  kategori: yazilim
+  sade: >-
+    Gerçek para kullanmadan, önerilen işlemlerin sonucunu izlemek için tutulan sanal portföy.
+  teknik: >-
+    Tek kaynak workspaces/<uid>/data/live_trading/portfolio.json. Kâr/zarar value_portfolio ile başka günün fiyatıyla
+    değerlenir; summary.daily_return_pct kâr/zarar değildir (aynı gün fiyatıyla yalnız komisyonu gösterir). Aynı tarih iki
+    kez uygulanmaz (applied_dates).
+  kodda: [app/services/portfolio.py::value_portfolio, app/services/portfolio.py::portfolio_path]
+  belgede: [app/CLAUDE.md]
+  ilgili: [gunluk-karar, calisma-alani, islem-maliyeti]
+
+- id: golden-test
+  terim: Tahmin golden testi
+  kategori: yazilim
+  sade: >-
+    Tahmin hattının çıktısını kayıtlı bir referansla karşılaştıran test. Kırmızı olması davranışın gerçekten değiştiği anlamına gelir.
+  teknik: >-
+    tests/test_prediction_regression.py, CPU'ya sabit (GPU sonucu farklı). K1 gereği 2026-11-15'te bir kez CPU'da yenilendi
+    (v2.0.0). Yalnız bilinçli bir davranış değişikliğinde yenilenir ve nedeni plana yazılır; --update --gpu reddedilir.
+  kodda: [tests/test_prediction_regression.py]
+  belgede: [tests/CLAUDE.md]
+  ilgili: [k-kararlari, tahmin-ensemble, surum]
+
+- id: surum
+  terim: Sürüm (SemVer)
+  kategori: yazilim
+  sade: >-
+    Sistemin her yayına verdiği numara. Büyük değişiklikte ilk, yeni iş paketinde ortadaki, düzeltmede son hane artar.
+  teknik: >-
+    Tek kaynak app/__init__.py (__version__); paket = MINOR. main korumalı (yalnız PR); birleşmeden sonra tag + gh release
+    --generate-notes. Sürüm /health, RL ortam kaydı ve tahmin manifestinde görünür.
+  kodda: [app/__init__.py::__version__]
+  belgede: [docs/development/versioning.md]
+  ilgili: [sistem-haritasi]
+
+- id: sistem-haritasi
+  terim: Sistem haritası
+  kategori: yazilim
+  sade: >-
+    Sistemin bileşenlerini ve her birinin şu anki durumunu gösteren tek belge.
+  teknik: >-
+    docs/development/system-map.md: düğüm sınıfı + durum tablosu + 'Son güncelleme' satırı. Bir bileşenin durumunu
+    değiştiren PR haritayı aynı PR'da günceller; Rehber'in aşama çizelgesi bu tablodan üretilir.
+  kodda: [scripts/build_guide.py]
+  belgede: [docs/development/system-map.md]
+  ilgili: [rehber-sayfasi, surum, faz]
+
+- id: venv-marl
+  terim: venv-marl (ayrı ortam)
+  kategori: yazilim
+  sade: >-
+    Çok ajanlı öğrenme kütüphaneleri için kurulmuş ayrı Python ortamı. Üretim kodu ona bağımlı değildir.
+  teknik: >-
+    K9: BenchMARL/TorchRL/PettingZoo yalnız venv-marl'da. marl/ içindeki saf çekirdek (weights, accounting, orders, obs_spec,
+    panel) iki ortamda da çalışır; marl/env.py ve comm_models.py yalnız venv-marl'da. app/ ve dashboard/ bunları import etmez.
+  kodda: [marl/env.py, marl/comm_models.py]
+  belgede: [marl/CLAUDE.md]
+  ilgili: [benchmarl, gymnasium, marl]
+
+- id: konteyner
+  terim: Konteyner (Docker)
+  kategori: yazilim
+  sade: >-
+    Sistemin bütün bağımlılıklarıyla paketlenip tek komutla çalıştırılabilen kopyası. Kod imaja kopyalandığı için değişiklik yeniden derleme ister.
+  teknik: >-
+    Dockerfile + docker-compose.yml. İmaj docs/ ve *.md almaz (.dockerignore); bu yüzden panonun okuduğu içerik
+    dashboard/content altında tutulur.
+  kodda: [Dockerfile, docker-compose.yml]
+  ilgili: [pano, rehber-sayfasi]

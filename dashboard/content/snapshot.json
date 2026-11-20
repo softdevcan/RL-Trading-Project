@@ -311,9 +311,9 @@
   },
   {
    "ad": "Sistem rehberi ve sözlük (K28)",
-   "durum": "R1 bitti; R2 ve R3 kodu bitti (2026-11-19)",
+   "durum": "R1–R4 bitti (2026-11-20)",
    "sinif": "bitti",
-   "siradaki": "Görsel denetim + konteyner; R4 (kalan terimler, üst çubuk araması, SSS)"
+   "siradaki": "Görsel denetim + konteyner (R4 araması ve yeni terimler)"
   },
   {
    "ad": "Faz 10 M4 iletişim kapıları",
@@ -384,7 +384,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "e76ee84ac2a8ca4a6dbb3930d2fa0980f6200b05901733200b302d2a1bb2fb9e",
+   "tablo_sha256": "f38fcd3407e6fa29b82692531c8c308187b8b3bdaa6c7077be504da791383294",
    "uretim_commit": null
   }
  }

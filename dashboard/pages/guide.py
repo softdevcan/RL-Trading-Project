@@ -77,6 +77,9 @@ def filter_terms(terms: list, query: str | None, category: str | None) -> list:
     return out
 
 
+GLOSSARY_PATH_PREFIX = "/dash/guide#terim-"  # ust cubuk aramasi (topbar._glossary_options) bu capaya gider
+
+
 def _anchor(term_id: str) -> str:
     return f"terim-{term_id}"
 
@@ -263,8 +266,8 @@ def layout():
 
 
 SCROLL_TO_HASH_JS = """
-function(_trigger) {
-    var h = window.location.hash;
+function(_trigger, hash) {
+    var h = hash || window.location.hash;
     if (h && h.length > 1) {
         var el = document.getElementById(decodeURIComponent(h.slice(1)));
         if (el) { el.scrollIntoView({block: "start"}); }
@@ -275,9 +278,10 @@ function(_trigger) {
 
 
 def register_callbacks(app):
-    # Yalniz acilista (tetik deposu bir kez cizilir); aramayla yeniden cizimde kaydirmaz.
+    # Acilista (tetik deposu bir kez cizilir) ve ust cubuk aramasi capayi degistirince (url.hash);
+    # sozluk icindeki aramayla yeniden cizimde kaydirmaz.
     app.clientside_callback(SCROLL_TO_HASH_JS, Output("guide-scroll-done", "data"),
-                            Input("guide-scroll-trigger", "data"))
+                            Input("guide-scroll-trigger", "data"), Input("url", "hash"))
 
     @app.callback(Output("guide-terms", "children"), Output("guide-count", "children"),
                   Input("guide-search", "value"), Input("guide-category", "value"))
