@@ -166,7 +166,7 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 
 **Betimsel (kararı değiştirmez):**
 - **Öğrenme denetimi:** altı koşunun hepsinde son 10 güncellemenin ortalama ödülü ilk 10'unkinden yüksek. R0-N tohum 14 sınırda (14,0 → 14,5).
-- Eğitim ödül eğrileri SR-N'de daha yüksek bitiyor: son 10 ortalaması 26–30, R0-N'de 15–22. Bu eğitim içi bir ölçüdür; doğrulamada tutmadı.
+- Eğitim ödül eğrileri SR-N'de daha yüksek bitiyor: son 10 ortalaması 26–30, R0-N'de 14,5–21,5. Bu eğitim içi bir ölçüdür; doğrulamada tutmadı.
 - **İşaret dönüşü:** eğitimde üç tohumda pozitif, doğrulamada iki tohumda negatif. Bu, ek yayın bloğunun eğitim penceresine uyum sağlıyor olabileceğine dair bir uyarıdır. 3 tohumla bu ayrılamaz. M8 ablasyonunda doğrulama ve test pencereleri bu yüzden ayrıca raporlanmalı.
 - Devir: SR-N eğitim 0,31 / doğrulama 0,32, R0-N 0,30 / 0,28. Nakit ağırlığı iki kolda da ~%1–4.
 
