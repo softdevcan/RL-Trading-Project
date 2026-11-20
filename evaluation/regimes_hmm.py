@@ -33,6 +33,7 @@ K_CANDIDATES = (2, 3)
 MIN_FIT_OBS = 504          # ilk capadan once en az ~2 yil getiri
 SCALE = 100.0              # getiri yuzde biriminde (optimizasyon kararliligi)
 FIT_SEED = 0               # search_reps baslangiclari icin (deterministik uyum)
+MAXITER = 500              # varsayilan 100'de ilk capa (2013-06-03, K=3) yakinsamiyordu (olculdu; llf farki ~0,5)
 
 
 def log_returns(close: pd.Series) -> pd.Series:
@@ -65,9 +66,9 @@ def fit_params(x: np.ndarray, k: int, start: Optional[np.ndarray] = None, search
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             if start is not None:
-                res = m.fit(start_params=start, disp=False)
+                res = m.fit(start_params=start, disp=False, maxiter=MAXITER)
             else:
-                res = m.fit(disp=False, search_reps=search_reps)
+                res = m.fit(disp=False, search_reps=search_reps, maxiter=MAXITER)
     finally:
         np.random.set_state(state)
     mu, sd = _state_moments(m, res.params, k)
