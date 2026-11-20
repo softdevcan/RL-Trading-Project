@@ -445,5 +445,27 @@ check("m8-v1: iptal gunu atilir; SKBNK sinir oncesi TERP carpaniyla duzelir; kes
       and _aaa.drop(_aaa.index[_i5]).equals(_raa.drop(_raa.index[_i5])),
       f"patch {_rep['close_patch']['n']}, rights {[r['rows_scaled'] for r in _rep['rights_fixes']]}")
 
+# ---------------------------------------------------------------------------------------------
+print("\n[8] M8 kontrol noktasi secimi: marl.selection == evaluation.rl_folds (M8 tasarimi A1)")
+from marl import selection as SEL  # noqa: E402
+from evaluation import rl_folds as RF  # noqa: E402
+_rng8, _ok8 = np.random.default_rng(11), True
+for _ in range(30):
+    _n = int(_rng8.integers(2, 300))
+    _R, _rf = _rng8.normal(0.0005, 0.01, _n), np.abs(_rng8.normal(0.0004, 0.0001, _n))
+    _dt = pd.bdate_range('2020-01-01', periods=_n)
+    _a, _b = SEL.excess_sharpe(_R, _rf), RF.excess_sharpe(_R, _dt, pd.Series(_rf, index=_dt))
+    _ok8 &= (_a is None and _b is None) or (_a is not None and _b is not None and np.isclose(_a, _b, rtol=1e-12))
+_ok8 &= SEL.excess_sharpe(np.zeros(10), np.zeros(10)) is None and RF.excess_sharpe(np.zeros(10)) is None   # hic islem yok
+for _ in range(40):                                   # esitlik (0,1'e yuvarlanmis metrik), None ve hepsi-None
+    _recs = [{'step': s * 100, 'params_sha': str(_rng8.integers(0, 4)),
+              'metric': (None if _rng8.random() < 0.25 else float(np.round(_rng8.normal(), 1)))} for s in range(1, 11)]
+    if _rng8.random() < 0.1:
+        _recs = [{**r, 'metric': None} for r in _recs]
+    _x, _y = SEL.select_checkpoint(_recs), RF.select_checkpoint(_recs)
+    _ok8 &= _x['step'] == _y['step'] and bool(_x['degenerate']) == bool(_y.get('degenerate'))
+check("excess_sharpe ve select_checkpoint iki uygulamada ayni (rastgele seri, sabit brut, esitlik, hepsi None); "
+      "N_CHECKPOINTS ayni", bool(_ok8) and SEL.N_CHECKPOINTS == RF.N_CHECKPOINTS)
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

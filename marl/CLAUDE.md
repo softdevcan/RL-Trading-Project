@@ -4,7 +4,7 @@ Tek gercek kaynak: `docs/development/phase-10-m2-design.md`. Muhasebe, projeksiy
 degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hatalidir.
 
 ## Iki katman (K9)
-- Saf cekirdek (`weights`, `accounting`, `orders`, `obs_spec`, `panel`): numpy/pandas. Ana `venv/` (canli
+- Saf cekirdek (`weights`, `accounting`, `orders`, `obs_spec`, `panel`, `selection`): numpy/pandas. Ana `venv/` (canli
   karar) ve `venv-marl/` (egitim) ikisi de import eder. Buraya pettingzoo/torchrl/benchmarl import'u KOYMA.
 - `env.py`: PettingZoo. YALNIZ `venv-marl/`. `app/` ve `dashboard/` bunu import etmez.
 - `comm_models.py` (M4, M5): attn/gat/self politika modelleri + S-msg guven terimi; YALNIZ `venv-marl/`. gat = attn + sabit graf maskesi, self = kendine dikkat (ayni parametre); `conf_mode='none'` M4a koşularindaki modelle bit-es KALMALI. `conf_temp` (GLM) yalniz guven terimini bozar; gozlem/mesaj icerigi degismez. `set_sender_mask` (M7a) yalniz DEGERLENDIRME araci: kalici degil, durum sozlugune yazilmaz; None iken ileri gecis bit-es. Tasarim `docs/development/phase-10-m4-design.md`, `phase-10-m5-design.md` §3.
@@ -44,9 +44,12 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (62, ana venv)
+- **M8 kat degerlendirmesi** (M8 tasarimi A1): `train_m3.py --checkpoints K` yalniz politika agirligini yazar (egitim
+  kontrol noktasiz kosuyla bit-es KALMALI); `eval_fold_m8.py` testi YALNIZ secilen noktayla BIR KEZ okur, cikti varsa
+  durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
+- `python tests/test_marl_core.py` (63, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
-- `venv-marl\Scripts\python tests/test_marl_m3.py` (18, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7)
+- `venv-marl\Scripts\python tests/test_marl_m3.py` (20, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7, M8 kontrol noktalari)
 - `venv-marl\Scripts\python tests/test_marl_m4.py` (20, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
 - `venv-marl\Scripts\python tests/test_marl_batched_env.py` (4, yalniz venv-marl; toplu ortam paritesi)
 - `venv-marl\Scripts\python tests/test_marl_m5_msg.py` (20, yalniz venv-marl; S-msg conf_mode, beta, gecit, karistirilmis guven, GLM gonderici sicakligi; 'none' M4a ile bit-es)

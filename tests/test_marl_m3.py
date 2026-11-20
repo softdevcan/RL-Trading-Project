@@ -198,6 +198,22 @@ rd = os.path.join(tmp, 'run')
 R.save_policy(er, CFG, {'build': build, 'policy_sha256': digest(er)}, rd)
 el, meta = R.load_policy(rd)
 check("kaydet/yukle: ayni politika ozeti", digest(el) == digest(er))
+# M8 tasarimi A1: kontrol noktalari esit aralikli; son nokta = son politika; kayit egitimi degistirmez (bit-es)
+import json  # noqa: E402
+_cb, _ck = {**build, 'frames': 600}, os.path.join(tmp, 'ckpt')        # 3 iterasyon (frames_per_batch 200)
+_e_ck = R.build_experiment(CFG, **_cb, checkpoints=3, checkpoint_dir=_ck)
+_e_ck.run()
+_e_no = R.build_experiment(CFG, **_cb)
+_e_no.run()
+with open(os.path.join(_ck, 'index.json'), encoding='utf-8') as _fh:
+    _idx = json.load(_fh)
+_last = torch.load(os.path.join(_ck, _idx[-1]['file']))
+check("M8 A1: kontrol noktalari iter 1/2/3 (kare 200/400/600), son nokta = son politika, kontrol noktasiz "
+      "kosuyla ayni politika; 600k/6000/10 izgarasi 10..100",
+      [c['iter'] for c in _idx] == [1, 2, 3] and [c['frames'] for c in _idx] == [200, 400, 600]
+      and R.state_digest(_last) == R.state_digest(_e_ck.policy.state_dict()) and digest(_e_ck) == digest(_e_no)
+      and R.checkpoint_iters(600_000, 6000, 10) == list(range(10, 101, 10)),
+      f"{[(c['iter'], c['frames']) for c in _idx]}")
 ecfg = {**CFG, 'mode': 'eval', 'start_row': 180, 'end_row': 259,
         'norm_stats_path': os.path.join(rd, 'norm_stats.json')}
 s1 = R.deterministic_rollout(el.policy, ecfg)

@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.1 TASLAK · 2026-11-20 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v0.2 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -23,7 +23,13 @@
 
 ## 2. M8'den önce gereken altyapı (kodu yok)
 
-- **A1 — Kat koşucusu.** `scripts/marl/train_m3.py` bugün `panel_m2.npz`'ye ve 2018-12-31 eğitim sonuna sabit; kontrol noktası seçimi yok (`m3_runner`: `checkpoint_at_end=False`). Gereken: panel yolu ve wf-v1 katı parametresi (satırlar `evaluation/splits.py`'den); eğitim bütçesi boyunca 10 kontrol noktası; doğrulamada `rl_folds` kuralıyla seçim; seçilen modelle testin **bir kez** okunması; deneme kaydına (`evaluation/trial_registry.py`) yazım. Varsayılan davranış M3–M7 koşularıyla bit-eş kalır.
+- **A1 — Kat koşucusu. BİTTİ (2026-11-21).**
+  - `train_m3.py` yeni seçenekler: `--panel`, `--train-end` ve `--checkpoints K` (varsayılanlar M3–M7 değerleri).
+  - Kontrol noktaları `m3_runner` callback'iyle eğitim bütçesi boyunca eşit aralıklı yazılıyor; yalnız politika ağırlıkları kaydediliyor, `ckpt/index.json` iterasyon, kare ve ağırlık özetini tutuyor.
+  - `scripts/marl/eval_fold_m8.py`: noktalar doğrulama yılında belirlenimci tek geçişle ölçülüyor; seçim `marl/selection.py` ile yapılıyor (`rl_folds`'un saf numpy eşi, `test_marl_core` [8] parite testi). Test yalnız seçilen noktayla **bir kez** okunuyor. Çıktı varsa betik duruyor; `--also-last` son noktayı ayrı kayıtla okuyor (K-M8-4).
+  - Testler: `test_marl_m3` [4]. Noktalar doğru iterasyonda yazılıyor, son nokta son politikayla aynı, kontrol noktalı eğitim kontrol noktasız eğitimle bit-eş. `test_marl_batched_env`, `test_marl_m4`, `test_marl_m5_msg` ve `test_marl_env` yeşil.
+  - Duman koşusu `panel_m8`'de, 2021+'a dokunmadan yapıldı: eğitim ..2017, doğrulama 2018, test 2019. Pencereler ve satır kuralı doğru, ikinci test okuması reddediliyor.
+  - Kalan: deneme kaydına yazım ve wf-v1 kat tarihlerinin `evaluation/splits.py` ile denetimi. İkisi ana venv'deki okuma adımında yapılacak (A3).
 - **A2 — SARL kolları (K15).** SARL-ağırlık: tek merkezi PPO aktörü, 30 boyutlu logit, nakit z₀ = 0 sabit (MARL'la aynı eylem temsili). SARL-eşmimari: MARL ile aynı paylaşımlı mimari, tek-ajan eğitimi (§2.3'teki itirazın kontrolü). Tasarım bu belgede, kod M8 koşularından önce ayrı commit'te ve testli.
 - **A3 — Okuma kodu.** Çıkarım birimi ve gürültü tabanı kuralı (§3) koşudan önce yazılır ve sentetik kayıtla sınanır (`--self-test`, M5 kalıbı).
 
@@ -55,5 +61,7 @@
 A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (GPU boşken) → ön kayıt v1.0 + hakem-rl ve hakem-finans (paralel) → dondurma → M8 koşuları → faz kapanışında hakem-2.
 
 ## Versiyon geçmişi
+
+- **v0.2 (2026-11-21):** A1 kat koşucusu bitti (`train_m3.py --panel/--train-end/--checkpoints`, `eval_fold_m8.py`, `marl/selection.py`); `test_marl_core` 63, `test_marl_m3` 20.
 
 - **v0.1 (2026-11-20):** Taslak: sabit girdiler, eksik altyapı (A1 kat koşucusu, A2 SARL kolları, A3 okuma kodu), gürültü tabanı tasarımı, karar bekleyen maddeler K-M8-1..6. Koşu yok.

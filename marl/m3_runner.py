@@ -17,6 +17,7 @@ Baseline'lar (M2 §9 #11, hakem-finans F7/F10): ortamin AYNI muhasebesi (`accoun
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -30,12 +31,63 @@ from marl import weights as W
 from marl.benchmarl_task import MarlTask, make_env
 
 
+def checkpoint_iters(frames: int, frames_per_batch: int, k: int) -> list:
+    """M8 (tasarim A1): egitim butcesi boyunca esit aralikli k kontrol noktasinin iterasyon numaralari (1 tabanli;
+    sonuncusu son iterasyon = egitimin son modeli; `rl_folds` izgarasiyla ayni ilke)."""
+    n = -(-int(frames) // int(frames_per_batch))
+    if not 1 <= k <= n:
+        raise ValueError(f"kontrol noktasi sayisi 1..{n} olmali: {k}")
+    return [int(round(i * n / k)) for i in range(1, k + 1)]
+
+
+def state_digest(sd: dict) -> str:
+    """state_dict ozeti; tensor olmayan girdiler (TensorDict ust verisi, or. torch.Size) repr ile."""
+    h = hashlib.sha256()
+    for name in sorted(sd):
+        v = sd[name]
+        h.update(name.encode())
+        h.update(v.detach().cpu().contiguous().numpy().tobytes() if torch.is_tensor(v) else repr(v).encode())
+    return h.hexdigest()
+
+
+def _checkpoint_saver(out_dir: str, iters: list):
+    """Yalniz politika agirliklarini secili iterasyonlarin sonunda yazar; RNG'ye ve egitime dokunmaz."""
+    from benchmarl.experiment.callback import Callback
+
+    class CheckpointSaver(Callback):
+        def __init__(self):
+            super().__init__()
+            self.k, self.index = 0, []
+
+        def on_setup(self):
+            if len(self.experiment.group_map) != 1:
+                raise ValueError("kontrol noktasi kaydi tek ajan grubu ister")
+
+        def on_train_end(self, training_td, group):
+            self.k += 1
+            if self.k not in iters:
+                return
+            sd = {n: (t.detach().cpu().clone() if torch.is_tensor(t) else t)
+                  for n, t in self.experiment.policy.state_dict().items()}
+            name = f'ckpt_{self.k:04d}.pt'
+            torch.save(sd, os.path.join(out_dir, name))
+            self.index.append({'iter': self.k, 'frames': int(self.experiment.total_frames), 'file': name,
+                               'params_sha': state_digest(sd)})
+            with open(os.path.join(out_dir, 'index.json'), 'w', encoding='utf-8') as fh:
+                json.dump(self.index, fh, indent=1)
+
+    return CheckpointSaver()
+
+
 def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames: int = 30_000,
                      frames_per_batch: int = 6000, epochs: int = 10, n_envs: int = 10, parallel: bool = False,
                      train_device: str = 'cpu', sampling_device: str = 'cpu', init_std: float = 0.12,
-                     lr: Optional[float] = None, save_folder: Optional[str] = None, model: Optional[dict] = None):
+                     lr: Optional[float] = None, save_folder: Optional[str] = None, model: Optional[dict] = None,
+                     checkpoints: int = 0, checkpoint_dir: Optional[str] = None):
     """`model`: None -> BenchMARL MLP politikasi (M3, M4 `none` kolu); dict -> M4 iletisim kolu
-    (`marl.comm_models.CommPolicyConfig` alanlari: kind, hidden, heads, rounds, edges). Elestirmen her zaman MLP."""
+    (`marl.comm_models.CommPolicyConfig` alanlari: kind, hidden, heads, rounds, edges). Elestirmen her zaman MLP.
+    `checkpoints` > 0 (M8, tasarim A1): esit aralikli politika agirliklari `checkpoint_dir`'e (index.json ile);
+    0 iken Experiment cagrisi oncekiyle ayni."""
     from benchmarl.algorithms import IppoConfig, MappoConfig
     from benchmarl.experiment import Experiment, ExperimentConfig
     from benchmarl.models.mlp import MlpConfig
@@ -66,8 +118,14 @@ def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames:
     else:
         from marl.comm_models import CommPolicyConfig
         policy_cfg = CommPolicyConfig(**model)
+    kw = {}
+    if checkpoints:
+        if not checkpoint_dir:
+            raise ValueError("checkpoints > 0 icin checkpoint_dir gerekli")
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        kw['callbacks'] = [_checkpoint_saver(checkpoint_dir, checkpoint_iters(frames, frames_per_batch, checkpoints))]
     return Experiment(task=task, algorithm_config=algo_cfg, model_config=policy_cfg,
-                      critic_model_config=MlpConfig.get_from_yaml(), seed=seed, config=cfg)
+                      critic_model_config=MlpConfig.get_from_yaml(), seed=seed, config=cfg, **kw)
 
 
 def save_policy(exp, task_cfg: dict, run_meta: dict, out_dir: str) -> dict:
@@ -84,15 +142,16 @@ def save_policy(exp, task_cfg: dict, run_meta: dict, out_dir: str) -> dict:
     return meta
 
 
-def load_policy(run_dir: str):
-    """Kayitli politikayi ayni yapiyla yeniden kur (egitim yapilmaz)."""
+def load_policy(run_dir: str, weights: Optional[str] = None):
+    """Kayitli politikayi ayni yapiyla yeniden kur (egitim yapilmaz). `weights`: varsayilan `policy.pt`;
+    M8 kontrol noktasi icin `ckpt/ckpt_XXXX.pt`."""
     with open(os.path.join(run_dir, 'meta.json'), encoding='utf-8') as fh:
         meta = json.load(fh)
     b = meta['build']
     exp = build_experiment(meta['task_cfg'], algo=b['algo'], seed=b['seed'], frames=b['frames_per_batch'],
                            frames_per_batch=b['frames_per_batch'], epochs=b['epochs'], n_envs=1,
                            init_std=b['init_std'], lr=b.get('lr'), model=b.get('model'))
-    exp.policy.load_state_dict(torch.load(os.path.join(run_dir, 'policy.pt'), map_location='cpu'))
+    exp.policy.load_state_dict(torch.load(os.path.join(run_dir, weights or 'policy.pt'), map_location='cpu'))
     return exp, meta
 
 
