@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.5 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.6 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -78,7 +78,7 @@ Kod: `evaluation/regimes_hmm.py` (test `tests/test_regimes_hmm.py` 4/4: B0 kesme
 - **Tekrar üretim hatası (test yakaladı, düzeltildi):** statsmodels `search_reps` rastgele başlangıçları NumPy'ın küresel üreticisinden çekiyor; tohumsuz uyum aynı veride farklı parametre veriyordu (kesme değişmezliği ~1e-5 ile kırıldı). Uyum artık sabit tohumla (`FIT_SEED`), küresel durum geri yüklenerek yapılıyor. İlk çapa varsayılan 100 iterasyonda yakınsamıyordu; `MAXITER = 500` ile 31 + 54 uyumun hepsi yakınsadı.
 - **Durum sayısı:** ilk çapada (2013-06-03, MARL panelinin ilk seansı) BIC K = 3'ü seçti (K = 2: 8.774, K = 3: 8.738). **Beyan:** ilk çapanın tarihi, scratchpad'deki bir denemede BIC'in çapaya bağlı olduğu (2010 çapasında K = 2) görüldükten sonra "olasılığın gerektiği ilk gün" ilkesine bağlandı; başarım okunmadı.
 - **Kanonik sıra tutarlı:** 85 uyumun hepsinde σ'ya göre artan sıra ortalamaya göre azalan sırayla aynı (`mean_desc_with_sd`): en sakin durumun ortalama getirisi en yüksek, en çalkantılı durumunki en düşük.
-- **İki hücreli eşleme seçimi (öneri, kullanıcı onayı bekliyor):** "en çalkantılı durum ≥ 0,5 → düşüş benzeri" (`two_cell`) K = 3'te dejenere: o durum nadir bir kriz durumu (eğitim 35 gün, ≥ 20 günlük dönem yok; birleşik test 69 gün). **"En sakin durum ≥ 0,5 ↔ geri kalanlar" (`calm_vs_rest`)** dengeli: eğitim 570 / 773 gün (11 / 15 dönem), doğrulama 253 / 247 (5 / 6), birleşik test 670 / 784 (9 / 11).
+- **İki hücreli eşleme seçimi (KARAR K-M6-5, 2026-11-20, kullanıcı: `calm_vs_rest`; §5):** "en çalkantılı durum ≥ 0,5 → düşüş benzeri" (`two_cell`) K = 3'te dejenere: o durum nadir bir kriz durumu (eğitim 35 gün, ≥ 20 günlük dönem yok; birleşik test 69 gün). **"En sakin durum ≥ 0,5 ↔ geri kalanlar" (`calm_vs_rest`)** dengeli: eğitim 570 / 773 gün (11 / 15 dönem), doğrulama 253 / 247 (5 / 6), birleşik test 670 / 784 (9 / 11).
 - **İkinci tanım birincilin tekrarı değil:** `calm_vs_rest` ile kural tabanlı birincil eğilim etiketinin gün bazında uyuşması geliştirme pencerelerinde 0,74 / 0,70, birleşik testte **0,52** (yıllara göre 0,31–0,66). Test döneminde HMM ikinci tanımı eğilimi değil oynaklık durumunu ölçüyor. Sonuç: M8'de AQ3'ün HMM ile tekrarı "aynı sorunun ikinci etiketle sınanması" diye değil, "oynaklık durumuna koşullu ayrı bir okuma" diye yazılmalı (K10 döngüselliğine ek beyan).
 
 ### 3.2 M7a durumu (2026-11-20): karşı-olgusal mesaj maskeleme (betimsel tanı)
@@ -121,6 +121,7 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 - **K-M6-1 — H4'ün rejim çözünürlüğü.** Öneri: **birincil çözünürlük iki hücre (eğilim)**, altı hücre yalnız betimsel. Gerekçe §2: altı hücrede dönem sayısı sıfıra iniyor. Alternatif: üç oynaklık düzeyi (eğilimden bağımsız).
 - **K-M6-2 — HMM uyum protokolü.** Öneri: çapalarda (63 seans) genişleyen pencereyle yeniden uyum, yalnız filtrelenmiş olasılık, durum sayısı {2, 3} BIC ile ilk çapada sabit, girdi USD bazlı XU100 günlük log getirisi. Alternatif: yalnız eğitim penceresinde tek uyum (daha basit, ama test penceresinde parametre bayatlar).
 - **K-M6-3 — S-reg ana tasarımda mı?** Plan "ana tasarımda sabit, katkısı tek ablasyonla" diyor. Bu, M8'in temel gözleminin M3–M5 pilotlarından farklı olacağı (yeni gözlem sürümü) anlamına gelir. Öneri: planı izle (S-reg açık, tek ablasyon "S-reg kapalı"); M6b'yi bir kısa pilotla (3 tohum, maliyetsiz, ~1 sa) "S-reg açıkken öğrenme bozulmuyor mu" diye sına, sonuç tez bulgusu değil.
+- **K-M6-5 — HMM iki hücreli eşleme (2026-11-20, kullanıcı; öneri yönünde KAPANDI): `calm_vs_rest`.** "En sakin durum olasılığı ≥ 0,5" ↔ geri kalanlar. `two_cell` (en çalkantılı ↔ geri kalan) K = 3'te dejenere olduğu için birincil değil, yalnız betimsel. Kodda tek kaynak `evaluation/regimes_hmm.py::PRIMARY_TWO_CELL`. M8'de bu tanım eğilimin tekrarı değil, "oynaklık durumuna koşullu ayrı okuma" olarak yazılır (§3.1).
 - **K-M6-4 — 2021+ rejim sayımı.** Öneri: M8 ön kaydından önce, wf-v1 test yıllarında **yalnız rejim etiketinin** gün/dönem sayımı (piyasa endeksi verisi; hiçbir politika ya da başarım okunmaz). Bu, M8'de H4 için kaç dönem olacağını önceden söyler. Pencere dokunulmamışlık kuralının (Faz 9 R1 `EXPOSED_EVAL_WINDOWS`) kapsamına girip girmediği kullanıcı kararıdır.
 
 ## 6. M6b kısa pilot ön kaydı (K-M6-3; DONDURULDU 2026-11-20, koşudan önce)
@@ -150,6 +151,7 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-20):** K-M6-5 kapandı (HMM iki hücre = `calm_vs_rest`, `PRIMARY_TWO_CELL`). M7b kodu (tek biçimli dikkat, karıştırılmış mesaj, dikkat kaydı; `attn_m7b.py`) yazıldı; ölçüm koşulmadı.
 - **v0.5 (2026-11-20):** §6 M6b kısa pilot ön kaydı DONDURULDU (R0-N ↔ SR-N, tohum 12–14, maliyetsiz; okuma BOZULMA / IYILESME_ISARETI / FARK_YOK). M6b kodu: `build_sreg_m6.py`, `extras_path`.
 - **v0.4 (2026-11-20):** §3.2 M7a ölçümü: maskeleme mesaj kanalına bağımlılığı ölçüyor, bilgiyi değil (tahminsiz kolda da düşüş); dağılımı koruyan karıştırma kontrolü önerisi.
 - **v0.3 (2026-11-20):** §3.1 M6a kod + ölçüm: K = 3, `calm_vs_rest` önerisi, test yıllarında birincil eğilimle uyuşma 0,52 (ikinci tanım oynaklık durumunu ölçüyor). M6c kodu (`evaluation/regime_contrast.py`, test 3/3).

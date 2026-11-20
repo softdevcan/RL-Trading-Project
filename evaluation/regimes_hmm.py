@@ -33,6 +33,8 @@ K_CANDIDATES = (2, 3)
 MIN_FIT_OBS = 504          # ilk capadan once en az ~2 yil getiri
 SCALE = 100.0              # getiri yuzde biriminde (optimizasyon kararliligi)
 FIT_SEED = 0               # search_reps baslangiclari icin (deterministik uyum)
+# Iki hucreli eslemenin birincil secimi (kullanici karari K-M6-5, 2026-11-20; M6 tasarimi §5). 'two_cell' K = 3'te dejenere.
+PRIMARY_TWO_CELL = 'calm_vs_rest'
 MAXITER = 500              # varsayilan 100'de ilk capa (2013-06-03, K=3) yakinsamiyordu (olculdu; llf farki ~0,5)
 
 
