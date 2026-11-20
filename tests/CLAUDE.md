@@ -122,6 +122,7 @@ venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle ag
                                            #          GLM gonderici sicakligi yalniz guven teriminde + egitici conf_fields (z_scale egitim satirlarindan) (20, ~1 dk; YALNIZ venv-marl)
 python scripts/marl/analyze_m5.py --self-test  # M5 mekanizma okumasi: H2 (i)-(v) etiket + tek okuma (karistirilmis guven, beta esigi, gurultu tabani, dogrulama), H3 sabit sira + KISMI, eksik kol ayrimi, m = ceil(2k/3) (10, ~10 sn; ana venv)
 python scripts/marl/analyze_m5real.py --self-test  # M5 gercek sinyal okumasi: O1-O4 oncelik sirasi, siralama tabani (b), tabansiz ikincil, boyut tanisi, O3 negatif notu, brut SR, eksik kol (9, ~10 sn; ana venv)
+python scripts/marl/analyze_m6sreg.py --self-test  # M6b S-reg kisa pilot okumasi: FARK_YOK / BOZULMA / IYILESME_ISARETI, ters isaretli tohum, dogrulama celiskisi, eksik tohum (6, ~5 sn; ana venv)
 python tests/test_guide.py                 # K28 R1 sistem sozlugu: sema, ilgili + kisaltma baglantisi, kod/belge yollari, kaynak
                                            #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla; R2 Rehber sayfasi kurulus + arama + menu; R3 deney kartlari kaynaga esit + snapshot/harita bayatligi (9, ~5 sn; ana venv)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,

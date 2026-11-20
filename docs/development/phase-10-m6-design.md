@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.4 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.5 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -123,10 +123,34 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 - **K-M6-3 — S-reg ana tasarımda mı?** Plan "ana tasarımda sabit, katkısı tek ablasyonla" diyor. Bu, M8'in temel gözleminin M3–M5 pilotlarından farklı olacağı (yeni gözlem sürümü) anlamına gelir. Öneri: planı izle (S-reg açık, tek ablasyon "S-reg kapalı"); M6b'yi bir kısa pilotla (3 tohum, maliyetsiz, ~1 sa) "S-reg açıkken öğrenme bozulmuyor mu" diye sına, sonuç tez bulgusu değil.
 - **K-M6-4 — 2021+ rejim sayımı.** Öneri: M8 ön kaydından önce, wf-v1 test yıllarında **yalnız rejim etiketinin** gün/dönem sayımı (piyasa endeksi verisi; hiçbir politika ya da başarım okunmaz). Bu, M8'de H4 için kaç dönem olacağını önceden söyler. Pencere dokunulmamışlık kuralının (Faz 9 R1 `EXPOSED_EVAL_WINDOWS`) kapsamına girip girmediği kullanıcı kararıdır.
 
+## 6. M6b kısa pilot ön kaydı (K-M6-3; DONDURULDU 2026-11-20, koşudan önce)
+
+**Soru (sağlamlık, tez bulgusu değil):** S-reg yayın bloğu gözleme eklenince öğrenme bozuluyor mu? Plan S-reg'i ana tasarımda açık tutuyor (Faz 10 §3.1.3); bu pilot onun bir sakıncasını erken yakalamak için. S-reg'in değerini ölçmez; o M8'deki tek ablasyondur.
+
+**Düzen:**
+- Blok: `data/marl/sreg_m6.npz` (`build_sreg_m6.py`; kayıt `measurements/phase10-m6/sreg_block.json`): [z(sma_ratio), z(vol)], birincil (USD bazlı) etiketin sürekli özellikleri, as-of, ölçek yalnız eğitim satırlarından; kırpma 0, B0 5/5.
+- Kollar: **R0-N** (none, tahminsiz, S-reg yok) ve **SR-N** (none, tahminsiz, S-reg açık). Tek etken S-reg; mimari, tohum ve diğer her şey aynı. İletişimsiz mimari, en ucuz ve S-reg'in iletişimden bağımsız etkisini verir.
+- Sabitler: **maliyetsiz** (K-M6-3), α 0,25, MAPPO, eleştirmen MLP (tüm yerel gözlemler; S-reg eleştirmene de girer), F = 600.000, lr 5e-4, `init_std` 0,12, son ağırlıklar, deterministik tam pencere değerlendirme. Eğitim 2013-08..2018-12, doğrulama 2019–2020.
+- **Tohumlar 12, 13, 14** (yeni; 0–11 önceki pilotlarda kullanıldı ve sonuçları görüldü).
+- Süre tahmini: 6 koşu, iki eş zamanlı, ~25–30 dk (none kolu ~6–7 dk/koşu, M5 gerçek sinyal kayıtları).
+
+**Okuma kuralı (önceden sabit; `scripts/marl/analyze_m6sreg.py`, self-test):** D = D(SR-N, R0-N), yıllık Sharpe farkı, fazla getiri, eşli tohum, ortak HAC.
+| Okuma | Koşul (hepsi) | Sonuç |
+|---|---|---|
+| `BOZULMA` | eğitimde D < 0, iki yönlü p < 0,05, **üç tohumun üçünde** fark negatif, doğrulamada D < 0 ve en az 2/3 tohumda negatif | S-reg ana tasarıma bu haliyle girmez; karar kullanıcıda |
+| `IYILESME_ISARETI` | aynı koşullar pozitif yönde | Keşifsel; S-reg plan gereği ana tasarımda, değeri M8 ablasyonunda sınanır. Tez bulgusu değil |
+| `FARK_YOK` | ikisi de değil | Öğrenme bozulmuyor; plan izlenir (S-reg ana tasarımda) |
+
+- Betimsel (kararı değiştirmez): tohum başına Sharpe, devir, nakit ağırlığı, eğitim eğrileri (`curves_m4a.py`), "her koşuda son 10 güncelleme ilk 10'dan yüksek" denetimi.
+- **Sınırlar:** 3 tohumda ortak HAC tohum varyansını taşımaz (M5 §4.11); bu yüzden üç tohumda aynı işaret ve doğrulama koşulu birlikte aranır. Maliyetsiz düzen 20 bps'deki davranışı söylemez. Pilot tek bir S-reg tanımını (iki sürekli özellik) sınar.
+- **Yasak kurtarma:** ek tohum, özellik kümesini, maliyeti ya da eşiği sonuca bakarak değiştirmek yapılmaz; gerekirse yeni ön kayıt.
+- Hakem okuması yapılmadı (kademeli kural: kısa ve ucuz pilot, tez bulgusu üretmez; beyan).
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.5 (2026-11-20):** §6 M6b kısa pilot ön kaydı DONDURULDU (R0-N ↔ SR-N, tohum 12–14, maliyetsiz; okuma BOZULMA / IYILESME_ISARETI / FARK_YOK). M6b kodu: `build_sreg_m6.py`, `extras_path`.
 - **v0.4 (2026-11-20):** §3.2 M7a ölçümü: maskeleme mesaj kanalına bağımlılığı ölçüyor, bilgiyi değil (tahminsiz kolda da düşüş); dağılımı koruyan karıştırma kontrolü önerisi.
 - **v0.3 (2026-11-20):** §3.1 M6a kod + ölçüm: K = 3, `calm_vs_rest` önerisi, test yıllarında birincil eğilimle uyuşma 0,52 (ikinci tanım oynaklık durumunu ölçüyor). M6c kodu (`evaluation/regime_contrast.py`, test 3/3).
 - **v0.2 (2026-11-20):** K-M6-1..4 kullanıcı tarafından öneri yönünde kapatıldı. §2.1: wf-v1 test yıllarında yalnız etiket sayımı (birleşik testte eğilim hücresi başına 8–9 dönem, kat başına 1–3).

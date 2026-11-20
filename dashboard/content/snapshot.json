@@ -368,7 +368,7 @@
    "ad": "Faz 10 M6/M7 rejim ve yorumlanabilirlik",
    "durum": "sürüyor",
    "sinif": "suruyor",
-   "siradaki": "Kullanıcı kararları K-M6-1..4; sonra M6a HMM, M6c okuma aracı, M7a/b"
+   "siradaki": "M6b pilotu (run_m6sreg.py --jobs 2, ~30 dk), M7b dikkat testleri + karıştırılmış mesaj kontrolü"
   },
   {
    "ad": "Faz 10 M8, nihai koşumlar",
@@ -431,7 +431,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "da9a3bed31390f2b58888871f617b069fc8949990f47d2081dc985a493b2cb7b",
+   "tablo_sha256": "b4cdc6eaa5de1885ddb852c86b9dae507b71909c856ed3737e28b7549cf5cbe4",
    "uretim_commit": null
   }
  }
