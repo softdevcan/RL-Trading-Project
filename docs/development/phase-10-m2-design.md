@@ -1,6 +1,6 @@
 # Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
 
-**Sürüm:** v0.8 · 2026-11-20 · dal `feat/phase10-m8-margin-2021`
+**Sürüm:** v0.9 · 2026-11-20 · dal `feat/phase10-m8-margin-2021`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
 **Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). S-obs ufuk hizası ölçüldü; M3 pozitif kontrolü PC060-K12 (§9.1). Hakem-2 M2 kapanışı: Küçük revizyon, bulgular işlendi (§10); satış engeli dönem bağımlı marja geçti (v0.7). **M2 çekirdeği kapandı;** sıradaki M3.
 
@@ -298,6 +298,18 @@ Boyut: F + 3 + N + G + 4·[S-obs] + E. N = 30'da ek özellik yokken 44.
 - `.npz` yazımında `--json` aynı ölçüm alanlarına `npz` (göreli yol, SHA-256) ve `risk_free` (kapsam) ekler. Panel `data/marl/panel_m2.npz` (git dışı).
 - Varsayılan pencere sonu 2020-12-31. 2021, m0p-v2 doğrulayıcı penceresi olduğu için ona dokunulmaz.
 
+### 6.1 M8 paneli: ikinci kaynakla veri denetimi (2026-11-20; ölçüldü, KARAR BEKLİYOR)
+
+M8'in 2021+ penceresi için panel kaynağı (yfinance, düzeltilmiş) ikinci bir kaynakla karşılaştırıldı: İş Yatırım HisseTekil (ham ve düzeltilmiş kapanış, gün içi en düşük/en yüksek, sermaye). Betik `scripts/marl/cross_source_audit_m8.py` (`640a7f2`), ölçüm `measurements/phase10-m8/cross_source_audit.json`; ham yanıtlar git dışı (`data/marl/sources/isyatirim/`, SHA'ları JSON'da). Performans okunmadı. Normal günlerde iki kaynağın düzeltilmiş kapanışı 4 basamakta eşit (THYAO 2022-12-14: 133,8331).
+
+Bulgular (2013-06..2026-11-09, 100.949 ortak hücre; sapma = log(bizim / İşY) − 11 seanslık merkezi medyan):
+- **Kesik gün çubuğu.** |sapma| > %1: 1.022 hücre (%1,0); > %2: 235; > %5: 26. Yıl bazında > %1: 2018'de 147, 2019'da 373, 2020'de 266 (M2–M7 geliştirme dönemi); 2021'de 4, 2022'de 61, 2023'te 30, 2024'te 7, 2025'te 5, 2026'da 1. En az 5 hissede > %1 sapma olan 46 gün var; en kötüleri 2023-01-05 (30 hisse), 2016-01-22 (28), 2019-04-04 (27), 2020-03-11 (24). Örnek: 2023-01-05'te İşY'de VAKBN ve YKBNK günün en düşüğünde kapanıyor (10,64 ve 9,208); yfinance kapanışı (11,41 ve 9,788) İşY'nin gün aralığının üst kısmında, yani seans sonundaki düşüş yfinance çubuğunda yok. 2021+ |sapma| > %2: 55 hücre, 10 gün (2022-05-10, 06-27, 11-17, 11-29, 12-12, 12-16; 2023-01-05; 2024-04-09; 2025-05-08; 2026-03-19).
+- **Sermaye artırımı düzeltmesi.** 87 olayın 79'u iki kaynakta aynı günde düzeltilmiş. Gerçek sorunlar SKBNK'de. Hak kullanım günleri 2024-06-13 ve 2026-10-22 (İşY ham kapanış düşüşü ve sermaye 1,86 → 2,5 → 3,5 milyar TL); yfinance düzeltmeyi 2024-06-04 ve 2026-10-19'dan itibaren uygulamış, sınırdan öncesi ham kalmış. Sonuç sahte bir −%20 (dlog −0,222) ve −%22 (−0,251) düşüş. Çarpanlar teorik fiyattan 0,8010 ve 0,7781 (İşY ham kapanışı ve %34,41 / %40 oran, pay başı 1 TL). SKBNK 2014-06-09 (−0,064) ve 2015-02-27 (−0,022) iki kaynakta farklı düzeltilmiş; hangisinin doğru olduğu doğrulanmadı. Kalan dört uyumsuz olay, aynı günlere düşen kesik çubuklar.
+- **Gün kümesi.** 2023-02-08 (işlemleri iptal edilen seans, §2.5) İşY'de yok. 2024-04-09 (Ramazan Bayramı arifesi yarım seansı) yfinance'te yok; kapı onu hayalet gün olarak atıyor.
+- Açılış fiyatı için ikinci kaynak yok (HisseTekil açılış vermiyor); açılışlar doğrulanmadı.
+
+**Öneri (karar bekliyor):** yalnız M8 paneline, açıkça istenince uygulanan sürümlü bir veri düzeltmesi (`m8-v1`): (i) 2023-02-08 satırı atılır; (ii) SKBNK'nin 2024-06-04 ve 2026-10-19 sınırlarından önceki fiyatları 0,8010 ve 0,7781 ile çarpılır; (iii) |sapma| > %1 olan kapanışlar İşY düzeltilmiş kapanışıyla (yerel ölçek oranıyla) değiştirilir, yüksek/düşük kapanışı kapsayacak biçimde genişletilir. Paylaşılan veri kapısı, M2 paneli ve Milestone 0' verisi değişmez. M2–M7 pilotlarının düzeltilmemiş veriyle koşulduğu beyan edilir; bu fark tüm kollarda ortaktır.
+
 ---
 
 ## 7. Ortam `MarlPortfolioEnv` (PettingZoo Parallel)
@@ -508,6 +520,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.9 (2026-11-20):** §6.1 M8 paneli ikinci kaynakla denetlendi (İş Yatırım; `measurements/phase10-m8/cross_source_audit.json`): kesik gün çubukları, SKBNK'nin yanlış günden düzeltilmiş iki bedelli artırımı, 2023-02-08 iptal seansı. Düzeltme önerisi `m8-v1` kullanıcı kararını bekliyor. Kod davranışı değişmedi.
 - **v0.8 (2026-11-20):** §2.5 fiyat marjı kapsamı 2021+'ya uzatıldı (M8 engel 1a; kullanıcı onayı): takvime yeni giriş yok, `PRICE_MARGIN_VERIFIED_UNTIL` 2026-11-09; birincil kaynak Borsa İstanbul 2020/20 sayılı duyuru; veri denetimi `measurements/phase10-m8/price_limit_audit.json`. Panel 2021+ için açık veri maddeleri (2023-02-08 iptal edilen seans, 2022-12-16 kısmi gün, SKBNK) listelendi. `test_marl_core` 61.
 
 - **v0.7 (2026-11-16):** Hakem-2 M2 kapanışı (§10 H1–H10; Küçük revizyon). H1: ön kayıt v0.7, satış engeli dönem bağımlı fiyat marjı (kullanıcı kararı; ortamda 38 → 2 hücre; 2021+ için kod açık hata verir). H2–H10: §9.1 sonrası notlar (MDE ≈ 0,26–0,27; tohum yayılımı K12 0,20–0,36), K12 gece ayrıştırması, ölçüm izi, açılış boşluğu denetimi, duman betiği, §3.2 e yan etki beyanı. Karar değişmedi: M3 pozitif kontrolü PC060-K12. Testler 61 + 36. **M2 çekirdeği kapandı;** kalan maddeler M3/M8'de (§9 #4–#6, #10–#12).
