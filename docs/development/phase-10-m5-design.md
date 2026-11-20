@@ -1,6 +1,6 @@
 # Faz 10 M5 — Tahmin sinyali ve güvenle ağırlıklı iletişim: tasarım ve ön kayıt
 
-**Sürüm:** v0.11 · 2026-11-19 · dal `feat/phase10-m5-mech`
+**Sürüm:** v0.13 · 2026-11-20 · dal `feat/phase10-m5-real`
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 (P5 ve "P5 durumu"), sinyal yolları tablosu, AQ2 ablasyonu
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M5 (Y7 yeniden çerçeveleme, ablasyon kolları), M8 "Güven kolları" maddesi, §9.31 kullanıcı kararı
@@ -342,9 +342,9 @@ Maliyet: ~38 bin token, 4 araç, ~0,9 dk (`review-panel.md` kaydı).
 
 **Deneme kaydı:** H2 ve H3 birer deneme (H3 SINANMADI olarak), GD betimsel (§4.5).
 
-## 5. Gerçek sinyal kolları ön kaydı (v0.12; DONDURULDU, kol seti onaylandı) — sonuçtan önce
+## 5. Gerçek sinyal kolları ön kaydı (v0.13; KOŞULDU, iki yolda O1_fark_yok, §5.10) — sonuçtan önce
 
-**Durum (v0.12, 2026-11-20):** Kullanıcı önerilen **8 kol × 3 tohum = 24 koşu** setini onayladı; §5 değişmeden koşulur (sonuç §5.10'da). Alternatif setler (§5.3 sonu) koşulmaz. **Durum (v0.11):** Okuma kuralı, eşikler ve kodu **DONDURULDU** (hakem-finans 2. okuma Kabul, hakem-rl 2. okuma Küçük rev. yalnız KÜÇÜK notlarla; §5.9). Kol seti kullanıcı onayı bekliyor: 8 kol onaylanırsa bu bölüm değişmeden koşulur. Başka bir set seçilirse §5 güncellenir ve hakemler yeniden okur. **Durum (v0.9):** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
+**Durum (v0.13, 2026-11-20):** 24 koşu bitti; okuma iki yolda da **`O1_fark_yok`** (§5.10). Ön kayıt değişmedi. **Durum (v0.12, 2026-11-20):** Kullanıcı önerilen **8 kol × 3 tohum = 24 koşu** setini onayladı; §5 değişmeden koşulur (sonuç §5.10'da). Alternatif setler (§5.3 sonu) koşulmaz. **Durum (v0.11):** Okuma kuralı, eşikler ve kodu **DONDURULDU** (hakem-finans 2. okuma Kabul, hakem-rl 2. okuma Küçük rev. yalnız KÜÇÜK notlarla; §5.9). Kol seti kullanıcı onayı bekliyor: 8 kol onaylanırsa bu bölüm değişmeden koşulur. Başka bir set seçilirse §5 güncellenir ve hakemler yeniden okur. **Durum (v0.9):** Taslak. Kol seti kullanıcı onayı bekliyor (öneri aşağıda). Koşu kullanıcının takviminde; 2026-11-19 kararı: "şu an koşu yapamayız, planlayalım". Hakem okuması (hakem-finans + hakem-rl) koşudan önce. Okuma kuralı §2.4 (O1–O4) ve yasak kurtarma yolları §2.5 **değişmez**; bu bölüm onları uygulanabilir eşiklere çevirir.
 
 ### 5.1 Soru
 
@@ -451,10 +451,38 @@ Maliyet: hakem-finans ~36 bin token, 8 araç, ~1,3 dk; hakem-rl ~36 bin, 6 araç
 
 **İkinci okuma (SendMessage, aynı hakemler):** hakem-finans **Kabul** (3 KÜÇÜK: iki yönlü olasılık ≈ 0,074; değiştirilebilirlik hiza varsayımına bağlı; tabansız ikincil "olası"). hakem-rl **Küçük rev.**, yalnız KÜÇÜK (tohumlar arası bağımlılık → (1/3)³ alt sınır; iki yönlü olasılık); kural–kod uyumu temiz, öncelik sırası aynı. Hepsi v0.11'de beyanla işlendi; kural değişmedi. Kural gereği üçüncü okuma yapılmadı (yalnız KÜÇÜK). Maliyet: hakem-finans ~46 bin token (önceki bağlamla), 4 araç, ~0,6 dk; hakem-rl kayıt `review-panel.md`'de.
 
+
+### 5.10 Sonuç (2026-11-20; okuma §5.4'e göre, sonuçtan sonra değiştirilmedi)
+
+**Okuma: iki yolda da `O1_fark_yok`.** Bu sinyal (pit_v2) ve bu güçle, gerçek sinyalin karıştırılmış sinyale göre bilgi kaynaklı bir fark yarattığı tespit edilmedi: ne gözlem yolunda (SO) ne de gözlem + güvenli mesaj yolunda (SB). Yazılmayacak olan: "tahmin sinyali MARL'a değer katmaz", "güven mekanizması çalışmaz" (§2.4 O1).
+
+Kaynak: `measurements/phase10-m5/m5real_results.json` (`analyze_m5real.py`, self-test 9/9; betik SHA `85641ec7…`, temiz ağaç). 24 koşunun hepsi temiz ağaçta, commit `75c76da` (`train_runs`). Eğriler `m5real_curves.json` (`curves_m4a.py`, temiz ağaç `9cb2092`): 24 koşunun 24'ünde ilk 10 güncellemenin ortalama bölüm getirisi negatif ve son 10'unki ondan yüksek; 21'inde son 10 pozitif. Kollar öğreniyor. Sayılar yıllık Sharpe farkı D (20 bps, fazla getiri, eşli tohum 9–11).
+
+| Yol | Karşılaştırma | D eğitim (SE) | iki yönlü p (Holm) | Sıralama tabanı | D doğrulama | Fark var mı |
+|---|---|---|---|---|---|---|
+| SO | gerçek ↔ karıştırılmış (birincil) | 0,007 (0,101) | 0,95 (1,0) | R üstte: tohum 9, 11; altta: yok → **yok** | 0,117 | hayır |
+| SB | gerçek ↔ karıştırılmış (birincil) | −0,027 (0,101) | 0,79 (1,0) | R üstte: 9; altta: 10, 11 → **yok** | −0,130 | hayır |
+
+- Birincil koşullar (§5.4): (a) Holm p < 0,05 iki yolda da **sağlanmadı**; (b) sıralama tabanı iki yolda da **sağlanmadı** (hiçbir yolda üç tohumun üçünde aynı taraf yok); (c) doğrulamada işaret tekrarı iki yolda da sağlandı, ama (a) ve (b) olmadan tek başına okunmaz.
+- **İkincil, tahminsize göre (tabansız, dört test Holm):** dördünde de Holm p = 1,0, fark yok. En küçük ham p SO gerçek ↔ T0-N doğrulamada (tek yönlü 0,036) ve bu birincil okuma değil; doğrulama tek başına koşul değildir. `secondary_note` boş.
+- **Boyut tanısı:** iki bilgisiz kol arasında D(S, S2) eğitimde SO 0,131 (p 0,30), SB −0,033 (p 0,56); ortak HAC'ın kalibre olmadığına dair işaret yok (`hac_uncalibrated_flag` false). M5 mekanizma kollarındaki gürültü tabanı uyarısı (§4.11) bu düzende tekrarlanmadı.
+
+**Betimsel (kararı değiştirmez):**
+- En küçük tespit edilebilir D, (1,96 + 0,84)·SE: SO 0,283, SB 0,284 (yıllık Sharpe). Gözlenen birincil farklar bunun çok altında; O1 "etki yok" değil, "bu güçle tespit edilmedi" demektir. Tohum gereksinimi (M4b formülü) burada bilgi vermez: gözlenen D sıfıra çok yakın olduğu için formül anlamsız büyüklükte sayı üretir; okuma betiği bunu üretmiyor ve sonradan eklenmedi.
+- Öğrenilen β (SB yolu, tohum 9/10/11): gerçek −0,019 / 0,026 / −0,006; karıştırılmış −0,014 / 0,037 / 0,014; ikinci karıştırma 0,002 / −0,059 / 0,045. Üç blokta da sıfır çevresinde ve işareti tohumlar arasında değişiyor: politika bu sinyalin güven terimine tutarlı bir ağırlık vermedi.
+- Devir (eğitim, ortalama): SO 0,27, SO-S 0,34, T0-N 0,43; SB 0,60, SB-S 0,61. Tahmin bloklu gözlem yolu tahminsizden daha az işlem yapıyor; iletişimli yol gözlem yolunun iki katından fazla.
+- Brüt (maliyetsiz, X + c·devir yaklaşığı) Sharpe tohum başına `paths.*.gross_sharpe_betimsel`'de.
+
+**Sınırlar (§5.6 tekrar):** tek tahmin tablosu, 3 tohum, 20 bps. Pozitif kontrol bile 20 bps'de KISMİ kalmıştı (M3 §6.7). Sonuç başka bir tahmin hattına ya da daha bilgili bir sinyale genellenmez. Deneme kaydı: 24 koşu, 2 birincil + 4 ikincil test N'ye girer.
+
+**Sonraki adım (kullanıcı kararı):** §5.7 gereği ek tohum, başka P tablosu ya da maliyet değişikliği bu karşılaştırmayı kurtarmak için yapılmaz. Gerçek sinyal sorusu yeniden açılacaksa (daha bilgili sinyal, ör. kapıdan geçen bir P tablosu) yeni ön kayıt gerekir.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.13 (2026-11-20):** §5 gerçek sinyal kolları KOŞULDU (24 koşu, temiz ağaç `75c76da`): SO ve SB yollarında `O1_fark_yok` (§5.10, `m5real_results.json`, `m5real_curves.json`).
+- **v0.12 (2026-11-20):** Kullanıcı 8 kol × 3 tohum setini onayladı; §5 değişmeden koşuldu.
 - **v0.11 (2026-11-19):** §5 ikinci okumalar (hakem-finans Kabul; hakem-rl Küçük rev., yalnız KÜÇÜK) beyanla işlendi: iki yönlü ≈ 0,074, alt sınır (tohumlar arası bağımlılık), hiza varsayımı, ikincil okumalar "olası". Okuma kuralı DONDURULDU; kol seti kullanıcı onayı bekliyor. Koşu yok.
 - **v0.10 (2026-11-19):** §5 hakem-finans + hakem-rl 1. okuma (ikisi Küçük rev.) işlendi: pencere içi permütasyon, sıralama tabanı, tabansız ikincil, boyut tanısı, brüt SR betimsel, oynaklık hizası ölçüldü. Koşu yok.
 - **v0.9 (2026-11-19):** §5 gerçek sinyal kolları ön kaydı TASLAK: 8 kol (T0-N, SO, SO-S, SO-S2, T0-G, SB, SB-S, SB-S2), 20 bps, tohum 9–11, gürültü tabanı karıştırılmış ↔ karıştırılmış-2, okuma O1–O4 öncelik sırasıyla. Kod `build_pred_m5real.py`, `run_m5real.py`, `analyze_m5real.py` (self-test 7/7); bloklar arşivlendi. Koşu yok.
