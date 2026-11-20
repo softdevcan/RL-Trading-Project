@@ -1,6 +1,6 @@
 # Sistem Rehberi ve Sözlük — Plan
 
-**Sürüm:** v0.7 · 2026-11-20 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
+**Sürüm:** v0.8 · 2026-11-20 · **Durum:** **ONAYLANDI (2026-11-19, kullanıcı; R-K1..R-K7 öneri yönünde).** **R1 bitti** (§11), **R2 ve R3 kodu bitti** (§12, §13; görsel denetim ve konteyner açılışı bekliyor); sonra R4.
 **Kaynak istek (kullanıcı, 2026-11-19):** "Sistemimizin bir sözlüğünü çıkartalım. Hatta arayüzde tüm sistemi anlatan bir sayfa ekleriz, bu dokümandan yola çıkarak."
 **Tetikleyen sorun:** Tasarım belgeleri ve raporlar hakem için yazıldı. Kol kodları (G-X, Z-S), istatistik kısaltmaları (D, HAC, Holm) ve aşama adları (M4a, K12) tanımsız ya da dağınık tanımlı. Kullanıcı sonuçları takip edemiyor ve sistemi konuyu bilmeyen birine anlatamıyor.
 
@@ -161,7 +161,7 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 
 ## 11. R1 durumu (2026-11-19)
 
-- **Sözlük:** `dashboard/content/glossary.yaml`, 73 terim, 7 kategori (yazılım ve ürün kategorisi R4'te). Üretilmiş [`docs/sozluk.md`](../sozluk.md) (`python scripts/build_guide.py`; `--check` bayatlığı yakalar).
+- **Sözlük:** `dashboard/content/glossary.yaml`, R1'de 73 terim, 7 kategori; R4 sonrası 171 terim, 8 kategori (§15). Üretilmiş [`docs/sozluk.md`](../sozluk.md) (`python scripts/build_guide.py`; `--check` bayatlığı yakalar).
 - **Test:** `tests/test_guide.py` 6/6 ([1]–[6]; her kontrol mutasyonla birlikte). 93 kod/belge yolu ve 13 kaynak dizesi denetleniyor.
 - **Plandan sapmalar (beyan):** (a) §6 [5]'teki "ilk" yasağı tek kelime değil özgünlük kalıbı olarak uygulandı (`ilk kez|defa|çalışma`, `literatürde yok|ilk`); "ilk gün" gibi olağan kullanımlar engellenmez. (b) Yasaklı ifade taraması `uyari` alanını atlar, çünkü o alan yasaklı ifadeyi "denmez" diye anmak için var. (c) Sözlükte deney sonucu (etiket, ölçülen sayı) yok; yalnız tanım ve tasarım parametresi. Sonuçlar R3'teki deney kartlarına (`snapshot.json`) kalır. (d) M5 kol kodları (G0/GL/GLS/GLM/GD) M5 mekanizma ön kaydına göre yazıldı (GLG yok).
 - **Açık:** üretilmiş dosyanın elle düzenlenmesini engelleyen guard hook'u (§2, isteğe bağlı) eklenmedi; `--check` + test [6] bayatlığı yakalıyor. Bakım kuralı (§7) kök `CLAUDE.md`'ye R4'te girer.
@@ -193,12 +193,14 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 
 - **Yapıldı:** Komut paletine her sözlük terimi "Sözlük · <terim>" olarak eklendi (`topbar._glossary_options`, tek kaynak `glossary.yaml`, alfabetik). Seçim `/dash/guide#terim-<id>`'ye gider: `go_to_page` yolu ve çapayı ayrı yazar (`url.pathname` + `url.hash`; `dcc.Location` ikisini tek `pushState` ile birleştirir, kaynak `Location.react.js` `updateLocation`). Rehber'deyken yalnız çapa değişir, sayfa yeniden çizilmez; kaydırma geri çağrısı artık `url.hash`'i de dinler. Başka sayfaya geçiş çapayı temizler. `test_topbar` 39 → 43 kontrol.
 - **Bilinen sınır:** Rehber'de sözlük araması bir filtre uygulamışken başka bir terim seçilirse, terim filtrede yoksa kaydırma olmaz (öğe DOM'da yok). Aynı terim art arda seçilirse çapa değişmediği için yeniden kaydırmaz.
-- **Kalan:** ~110 terim; bakım kuralı zaten kök `CLAUDE.md`'de.
+- **Terimler (2026-11-20):** 98 yeni terim; sözlük 171 terim, 8 kategori (sistem 20, deney 15, değerlendirme 26, MARL 25, tek ajan RL 22, tahmin 23, veri 23, yazılım ve ürün 17). Envanterdeki (§4) her kategori dolu. Her teknik tanım koddan okundu; `kodda` yolları ve `::ad`'lar test [3] ile denetleniyor. Plandaki tahminle iki ayrışma beyan: ensemble meta-öğrenicisinin kurucu varsayılanı `'xgboost'` (alan kural dosyası "Ridge (default)" diyordu; terimde varsayılan iddia edilmedi) ve `seeds_needed` güven aralığı alt ucu değil, güç formülü (tek yönlü %5, %80 güç). Gerçek sinyal kollarının (M5 §5) kol kodları M5 gerçek sinyal PR'ına bırakıldı (o dal henüz main'de değil).
+- **R4 kapandı.** Açık kalan: tarayıcıda görsel denetim (üst çubuk araması ve yeni terimler).
 
 ---
 
 ## Versiyon geçmişi
 
+- **v0.8 (2026-11-20):** R4 kalan 98 terim (§15); sözlük 171 terim. R4 kapandı.
 - **v0.7 (2026-11-20):** R4 üst çubuk araması (§15). Kalan: terimler.
 - **v0.6 (2026-11-19):** R4 kısmi (§14): SSS bölümü, çapaya kaydırma. Kalan: terimler, üst çubuk araması.
 - **v0.5 (2026-11-19):** R3 kodu (§13): `snapshot.json`, 5 deney kartı, aşama çizelgesi, test 9/9; bakım kuralı CLAUDE.md'de.
