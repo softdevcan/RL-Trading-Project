@@ -1,0 +1,1777 @@
+{
+ "note": "M7a karsi-olgusal mesaj maskeleme (BETIMSEL tani; egitim yok, karar yok)",
+ "window": "val",
+ "runs": [
+  {
+   "run": "results/marl_m4b/G-X/s3",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "fd267d2a4cceda14e520f2bcb11d2deef3428399d6627be9d10830d6939af97c",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.80056375369723,
+     "turnover_mean": 0.6000810670890019,
+     "cash_weight_mean": 0.10523661990309563,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.528320750021962,
+     "turnover_mean": 0.6770504492025587,
+     "cash_weight_mean": 0.08316697337305146,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.272243003675268
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.7543570431383673,
+     "turnover_mean": 0.6011102975504811,
+     "cash_weight_mean": 0.10447301955517208,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.04620671055886272
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.6573312689738174,
+     "turnover_mean": 0.6298404733652005,
+     "cash_weight_mean": 0.09660802097969556,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.14323248472341255
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.7886577945600575,
+     "turnover_mean": 0.60031451857528,
+     "cash_weight_mean": 0.10516306220027427,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.011905959137172517
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.7790602322058603,
+     "turnover_mean": 0.6058733154875731,
+     "cash_weight_mean": 0.10360291524864286,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.021503521491369693
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.7287208299579148,
+     "turnover_mean": 0.6011667413818111,
+     "cash_weight_mean": 0.1046498080861993,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.07184292373931522
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.7199195988864516,
+     "turnover_mean": 0.6041735013178277,
+     "cash_weight_mean": 0.10200616287380856,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.08064415481077836
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.7760477096278289,
+     "turnover_mean": 0.6037822756878451,
+     "cash_weight_mean": 0.10463855344786666,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.02451604406940111
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.8208254478441546,
+     "turnover_mean": 0.6047830859512999,
+     "cash_weight_mean": 0.10330816906945157,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.02026169414692458
+    }
+   },
+   "seconds": 14.3
+  },
+  {
+   "run": "results/marl_m4b/G-X/s4",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "975bbdbc0973673b669ec3feab7ee31568846739a485e3b72e5629f412e4b2b4",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.6823861971417323,
+     "turnover_mean": 0.7116162086257359,
+     "cash_weight_mean": 0.04080680224998399,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.5945353210224515,
+     "turnover_mean": 0.7398608227235731,
+     "cash_weight_mean": 0.03196600421200767,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.08785087611928077
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.6867299471603054,
+     "turnover_mean": 0.7129285340341948,
+     "cash_weight_mean": 0.040563491135907126,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.004343750018573123
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.6220413179103459,
+     "turnover_mean": 0.7190297542469877,
+     "cash_weight_mean": 0.03904998797659292,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.06034487923138643
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.6841443961099303,
+     "turnover_mean": 0.7121062866071113,
+     "cash_weight_mean": 0.04080487547948477,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0017581989681979548
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.691511961498776,
+     "turnover_mean": 0.7145779064821217,
+     "cash_weight_mean": 0.03985402572811505,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.009125764357043709
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.6783755372584791,
+     "turnover_mean": 0.7123262507479481,
+     "cash_weight_mean": 0.04018863582711951,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.00401065988325322
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.657236692964381,
+     "turnover_mean": 0.712932934395277,
+     "cash_weight_mean": 0.04039496623008915,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.02514950417735129
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.6745211788783023,
+     "turnover_mean": 0.712503214651513,
+     "cash_weight_mean": 0.040056554021961344,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.007865018263430001
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.6687164858521781,
+     "turnover_mean": 0.7128067741555546,
+     "cash_weight_mean": 0.040369417911812845,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.013669711289554187
+    }
+   },
+   "seconds": 14.2
+  },
+  {
+   "run": "results/marl_m4b/G-X/s5",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "d5b1769a86ba608c8e88fa736c0d0f34cfb1145944d75b740c57261270a05b37",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.655360410151245,
+     "turnover_mean": 0.5685810424595727,
+     "cash_weight_mean": 0.005336230634537094,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.8346164956756801,
+     "turnover_mean": 0.6780762165940439,
+     "cash_weight_mean": 0.005214447773854578,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.17925608552443506
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.6479882051872918,
+     "turnover_mean": 0.5729054130233533,
+     "cash_weight_mean": 0.005355266708945443,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.007372204963953188
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.7925938720838779,
+     "turnover_mean": 0.6086624628924141,
+     "cash_weight_mean": 0.005269179971786863,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.13723346193263286
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.6531022805842461,
+     "turnover_mean": 0.5694397391210853,
+     "cash_weight_mean": 0.005339711870831478,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.00225812956699889
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.6707368168603234,
+     "turnover_mean": 0.5773265370350095,
+     "cash_weight_mean": 0.005334224646764304,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.01537640670907836
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.6565017186589183,
+     "turnover_mean": 0.5721055053986146,
+     "cash_weight_mean": 0.005327143766518808,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.0011413085076732443
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.6464721761525146,
+     "turnover_mean": 0.5723975536919333,
+     "cash_weight_mean": 0.005320987592027718,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.0088882339987304
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.6303010264013262,
+     "turnover_mean": 0.5731555393628218,
+     "cash_weight_mean": 0.00533805431796373,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.025059383749918784
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.6841155377134279,
+     "turnover_mean": 0.5734710986294116,
+     "cash_weight_mean": 0.005307786181957372,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.028755127562182903
+    }
+   },
+   "seconds": 14.5
+  },
+  {
+   "run": "results/marl_m4b/G-S/s3",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "a42e327f6524356d3c59f1a5a21bfc666ea115d13461837c04e577c927984cee",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.33640105811586757,
+     "turnover_mean": 0.5351582104777767,
+     "cash_weight_mean": 0.050746796134352935,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.2454670554739848,
+     "turnover_mean": 0.6166250798664362,
+     "cash_weight_mean": 0.041824302714572964,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.09093400264188276
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.31941574923858523,
+     "turnover_mean": 0.5394675656266736,
+     "cash_weight_mean": 0.0506412580317538,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.016985308877282335
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.2173914427413575,
+     "turnover_mean": 0.5616192576492653,
+     "cash_weight_mean": 0.04739019677722766,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.11900961537451007
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.34827754836118824,
+     "turnover_mean": 0.5354412700370338,
+     "cash_weight_mean": 0.05066506441609794,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.01187649024532067
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.32826127486368756,
+     "turnover_mean": 0.5417163985882413,
+     "cash_weight_mean": 0.050216786646344005,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.00813978325218001
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.3505730037534562,
+     "turnover_mean": 0.5385528083925539,
+     "cash_weight_mean": 0.050446318998827115,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.014171945637588612
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.32005525264237505,
+     "turnover_mean": 0.5414411184237709,
+     "cash_weight_mean": 0.04957699708638291,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.016345805473492514
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.3373077474774635,
+     "turnover_mean": 0.5374328433524748,
+     "cash_weight_mean": 0.05074090209402914,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.0009066893615959359
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.34043909591528804,
+     "turnover_mean": 0.5376775698280964,
+     "cash_weight_mean": 0.04998362101418475,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.004038037799420469
+    }
+   },
+   "seconds": 14.5
+  },
+  {
+   "run": "results/marl_m4b/G-S/s4",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "e3d934726636850ba7f904b9edc6868bbc0af8d58c2663956baf86a12b62af47",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.5962402700764879,
+     "turnover_mean": 0.7041432121454836,
+     "cash_weight_mean": 0.01727671733863246,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.6958719649637959,
+     "turnover_mean": 0.6780022024122225,
+     "cash_weight_mean": 0.015641084287557158,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.09963169488730794
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.6014812190684438,
+     "turnover_mean": 0.7033868934348875,
+     "cash_weight_mean": 0.017174189177442196,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.005240948991955818
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.5621277675385462,
+     "turnover_mean": 0.7000723419839441,
+     "cash_weight_mean": 0.016825345528759805,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.034112502537941736
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.602012597252919,
+     "turnover_mean": 0.7044417655612417,
+     "cash_weight_mean": 0.017314075748344968,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.005772327176431058
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.6282470270429465,
+     "turnover_mean": 0.7014767177111171,
+     "cash_weight_mean": 0.017211318153995778,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.032006756966458605
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.5987321055049668,
+     "turnover_mean": 0.7024335136979016,
+     "cash_weight_mean": 0.01726059410186172,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.0024918354284788613
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.5851638129739107,
+     "turnover_mean": 0.7029824564845771,
+     "cash_weight_mean": 0.01716105064183054,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.011076457102577209
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.6113754489351999,
+     "turnover_mean": 0.7020741539405299,
+     "cash_weight_mean": 0.01703739884121091,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.015135178858711962
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.604786069437166,
+     "turnover_mean": 0.7018372368662518,
+     "cash_weight_mean": 0.0172758040825554,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.008545799360678008
+    }
+   },
+   "seconds": 14.2
+  },
+  {
+   "run": "results/marl_m4b/G-S/s5",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "b3f8598896e2324a78e7c27274284dc56b4a4017b41606ea012b957fb3c6d90c",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.47556925440203957,
+     "turnover_mean": 0.46961154187286025,
+     "cash_weight_mean": 0.006235100263482577,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.6773754995070242,
+     "turnover_mean": 0.48562668547023174,
+     "cash_weight_mean": 0.006058721926182471,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.20180624510498468
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.47361806713251425,
+     "turnover_mean": 0.47309636984120707,
+     "cash_weight_mean": 0.0062542782515076405,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0019511872695253119
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.49056719216517797,
+     "turnover_mean": 0.47429837392048374,
+     "cash_weight_mean": 0.006108717825379994,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.014997937763138403
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.4863539280295447,
+     "turnover_mean": 0.469285129917326,
+     "cash_weight_mean": 0.0062363935919589365,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.010784673627505126
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.4783243762381462,
+     "turnover_mean": 0.471999409779461,
+     "cash_weight_mean": 0.006214015473113562,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0027551218361066554
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.4921601970379446,
+     "turnover_mean": 0.46887403270729827,
+     "cash_weight_mean": 0.006232466211046345,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.016590942635905048
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.4884351999550166,
+     "turnover_mean": 0.4704633018759057,
+     "cash_weight_mean": 0.006148821657763608,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.012865945552977043
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.5047835421043587,
+     "turnover_mean": 0.46909483180336137,
+     "cash_weight_mean": 0.006289394340330574,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.029214287702319153
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.5152344399238378,
+     "turnover_mean": 0.46872732856196797,
+     "cash_weight_mean": 0.006162355835816188,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.03966518552179821
+    }
+   },
+   "seconds": 14.2
+  },
+  {
+   "run": "results/marl_m5/G0/s6",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "764f8b47c841619faf2eba586cac0be2872b4b3ec8c8d8a08936379f773704bc",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.6288780150425388,
+     "turnover_mean": 0.7577269972351451,
+     "cash_weight_mean": 0.006587010545252998,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.4387075566525234,
+     "turnover_mean": 0.8944494553906424,
+     "cash_weight_mean": 0.005748700694965337,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.1901704583900154
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.6118289283722158,
+     "turnover_mean": 0.7625985972512268,
+     "cash_weight_mean": 0.006559731520686885,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.01704908667032301
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.5770048442118905,
+     "turnover_mean": 0.7940836395010724,
+     "cash_weight_mean": 0.0062275487050462725,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.05187317083064835
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.6283694039197869,
+     "turnover_mean": 0.7583800794213257,
+     "cash_weight_mean": 0.006602773598425601,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.0005086111227519119
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.6081666013118722,
+     "turnover_mean": 0.773406077426088,
+     "cash_weight_mean": 0.006427213197970561,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.02071141373066665
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.606089504139232,
+     "turnover_mean": 0.7630913863144081,
+     "cash_weight_mean": 0.006590093021981116,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.022788510903306802
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.6183749954937608,
+     "turnover_mean": 0.7634161578070816,
+     "cash_weight_mean": 0.006557455588333676,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.01050301954877797
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.6064173137814596,
+     "turnover_mean": 0.7655360096297712,
+     "cash_weight_mean": 0.006569889073768829,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.02246070126107924
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.6381485813279636,
+     "turnover_mean": 0.7612519570985131,
+     "cash_weight_mean": 0.006571954607055357,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.009270566285424775
+    }
+   },
+   "seconds": 14.2
+  },
+  {
+   "run": "results/marl_m5/G0/s7",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "ebffdf0f1d78ce834c56aefafedc85755ef2730051aefb2553ac1b247dc9496a",
+   "variants": {
+    "base": {
+     "sharpe_X": 1.4612510192281012,
+     "turnover_mean": 0.9087352803058611,
+     "cash_weight_mean": 0.0053388278745755535,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 1.0423082903699032,
+     "turnover_mean": 0.761872888983173,
+     "cash_weight_mean": 0.005711540360159713,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.41894272885819794
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 1.4465444981294657,
+     "turnover_mean": 0.9072869920655229,
+     "cash_weight_mean": 0.0054366328017298815,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.014706521098635461
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 1.2216663636110723,
+     "turnover_mean": 0.8679148017677162,
+     "cash_weight_mean": 0.005264846028981313,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.2395846556170289
+    },
+    "sector:DIGER": {
+     "sharpe_X": 1.4396755073347949,
+     "turnover_mean": 0.9086077658645705,
+     "cash_weight_mean": 0.005386020871768512,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.02157551189330631
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 1.3850120888329955,
+     "turnover_mean": 0.903763021298772,
+     "cash_weight_mean": 0.005202141047597195,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.07623893039510565
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 1.4262301810647808,
+     "turnover_mean": 0.9043238919484784,
+     "cash_weight_mean": 0.0054307858269473505,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.035020838163320356
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 1.4447151176532904,
+     "turnover_mean": 0.9065576783969589,
+     "cash_weight_mean": 0.005419665369937493,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.016535901574810774
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 1.5078193497381673,
+     "turnover_mean": 0.89656431756721,
+     "cash_weight_mean": 0.005392145779749526,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.04656833051006615
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 1.4911070447567372,
+     "turnover_mean": 0.9065061768046123,
+     "cash_weight_mean": 0.005355452834425619,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.029856025528635977
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5/G0/s8",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "0955b7f2362567b6711b58fde71b8a70a026480669230f0d71c1f7e39402db31",
+   "variants": {
+    "base": {
+     "sharpe_X": 1.1577122025927573,
+     "turnover_mean": 0.8215360499582988,
+     "cash_weight_mean": 0.011874245665557464,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.614933133751956,
+     "turnover_mean": 0.7445986647804559,
+     "cash_weight_mean": 0.012695271290278955,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.5427790688408013
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 1.1424564555945664,
+     "turnover_mean": 0.8190251652235426,
+     "cash_weight_mean": 0.011824145252707781,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.015255746998190878
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 1.0942166771790276,
+     "turnover_mean": 0.8120784613301791,
+     "cash_weight_mean": 0.01188784632637267,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.06349552541372971
+    },
+    "sector:DIGER": {
+     "sharpe_X": 1.118172873592296,
+     "turnover_mean": 0.8212565811832642,
+     "cash_weight_mean": 0.011934219026405846,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.03953932900046131
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 1.124987193665524,
+     "turnover_mean": 0.821227693394474,
+     "cash_weight_mean": 0.011764929060333341,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.03272500892723329
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.978829756397433,
+     "turnover_mean": 0.8225892764417083,
+     "cash_weight_mean": 0.01209383955499342,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.17888244619532434
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 1.0972059320810137,
+     "turnover_mean": 0.8205091102192082,
+     "cash_weight_mean": 0.011961410224255703,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.06050627051174362
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 1.1857286201255743,
+     "turnover_mean": 0.8151812109696037,
+     "cash_weight_mean": 0.012059911280570209,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.02801641753281703
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 1.1803301943564553,
+     "turnover_mean": 0.819934522183103,
+     "cash_weight_mean": 0.011848173589982703,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.022617991763697942
+    }
+   },
+   "seconds": 14.2
+  },
+  {
+   "run": "results/marl_m5/GL/s6",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "33b9caefcfd67d2b6ba526a1c188169cf49ceed962f91fccb11258483caf4112",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.7383177062491221,
+     "turnover_mean": 0.7915490540278636,
+     "cash_weight_mean": 0.006374575076595099,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.47179953595372764,
+     "turnover_mean": 0.937870118339105,
+     "cash_weight_mean": 0.005810439782402124,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.26651817029539443
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.7030075670030301,
+     "turnover_mean": 0.7944540785294604,
+     "cash_weight_mean": 0.006380402113557485,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.03531013924609194
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.6374388408057843,
+     "turnover_mean": 0.8263769943628593,
+     "cash_weight_mean": 0.0061801198905120916,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.1008788654433378
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.7422468780121311,
+     "turnover_mean": 0.7922549512675239,
+     "cash_weight_mean": 0.006379486980671842,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.003929171763008998
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.7047118059686421,
+     "turnover_mean": 0.8148471388045078,
+     "cash_weight_mean": 0.006232928857090393,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.03360590028047994
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.762710009186169,
+     "turnover_mean": 0.7993387960199142,
+     "cash_weight_mean": 0.0064019496398123685,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.024392302937046972
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.692413524471208,
+     "turnover_mean": 0.7957783203913784,
+     "cash_weight_mean": 0.006343340514845185,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.04590418177791411
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.7188558366995481,
+     "turnover_mean": 0.7995584379699088,
+     "cash_weight_mean": 0.00636565553254946,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.019461869549573962
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.7473032983788389,
+     "turnover_mean": 0.7953854108982157,
+     "cash_weight_mean": 0.006352467409246967,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.008985592129716835
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5/GL/s7",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "cfa4a2a547c9d2e33d49e3c4284f9712c199f269a9138a83bf59d88b1282ac4a",
+   "variants": {
+    "base": {
+     "sharpe_X": 1.644161230789334,
+     "turnover_mean": 0.7407706772943732,
+     "cash_weight_mean": 0.01471752637526062,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 1.2098748862639432,
+     "turnover_mean": 0.6014089777494069,
+     "cash_weight_mean": 0.01403544060029132,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.43428634452539083
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 1.623029792669474,
+     "turnover_mean": 0.738555406087692,
+     "cash_weight_mean": 0.01502976602269144,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.02113143811986018
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 1.3890709122798508,
+     "turnover_mean": 0.7060223585842247,
+     "cash_weight_mean": 0.014133658819630725,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.25509031850948327
+    },
+    "sector:DIGER": {
+     "sharpe_X": 1.613814219961776,
+     "turnover_mean": 0.7422459570210252,
+     "cash_weight_mean": 0.014858476708686692,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.030347010827558085
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 1.5913651271909488,
+     "turnover_mean": 0.7375866472618456,
+     "cash_weight_mean": 0.014166416213224942,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.05279610359838527
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 1.571665735441145,
+     "turnover_mean": 0.736882583904071,
+     "cash_weight_mean": 0.014644803309688639,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.07249549534818911
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 1.6156862347945926,
+     "turnover_mean": 0.7361633728600341,
+     "cash_weight_mean": 0.014887044187731912,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.02847499599474146
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 1.673581107703426,
+     "turnover_mean": 0.732418861291292,
+     "cash_weight_mean": 0.014676272528479199,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.02941987691409187
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 1.6678421017904208,
+     "turnover_mean": 0.7364027035941565,
+     "cash_weight_mean": 0.014698741342850055,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.023680871001086734
+    }
+   },
+   "seconds": 14.8
+  },
+  {
+   "run": "results/marl_m5/GL/s8",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "ce48cdb57b974376d6b8fe87c61bb336e13cedd81644a92a57dac7aba46baccd",
+   "variants": {
+    "base": {
+     "sharpe_X": 1.3633498003787066,
+     "turnover_mean": 0.7379107563908206,
+     "cash_weight_mean": 0.01875225404074123,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.7291547987584611,
+     "turnover_mean": 0.7602475183359552,
+     "cash_weight_mean": 0.019517643336173986,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.6341950016202454
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 1.3353954927666338,
+     "turnover_mean": 0.7373503092437513,
+     "cash_weight_mean": 0.01871229590891332,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.027954307612072737
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 1.2526422362145588,
+     "turnover_mean": 0.7532250006093837,
+     "cash_weight_mean": 0.01864312143095605,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.11070756416414773
+    },
+    "sector:DIGER": {
+     "sharpe_X": 1.3357789657050114,
+     "turnover_mean": 0.7390250612306124,
+     "cash_weight_mean": 0.018810826148549533,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.027570834673695144
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 1.3150403449016723,
+     "turnover_mean": 0.7487154987005002,
+     "cash_weight_mean": 0.018775962667791208,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.04830945547703425
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 1.181289012410053,
+     "turnover_mean": 0.7456626764726951,
+     "cash_weight_mean": 0.019107297218709254,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.18206078796865355
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 1.3249542815124942,
+     "turnover_mean": 0.7390680878429964,
+     "cash_weight_mean": 0.01869135620289408,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.0383955188662124
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 1.3544969526048896,
+     "turnover_mean": 0.7365370686148873,
+     "cash_weight_mean": 0.018823480261062526,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.008852847773817007
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 1.3627562018442543,
+     "turnover_mean": 0.7388495477131067,
+     "cash_weight_mean": 0.01870233235714352,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0005935985344522887
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5real/T0-G/s9",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "3a14ebd504b185ac2d8650ffb618fbd3a9f6c8fbd2fb6313a297043d5abfd79c",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.2458436553947699,
+     "turnover_mean": 0.5731050807736014,
+     "cash_weight_mean": 0.04444076902295555,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.26945868548216473,
+     "turnover_mean": 0.6277851745546862,
+     "cash_weight_mean": 0.041492854461340024,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.023615030087394823
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.24630282370449966,
+     "turnover_mean": 0.576620710256434,
+     "cash_weight_mean": 0.044340305308061864,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.00045916830972975164
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.2115544803131834,
+     "turnover_mean": 0.5919870764350125,
+     "cash_weight_mean": 0.04278010394471278,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.03428917508158649
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.24748003960825102,
+     "turnover_mean": 0.5735203080164311,
+     "cash_weight_mean": 0.04441389752450192,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0016363842134811124
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.25235664799747554,
+     "turnover_mean": 0.5774832460692552,
+     "cash_weight_mean": 0.04404842621112049,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.006512992602705631
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.2531943174261847,
+     "turnover_mean": 0.5757722281023875,
+     "cash_weight_mean": 0.04411109392859123,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.007350662031414795
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.2611512384428714,
+     "turnover_mean": 0.5794073210758984,
+     "cash_weight_mean": 0.044153816414657036,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.015307583048101508
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.2519506674946268,
+     "turnover_mean": 0.5767806298691862,
+     "cash_weight_mean": 0.04609407135815728,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.0061070120998568955
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.2518081020559109,
+     "turnover_mean": 0.573048848312147,
+     "cash_weight_mean": 0.04437525930991525,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.005964446661141015
+    }
+   },
+   "seconds": 14.5
+  },
+  {
+   "run": "results/marl_m5real/T0-G/s10",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "6a596e53c6a3b6033c1599beccd04c081c832c1814472c8c9d0ca39325a7ab03",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.17088095724894511,
+     "turnover_mean": 0.37288763998103513,
+     "cash_weight_mean": 0.0531042655822539,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.16547565351075808,
+     "turnover_mean": 0.3759418548186494,
+     "cash_weight_mean": 0.052555172552246794,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.0054053037381870395
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.15969242457074298,
+     "turnover_mean": 0.37382259844829707,
+     "cash_weight_mean": 0.05314608983078706,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.011188532678202134
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.06552705564704471,
+     "turnover_mean": 0.37557495533691576,
+     "cash_weight_mean": 0.05142780177735578,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.1053539016019004
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.15288820261994218,
+     "turnover_mean": 0.37320096776771006,
+     "cash_weight_mean": 0.053161654143953976,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.017992754629002933
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.22609294194744442,
+     "turnover_mean": 0.37307303212399995,
+     "cash_weight_mean": 0.05318919180429789,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.055211984698499306
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.21363323865034942,
+     "turnover_mean": 0.3721624964604967,
+     "cash_weight_mean": 0.053301644155810665,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.0427522814014043
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.1799403078457327,
+     "turnover_mean": 0.3722064728890614,
+     "cash_weight_mean": 0.05329432253801798,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.009059350596787585
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.12931505014813263,
+     "turnover_mean": 0.3728524605326746,
+     "cash_weight_mean": 0.0532855482945116,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.04156590710081248
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.16755985492162404,
+     "turnover_mean": 0.37221868984443474,
+     "cash_weight_mean": 0.05314092438197409,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0033211023273210794
+    }
+   },
+   "seconds": 14.1
+  },
+  {
+   "run": "results/marl_m5real/T0-G/s11",
+   "kind": "gat",
+   "conf_mode": "none",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "90db130a4b00307b9f021a4a3f068df45e1da0349c622290bb69a0683bba5f12",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.3029753901531445,
+     "turnover_mean": 0.5009731354234636,
+     "cash_weight_mean": 0.029965414594936447,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.059773320680869796,
+     "turnover_mean": 0.5945909060684853,
+     "cash_weight_mean": 0.020104069847676542,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.2432020694722747
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.2636568081907225,
+     "turnover_mean": 0.5056969424006532,
+     "cash_weight_mean": 0.029475214788662288,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.039318581962421995
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.0017109370582408302,
+     "turnover_mean": 0.5359154728361553,
+     "cash_weight_mean": 0.026619198106426708,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.3012644530949037
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.30486334554327255,
+     "turnover_mean": 0.5023133389837411,
+     "cash_weight_mean": 0.02994081614139786,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0018879553901280377
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.2108956144551644,
+     "turnover_mean": 0.5102049247582775,
+     "cash_weight_mean": 0.028392884214476923,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.09207977569798012
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.31271583701808137,
+     "turnover_mean": 0.505029778836215,
+     "cash_weight_mean": 0.029589298205225902,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.009740446864936858
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.29077178280165616,
+     "turnover_mean": 0.5072323515401275,
+     "cash_weight_mean": 0.029260818167421525,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.012203607351488344
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.4524826098239753,
+     "turnover_mean": 0.5080453582111932,
+     "cash_weight_mean": 0.02923153265713651,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.1495072196708308
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.4147190432301891,
+     "turnover_mean": 0.5020579463766396,
+     "cash_weight_mean": 0.029699635001431218,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.11174365307704459
+    }
+   },
+   "seconds": 14.1
+  },
+  {
+   "run": "results/marl_m5real/SB/s9",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "a8d2af497c64fa338d3714bf7f60679552a545258e7a144b5fb872c57002e02e",
+   "variants": {
+    "base": {
+     "sharpe_X": -0.20598887440366606,
+     "turnover_mean": 0.591274542429032,
+     "cash_weight_mean": 0.015645234487510578,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": -0.32443059866903656,
+     "turnover_mean": 0.564782566126076,
+     "cash_weight_mean": 0.010128748615751188,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.1184417242653705
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": -0.19820832117729154,
+     "turnover_mean": 0.5930162138396745,
+     "cash_weight_mean": 0.015521138532801843,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.007780553226374526
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": -0.2618323615401877,
+     "turnover_mean": 0.582229884842643,
+     "cash_weight_mean": 0.014339071404552726,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.055843487136521625
+    },
+    "sector:DIGER": {
+     "sharpe_X": -0.20333099525030848,
+     "turnover_mean": 0.5908977701382757,
+     "cash_weight_mean": 0.015585703449833078,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0026578791533575785
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": -0.182870116935586,
+     "turnover_mean": 0.5929763778423143,
+     "cash_weight_mean": 0.015146168309774317,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.023118757468080064
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": -0.20863519802367095,
+     "turnover_mean": 0.5855130125921973,
+     "cash_weight_mean": 0.014634483025042467,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.0026463236200048867
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": -0.19206629529339442,
+     "turnover_mean": 0.5873517239177111,
+     "cash_weight_mean": 0.015395825443552908,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.013922579110271643
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": -0.20919440618161123,
+     "turnover_mean": 0.5911672145126748,
+     "cash_weight_mean": 0.015513568384278989,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.003205531777945164
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": -0.22763717805680964,
+     "turnover_mean": 0.5870001906969273,
+     "cash_weight_mean": 0.014953780725264345,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.021648303653143575
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5real/SB/s10",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "d9896a081392fed7760f8bb1770a0971439c30d46921c82ed5e419572a174eac",
+   "variants": {
+    "base": {
+     "sharpe_X": -0.3954178948217005,
+     "turnover_mean": 0.5633656706728831,
+     "cash_weight_mean": 0.011025698941979946,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": -0.3052251777537764,
+     "turnover_mean": 0.6288894060279658,
+     "cash_weight_mean": 0.011221456238813312,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.09019271706792409
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": -0.3958135534956776,
+     "turnover_mean": 0.5641938245319501,
+     "cash_weight_mean": 0.010999697088277801,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0003956586739771173
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": -0.31866617126922414,
+     "turnover_mean": 0.5862001388850819,
+     "cash_weight_mean": 0.011164086149735825,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.07675172355247634
+    },
+    "sector:DIGER": {
+     "sharpe_X": -0.39445582352803826,
+     "turnover_mean": 0.5641129911851651,
+     "cash_weight_mean": 0.011015080428654223,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0009620712936622144
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": -0.39976157390602174,
+     "turnover_mean": 0.5714375908602537,
+     "cash_weight_mean": 0.011046778252833019,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.004343679084321261
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": -0.37878059253279284,
+     "turnover_mean": 0.5648181601102497,
+     "cash_weight_mean": 0.011014755646045031,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.01663730228890764
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": -0.3752487817106654,
+     "turnover_mean": 0.5687966589503533,
+     "cash_weight_mean": 0.011048642688745811,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.020169113111035086
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": -0.44282026419328024,
+     "turnover_mean": 0.5642869914486179,
+     "cash_weight_mean": 0.010972936828887142,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.04740236937157977
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": -0.40257929588620156,
+     "turnover_mean": 0.5633983515925862,
+     "cash_weight_mean": 0.01103183797100569,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.007161401064501083
+    }
+   },
+   "seconds": 15.0
+  },
+  {
+   "run": "results/marl_m5real/SB/s11",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "23afa75e25fe7266ab8fec4996e8cff04f107247c92236bdd37c9670428144f4",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.263289563760423,
+     "turnover_mean": 0.6130551743931462,
+     "cash_weight_mean": 0.007682658799001145,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.22209919547850296,
+     "turnover_mean": 0.6255168914171987,
+     "cash_weight_mean": 0.006624770126986398,
+     "n_senders": 30,
+     "delta_sharpe_X": -0.04119036828192005
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.2776297858037251,
+     "turnover_mean": 0.6142211303104467,
+     "cash_weight_mean": 0.007680904585818493,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.014340222043302098
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.25965888145726124,
+     "turnover_mean": 0.6182417700307051,
+     "cash_weight_mean": 0.0075765203796108035,
+     "n_senders": 8,
+     "delta_sharpe_X": -0.0036306823031617697
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.2626212122155171,
+     "turnover_mean": 0.6132427874450413,
+     "cash_weight_mean": 0.007677971911681693,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.0006683515449059096
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.2520571367593789,
+     "turnover_mean": 0.6139737464220979,
+     "cash_weight_mean": 0.007561999781858788,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.011232427001044099
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.2385706689257306,
+     "turnover_mean": 0.6126130079274983,
+     "cash_weight_mean": 0.007471520916519628,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.024718894834692418
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.23603894351708127,
+     "turnover_mean": 0.6141013362194658,
+     "cash_weight_mean": 0.007632996998799272,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.02725062024334174
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.2706922412094914,
+     "turnover_mean": 0.6132163322692882,
+     "cash_weight_mean": 0.00763716171121529,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.007402677449068418
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.27109900352087785,
+     "turnover_mean": 0.6133084874188344,
+     "cash_weight_mean": 0.00762125462405865,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.007809439760454839
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5real/SB-S/s9",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "c5f311597cdd905a21fafe80f460ecbe7fa6460828a9f6ab872946f258864c53",
+   "variants": {
+    "base": {
+     "sharpe_X": -0.035619858037531996,
+     "turnover_mean": 0.6555523835299019,
+     "cash_weight_mean": 0.008227756391183725,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": -0.009373473547980845,
+     "turnover_mean": 0.6398342144057217,
+     "cash_weight_mean": 0.00801410996782893,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.02624638448955115
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": -0.036276089951060304,
+     "turnover_mean": 0.6559534160027244,
+     "cash_weight_mean": 0.008244708250906316,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0006562319135283087
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.001859574445858918,
+     "turnover_mean": 0.6518910273185717,
+     "cash_weight_mean": 0.008230806172814381,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.03747943248339091
+    },
+    "sector:DIGER": {
+     "sharpe_X": -0.04096093161064171,
+     "turnover_mean": 0.6556826024200838,
+     "cash_weight_mean": 0.008224410231715105,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.005341073573109714
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": -0.03006558704172026,
+     "turnover_mean": 0.653293294885053,
+     "cash_weight_mean": 0.008155865306959878,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.005554270995811735
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": -0.05163587435214918,
+     "turnover_mean": 0.6561427499064391,
+     "cash_weight_mean": 0.008306896914182895,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.016016016314617187
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": -0.044207437667294375,
+     "turnover_mean": 0.6545855629356758,
+     "cash_weight_mean": 0.008195230757600314,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.008587579629762379
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": -0.02637332762163882,
+     "turnover_mean": 0.6550634318259586,
+     "cash_weight_mean": 0.008183811363315937,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.009246530415893177
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": -0.050053231495800356,
+     "turnover_mean": 0.6537294497805306,
+     "cash_weight_mean": 0.008225503176696925,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.01443337345826836
+    }
+   },
+   "seconds": 14.6
+  },
+  {
+   "run": "results/marl_m5real/SB-S/s10",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "e507ae074c1e6e822c18556564cf0d912c8920cbd00e4dd0c19075f4f624eee8",
+   "variants": {
+    "base": {
+     "sharpe_X": -0.3197405609089483,
+     "turnover_mean": 0.5975460493904365,
+     "cash_weight_mean": 0.013537929924931422,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": -0.2167851821158403,
+     "turnover_mean": 0.6958361574753315,
+     "cash_weight_mean": 0.013502122913549016,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.10295537879310801
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": -0.28943413859349504,
+     "turnover_mean": 0.5986791682577084,
+     "cash_weight_mean": 0.013419925941485101,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.030306422315453274
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": -0.28170639320189433,
+     "turnover_mean": 0.6337550544956095,
+     "cash_weight_mean": 0.01386899180463557,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.03803416770705398
+    },
+    "sector:DIGER": {
+     "sharpe_X": -0.3204058966747433,
+     "turnover_mean": 0.5986563491388371,
+     "cash_weight_mean": 0.013542035860430115,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.0006653357657949721
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": -0.30221052678332233,
+     "turnover_mean": 0.6092150054257883,
+     "cash_weight_mean": 0.013400282634685208,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.01753003412562598
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": -0.3291775984556225,
+     "turnover_mean": 0.5988795330994345,
+     "cash_weight_mean": 0.013645961117588772,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.009437037546674187
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": -0.3077811669163953,
+     "turnover_mean": 0.6036279517147561,
+     "cash_weight_mean": 0.013518927148321055,
+     "n_senders": 3,
+     "delta_sharpe_X": 0.011959393992553025
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": -0.3471328592214136,
+     "turnover_mean": 0.6007794629928092,
+     "cash_weight_mean": 0.013403970445703841,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.027392298312465313
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": -0.3805282315696015,
+     "turnover_mean": 0.5973768132116399,
+     "cash_weight_mean": 0.013584416904476829,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.060787670660653215
+    }
+   },
+   "seconds": 14.7
+  },
+  {
+   "run": "results/marl_m5real/SB-S/s11",
+   "kind": "gat",
+   "conf_mode": "zlogodds",
+   "window": "val",
+   "rows": [
+    1401,
+    1901
+   ],
+   "policy_sha256": "cdc19af6494aee7315a8c6eae26ba62d94607165f32b4cecbae779974753b870",
+   "variants": {
+    "base": {
+     "sharpe_X": 0.40798248086827016,
+     "turnover_mean": 0.5838304872909039,
+     "cash_weight_mean": 0.020260237544943514,
+     "n_senders": 0,
+     "bit_equal_stored_eval": true
+    },
+    "all": {
+     "sharpe_X": 0.4893527773896319,
+     "turnover_mean": 0.6082867325522409,
+     "cash_weight_mean": 0.01977070945517751,
+     "n_senders": 30,
+     "delta_sharpe_X": 0.08137029652136174
+    },
+    "sector:ANA METAL SANAYİ": {
+     "sharpe_X": 0.4179899824339009,
+     "turnover_mean": 0.5846048420233965,
+     "cash_weight_mean": 0.02032799304652746,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.010007501565630739
+    },
+    "sector:BANKALAR": {
+     "sharpe_X": 0.4845938046698005,
+     "turnover_mean": 0.5907984143221796,
+     "cash_weight_mean": 0.020120716816385345,
+     "n_senders": 8,
+     "delta_sharpe_X": 0.07661132380153035
+    },
+    "sector:DIGER": {
+     "sharpe_X": 0.40717540258920576,
+     "turnover_mean": 0.5838857733345342,
+     "cash_weight_mean": 0.02025399236719595,
+     "n_senders": 5,
+     "delta_sharpe_X": -0.0008070782790643993
+    },
+    "sector:HOLDİNGLER VE YATIRIM ŞİRKETLERİ": {
+     "sharpe_X": 0.40834613497292555,
+     "turnover_mean": 0.5850504627655494,
+     "cash_weight_mean": 0.02015618923415729,
+     "n_senders": 5,
+     "delta_sharpe_X": 0.0003636541046553865
+    },
+    "sector:KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": {
+     "sharpe_X": 0.4063286460562965,
+     "turnover_mean": 0.5863301793915302,
+     "cash_weight_mean": 0.02053731944613847,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.0016538348119736757
+    },
+    "sector:METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": {
+     "sharpe_X": 0.3805273746554794,
+     "turnover_mean": 0.5835371580044739,
+     "cash_weight_mean": 0.020232755390628795,
+     "n_senders": 3,
+     "delta_sharpe_X": -0.027455106212790736
+    },
+    "sector:PERAKENDE TİCARET": {
+     "sharpe_X": 0.41139546353408424,
+     "turnover_mean": 0.5843930338568021,
+     "cash_weight_mean": 0.020205825462161087,
+     "n_senders": 2,
+     "delta_sharpe_X": 0.0034129826658140794
+    },
+    "sector:ULAŞTIRMA VE DEPOLAMA": {
+     "sharpe_X": 0.40726240588721196,
+     "turnover_mean": 0.5849022229529782,
+     "cash_weight_mean": 0.020219816357669194,
+     "n_senders": 2,
+     "delta_sharpe_X": -0.0007200749810581941
+    }
+   },
+   "seconds": 14.8
+  }
+ ],
+ "provenance": {
+  "commit": "fc675effa058a779b1ca9466a9ddbe2357ac4418",
+  "git_status_porcelain": "",
+  "script_sha256": "b202176938904f2e8c7843c41c23013f7c5fe2ad9f8ada29c9ab57ca99109dc0",
+  "comm_models_sha256": "72f814bad3ba4d2979fd4543f1fe99ecf3df5aac56df72a183666fb30a71987b",
+  "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b"
+ }
+}

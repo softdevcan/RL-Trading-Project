@@ -83,6 +83,20 @@ bad = os.path.join(tmp, 'pred_bad.npz')
 np.savez(bad, dates=arr['dates'][:-1], symbols=arr['symbols'], p_up_cal=np.zeros((259, 4)),
          pred_logret=np.zeros((259, 4)), model_disagreement=np.zeros((259, 4)))
 check("tahmin blogu panel ile hizali degil -> ValueError", raises(lambda: load_pred(bad, PN.load_npz(panel_path))))
+ex = np.random.default_rng(7).normal(size=(260, 2))
+ex_path = os.path.join(tmp, 'sreg.npz')
+np.savez(ex_path, dates=arr['dates'], names=np.array(['sma_ratio', 'vol']), extras=ex)
+ex_bad = os.path.join(tmp, 'sreg_bad.npz')
+np.savez(ex_bad, dates=arr['dates'][:-1], names=np.array(['a', 'b']), extras=ex[:-1])
+e0, e1 = make_env(CFG), make_env({**CFG, 'extras_path': ex_path})
+o0, o1 = e0.reset(seed=0)[0], e1.reset(seed=0)[0]
+ag = e1.possible_agents
+same_head = all(np.array_equal(o0[a], o1[a][:-2]) for a in ag)
+tail_ok = all(np.allclose(o1[a][-2:], ex[e1.t].astype(np.float32)) for a in ag)
+check("M6b yayin blogu (extras_path): yerel gozlem +2 boyut, bas kismi bloksuzla bit-es, son 2 sutun her ajanda o gunun "
+      "S-reg degeri; hizasiz blok -> ValueError",
+      e1.spec.local_dim == e0.spec.local_dim + 2 and same_head and tail_ok
+      and raises(lambda: make_env({**CFG, 'extras_path': ex_bad})), f"{e0.spec.local_dim} {e1.spec.local_dim}")
 
 # ---------------------------------------------------------------------------------------------
 print("\n[2] Bolum sonu ve bootstrap")

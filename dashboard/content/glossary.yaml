@@ -418,6 +418,57 @@
   belgede: [docs/development/phase-10-marl-plan.md]
   ilgili: [on-kayit, gelistirme-kapisi, okuma-o1-o4, pencereler]
 
+- id: kol-kodlari-m6
+  terim: R0-N / SR-N
+  kategori: deney
+  sade: >-
+    M6b pilotunun iki kolu: biri bugünkü gözlemle, öteki ayrıca bütün ajanlara aynı piyasa durumu bilgisini (eğilim ve oynaklık) vererek eğitilir. İkisi de iletişimsiz ve tahminsizdir.
+  teknik: >-
+    Tek etken S-reg yayın bloğu [z(sma_ratio), z(vol)]; maliyetsiz, F 600 bin, tohum 12–14; okuma BOZULMA / IYILESME_ISARETI /
+    FARK_YOK (M6 tasarımı §6).
+  kodda: [scripts/marl/run_m6sreg.py, scripts/marl/analyze_m6sreg.py]
+  belgede: [docs/development/phase-10-m6-design.md]
+  ilgili: [s-reg, kol, rejim]
+
+- id: s-reg
+  terim: S-reg (rejim yayın bloğu)
+  kategori: marl
+  sade: >-
+    Bütün ajanlara aynı anda verilen piyasa durumu bilgisi: endeksin eğilimi ve oynaklığı. Her ajan kendi hissesine bakarken piyasanın genel havasını da görür.
+  teknik: >-
+    Gözleme eklenen paylaşılan ek özellikler (extras): birincil rejim etiketinin sürekli özellikleri z(sma_ratio), z(vol);
+    as-of, ölçek yalnız eğitim satırlarından; eleştirmene de girer. Bayrak kapalıyken gözlem v1 ile bit-eş.
+  kodda: [scripts/marl/build_sreg_m6.py]
+  belgede: [docs/development/phase-10-m6-design.md]
+  ilgili: [rejim, s-obs, gozlem]
+
+- id: hmm-rejim
+  terim: HMM rejimi (ikinci tanım)
+  kategori: veri
+  sade: >-
+    Piyasanın sakin ya da çalkantılı döneminin, getirilerden istatistiksel olarak çıkarılan ikinci bir etiketi. Kural tabanlı etiketin tekrarı değil, daha çok oynaklık durumunu ölçer.
+  teknik: >-
+    Saklı Markov modeli (rejime göre değişen ortalama + varyans), USD bazlı XU100 günlük getiri; 63 seansta bir genişleyen
+    yeniden uyum, yalnız filtrelenmiş olasılık; durum sayısı BIC ile (K = 3). İki hücre: en sakin durum ≥ 0,5 ↔ geri kalanlar
+    (`calm_vs_rest`, K-M6-5).
+  kodda: [evaluation/regimes_hmm.py::PRIMARY_TWO_CELL]
+  belgede: [docs/development/phase-10-m6-design.md]
+  ilgili: [rejim, nokta-zamanlilik]
+  kaynak: ["Hamilton (1989)", "Nystrup vd. (2018)"]
+
+- id: dikkat-testleri
+  terim: Dikkat testleri (maskeleme, tek biçimli dikkat, karıştırılmış mesaj)
+  kategori: marl
+  sade: >-
+    Ajanların mesajlara ne kadar ve nasıl dayandığını, eğitimden sonra mesajları kapatarak, eşit ağırlıkla ortalayarak ya da göndericiler arasında karıştırarak sınayan tanılar. Kararın nedensel açıklaması değildir.
+  teknik: >-
+    Yalnız değerlendirme: `set_sender_mask` (M7a; mesaj kapalı), `set_uniform_attention` (izinli göndericilere eşit ağırlık),
+    `set_sender_permutation` (yuva j, π(j)'nin mesajını taşır; dağılım korunur), `set_attention_record`. Kapalıyken bit-eş.
+  kodda: [marl/comm_models.py::CommPolicy, scripts/marl/mask_m7.py, scripts/marl/attn_m7b.py]
+  belgede: [docs/development/phase-10-m6-design.md]
+  ilgili: [dikkat, iletisim-kollari]
+  kaynak: ["Wiegreffe & Pinter (2019)", "Jain & Wallace (2019)"]
+
 - id: kol-kodlari-m5-gercek
   terim: T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2
   kategori: deney

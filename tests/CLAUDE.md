@@ -88,6 +88,10 @@ python tests/test_reward_differential.py   # Faz 9/G1: Moody-Saffell D_t — den
                                            #          'ema_level' main'deki reward_functions.py ile bit-es; nakitte taban; env + hpo_reward_mismatch tam odul tanimi (22)
 python tests/test_regimes.py               # Faz 9/B6: nedensel XU100 rejim etiketi — B0 kesme degismezligi (sentetik +
                                            #          gercek), 2 mutasyon, eski Y3 metrigi yok, as-of, ozet; kayan tercil + USD kolu B0, episodes_min20 (17, ag yok)
+python tests/test_regimes_hmm.py           # Faz 10/M6a: HMM ikinci rejim tanimi — yalniz filtrelenmis olasilik B0 (3 kesim) + duzeltilmis
+                                           #          olasilik mutasyonu, capa oncesi uyum, deterministik uyum (search_reps kuresel RNG), BIC, kanonik sira (4, ~5 sn; ana venv)
+python tests/test_regime_contrast.py       # Faz 10/M6c: rejime kosullu kol karsilastirmasi (H4 araci) — hucre D + kontrast elle, guc,
+                                           #          etkisiz seride red orani <= 0,12 (100 seri, dairesel blok bootstrap) (3, ~15 sn; ana venv)
 python tests/test_calibration.py           # Faz 9/F1-F4: ECE (15 kutu) ve Brier elle, sicaklik T~3 bulur; ensemble
                                            #          legacy/calibrated, p_up_raw+p_up_cal, fiyat ayni, kaydet/yukle, test
                                            #          bozulunca yon modeli bit-es + arindirma 0 mutasyonu; AUC/BSS bilgi kapisi (18, ~1 dk)
@@ -109,15 +113,16 @@ venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: 
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
                                            #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)
 venv-marl\Scripts\python tests/test_marl_m3.py  # Faz 10/M3 BenchMARL gorevi: tek grup, bolum sonu terminated=False +
-                                           #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu (18, ~2 dk)
+                                           #          GAE bootstrap, MAPPO anahtar baglantisi, kisa MAPPO (iki elestirmen), tohum bit-es, kaydet/yukle + deterministik eval, ayni muhasebeyle baseline, R7 baslangic gurultusu, M6b S-reg yayin blogu (extras_path) (19, ~2 dk)
 venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (attn, gat): graf maskesi, esit butce (formul, attn = gat,
                                            #          M4 boyutlarinda none'a gore <= %10), gat'te komsu olmayan ajan etkisiz + attn'de etkili,
-                                           #          self (M4b mimari-es kontrol: ayni parametre, iletisim yok), kisa MAPPO + tohum bit-es + kaydet/yukle (18, ~1 dk; YALNIZ venv-marl)
+                                           #          self (M4b mimari-es kontrol: ayni parametre, iletisim yok), M7a gonderici maskesi (kapali gonderici etkisiz, None bit-es, durum sozlugunde yok), M7b tek bicimli dikkat (q,k sifir yoluyla esit) + karistirilmis mesaj + dikkat kaydi (kapaliyken bit-es), kisa MAPPO + tohum bit-es + kaydet/yukle (20, ~1 dk; YALNIZ venv-marl)
 venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle agirlikli dikkat: conf_mode='none' 62b4023 ile bit-es, guven terimi (prob/zlogodds),
                                            #          gat maskesi + guven, beta>0 dikkati arttirir, karistirilmis guven, gecit, H3 bulgusu (zlogodds sicakligi siler), kisa MAPPO,
                                            #          GLM gonderici sicakligi yalniz guven teriminde + egitici conf_fields (z_scale egitim satirlarindan) (20, ~1 dk; YALNIZ venv-marl)
 python scripts/marl/analyze_m5.py --self-test  # M5 mekanizma okumasi: H2 (i)-(v) etiket + tek okuma (karistirilmis guven, beta esigi, gurultu tabani, dogrulama), H3 sabit sira + KISMI, eksik kol ayrimi, m = ceil(2k/3) (10, ~10 sn; ana venv)
 python scripts/marl/analyze_m5real.py --self-test  # M5 gercek sinyal okumasi: O1-O4 oncelik sirasi, siralama tabani (b), tabansiz ikincil, boyut tanisi, O3 negatif notu, brut SR, eksik kol (9, ~10 sn; ana venv)
+python scripts/marl/analyze_m6sreg.py --self-test  # M6b S-reg kisa pilot okumasi: FARK_YOK / BOZULMA / IYILESME_ISARETI, ters isaretli tohum, dogrulama celiskisi, eksik tohum (6, ~5 sn; ana venv)
 python tests/test_guide.py                 # K28 R1 sistem sozlugu: sema, ilgili + kisaltma baglantisi, kod/belge yollari, kaynak
                                            #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla; R2 Rehber sayfasi kurulus + arama + menu; R3 deney kartlari kaynaga esit + snapshot/harita bayatligi (9, ~5 sn; ana venv)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,

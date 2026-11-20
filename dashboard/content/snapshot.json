@@ -253,6 +253,42 @@
     "siralama-tabani"
    ],
    "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m6-sreg",
+   "baslik": "M6b: Piyasa durumu bilgisi öğrenmeyi bozuyor mu?",
+   "soru": "Bütün ajanlara aynı anda piyasanın eğilim ve oynaklık bilgisini ek gözlem olarak vermek, öğrenmeyi bozuyor mu? Kısa bir pilot: iletişimsiz, tahminsiz, maliyetsiz, 3 tohum. Bilginin değerini değil, bir sakıncasını arar.",
+   "okuma": "Bozulma gözlenmedi; plan gereği bu bilgi ana tasarımda kalır ve değeri M8'de ayrıca sınanır. Eğitimde öndeyken doğrulamada geride kalması, eğitim penceresine uyum sağlıyor olabileceğine dair bir uyarıdır.",
+   "etiket": "GÖZLENMEDİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m6/m6sreg_results.json",
+    "alan": "label",
+    "ham": "FARK_YOK"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (bilgili − bilgisiz)",
+     "deger": "+0,19",
+     "ham": 0.18571229972604897,
+     "kaynak": "docs/development/measurements/phase10-m6/m6sreg_results.json",
+     "alan": "train.D_annual"
+    },
+    {
+     "ad": "Sharpe farkı, doğrulama",
+     "deger": "−0,28",
+     "ham": -0.27996474428128915,
+     "kaynak": "docs/development/measurements/phase10-m6/m6sreg_results.json",
+     "alan": "val.D_annual"
+    }
+   ],
+   "belge": "docs/development/phase-10-m6-design.md",
+   "terimler": [
+    "kol-kodlari-m6",
+    "s-reg",
+    "rejim",
+    "etiket-gozlenmedi"
+   ],
+   "rozet": "Tez bulgusu değil"
   }
  ],
  "asamalar": [
@@ -365,7 +401,13 @@
    "siradaki": "Kullanıcı kararı: M6/M7'ye geçiş ya da daha bilgili sinyalle yeni ön kayıt; M8 öncesi ortam hızı (§3.2.8)"
   },
   {
-   "ad": "Faz 10 M6–M8, nihai koşumlar",
+   "ad": "Faz 10 M6/M7 rejim ve yorumlanabilirlik",
+   "durum": "bitti (tanı ve pilotlar)",
+   "sinif": "bitti",
+   "siradaki": "M8 ön kaydı (engeller satır altında)"
+  },
+  {
+   "ad": "Faz 10 M8, nihai koşumlar",
    "durum": "planlı",
    "sinif": "planli",
    "siradaki": null
@@ -420,12 +462,16 @@
    "sha256": "9e9e4f42890181f8e092b4b7d6ad09b549218bafad9778aee9e6e2841441b390",
    "uretim_commit": "75c76da00faf9648268a311722c94cc65ab3fb0b"
   },
+  "docs/development/measurements/phase10-m6/m6sreg_results.json": {
+   "sha256": "f5d92e2fc7e44c0843693f81e204cec95a0efb26460dfa1f692f77b0efa2fcb7",
+   "uretim_commit": "a207e67ddda5b09c1e5f2ca04e3a6e05ca293073"
+  },
   "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
    "sha256": "ba21c3ff7c29ac14b9fdeb5122e4c0dd62a1079d1f424604df3705a1e5202bbb",
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "e07034ac8d1432701da1a890354bb44d23d79bd68a06f0a69e7c97f8db130ec0",
+   "tablo_sha256": "8e38965f889a26801efaf17c82eec6b1e9202eac037678a329daee3e471c4ef9",
    "uretim_commit": null
   }
  }

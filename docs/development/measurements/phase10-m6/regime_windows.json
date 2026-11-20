@@ -1,0 +1,326 @@
+{
+ "note": "M6 on olcumu (betimsel tasarim girdisi); performans sayisi YOK",
+ "windows": {
+  "train": [
+   "2013-08-27",
+   "2018-12-31",
+   1343
+  ],
+  "val": [
+   "2019-01-02",
+   "2020-12-31",
+   500
+  ]
+ },
+ "min_episode_days": 20,
+ "arms": {
+  "birincil": {
+   "train": {
+    "regime": {
+     "bear_high": {
+      "days": 158,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 290,
+      "episodes": 28,
+      "episodes_min20": 4
+     },
+     "bear_mid": {
+      "days": 392,
+      "episodes": 23,
+      "episodes_min20": 6
+     },
+     "bull_high": {
+      "days": 9,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 463,
+      "episodes": 17,
+      "episodes_min20": 6
+     },
+     "bull_mid": {
+      "days": 31,
+      "episodes": 8,
+      "episodes_min20": 0
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 840,
+      "episodes": 23,
+      "episodes_min20": 4
+     },
+     "bull": {
+      "days": 503,
+      "episodes": 22,
+      "episodes_min20": 6
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "val": {
+    "regime": {
+     "bear_high": {
+      "days": 77,
+      "episodes": 3,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 69,
+      "episodes": 7,
+      "episodes_min20": 1
+     },
+     "bear_mid": {
+      "days": 126,
+      "episodes": 14,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 22,
+      "episodes": 3,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 112,
+      "episodes": 6,
+      "episodes_min20": 2
+     },
+     "bull_mid": {
+      "days": 94,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 272,
+      "episodes": 12,
+      "episodes_min20": 3
+     },
+     "bull": {
+      "days": 228,
+      "episodes": 12,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  },
+  "nominal": {
+   "train": {
+    "regime": {
+     "bear_high": {
+      "days": 148,
+      "episodes": 15,
+      "episodes_min20": 2
+     },
+     "bear_low": {
+      "days": 149,
+      "episodes": 21,
+      "episodes_min20": 2
+     },
+     "bear_mid": {
+      "days": 302,
+      "episodes": 23,
+      "episodes_min20": 5
+     },
+     "bull_high": {
+      "days": 16,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 661,
+      "episodes": 19,
+      "episodes_min20": 5
+     },
+     "bull_mid": {
+      "days": 67,
+      "episodes": 14,
+      "episodes_min20": 1
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 599,
+      "episodes": 31,
+      "episodes_min20": 5
+     },
+     "bull": {
+      "days": 744,
+      "episodes": 30,
+      "episodes_min20": 5
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "val": {
+    "regime": {
+     "bear_high": {
+      "days": 55,
+      "episodes": 2,
+      "episodes_min20": 1
+     },
+     "bear_low": {
+      "days": 4,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 75,
+      "episodes": 14,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 13,
+      "episodes": 1,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 168,
+      "episodes": 6,
+      "episodes_min20": 4
+     },
+     "bull_mid": {
+      "days": 185,
+      "episodes": 16,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 134,
+      "episodes": 13,
+      "episodes_min20": 2
+     },
+     "bull": {
+      "days": 366,
+      "episodes": 13,
+      "episodes_min20": 6
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  },
+  "rolling5y": {
+   "train": {
+    "regime": {
+     "bear_high": {
+      "days": 334,
+      "episodes": 24,
+      "episodes_min20": 4
+     },
+     "bear_low": {
+      "days": 145,
+      "episodes": 12,
+      "episodes_min20": 3
+     },
+     "bear_mid": {
+      "days": 361,
+      "episodes": 32,
+      "episodes_min20": 6
+     },
+     "bull_high": {
+      "days": 17,
+      "episodes": 7,
+      "episodes_min20": 0
+     },
+     "bull_low": {
+      "days": 346,
+      "episodes": 11,
+      "episodes_min20": 5
+     },
+     "bull_mid": {
+      "days": 140,
+      "episodes": 13,
+      "episodes_min20": 2
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 840,
+      "episodes": 23,
+      "episodes_min20": 4
+     },
+     "bull": {
+      "days": 503,
+      "episodes": 22,
+      "episodes_min20": 6
+     },
+     "_unlabeled_days": 0
+    }
+   },
+   "val": {
+    "regime": {
+     "bear_high": {
+      "days": 156,
+      "episodes": 11,
+      "episodes_min20": 2
+     },
+     "bear_low": {
+      "days": 12,
+      "episodes": 6,
+      "episodes_min20": 0
+     },
+     "bear_mid": {
+      "days": 104,
+      "episodes": 10,
+      "episodes_min20": 1
+     },
+     "bull_high": {
+      "days": 74,
+      "episodes": 8,
+      "episodes_min20": 1
+     },
+     "bull_low": {
+      "days": 59,
+      "episodes": 4,
+      "episodes_min20": 1
+     },
+     "bull_mid": {
+      "days": 95,
+      "episodes": 5,
+      "episodes_min20": 3
+     },
+     "_unlabeled_days": 0
+    },
+    "trend": {
+     "bear": {
+      "days": 272,
+      "episodes": 12,
+      "episodes_min20": 3
+     },
+     "bull": {
+      "days": 228,
+      "episodes": 12,
+      "episodes_min20": 4
+     },
+     "_unlabeled_days": 0
+    }
+   }
+  }
+ },
+ "agreement": {
+  "birincil_vs_nominal.train": 0.6381236038719286,
+  "birincil_vs_rolling5y.train": 0.6679076693968726,
+  "birincil_vs_nominal.val": 0.506,
+  "birincil_vs_rolling5y.val": 0.518
+ },
+ "provenance": {
+  "commit": "b16f8374d52c6ba8b6ce638703e4ff9da687b8cc",
+  "git_status_porcelain": "",
+  "script_sha256": "e1215cf62778b7ee91c281c32efa0257994795fd72627f3e51d33521729bcb84",
+  "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+  "xu100_sha256": "e4adbef53162df7dff1e6a340377a72d355bf775893365741bece83bcb5a6b37",
+  "usdtry_sha256": "5b87b4a80e4f828011f5f34cc4b8d84015471802e0b68336cbb139d1e6cf9227"
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "note": "M6b S-reg yayin blogu (tasarim girdisi); performans sayisi YOK",
+ "names": [
+  "sma_ratio",
+  "vol"
+ ],
+ "out": "data/marl/sreg_m6.npz",
+ "out_sha256": "dde753897461253d8b93593d4c6c038811df7f732d84b9934216a663f6899ece",
+ "n_dates": 1902,
+ "n_train_rows": 1343,
+ "mean": [
+  -0.05821846630234728,
+  0.2606891628123664
+ ],
+ "std": [
+  0.13825469245672295,
+  0.09286934673152784
+ ],
+ "clip_frac": {
+  "sma_ratio": 0.0,
+  "vol": 0.0
+ },
+ "z_range_val": {
+  "sma_ratio": [
+   -1.6170488420197167,
+   2.4948637460349534
+  ],
+  "vol": [
+   -0.921525597977376,
+   1.8446361810346674
+  ]
+ },
+ "b0_cut_invariance": [
+  true,
+  true,
+  true,
+  true,
+  true
+ ],
+ "provenance": {
+  "commit": "84a353c9b196c0e3f2706a76ef507a6f1b77f98d",
+  "git_status_porcelain": "",
+  "script_sha256": "c3a6adce39ff3572e72aa9e5bc569f8cbb851c64bb4b386ae984aa5c6a7569a2",
+  "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b"
+ }
+}

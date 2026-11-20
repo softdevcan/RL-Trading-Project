@@ -249,6 +249,30 @@ deneyler:
       belge: docs/development/phase-10-m5-design.md
       terimler: [kol-kodlari-m5-gercek, s-obs, karistirilmis-kontrol, mde, siralama-tabani]
 
+    - id: m6-sreg
+      baslik: "M6b: Piyasa durumu bilgisi öğrenmeyi bozuyor mu?"
+      soru: >-
+        Bütün ajanlara aynı anda piyasanın eğilim ve oynaklık bilgisini ek gözlem olarak vermek, öğrenmeyi bozuyor mu?
+        Kısa bir pilot: iletişimsiz, tahminsiz, maliyetsiz, 3 tohum. Bilginin değerini değil, bir sakıncasını arar.
+      etiket: {kaynak: docs/development/measurements/phase10-m6/m6sreg_results.json, alan: label,
+               esit: FARK_YOK, evet: GÖZLENMEDİ, hayir: KISMİ}
+      sayilar:
+        - ad: Sharpe farkı, eğitim (bilgili − bilgisiz)
+          kaynak: docs/development/measurements/phase10-m6/m6sreg_results.json
+          alan: train.D_annual
+          ondalik: 2
+          isaret: true
+        - ad: Sharpe farkı, doğrulama
+          kaynak: docs/development/measurements/phase10-m6/m6sreg_results.json
+          alan: val.D_annual
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Bozulma gözlenmedi; plan gereği bu bilgi ana tasarımda kalır ve değeri M8'de ayrıca sınanır. Eğitimde öndeyken
+        doğrulamada geride kalması, eğitim penceresine uyum sağlıyor olabileceğine dair bir uyarıdır.
+      belge: docs/development/phase-10-m6-design.md
+      terimler: [kol-kodlari-m6, s-reg, rejim, etiket-gozlenmedi]
+
 sss:
   baslik: Sık sorulanlar
   sorular:

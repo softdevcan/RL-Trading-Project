@@ -138,6 +138,51 @@ x_all[0, 1:] += 3.0    # ajan 0 disindaki herkes
 check("self: diger ajanlarin gozlemi ajan 0 ciktisini degistirmez (iletisim yok)",
       torch.equal(out(cs, obs)[0], out(cs, x_all)[0]))
 check("self: ajanin kendi gozlemi kendi ciktisini degistirir (ajan 1)", not torch.equal(out(cs, obs)[1], out(cs, x_nb)[1]))
+base0 = out(cg, obs)[0]
+cg.set_sender_mask([1])
+masked_nb = torch.equal(out(cg, obs)[0], out(cg, x_nb)[0])          # 1'in mesaji kapali: 1'in gozlemi 0'i etkilemez
+masked_diff = not torch.equal(out(cg, obs)[0], base0)               # maske ciktiyi degistirir
+own1 = not torch.equal(out(cg, obs)[1], out(cg, x_nb)[1])           # alici 1 kendi kodunu gormeye devam eder
+in_sd = any('sender_block' in k for k in cg.state_dict())
+cg.set_sender_mask(None)
+restored = torch.equal(out(cg, obs)[0], base0)
+ca.set_sender_mask(range(1, N))
+attn_isolated = torch.equal(out(ca, obs)[0], out(ca, x_all)[0])
+ca.set_sender_mask(None)
+check("M7a gonderici maskesi: kapali gondericinin gozlemi aliciyi etkilemez, cikti degisir, gonderici kendini gorur; "
+      "None bit-es geri doner; durum sozlugune yazilmaz; attn'de herkes kapaliysa ajan 0 yalitilir; aralik disi hata",
+      masked_nb and masked_diff and own1 and restored and not in_sd and attn_isolated
+      and raises(lambda: cg.set_sender_mask([N])), f"nb={masked_nb} diff={masked_diff} own1={own1} rest={restored} sd={in_sd} attn={attn_isolated}")
+
+import copy  # noqa: E402
+
+u_ref = copy.deepcopy(cg)                       # q, k izdusumleri sifir -> puanlar esit -> standart yol tek bicimli
+with torch.no_grad():
+    Hd = u_ref.attn[0].embed_dim
+    u_ref.attn[0].in_proj_weight[:2 * Hd].zero_()
+    u_ref.attn[0].in_proj_bias[:2 * Hd].zero_()
+cg.set_uniform_attention(True)
+uni_ok = torch.allclose(out(cg, obs), out(u_ref, obs), atol=1e-6) and not torch.allclose(out(cg, obs)[0], base0, atol=1e-6)
+cg.set_uniform_attention(False)
+ident = list(range(N))
+cg.set_sender_permutation(ident)
+perm_ident = torch.equal(out(cg, obs)[0], base0)
+der = [1, 2, 0] + list(range(3, N)) if N > 3 else [1, 0]
+cg.set_sender_permutation(der)
+perm_diff = not torch.equal(out(cg, obs)[0], base0)
+cg.set_sender_permutation(None)
+cg.set_attention_record(True)
+_ = out(cg, obs)
+w = cg.attention_log[0]
+rec_ok = (len(cg.attention_log) == 1 and torch.allclose(w.sum(-1), torch.ones_like(w.sum(-1)), atol=1e-5)
+          and bool((w[0][cg.attn_mask] == 0).all()))
+cg.set_attention_record(False)
+m7b_sd = any(k in str(list(cg.state_dict())) for k in ('sender_perm', 'attention_log'))
+check("M7b: tek bicimli dikkat = q,k sifirlanmis standart yol; kimlik permutasyonu bit-es, karisim ciktiyi degistirir; "
+      "dikkat kaydi satirlari 1'e toplanir ve graf disi 0; kapatinca bit-es; durum sozlugune yazilmaz; gecersiz perm hata",
+      uni_ok and perm_ident and perm_diff and rec_ok and torch.equal(out(cg, obs)[0], base0) and not m7b_sd
+      and raises(lambda: cg.set_sender_permutation([0] * N)),
+      f"uni={uni_ok} ident={perm_ident} diff={perm_diff} rec={rec_ok} sd={m7b_sd}")
 
 # ---------------------------------------------------------------------------------------------
 print("\n[4] Kisa MAPPO, tohum, kaydet/yukle")

@@ -88,7 +88,9 @@ def conf_fields(a, arrays: dict, end_row: int) -> dict:
     from marl.benchmarl_task import load_pred
     from marl.comm_models import conf_scale, sender_temperatures
     N = len(arrays['symbols'])
-    dim = OS.ObsSpec(n_agents=N, use_pred=True).local_dim     # trainer grup/ek ozellik kullanmaz
+    # Tahmin blogu [p-0,5, z(logret), z(dis), pred_ok] yayin blogundan (S-reg, M6b) ONCE gelir (obs_spec.local_obs):
+    # ek bloksuz boyuttan sayilan indeksler ek blok varken de dogrudur.
+    dim = OS.ObsSpec(n_agents=N, use_pred=True).local_dim     # trainer grup ozelligi kullanmaz
     pred = load_pred(a.pred_path, arrays)
     rows = slice(OS.WARMUP_ROWS, end_row + 1)
     ok = np.isfinite(pred['p_up_cal']) & np.isfinite(pred['pred_logret']) & np.isfinite(pred['model_disagreement'])
@@ -117,7 +119,7 @@ def conf_scalars(exp) -> dict | None:
 def train_task_cfg(a, end_row: int, warmup: int) -> dict:
     return dict(panel_path=PANEL, start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
                 cost_bps_roundtrip=a.cost_bps, reward_term='excess', reward_scale=100.0, episode_len=a.episode_len,
-                use_state=a.use_state, pred_path=a.pred_path)
+                use_state=a.use_state, pred_path=a.pred_path, extras_path=a.extras_path)
 
 
 def main():
@@ -135,6 +137,7 @@ def main():
     ap.add_argument('--lr', type=float, default=5e-4, help='M3a on kaydi v0.2 (hakem-rl M3a #4); BenchMARL varsayilani 5e-5')
     ap.add_argument('--use-state', action='store_true', help='elestirmen girdisi ortam state() (varsayilan: tum gozlemler)')
     ap.add_argument('--pred-path', default=None)
+    ap.add_argument('--extras-path', default=None, help='M6b S-reg yayin blogu (scripts/marl/build_sreg_m6.py)')
     ap.add_argument('--train-device', default='cpu')
     ap.add_argument('--sampling-device', default='cpu')
     ap.add_argument('--seed', type=int, default=0)
@@ -185,6 +188,7 @@ def main():
         'note': 'egitim kaydi; performans sayisi YOK (degerlendirme eval_m3, okuma M3 on kaydi)',
         **provenance(), 'args': vars(a), 'build': build, 'panel_sha256': arrays['sha256'],
         'pred_sha256': (hashlib.sha256(open(a.pred_path, 'rb').read()).hexdigest() if a.pred_path else None),
+        'extras_sha256': (hashlib.sha256(open(a.extras_path, 'rb').read()).hexdigest() if a.extras_path else None),
         'train_window': [str(dates[OS.WARMUP_ROWS]), str(dates[end_row])],
         'wall_seconds': round(wall, 1), 'frames': exp.total_frames,
         'seconds_per_200k': round(wall / max(exp.total_frames, 1) * 200_000, 1),
