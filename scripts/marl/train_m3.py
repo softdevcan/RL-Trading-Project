@@ -119,7 +119,8 @@ def conf_scalars(exp) -> dict | None:
 def train_task_cfg(a, end_row: int, warmup: int) -> dict:
     return dict(panel_path=PANEL, start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
                 cost_bps_roundtrip=a.cost_bps, reward_term='excess', reward_scale=100.0, episode_len=a.episode_len,
-                use_state=a.use_state, pred_path=a.pred_path, extras_path=a.extras_path)
+                use_state=a.use_state, pred_path=a.pred_path, extras_path=a.extras_path,
+                **({'batched': True} if a.batched_env else {}))   # kapaliyken gorev konfigurasyonu eskisiyle ayni
 
 
 def main():
@@ -130,6 +131,8 @@ def main():
     ap.add_argument('--epochs', type=int, default=10, help='MAPPO onerisi <= 10; mini-parti bolunmez')
     ap.add_argument('--n-envs', type=int, default=10)
     ap.add_argument('--parallel', action='store_true')
+    ap.add_argument('--batched-env', action='store_true',
+                    help='Faz 10 §3.2.8: n-envs ortami tek surecte toplu adimla (marl/batched_env.py); --parallel yok sayilir')
     ap.add_argument('--episode-len', type=int, default=252)
     ap.add_argument('--alpha', type=float, default=0.25)
     ap.add_argument('--cost-bps', type=float, default=20.0, help='gidis-donus bps (D4)')
