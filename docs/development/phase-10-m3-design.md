@@ -197,6 +197,17 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 
 ---
 
+### 5.3 Tekrar: toplu toplayıcıyla M3a (2026-11-20; koşudan önce yazıldı)
+
+**Neden:** Faz 10 §3.2.8 adım 2'de veri toplama düzeni değişti (`marl/batched_env.py`, kullanıcı kararı). Ortam adımları eskisiyle bit-eş (`test_marl_batched_env`), ama eğitimin bütünü değil: toplama sırası ve sıfırlamalar farklı. Bu tekrar, cevabı bilinen pozitif kontrolle yeni toplayıcının öğrenmeyi bozmadığını sınar. M8 bu toplayıcıyla koşulacağı için M8'den önce yapılır. Yeni bir hipotez sınamaz, tez bulgusu değildir.
+
+**Düzen:** §5 v0.2 ön kaydının **aynısı**: A1 (PC060-K12) ↔ S1 (karıştırılmış), tohum 0, 1, 2, üreteçler 20261115 / 1 / 2, maliyetsiz, F = 600.000, lr 5e-4, MLP politika, eleştirmen tüm yerel gözlemler. Değişen tek şey toplama: `--batched-env` (10 ortam, tek süreç) ve `--jobs 3`. Kök `results/marl_m3a_batched`. Komut: `venv-marl\Scripts\python scripts/marl/run_m3a.py --frames 600000 --root results/marl_m3a_batched --batched-env --jobs 3`.
+
+**Okuma kuralı:** §5'in eşikleri değişmeden (`analyze_m3.py`): (i) eğitim D ≥ 0,3 ve tek yönlü p < 0,05, (ii) min A1 > max S1, (iii) doğrulamada D > 0 ve 2/3 tohum.
+- **GEÇTİ:** yeni toplayıcı öğrenme hattını bozmuyor; M8 bu toplayıcıyla ön kaydedilebilir.
+- **GEÇTİ değil:** M8'e geçilmez. Toplayıcı incelenir; karar kullanıcıda. Eşik ya da tohum sonuca bakılarak değiştirilmez.
+- **Betimsel:** eski M3a'yla tohum başına SR farkı (bit-eşlik beklenmez), süre.
+
 ## 6. ÖN KAYIT v1.1 — M3b maliyet kapısı ve M4 temel yapılandırması (2026-11-18, ilk M3b eğitiminden ÖNCE)
 
 Kapsam ve toplam süre kullanıcıya sunuldu ve onaylandı (2026-11-18). M3a'nın okuma kuralı ve eşikleri değiştirilmedi. v1.0 (`2462853`) hiç koşulmadan hakem-rl okumasıyla v1.1'e güncellendi (§8).
