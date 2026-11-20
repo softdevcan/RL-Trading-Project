@@ -1,6 +1,6 @@
 # Faz 10 M6/M7 — Rejim ve yorumlanabilirlik: tasarım
 
-**Sürüm:** v0.6 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
+**Sürüm:** v0.7 · 2026-11-20 · dal `feat/phase10-m6` · **Durum:** kararlar K-M6-1..4 KAPANDI (2026-11-20, kullanıcı; dördü de öneri yönünde, §5). Sıradaki: §2.1 2021+ etiket sayımı, M6a HMM, M6c okuma aracı.
 **Üst belgeler:**
 - [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.1.3 sinyal yolları (S-reg), §4 sıra (M5 → M6/M7 → M8), §6 K10, §3.2.8 ortam hızı
 - [phase-9-research-validity-plan.md](phase-9-research-validity-plan.md) M6 (rejim, AQ3, G5), M7 (yorumlanabilirlik), M8 (H4, "Rejim etiketi" maddesi)
@@ -147,10 +147,38 @@ Bütün mesajlar kapalıyken eğitim penceresinde ΔSR (yıllık, fazla getiri; 
 - **Yasak kurtarma:** ek tohum, özellik kümesini, maliyeti ya da eşiği sonuca bakarak değiştirmek yapılmaz; gerekirse yeni ön kayıt.
 - Hakem okuması yapılmadı (kademeli kural: kısa ve ucuz pilot, tez bulgusu üretmez; beyan).
 
+### 6.1 Sonuç (2026-11-20): FARK_YOK — S-reg açıkken öğrenme bozulmuyor
+
+**Sade özet.** Bütün ajanlara aynı piyasa durumu bilgisini (endeksin eğilimi ve oynaklığı) ek gözlem olarak verdik ve vermediğimiz kolla karşılaştırdık. Eğitimde ek bilgili kol üç tohumda da biraz öndeydi. Doğrulamada iki tohumda gerideydi. Fark iki pencerede de istatistik olarak ayırt edilemedi ve işareti pencereler arasında değişti. Ön kaydın sorusu "öğrenmeyi bozuyor mu" idi; bozduğuna dair işaret yok. Plan gereği S-reg ana tasarımda kalır, değeri M8'deki tek ablasyonla sınanır. Bu bir tez bulgusu değildir.
+
+**Kaynak:** `measurements/phase10-m6/m6sreg_results.json` (`analyze_m6sreg.py`), eğriler `m6sreg_curves.json` (`curves_m4a.py`, her koşunun `run.log`'u). Sayılar bu dosyalardan yuvarlanmıştır.
+
+**Koşu izi:** 6/6 koşu, F = 600.000, maliyetsiz, tohum 12–14. Hepsi commit `a207e67`'den, temiz ağaçla. Koşu başına eğitim 531–542 sn (iki eş zamanlı). Parametre sayısı R0-N 77.826, SR-N 78.338. S-reg bloğunun SHA'sı üç SR-N koşusunda aynı (`dde75389…`).
+
+| | Eğitim | Doğrulama |
+|---|---|---|
+| D = D(SR-N, R0-N), yıllık (SE) | +0,19 (0,23) | −0,28 (0,29) |
+| İki yönlü p | 0,41 | 0,33 |
+| Tohum farkları (12, 13, 14) | +0,01 / +0,30 / +0,25 | +0,16 / −0,54 / −0,45 |
+| SR SR-N / R0-N | 1,21 / 1,01 / 1,07 ↔ 1,20 / 0,71 / 0,82 | 0,81 / 0,44 / 0,30 ↔ 0,65 / 0,98 / 0,76 |
+
+**Okuma (§6 tablosu):** `BOZULMA` koşulları sağlanmadı: eğitimde D > 0, p 0,41. `IYILESME_ISARETI` koşulları da sağlanmadı: p 0,41 ve doğrulamada D < 0. Okuma **FARK_YOK**: öğrenme bozulmuyor; plan izlenir (S-reg ana tasarımda).
+
+**Betimsel (kararı değiştirmez):**
+- **Öğrenme denetimi:** altı koşunun hepsinde son 10 güncellemenin ortalama ödülü ilk 10'unkinden yüksek. R0-N tohum 14 sınırda (14,0 → 14,5).
+- Eğitim ödül eğrileri SR-N'de daha yüksek bitiyor: son 10 ortalaması 26–30, R0-N'de 15–22. Bu eğitim içi bir ölçüdür; doğrulamada tutmadı.
+- **İşaret dönüşü:** eğitimde üç tohumda pozitif, doğrulamada iki tohumda negatif. Bu, ek yayın bloğunun eğitim penceresine uyum sağlıyor olabileceğine dair bir uyarıdır. 3 tohumla bu ayrılamaz. M8 ablasyonunda doğrulama ve test pencereleri bu yüzden ayrıca raporlanmalı.
+- Devir: SR-N eğitim 0,31 / doğrulama 0,32, R0-N 0,30 / 0,28. Nakit ağırlığı iki kolda da ~%1–4.
+
+**Sınırlar:** 3 tohum, maliyetsiz, iletişimsiz mimari, tek bir S-reg tanımı (iki sürekli özellik). Ortak HAC tohum varyansını taşımaz (M5 §4.11). Pilot S-reg'in değerini ölçmez.
+
+**Yasak kurtarma (§6):** ek tohum, özellik kümesi, maliyet ya da eşik sonuca bakılarak değiştirilmez.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.7 (2026-11-20):** §6.1 M6b pilot sonucu: FARK_YOK (eğitim D +0,19, p 0,41; doğrulama −0,28); S-reg ana tasarımda kalır. Ön kayıt değişmedi.
 - **v0.6 (2026-11-20):** K-M6-5 kapandı (HMM iki hücre = `calm_vs_rest`, `PRIMARY_TWO_CELL`). M7b kodu (tek biçimli dikkat, karıştırılmış mesaj, dikkat kaydı; `attn_m7b.py`) yazıldı; ölçüm koşulmadı.
 - **v0.5 (2026-11-20):** §6 M6b kısa pilot ön kaydı DONDURULDU (R0-N ↔ SR-N, tohum 12–14, maliyetsiz; okuma BOZULMA / IYILESME_ISARETI / FARK_YOK). M6b kodu: `build_sreg_m6.py`, `extras_path`.
 - **v0.4 (2026-11-20):** §3.2 M7a ölçümü: maskeleme mesaj kanalına bağımlılığı ölçüyor, bilgiyi değil (tahminsiz kolda da düşüş); dağılımı koruyan karıştırma kontrolü önerisi.
