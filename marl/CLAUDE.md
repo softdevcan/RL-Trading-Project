@@ -31,8 +31,9 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - **Listeleme kilidi** `LISTING_LOCKOUT=20` seans (`fill_prices`, ortam `listing_lockout`); canli karar da ayni
   `tradable` maskesini kullanir. Fiyatlar yfinance duzeltilmis: tam sayi modunda lot/fiyat seviyesi iddiasi yok.
 - **Taban acilista satis engeli, DONEM BAGIMLI marj** (tasarim §2.5 ON KAYIT v0.7; hakem-2 H1): `limit_down_gaps(dates)`
-  -> esik marj - 0,005; marj BISTECH oncesi %20 (DOGRULANMADI), 2015-11-30 %20, 2020-03-13 %10. Kapsam
-  `PRICE_MARGIN_VERIFIED_UNTIL` (2020-12-31) sonrasi HATA: 2021+ icin once marj gecmisini kaynakla dogrula, takvimi uzat.
+  -> esik marj - 0,005; marj BISTECH oncesi %20 (DOGRULANMADI), 2015-11-30 %20, 2020-03-13'ten bugune %10 (Borsa
+  Istanbul 2020/20; 2021+ yeni giris yok, §2.5 2026-11-20). Kapsam `PRICE_MARGIN_VERIFIED_UNTIL` (2026-11-09) sonrasi
+  HATA: veri yenilenince kaynagi yeniden denetle, `scripts/marl/price_limit_audit_m8.py`'yi kos, sonra tarihi uzat.
   Ortam varsayilani `limit_down_gap='schedule'`; sabit `LIMIT_DOWN_GAP_FIXED=0.095` yalniz duyarlilik/sentetik test.
   `project(no_sell)` ve `rebalance_orders(no_sell)` ayni maskeyi alir. Canli karar `no_sell=None`. Tavan alim engeli YOK.
 - **Sembol sirasi panelin gorunme sirasi**; `sorted()` uygulama.

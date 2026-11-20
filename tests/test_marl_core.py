@@ -182,11 +182,13 @@ check("satis engeli: -%10 bosluk engelli, -%9,4 degil; esik 0 -> hic; nedensel (
       _gp['no_sell'][120, 0] and not _gp['no_sell'][121, 0] and not _gp0['no_sell'].any()
       and np.array_equal(_gc['no_sell'], _gp['no_sell'][:121]) and not _gp['no_sell'][~_gp['valid']].any())
 # v0.7 donem bagimli marj (hakem-2 H1): 2015-11-30 oncesi ve +-%20 doneminde esik 0,195, 2020-03-13'ten 0,095
-_ld = A.limit_down_gaps(['2014-01-02', '2015-11-27', '2015-11-30', '2020-03-12', '2020-03-13', '2020-12-31'])
-check("v0.7 takvim: 0,195 / 0,195 / 0,195 / 0,195 / 0,095 / 0,095",
-      np.allclose(_ld, [0.195, 0.195, 0.195, 0.195, 0.095, 0.095]))
-check("v0.7 takvim: dogrulanmis kapsam disi (2021-01-04) ve tarih olmayan girdi -> ValueError",
-      raises(lambda: A.limit_down_gaps(['2020-12-31', '2021-01-04'])) and raises(lambda: A.limit_down_gaps(['d0001'])))
+# 2021+ (tasarim §2.5, 2026-11-20): yeni giris yok, %10 surer; dogrulanmis kapsam 2026-11-09'da biter
+_ld = A.limit_down_gaps(['2014-01-02', '2015-11-27', '2015-11-30', '2020-03-12', '2020-03-13', '2020-12-31',
+                         '2023-02-15', '2026-11-09'])
+check("takvim: 0,195 x4 (BISTECH oncesi, +-%20) / 0,095 x4 (2020-03-13'ten, 2021+ dahil)",
+      np.allclose(_ld, [0.195, 0.195, 0.195, 0.195, 0.095, 0.095, 0.095, 0.095]))
+check("takvim: dogrulanmis kapsam disi (2026-11-10) ve tarih olmayan girdi -> ValueError",
+      raises(lambda: A.limit_down_gaps(['2026-11-09', '2026-11-10'])) and raises(lambda: A.limit_down_gaps(['d0001'])))
 _go2 = _la['open'].copy()
 _go2[120, 0] = _la['close'][119, 0] * 0.85     # -%15: sabit kuralda engel, +-%20 doneminde engel yok
 _go2[121, 0] = _la['close'][120, 0] * 0.80     # -%20: her iki kuralda engel

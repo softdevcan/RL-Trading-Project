@@ -41,13 +41,17 @@ def one_way_cost(bps_roundtrip: float) -> float:
 LISTING_LOCKOUT = 20   # kullanici karari 2026-11-16 (hakem-finans M2 #1): halka arz tavan serisi
 # Taban acilista SATIS engeli. ON KAYIT v0.7 (tasarim §2.5; kullanici karari 2026-11-16, hakem-2 H1): donem
 # bagimli fiyat marji, no_sell = O_t / Cf_{t-1} <= 1 - (marj_t - 0,005). Kaynaklar: BISTECH belgesi §2.1.2
-# (2015-11-30'dan itibaren paylarda %20, baz = onceki kapanis); bianet 13.03.2020 (%10). BISTECH oncesi marj
-# DOGRULANMADI: %20 varsayilir (beyan). Dogrulanmis kapsam PRICE_MARGIN_VERIFIED_UNTIL'de biter; sonrasi hata.
+# (2015-11-30'dan itibaren paylarda %20, baz = onceki kapanis); Borsa Istanbul 2020/20 sayili duyuru (onay
+# 12/03/2020: 13/03/2020'den "ikinci bir duyuruya kadar" Yildiz + Ana Pazar %10; ikincil kaynak bianet 13.03.2020).
+# 2021+ (tasarim §2.5, 2026-11-20): YENI GIRIS YOK, 2020/20 hala yururlukte (Pay Piyasasi Proseduru Rev 54 Tablo-4
+# dipnot 10; Alt Pazar/YIP/POIP genel kural %10); veri denetimi measurements/phase10-m8/price_limit_audit.json.
+# BISTECH oncesi marj DOGRULANMADI: %20 varsayilir (beyan). Dogrulanmis kapsam PRICE_MARGIN_VERIFIED_UNTIL'de biter;
+# sonrasi hata: veri yenilenince once kaynak ve veri yeniden denetlenir (scripts/marl/price_limit_audit_m8.py).
 # Tavan: alim engeli YOK (beyan). Eski sabit kural (§9 #9, v0.5) yalniz duyarlilik ve testler icin:
 LIMIT_DOWN_GAP_FIXED = 0.095
 PRICE_MARGIN_PRE_BISTECH = 0.20                                # DOGRULANMADI (beyan)
 PRICE_MARGIN_SCHEDULE = (('2015-11-30', 0.20), ('2020-03-13', 0.10))   # (yururluk tarihi, marj)
-PRICE_MARGIN_VERIFIED_UNTIL = '2020-12-31'
+PRICE_MARGIN_VERIFIED_UNTIL = '2026-11-09'   # veri son gunu; kaynaklar 2026-11-20'de denetlendi (tasarim §2.5)
 LIMIT_TOLERANCE = 0.005
 
 
@@ -55,7 +59,7 @@ def limit_down_gaps(dates) -> np.ndarray:
     """[T] satir basina taban esigi (marj_t - 0,005); `fill_prices(limit_down_gap=...)` girdisi.
 
     dates: 'YYYY-MM-DD' dizgileri (panel `dates`). Dogrulanmis kapsamin disindaki tarih -> ValueError
-    (2021+ pencerelerinden once marj gecmisi kaynakla dogrulanip takvim uzatilir; sessiz varsayilan yok).
+    (veri yenilenince marj once kaynakla ve veri denetimiyle yeniden dogrulanip kapsam uzatilir; sessiz varsayilan yok).
     """
     d = np.asarray([str(x)[:10] for x in dates])
     last = max(d.tolist()) if d.size else ''
@@ -71,7 +75,9 @@ def limit_down_gaps(dates) -> np.ndarray:
 def margin_schedule_meta() -> dict:
     return {'rule': 'no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)', 'tolerance': LIMIT_TOLERANCE,
             'pre_bistech_assumed_unverified': PRICE_MARGIN_PRE_BISTECH, 'schedule': [list(x) for x in PRICE_MARGIN_SCHEDULE],
-            'verified_until': PRICE_MARGIN_VERIFIED_UNTIL, 'preregistration': 'phase-10-m2-design.md §2.5 v0.7 (b8e310e)'}
+            'verified_until': PRICE_MARGIN_VERIFIED_UNTIL, 'preregistration': 'phase-10-m2-design.md §2.5 v0.7 (b8e310e)',
+            'verification_2021plus': 'phase-10-m2-design.md §2.5 (2026-11-20): Borsa Istanbul 2020/20 hala yururlukte; '
+                                     'measurements/phase10-m8/price_limit_audit.json'}
 
 
 def fill_prices(open_px, close_px, listing_lockout: int = 0, limit_down_gap=0.0) -> dict:
