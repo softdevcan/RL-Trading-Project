@@ -138,6 +138,21 @@ x_all[0, 1:] += 3.0    # ajan 0 disindaki herkes
 check("self: diger ajanlarin gozlemi ajan 0 ciktisini degistirmez (iletisim yok)",
       torch.equal(out(cs, obs)[0], out(cs, x_all)[0]))
 check("self: ajanin kendi gozlemi kendi ciktisini degistirir (ajan 1)", not torch.equal(out(cs, obs)[1], out(cs, x_nb)[1]))
+base0 = out(cg, obs)[0]
+cg.set_sender_mask([1])
+masked_nb = torch.equal(out(cg, obs)[0], out(cg, x_nb)[0])          # 1'in mesaji kapali: 1'in gozlemi 0'i etkilemez
+masked_diff = not torch.equal(out(cg, obs)[0], base0)               # maske ciktiyi degistirir
+own1 = not torch.equal(out(cg, obs)[1], out(cg, x_nb)[1])           # alici 1 kendi kodunu gormeye devam eder
+in_sd = any('sender_block' in k for k in cg.state_dict())
+cg.set_sender_mask(None)
+restored = torch.equal(out(cg, obs)[0], base0)
+ca.set_sender_mask(range(1, N))
+attn_isolated = torch.equal(out(ca, obs)[0], out(ca, x_all)[0])
+ca.set_sender_mask(None)
+check("M7a gonderici maskesi: kapali gondericinin gozlemi aliciyi etkilemez, cikti degisir, gonderici kendini gorur; "
+      "None bit-es geri doner; durum sozlugune yazilmaz; attn'de herkes kapaliysa ajan 0 yalitilir; aralik disi hata",
+      masked_nb and masked_diff and own1 and restored and not in_sd and attn_isolated
+      and raises(lambda: cg.set_sender_mask([N])), f"nb={masked_nb} diff={masked_diff} own1={own1} rest={restored} sd={in_sd} attn={attn_isolated}")
 
 # ---------------------------------------------------------------------------------------------
 print("\n[4] Kisa MAPPO, tohum, kaydet/yukle")

@@ -7,7 +7,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - Saf cekirdek (`weights`, `accounting`, `orders`, `obs_spec`, `panel`): numpy/pandas. Ana `venv/` (canli
   karar) ve `venv-marl/` (egitim) ikisi de import eder. Buraya pettingzoo/torchrl/benchmarl import'u KOYMA.
 - `env.py`: PettingZoo. YALNIZ `venv-marl/`. `app/` ve `dashboard/` bunu import etmez.
-- `comm_models.py` (M4, M5): attn/gat/self politika modelleri + S-msg guven terimi; YALNIZ `venv-marl/`. gat = attn + sabit graf maskesi, self = kendine dikkat (ayni parametre); `conf_mode='none'` M4a koşularindaki modelle bit-es KALMALI. `conf_temp` (GLM) yalniz guven terimini bozar; gozlem/mesaj icerigi degismez. Tasarim `docs/development/phase-10-m4-design.md`, `phase-10-m5-design.md` §3.
+- `comm_models.py` (M4, M5): attn/gat/self politika modelleri + S-msg guven terimi; YALNIZ `venv-marl/`. gat = attn + sabit graf maskesi, self = kendine dikkat (ayni parametre); `conf_mode='none'` M4a koşularindaki modelle bit-es KALMALI. `conf_temp` (GLM) yalniz guven terimini bozar; gozlem/mesaj icerigi degismez. `set_sender_mask` (M7a) yalniz DEGERLENDIRME araci: kalici degil, durum sozlugune yazilmaz; None iken ileri gecis bit-es. Tasarim `docs/development/phase-10-m4-design.md`, `phase-10-m5-design.md` §3.
 - `benchmarl_task.py` (M3): BenchMARL gorevi; YALNIZ `venv-marl/`. Tohum bit-esligi icin `OMP_NUM_THREADS=1`
   `MKL_NUM_THREADS=1` torch import'undan ONCE (`torch.set_num_threads` surec ortasinda yetmiyor).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
