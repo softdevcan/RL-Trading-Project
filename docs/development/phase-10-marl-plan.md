@@ -391,6 +391,36 @@ Vision §3.5'in F2 (RLlib) tavsiyesi bu yüzden spike sonucuna bağlanır (§6 K
 
 **Sınır.** M5'i ve devam eden pilotları bloklamaz. M8 uzun koşu ön kaydından önce yapılır. Hiçbir sonuç ya da eşik bu maddeye göre değiştirilmez.
 
+**Adım 1 sonucu (2026-11-20, ölçüldü; `measurements/phase10-m8/env_profile.json`, `scripts/marl/profile_env_m8.py`, temiz ağaç `be5e2c0`):**
+
+| Ölçüm | Sonuç |
+|---|---|
+| Ham ortam adımı, tek süreç, rastgele eylem | 0,12 ms (bunun ~%31'i ölçüm döngüsünün eylem üretimi); kümülatif pay: muhasebe `step_fractional` %24, projeksiyon `project` %15, gözlem `_obs` %9 |
+| Aynı adım TorchRL `PettingZooWrapper` içinden (`rand_step`) | 1,91 ms (~16×) |
+| 30 bin kare gat eğitimi, paralel toplama (10 ortam), 10 epoch | 29,6 sn (0,99 ms/kare) |
+| Aynısı 1 epoch | 25,3 sn → güncelleme payı ~%16 (epoch başı eşit varsayımıyla, kaba) |
+| Seri toplama, 10 epoch | 71,7 sn → paralel toplama yalnız 2,4× |
+
+- **Okuma:** Sürenin ~%84'ü veri toplama. Toplamada her ortam süreci adım başına ~8 ms harcıyor (3.000 adım / 25 sn). Ortamın kendi hesabı bunun ~%1–2'si, sarmalayıcı ~%23. Geri kalanı adım başına küçük partili politika çağrısı ve süreçler arası tensordict aktarımı (ayrıştırılmadı; çıkarım).
+- **Sonuç:** GPU'da toplu bir torch ortamı (seçenek b) en fazla ortam hesabını ve sarmalayıcıyı kaldırır. Asıl kaldıraç adım başına sabit ek yüktür. Aday: aynı numpy çekirdeğini çağıran, B ortamı tek süreçte toplu adımlayan ve tensordict'i parti başına bir kez kuran yerel bir TorchRL ortamı (seçenek a′). Çekirdek fonksiyonlar aynı kalır, K2/K5/K6 paritesi bit-eş kalır. Toplama düzeni değişeceği için eski pilotlarla bit-eşlik beklenmez; M8 ön kaydı yeni düzenle yazılır. Kazanç tahmini ölçülmedi.
+
+**Adım 2 (KARAR 2026-11-20, kullanıcı: toplu yerel ortam) — prototip ve ölçüm:**
+- **Kod:** `marl/batched_env.py::BatchedMarlEnv`. B tane `MarlPortfolioEnv`'i tek süreçte adımlar, veri paketini parti başına bir kez kurar. Görevde `batched=True`, eğiticide `--batched-env`; varsayılan kapalı, kapalıyken görev konfigürasyonu değişmez. BenchMARL bunu vektörleşmiş ortam olarak kullanır; görev bu durumda parti boyutsuz spec verir.
+- **Parite** (`tests/test_marl_batched_env.py` 4/4): B = 1 toplu ortam `PettingZooWrapper` ile bit-eş (gözlem, ödül, bitiş; bölüm sonları dahil). B = 3'te alt ortamlar bağımsız tek ortamla bit-eş. Tohum düzeni sarmalayıcının `_set_seed`'iyle aynı. Çekirdek fonksiyonlar aynı olduğu için K2/K5/K6 paritesi değişmez. Aynı tohumla toplu ve paralel **eğitim** aynı politikayı vermez: toplama düzeni farklıdır, plan bunu öngörmüştü.
+- **Süre** (`measurements/phase10-m8/collect_timing.json`, `scripts/marl/time_collect_m8.py`, temiz ağaç `64db8b4`; 30 bin kare gat, 20 bps):
+
+| Düzen | Eğitim duvarı | Hız |
+|---|---|---|
+| Paralel, 10 süreç (bugünkü) | 29,3 sn | 1× |
+| Toplu, 10 ortam | 18,9 sn | 1,55× |
+| Toplu, 30 ortam | 14,2 sn | 2,06× |
+| Toplu, 60 ortam | 12,9 sn | 2,27× |
+| Toplu, 10 ortam, 3 koşu aynı anda | 34,0 sn toplam (koşu başına 27,6–28,7) | saatte 318 ↔ 93 koşu (başlatma dahil; 3,4×) |
+
+- **Sınır:** Altı eş zamanlı toplu koşu GPU belleğini (8 GB, süreç başına ~1,2 GB) doldurdu ve durdu (elle deneme, kayıt dışı). Pratik tavan 3–4 eş zamanlı koşudur. Ortam sayısını (n_envs) değiştirmek, parti başına bölüm uzunluğunu ve GAE kesmesini, yani eğitim dinamiğini değiştirir. Bu yüzden M8 ön kaydı toplama düzenini (toplu, n_envs) baştan sabitler.
+- **M8 için kaba tahmin** (ölçüm değil; 30 bin kareden 600 bine doğrusal ölçekleme): bugünkü düzenle 80 koşu ~8 saat. Toplu ortam, 10 ortam ve 3 eş zamanlı koşuyla ~2,5–3 saat.
+- **M8'den önce önerilen davranış denetimi:** Toplu toplayıcıyla M3a pozitif kontrolü (A1 ↔ S1, maliyetsiz) yeniden koşulur ve GEÇTİ'nin tekrarlandığı görülür. Bu, öğrenme davranışının yeni toplayıcıda bozulmadığının kanıtıdır; kısa, ~6 koşu.
+
 ### 3.3 Karar mekanizması
 
 **Bugünkü akış:**
@@ -649,3 +679,6 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
 - **2026-11-19 (K28 onayı + M5 kararları; kullanıcı):** K28 planı onaylandı (R-K1..R-K7 öneri yönünde). M5 mekanizma ön kaydı yazılacak; açık kararlar K-d..K-h öneri yönünde kapandı, taban kol gat (M4b PİLOT_İŞARETİ). K-i (eşik biçimi) ön kayıtta yeniden sunulacak ([M5 tasarımı](phase-10-m5-design.md) §3.5).
 - **2026-11-19 (§3.2.8 ortam hızı; kullanıcı kararı):** Uzun koşulardan (M8 öncesi, ~16 tohum) önce ortam hızı maddesi eklendi: profil → kullanıcı kararı (CPU hızlandırma ya da GPU'da toplu torch ortamı) → parite kabul ölçütü. Dayanak M4b süre ölçümü (darboğaz CPU). **Kod değişikliği yok.**
 - **2026-11-19 (M5 mekanizma kolları; ön kayıt v0.7 DONDURULDU, hakem-rl iki okuma):** Sentetik komşu sinyali düzeninde G0/GL/GLS/GLM/GD, 3 yeni tohum. H2 KISMİ: GL ↔ G0 +0,13 (p 0,039), GL ↔ GLS +0,09, doğrulama işareti, β güvene özgü; ama gürültü tabanı GD ↔ G0 +0,18 > GL farkı → `gurultu_tabani`. H3 SINANMADI ([M5 tasarımı](phase-10-m5-design.md) §4.11). Sırada gerçek sinyal kolları ön kaydı.
+- **2026-11-20 (§3.2.8 adım 1 ölçüldü):** ortam hızı profili. Ham ortam 0,12 ms/adım, sarmalayıcı 1,91 ms, toplama payı ~%84, güncelleme ~%16, paralel 2,4×. Darboğaz adım başına sabit ek yük; adım 2 kararı kullanıcıda. **Kod değişikliği yok** (yalnız profil betiği).
+- **2026-11-20 (§3.2.8 adım 2; kullanıcı kararı: toplu yerel ortam):** `BatchedMarlEnv` (parite bit-eş, test 4/4); tek koşu 1,55× (n_envs 10), 3 eş zamanlı koşuyla saatte 3,4× daha çok koşu; GPU belleği 3–4 eş zamanlı koşuyla sınırlı. M8 ön kaydı toplama düzenini sabitler; önce M3a pozitif kontrolü yeni toplayıcıyla tekrarlanır (öneri).
+- **2026-11-20 (§3.2.8 davranış denetimi):** M3a pozitif kontrolü toplu toplayıcıyla tekrarlandı: GEÇTİ (eğitim D +0,82, doğrulama +0,96; eski +0,76 / +0,82). 6 koşu ~10 dk ([M3 tasarımı](phase-10-m3-design.md) §5.3–5.4). M8 bu toplayıcıyla ön kaydedilebilir.

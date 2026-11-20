@@ -117,6 +117,8 @@ venv-marl\Scripts\python tests/test_marl_m3.py  # Faz 10/M3 BenchMARL gorevi: te
 venv-marl\Scripts\python tests/test_marl_m4.py  # Faz 10/M4 iletisim kollari (attn, gat): graf maskesi, esit butce (formul, attn = gat,
                                            #          M4 boyutlarinda none'a gore <= %10), gat'te komsu olmayan ajan etkisiz + attn'de etkili,
                                            #          self (M4b mimari-es kontrol: ayni parametre, iletisim yok), M7a gonderici maskesi (kapali gonderici etkisiz, None bit-es, durum sozlugunde yok), M7b tek bicimli dikkat (q,k sifir yoluyla esit) + karistirilmis mesaj + dikkat kaydi (kapaliyken bit-es), kisa MAPPO + tohum bit-es + kaydet/yukle (20, ~1 dk; YALNIZ venv-marl)
+venv-marl\Scripts\python tests/test_marl_batched_env.py  # Faz 10 §3.2.8 toplu yerel ortam: B=1 PettingZooWrapper ile bit-es (bolum sonu dahil),
+                                           #          B=3 alt ortamlar bagimsiz tek ortamla bit-es, gorev parti boyutsuz spec, kisa MAPPO + tohum, varsayilan kapali (4, ~1 dk; YALNIZ venv-marl)
 venv-marl\Scripts\python tests/test_marl_m5_msg.py  # Faz 10/M5 S-msg guvenle agirlikli dikkat: conf_mode='none' 62b4023 ile bit-es, guven terimi (prob/zlogodds),
                                            #          gat maskesi + guven, beta>0 dikkati arttirir, karistirilmis guven, gecit, H3 bulgusu (zlogodds sicakligi siler), kisa MAPPO,
                                            #          GLM gonderici sicakligi yalniz guven teriminde + egitici conf_fields (z_scale egitim satirlarindan) (20, ~1 dk; YALNIZ venv-marl)

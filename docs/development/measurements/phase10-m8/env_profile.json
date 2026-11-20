@@ -1,0 +1,184 @@
+{
+ "note": "Faz 10 §3.2.8 adim 1: ortam hizi profili; basarim okunmaz",
+ "commit": "be5e2c0b35cf5a6d05dd8b6b015f7012af298e7d",
+ "git_status_porcelain": "",
+ "script_sha256": "49eb7dc33f4da5e57a26de053b6a3c60df4c99bbba60a44081f17b81ab01844f",
+ "env": {
+  "torch": "2.6.0+cu124",
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "omp": "1",
+  "cpu_count": 16
+ },
+ "A_raw_env": {
+  "steps": 2000,
+  "ms_per_step": 0.1190265500008536,
+  "profile_total_s": 0.3334046000000001,
+  "top_marl_cumulative": [
+   {
+    "func": "marl/env.py:step",
+    "cum_share": 0.6239898909613123,
+    "self_share": 0.13388477543501195,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/accounting.py:step_fractional",
+    "cum_share": 0.23504354768950392,
+    "self_share": 0.06971709448519904,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/weights.py:project",
+    "cum_share": 0.14676612140324394,
+    "self_share": 0.041302069617515764,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/env.py:_obs",
+    "cum_share": 0.08572917110321811,
+    "self_share": 0.02244690085259771,
+    "calls_per_step": 1.0035
+   },
+   {
+    "func": "marl/env.py:_local",
+    "cum_share": 0.0632822702506204,
+    "self_share": 0.004453147916975349,
+    "calls_per_step": 1.0035
+   },
+   {
+    "func": "marl/weights.py:_project_once",
+    "cum_share": 0.06084559121259873,
+    "self_share": 0.037699239902508834,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/obs_spec.py:local_obs",
+    "cum_share": 0.05882912233364505,
+    "self_share": 0.02288150793360379,
+    "calls_per_step": 1.0035
+   },
+   {
+    "func": "marl/weights.py:target_weights",
+    "cum_share": 0.055797370522182345,
+    "self_share": 0.02476420541288272,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/accounting.py:step_growth",
+    "cum_share": 0.04463225762332012,
+    "self_share": 0.03290716444824096,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/accounting.py:agent_rewards",
+    "cum_share": 0.012624300924462347,
+    "self_share": 0.011750587724344532,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/accounting.py:contrib_residual",
+    "cum_share": 0.007362225956090587,
+    "self_share": 0.0022111272609915992,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/obs_spec.py:local_dim",
+    "cum_share": 0.0039051650757068127,
+    "self_share": 0.0018269094067688322,
+    "calls_per_step": 1.0035
+   }
+  ],
+  "top_self": [
+   {
+    "func": "scripts/marl/profile_env_m8.py:loop",
+    "cum_share": 0.9999652074386493,
+    "self_share": 0.3085845246286343,
+    "calls_per_step": 0.0005
+   },
+   {
+    "func": "marl/env.py:step",
+    "cum_share": 0.6239898909613123,
+    "self_share": 0.13388477543501195,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "~:<method 'astype' of 'numpy.ndarray' objects>",
+    "cum_share": 0.07179954925636897,
+    "self_share": 0.07179954925636897,
+    "calls_per_step": 32.007
+   },
+   {
+    "func": "marl/accounting.py:step_fractional",
+    "cum_share": 0.23504354768950392,
+    "self_share": 0.06971709448519904,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "~:<method 'reduce' of 'numpy.ufunc' objects>",
+    "cum_share": 0.056666584684194506,
+    "self_share": 0.056666584684194506,
+    "calls_per_step": 14.0
+   },
+   {
+    "func": "marl/weights.py:project",
+    "cum_share": 0.14676612140324394,
+    "self_share": 0.041302069617515764,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/weights.py:_project_once",
+    "cum_share": 0.06084559121259873,
+    "self_share": 0.037699239902508834,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "marl/accounting.py:step_growth",
+    "cum_share": 0.04463225762332012,
+    "self_share": 0.03290716444824096,
+    "calls_per_step": 1.0
+   },
+   {
+    "func": "~:<method 'reshape' of 'numpy.ndarray' objects>",
+    "cum_share": 0.03120682798017783,
+    "self_share": 0.03120682798017783,
+    "calls_per_step": 31.0
+   },
+   {
+    "func": "marl/weights.py:target_weights",
+    "cum_share": 0.055797370522182345,
+    "self_share": 0.02476420541288272,
+    "calls_per_step": 1.0
+   }
+  ]
+ },
+ "B_wrapped_env": {
+  "steps": 2000,
+  "ms_per_step": 1.912888800001383
+ },
+ "C_training": {
+  "parallel_ep10": {
+   "train_wall_s": 29.6,
+   "process_wall_s": 38.4,
+   "frames": 30000,
+   "ms_per_frame": 0.9866666666666667
+  },
+  "parallel_ep1": {
+   "train_wall_s": 25.3,
+   "process_wall_s": 34.1,
+   "frames": 30000,
+   "ms_per_frame": 0.8433333333333334
+  },
+  "serial_ep10": {
+   "train_wall_s": 71.7,
+   "process_wall_s": 76.4,
+   "frames": 30000,
+   "ms_per_frame": 2.39
+  },
+  "decomposition": {
+   "update_9_epochs_s": 4.300000000000001,
+   "update_share_parallel_ep10": 0.16141141141141144,
+   "collection_plus_1ep_s": 25.3,
+   "parallel_speedup_vs_serial": 2.4222972972972974,
+   "note": "guncelleme payi ~ (ep10 - ep1) * 10/9 / ep10 (epoch basi esit varsayimi); kaba"
+  }
+ }
+}

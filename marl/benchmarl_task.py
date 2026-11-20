@@ -30,7 +30,7 @@ from marl.env import MarlPortfolioEnv
 
 TASK_KEYS = ('panel_path', 'start_row', 'end_row', 'mode', 'alpha', 'cost_bps_roundtrip', 'reward_term',
              'reward_scale', 'episode_len', 'pred_path', 'norm_stats_path', 'use_state', 'limit_down_gap',
-             'extras_path')
+             'extras_path', 'batched')
 
 
 def load_pred(path: Optional[str], panel: dict) -> Optional[dict]:
@@ -83,6 +83,13 @@ class MarlTask(Task):
     def get_env_fun(self, num_envs: int, continuous_actions: bool, seed: Optional[int], device) -> Callable[[], EnvBase]:
         config = copy.deepcopy(self.config)
         use_state = bool(config.get('use_state', False))
+        if config.get('batched'):
+            # Faz 10 §3.2.8 adim 2: B ortami tek surecte adimlayan yerel ortam (marl/batched_env.py); BenchMARL bunu
+            # vektorlesmis ortam olarak kullanir (Serial/ParallelEnv sarmalamasi atlanir). Cekirdek ayni, parite bit-es.
+            if use_state:
+                raise ValueError("batched ortam state() vermez: use_state ile birlikte kullanilmaz")
+            from marl.batched_env import BatchedMarlEnv
+            return lambda: BatchedMarlEnv([lambda: make_env(config)] * num_envs, seed=seed, device=device)
         return lambda: PettingZooWrapper(env=make_env(config), seed=seed, device=device, categorical_actions=True,
                                          return_state=use_state, use_mask=False)
 
@@ -112,7 +119,8 @@ class MarlTask(Task):
         return None
 
     def observation_spec(self, env: EnvBase) -> Composite:
-        spec = env.observation_spec.clone()
+        # toplu ortamda (batch_size != ()) BenchMARL parti boyutsuz spec bekler (VMAS gorevleriyle ayni)
+        spec = (env.full_observation_spec_unbatched if env.batch_size else env.observation_spec).clone()
         for group in self.group_map(env):
             for key in list(spec[group].keys()):
                 if key != 'observation':
@@ -125,7 +133,7 @@ class MarlTask(Task):
         return None
 
     def action_spec(self, env: EnvBase) -> Composite:
-        return env.full_action_spec
+        return env.full_action_spec_unbatched if env.batch_size else env.full_action_spec
 
     @staticmethod
     def env_name() -> str:

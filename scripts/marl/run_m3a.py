@@ -57,7 +57,12 @@ def main():
     ap.add_argument('--gpu-busy-pct', type=int, default=30)
     ap.add_argument('--max-wait', type=int, default=4 * 3600)
     ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--batched-env', action='store_true',
+                    help='Faz 10 §3.2.8 toplu yerel ortam (--parallel yerine); M3 tasarimi §5.3 tekrari')
+    ap.add_argument('--jobs', type=int, default=1, help='es zamanli kosu (toplu ortamla 3; GPU bellegi siniri)')
     a = ap.parse_args()
+    if a.jobs > 1:
+        a.gpu_busy_pct = max(a.gpu_busy_pct, 80)   # kendi kosularimiz GPU'yu kullanir; esik yalniz dis yuk icin
     if a.frames < F_MIN:
         raise SystemExit(f'F = {a.frames} < F_min = {F_MIN}: M3a kosulmaz, sure karari kullaniciya doner (§5.1)')
     for window in ('train', 'val'):
@@ -66,21 +71,32 @@ def main():
             if not os.path.exists(out):
                 run([PY, 'scripts/marl/eval_m3.py', '--baselines', '--window', window, '--cost-bps', str(bps),
                      '--out', out], a.dry_run)
-    for arm, bps, suffix in ARMS:
-        for s in SEEDS:
-            d = os.path.join(a.root, arm, f's{s}')
-            if os.path.exists(os.path.join(d, 'eval_val.npz')):
-                continue
-            cmd = [PY, 'scripts/marl/train_m3.py', '--frames', str(a.frames), '--seed', str(s), '--cost-bps', str(bps),
-                   '--train-device', a.train_device, '--parallel', '--save-dir', d, '--out', os.path.join(d, 'train.json')]
-            cmd += ['--pred-path', os.path.join('data', 'marl', f'pred_pc060_k12_g{GEN[s]}{suffix}.npz')]
-            if not a.dry_run:
-                wait_gpu(a)
-            if not os.path.exists(os.path.join(d, 'policy.pt')):
-                run(cmd, a.dry_run)
-            for window in ('train', 'val'):
-                run([PY, 'scripts/marl/eval_m3.py', '--run-dir', d, '--window', window,
-                     '--out', os.path.join(d, f'eval_{window}.npz')], a.dry_run)
+    collect = ['--batched-env'] if a.batched_env else ['--parallel']
+    tasks = [(arm, bps, suffix, s) for arm, bps, suffix in ARMS for s in SEEDS
+             if not os.path.exists(os.path.join(a.root, arm, f's{s}', 'eval_val.npz'))]
+
+    def one(task):
+        arm, bps, suffix, s = task
+        d = os.path.join(a.root, arm, f's{s}')
+        cmd = [PY, 'scripts/marl/train_m3.py', '--frames', str(a.frames), '--seed', str(s), '--cost-bps', str(bps),
+               '--train-device', a.train_device, *collect, '--save-dir', d, '--out', os.path.join(d, 'train.json')]
+        cmd += ['--pred-path', os.path.join('data', 'marl', f'pred_pc060_k12_g{GEN[s]}{suffix}.npz')]
+        if not a.dry_run:
+            wait_gpu(a)
+        if not os.path.exists(os.path.join(d, 'policy.pt')):
+            run(cmd, a.dry_run)
+        for window in ('train', 'val'):
+            run([PY, 'scripts/marl/eval_m3.py', '--run-dir', d, '--window', window,
+                 '--out', os.path.join(d, f'eval_{window}.npz')], a.dry_run)
+
+    if a.jobs <= 1:
+        for t in tasks:
+            one(t)
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=a.jobs) as ex:
+            for f in [ex.submit(one, t) for t in tasks]:
+                f.result()
 
 
 if __name__ == '__main__':
