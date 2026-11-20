@@ -365,7 +365,13 @@
    "siradaki": "Kullanıcı kararı: M6/M7'ye geçiş ya da daha bilgili sinyalle yeni ön kayıt; M8 öncesi ortam hızı (§3.2.8)"
   },
   {
-   "ad": "Faz 10 M6–M8, nihai koşumlar",
+   "ad": "Faz 10 M6/M7 rejim ve yorumlanabilirlik",
+   "durum": "sürüyor",
+   "sinif": "suruyor",
+   "siradaki": "Kullanıcı kararları K-M6-1..4; sonra M6a HMM, M6c okuma aracı, M7a/b"
+  },
+  {
+   "ad": "Faz 10 M8, nihai koşumlar",
    "durum": "planlı",
    "sinif": "planli",
    "siradaki": null
@@ -425,7 +431,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "e07034ac8d1432701da1a890354bb44d23d79bd68a06f0a69e7c97f8db130ec0",
+   "tablo_sha256": "da9a3bed31390f2b58888871f617b069fc8949990f47d2081dc985a493b2cb7b",
    "uretim_commit": null
   }
  }
