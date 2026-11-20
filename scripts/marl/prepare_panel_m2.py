@@ -10,6 +10,13 @@ Eksik gunler ATILMAZ (M1 spike'i 69 gunu atiyordu); hucre maskesi ortamda.
 --health-only: rf olmadan da kosar; .npz YAZMAZ, gozlem sagligini (ozellik basina kirpma orani,
 sabitlik; K18) egitim satirlarinda ve egitim istatistigiyle dogrulama satirlarinda (train_end, end] olcer. rf yoksa .npz yazimi acik hatayla durur (sabite dusulmez).
 Pencere 2021'e dokunmaz (m0p-v2 dogrulayici penceresi; --end varsayilani 2020-12-31).
+
+M8 paneli (tasarim §6.1, kullanici karari 2026-11-20): `--data-fix m8-v1` veri duzeltmesini (`marl/panel_fix.py`)
+uygular ve MACD/RSI/CCI'yi duzeltilmis fiyattan yeniden hesaplar; once yeniden hesabin CSV'yi urettigi sinanir.
+Varsayilan `none`: hat M2 paneliyle ayni (bit-es).
+
+    python scripts/marl/prepare_panel_m2.py --data-fix m8-v1 --end 2026-11-09 --out data/marl/panel_m8.npz \
+        --json docs/development/measurements/phase10-m8/panel_m8.json
 """
 from __future__ import annotations
 
@@ -40,6 +47,8 @@ def main():
     ap.add_argument('--health-only', action='store_true')
     ap.add_argument('--train-end', default='2018-12-31', help='--health-only: olcum satirlarinin sonu')
     ap.add_argument('--json', default=None, help='olcum JSON cikisi')
+    ap.add_argument('--data-fix', choices=('none', 'm8-v1'), default='none',
+                    help="M8 paneli veri duzeltmesi (tasarim §6.1); 'none' -> M2 paneliyle ayni hat")
     a = ap.parse_args()
 
     from data.data_fetcher import DataFetcher
@@ -49,7 +58,21 @@ def main():
     from marl import panel as PN
 
     src = os.path.join(DataFetcher().data_dir, 'stock_data_with_indicators.csv')
-    df = with_adx(DataFetcher().load_data('stock_data_with_indicators.csv'), 'wilder')
+    df = DataFetcher().load_data('stock_data_with_indicators.csv')
+    fix = None
+    if a.data_fix == 'm8-v1':   # yalniz M8 paneli (tasarim §6.1); paylasilan kapi ve M2 paneli degismez
+        import pandas as pd
+        from marl import panel_fix as PF
+        cols = ['macd', 'macd_signal', 'macd_hist', 'rsi', 'cci']
+        same = float(np.nanmax(np.abs(PF.recompute_indicators(df)[cols].to_numpy() - df[cols].to_numpy())))
+        if not same < 1e-6:
+            raise RuntimeError(f"gosterge yeniden hesabi CSV'yi uretmiyor (en buyuk fark {same}); m8-v1 durdu")
+        syms = list(pd.unique(df.index.get_level_values('symbol')))
+        df, fix = PF.apply_m8_v1(df, {s: PF.load_isy(s) for s in syms})
+        df = PF.recompute_indicators(df)
+        fix['indicator_recompute_check_max_abs_diff'] = same
+        fix['isy_sha256'] = PF.isy_sha256(syms)
+    df = with_adx(df, 'wilder')
     panel, gate = prepare_rl_panel(df, start=a.start, end=a.end, drop_indicator_warmup=True)
     arrays = PN.build_arrays(panel)
     dates = arrays['dates']
@@ -116,6 +139,13 @@ def main():
         'health_val': health_val, 'norm_stats': stats,
         'gate': {k: gate[k] for k in list(gate)[:12]},
     }
+    if fix is not None:
+        rep['data_fix'] = fix
+        rep['data_fix_summary'] = {**{k: fix[k] for k in ('version', 'close_tol', 'median_window', 'drop_sessions',
+                                                           'rights_fixes', 'indicator_recompute_check_max_abs_diff',
+                                                           'isy_sha256')},
+                                   'close_patch_n': fix['close_patch']['n'],
+                                   'residual_max_abs_dev_after': fix['verify']['residual_max_abs_dev_after']}
     def _write_json():
         if a.json:
             os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
@@ -138,7 +168,7 @@ def main():
                         'first_nan_rows': int(np.argmax(np.isfinite(rf))) if np.isfinite(rf).any() else None,
                         'per_period_mean': float(np.nanmean(rf)), 'per_period_max': float(np.nanmax(rf))}
     info = PN.save_npz(arrays, a.out, meta={k: rep[k] for k in rep
-                                            if k not in ('health', 'health_val', 'norm_stats')})
+                                            if k not in ('health', 'health_val', 'norm_stats', 'data_fix')})
     info['path'] = os.path.relpath(os.path.abspath(a.out), ROOT).replace(os.sep, '/')   # yerel yol JSON'a girmez
     rep['npz'] = info
     _write_json()   # .npz SHA + rf kapsami olcum JSON'una (health-only ile ayni alanlar + npz, risk_free)

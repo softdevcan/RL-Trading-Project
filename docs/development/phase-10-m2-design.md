@@ -1,6 +1,6 @@
 # Faz 10 M2 — Ortam ve karar katmanı çekirdeği: tasarım
 
-**Sürüm:** v0.9 · 2026-11-20 · dal `feat/phase10-m8-margin-2021`
+**Sürüm:** v0.10 · 2026-11-20 · dal `feat/phase10-m8-margin-2021`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §3.2 (RL katmanı), §3.3 (karar mekanizması), §8 #13 (muhasebe denklemi).
 **Durum:** saf çekirdek ve PettingZoo ortamı yazıldı ve testli; hakem-rl + hakem-finans Kabul (§10). Gerçek 30 sembollü panelde ölçüm yapıldı (§9 #1, `measurements/phase10-m2/obs_health.json`) ve fiyat limiti ön kayıtlı kuralı uygulandı: taban açılışta satış engeli (§9 #9). Performans sayısı **yok** (S1). S-obs ufuk hizası ölçüldü; M3 pozitif kontrolü PC060-K12 (§9.1). Hakem-2 M2 kapanışı: Küçük revizyon, bulgular işlendi (§10); satış engeli dönem bağımlı marja geçti (v0.7). **M2 çekirdeği kapandı;** sıradaki M3.
 
@@ -297,8 +297,9 @@ Boyut: F + 3 + N + G + 4·[S-obs] + E. N = 30'da ek özellik yokken 44.
 - `--health-only`, rf olmadan da koşar ve gözlem sağlığını ölçer (K18: özellik başına kırpma oranı ve sabitlik; eğitim + doğrulama satırları).
 - `.npz` yazımında `--json` aynı ölçüm alanlarına `npz` (göreli yol, SHA-256) ve `risk_free` (kapsam) ekler. Panel `data/marl/panel_m2.npz` (git dışı).
 - Varsayılan pencere sonu 2020-12-31. 2021, m0p-v2 doğrulayıcı penceresi olduğu için ona dokunulmaz.
+- M8 paneli `--data-fix m8-v1 --end 2026-11-09` ile kurulur (§6.1). Varsayılan `--data-fix none`; M2 paneli ve paylaşılan kapı değişmez.
 
-### 6.1 M8 paneli: ikinci kaynakla veri denetimi (2026-11-20; ölçüldü, KARAR BEKLİYOR)
+### 6.1 M8 paneli: ikinci kaynakla veri denetimi ve `m8-v1` düzeltmesi (2026-11-20)
 
 M8'in 2021+ penceresi için panel kaynağı (yfinance, düzeltilmiş) ikinci bir kaynakla karşılaştırıldı: İş Yatırım HisseTekil (ham ve düzeltilmiş kapanış, gün içi en düşük/en yüksek, sermaye). Betik `scripts/marl/cross_source_audit_m8.py` (`640a7f2`), ölçüm `measurements/phase10-m8/cross_source_audit.json`; ham yanıtlar git dışı (`data/marl/sources/isyatirim/`, SHA'ları JSON'da). Performans okunmadı. Normal günlerde iki kaynağın düzeltilmiş kapanışı 4 basamakta eşit (THYAO 2022-12-14: 133,8331).
 
@@ -309,6 +310,14 @@ Bulgular (2013-06..2026-11-09, 100.949 ortak hücre; sapma = log(bizim / İşY) 
 - Açılış fiyatı için ikinci kaynak yok (HisseTekil açılış vermiyor); açılışlar doğrulanmadı.
 
 **Öneri (karar bekliyor):** yalnız M8 paneline, açıkça istenince uygulanan sürümlü bir veri düzeltmesi (`m8-v1`): (i) 2023-02-08 satırı atılır; (ii) SKBNK'nin 2024-06-04 ve 2026-10-19 sınırlarından önceki fiyatları 0,8010 ve 0,7781 ile çarpılır; (iii) |sapma| > %1 olan kapanışlar İşY düzeltilmiş kapanışıyla (yerel ölçek oranıyla) değiştirilir, yüksek/düşük kapanışı kapsayacak biçimde genişletilir. Paylaşılan veri kapısı, M2 paneli ve Milestone 0' verisi değişmez. M2–M7 pilotlarının düzeltilmemiş veriyle koşulduğu beyan edilir; bu fark tüm kollarda ortaktır.
+
+**KARAR (2026-11-20, kullanıcı): `m8-v1` uygulandı; kapsam genişletilmez.** Kod `marl/panel_fix.py` (yalnız ana venv), hat `scripts/marl/prepare_panel_m2.py --data-fix m8-v1`. Varsayılan `none` M2 paneliyle bit-eş: panel yeniden kurulup `data/marl/panel_m2.npz` ile dizi dizi karşılaştırıldı, fark yok. Sıra:
+1. İptal seansı (2023-02-08) satırı atılır.
+2. SKBNK'nin yfinance sınırından önceki açılış/yüksek/düşük/kapanışı f = TERP / P ile çarpılır. TERP = (P + r S) / (1 + r); P = hak kullanım gününden önceki İşY ham kapanışı, r = sermaye_sonra / sermaye_önce − 1, S = 1 TL. 2024 için f = 0,801016 (P 4,49; 1,86 → 2,5 milyar TL), 2026 için 0,778061 (P 4,48; 2,5 → 3,5 milyar TL).
+3. |sapma| > %1 olan kapanışlar İşY × yerel ölçekle (medyan) yamanır; yüksek/düşük İşY gün içi aralığını (aynı ölçekle) ve yeni kapanışı kapsar. Kapının düz satırları (hacim 0, tek fiyat; `data.integrity._flat_rows`) ne aday ne medyan girdisidir: kapı onları hayalet gün / bayat hücre olarak işler, takvim değişmez. Yama, eşiği aşan hücre kalmayana kadar tekrarlanır (komşu yamalar medyanı kaydırır; en çok 10 geçiş, yakınsamazsa hata).
+4. MACD, RSI, CCI düzeltilmiş fiyattan CSV'yi üreten aynı fonksiyonlarla yeniden hesaplanır (`TechnicalIndicators`, ısınma ffill → bfill → 0); ADX hattaki `with_adx`. Kurulum önce yeniden hesabın düzeltilmemiş veride CSV'yi ürettiğini sınar; fark ≥ 1e-6 ise durur.
+
+Açılış ve hacim değişmez; açılışlar doğrulanmadı (beyan). SKBNK 2014-06-09 ve 2015-02-27 farkları doğrulanmadığı için düzeltilmez (beyan). Panel `data/marl/panel_m8.npz` (git dışı); meta düzeltme özetini ve İşY dosyalarının SHA-256'larını taşır. Test: `test_marl_core` [7] (iptal günü, TERP çarpanı, yama + aralık genişlemesi, kalan hücreler bit-eş).
 
 ---
 
@@ -520,6 +529,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.10 (2026-11-20):** §6.1 KARAR (kullanıcı): `m8-v1` uygulandı (`marl/panel_fix.py`, `prepare_panel_m2.py --data-fix m8-v1`; varsayılan hat M2 paneliyle bit-eş). `test_marl_core` 62.
 - **v0.9 (2026-11-20):** §6.1 M8 paneli ikinci kaynakla denetlendi (İş Yatırım; `measurements/phase10-m8/cross_source_audit.json`): kesik gün çubukları, SKBNK'nin yanlış günden düzeltilmiş iki bedelli artırımı, 2023-02-08 iptal seansı. Düzeltme önerisi `m8-v1` kullanıcı kararını bekliyor. Kod davranışı değişmedi.
 - **v0.8 (2026-11-20):** §2.5 fiyat marjı kapsamı 2021+'ya uzatıldı (M8 engel 1a; kullanıcı onayı): takvime yeni giriş yok, `PRICE_MARGIN_VERIFIED_UNTIL` 2026-11-09; birincil kaynak Borsa İstanbul 2020/20 sayılı duyuru; veri denetimi `measurements/phase10-m8/price_limit_audit.json`. Panel 2021+ için açık veri maddeleri (2023-02-08 iptal edilen seans, 2022-12-16 kısmi gün, SKBNK) listelendi. `test_marl_core` 61.
 

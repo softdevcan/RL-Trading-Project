@@ -11,6 +11,9 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `benchmarl_task.py` (M3): BenchMARL gorevi; YALNIZ `venv-marl/`. Tohum bit-esligi icin `OMP_NUM_THREADS=1`
   `MKL_NUM_THREADS=1` torch import'undan ONCE (`torch.set_num_threads` surec ortasinda yetmiyor).
 - `batched_env.py` (Faz 10 §3.2.8): B tane `MarlPortfolioEnv`'i tek surecte adimlayan TorchRL ortami; YALNIZ `venv-marl/`. Cekirdek AYNI fonksiyonlar, parite bit-es (`test_marl_batched_env`). Tohum duzeni `PettingZooWrapper._set_seed` ile ayni (kurulumda reset(seed + i), sonra tohumsuz). Gorevde `batched=True`, egitici `--batched-env`; varsayilan kapali.
+- `panel_fix.py` (M8, tasarim §6.1): panel veri duzeltmesi `m8-v1`; YALNIZ ana venv (data/ import eder), ortam ve
+  canli karar import ETMEZ. Yalniz `prepare_panel_m2.py --data-fix m8-v1` cagirir; varsayilan `none` M2 paneliyle
+  bit-es KALMALI. Ikinci kaynak onbellegi `data/marl/sources/isyatirim/` (git disi; `cross_source_audit_m8.py --fetch`).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
 - Eski ortam `env/trading_env.py` ve state space'i DEGISMEZ; yeni ortam oraya konmadi (tasarim §1).
 
@@ -41,7 +44,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - 2021 (m0p-v2 dogrulayici penceresi) ve sonrasi M2 gelistirmesinde basarimla OKUNMAZ.
 
 ## Test
-- `python tests/test_marl_core.py` (61, ana venv)
+- `python tests/test_marl_core.py` (62, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
 - `venv-marl\Scripts\python tests/test_marl_m3.py` (18, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7)
 - `venv-marl\Scripts\python tests/test_marl_m4.py` (20, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
