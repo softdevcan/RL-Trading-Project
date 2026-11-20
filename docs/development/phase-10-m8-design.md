@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.2 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v0.3 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -30,7 +30,24 @@
   - Testler: `test_marl_m3` [4]. Noktalar doğru iterasyonda yazılıyor, son nokta son politikayla aynı, kontrol noktalı eğitim kontrol noktasız eğitimle bit-eş. `test_marl_batched_env`, `test_marl_m4`, `test_marl_m5_msg` ve `test_marl_env` yeşil.
   - Duman koşusu `panel_m8`'de, 2021+'a dokunmadan yapıldı: eğitim ..2017, doğrulama 2018, test 2019. Pencereler ve satır kuralı doğru, ikinci test okuması reddediliyor.
   - Kalan: deneme kaydına yazım ve wf-v1 kat tarihlerinin `evaluation/splits.py` ile denetimi. İkisi ana venv'deki okuma adımında yapılacak (A3).
-- **A2 — SARL kolları (K15).** SARL-ağırlık: tek merkezi PPO aktörü, 30 boyutlu logit, nakit z₀ = 0 sabit (MARL'la aynı eylem temsili). SARL-eşmimari: MARL ile aynı paylaşımlı mimari, tek-ajan eğitimi (§2.3'teki itirazın kontrolü). Tasarım bu belgede, kod M8 koşularından önce ayrı commit'te ve testli.
+- **A2 — SARL kolları (K15).** SARL-ağırlık: tek merkezi PPO aktörü, 30 boyutlu logit, nakit z₀ = 0 sabit (MARL'la aynı eylem temsili). SARL-eşmimari: MARL ile aynı paylaşımlı mimari, tek-ajan eğitimi (§2.3'teki itirazın kontrolü). Tasarım (2026-11-21):
+  - **Tek-ajan görünümü** `marl/sarl.py::SarlPortfolioEnv`: `MarlPortfolioEnv`'in üstünde ince bir katman. Ortamın kendisi değişmez.
+    - Tek ajan `agent_0`, grup adı MARL'la aynı (`agent`).
+    - Gözlem: 30 yerel gözlem panel sırasıyla yan yana. Her satır MARL ajanının gözlemiyle aynı, kimlik one-hot dahil.
+    - Eylem: 30 logit, i. bileşen ajan i'nin logiti. Hedef ağırlık, projeksiyon ve muhasebe aynı çekirdekte (iç ortam) yapılır.
+    - Ödül: ajan ödüllerinin ortalaması = ölçek · (α · ort(kᵢ) + (1 − α) · G), yani takım ödülü. α = 0'da MARL ajanlarının ödülüne eşit.
+    - Bölüm sonu iç ortamla aynı.
+  - **Eğitim:** BenchMARL MAPPO, tek üyeli grupla; bu PPO'ya eşittir. Ortak log-olasılık satır log-olasılıklarının toplamıdır, bu yüzden oran kırpması ortaktır (§2.3'teki farkın kendisi).
+  - **Eleştirmen:** aynı MLP yapılandırması, girdi düz gözlem. Bu, MAPPO eleştirmeninin gördüğü bilgiyle aynıdır (tüm yerel gözlemler). Çıkış 1 değer; MAPPO'da ajan başına değer. Fark yalnız çıkış katmanında (beyan).
+  - **SARL-ağırlık politikası:** BenchMARL MLP, düz gözlemden (N·d) 2N çıkışa; MARL ile aynı hücreler.
+  - **SARL-eşmimari politikası** `RowSharedPolicy`: düz gözlemi N satıra böler. Her satıra aynı MLP uygulanır (d → hücreler → 2; MARL paylaşımlı ajan MLP'siyle aynı katmanlar). Çıkış `[loc₁..loc_N, ölçek₁..ölçek_N]` (`NormalParamExtractor` yarıları). Aynı ağırlıklarla eylem dağılımı MARL ajanlarının ortak dağılımına eşittir.
+  - **Beyan:** α > 0'da SARL kollarında ajan başına kredi yoktur; bu tasarım gereğidir ve karşıtlığın konusudur. Ön kayıt paketiyle hakem-rl okur.
+  - **Testler** (`tests/test_marl_sarl.py`, venv-marl):
+    - aynı eylem dizisiyle SARL ve MARL ortamının muhasebesi bit-eş, SARL ödülü MARL ödüllerinin ortalaması;
+    - toplu yol tek ortamla bit-eş;
+    - aynı ağırlıklarla `RowSharedPolicy` çıktısı MARL MLP'sinin ajan başına çıktısına eşit;
+    - iki SARL kolunda kısa MAPPO koşusu ve tohum belirlenimciliği; kaydet/yükle ve belirlenimci değerlendirme.
+  - **BİTTİ (2026-11-21).** `marl/sarl.py` (yalnız venv-marl), `make_env` `single_agent` anahtarı, `m3_runner` `rowshared` modeli, `train_m3.py --sarl {agirlik, esmimari}`. Testler `test_marl_sarl` 4/4; diğer venv-marl testleri ve `test_marl_core` yeşil. Komut satırı denemesi: `panel_m8`, toplu toplayıcı, kontrol noktaları ve `eval_fold_m8` çalışıyor. SARL-eşmimari politikası 77.826 parametre; MARL paylaşımlı politikasıyla aynı.
 - **A3 — Okuma kodu.** Çıkarım birimi ve gürültü tabanı kuralı (§3) koşudan önce yazılır ve sentetik kayıtla sınanır (`--self-test`, M5 kalıbı).
 
 ## 3. Gürültü tabanı dağılımı (engel 2)
@@ -49,7 +66,7 @@
 
 | # | Madde | Öneri |
 |---|---|---|
-| K-M8-1 | **Çıkarım birimi.** K20 "kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi" diyor; M5 §4.11 bu serinin ortak HAC p'sinin tohum varyansını taşımadığını gösterdi | Birincil çıkarım **tohum × kat düzeyinde**: eşli (aynı tohum, aynı kat) Sharpe farkları, tabakalı bootstrap güven aralığı. Ortak HAC p betimsel kalır. Karar eşiği §3'teki boş dağılımla |
+| K-M8-1 | **Çıkarım birimi.** K20 "kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi" diyor; M5 §4.11 bu serinin ortak HAC p'sinin tohum varyansını taşımadığını gösterdi | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Birincil çıkarım **tohum × kat düzeyinde**: eşli (aynı tohum, aynı kat) Sharpe farkları, tabakalı bootstrap güven aralığı. Ortak HAC p betimsel kalır. Karar eşiği §3'teki boş dağılımla. K20'nin "birleştirilmiş seri" maddesi bu kararla değişir (plan kaydı) |
 | K-M8-2 | **Doğrulayıcı kanıt** (Faz 9 plan: "yalnız 2021 katı + ön kayıt sonrası ileri veri mi") | Karar A1–A2 bittikten sonra, ön kayıt v1.0'da |
 | K-M8-3 | **Kollar ve bütçe**: IPPO dahil mi, hangi iletişim kolları, sinyal kolları (M5 gerçek sinyal `O1_fark_yok`), kol budama kuralı (K20) | Boyut ölçümünden (§3) sonra, bütçeyle birlikte |
 | K-M8-4 | **Seçim kuralı etkeni** (argmax ↔ son nokta; Faz 9 §9.12) | Ön kayıtta önceden tanımlı etken olarak; her kural kendi kaydıyla bir kez okunur ve deneme sayısına (N) eklenir |
@@ -61,6 +78,8 @@
 A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (GPU boşken) → ön kayıt v1.0 + hakem-rl ve hakem-finans (paralel) → dondurma → M8 koşuları → faz kapanışında hakem-2.
 
 ## Versiyon geçmişi
+
+- **v0.3 (2026-11-21):** A2 SARL kolları bitti (`marl/sarl.py`: tek-ajan görünümü + `RowSharedPolicy`; `train_m3.py --sarl`); K-M8-1 KARAR (kullanıcı): birincil çıkarım tohum × kat düzeyinde. `test_marl_sarl` 4.
 
 - **v0.2 (2026-11-21):** A1 kat koşucusu bitti (`train_m3.py --panel/--train-end/--checkpoints`, `eval_fold_m8.py`, `marl/selection.py`); `test_marl_core` 63, `test_marl_m3` 20.
 

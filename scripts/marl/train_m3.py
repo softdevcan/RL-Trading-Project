@@ -120,11 +120,25 @@ def conf_scalars(exp) -> dict | None:
     return out
 
 
+def sarl_model(a, n_symbols: int):
+    """M8 tasarimi A2: SARL-agirlik -> None (BenchMARL MLP, duz gozlem, merkezi aktor); SARL-esmimari -> satir
+    paylasimli MLP, MARL ajan MLP'siyle ayni hucreler (MlpConfig varsayilani Linear + Tanh + normsuz olmali)."""
+    if a.sarl == 'agirlik':
+        return None
+    import torch.nn as nn
+    from benchmarl.models.mlp import MlpConfig
+    mc = MlpConfig.get_from_yaml()
+    if mc.layer_class is not nn.Linear or mc.activation_class is not nn.Tanh or mc.norm_class is not None:
+        raise SystemExit('MlpConfig varsayilani degismis: RowSharedPolicy esitligi Linear/Tanh/normsuz ister')
+    return {'kind': 'rowshared', 'n_rows': int(n_symbols), 'num_cells': list(mc.num_cells)}
+
+
 def train_task_cfg(a, end_row: int, warmup: int) -> dict:
     return dict(panel_path=getattr(a, 'panel', PANEL), start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
                 cost_bps_roundtrip=a.cost_bps, reward_term='excess', reward_scale=100.0, episode_len=a.episode_len,
                 use_state=a.use_state, pred_path=a.pred_path, extras_path=a.extras_path,
-                **({'batched': True} if a.batched_env else {}))   # kapaliyken gorev konfigurasyonu eskisiyle ayni
+                **({'batched': True} if a.batched_env else {}),    # kapaliyken gorev konfigurasyonu eskisiyle ayni
+                **({'single_agent': True} if getattr(a, 'sarl', 'none') != 'none' else {}))   # M8 A2
 
 
 def main():
@@ -166,6 +180,8 @@ def main():
     ap.add_argument('--shuffle-seed', type=int, default=None, help='derangement tohumu (varsayilan --seed)')
     ap.add_argument('--conf-temp-seed', type=int, default=None,
                     help='GLM: gonderici basina sicaklik T_j ~ log-tekduze comm_models.GLM_TEMP_RANGE [0,25; 4] ureteci (yalniz guven terimi)')
+    ap.add_argument('--sarl', choices=('none', 'agirlik', 'esmimari'), default='none',
+                    help='M8 tasarimi A2 (K15): tek-ajan kontrol kolu (marl/sarl.py); none = MARL (M3-M7 ile ayni)')
     ap.add_argument('--panel', default=PANEL, help='M8: data/marl/panel_m8.npz (M8 tasarimi A1)')
     ap.add_argument('--train-end', default=TRAIN_END, help='egitim son tarihi (dahil); M8: wf-v1 katinin dogrulama oncesi')
     ap.add_argument('--checkpoints', type=int, default=0,
@@ -175,6 +191,8 @@ def main():
     a = ap.parse_args()
     if a.checkpoints and not a.save_dir:
         raise SystemExit('--checkpoints --save-dir ister')
+    if a.sarl != 'none' and (a.comm != 'none' or a.conf_mode != 'none' or a.use_state):
+        raise SystemExit('--sarl iletisim/guven kolu ve --use-state ile kullanilmaz (M8 tasarimi A2)')
     os.environ.setdefault('OMP_NUM_THREADS', str(a.threads))
     os.environ.setdefault('MKL_NUM_THREADS', str(a.threads))
 
@@ -192,7 +210,8 @@ def main():
     tcfg = train_task_cfg(a, end_row, OS.WARMUP_ROWS)
     build = dict(algo=a.algo, seed=a.seed, frames=a.frames, frames_per_batch=a.frames_per_batch, epochs=a.epochs,
                  n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std, lr=a.lr,
-                 model=comm_model(a, [str(s) for s in arrays['symbols']], conf_fields(a, arrays, end_row)))
+                 model=(sarl_model(a, len(arrays['symbols'])) if a.sarl != 'none' else
+                        comm_model(a, [str(s) for s in arrays['symbols']], conf_fields(a, arrays, end_row))))
     ckpt_dir = os.path.join(a.save_dir, 'ckpt') if a.checkpoints else None
     exp = build_experiment(tcfg, train_device=a.train_device, sampling_device=a.sampling_device, **build,
                            **({'checkpoints': a.checkpoints, 'checkpoint_dir': ckpt_dir} if a.checkpoints else {}))

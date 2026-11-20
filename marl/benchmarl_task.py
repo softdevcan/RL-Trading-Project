@@ -30,7 +30,7 @@ from marl.env import MarlPortfolioEnv
 
 TASK_KEYS = ('panel_path', 'start_row', 'end_row', 'mode', 'alpha', 'cost_bps_roundtrip', 'reward_term',
              'reward_scale', 'episode_len', 'pred_path', 'norm_stats_path', 'use_state', 'limit_down_gap',
-             'extras_path', 'batched')
+             'extras_path', 'batched', 'single_agent')
 
 
 def load_pred(path: Optional[str], panel: dict) -> Optional[dict]:
@@ -67,12 +67,16 @@ def make_env(cfg: dict) -> MarlPortfolioEnv:
     if cfg.get('norm_stats_path'):
         with open(cfg['norm_stats_path'], encoding='utf-8') as fh:
             ns = json.load(fh)
-    return MarlPortfolioEnv(
+    env = MarlPortfolioEnv(
         arrays, int(cfg['start_row']), int(cfg['end_row']), norm_stats=ns, mode=cfg.get('mode', 'train'),
         alpha=float(cfg.get('alpha', 0.25)), cost_bps_roundtrip=float(cfg.get('cost_bps_roundtrip', 20.0)),
         reward_term=cfg.get('reward_term', 'excess'), reward_scale=float(cfg.get('reward_scale', 100.0)),
         episode_len=int(cfg.get('episode_len', 252)), pred=load_pred(cfg.get('pred_path'), arrays),
         extras=load_extras(cfg.get('extras_path'), arrays), limit_down_gap=cfg.get('limit_down_gap', 'schedule'))
+    if cfg.get('single_agent'):          # M8 tasarimi A2 (K15): SARL kollari, ayni cekirdek ustunde tek-ajan gorunumu
+        from marl.sarl import SarlPortfolioEnv
+        return SarlPortfolioEnv(env)
+    return env
 
 
 class MarlTask(Task):

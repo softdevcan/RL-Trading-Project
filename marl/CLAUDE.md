@@ -14,6 +14,9 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `panel_fix.py` (M8, tasarim §6.1): panel veri duzeltmesi `m8-v1`; YALNIZ ana venv (data/ import eder), ortam ve
   canli karar import ETMEZ. Yalniz `prepare_panel_m2.py --data-fix m8-v1` cagirir; varsayilan `none` M2 paneliyle
   bit-es KALMALI. Ikinci kaynak onbellegi `data/marl/sources/isyatirim/` (git disi; `cross_source_audit_m8.py --fetch`).
+- `sarl.py` (M8 tasarimi A2, K15): SARL kollari; YALNIZ venv-marl. `SarlPortfolioEnv` ayni cekirdek ustunde tek-ajan
+  gorunumu (ajan `agent_0`, grup 'agent'; odul = ajan odullerinin ortalamasi); `RowSharedPolicy` (esmimari) MARL ajan
+  MLP'siyle ayni katmanlar. Gorevde `single_agent=True`, egitici `--sarl {agirlik, esmimari}`; varsayilan MARL (bit-es).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
 - Eski ortam `env/trading_env.py` ve state space'i DEGISMEZ; yeni ortam oraya konmadi (tasarim §1).
 
@@ -50,6 +53,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `python tests/test_marl_core.py` (63, ana venv)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
 - `venv-marl\Scripts\python tests/test_marl_m3.py` (20, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7, M8 kontrol noktalari)
+- `venv-marl\Scripts\python tests/test_marl_sarl.py` (4, yalniz venv-marl; SARL muhasebe paritesi + takim odulu, toplu yol, esmimari esitligi, kisa MAPPO + tohum + kaydet/yukle)
 - `venv-marl\Scripts\python tests/test_marl_m4.py` (20, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
 - `venv-marl\Scripts\python tests/test_marl_batched_env.py` (4, yalniz venv-marl; toplu ortam paritesi)
 - `venv-marl\Scripts\python tests/test_marl_m5_msg.py` (20, yalniz venv-marl; S-msg conf_mode, beta, gecit, karistirilmis guven, GLM gonderici sicakligi; 'none' M4a ile bit-es)

@@ -115,6 +115,9 @@ def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames:
     task = MarlTask.PORTFOLIO.update_config(dict(task_cfg))
     if model is None:
         policy_cfg = MlpConfig.get_from_yaml()
+    elif model.get('kind') == 'rowshared':               # M8 A2: SARL-esmimari (marl/sarl.py)
+        from marl.sarl import RowSharedConfig
+        policy_cfg = RowSharedConfig(n_rows=int(model['n_rows']), num_cells=list(model['num_cells']))
     else:
         from marl.comm_models import CommPolicyConfig
         policy_cfg = CommPolicyConfig(**model)
