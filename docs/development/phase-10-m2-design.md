@@ -309,7 +309,7 @@ Bulgular (2013-06..2026-11-09, 100.949 ortak hücre; sapma = log(bizim / İşY) 
 - **Gün kümesi.** 2023-02-08 (işlemleri iptal edilen seans, §2.5) İşY'de yok. 2024-04-09 (Ramazan Bayramı arifesi yarım seansı) yfinance'te yok; kapı onu hayalet gün olarak atıyor.
 - Açılış fiyatı için ikinci kaynak yok (HisseTekil açılış vermiyor); açılışlar doğrulanmadı.
 
-**Öneri (karar bekliyor):** yalnız M8 paneline, açıkça istenince uygulanan sürümlü bir veri düzeltmesi (`m8-v1`): (i) 2023-02-08 satırı atılır; (ii) SKBNK'nin 2024-06-04 ve 2026-10-19 sınırlarından önceki fiyatları 0,8010 ve 0,7781 ile çarpılır; (iii) |sapma| > %1 olan kapanışlar İşY düzeltilmiş kapanışıyla (yerel ölçek oranıyla) değiştirilir, yüksek/düşük kapanışı kapsayacak biçimde genişletilir. Paylaşılan veri kapısı, M2 paneli ve Milestone 0' verisi değişmez. M2–M7 pilotlarının düzeltilmemiş veriyle koşulduğu beyan edilir; bu fark tüm kollarda ortaktır.
+**Öneri (2026-11-20; aşağıda KARAR):** yalnız M8 paneline, açıkça istenince uygulanan sürümlü bir veri düzeltmesi (`m8-v1`): (i) 2023-02-08 satırı atılır; (ii) SKBNK'nin 2024-06-04 ve 2026-10-19 sınırlarından önceki fiyatları 0,8010 ve 0,7781 ile çarpılır; (iii) |sapma| > %1 olan kapanışlar İşY düzeltilmiş kapanışıyla (yerel ölçek oranıyla) değiştirilir, yüksek/düşük kapanışı kapsayacak biçimde genişletilir. Paylaşılan veri kapısı, M2 paneli ve Milestone 0' verisi değişmez. M2–M7 pilotlarının düzeltilmemiş veriyle koşulduğu beyan edilir; bu fark tüm kollarda ortaktır.
 
 **KARAR (2026-11-20, kullanıcı): `m8-v1` uygulandı; kapsam genişletilmez.** Kod `marl/panel_fix.py` (yalnız ana venv), hat `scripts/marl/prepare_panel_m2.py --data-fix m8-v1`. Varsayılan `none` M2 paneliyle bit-eş: panel yeniden kurulup `data/marl/panel_m2.npz` ile dizi dizi karşılaştırıldı, fark yok. Sıra:
 1. İptal seansı (2023-02-08) satırı atılır.
@@ -318,6 +318,13 @@ Bulgular (2013-06..2026-11-09, 100.949 ortak hücre; sapma = log(bizim / İşY) 
 4. MACD, RSI, CCI düzeltilmiş fiyattan CSV'yi üreten aynı fonksiyonlarla yeniden hesaplanır (`TechnicalIndicators`, ısınma ffill → bfill → 0); ADX hattaki `with_adx`. Kurulum önce yeniden hesabın düzeltilmemiş veride CSV'yi ürettiğini sınar; fark ≥ 1e-6 ise durur.
 
 Açılış ve hacim değişmez; açılışlar doğrulanmadı (beyan). SKBNK 2014-06-09 ve 2015-02-27 farkları doğrulanmadığı için düzeltilmez (beyan). Panel `data/marl/panel_m8.npz` (git dışı); meta düzeltme özetini ve İşY dosyalarının SHA-256'larını taşır. Test: `test_marl_core` [7] (iptal günü, TERP çarpanı, yama + aralık genişlemesi, kalan hücreler bit-eş).
+
+**Panel ölçümü** (`measurements/phase10-m8/panel_m8.json`; kurulum commit `1a0233b`, temiz ağaç; performans okunmadı):
+- `data/marl/panel_m8.npz`: SHA-256 `2b7ea84c6c5e…`, 2013-06-03..2026-11-09, T 3.364, N 30. Hayalet gün (67) ve eksik hücre oranı (%0,115) değişmedi; rf 3.363 / 3.364 satırda sonlu (ilk satır tasarım gereği NaN).
+- Gösterge yeniden hesap sınaması: en büyük fark 2e-10. 2023-02-08'den 30 satır atıldı. SKBNK'de 4.987 ve 5.581 satır çarpıldı.
+- Kapanış yaması: 990 hücre, 5 geçişte yakınsadı (964, 33, 4, 1, 0), kalan en büyük |sapma| 0,00999; 3.835 düz satır dışarıda. Yıl bazında 2018'de 148, 2019'da 391, 2020'de 246; 2021'de 4, 2022'de 61, 2023'te 30, 2024'te 6, 2025'te 5, 2026'da 1.
+- Bağımsız sınama (marj bandı; İşY'den bağımsız): bant dışı kapanış 2021+'da 38 → 0, 2013-06..2020-12'de 7 → 6; bant dışı açılış boşluğu 2021+'da 31 → 1 (SASA 2022-11-30, 0,8942; açılış doğrulanmadı).
+- Ortam (venv-marl) bu paneli 2019-01..2026-11 boyunca rastgele eylemle hatasız adımlıyor: adımlar sonlu, satış engeli tetikleniyor (duman koşusu, arşivlenmedi).
 
 ---
 
