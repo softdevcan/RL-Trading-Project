@@ -179,6 +179,43 @@
     "gelistirme-kapisi"
    ],
    "rozet": "Tez bulgusu değil"
+  },
+  {
+   "id": "m5-mekanizma",
+   "baslik": "M5: Mesajı göndericinin güvenine göre ağırlıklandırmak işe yarıyor mu?",
+   "soru": "Komşudan gelen mesaja, gönderici ne kadar eminse o kadar çok kulak veren ajanlar (GL), güveni hiç kullanmayan ajanlardan (G0) daha iyi karar veriyor mu? Kontrol için güveni karıştırılmış ve güveni neredeyse hiç ayırmayan kollar da koşuldu.",
+   "okuma": "Güvenli kol önde ve ajanlar güveni yalnız güven gerçekken kullanmayı öğrendi. Ama güveni neredeyse hiç kullanmayan kontrol kolu da aynı ölçüde önde çıktı; fark eğitimin rastlantısal sapmasından ayırt edilemedi. Kalibrasyon sorusu (H3) bu yüzden sınanmadı.",
+   "etiket": "KISMİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m5/m5_results.json",
+    "alan": "label_H2",
+    "ham": "KISMI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, eğitim (güvenli − düz iletişim)",
+     "deger": "+0,13",
+     "ham": 0.12706098544252378,
+     "kaynak": "docs/development/measurements/phase10-m5/m5_results.json",
+     "alan": "pairs.GL_G0_train.D_annual"
+    },
+    {
+     "ad": "Gürültü tabanı (güveni neredeyse hiç kullanmayan kol − düz iletişim)",
+     "deger": "+0,18",
+     "ham": 0.1799327847825802,
+     "kaynak": "docs/development/measurements/phase10-m5/m5_results.json",
+     "alan": "noise_floor_D_GD_G0"
+    }
+   ],
+   "belge": "docs/development/phase-10-m5-design.md",
+   "terimler": [
+    "kol-kodlari-m5",
+    "s-msg",
+    "beta",
+    "etiket-kismi",
+    "tohum"
+   ],
+   "rozet": "Tez bulgusu değil"
   }
  ],
  "asamalar": [
@@ -279,10 +316,22 @@
    "siradaki": "Görsel denetim + konteyner; R4 (kalan terimler, üst çubuk araması, SSS)"
   },
   {
-   "ad": "Faz 10 M4–M8, nihai koşumlar",
+   "ad": "Faz 10 M4 iletişim kapıları",
+   "durum": "bitti",
+   "sinif": "bitti",
+   "siradaki": "— (taban gat: kullanıcı kararı)"
+  },
+  {
+   "ad": "Faz 10 M5 tahmin sinyali + güvenle ağırlıklı iletişim",
+   "durum": "sürüyor",
+   "sinif": "suruyor",
+   "siradaki": "Gerçek sinyal kolları ön kaydı (§2.3, K-a; 20 bps)"
+  },
+  {
+   "ad": "Faz 10 M6–M8, nihai koşumlar",
    "durum": "planlı",
    "sinif": "planli",
-   "siradaki": "M4a bitti (gat KISMİ, attn GÖZLENMEDİ); M4b pilotu PİLOT_İŞARETİ (§6.4); M5 mekanizma tabanı kullanıcı kararı (phase-10-m4-design.md)"
+   "siradaki": null
   },
   {
    "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
@@ -326,12 +375,16 @@
    "sha256": "d8758065aa850cec72c7bbda712f9c5edc288f36278fdb0dcbbe681896d0aaf8",
    "uretim_commit": "8ea46ec1ac65548c979cde21f657a91ef4367c70"
   },
+  "docs/development/measurements/phase10-m5/m5_results.json": {
+   "sha256": "1d07619242519840fc9271217cf9e248d77b1a99bfb9069ee5881472c3631c88",
+   "uretim_commit": "1cd9d95bc34695c3dc12cfbbed7b6e7671155bcc"
+  },
   "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
    "sha256": "ba21c3ff7c29ac14b9fdeb5122e4c0dd62a1079d1f424604df3705a1e5202bbb",
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "473f7e38cf25e666380b29540605fbd387a941b8a86ba1197626d6a2fd9de65f",
+   "tablo_sha256": "e76ee84ac2a8ca4a6dbb3930d2fa0980f6200b05901733200b302d2a1bb2fb9e",
    "uretim_commit": null
   }
  }

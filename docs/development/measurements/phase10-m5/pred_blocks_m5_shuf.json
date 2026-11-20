@@ -1,0 +1,48 @@
+{
+ "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+ "base_table": {
+  "run_id": "pit_v1_seed42",
+  "sha256": "747bd39a9cf9eea91869cbef41ba08b1e668f25c2528a990c1529dbacc5deae9",
+  "table_version": "pit-v1",
+  "seed": null,
+  "models": [
+   "xgboost",
+   "lightgbm",
+   "catboost"
+  ]
+ },
+ "target_auc": 0.6,
+ "label": "1[Of_{t+2} > Of_{t+1}] (pc_alignment_m2.k12_labels)",
+ "commit": "f4ab2478f01a5b851cb4a7d98b3fc9b5d5d6f30b",
+ "git_status_porcelain": "",
+ "script_sha256": "22cf6a4bed88debc3a1d7476829664fb219ee4efb9de04c7dc6030f2a6e96b4b",
+ "blocks": [
+  {
+   "seed": 6,
+   "shuffled_rows": true,
+   "path": "data/marl/pred_pc060_k12_g6_shuf.npz",
+   "sha256": "883bd9232982e7755dfffabc6162d5b80a345f2afb8369b17ef2f50fe5963095",
+   "generator_auc_meta_ok": 0.5983391145289176,
+   "auc_block_vs_label": 0.4986644559902612,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 7,
+   "shuffled_rows": true,
+   "path": "data/marl/pred_pc060_k12_g7_shuf.npz",
+   "sha256": "96579f78f992defdf465a328579e2bd1d4d4e72a2afa13b17c2979de628511e7",
+   "generator_auc_meta_ok": 0.6000590576365483,
+   "auc_block_vs_label": 0.5001931987535604,
+   "coverage": 0.9591482649842271
+  },
+  {
+   "seed": 8,
+   "shuffled_rows": true,
+   "path": "data/marl/pred_pc060_k12_g8_shuf.npz",
+   "sha256": "48a29edb2d1308f3068eb34afc84f0636e6be4a1a0957f0587a7649ee6bbef94",
+   "generator_auc_meta_ok": 0.6002120966875085,
+   "auc_block_vs_label": 0.4962226809887098,
+   "coverage": 0.9591482649842271
+  }
+ ]
+}

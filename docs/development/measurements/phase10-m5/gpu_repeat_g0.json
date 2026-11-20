@@ -1,0 +1,43 @@
+{
+ "note": "M5 gurultu tabani karari icin (hakem-rl M5 #1): G0 yapilandirmasi ayni tohumla GPU-da iki kez; politika ozeti esitse ayni tohumlu tekrar kosu gurultu tabani vermez. Kosu sonucu degil (30 bin kare, okunmaz). Kayitlar train_m3.py --out ciktisindan alan secimiyle kopyalandi (scripts disi, 2026-11-19).",
+ "args": {
+  "frames": 30000,
+  "seed": 6,
+  "comm": "gat",
+  "lr": 0.0005,
+  "train_device": "cuda",
+  "parallel": true,
+  "pred_path": "data/marl/pred_m4nb_g6.npz",
+  "cost_bps": 0.0
+ },
+ "env": {
+  "python": "3.12.5",
+  "torch": "2.6.0+cu124",
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "threads": 1,
+  "omp": "1"
+ },
+ "runs": [
+  {
+   "commit": "be93ade0de256c3716afaf3ac9bdf873d288ad97",
+   "git_status_porcelain": "",
+   "script_sha256": "deb602775895f76bbabcd8e0702c344e75706c01c92f9c8cbf72ffcc1425ae68",
+   "pred_sha256": "09ec1308be9a82521e9d0746d6627085c0816a20d1d3a4858c74f3a847bc6d73",
+   "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+   "frames": 30000,
+   "wall_seconds": 30.0,
+   "policy_sha256": "45e6f276789785c830f3eb4cbf03ee1585ac85954fb29fdaf4f18b1c6eadd4f0"
+  },
+  {
+   "commit": "be93ade0de256c3716afaf3ac9bdf873d288ad97",
+   "git_status_porcelain": "",
+   "script_sha256": "deb602775895f76bbabcd8e0702c344e75706c01c92f9c8cbf72ffcc1425ae68",
+   "pred_sha256": "09ec1308be9a82521e9d0746d6627085c0816a20d1d3a4858c74f3a847bc6d73",
+   "panel_sha256": "a5dcf9a607e0447df490f0a47c5187555f428faddc62b47d5eef81819e5e147b",
+   "frames": 30000,
+   "wall_seconds": 30.2,
+   "policy_sha256": "45e6f276789785c830f3eb4cbf03ee1585ac85954fb29fdaf4f18b1c6eadd4f0"
+  }
+ ],
+ "bit_identical": true
+}

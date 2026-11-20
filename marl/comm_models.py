@@ -22,6 +22,10 @@ M5 S-msg (plan §3.1 sinyal yollari; Faz 9 M5; M5 tasarimi §3 TASLAK): guvenle 
         b = gate_b_init (4,6 -> g ~ 0,99: gecitli kol gecitsiz kola yakin baslar; tasarim varsayimi).
   shuffle_conf: guven terimi sabit bir ajan permutasyonuyla karistirilir (b_j <- b_pi(j); karistirilmis-guven
         kolu, hakem-2 #10): marjinal dagilim ayni, gonderici-guven baglantisi yok.
+  conf_temp: gonderici basina sicaklik T_j (H3 bozulmus-kalibrasyon kolu GLM; M5 tasarimi §3.3, §4): yalniz
+        GUVEN TERIMINDE p_j <- sigmoid(T_j * logit p_j); gozlem ve mesaj icerigi DEGISMEZ (kullanici karari
+        2026-11-19: fark yalniz mekanizmadan gelsin). Sembol ici siralama ayni, semboller arasi guven sirasi bozulur.
+        z_scale bozulmus terimden olculur (`conf_scale(..., temp)`): kuresel olcek GL ile ayni kalir.
 Guven gozlemden okunur (`conf_index` = p_up_cal - 0,5 sutunu, `conf_ok_index` = pred_ok); `obs_spec` DEGISMEZ (K2).
 conf_mode = 'none' iken model M4'teki CommPolicy ile bit-estir (test_marl_m5_msg).
 
@@ -33,6 +37,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
+import numpy as np
 import torch
 from tensordict import TensorDictBase
 from torch import nn
@@ -65,6 +70,30 @@ def derangement(n: int, seed: int) -> torch.Tensor:
             return p
 
 
+GLM_TEMP_RANGE = (0.25, 4.0)   # kullanici karari 2026-11-19 (M5 §4.3): [0,5; 2] gonderici sirasini az bozuyordu (Spearman ~0,88)
+
+
+def sender_temperatures(n_agents: int, seed: int, lo: float = GLM_TEMP_RANGE[0], hi: float = GLM_TEMP_RANGE[1]) -> list:
+    """GLM kolu: gonderici basina T_j ~ log-tekduze [lo, hi], numpy PCG64 tohumlu (surecler arasi deterministik)."""
+    if not (0 < lo < hi):
+        raise ValueError(f"0 < lo < hi olmali: {lo}, {hi}")
+    rng = np.random.default_rng(int(seed))
+    return [float(t) for t in np.exp(rng.uniform(np.log(lo), np.log(hi), int(n_agents)))]
+
+
+def conf_scale(p_up: np.ndarray, ok: np.ndarray, temp: Optional[Sequence[float]] = None) -> float:
+    """zlogodds z_scale = std(|T_j logit p|) tahmini olan hucrelerde. p_up [T, N] (ham p_up_cal), ok [T, N]; satir
+    secimi (egitim penceresi) cagirana aittir. temp verilirse bozulmus terimin std'si (GLM)."""
+    p = np.clip(np.asarray(p_up, dtype=np.float64), 1e-6, 1 - 1e-6)
+    lz = np.abs(np.log(p / (1 - p)))
+    if temp is not None:
+        lz = lz * np.asarray(temp, dtype=np.float64)[None, :]
+    v = lz[np.asarray(ok, dtype=bool) & np.isfinite(lz)]
+    if v.size < 2:
+        raise ValueError("z_scale icin en az iki tahminli hucre gerekli")
+    return float(v.std(ddof=1))
+
+
 def confidence_term(p_minus_half: torch.Tensor, ok: torch.Tensor, mode: str, c_min: float, c_max: float,
                     z_scale: float) -> torch.Tensor:
     """Gonderici guven terimi b_j [..., N] (alicidan bagimsiz). p_minus_half = p_up_cal - 0,5 (gozlem sutunu)."""
@@ -88,7 +117,7 @@ class CommPolicy(Model):
                  conf_mode: str = 'none', conf_index: Optional[int] = None, conf_ok_index: Optional[int] = None,
                  beta_mode: str = 'fixed', beta_init: float = 0.0, gate: bool = False, gate_b_init: float = 4.6,
                  c_min: float = 0.5, c_max: float = 0.99, z_scale: float = 1.0, shuffle_conf: bool = False,
-                 shuffle_seed: int = 0, **kwargs):
+                 shuffle_seed: int = 0, conf_temp: Optional[Sequence[float]] = None, **kwargs):
         super().__init__(
             input_spec=kwargs.pop('input_spec'), output_spec=kwargs.pop('output_spec'),
             agent_group=kwargs.pop('agent_group'), input_has_agent_dim=kwargs.pop('input_has_agent_dim'),
@@ -112,8 +141,11 @@ class CommPolicy(Model):
         if conf_mode not in CONF_MODES or beta_mode not in BETA_MODES:
             raise ValueError(f"conf_mode {CONF_MODES}, beta_mode {BETA_MODES}: {conf_mode}, {beta_mode}")
         uses_conf = conf_mode != 'none'
-        if not uses_conf and (gate or shuffle_conf or beta_mode == 'learned' or beta_init):
-            raise ValueError("beta / gecit / karistirma yalniz conf_mode != 'none' ile")
+        if not uses_conf and (gate or shuffle_conf or beta_mode == 'learned' or beta_init or conf_temp is not None):
+            raise ValueError("beta / gecit / karistirma / sicaklik yalniz conf_mode != 'none' ile")
+        if conf_temp is not None and (shuffle_conf or len(conf_temp) != self.n_agents
+                                      or not all(float(t) > 0 for t in conf_temp)):
+            raise ValueError("conf_temp: n_agents uzunlukta pozitif sicaklik; karistirilmis guvenle birlikte kullanilmaz")
         n_in = sum(s.shape[-1] for s in self.input_spec.values(True, True))
         if uses_conf and not (conf_index is not None and conf_ok_index is not None
                               and 0 <= conf_index < n_in and 0 <= conf_ok_index < n_in):
@@ -148,11 +180,16 @@ class CommPolicy(Model):
                 self.gate_b = nn.Parameter(torch.tensor(float(gate_b_init), device=self.device))
             perm = derangement(self.n_agents, shuffle_seed) if shuffle_conf else None
             self.register_buffer('conf_perm', None if perm is None else perm.to(self.device), persistent=False)
+            temp = None if conf_temp is None else torch.tensor([float(t) for t in conf_temp], device=self.device)
+            self.register_buffer('conf_temp', temp, persistent=False)
 
     def conf_terms(self, x: torch.Tensor) -> torch.Tensor:
-        """x [B, N, F] -> gonderici guven terimi b [B, N] (karistirma dahil)."""
-        b = confidence_term(x[..., self.conf_index], x[..., self.conf_ok_index], self.conf_mode,
-                            self.c_min, self.c_max, self.z_scale)
+        """x [B, N, F] -> gonderici guven terimi b [B, N] (karistirma ya da gonderici sicakligi dahil)."""
+        pm = x[..., self.conf_index]
+        if self.conf_temp is not None:     # GLM: yalniz guven teriminde p_j <- sigmoid(T_j logit p_j)
+            p = torch.clamp(0.5 + pm, 1e-6, 1 - 1e-6)
+            pm = torch.sigmoid(self.conf_temp * torch.log(p / (1 - p))) - 0.5
+        b = confidence_term(pm, x[..., self.conf_ok_index], self.conf_mode, self.c_min, self.c_max, self.z_scale)
         return b if self.conf_perm is None else b[..., self.conf_perm]
 
     def _score_mask(self, b: torch.Tensor) -> torch.Tensor:
@@ -212,6 +249,7 @@ class CommPolicyConfig(ModelConfig):
     z_scale: float = 1.0
     shuffle_conf: bool = False
     shuffle_seed: int = 0
+    conf_temp: Optional[list] = field(default=None)
 
     @staticmethod
     def associated_class():

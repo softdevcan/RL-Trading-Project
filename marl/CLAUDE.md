@@ -7,7 +7,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - Saf cekirdek (`weights`, `accounting`, `orders`, `obs_spec`, `panel`): numpy/pandas. Ana `venv/` (canli
   karar) ve `venv-marl/` (egitim) ikisi de import eder. Buraya pettingzoo/torchrl/benchmarl import'u KOYMA.
 - `env.py`: PettingZoo. YALNIZ `venv-marl/`. `app/` ve `dashboard/` bunu import etmez.
-- `comm_models.py` (M4, M5): attn/gat/self politika modelleri + S-msg guven terimi; YALNIZ `venv-marl/`. gat = attn + sabit graf maskesi, self = kendine dikkat (ayni parametre); `conf_mode='none'` M4a koşularindaki modelle bit-es KALMALI. Tasarim `docs/development/phase-10-m4-design.md`, `phase-10-m5-design.md` §3.
+- `comm_models.py` (M4, M5): attn/gat/self politika modelleri + S-msg guven terimi; YALNIZ `venv-marl/`. gat = attn + sabit graf maskesi, self = kendine dikkat (ayni parametre); `conf_mode='none'` M4a koşularindaki modelle bit-es KALMALI. `conf_temp` (GLM) yalniz guven terimini bozar; gozlem/mesaj icerigi degismez. Tasarim `docs/development/phase-10-m4-design.md`, `phase-10-m5-design.md` §3.
 - `benchmarl_task.py` (M3): BenchMARL gorevi; YALNIZ `venv-marl/`. Tohum bit-esligi icin `OMP_NUM_THREADS=1`
   `MKL_NUM_THREADS=1` torch import'undan ONCE (`torch.set_num_threads` surec ortasinda yetmiyor).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
@@ -43,4 +43,4 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
 - `venv-marl\Scripts\python tests/test_marl_m3.py` (18, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7)
 - `venv-marl\Scripts\python tests/test_marl_m4.py` (18, yalniz venv-marl; `comm_models` attn/gat/self: graf maskesi, esit butce, gat'te komsu disi etkisiz, self iletisimsiz, tohum, kaydet/yukle)
-- `venv-marl\Scripts\python tests/test_marl_m5_msg.py` (17, yalniz venv-marl; S-msg conf_mode, beta, gecit, karistirilmis guven; 'none' M4a ile bit-es)
+- `venv-marl\Scripts\python tests/test_marl_m5_msg.py` (20, yalniz venv-marl; S-msg conf_mode, beta, gecit, karistirilmis guven, GLM gonderici sicakligi; 'none' M4a ile bit-es)
