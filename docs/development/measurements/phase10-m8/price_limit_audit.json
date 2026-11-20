@@ -1,0 +1,755 @@
+{
+ "source_csv": "data/bist/stock_data_with_indicators.csv",
+ "source_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "last_date": "2026-11-09",
+ "symbols": [
+  "AKBNK.IS",
+  "ARCLK.IS",
+  "ASELS.IS",
+  "BIMAS.IS",
+  "EKGYO.IS",
+  "ENKAI.IS",
+  "EREGL.IS",
+  "FROTO.IS",
+  "GARAN.IS",
+  "HALKB.IS",
+  "ISCTR.IS",
+  "KCHOL.IS",
+  "KRDMD.IS",
+  "MGROS.IS",
+  "ODAS.IS",
+  "PETKM.IS",
+  "PGSUS.IS",
+  "SAHOL.IS",
+  "SASA.IS",
+  "SISE.IS",
+  "SKBNK.IS",
+  "TAVHL.IS",
+  "TCELL.IS",
+  "THYAO.IS",
+  "TKFEN.IS",
+  "TOASO.IS",
+  "TSKB.IS",
+  "TUPRS.IS",
+  "VAKBN.IS",
+  "YKBNK.IS"
+ ],
+ "tolerance": 0.005,
+ "periods": {
+  "bistech_20": {
+   "from": "2015-11-30",
+   "to": "2020-03-12",
+   "margin_by_source": 0.2,
+   "cells": 33510,
+   "open": {
+    "max": 1.1477281518297182,
+    "min": 0.7864521298584494,
+    "n_beyond_0.105": 28,
+    "n_in_0.105_0.205": 27,
+    "n_near_0.10 (0.095-0.105)": 4,
+    "n_beyond_own_band": 1,
+    "n_le_0.905": 27
+   },
+   "high": {
+    "max": 1.2083333004972328,
+    "min": 0.8953493446632372,
+    "n_beyond_0.105": 98,
+    "n_in_0.105_0.205": 96,
+    "n_near_0.10 (0.095-0.105)": 33,
+    "n_beyond_own_band": 2
+   },
+   "low": {
+    "max": 1.0865829687912625,
+    "min": 0.7500001849196543,
+    "n_beyond_0.105": 107,
+    "n_in_0.105_0.205": 105,
+    "n_near_0.10 (0.095-0.105)": 57,
+    "n_beyond_own_band": 2
+   },
+   "close": {
+    "max": 1.2000032094882667,
+    "min": 0.7616281176991408,
+    "n_beyond_0.105": 68,
+    "n_in_0.105_0.205": 67,
+    "n_near_0.10 (0.095-0.105)": 30,
+    "n_beyond_own_band": 1
+   }
+  },
+  "margin_10_2020": {
+   "from": "2020-03-13",
+   "to": "2020-12-31",
+   "margin_by_source": 0.1,
+   "cells": 6030,
+   "open": {
+    "max": 1.1000045869288877,
+    "min": 0.9183555567011324,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 6,
+    "n_beyond_own_band": 0,
+    "n_le_0.905": 0
+   },
+   "high": {
+    "max": 1.1242139241812068,
+    "min": 0.9410860043471694,
+    "n_beyond_0.105": 7,
+    "n_in_0.105_0.205": 7,
+    "n_near_0.10 (0.095-0.105)": 100,
+    "n_beyond_own_band": 7
+   },
+   "low": {
+    "max": 1.07142860682874,
+    "min": 0.8757962535516721,
+    "n_beyond_0.105": 5,
+    "n_in_0.105_0.205": 5,
+    "n_near_0.10 (0.095-0.105)": 53,
+    "n_beyond_own_band": 5
+   },
+   "close": {
+    "max": 1.1097215316833937,
+    "min": 0.8876147606300461,
+    "n_beyond_0.105": 5,
+    "n_in_0.105_0.205": 5,
+    "n_near_0.10 (0.095-0.105)": 93,
+    "n_beyond_own_band": 5
+   }
+  },
+  "y2021": {
+   "from": "2021-01-01",
+   "to": "2021-12-31",
+   "margin_by_source": 0.1,
+   "cells": 7470,
+   "open": {
+    "max": 1.0995907795604671,
+    "min": 0.9005629887662102,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 8,
+    "n_beyond_own_band": 0,
+    "n_le_0.905": 4
+   },
+   "high": {
+    "max": 1.1033519150197502,
+    "min": 0.9209931922047899,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 81,
+    "n_beyond_own_band": 0
+   },
+   "low": {
+    "max": 1.0992441070815149,
+    "min": 0.8999997934371846,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 136,
+    "n_beyond_own_band": 0
+   },
+   "close": {
+    "max": 1.1033519150197502,
+    "min": 0.8999997934371846,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 137,
+    "n_beyond_own_band": 0
+   }
+  },
+  "y2022": {
+   "from": "2022-01-01",
+   "to": "2022-12-31",
+   "margin_by_source": 0.1,
+   "cells": 7560,
+   "open": {
+    "max": 1.1016225086683782,
+    "min": 0.8941761062456206,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 1,
+    "n_near_0.10 (0.095-0.105)": 33,
+    "n_beyond_own_band": 1,
+    "n_le_0.905": 28
+   },
+   "high": {
+    "max": 1.1759180540483312,
+    "min": 0.9000001176834714,
+    "n_beyond_0.105": 8,
+    "n_in_0.105_0.205": 8,
+    "n_near_0.10 (0.095-0.105)": 209,
+    "n_beyond_own_band": 8
+   },
+   "low": {
+    "max": 1.1016225086683782,
+    "min": 0.8941761062456206,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 1,
+    "n_near_0.10 (0.095-0.105)": 109,
+    "n_beyond_own_band": 1
+   },
+   "close": {
+    "max": 1.1759180540483312,
+    "min": 0.8999999013523604,
+    "n_beyond_0.105": 6,
+    "n_in_0.105_0.205": 6,
+    "n_near_0.10 (0.095-0.105)": 204,
+    "n_beyond_own_band": 6
+   }
+  },
+  "y2023": {
+   "from": "2023-01-01",
+   "to": "2023-12-31",
+   "margin_by_source": 0.1,
+   "cells": 7470,
+   "open": {
+    "max": 1.220516395316008,
+    "min": 0.8999998415499374,
+    "n_beyond_0.105": 28,
+    "n_in_0.105_0.205": 27,
+    "n_near_0.10 (0.095-0.105)": 31,
+    "n_beyond_own_band": 28,
+    "n_le_0.905": 21
+   },
+   "high": {
+    "max": 1.220516395316008,
+    "min": 0.8999998415499374,
+    "n_beyond_0.105": 31,
+    "n_in_0.105_0.205": 26,
+    "n_near_0.10 (0.095-0.105)": 141,
+    "n_beyond_own_band": 31
+   },
+   "low": {
+    "max": 1.1792817886756874,
+    "min": 0.005714286254415697,
+    "n_beyond_0.105": 30,
+    "n_in_0.105_0.205": 28,
+    "n_near_0.10 (0.095-0.105)": 79,
+    "n_beyond_own_band": 30
+   },
+   "close": {
+    "max": 1.220516395316008,
+    "min": 0.8999998126899953,
+    "n_beyond_0.105": 30,
+    "n_in_0.105_0.205": 25,
+    "n_near_0.10 (0.095-0.105)": 127,
+    "n_beyond_own_band": 30
+   }
+  },
+  "y2024": {
+   "from": "2024-01-01",
+   "to": "2024-12-31",
+   "margin_by_source": 0.1,
+   "cells": 7476,
+   "open": {
+    "max": 1.0997442884418571,
+    "min": 0.8041200915377399,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 1,
+    "n_near_0.10 (0.095-0.105)": 6,
+    "n_beyond_own_band": 1,
+    "n_le_0.905": 4
+   },
+   "high": {
+    "max": 1.1000001577205618,
+    "min": 0.8072248925853927,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 1,
+    "n_near_0.10 (0.095-0.105)": 40,
+    "n_beyond_own_band": 1
+   },
+   "low": {
+    "max": 1.0996810210368844,
+    "min": 0.787044332647706,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 15,
+    "n_beyond_own_band": 1
+   },
+   "close": {
+    "max": 1.1000000497541895,
+    "min": 0.7917012569883041,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 20,
+    "n_beyond_own_band": 1
+   }
+  },
+  "y2025": {
+   "from": "2025-01-01",
+   "to": "2025-12-31",
+   "margin_by_source": 0.1,
+   "cells": 7530,
+   "open": {
+    "max": 1.0998486889683616,
+    "min": 0.906065076747028,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 1,
+    "n_beyond_own_band": 0,
+    "n_le_0.905": 0
+   },
+   "high": {
+    "max": 1.1131620227242558,
+    "min": 0.9378698326254229,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 1,
+    "n_near_0.10 (0.095-0.105)": 55,
+    "n_beyond_own_band": 1
+   },
+   "low": {
+    "max": 1.0711043541147043,
+    "min": 0.8999999552200175,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 55,
+    "n_beyond_own_band": 0
+   },
+   "close": {
+    "max": 1.1000000760929178,
+    "min": 0.8999999552200175,
+    "n_beyond_0.105": 0,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 74,
+    "n_beyond_own_band": 0
+   }
+  },
+  "y2026": {
+   "from": "2026-01-01",
+   "to": "2026-12-31",
+   "margin_by_source": 0.1,
+   "cells": 6390,
+   "open": {
+    "max": 1.0997137520934424,
+    "min": 0.7653321434181892,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 17,
+    "n_beyond_own_band": 1,
+    "n_le_0.905": 12
+   },
+   "high": {
+    "max": 1.1000000108372079,
+    "min": 0.7780611605592667,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 88,
+    "n_beyond_own_band": 1
+   },
+   "low": {
+    "max": 1.0997137520934424,
+    "min": 0.749420896370021,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 58,
+    "n_beyond_own_band": 1
+   },
+   "close": {
+    "max": 1.1000000108372079,
+    "min": 0.7541942899870141,
+    "n_beyond_0.105": 1,
+    "n_in_0.105_0.205": 0,
+    "n_near_0.10 (0.095-0.105)": 80,
+    "n_beyond_own_band": 1
+   }
+  }
+ },
+ "cancelled_session_2023_02_08": {
+  "base_date": "2023-02-07",
+  "reopen_date": "2023-02-15",
+  "reopen_close_over_base": {
+   "max": 1.100000240391137,
+   "min": 1.0982906797544534,
+   "n": 30
+  },
+  "reopen_open_over_base": {
+   "max": 1.0999999878832247,
+   "min": 1.0211039152047272
+  },
+  "row_2023_02_08": {
+   "n_rows": 30,
+   "n_ohlc_flat": 30,
+   "n_volume_zero": 0,
+   "volume_over_neighbor_median_max": 0.0004967113486671769,
+   "close_over_prev_close": {
+    "min": 0.9008498275963914,
+    "max": 0.9775001450932219
+   }
+  }
+ },
+ "partial_day_2022_12_16": {
+  "volume_over_neighbor_median": {
+   "median": 0.29240669282877807,
+   "min": 0.1268103944425242,
+   "max": 0.7665452813883172
+  },
+  "two_day_close_ratio_2022_12_19_over_2022_12_15_max": 1.2096217789318766,
+  "bound_1.10_squared": 1.21
+ },
+ "beyond_band_2021plus": {
+  "reopen_after_cancelled_2023_02_08": {
+   "n_cells": 30,
+   "cells": [
+    {
+     "date": "2023-02-15",
+     "symbol": "AKBNK.IS",
+     "open": 1.1314,
+     "high": 1.1803,
+     "low": 1.1139,
+     "close": 1.1803
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "ARCLK.IS",
+     "open": 1.1611,
+     "high": 1.1873,
+     "low": 1.1377,
+     "close": 1.1873
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "ASELS.IS",
+     "open": 1.153,
+     "high": 1.2201,
+     "low": 1.1237,
+     "close": 1.2201
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "BIMAS.IS",
+     "high": 1.1253,
+     "close": 1.1253
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "EKGYO.IS",
+     "open": 1.1706,
+     "high": 1.204,
+     "low": 1.1538,
+     "close": 1.204
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "ENKAI.IS",
+     "open": 1.1266,
+     "high": 1.201,
+     "low": 1.1104,
+     "close": 1.201
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "EREGL.IS",
+     "open": 1.1223,
+     "high": 1.1594,
+     "low": 1.1223,
+     "close": 1.1594
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "FROTO.IS",
+     "open": 1.1651,
+     "high": 1.1708,
+     "low": 1.107,
+     "close": 1.1708
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "GARAN.IS",
+     "open": 1.1439,
+     "high": 1.1774,
+     "low": 1.1296,
+     "close": 1.1774
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "HALKB.IS",
+     "open": 1.1307,
+     "high": 1.1637,
+     "low": 1.1225,
+     "close": 1.1637
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "ISCTR.IS",
+     "open": 1.1482,
+     "high": 1.1582,
+     "low": 1.1128,
+     "close": 1.1582
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "KCHOL.IS",
+     "open": 1.1212,
+     "high": 1.1485,
+     "low": 1.1053,
+     "close": 1.1485
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "KRDMD.IS",
+     "open": 1.2205,
+     "high": 1.2205,
+     "low": 1.1724,
+     "close": 1.2205
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "MGROS.IS",
+     "open": 1.1165,
+     "high": 1.1534,
+     "close": 1.1534
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "ODAS.IS",
+     "open": 1.1054,
+     "high": 1.1898,
+     "low": 1.1054,
+     "close": 1.1898
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "PETKM.IS",
+     "open": 1.1482,
+     "high": 1.2017,
+     "low": 1.1474,
+     "close": 1.2017
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "PGSUS.IS",
+     "open": 1.1958,
+     "high": 1.2018,
+     "low": 1.1625,
+     "close": 1.2018
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "SAHOL.IS",
+     "open": 1.1199,
+     "high": 1.1655,
+     "low": 1.1199,
+     "close": 1.1655
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "SASA.IS",
+     "open": 1.1899,
+     "high": 1.1899,
+     "low": 1.1553,
+     "close": 1.1899
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "SISE.IS",
+     "open": 1.1281,
+     "high": 1.1692,
+     "low": 1.109,
+     "close": 1.1692
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "SKBNK.IS",
+     "open": 1.1549,
+     "high": 1.2066,
+     "low": 1.1268,
+     "close": 1.2066
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TAVHL.IS",
+     "open": 1.1609,
+     "high": 1.1941,
+     "low": 1.1292,
+     "close": 1.1941
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TCELL.IS",
+     "open": 1.129,
+     "high": 1.1852,
+     "low": 1.129,
+     "close": 1.1852
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "THYAO.IS",
+     "open": 1.1826,
+     "high": 1.2165,
+     "low": 1.1739,
+     "close": 1.2165
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TKFEN.IS",
+     "open": 1.1084,
+     "high": 1.1904,
+     "low": 1.1084,
+     "close": 1.1904
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TOASO.IS",
+     "open": 1.1332,
+     "high": 1.2103,
+     "low": 1.1332,
+     "close": 1.2103
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TSKB.IS",
+     "open": 1.1369,
+     "high": 1.1935,
+     "close": 1.1935
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "TUPRS.IS",
+     "open": 1.1793,
+     "high": 1.1793,
+     "low": 1.1793,
+     "close": 1.1793
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "VAKBN.IS",
+     "open": 1.1684,
+     "high": 1.1791,
+     "low": 1.1257,
+     "close": 1.1791
+    },
+    {
+     "date": "2023-02-15",
+     "symbol": "YKBNK.IS",
+     "high": 1.1535,
+     "close": 1.1535
+    }
+   ]
+  },
+  "after_partial_day_2022_12_16": {
+   "n_cells": 7,
+   "cells": [
+    {
+     "date": "2022-12-19",
+     "symbol": "ARCLK.IS",
+     "high": 1.1228,
+     "close": 1.1112
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "HALKB.IS",
+     "high": 1.1397,
+     "close": 1.1397
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "ISCTR.IS",
+     "high": 1.115,
+     "close": 1.115
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "PETKM.IS",
+     "high": 1.1206
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "SKBNK.IS",
+     "high": 1.1355,
+     "close": 1.1355
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "TSKB.IS",
+     "high": 1.1202,
+     "close": 1.1202
+    },
+    {
+     "date": "2022-12-19",
+     "symbol": "VAKBN.IS",
+     "high": 1.1759,
+     "close": 1.1759
+    }
+   ]
+  },
+  "unexplained": {
+   "n_cells": 10,
+   "cells": [
+    {
+     "date": "2022-11-10",
+     "symbol": "EREGL.IS",
+     "high": 1.1067
+    },
+    {
+     "date": "2022-11-30",
+     "symbol": "SASA.IS",
+     "open": 0.8942,
+     "low": 0.8942
+    },
+    {
+     "date": "2023-01-06",
+     "symbol": "ENKAI.IS",
+     "low": 0.8913
+    },
+    {
+     "date": "2023-01-06",
+     "symbol": "VAKBN.IS",
+     "low": 0.8948
+    },
+    {
+     "date": "2023-04-06",
+     "symbol": "ISCTR.IS",
+     "low": 0.0826
+    },
+    {
+     "date": "2023-04-06",
+     "symbol": "MGROS.IS",
+     "low": 0.0057
+    },
+    {
+     "date": "2023-05-23",
+     "symbol": "SASA.IS",
+     "high": 1.1129
+    },
+    {
+     "date": "2024-06-04",
+     "symbol": "SKBNK.IS",
+     "open": 0.8041,
+     "high": 0.8072,
+     "low": 0.787,
+     "close": 0.7917
+    },
+    {
+     "date": "2025-05-09",
+     "symbol": "ENKAI.IS",
+     "high": 1.1132
+    },
+    {
+     "date": "2026-10-19",
+     "symbol": "SKBNK.IS",
+     "open": 0.7653,
+     "high": 0.7781,
+     "low": 0.7494,
+     "close": 0.7542
+    }
+   ]
+  }
+ },
+ "schedule_in_code_at_run": {
+  "rule": "no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)",
+  "tolerance": 0.005,
+  "pre_bistech_assumed_unverified": 0.2,
+  "schedule": [
+   [
+    "2015-11-30",
+    0.2
+   ],
+   [
+    "2020-03-13",
+    0.1
+   ]
+  ],
+  "verified_until": "2020-12-31",
+  "preregistration": "phase-10-m2-design.md §2.5 v0.7 (b8e310e)"
+ },
+ "provenance": {
+  "commit": "88be7fffe34d716d15ce3fb57bfa8d5e1756d8ab",
+  "git_status_porcelain": "",
+  "script_sha256": "c4c0c99297ed808245b011a597d80d6221bae2c4d75397d0be5beff73fd01231"
+ }
+}

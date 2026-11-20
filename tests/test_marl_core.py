@@ -182,11 +182,13 @@ check("satis engeli: -%10 bosluk engelli, -%9,4 degil; esik 0 -> hic; nedensel (
       _gp['no_sell'][120, 0] and not _gp['no_sell'][121, 0] and not _gp0['no_sell'].any()
       and np.array_equal(_gc['no_sell'], _gp['no_sell'][:121]) and not _gp['no_sell'][~_gp['valid']].any())
 # v0.7 donem bagimli marj (hakem-2 H1): 2015-11-30 oncesi ve +-%20 doneminde esik 0,195, 2020-03-13'ten 0,095
-_ld = A.limit_down_gaps(['2014-01-02', '2015-11-27', '2015-11-30', '2020-03-12', '2020-03-13', '2020-12-31'])
-check("v0.7 takvim: 0,195 / 0,195 / 0,195 / 0,195 / 0,095 / 0,095",
-      np.allclose(_ld, [0.195, 0.195, 0.195, 0.195, 0.095, 0.095]))
-check("v0.7 takvim: dogrulanmis kapsam disi (2021-01-04) ve tarih olmayan girdi -> ValueError",
-      raises(lambda: A.limit_down_gaps(['2020-12-31', '2021-01-04'])) and raises(lambda: A.limit_down_gaps(['d0001'])))
+# 2021+ (tasarim §2.5, 2026-11-20): yeni giris yok, %10 surer; dogrulanmis kapsam 2026-11-09'da biter
+_ld = A.limit_down_gaps(['2014-01-02', '2015-11-27', '2015-11-30', '2020-03-12', '2020-03-13', '2020-12-31',
+                         '2023-02-15', '2026-11-09'])
+check("takvim: 0,195 x4 (BISTECH oncesi, +-%20) / 0,095 x4 (2020-03-13'ten, 2021+ dahil)",
+      np.allclose(_ld, [0.195, 0.195, 0.195, 0.195, 0.095, 0.095, 0.095, 0.095]))
+check("takvim: dogrulanmis kapsam disi (2026-11-10) ve tarih olmayan girdi -> ValueError",
+      raises(lambda: A.limit_down_gaps(['2026-11-09', '2026-11-10'])) and raises(lambda: A.limit_down_gaps(['d0001'])))
 _go2 = _la['open'].copy()
 _go2[120, 0] = _la['close'][119, 0] * 0.85     # -%15: sabit kuralda engel, +-%20 doneminde engel yok
 _go2[121, 0] = _la['close'][120, 0] * 0.80     # -%20: her iki kuralda engel
@@ -406,6 +408,42 @@ out = PN.build_arrays(df)
 check("sembol sirasi panelin gorunme sirasi (sorted degil)", list(out['symbols']) == order)
 check("eksik hucre NaN kalir (atilmaz), takvim tam", out['close'].shape == (5, 3)
       and np.isnan(out['close'][2, 1]) and len(out['dates']) == 5)
+
+# ---------------------------------------------------------------------------------------------
+print("\n[7] M8 paneli veri duzeltmesi m8-v1 (tasarim §6.1)")
+from marl import panel_fix as PF  # noqa: E402
+_d = pd.bdate_range('2023-01-02', '2024-07-31')
+_ds = np.asarray(_d.strftime('%Y-%m-%d'))
+_rng = np.random.default_rng(7)
+_truth = {s: 10.0 * np.exp(np.cumsum(_rng.normal(0, 0.01, len(_d)))) for s in ('AAA.IS', 'SKBNK.IS')}
+_rows, _isy = [], {}
+for _s, _tr in _truth.items():
+    _c = _tr.copy()
+    if _s == 'SKBNK.IS':                       # yfinance: iki sinirdan oncesi duzeltilmemis (gercek veriyle ayni)
+        for _fx in PF.RIGHTS_FIXES:
+            _c[_ds < _fx['yf_boundary']] /= PF.rights_factor(_fx)
+    else:                                      # kesik gun cubugu: kapanis %5 yuksek
+        _c[list(_ds).index('2023-01-05')] *= 1.05
+    _rows += [{'symbol': _s, 'date': d, 'open': _c[i], 'high': _c[i] * 1.01, 'low': _c[i] * 0.99,
+               'close': _c[i], 'volume': 100.0} for i, d in enumerate(_d)]
+    _k = 2.0 if _s == 'AAA.IS' else 0.5        # iki kaynagin sabit olcek farki
+    _isy[_s] = pd.DataFrame({'HGDG_KAPANIS': _tr * _k, 'HG_KAPANIS': _tr * _k, 'HG_MIN': _tr * _k * 0.98,
+                             'HG_MAX': _tr * _k * 1.02}, index=_ds)
+_raw = pd.DataFrame(_rows).set_index(['symbol', 'date'])
+_fixd, _rep = PF.apply_m8_v1(_raw, _isy)
+_keep = _ds != '2023-02-08'
+_sk = _fixd.xs('SKBNK.IS', level='symbol')['close'].to_numpy()
+_aaa, _raa = _fixd.xs('AAA.IS', level='symbol'), _raw.xs('AAA.IS', level='symbol')[_keep]
+_i5 = list(_aaa.index.strftime('%Y-%m-%d')).index('2023-01-05')
+_t5 = _truth['AAA.IS'][list(_ds).index('2023-01-05')]
+check("m8-v1: iptal gunu atilir; SKBNK sinir oncesi TERP carpaniyla duzelir; kesik kapanis IsY x yerel olcege "
+      "yamanir, dusuk IsY araligina genisler; kalan hucreler bit-es",
+      _rep['drop_sessions']['2023-02-08']['rows'] == 2 and len(_aaa) == _keep.sum()
+      and np.allclose(_sk, _truth['SKBNK.IS'][_keep], rtol=1e-12, atol=0)
+      and _rep['close_patch']['n'] == 1 and np.isclose(_aaa['close'].iloc[_i5], _t5, rtol=1e-12, atol=0)
+      and np.isclose(_aaa['low'].iloc[_i5], 0.98 * _t5) and _aaa['high'].iloc[_i5] >= _aaa['close'].iloc[_i5]
+      and _aaa.drop(_aaa.index[_i5]).equals(_raa.drop(_raa.index[_i5])),
+      f"patch {_rep['close_patch']['n']}, rights {[r['rows_scaled'] for r in _rep['rights_fixes']]}")
 
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

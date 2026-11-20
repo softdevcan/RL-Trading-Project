@@ -99,7 +99,8 @@ python tests/test_pit_table.py            # Faz 9/P: PIT tahmin tablosu — B0 g
                                            #          taban ve meta mutasyonu B0'i kirar, K19 tarihleri, havuzlu T, acik maske,
                                            #          P2 kapsam, parquet + manifest, bootstrap p-degeri + BH; kapi v2 + I3 duyarlilik (capa kumesi bootstrap); P4 env adaptoru B0 + env uctan uca + mutasyon; Milestone 0' pozitif kontrol tablosu;
                                            #          P5a pit-v2 (O_{t+1}->O_{t+2}): etiket elle, varsayilan main ile bit-es (git show), B0, etiket siniri +
-                                           #          purge 1 seans mutasyonu, bant disi acilis maskesi (45, ~2 dk; gercek panel)
+                                           #          purge 1 seans mutasyonu, bant disi acilis maskesi (44, ~2 dk; gercek panel;
+                                           #          main P5a'siz bir dalda bit-eslik iki kontrol -> 45)
 python tests/test_baselines.py             # Faz 9/D1-D4: 1/N aylik + al-tut elle hesap, gec listeleme, maliyet izgarasi,
                                            #          reel (TUFE basamak) / USD (kur t-1) + ayni gun kur mutasyonu, A8 0,02 yok,
                                            #          gercek 2021 penceresi (19, ~10 sn)
@@ -108,7 +109,7 @@ python tests/test_rl_walk_forward.py       # Faz 9/R1 + P4 + M8 secim kurali: wf
                                            #          bit-es (A2C/PPO/TD3/SAC), rota<->HPO ayni gozlem, kayit; rota P tablosuyla (DTF), argmax + son nokta iki test kaydi (98, ~1 dk)
 python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri 5+ln N, projeksiyon (500 rastgele), muhasebe
                                            #          elle hesap + maliyet bir kez + katki, K5 emir + apply_decisions gidis-donus,
-                                           #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel (61, ~5 sn; ana venv)
+                                           #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel, M8 m8-v1 veri duzeltmesi (62, ~5 sn; ana venv)
 venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
                                            #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)

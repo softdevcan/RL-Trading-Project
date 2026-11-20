@@ -1,0 +1,7876 @@
+{
+ "source_csv": "data/bist/stock_data_with_indicators.csv",
+ "source_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+ "commit": "1a0233bb67ae80ce65c4b122be883f1e3179a4fd",
+ "market": {
+  "listing_lockout_sessions": 20,
+  "listing_lockout_cells": 60,
+  "listing_lockout_symbols": [
+   "EKGYO.IS",
+   "ODAS.IS",
+   "PGSUS.IS"
+  ],
+  "open_gap_limit_cells": {
+   "0.095": {
+    "open_gap_up_cells": 65,
+    "open_gap_down_cells": 105,
+    "frac_of_valid": 0.0016869430607101038,
+    "frac_up": 0.0006450076408597455,
+    "frac_down": 0.0010419354198503582,
+    "up_in_health_rows": 25,
+    "down_in_health_rows": 17
+   },
+   "0.195": {
+    "open_gap_up_cells": 1,
+    "open_gap_down_cells": 2,
+    "frac_of_valid": 2.9769583424295948e-05,
+    "frac_up": 9.923194474765316e-06,
+    "frac_down": 1.9846388949530633e-05,
+    "up_in_health_rows": 1,
+    "down_in_health_rows": 1
+   }
+  },
+  "post_lockout_first10_gaps": {
+   "EKGYO.IS": {
+    "first_tradable": "2013-07-08",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   },
+   "ODAS.IS": {
+    "first_tradable": "2013-07-25",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   },
+   "PGSUS.IS": {
+    "first_tradable": "2013-09-26",
+    "gap_up_0.095": 0,
+    "gap_down_0.095": 0
+   }
+  },
+  "open_valid_close_missing_cells": 0,
+  "limit_down_no_sell": {
+   "rule": "no_sell = O_t/Cf_{t-1} <= 1 - (margin_t - tolerance)",
+   "tolerance": 0.005,
+   "pre_bistech_assumed_unverified": 0.2,
+   "schedule": [
+    [
+     "2015-11-30",
+     0.2
+    ],
+    [
+     "2020-03-13",
+     0.1
+    ]
+   ],
+   "verified_until": "2026-11-09",
+   "preregistration": "phase-10-m2-design.md §2.5 v0.7 (b8e310e)",
+   "verification_2021plus": "phase-10-m2-design.md §2.5 (2026-11-20): Borsa Istanbul 2020/20 hala yururlukte; measurements/phase10-m8/price_limit_audit.json"
+  },
+  "no_sell_cells": 66,
+  "no_sell_cells_health_rows": 1,
+  "no_sell_cells_val_rows": 65,
+  "price_basis": "yfinance history() auto_adjust varsayilani (bolunme + temettu duzeltilmis)"
+ },
+ "window": [
+  "2013-06-03",
+  "2026-11-09"
+ ],
+ "T": 3364,
+ "N": 30,
+ "symbols": [
+  "AKBNK.IS",
+  "ARCLK.IS",
+  "ASELS.IS",
+  "BIMAS.IS",
+  "EKGYO.IS",
+  "ENKAI.IS",
+  "EREGL.IS",
+  "FROTO.IS",
+  "GARAN.IS",
+  "HALKB.IS",
+  "ISCTR.IS",
+  "KCHOL.IS",
+  "KRDMD.IS",
+  "MGROS.IS",
+  "ODAS.IS",
+  "PETKM.IS",
+  "PGSUS.IS",
+  "SAHOL.IS",
+  "SASA.IS",
+  "SISE.IS",
+  "SKBNK.IS",
+  "TAVHL.IS",
+  "TCELL.IS",
+  "THYAO.IS",
+  "TKFEN.IS",
+  "TOASO.IS",
+  "TSKB.IS",
+  "TUPRS.IS",
+  "VAKBN.IS",
+  "YKBNK.IS"
+ ],
+ "incomplete_days": 92,
+ "missing_cell_frac": 0.0011494252873562871,
+ "obs_spec": "marl-obs-v1",
+ "health_rows": [
+  "2013-08-27",
+  "2018-12-31"
+ ],
+ "health": {
+  "r1": {
+   "clip_frac": 0.001616191754935601,
+   "constant": false,
+   "n": 40218
+  },
+  "r5": {
+   "clip_frac": 0.0011686309612611268,
+   "constant": false,
+   "n": 40218
+  },
+  "r20": {
+   "clip_frac": 0.0008702570988114775,
+   "constant": false,
+   "n": 40218
+  },
+  "range": {
+   "clip_frac": 0.004525336913819683,
+   "constant": false,
+   "n": 40218
+  },
+  "gap": {
+   "clip_frac": 0.004376149982594858,
+   "constant": false,
+   "n": 40218
+  },
+  "vol20": {
+   "clip_frac": 0.0018897011288477796,
+   "constant": false,
+   "n": 40218
+  },
+  "rsi": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 40218
+  },
+  "cci": {
+   "clip_frac": 2.4864488537470783e-05,
+   "constant": false,
+   "n": 40218
+  },
+  "adx": {
+   "clip_frac": 0.00012432244268735393,
+   "constant": false,
+   "n": 40218
+  },
+  "macd_rel": {
+   "clip_frac": 0.0007459346561241235,
+   "constant": false,
+   "n": 40218
+  },
+  "vlog_z": {
+   "clip_frac": 0.00012432244268735393,
+   "constant": false,
+   "n": 40218
+  }
+ },
+ "val_rows": [
+  "2019-01-02",
+  "2026-11-09"
+ ],
+ "health_val": {
+  "r1": {
+   "clip_frac": 0.00042473666326877334,
+   "constant": false,
+   "n": 58860
+  },
+  "r5": {
+   "clip_frac": 0.006303092082908596,
+   "constant": false,
+   "n": 58860
+  },
+  "r20": {
+   "clip_frac": 0.006455997281685355,
+   "constant": false,
+   "n": 58860
+  },
+  "range": {
+   "clip_frac": 0.010703363914373088,
+   "constant": false,
+   "n": 58860
+  },
+  "gap": {
+   "clip_frac": 0.007424396873938159,
+   "constant": false,
+   "n": 58860
+  },
+  "vol20": {
+   "clip_frac": 0.0074413863404689095,
+   "constant": false,
+   "n": 58860
+  },
+  "rsi": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 58860
+  },
+  "cci": {
+   "clip_frac": 0.0,
+   "constant": false,
+   "n": 58860
+  },
+  "adx": {
+   "clip_frac": 0.0004926945293917771,
+   "constant": false,
+   "n": 58860
+  },
+  "macd_rel": {
+   "clip_frac": 0.006354060482500849,
+   "constant": false,
+   "n": 58860
+  },
+  "vlog_z": {
+   "clip_frac": 0.0003567787971457696,
+   "constant": false,
+   "n": 58860
+  }
+ },
+ "norm_stats": {
+  "version": "marl-obs-v1",
+  "n_cells": 40218,
+  "features": {
+   "r1": {
+    "mean": 0.00044336077830828486,
+    "std": 0.0212623507336368
+   },
+   "r5": {
+    "mean": 0.002128358069105449,
+    "std": 0.04643797219501516
+   },
+   "r20": {
+    "mean": 0.00792962224605177,
+    "std": 0.0903198576086002
+   },
+   "range": {
+    "mean": 0.024725692144421826,
+    "std": 0.01640214644940599
+   },
+   "gap": {
+    "mean": 0.0014460930354590997,
+    "std": 0.011749017252165829
+   },
+   "vol20": {
+    "mean": 0.01945912980796448,
+    "std": 0.007377967564076311
+   },
+   "rsi": {
+    "mean": 0.015944203488678,
+    "std": 0.12091726419803525
+   },
+   "cci": {
+    "mean": 0.04848784058970292,
+    "std": 0.562345358426454
+   },
+   "adx": {
+    "mean": 0.24953872004958885,
+    "std": 0.10485555326517834
+   },
+   "macd_rel": {
+    "mean": 0.0012833275681038408,
+    "std": 0.022687736567563805
+   },
+   "vlog_z": {
+    "mean": 0.009547899393401395,
+    "std": 1.0822212557550612
+   }
+  }
+ },
+ "gate": {
+  "window_start": "2013-06-01",
+  "window_end": "2026-11-09",
+  "rows_in_window": 102870,
+  "rows_after": 100804,
+  "n_artifacts": 0,
+  "ghost_threshold": 0.9,
+  "n_ghost_days": 67,
+  "ghost_days": [
+   "2013-08-08",
+   "2013-08-09",
+   "2013-08-30",
+   "2013-10-15",
+   "2013-10-16",
+   "2013-10-17",
+   "2013-10-18",
+   "2013-10-29",
+   "2014-01-01",
+   "2014-04-23",
+   "2014-05-01",
+   "2014-05-19",
+   "2014-07-28",
+   "2014-07-29",
+   "2014-07-30",
+   "2014-10-06",
+   "2014-10-07",
+   "2014-10-29",
+   "2015-01-01",
+   "2015-04-23",
+   "2015-05-01",
+   "2015-05-19",
+   "2015-07-17",
+   "2015-09-24",
+   "2015-09-25",
+   "2015-10-29",
+   "2016-01-01",
+   "2016-01-22",
+   "2016-05-19",
+   "2016-07-05",
+   "2016-07-06",
+   "2016-07-07",
+   "2016-08-30",
+   "2016-09-12",
+   "2016-09-13",
+   "2016-09-14",
+   "2016-09-15",
+   "2017-05-01",
+   "2017-05-19",
+   "2017-06-26",
+   "2017-06-27",
+   "2017-08-30",
+   "2017-09-01",
+   "2017-09-04",
+   "2018-01-01",
+   "2018-04-23",
+   "2018-05-01",
+   "2018-06-15",
+   "2018-08-21",
+   "2018-08-22",
+   "2018-08-23",
+   "2018-08-24",
+   "2018-08-30",
+   "2018-10-29",
+   "2019-01-01",
+   "2019-04-23",
+   "2019-05-01",
+   "2019-06-04",
+   "2019-06-05",
+   "2019-06-06",
+   "2019-07-15",
+   "2019-08-12",
+   "2019-08-13",
+   "2019-08-14",
+   "2019-08-30",
+   "2020-03-11",
+   "2024-04-09"
+  ],
+  "n_stale_cells_dropped": 39,
+  "n_symbols": 30,
+  "n_dates": 3364,
+  "missing_cell_frac": 0.0011494252873562871
+ },
+ "data_fix": {
+  "version": "m8-v1",
+  "close_tol": 0.01,
+  "median_window": 11,
+  "drop_sessions": {
+   "2023-02-08": {
+    "rows": 30,
+    "source": "Borsa Istanbul KAP aciklamasi 08/02/2023 (Haberturk aktarimi): 8 Subat 2023 islemlerinin tamami iptal, pay piyasasi 14 Subat aksamina kadar kapali; Is Yatirim verisinde bu gun yok"
+   }
+  },
+  "rights_fixes": [
+   {
+    "symbol": "SKBNK.IS",
+    "yf_boundary": "2024-06-04",
+    "ex_date": "2024-06-13",
+    "capital_from": 1860000000.0,
+    "capital_to": 2500000000.0,
+    "price": 1.0,
+    "cum_close_raw": 4.49,
+    "source": "Is Yatirim HisseTekil: 13/06/2024 ham kapanis 4,49 -> 3,71, sermaye 1,86 -> 2,5 milyar TL",
+    "factor": 0.801016,
+    "rows_scaled": 4987
+   },
+   {
+    "symbol": "SKBNK.IS",
+    "yf_boundary": "2026-10-19",
+    "ex_date": "2026-10-22",
+    "capital_from": 2500000000.0,
+    "capital_to": 3500000000.0,
+    "price": 1.0,
+    "cum_close_raw": 4.48,
+    "source": "Is Yatirim HisseTekil: 22/10/2026 ham kapanis 4,48 -> 3,21, sermaye 2,5 -> 3,5 milyar TL",
+    "factor": 0.778061,
+    "rows_scaled": 5581
+   }
+  ],
+  "close_patch": {
+   "n": 990,
+   "passes": [
+    964,
+    33,
+    4,
+    1,
+    0
+   ],
+   "flat_rows_excluded": 3835,
+   "by_year": {
+    "2013": 38,
+    "2014": 9,
+    "2015": 48,
+    "2016": 3,
+    "2018": 148,
+    "2019": 391,
+    "2020": 246,
+    "2021": 4,
+    "2022": 61,
+    "2023": 30,
+    "2024": 6,
+    "2025": 5,
+    "2026": 1
+   },
+   "cells": [
+    {
+     "date": "2013-06-05",
+     "symbol": "ENKAI.IS",
+     "dev": -0.011,
+     "close_old": 1.738887,
+     "close_new": 1.758049
+    },
+    {
+     "date": "2013-07-01",
+     "symbol": "SASA.IS",
+     "dev": 0.0106,
+     "close_old": 0.004466,
+     "close_new": 0.004418
+    },
+    {
+     "date": "2013-07-02",
+     "symbol": "SASA.IS",
+     "dev": 0.0106,
+     "close_old": 0.004466,
+     "close_new": 0.004418
+    },
+    {
+     "date": "2013-07-05",
+     "symbol": "SASA.IS",
+     "dev": 0.0109,
+     "close_old": 0.004277,
+     "close_new": 0.004231
+    },
+    {
+     "date": "2013-07-08",
+     "symbol": "SASA.IS",
+     "dev": 0.0109,
+     "close_old": 0.004277,
+     "close_new": 0.004231
+    },
+    {
+     "date": "2013-07-19",
+     "symbol": "SASA.IS",
+     "dev": -0.0104,
+     "close_old": 0.004512,
+     "close_new": 0.004559
+    },
+    {
+     "date": "2013-07-31",
+     "symbol": "SASA.IS",
+     "dev": -0.012,
+     "close_old": 0.004324,
+     "close_new": 0.004376
+    },
+    {
+     "date": "2013-08-01",
+     "symbol": "SASA.IS",
+     "dev": -0.0108,
+     "close_old": 0.004324,
+     "close_new": 0.004371
+    },
+    {
+     "date": "2013-08-12",
+     "symbol": "SASA.IS",
+     "dev": -0.012,
+     "close_old": 0.004324,
+     "close_new": 0.004376
+    },
+    {
+     "date": "2013-09-02",
+     "symbol": "SASA.IS",
+     "dev": -0.0135,
+     "close_old": 0.003807,
+     "close_new": 0.003859
+    },
+    {
+     "date": "2013-09-05",
+     "symbol": "SASA.IS",
+     "dev": -0.0103,
+     "close_old": 0.003713,
+     "close_new": 0.003751
+    },
+    {
+     "date": "2013-09-09",
+     "symbol": "SASA.IS",
+     "dev": -0.0112,
+     "close_old": 0.003807,
+     "close_new": 0.00385
+    },
+    {
+     "date": "2013-09-10",
+     "symbol": "SASA.IS",
+     "dev": -0.012,
+     "close_old": 0.003901,
+     "close_new": 0.003948
+    },
+    {
+     "date": "2013-09-11",
+     "symbol": "SASA.IS",
+     "dev": -0.0107,
+     "close_old": 0.003901,
+     "close_new": 0.003943
+    },
+    {
+     "date": "2013-09-17",
+     "symbol": "SASA.IS",
+     "dev": 0.013,
+     "close_old": 0.003995,
+     "close_new": 0.003943
+    },
+    {
+     "date": "2013-09-20",
+     "symbol": "SASA.IS",
+     "dev": 0.0103,
+     "close_old": 0.004183,
+     "close_new": 0.00414
+    },
+    {
+     "date": "2013-09-24",
+     "symbol": "SASA.IS",
+     "dev": 0.0116,
+     "close_old": 0.004089,
+     "close_new": 0.004042
+    },
+    {
+     "date": "2013-09-25",
+     "symbol": "SASA.IS",
+     "dev": 0.0103,
+     "close_old": 0.004183,
+     "close_new": 0.00414
+    },
+    {
+     "date": "2013-10-07",
+     "symbol": "SASA.IS",
+     "dev": -0.0108,
+     "close_old": 0.004324,
+     "close_new": 0.004371
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0246,
+     "close_old": 4.367884,
+     "close_new": 4.261671
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0132,
+     "close_old": 7.982497,
+     "close_new": 7.877487
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0119,
+     "close_old": 2.447599,
+     "close_new": 2.476856
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "EREGL.IS",
+     "dev": 0.0188,
+     "close_old": 0.564978,
+     "close_new": 0.554476
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "FROTO.IS",
+     "dev": 0.0233,
+     "close_old": 1.2792,
+     "close_new": 1.249734
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "GARAN.IS",
+     "dev": 0.0132,
+     "close_old": 5.344338,
+     "close_new": 5.274231
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0116,
+     "close_old": 0.631499,
+     "close_new": 0.624185
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "ODAS.IS",
+     "dev": 0.0173,
+     "close_old": 0.617292,
+     "close_new": 0.606716
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "PETKM.IS",
+     "dev": 0.0132,
+     "close_old": 0.956022,
+     "close_new": 0.943513
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0197,
+     "close_old": 6.282306,
+     "close_new": 6.159668
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "SISE.IS",
+     "dev": 0.0259,
+     "close_old": 1.43084,
+     "close_new": 1.394242
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "THYAO.IS",
+     "dev": 0.0135,
+     "close_old": 7.307094,
+     "close_new": 7.209394
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0106,
+     "close_old": 3.259516,
+     "close_new": 3.225268
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "TOASO.IS",
+     "dev": 0.0114,
+     "close_old": 5.496112,
+     "close_new": 5.433866
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0176,
+     "close_old": 4.301478,
+     "close_new": 4.226285
+    },
+    {
+     "date": "2013-12-02",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0116,
+     "close_old": 2.218003,
+     "close_new": 2.192339
+    },
+    {
+     "date": "2013-12-06",
+     "symbol": "TOASO.IS",
+     "dev": -0.0153,
+     "close_old": 5.392412,
+     "close_new": 5.475345
+    },
+    {
+     "date": "2013-12-26",
+     "symbol": "SASA.IS",
+     "dev": 0.0113,
+     "close_old": 0.004183,
+     "close_new": 0.004136
+    },
+    {
+     "date": "2013-12-27",
+     "symbol": "SASA.IS",
+     "dev": 0.014,
+     "close_old": 0.003995,
+     "close_new": 0.003939
+    },
+    {
+     "date": "2014-01-02",
+     "symbol": "SASA.IS",
+     "dev": 0.0113,
+     "close_old": 0.004183,
+     "close_new": 0.004136
+    },
+    {
+     "date": "2014-01-13",
+     "symbol": "SASA.IS",
+     "dev": 0.0102,
+     "close_old": 0.005076,
+     "close_new": 0.005025
+    },
+    {
+     "date": "2014-01-14",
+     "symbol": "SASA.IS",
+     "dev": 0.0102,
+     "close_old": 0.005076,
+     "close_new": 0.005025
+    },
+    {
+     "date": "2014-01-17",
+     "symbol": "SASA.IS",
+     "dev": 0.0102,
+     "close_old": 0.005076,
+     "close_new": 0.005025
+    },
+    {
+     "date": "2014-01-24",
+     "symbol": "SASA.IS",
+     "dev": -0.0179,
+     "close_old": 0.004888,
+     "close_new": 0.004976
+    },
+    {
+     "date": "2014-01-29",
+     "symbol": "SASA.IS",
+     "dev": -0.0184,
+     "close_old": 0.004794,
+     "close_new": 0.004883
+    },
+    {
+     "date": "2014-02-10",
+     "symbol": "SASA.IS",
+     "dev": -0.0102,
+     "close_old": 0.005123,
+     "close_new": 0.005176
+    },
+    {
+     "date": "2014-02-14",
+     "symbol": "SASA.IS",
+     "dev": -0.0102,
+     "close_old": 0.005123,
+     "close_new": 0.005176
+    },
+    {
+     "date": "2014-09-05",
+     "symbol": "SASA.IS",
+     "dev": 0.0133,
+     "close_old": 0.006863,
+     "close_new": 0.006772
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0296,
+     "close_old": 4.818748,
+     "close_new": 4.678102
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0129,
+     "close_old": 8.316429,
+     "close_new": 8.209569
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0234,
+     "close_old": 2.193771,
+     "close_new": 2.142944
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "GARAN.IS",
+     "dev": 0.0391,
+     "close_old": 6.301341,
+     "close_new": 6.059821
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "HALKB.IS",
+     "dev": 0.0307,
+     "close_old": 11.463991,
+     "close_new": 11.117877
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0236,
+     "close_old": 0.749313,
+     "close_new": 0.731801
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0177,
+     "close_old": 1.324211,
+     "close_new": 1.300991
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "ODAS.IS",
+     "dev": 0.0246,
+     "close_old": 1.198895,
+     "close_new": 1.169798
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "PETKM.IS",
+     "dev": 0.02,
+     "close_old": 1.120009,
+     "close_new": 1.097839
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0244,
+     "close_old": 5.084295,
+     "close_new": 4.961495
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0216,
+     "close_old": 6.537106,
+     "close_new": 6.397723
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "THYAO.IS",
+     "dev": 0.0355,
+     "close_old": 8.694268,
+     "close_new": 8.391387
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "TKFEN.IS",
+     "dev": 0.019,
+     "close_old": 3.280059,
+     "close_new": 3.218452
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "TOASO.IS",
+     "dev": 0.0343,
+     "close_old": 7.122969,
+     "close_new": 6.882608
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "TSKB.IS",
+     "dev": 0.015,
+     "close_old": 0.943049,
+     "close_new": 0.928981
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0391,
+     "close_old": 4.193491,
+     "close_new": 4.032575
+    },
+    {
+     "date": "2015-03-31",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0271,
+     "close_old": 2.211429,
+     "close_new": 2.152238
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0139,
+     "close_old": 4.86767,
+     "close_new": 4.800427
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0157,
+     "close_old": 1.926475,
+     "close_new": 1.89652
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0155,
+     "close_old": 2.343593,
+     "close_new": 2.380158
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "HALKB.IS",
+     "dev": 0.0124,
+     "close_old": 10.694801,
+     "close_new": 10.563262
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0125,
+     "close_old": 0.72184,
+     "close_new": 0.712878
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "ODAS.IS",
+     "dev": 0.0145,
+     "close_old": 1.120946,
+     "close_new": 1.104862
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "PETKM.IS",
+     "dev": 0.011,
+     "close_old": 1.161255,
+     "close_new": 1.148569
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0176,
+     "close_old": 0.849243,
+     "close_new": 0.864312
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0135,
+     "close_old": 3.074627,
+     "close_new": 3.033495
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "TOASO.IS",
+     "dev": 0.0179,
+     "close_old": 7.844957,
+     "close_new": 7.705651
+    },
+    {
+     "date": "2015-06-12",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0148,
+     "close_old": 3.887982,
+     "close_new": 3.945906
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0248,
+     "close_old": 2.091387,
+     "close_new": 2.143814
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "EREGL.IS",
+     "dev": 0.0159,
+     "close_old": 0.93869,
+     "close_new": 0.923859
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "FROTO.IS",
+     "dev": -0.0293,
+     "close_old": 1.710265,
+     "close_new": 1.761085
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "GARAN.IS",
+     "dev": -0.0348,
+     "close_old": 5.30401,
+     "close_new": 5.491586
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "HALKB.IS",
+     "dev": -0.0253,
+     "close_old": 9.572723,
+     "close_new": 9.818178
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "ISCTR.IS",
+     "dev": -0.027,
+     "close_old": 0.606653,
+     "close_new": 0.623255
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "ODAS.IS",
+     "dev": -0.0276,
+     "close_old": 0.909345,
+     "close_new": 0.934757
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "PETKM.IS",
+     "dev": -0.0134,
+     "close_old": 1.408736,
+     "close_new": 1.427745
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0117,
+     "close_old": 3.660283,
+     "close_new": 3.703207
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0372,
+     "close_old": 5.707771,
+     "close_new": 5.923848
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "SISE.IS",
+     "dev": -0.0235,
+     "close_old": 1.92139,
+     "close_new": 1.966995
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0193,
+     "close_old": 0.773866,
+     "close_new": 0.788971
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0104,
+     "close_old": 15.459849,
+     "close_new": 15.299243
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "THYAO.IS",
+     "dev": -0.0307,
+     "close_old": 7.512239,
+     "close_new": 7.746721
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "TKFEN.IS",
+     "dev": -0.012,
+     "close_old": 2.901269,
+     "close_new": 2.936263
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "TOASO.IS",
+     "dev": -0.0392,
+     "close_old": 8.945108,
+     "close_new": 9.30254
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "TSKB.IS",
+     "dev": -0.0198,
+     "close_old": 0.816999,
+     "close_new": 0.833299
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0158,
+     "close_old": 4.394182,
+     "close_new": 4.464354
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0198,
+     "close_old": 3.819373,
+     "close_new": 3.895764
+    },
+    {
+     "date": "2015-12-01",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0234,
+     "close_old": 1.813264,
+     "close_new": 1.856275
+    },
+    {
+     "date": "2016-01-20",
+     "symbol": "ODAS.IS",
+     "dev": 0.0237,
+     "close_old": 0.800867,
+     "close_new": 0.782073
+    },
+    {
+     "date": "2016-01-20",
+     "symbol": "PETKM.IS",
+     "dev": 0.0119,
+     "close_old": 1.61497,
+     "close_new": 1.595922
+    },
+    {
+     "date": "2016-07-01",
+     "symbol": "SISE.IS",
+     "dev": 0.027,
+     "close_old": 2.554513,
+     "close_new": 2.486466
+    },
+    {
+     "date": "2018-03-15",
+     "symbol": "FROTO.IS",
+     "dev": 0.011,
+     "close_old": 3.696976,
+     "close_new": 3.656402
+    },
+    {
+     "date": "2018-03-16",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0106,
+     "close_old": 12.996498,
+     "close_new": 13.135378
+    },
+    {
+     "date": "2018-03-16",
+     "symbol": "MGROS.IS",
+     "dev": 0.0115,
+     "close_old": 22.973663,
+     "close_new": 22.711085
+    },
+    {
+     "date": "2018-03-16",
+     "symbol": "SASA.IS",
+     "dev": -0.0104,
+     "close_old": 0.111388,
+     "close_new": 0.112556
+    },
+    {
+     "date": "2018-04-11",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0126,
+     "close_old": 0.758791,
+     "close_new": 0.768421
+    },
+    {
+     "date": "2018-04-30",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0134,
+     "close_old": 0.748741,
+     "close_new": 0.758863
+    },
+    {
+     "date": "2018-05-02",
+     "symbol": "PETKM.IS",
+     "dev": 0.0511,
+     "close_old": 4.060132,
+     "close_new": 3.857742
+    },
+    {
+     "date": "2018-05-07",
+     "symbol": "FROTO.IS",
+     "dev": 0.0105,
+     "close_old": 3.45842,
+     "close_new": 3.422146
+    },
+    {
+     "date": "2018-05-09",
+     "symbol": "ODAS.IS",
+     "dev": 0.0118,
+     "close_old": 1.986067,
+     "close_new": 1.962736
+    },
+    {
+     "date": "2018-05-16",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0146,
+     "close_old": 0.693465,
+     "close_new": 0.683414
+    },
+    {
+     "date": "2018-06-04",
+     "symbol": "FROTO.IS",
+     "dev": -0.0106,
+     "close_old": 3.952479,
+     "close_new": 3.994763
+    },
+    {
+     "date": "2018-06-05",
+     "symbol": "FROTO.IS",
+     "dev": -0.0123,
+     "close_old": 3.880178,
+     "close_new": 3.928226
+    },
+    {
+     "date": "2018-06-11",
+     "symbol": "TSKB.IS",
+     "dev": 0.0101,
+     "close_old": 0.936086,
+     "close_new": 0.926703
+    },
+    {
+     "date": "2018-06-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0103,
+     "close_old": 0.917364,
+     "close_new": 0.908007
+    },
+    {
+     "date": "2018-06-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0104,
+     "close_old": 0.908003,
+     "close_new": 0.898603
+    },
+    {
+     "date": "2018-06-20",
+     "symbol": "TSKB.IS",
+     "dev": 0.0104,
+     "close_old": 0.898642,
+     "close_new": 0.889303
+    },
+    {
+     "date": "2018-06-21",
+     "symbol": "FROTO.IS",
+     "dev": -0.0108,
+     "close_old": 3.958505,
+     "close_new": 4.001544
+    },
+    {
+     "date": "2018-06-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0109,
+     "close_old": 0.851838,
+     "close_new": 0.861203
+    },
+    {
+     "date": "2018-06-29",
+     "symbol": "TSKB.IS",
+     "dev": 0.0103,
+     "close_old": 0.917364,
+     "close_new": 0.907986
+    },
+    {
+     "date": "2018-07-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0101,
+     "close_old": 0.926725,
+     "close_new": 0.917407
+    },
+    {
+     "date": "2018-07-03",
+     "symbol": "TSKB.IS",
+     "dev": 0.0104,
+     "close_old": 0.908003,
+     "close_new": 0.898642
+    },
+    {
+     "date": "2018-07-04",
+     "symbol": "TSKB.IS",
+     "dev": -0.0202,
+     "close_old": 0.908003,
+     "close_new": 0.92656
+    },
+    {
+     "date": "2018-07-06",
+     "symbol": "SKBNK.IS",
+     "dev": 0.015,
+     "close_old": 0.673364,
+     "close_new": 0.663337
+    },
+    {
+     "date": "2018-07-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.0104,
+     "close_old": 0.908003,
+     "close_new": 0.898607
+    },
+    {
+     "date": "2018-07-11",
+     "symbol": "ODAS.IS",
+     "dev": 0.0146,
+     "close_old": 1.818015,
+     "close_new": 1.791735
+    },
+    {
+     "date": "2018-07-11",
+     "symbol": "TSKB.IS",
+     "dev": 0.0114,
+     "close_old": 0.823755,
+     "close_new": 0.814406
+    },
+    {
+     "date": "2018-07-12",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0102,
+     "close_old": 5.769952,
+     "close_new": 5.829362
+    },
+    {
+     "date": "2018-07-13",
+     "symbol": "ODAS.IS",
+     "dev": 0.0124,
+     "close_old": 1.856208,
+     "close_new": 1.833401
+    },
+    {
+     "date": "2018-07-13",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2018-07-17",
+     "symbol": "MGROS.IS",
+     "dev": -0.012,
+     "close_old": 17.047398,
+     "close_new": 17.253607
+    },
+    {
+     "date": "2018-07-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2018-07-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0116,
+     "close_old": 0.805034,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2018-07-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0113,
+     "close_old": 0.823755,
+     "close_new": 0.833095
+    },
+    {
+     "date": "2018-07-26",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0144,
+     "close_old": 23.247572,
+     "close_new": 23.585722
+    },
+    {
+     "date": "2018-07-30",
+     "symbol": "TSKB.IS",
+     "dev": -0.0116,
+     "close_old": 0.795673,
+     "close_new": 0.804995
+    },
+    {
+     "date": "2018-07-31",
+     "symbol": "TSKB.IS",
+     "dev": 0.0116,
+     "close_old": 0.814395,
+     "close_new": 0.804995
+    },
+    {
+     "date": "2018-08-01",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0115,
+     "close_old": 1.470604,
+     "close_new": 1.453797
+    },
+    {
+     "date": "2018-08-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.795673,
+     "close_new": 0.786295
+    },
+    {
+     "date": "2018-08-03",
+     "symbol": "TSKB.IS",
+     "dev": -0.0116,
+     "close_old": 0.795673,
+     "close_new": 0.804995
+    },
+    {
+     "date": "2018-08-09",
+     "symbol": "TSKB.IS",
+     "dev": -0.0116,
+     "close_old": 0.795673,
+     "close_new": 0.804978
+    },
+    {
+     "date": "2018-08-10",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0118,
+     "close_old": 1.41178,
+     "close_new": 1.428595
+    },
+    {
+     "date": "2018-08-10",
+     "symbol": "FROTO.IS",
+     "dev": -0.0123,
+     "close_old": 3.410219,
+     "close_new": 3.45242
+    },
+    {
+     "date": "2018-08-10",
+     "symbol": "MGROS.IS",
+     "dev": -0.0136,
+     "close_old": 16.419138,
+     "close_new": 16.644189
+    },
+    {
+     "date": "2018-08-13",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0125,
+     "close_old": 1.336149,
+     "close_new": 1.352988
+    },
+    {
+     "date": "2018-08-13",
+     "symbol": "SISE.IS",
+     "dev": -0.0109,
+     "close_old": 4.715009,
+     "close_new": 4.766711
+    },
+    {
+     "date": "2018-08-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.014,
+     "close_old": 0.673982,
+     "close_new": 0.664582
+    },
+    {
+     "date": "2018-08-14",
+     "symbol": "SISE.IS",
+     "dev": -0.0125,
+     "close_old": 4.731969,
+     "close_new": 4.791399
+    },
+    {
+     "date": "2018-08-14",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0192,
+     "close_old": 0.517586,
+     "close_new": 0.527642
+    },
+    {
+     "date": "2018-08-14",
+     "symbol": "TSKB.IS",
+     "dev": -0.0136,
+     "close_old": 0.683343,
+     "close_new": 0.692681
+    },
+    {
+     "date": "2018-08-15",
+     "symbol": "MGROS.IS",
+     "dev": 0.0151,
+     "close_old": 13.71856,
+     "close_new": 13.512346
+    },
+    {
+     "date": "2018-08-15",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0194,
+     "close_old": 0.522611,
+     "close_new": 0.512572
+    },
+    {
+     "date": "2018-08-15",
+     "symbol": "TSKB.IS",
+     "dev": -0.0137,
+     "close_old": 0.673982,
+     "close_new": 0.683265
+    },
+    {
+     "date": "2018-08-16",
+     "symbol": "ODAS.IS",
+     "dev": -0.0103,
+     "close_old": 1.416982,
+     "close_new": 1.431678
+    },
+    {
+     "date": "2018-08-17",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0123,
+     "close_old": 12.611188,
+     "close_new": 12.457486
+    },
+    {
+     "date": "2018-08-17",
+     "symbol": "ODAS.IS",
+     "dev": -0.0135,
+     "close_old": 1.405524,
+     "close_new": 1.424659
+    },
+    {
+     "date": "2018-08-17",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0148,
+     "close_old": 21.827356,
+     "close_new": 21.506155
+    },
+    {
+     "date": "2018-08-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.014,
+     "close_old": 0.664621,
+     "close_new": 0.673966
+    },
+    {
+     "date": "2018-08-20",
+     "symbol": "TSKB.IS",
+     "dev": 0.0131,
+     "close_old": 0.673982,
+     "close_new": 0.673966
+    },
+    {
+     "date": "2018-08-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.013,
+     "close_old": 0.702064,
+     "close_new": 0.692968
+    },
+    {
+     "date": "2018-08-29",
+     "symbol": "TSKB.IS",
+     "dev": 0.013,
+     "close_old": 0.702064,
+     "close_new": 0.692968
+    },
+    {
+     "date": "2018-08-31",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0108,
+     "close_old": 15.650069,
+     "close_new": 15.820229
+    },
+    {
+     "date": "2018-08-31",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0118,
+     "close_old": 1.42022,
+     "close_new": 1.403503
+    },
+    {
+     "date": "2018-09-03",
+     "symbol": "TSKB.IS",
+     "dev": -0.013,
+     "close_old": 0.711425,
+     "close_new": 0.711425
+    },
+    {
+     "date": "2018-09-04",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0104,
+     "close_old": 13.888638,
+     "close_new": 14.033508
+    },
+    {
+     "date": "2018-09-04",
+     "symbol": "TSKB.IS",
+     "dev": 0.0131,
+     "close_old": 0.711425,
+     "close_new": 0.702147
+    },
+    {
+     "date": "2018-09-07",
+     "symbol": "TSKB.IS",
+     "dev": 0.0131,
+     "close_old": 0.711425,
+     "close_new": 0.702147
+    },
+    {
+     "date": "2018-09-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.0131,
+     "close_old": 0.673982,
+     "close_new": 0.665234
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "FROTO.IS",
+     "dev": -0.011,
+     "close_old": 3.841015,
+     "close_new": 3.883434
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0117,
+     "close_old": 12.227814,
+     "close_new": 12.3723
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "SISE.IS",
+     "dev": -0.0104,
+     "close_old": 4.884614,
+     "close_new": 4.935577
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0101,
+     "close_old": 0.497485,
+     "close_new": 0.49248
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "TOASO.IS",
+     "dev": -0.0152,
+     "close_old": 11.627171,
+     "close_new": 11.804748
+    },
+    {
+     "date": "2018-09-12",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0125,
+     "close_old": 1.328324,
+     "close_new": 1.345003
+    },
+    {
+     "date": "2018-09-13",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0195,
+     "close_old": 0.502511,
+     "close_new": 0.512411
+    },
+    {
+     "date": "2018-09-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0123,
+     "close_old": 0.683343,
+     "close_new": 0.674959
+    },
+    {
+     "date": "2018-09-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.0137,
+     "close_old": 0.673982,
+     "close_new": 0.683282
+    },
+    {
+     "date": "2018-09-18",
+     "symbol": "TSKB.IS",
+     "dev": -0.0128,
+     "close_old": 0.720786,
+     "close_new": 0.730104
+    },
+    {
+     "date": "2018-09-20",
+     "symbol": "TSKB.IS",
+     "dev": -0.0123,
+     "close_old": 0.758229,
+     "close_new": 0.767604
+    },
+    {
+     "date": "2018-09-21",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0115,
+     "close_old": 3.139114,
+     "close_new": 3.175381
+    },
+    {
+     "date": "2018-09-21",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0187,
+     "close_old": 0.532661,
+     "close_new": 0.542701
+    },
+    {
+     "date": "2018-09-21",
+     "symbol": "TKFEN.IS",
+     "dev": -0.014,
+     "close_old": 17.536737,
+     "close_new": 17.7842
+    },
+    {
+     "date": "2018-09-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0123,
+     "close_old": 0.76759,
+     "close_new": 0.758204
+    },
+    {
+     "date": "2018-09-25",
+     "symbol": "TSKB.IS",
+     "dev": 0.0118,
+     "close_old": 0.795673,
+     "close_new": 0.786312
+    },
+    {
+     "date": "2018-10-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.777033
+    },
+    {
+     "date": "2018-10-04",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0112,
+     "close_old": 0.497485,
+     "close_new": 0.491935
+    },
+    {
+     "date": "2018-10-04",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.739508,
+     "close_new": 0.730131
+    },
+    {
+     "date": "2018-10-08",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.77703
+    },
+    {
+     "date": "2018-10-09",
+     "symbol": "TSKB.IS",
+     "dev": 0.0123,
+     "close_old": 0.76759,
+     "close_new": 0.758229
+    },
+    {
+     "date": "2018-10-10",
+     "symbol": "ODAS.IS",
+     "dev": -0.0117,
+     "close_old": 1.298582,
+     "close_new": 1.31383
+    },
+    {
+     "date": "2018-10-10",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0197,
+     "close_old": 0.49246,
+     "close_new": 0.502246
+    },
+    {
+     "date": "2018-10-11",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0197,
+     "close_old": 0.49246,
+     "close_new": 0.502246
+    },
+    {
+     "date": "2018-10-12",
+     "symbol": "SKBNK.IS",
+     "dev": -0.01,
+     "close_old": 0.502511,
+     "close_new": 0.507565
+    },
+    {
+     "date": "2018-10-12",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0121,
+     "close_old": 17.67592,
+     "close_new": 17.891852
+    },
+    {
+     "date": "2018-10-17",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0135,
+     "close_old": 23.687162,
+     "close_new": 24.008337
+    },
+    {
+     "date": "2018-10-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.0123,
+     "close_old": 0.758229,
+     "close_new": 0.76763
+    },
+    {
+     "date": "2018-10-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0124,
+     "close_old": 0.758229,
+     "close_new": 0.748891
+    },
+    {
+     "date": "2018-10-19",
+     "symbol": "TSKB.IS",
+     "dev": -0.0126,
+     "close_old": 0.739508,
+     "close_new": 0.748891
+    },
+    {
+     "date": "2018-10-22",
+     "symbol": "SKBNK.IS",
+     "dev": 0.01,
+     "close_old": 0.497485,
+     "close_new": 0.492521
+    },
+    {
+     "date": "2018-10-22",
+     "symbol": "TSKB.IS",
+     "dev": 0.0126,
+     "close_old": 0.748869,
+     "close_new": 0.739504
+    },
+    {
+     "date": "2018-10-23",
+     "symbol": "TSKB.IS",
+     "dev": 0.0129,
+     "close_old": 0.730147,
+     "close_new": 0.720804
+    },
+    {
+     "date": "2018-10-24",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0104,
+     "close_old": 0.48241,
+     "close_new": 0.477421
+    },
+    {
+     "date": "2018-10-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0131,
+     "close_old": 0.711425,
+     "close_new": 0.720823
+    },
+    {
+     "date": "2018-10-26",
+     "symbol": "FROTO.IS",
+     "dev": -0.0113,
+     "close_old": 3.425282,
+     "close_new": 3.464367
+    },
+    {
+     "date": "2018-10-30",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0123,
+     "close_old": 5.457661,
+     "close_new": 5.390745
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "AKBNK.IS",
+     "dev": -0.0183,
+     "close_old": 4.329833,
+     "close_new": 4.409898
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0101,
+     "close_old": 15.09885,
+     "close_new": 15.25252
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "EREGL.IS",
+     "dev": -0.0144,
+     "close_old": 2.741002,
+     "close_new": 2.780824
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0142,
+     "close_old": 12.109556,
+     "close_new": 12.283052
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "SISE.IS",
+     "dev": -0.0107,
+     "close_old": 3.960268,
+     "close_new": 4.003038
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "TCELL.IS",
+     "dev": -0.0106,
+     "close_old": 8.39229,
+     "close_new": 8.481935
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0122,
+     "close_old": 10.472858,
+     "close_new": 10.601681
+    },
+    {
+     "date": "2018-10-31",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0125,
+     "close_old": 1.336678,
+     "close_new": 1.353435
+    },
+    {
+     "date": "2018-11-01",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0107,
+     "close_old": 0.47236,
+     "close_new": 0.477421
+    },
+    {
+     "date": "2018-11-02",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0104,
+     "close_old": 0.48241,
+     "close_new": 0.477415
+    },
+    {
+     "date": "2018-11-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0137,
+     "close_old": 0.692703,
+     "close_new": 0.683303
+    },
+    {
+     "date": "2018-11-13",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0104,
+     "close_old": 0.48241,
+     "close_new": 0.477428
+    },
+    {
+     "date": "2018-11-14",
+     "symbol": "TSKB.IS",
+     "dev": -0.0132,
+     "close_old": 0.702064,
+     "close_new": 0.711404
+    },
+    {
+     "date": "2018-11-14",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0122,
+     "close_old": 1.36174,
+     "close_new": 1.378441
+    },
+    {
+     "date": "2018-11-15",
+     "symbol": "ODAS.IS",
+     "dev": 0.011,
+     "close_old": 1.042685,
+     "close_new": 1.031284
+    },
+    {
+     "date": "2018-11-15",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0103,
+     "close_old": 0.487435,
+     "close_new": 0.482417
+    },
+    {
+     "date": "2018-11-20",
+     "symbol": "TSKB.IS",
+     "dev": 0.013,
+     "close_old": 0.720786,
+     "close_new": 0.711444
+    },
+    {
+     "date": "2018-11-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.730147,
+     "close_new": 0.720846
+    },
+    {
+     "date": "2018-11-22",
+     "symbol": "TSKB.IS",
+     "dev": -0.0132,
+     "close_old": 0.711425,
+     "close_new": 0.720846
+    },
+    {
+     "date": "2018-11-26",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.730147,
+     "close_new": 0.720846
+    },
+    {
+     "date": "2018-11-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.0124,
+     "close_old": 0.758229,
+     "close_new": 0.748885
+    },
+    {
+     "date": "2018-11-30",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0123,
+     "close_old": 1.386569,
+     "close_new": 1.369666
+    },
+    {
+     "date": "2018-11-30",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0164,
+     "close_old": 11.943995,
+     "close_new": 12.141448
+    },
+    {
+     "date": "2018-11-30",
+     "symbol": "TSKB.IS",
+     "dev": -0.0128,
+     "close_old": 0.730147,
+     "close_new": 0.739547
+    },
+    {
+     "date": "2018-11-30",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0175,
+     "close_old": 1.42022,
+     "close_new": 1.445303
+    },
+    {
+     "date": "2018-12-03",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0167,
+     "close_old": 0.608038,
+     "close_new": 0.597965
+    },
+    {
+     "date": "2018-12-03",
+     "symbol": "TSKB.IS",
+     "dev": 0.0125,
+     "close_old": 0.748869,
+     "close_new": 0.739547
+    },
+    {
+     "date": "2018-12-04",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0166,
+     "close_old": 0.587938,
+     "close_new": 0.597762
+    },
+    {
+     "date": "2018-12-05",
+     "symbol": "TSKB.IS",
+     "dev": -0.0128,
+     "close_old": 0.730147,
+     "close_new": 0.739546
+    },
+    {
+     "date": "2018-12-06",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0168,
+     "close_old": 0.587938,
+     "close_new": 0.59787
+    },
+    {
+     "date": "2018-12-07",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.730147,
+     "close_new": 0.720845
+    },
+    {
+     "date": "2018-12-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.013,
+     "close_old": 0.720786,
+     "close_new": 0.711444
+    },
+    {
+     "date": "2018-12-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0137,
+     "close_old": 0.683343,
+     "close_new": 0.674021
+    },
+    {
+     "date": "2018-12-17",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0175,
+     "close_old": 0.562812,
+     "close_new": 0.572732
+    },
+    {
+     "date": "2018-12-18",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0174,
+     "close_old": 0.572862,
+     "close_new": 0.582898
+    },
+    {
+     "date": "2018-12-19",
+     "symbol": "TSKB.IS",
+     "dev": -0.0136,
+     "close_old": 0.683343,
+     "close_new": 0.692722
+    },
+    {
+     "date": "2018-12-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0132,
+     "close_old": 0.711425,
+     "close_new": 0.702104
+    },
+    {
+     "date": "2018-12-25",
+     "symbol": "FROTO.IS",
+     "dev": -0.0109,
+     "close_old": 3.156282,
+     "close_new": 3.19091
+    },
+    {
+     "date": "2018-12-25",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0188,
+     "close_old": 19.071461,
+     "close_new": 18.716365
+    },
+    {
+     "date": "2018-12-26",
+     "symbol": "FROTO.IS",
+     "dev": -0.0188,
+     "close_old": 3.162576,
+     "close_new": 3.222458
+    },
+    {
+     "date": "2018-12-31",
+     "symbol": "FROTO.IS",
+     "dev": 0.0295,
+     "close_old": 3.241247,
+     "close_new": 3.146883
+    },
+    {
+     "date": "2018-12-31",
+     "symbol": "SISE.IS",
+     "dev": 0.0121,
+     "close_old": 4.876133,
+     "close_new": 4.817472
+    },
+    {
+     "date": "2018-12-31",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0264,
+     "close_old": 15.557286,
+     "close_new": 15.973944
+    },
+    {
+     "date": "2018-12-31",
+     "symbol": "TSKB.IS",
+     "dev": -0.0249,
+     "close_old": 0.739508,
+     "close_new": 0.758185
+    },
+    {
+     "date": "2019-01-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0129,
+     "close_old": 0.730147,
+     "close_new": 0.720781
+    },
+    {
+     "date": "2019-01-04",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0186,
+     "close_old": 0.522611,
+     "close_new": 0.532419
+    },
+    {
+     "date": "2019-01-07",
+     "symbol": "TSKB.IS",
+     "dev": 0.0137,
+     "close_old": 0.692703,
+     "close_new": 0.683282
+    },
+    {
+     "date": "2019-01-08",
+     "symbol": "TSKB.IS",
+     "dev": -0.0136,
+     "close_old": 0.683343,
+     "close_new": 0.692681
+    },
+    {
+     "date": "2019-01-11",
+     "symbol": "TSKB.IS",
+     "dev": -0.0137,
+     "close_old": 0.673982,
+     "close_new": 0.683282
+    },
+    {
+     "date": "2019-01-14",
+     "symbol": "TSKB.IS",
+     "dev": 0.0138,
+     "close_old": 0.683343,
+     "close_new": 0.674007
+    },
+    {
+     "date": "2019-01-17",
+     "symbol": "TSKB.IS",
+     "dev": 0.0129,
+     "close_old": 0.730147,
+     "close_new": 0.720811
+    },
+    {
+     "date": "2019-01-18",
+     "symbol": "ODAS.IS",
+     "dev": 0.0111,
+     "close_old": 0.951728,
+     "close_new": 0.941269
+    },
+    {
+     "date": "2019-01-21",
+     "symbol": "ODAS.IS",
+     "dev": -0.0102,
+     "close_old": 1.014137,
+     "close_new": 1.024512
+    },
+    {
+     "date": "2019-01-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.739508,
+     "close_new": 0.730111
+    },
+    {
+     "date": "2019-01-22",
+     "symbol": "ODAS.IS",
+     "dev": -0.0103,
+     "close_old": 1.008936,
+     "close_new": 1.019372
+    },
+    {
+     "date": "2019-01-22",
+     "symbol": "TSKB.IS",
+     "dev": -0.0124,
+     "close_old": 0.748869,
+     "close_new": 0.758212
+    },
+    {
+     "date": "2019-01-23",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0153,
+     "close_old": 1.620722,
+     "close_new": 1.645773
+    },
+    {
+     "date": "2019-01-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.795708
+    },
+    {
+     "date": "2019-01-29",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0308,
+     "close_old": 3.142609,
+     "close_new": 3.240877
+    },
+    {
+     "date": "2019-01-29",
+     "symbol": "TSKB.IS",
+     "dev": -0.0117,
+     "close_old": 0.795673,
+     "close_new": 0.805012
+    },
+    {
+     "date": "2019-01-29",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0101,
+     "close_old": 1.645785,
+     "close_new": 1.662558
+    },
+    {
+     "date": "2019-02-07",
+     "symbol": "ODAS.IS",
+     "dev": -0.0102,
+     "close_old": 1.04014,
+     "close_new": 1.050807
+    },
+    {
+     "date": "2019-02-07",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2019-02-11",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2019-02-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0118,
+     "close_old": 0.795673,
+     "close_new": 0.786312
+    },
+    {
+     "date": "2019-02-13",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0137,
+     "close_old": 1.176483,
+     "close_new": 1.192765
+    },
+    {
+     "date": "2019-02-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.777012
+    },
+    {
+     "date": "2019-02-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0121,
+     "close_old": 0.776951,
+     "close_new": 0.767612
+    },
+    {
+     "date": "2019-02-21",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0101,
+     "close_old": 3.03277,
+     "close_new": 3.002274
+    },
+    {
+     "date": "2019-02-22",
+     "symbol": "ODAS.IS",
+     "dev": 0.0106,
+     "close_old": 0.982933,
+     "close_new": 0.972552
+    },
+    {
+     "date": "2019-02-27",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.795673,
+     "close_new": 0.78629
+    },
+    {
+     "date": "2019-02-28",
+     "symbol": "FROTO.IS",
+     "dev": 0.0135,
+     "close_old": 3.543344,
+     "close_new": 3.495929
+    },
+    {
+     "date": "2019-02-28",
+     "symbol": "TOASO.IS",
+     "dev": 0.0113,
+     "close_old": 11.198857,
+     "close_new": 11.073318
+    },
+    {
+     "date": "2019-02-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.795673,
+     "close_new": 0.786279
+    },
+    {
+     "date": "2019-03-05",
+     "symbol": "TSKB.IS",
+     "dev": -0.0113,
+     "close_old": 0.823755,
+     "close_new": 0.833095
+    },
+    {
+     "date": "2019-03-07",
+     "symbol": "PETKM.IS",
+     "dev": -0.0124,
+     "close_old": 3.125,
+     "close_new": 3.163913
+    },
+    {
+     "date": "2019-03-08",
+     "symbol": "ODAS.IS",
+     "dev": 0.0121,
+     "close_old": 0.858116,
+     "close_new": 0.847765
+    },
+    {
+     "date": "2019-03-08",
+     "symbol": "TSKB.IS",
+     "dev": 0.0114,
+     "close_old": 0.823755,
+     "close_new": 0.814395
+    },
+    {
+     "date": "2019-03-11",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0138,
+     "close_old": 6.03159,
+     "close_new": 5.949115
+    },
+    {
+     "date": "2019-03-11",
+     "symbol": "TOASO.IS",
+     "dev": 0.0199,
+     "close_old": 10.634735,
+     "close_new": 10.424956
+    },
+    {
+     "date": "2019-03-12",
+     "symbol": "ODAS.IS",
+     "dev": -0.0299,
+     "close_old": 0.842514,
+     "close_new": 0.86809
+    },
+    {
+     "date": "2019-03-12",
+     "symbol": "PETKM.IS",
+     "dev": 0.0202,
+     "close_old": 3.261718,
+     "close_new": 3.196486
+    },
+    {
+     "date": "2019-03-12",
+     "symbol": "TOASO.IS",
+     "dev": 0.0243,
+     "close_old": 10.885455,
+     "close_new": 10.623699
+    },
+    {
+     "date": "2019-03-13",
+     "symbol": "ARCLK.IS",
+     "dev": 0.0197,
+     "close_old": 17.281771,
+     "close_new": 16.9446
+    },
+    {
+     "date": "2019-03-13",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0163,
+     "close_old": 6.454019,
+     "close_new": 6.349498
+    },
+    {
+     "date": "2019-03-14",
+     "symbol": "ASELS.IS",
+     "dev": -0.0113,
+     "close_old": 5.495984,
+     "close_new": 5.558336
+    },
+    {
+     "date": "2019-03-14",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0122,
+     "close_old": 1.369763,
+     "close_new": 1.386519
+    },
+    {
+     "date": "2019-03-14",
+     "symbol": "MGROS.IS",
+     "dev": -0.0116,
+     "close_old": 14.215541,
+     "close_new": 14.381216
+    },
+    {
+     "date": "2019-03-14",
+     "symbol": "ODAS.IS",
+     "dev": -0.012,
+     "close_old": 0.863316,
+     "close_new": 0.873718
+    },
+    {
+     "date": "2019-03-14",
+     "symbol": "PGSUS.IS",
+     "dev": -0.013,
+     "close_old": 5.921107,
+     "close_new": 5.998832
+    },
+    {
+     "date": "2019-03-15",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0121,
+     "close_old": 3.051076,
+     "close_new": 3.014363
+    },
+    {
+     "date": "2019-03-15",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0107,
+     "close_old": 6.13389,
+     "close_new": 6.200017
+    },
+    {
+     "date": "2019-03-15",
+     "symbol": "TOASO.IS",
+     "dev": -0.026,
+     "close_old": 10.728757,
+     "close_new": 11.011526
+    },
+    {
+     "date": "2019-03-15",
+     "symbol": "TSKB.IS",
+     "dev": -0.0113,
+     "close_old": 0.814395,
+     "close_new": 0.82361
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "MGROS.IS",
+     "dev": -0.0103,
+     "close_old": 14.543737,
+     "close_new": 14.694688
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0149,
+     "close_old": 6.468889,
+     "close_new": 6.565966
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0159,
+     "close_old": 0.628138,
+     "close_new": 0.638182
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0131,
+     "close_old": 22.182411,
+     "close_new": 21.892719
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "TOASO.IS",
+     "dev": -0.0153,
+     "close_old": 11.073497,
+     "close_new": 11.243978
+    },
+    {
+     "date": "2019-03-18",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0171,
+     "close_old": 1.938183,
+     "close_new": 1.971582
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "EREGL.IS",
+     "dev": 0.024,
+     "close_old": 2.97121,
+     "close_new": 2.900672
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "HALKB.IS",
+     "dev": 0.0185,
+     "close_old": 7.63,
+     "close_new": 7.490432
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0137,
+     "close_old": 0.941626,
+     "close_new": 0.928825
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0125,
+     "close_old": 14.71122,
+     "close_new": 14.528704
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0783,
+     "close_old": 2.406816,
+     "close_new": 2.225619
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0118,
+     "close_old": 22.064058,
+     "close_new": 21.806223
+    },
+    {
+     "date": "2019-03-19",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0145,
+     "close_old": 5.57,
+     "close_new": 5.48978
+    },
+    {
+     "date": "2019-03-20",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0832,
+     "close_old": 2.382003,
+     "close_new": 2.191774
+    },
+    {
+     "date": "2019-03-20",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0163,
+     "close_old": 0.623113,
+     "close_new": 0.613064
+    },
+    {
+     "date": "2019-03-20",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0121,
+     "close_old": 20.598713,
+     "close_new": 20.350988
+    },
+    {
+     "date": "2019-03-20",
+     "symbol": "TSKB.IS",
+     "dev": -0.0112,
+     "close_old": 0.833116,
+     "close_new": 0.842522
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "AKBNK.IS",
+     "dev": -0.0178,
+     "close_old": 5.275331,
+     "close_new": 5.369868
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0142,
+     "close_old": 16.13142,
+     "close_new": 16.361432
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "ASELS.IS",
+     "dev": -0.0122,
+     "close_old": 5.457382,
+     "close_new": 5.52455
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0302,
+     "close_old": 1.361359,
+     "close_new": 1.403057
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "EREGL.IS",
+     "dev": -0.0188,
+     "close_old": 2.741002,
+     "close_new": 2.792963
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "GARAN.IS",
+     "dev": -0.0103,
+     "close_old": 7.611567,
+     "close_new": 7.690478
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0149,
+     "close_old": 2.200045,
+     "close_new": 2.233126
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "ODAS.IS",
+     "dev": -0.0188,
+     "close_old": 0.837313,
+     "close_new": 0.853228
+    },
+    {
+     "date": "2019-03-21",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0141,
+     "close_old": 11.937932,
+     "close_new": 12.107226
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0124,
+     "close_old": 5.018568,
+     "close_new": 4.956778
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0107,
+     "close_old": 15.621021,
+     "close_new": 15.78952
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "EKGYO.IS",
+     "dev": 0.013,
+     "close_old": 1.352956,
+     "close_new": 1.335464
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "HALKB.IS",
+     "dev": 0.0129,
+     "close_old": 7.09,
+     "close_new": 6.999234
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0117,
+     "close_old": 0.8652,
+     "close_new": 0.855133
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0199,
+     "close_old": 2.100794,
+     "close_new": 2.059426
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "MGROS.IS",
+     "dev": 0.0182,
+     "close_old": 13.634167,
+     "close_new": 13.388378
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "PETKM.IS",
+     "dev": 0.0109,
+     "close_old": 3.046875,
+     "close_new": 3.013835
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "SASA.IS",
+     "dev": 0.0114,
+     "close_old": 0.116493,
+     "close_new": 0.115177
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "SKBNK.IS",
+     "dev": 0.017,
+     "close_old": 0.592963,
+     "close_new": 0.582943
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "TKFEN.IS",
+     "dev": -0.017,
+     "close_old": 19.670841,
+     "close_new": 20.007924
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "TOASO.IS",
+     "dev": 0.0136,
+     "close_old": 10.350073,
+     "close_new": 10.210651
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "TSKB.IS",
+     "dev": 0.0126,
+     "close_old": 0.795673,
+     "close_new": 0.785746
+    },
+    {
+     "date": "2019-03-22",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0133,
+     "close_old": 5.21,
+     "close_new": 5.141064
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "ASELS.IS",
+     "dev": -0.0126,
+     "close_old": 5.336749,
+     "close_new": 5.404275
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0122,
+     "close_old": 1.310938,
+     "close_new": 1.327015
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "FROTO.IS",
+     "dev": 0.0132,
+     "close_old": 3.165722,
+     "close_new": 3.124188
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "GARAN.IS",
+     "dev": -0.0104,
+     "close_old": 6.821984,
+     "close_new": 6.893648
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0103,
+     "close_old": 0.840687,
+     "close_new": 0.832032
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0111,
+     "close_old": 19.686304,
+     "close_new": 19.468796
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0112,
+     "close_old": 0.758229,
+     "close_new": 0.766734
+    },
+    {
+     "date": "2019-03-25",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0122,
+     "close_old": 4.99,
+     "close_new": 4.929671
+    },
+    {
+     "date": "2019-03-26",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0197,
+     "close_old": 5.993017,
+     "close_new": 5.875859
+    },
+    {
+     "date": "2019-03-26",
+     "symbol": "SISE.IS",
+     "dev": 0.0126,
+     "close_old": 5.11358,
+     "close_new": 5.04949
+    },
+    {
+     "date": "2019-03-26",
+     "symbol": "TKFEN.IS",
+     "dev": 0.012,
+     "close_old": 19.005865,
+     "close_new": 18.778741
+    },
+    {
+     "date": "2019-03-26",
+     "symbol": "TOASO.IS",
+     "dev": 0.0165,
+     "close_old": 10.059565,
+     "close_new": 9.894799
+    },
+    {
+     "date": "2019-03-26",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0194,
+     "close_old": 1.737681,
+     "close_new": 1.704285
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0125,
+     "close_old": 1.260518,
+     "close_new": 1.27632
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "EREGL.IS",
+     "dev": -0.0344,
+     "close_old": 2.624364,
+     "close_new": 2.716295
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "FROTO.IS",
+     "dev": -0.0146,
+     "close_old": 2.834675,
+     "close_new": 2.876441
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0338,
+     "close_old": 0.751283,
+     "close_new": 0.77711
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "ODAS.IS",
+     "dev": -0.0211,
+     "close_old": 0.733299,
+     "close_new": 0.748924
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "PETKM.IS",
+     "dev": -0.0157,
+     "close_old": 2.851562,
+     "close_new": 2.896611
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0353,
+     "close_old": 5.164089,
+     "close_new": 5.34958
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "SISE.IS",
+     "dev": -0.0391,
+     "close_old": 4.681088,
+     "close_new": 4.867639
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0138,
+     "close_old": 21.260496,
+     "close_new": 21.556322
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "TCELL.IS",
+     "dev": -0.0556,
+     "close_old": 8.730986,
+     "close_new": 9.229909
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0115,
+     "close_old": 17.938816,
+     "close_new": 18.146099
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0331,
+     "close_old": 11.084649,
+     "close_new": 11.457729
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "VAKBN.IS",
+     "dev": -0.017,
+     "close_old": 4.32,
+     "close_new": 4.394137
+    },
+    {
+     "date": "2019-03-27",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0206,
+     "close_old": 1.604013,
+     "close_new": 1.637356
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0172,
+     "close_old": 15.077687,
+     "close_new": 14.820802
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0133,
+     "close_old": 1.268921,
+     "close_new": 1.301667
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0127,
+     "close_old": 2.880216,
+     "close_new": 2.843928
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "FROTO.IS",
+     "dev": 0.0177,
+     "close_old": 2.936632,
+     "close_new": 2.885237
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0147,
+     "close_old": 0.795985,
+     "close_new": 0.784335
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0106,
+     "close_old": 12.69296,
+     "close_new": 12.558763
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "KRDMD.IS",
+     "dev": 0.017,
+     "close_old": 1.927107,
+     "close_new": 1.894536
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0208,
+     "close_old": 5.710467,
+     "close_new": 5.592835
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "SISE.IS",
+     "dev": 0.0234,
+     "close_old": 4.884614,
+     "close_new": 4.771412
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0189,
+     "close_old": 0.537686,
+     "close_new": 0.52761
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "TAVHL.IS",
+     "dev": 0.019,
+     "close_old": 21.315624,
+     "close_new": 20.914164
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0111,
+     "close_old": 17.892424,
+     "close_new": 17.694211
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.027,
+     "close_old": 0.702064,
+     "close_new": 0.683343
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0235,
+     "close_old": 11.514284,
+     "close_new": 11.247123
+    },
+    {
+     "date": "2019-03-28",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0154,
+     "close_old": 4.47,
+     "close_new": 4.401848
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0121,
+     "close_old": 14.830643,
+     "close_new": 15.011734
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "ASELS.IS",
+     "dev": -0.0131,
+     "close_old": 5.052058,
+     "close_new": 5.118772
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0301,
+     "close_old": 2.880216,
+     "close_new": 2.794937
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "FROTO.IS",
+     "dev": -0.022,
+     "close_old": 2.999569,
+     "close_new": 3.066223
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "ODAS.IS",
+     "dev": -0.0272,
+     "close_old": 0.754102,
+     "close_new": 0.774926
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "SASA.IS",
+     "dev": -0.0102,
+     "close_old": 0.110075,
+     "close_new": 0.1112
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0103,
+     "close_old": 17.211987,
+     "close_new": 17.390082
+    },
+    {
+     "date": "2019-03-29",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0142,
+     "close_old": 1.75439,
+     "close_new": 1.779452
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "ASELS.IS",
+     "dev": -0.0104,
+     "close_old": 5.047232,
+     "close_new": 5.100223
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0151,
+     "close_old": 2.849705,
+     "close_new": 2.892925
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "GARAN.IS",
+     "dev": -0.0148,
+     "close_old": 6.324548,
+     "close_new": 6.419088
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "ISCTR.IS",
+     "dev": -0.032,
+     "close_old": 0.798869,
+     "close_new": 0.824817
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "KRDMD.IS",
+     "dev": -0.012,
+     "close_old": 2.05944,
+     "close_new": 2.084262
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "PETKM.IS",
+     "dev": -0.0152,
+     "close_old": 2.96875,
+     "close_new": 3.01433
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0116,
+     "close_old": 5.740209,
+     "close_new": 5.807046
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "SASA.IS",
+     "dev": -0.0131,
+     "close_old": 0.112866,
+     "close_new": 0.114352
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "TSKB.IS",
+     "dev": -0.0132,
+     "close_old": 0.711425,
+     "close_new": 0.720845
+    },
+    {
+     "date": "2019-04-01",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0112,
+     "close_old": 4.41,
+     "close_new": 4.459603
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0247,
+     "close_old": 4.792926,
+     "close_new": 4.676119
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0103,
+     "close_old": 15.223224,
+     "close_new": 15.067683
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "EREGL.IS",
+     "dev": 0.0244,
+     "close_old": 2.777835,
+     "close_new": 2.710873
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "FROTO.IS",
+     "dev": 0.0151,
+     "close_old": 3.207145,
+     "close_new": 3.159189
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "GARAN.IS",
+     "dev": 0.0236,
+     "close_old": 6.442985,
+     "close_new": 6.292947
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0125,
+     "close_old": 0.81473,
+     "close_new": 0.804606
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0157,
+     "close_old": 13.450994,
+     "close_new": 13.241526
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0244,
+     "close_old": 2.075982,
+     "close_new": 2.025984
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "PGSUS.IS",
+     "dev": 0.014,
+     "close_old": 5.880187,
+     "close_new": 5.798536
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "SASA.IS",
+     "dev": 0.0162,
+     "close_old": 0.115517,
+     "close_new": 0.113662
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "SISE.IS",
+     "dev": 0.019,
+     "close_old": 4.833733,
+     "close_new": 4.742768
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "SKBNK.IS",
+     "dev": 0.019,
+     "close_old": 0.537686,
+     "close_new": 0.527585
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "TAVHL.IS",
+     "dev": 0.012,
+     "close_old": 23.171551,
+     "close_new": 22.895549
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "TCELL.IS",
+     "dev": 0.0157,
+     "close_old": 9.312543,
+     "close_new": 9.167231
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0259,
+     "close_old": 0.730147,
+     "close_new": 0.711446
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0143,
+     "close_old": 12.138391,
+     "close_new": 11.966623
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0155,
+     "close_old": 4.4,
+     "close_new": 4.332135
+    },
+    {
+     "date": "2019-04-02",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0142,
+     "close_old": 1.779452,
+     "close_new": 1.754353
+    },
+    {
+     "date": "2019-04-03",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0127,
+     "close_old": 15.786318,
+     "close_new": 15.98886
+    },
+    {
+     "date": "2019-04-03",
+     "symbol": "SISE.IS",
+     "dev": 0.0103,
+     "close_old": 4.77437,
+     "close_new": 4.72526
+    },
+    {
+     "date": "2019-04-03",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0114,
+     "close_old": 11.948444,
+     "close_new": 11.813237
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "AKBNK.IS",
+     "dev": -0.0253,
+     "close_old": 4.878515,
+     "close_new": 5.003556
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0202,
+     "close_old": 16.078329,
+     "close_new": 16.406351
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "ASELS.IS",
+     "dev": -0.0112,
+     "close_old": 5.124438,
+     "close_new": 5.182067
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0265,
+     "close_old": 15.582218,
+     "close_new": 16.000923
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0133,
+     "close_old": 1.252114,
+     "close_new": 1.268914
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0105,
+     "close_old": 2.910728,
+     "close_new": 2.941506
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "EREGL.IS",
+     "dev": -0.0203,
+     "close_old": 2.851502,
+     "close_new": 2.910059
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "FROTO.IS",
+     "dev": -0.0224,
+     "close_old": 3.281421,
+     "close_new": 3.355736
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "GARAN.IS",
+     "dev": -0.0183,
+     "close_old": 6.798296,
+     "close_new": 6.92375
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "HALKB.IS",
+     "dev": -0.0379,
+     "close_old": 6.0,
+     "close_new": 6.231754
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0257,
+     "close_old": 0.839245,
+     "close_new": 0.861068
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0254,
+     "close_old": 13.653083,
+     "close_new": 14.003749
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0199,
+     "close_old": 2.051169,
+     "close_new": 2.092501
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "MGROS.IS",
+     "dev": -0.0109,
+     "close_old": 13.587281,
+     "close_new": 13.735648
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "ODAS.IS",
+     "dev": -0.019,
+     "close_old": 0.81651,
+     "close_new": 0.832152
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "PETKM.IS",
+     "dev": -0.0171,
+     "close_old": 3.020833,
+     "close_new": 3.07293
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0281,
+     "close_old": 6.085813,
+     "close_new": 6.259475
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "SASA.IS",
+     "dev": -0.0134,
+     "close_old": 0.11468,
+     "close_new": 0.116223
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "SISE.IS",
+     "dev": -0.0178,
+     "close_old": 4.782851,
+     "close_new": 4.868662
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0186,
+     "close_old": 0.542711,
+     "close_new": 0.552875
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "TAVHL.IS",
+     "dev": -0.032,
+     "close_old": 22.748915,
+     "close_new": 23.487504
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "TCELL.IS",
+     "dev": -0.0171,
+     "close_old": 9.733406,
+     "close_new": 9.901171
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0245,
+     "close_old": 18.453854,
+     "close_new": 18.910713
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "TSKB.IS",
+     "dev": -0.0257,
+     "close_old": 0.720786,
+     "close_new": 0.739526
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0226,
+     "close_old": 11.84895,
+     "close_new": 12.120265
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0223,
+     "close_old": 4.48,
+     "close_new": 4.58116
+    },
+    {
+     "date": "2019-04-04",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0226,
+     "close_old": 1.829578,
+     "close_new": 1.871333
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "ARCLK.IS",
+     "dev": 0.0116,
+     "close_old": 16.237608,
+     "close_new": 16.237608
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "ASELS.IS",
+     "dev": -0.011,
+     "close_old": 5.196816,
+     "close_new": 5.254328
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0117,
+     "close_old": 6.333265,
+     "close_new": 6.259475
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0125,
+     "close_old": 24.053577,
+     "close_new": 24.356093
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "TOASO.IS",
+     "dev": -0.0209,
+     "close_old": 10.811467,
+     "close_new": 11.039297
+    },
+    {
+     "date": "2019-04-05",
+     "symbol": "TSKB.IS",
+     "dev": 0.0128,
+     "close_old": 0.739508,
+     "close_new": 0.730126
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0113,
+     "close_old": 16.317249,
+     "close_new": 16.50315
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "GARAN.IS",
+     "dev": -0.0113,
+     "close_old": 6.948317,
+     "close_new": 7.027381
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0189,
+     "close_old": 0.833477,
+     "close_new": 0.849343
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0108,
+     "close_old": 6.294601,
+     "close_new": 6.363045
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "SASA.IS",
+     "dev": -0.0122,
+     "close_old": 0.113145,
+     "close_new": 0.11453
+    },
+    {
+     "date": "2019-04-09",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0183,
+     "close_old": 23.079676,
+     "close_new": 23.506008
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0131,
+     "close_old": 16.140272,
+     "close_new": 16.352666
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "HALKB.IS",
+     "dev": 0.0155,
+     "close_old": 6.49,
+     "close_new": 6.39029
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0118,
+     "close_old": 13.742003,
+     "close_new": 13.580973
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0125,
+     "close_old": 6.155408,
+     "close_new": 6.232559
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "SASA.IS",
+     "dev": 0.013,
+     "close_old": 0.116633,
+     "close_new": 0.115122
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "SISE.IS",
+     "dev": -0.0115,
+     "close_old": 5.062698,
+     "close_new": 5.121164
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "THYAO.IS",
+     "dev": 0.0163,
+     "close_old": 13.891294,
+     "close_new": 13.666109
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0141,
+     "close_old": 19.808113,
+     "close_new": 19.530712
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "TOASO.IS",
+     "dev": -0.0141,
+     "close_old": 10.868432,
+     "close_new": 11.022216
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "TSKB.IS",
+     "dev": -0.0129,
+     "close_old": 0.720786,
+     "close_new": 0.730126
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0159,
+     "close_old": 12.047938,
+     "close_new": 11.857725
+    },
+    {
+     "date": "2019-04-10",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0135,
+     "close_old": 4.46,
+     "close_new": 4.400209
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0208,
+     "close_old": 4.925199,
+     "close_new": 4.824037
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "ARCLK.IS",
+     "dev": 0.011,
+     "close_old": 16.202211,
+     "close_new": 16.024807
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0135,
+     "close_old": 1.252114,
+     "close_new": 1.235317
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "GARAN.IS",
+     "dev": 0.0102,
+     "close_old": 6.987797,
+     "close_new": 6.916705
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0193,
+     "close_old": 0.830593,
+     "close_new": 0.81468
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0119,
+     "close_old": 13.661166,
+     "close_new": 13.498892
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "ODAS.IS",
+     "dev": 0.0125,
+     "close_old": 0.832112,
+     "close_new": 0.82179
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0186,
+     "close_old": 6.248203,
+     "close_new": 6.132967
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "SISE.IS",
+     "dev": 0.0248,
+     "close_old": 5.215343,
+     "close_new": 5.087442
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0124,
+     "close_old": 22.436529,
+     "close_new": 22.160741
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "TCELL.IS",
+     "dev": 0.0136,
+     "close_old": 9.565061,
+     "close_new": 9.435668
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0332,
+     "close_old": 11.912265,
+     "close_new": 11.522787
+    },
+    {
+     "date": "2019-04-11",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0188,
+     "close_old": 1.796161,
+     "close_new": 1.762689
+    },
+    {
+     "date": "2019-04-12",
+     "symbol": "FROTO.IS",
+     "dev": -0.0186,
+     "close_old": 3.352382,
+     "close_new": 3.415447
+    },
+    {
+     "date": "2019-04-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0132,
+     "close_old": 0.711425,
+     "close_new": 0.702125
+    },
+    {
+     "date": "2019-04-12",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0143,
+     "close_old": 1.746035,
+     "close_new": 1.771131
+    },
+    {
+     "date": "2019-04-16",
+     "symbol": "SISE.IS",
+     "dev": 0.0101,
+     "close_old": 5.071179,
+     "close_new": 5.020297
+    },
+    {
+     "date": "2019-04-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.0131,
+     "close_old": 0.711425,
+     "close_new": 0.720826
+    },
+    {
+     "date": "2019-04-19",
+     "symbol": "ARCLK.IS",
+     "dev": -0.027,
+     "close_old": 16.653502,
+     "close_new": 17.109197
+    },
+    {
+     "date": "2019-04-19",
+     "symbol": "TSKB.IS",
+     "dev": -0.0131,
+     "close_old": 0.711425,
+     "close_new": 0.720826
+    },
+    {
+     "date": "2019-04-24",
+     "symbol": "TSKB.IS",
+     "dev": 0.0132,
+     "close_old": 0.711425,
+     "close_new": 0.702064
+    },
+    {
+     "date": "2019-04-25",
+     "symbol": "TSKB.IS",
+     "dev": -0.0134,
+     "close_old": 0.692703,
+     "close_new": 0.702064
+    },
+    {
+     "date": "2019-04-29",
+     "symbol": "TSKB.IS",
+     "dev": -0.0134,
+     "close_old": 0.692703,
+     "close_new": 0.702064
+    },
+    {
+     "date": "2019-05-07",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0103,
+     "close_old": 0.48241,
+     "close_new": 0.487393
+    },
+    {
+     "date": "2019-05-09",
+     "symbol": "TSKB.IS",
+     "dev": -0.014,
+     "close_old": 0.664621,
+     "close_new": 0.674003
+    },
+    {
+     "date": "2019-05-10",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0107,
+     "close_old": 0.467335,
+     "close_new": 0.462339
+    },
+    {
+     "date": "2019-05-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.014,
+     "close_old": 0.673982,
+     "close_new": 0.664599
+    },
+    {
+     "date": "2019-05-13",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0117,
+     "close_old": 0.437184,
+     "close_new": 0.4321
+    },
+    {
+     "date": "2019-05-13",
+     "symbol": "TSKB.IS",
+     "dev": -0.0148,
+     "close_old": 0.627177,
+     "close_new": 0.63654
+    },
+    {
+     "date": "2019-05-14",
+     "symbol": "TSKB.IS",
+     "dev": 0.0143,
+     "close_old": 0.65526,
+     "close_new": 0.64594
+    },
+    {
+     "date": "2019-05-16",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0107,
+     "close_old": 0.45226,
+     "close_new": 0.452289
+    },
+    {
+     "date": "2019-05-16",
+     "symbol": "TSKB.IS",
+     "dev": 0.029,
+     "close_old": 0.65526,
+     "close_new": 0.636517
+    },
+    {
+     "date": "2019-05-17",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0113,
+     "close_old": 0.447234,
+     "close_new": 0.442209
+    },
+    {
+     "date": "2019-05-20",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0107,
+     "close_old": 0.442209,
+     "close_new": 0.446958
+    },
+    {
+     "date": "2019-05-20",
+     "symbol": "TSKB.IS",
+     "dev": 0.0147,
+     "close_old": 0.645899,
+     "close_new": 0.636499
+    },
+    {
+     "date": "2019-05-21",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0116,
+     "close_old": 0.437184,
+     "close_new": 0.436883
+    },
+    {
+     "date": "2019-05-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0148,
+     "close_old": 0.636538,
+     "close_new": 0.627217
+    },
+    {
+     "date": "2019-05-24",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0111,
+     "close_old": 0.437184,
+     "close_new": 0.442049
+    },
+    {
+     "date": "2019-05-27",
+     "symbol": "SKBNK.IS",
+     "dev": -0.022,
+     "close_old": 0.45226,
+     "close_new": 0.462309
+    },
+    {
+     "date": "2019-05-27",
+     "symbol": "TSKB.IS",
+     "dev": -0.0148,
+     "close_old": 0.627177,
+     "close_new": 0.636517
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "HALKB.IS",
+     "dev": 0.0131,
+     "close_old": 5.39,
+     "close_new": 5.31987
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0101,
+     "close_old": 0.722442,
+     "close_new": 0.715213
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "MGROS.IS",
+     "dev": -0.0293,
+     "close_old": 11.046113,
+     "close_new": 11.374365
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "PETKM.IS",
+     "dev": 0.0108,
+     "close_old": 3.014322,
+     "close_new": 2.98185
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0108,
+     "close_old": 6.387593,
+     "close_new": 6.456707
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0125,
+     "close_old": 5.590905,
+     "close_new": 5.521342
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "SISE.IS",
+     "dev": 0.0171,
+     "close_old": 4.477563,
+     "close_new": 4.401447
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "TCELL.IS",
+     "dev": 0.0114,
+     "close_old": 8.70803,
+     "close_new": 8.60909
+    },
+    {
+     "date": "2019-05-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.0148,
+     "close_old": 0.636538,
+     "close_new": 0.627183
+    },
+    {
+     "date": "2019-05-29",
+     "symbol": "SKBNK.IS",
+     "dev": 0.011,
+     "close_old": 0.45226,
+     "close_new": 0.452087
+    },
+    {
+     "date": "2019-05-29",
+     "symbol": "TSKB.IS",
+     "dev": -0.015,
+     "close_old": 0.617817,
+     "close_new": 0.627183
+    },
+    {
+     "date": "2019-05-30",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0109,
+     "close_old": 0.462309,
+     "close_new": 0.462172
+    },
+    {
+     "date": "2019-05-30",
+     "symbol": "TSKB.IS",
+     "dev": -0.0146,
+     "close_old": 0.636538,
+     "close_new": 0.645883
+    },
+    {
+     "date": "2019-05-31",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0177,
+     "close_old": 0.96918,
+     "close_new": 0.986534
+    },
+    {
+     "date": "2019-05-31",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0108,
+     "close_old": 0.462309,
+     "close_new": 0.467317
+    },
+    {
+     "date": "2019-06-03",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0106,
+     "close_old": 0.457285,
+     "close_new": 0.457285
+    },
+    {
+     "date": "2019-06-07",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0108,
+     "close_old": 0.477385,
+     "close_new": 0.477445
+    },
+    {
+     "date": "2019-06-10",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0108,
+     "close_old": 0.477385,
+     "close_new": 0.477445
+    },
+    {
+     "date": "2019-06-11",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.47236,
+     "close_new": 0.467365
+    },
+    {
+     "date": "2019-06-12",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0107,
+     "close_old": 0.47236,
+     "close_new": 0.467335
+    },
+    {
+     "date": "2019-06-13",
+     "symbol": "SKBNK.IS",
+     "dev": 0.011,
+     "close_old": 0.457285,
+     "close_new": 0.452295
+    },
+    {
+     "date": "2019-06-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0144,
+     "close_old": 0.65526,
+     "close_new": 0.645883
+    },
+    {
+     "date": "2019-06-14",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0104,
+     "close_old": 13.386326,
+     "close_new": 13.248462
+    },
+    {
+     "date": "2019-06-14",
+     "symbol": "SKBNK.IS",
+     "dev": 0.011,
+     "close_old": 0.457285,
+     "close_new": 0.452301
+    },
+    {
+     "date": "2019-06-14",
+     "symbol": "TSKB.IS",
+     "dev": 0.0144,
+     "close_old": 0.65526,
+     "close_new": 0.645883
+    },
+    {
+     "date": "2019-06-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0141,
+     "close_old": 0.664621,
+     "close_new": 0.655321
+    },
+    {
+     "date": "2019-06-19",
+     "symbol": "TSKB.IS",
+     "dev": -0.0142,
+     "close_old": 0.65526,
+     "close_new": 0.664603
+    },
+    {
+     "date": "2019-06-20",
+     "symbol": "TSKB.IS",
+     "dev": -0.0137,
+     "close_old": 0.673982,
+     "close_new": 0.683303
+    },
+    {
+     "date": "2019-06-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0138,
+     "close_old": 0.683343,
+     "close_new": 0.674003
+    },
+    {
+     "date": "2019-06-24",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0105,
+     "close_old": 0.477385,
+     "close_new": 0.482404
+    },
+    {
+     "date": "2019-06-24",
+     "symbol": "TSKB.IS",
+     "dev": 0.0137,
+     "close_old": 0.692703,
+     "close_new": 0.683303
+    },
+    {
+     "date": "2019-06-26",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0174,
+     "close_old": 0.986487,
+     "close_new": 1.003794
+    },
+    {
+     "date": "2019-06-27",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0129,
+     "close_old": 3.440058,
+     "close_new": 3.396056
+    },
+    {
+     "date": "2019-06-28",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0103,
+     "close_old": 0.49246,
+     "close_new": 0.48743
+    },
+    {
+     "date": "2019-06-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.0267,
+     "close_old": 0.711425,
+     "close_new": 0.692703
+    },
+    {
+     "date": "2019-07-01",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0101,
+     "close_old": 0.502511,
+     "close_new": 0.497485
+    },
+    {
+     "date": "2019-07-01",
+     "symbol": "TSKB.IS",
+     "dev": -0.0128,
+     "close_old": 0.720786,
+     "close_new": 0.730104
+    },
+    {
+     "date": "2019-07-02",
+     "symbol": "SKBNK.IS",
+     "dev": 0.01,
+     "close_old": 0.507536,
+     "close_new": 0.502474
+    },
+    {
+     "date": "2019-07-04",
+     "symbol": "TSKB.IS",
+     "dev": -0.0127,
+     "close_old": 0.730147,
+     "close_new": 0.739491
+    },
+    {
+     "date": "2019-07-05",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0101,
+     "close_old": 0.502511,
+     "close_new": 0.497485
+    },
+    {
+     "date": "2019-07-09",
+     "symbol": "TSKB.IS",
+     "dev": 0.0129,
+     "close_old": 0.730147,
+     "close_new": 0.720808
+    },
+    {
+     "date": "2019-07-10",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0103,
+     "close_old": 0.487435,
+     "close_new": 0.492496
+    },
+    {
+     "date": "2019-07-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.0124,
+     "close_old": 0.758229,
+     "close_new": 0.748908
+    },
+    {
+     "date": "2019-07-11",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0103,
+     "close_old": 0.48241,
+     "close_new": 0.487399
+    },
+    {
+     "date": "2019-07-12",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.477385,
+     "close_new": 0.472331
+    },
+    {
+     "date": "2019-07-16",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0104,
+     "close_old": 0.48241,
+     "close_new": 0.477421
+    },
+    {
+     "date": "2019-07-16",
+     "symbol": "TSKB.IS",
+     "dev": 0.0126,
+     "close_old": 0.748869,
+     "close_new": 0.739508
+    },
+    {
+     "date": "2019-07-17",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0103,
+     "close_old": 0.48241,
+     "close_new": 0.487399
+    },
+    {
+     "date": "2019-07-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.0124,
+     "close_old": 0.748869,
+     "close_new": 0.758208
+    },
+    {
+     "date": "2019-07-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0121,
+     "close_old": 0.776951,
+     "close_new": 0.767608
+    },
+    {
+     "date": "2019-07-19",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0104,
+     "close_old": 0.487435,
+     "close_new": 0.492527
+    },
+    {
+     "date": "2019-07-22",
+     "symbol": "ODAS.IS",
+     "dev": 0.0141,
+     "close_old": 0.738499,
+     "close_new": 0.728179
+    },
+    {
+     "date": "2019-07-23",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0157,
+     "close_old": 1.098981,
+     "close_new": 1.116404
+    },
+    {
+     "date": "2019-07-23",
+     "symbol": "SKBNK.IS",
+     "dev": 0.01,
+     "close_old": 0.497485,
+     "close_new": 0.492527
+    },
+    {
+     "date": "2019-07-24",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0103,
+     "close_old": 0.49246,
+     "close_new": 0.487435
+    },
+    {
+     "date": "2019-07-30",
+     "symbol": "SKBNK.IS",
+     "dev": 0.01,
+     "close_old": 0.497485,
+     "close_new": 0.492527
+    },
+    {
+     "date": "2019-07-31",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0103,
+     "close_old": 0.49246,
+     "close_new": 0.48743
+    },
+    {
+     "date": "2019-07-31",
+     "symbol": "TSKB.IS",
+     "dev": 0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.777012
+    },
+    {
+     "date": "2019-08-05",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0104,
+     "close_old": 0.48241,
+     "close_new": 0.48743
+    },
+    {
+     "date": "2019-08-06",
+     "symbol": "TSKB.IS",
+     "dev": -0.0116,
+     "close_old": 0.795673,
+     "close_new": 0.80499
+    },
+    {
+     "date": "2019-08-07",
+     "symbol": "TSKB.IS",
+     "dev": 0.0117,
+     "close_old": 0.805034,
+     "close_new": 0.79569
+    },
+    {
+     "date": "2019-08-08",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.47236,
+     "close_new": 0.467371
+    },
+    {
+     "date": "2019-08-08",
+     "symbol": "TSKB.IS",
+     "dev": -0.0119,
+     "close_old": 0.786312,
+     "close_new": 0.79569
+    },
+    {
+     "date": "2019-08-09",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.477385,
+     "close_new": 0.47236
+    },
+    {
+     "date": "2019-08-21",
+     "symbol": "SKBNK.IS",
+     "dev": -0.011,
+     "close_old": 0.45226,
+     "close_new": 0.457265
+    },
+    {
+     "date": "2019-08-21",
+     "symbol": "TSKB.IS",
+     "dev": 0.0117,
+     "close_old": 0.805034,
+     "close_new": 0.79569
+    },
+    {
+     "date": "2019-08-22",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0222,
+     "close_old": 0.447234,
+     "close_new": 0.457265
+    },
+    {
+     "date": "2019-08-27",
+     "symbol": "ARCLK.IS",
+     "dev": 0.0139,
+     "close_old": 14.759853,
+     "close_new": 14.555533
+    },
+    {
+     "date": "2019-08-27",
+     "symbol": "SISE.IS",
+     "dev": 0.0117,
+     "close_old": 3.789623,
+     "close_new": 3.745487
+    },
+    {
+     "date": "2019-08-29",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0214,
+     "close_old": 0.457285,
+     "close_new": 0.467168
+    },
+    {
+     "date": "2019-09-02",
+     "symbol": "TSKB.IS",
+     "dev": 0.0116,
+     "close_old": 0.805034,
+     "close_new": 0.795712
+    },
+    {
+     "date": "2019-09-03",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0208,
+     "close_old": 0.477385,
+     "close_new": 0.487419
+    },
+    {
+     "date": "2019-09-03",
+     "symbol": "TSKB.IS",
+     "dev": 0.0116,
+     "close_old": 0.814395,
+     "close_new": 0.805012
+    },
+    {
+     "date": "2019-09-04",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0101,
+     "close_old": 0.48241,
+     "close_new": 0.487303
+    },
+    {
+     "date": "2019-09-06",
+     "symbol": "ODAS.IS",
+     "dev": 0.0118,
+     "close_old": 0.88932,
+     "close_new": 0.878923
+    },
+    {
+     "date": "2019-09-06",
+     "symbol": "TSKB.IS",
+     "dev": 0.0116,
+     "close_old": 0.814395,
+     "close_new": 0.805016
+    },
+    {
+     "date": "2019-09-09",
+     "symbol": "SKBNK.IS",
+     "dev": -0.01,
+     "close_old": 0.497485,
+     "close_new": 0.502496
+    },
+    {
+     "date": "2019-09-11",
+     "symbol": "SKBNK.IS",
+     "dev": -0.01,
+     "close_old": 0.497485,
+     "close_new": 0.502496
+    },
+    {
+     "date": "2019-09-11",
+     "symbol": "TSKB.IS",
+     "dev": 0.0108,
+     "close_old": 0.87056,
+     "close_new": 0.861199
+    },
+    {
+     "date": "2019-09-16",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0153,
+     "close_old": 1.124941,
+     "close_new": 1.142248
+    },
+    {
+     "date": "2019-09-17",
+     "symbol": "TSKB.IS",
+     "dev": 0.011,
+     "close_old": 0.861199,
+     "close_new": 0.851799
+    },
+    {
+     "date": "2019-09-18",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0148,
+     "close_old": 1.133595,
+     "close_new": 1.150552
+    },
+    {
+     "date": "2019-09-18",
+     "symbol": "TSKB.IS",
+     "dev": -0.0108,
+     "close_old": 0.861199,
+     "close_new": 0.861199
+    },
+    {
+     "date": "2019-09-19",
+     "symbol": "ODAS.IS",
+     "dev": 0.0113,
+     "close_old": 0.925725,
+     "close_new": 0.915323
+    },
+    {
+     "date": "2019-09-19",
+     "symbol": "TSKB.IS",
+     "dev": 0.011,
+     "close_old": 0.861199,
+     "close_new": 0.851799
+    },
+    {
+     "date": "2019-09-20",
+     "symbol": "TSKB.IS",
+     "dev": 0.0109,
+     "close_old": 0.861199,
+     "close_new": 0.851838
+    },
+    {
+     "date": "2019-09-23",
+     "symbol": "ODAS.IS",
+     "dev": -0.0121,
+     "close_old": 0.842514,
+     "close_new": 0.852793
+    },
+    {
+     "date": "2019-09-23",
+     "symbol": "TSKB.IS",
+     "dev": 0.0109,
+     "close_old": 0.861199,
+     "close_new": 0.851838
+    },
+    {
+     "date": "2019-09-23",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0126,
+     "close_old": 1.929828,
+     "close_new": 1.954214
+    },
+    {
+     "date": "2019-09-24",
+     "symbol": "TSKB.IS",
+     "dev": 0.0108,
+     "close_old": 0.87056,
+     "close_new": 0.861238
+    },
+    {
+     "date": "2019-09-27",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0269,
+     "close_old": 0.567837,
+     "close_new": 0.552779
+    },
+    {
+     "date": "2019-09-27",
+     "symbol": "TSKB.IS",
+     "dev": 0.0104,
+     "close_old": 0.898642,
+     "close_new": 0.88934
+    },
+    {
+     "date": "2019-10-03",
+     "symbol": "TSKB.IS",
+     "dev": -0.011,
+     "close_old": 0.842477,
+     "close_new": 0.851799
+    },
+    {
+     "date": "2019-10-04",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0152,
+     "close_old": 1.133595,
+     "close_new": 1.150927
+    },
+    {
+     "date": "2019-10-04",
+     "symbol": "TSKB.IS",
+     "dev": 0.011,
+     "close_old": 0.861199,
+     "close_new": 0.851817
+    },
+    {
+     "date": "2019-10-08",
+     "symbol": "TSKB.IS",
+     "dev": 0.0112,
+     "close_old": 0.842477,
+     "close_new": 0.833116
+    },
+    {
+     "date": "2019-10-10",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0138,
+     "close_old": 3.679038,
+     "close_new": 3.62872
+    },
+    {
+     "date": "2019-10-11",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0104,
+     "close_old": 0.487435,
+     "close_new": 0.492527
+    },
+    {
+     "date": "2019-10-14",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0107,
+     "close_old": 0.467335,
+     "close_new": 0.462352
+    },
+    {
+     "date": "2019-10-15",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.477385,
+     "close_new": 0.472365
+    },
+    {
+     "date": "2019-10-16",
+     "symbol": "AKBNK.IS",
+     "dev": -0.015,
+     "close_old": 5.189744,
+     "close_new": 5.26824
+    },
+    {
+     "date": "2019-10-16",
+     "symbol": "FROTO.IS",
+     "dev": -0.0126,
+     "close_old": 3.942613,
+     "close_new": 3.992441
+    },
+    {
+     "date": "2019-10-16",
+     "symbol": "GARAN.IS",
+     "dev": -0.0129,
+     "close_old": 6.711442,
+     "close_new": 6.798897
+    },
+    {
+     "date": "2019-10-17",
+     "symbol": "TSKB.IS",
+     "dev": -0.012,
+     "close_old": 0.776951,
+     "close_new": 0.786312
+    },
+    {
+     "date": "2019-10-18",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0103,
+     "close_old": 0.487435,
+     "close_new": 0.482422
+    },
+    {
+     "date": "2019-10-18",
+     "symbol": "TOASO.IS",
+     "dev": -0.0121,
+     "close_old": 12.144389,
+     "close_new": 12.29262
+    },
+    {
+     "date": "2019-10-18",
+     "symbol": "TSKB.IS",
+     "dev": 0.0114,
+     "close_old": 0.823755,
+     "close_new": 0.814412
+    },
+    {
+     "date": "2019-10-21",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0117,
+     "close_old": 0.856548,
+     "close_new": 0.866642
+    },
+    {
+     "date": "2019-10-21",
+     "symbol": "TSKB.IS",
+     "dev": -0.0116,
+     "close_old": 0.805034,
+     "close_new": 0.814412
+    },
+    {
+     "date": "2019-10-24",
+     "symbol": "TSKB.IS",
+     "dev": 0.0112,
+     "close_old": 0.842477,
+     "close_new": 0.833116
+    },
+    {
+     "date": "2019-10-30",
+     "symbol": "FROTO.IS",
+     "dev": 0.0218,
+     "close_old": 4.297415,
+     "close_new": 4.204953
+    },
+    {
+     "date": "2019-11-01",
+     "symbol": "TSKB.IS",
+     "dev": 0.0111,
+     "close_old": 0.842477,
+     "close_new": 0.833137
+    },
+    {
+     "date": "2019-11-06",
+     "symbol": "TSKB.IS",
+     "dev": 0.0109,
+     "close_old": 0.861199,
+     "close_new": 0.851838
+    },
+    {
+     "date": "2019-11-08",
+     "symbol": "TSKB.IS",
+     "dev": 0.0106,
+     "close_old": 0.879921,
+     "close_new": 0.870639
+    },
+    {
+     "date": "2019-11-11",
+     "symbol": "TSKB.IS",
+     "dev": 0.0106,
+     "close_old": 0.879921,
+     "close_new": 0.870639
+    },
+    {
+     "date": "2019-11-12",
+     "symbol": "TSKB.IS",
+     "dev": -0.0206,
+     "close_old": 0.87056,
+     "close_new": 0.888656
+    },
+    {
+     "date": "2019-11-14",
+     "symbol": "TSKB.IS",
+     "dev": 0.0108,
+     "close_old": 0.87056,
+     "close_new": 0.861243
+    },
+    {
+     "date": "2019-11-14",
+     "symbol": "YKBNK.IS",
+     "dev": -0.012,
+     "close_old": 2.071851,
+     "close_new": 2.096913
+    },
+    {
+     "date": "2019-11-15",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0191,
+     "close_old": 0.512561,
+     "close_new": 0.522466
+    },
+    {
+     "date": "2019-11-15",
+     "symbol": "TSKB.IS",
+     "dev": 0.0106,
+     "close_old": 0.879921,
+     "close_new": 0.870643
+    },
+    {
+     "date": "2019-12-10",
+     "symbol": "TSKB.IS",
+     "dev": -0.0174,
+     "close_old": 1.057777,
+     "close_new": 1.076378
+    },
+    {
+     "date": "2019-12-12",
+     "symbol": "TSKB.IS",
+     "dev": -0.0259,
+     "close_old": 1.076499,
+     "close_new": 1.104722
+    },
+    {
+     "date": "2019-12-16",
+     "symbol": "TSKB.IS",
+     "dev": -0.0176,
+     "close_old": 1.067138,
+     "close_new": 1.086128
+    },
+    {
+     "date": "2019-12-17",
+     "symbol": "MGROS.IS",
+     "dev": -0.0115,
+     "close_old": 22.617338,
+     "close_new": 22.880078
+    },
+    {
+     "date": "2019-12-25",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0139,
+     "close_old": 1.254742,
+     "close_new": 1.237435
+    },
+    {
+     "date": "2019-12-26",
+     "symbol": "FROTO.IS",
+     "dev": 0.0152,
+     "close_old": 4.69124,
+     "close_new": 4.620566
+    },
+    {
+     "date": "2019-12-27",
+     "symbol": "TSKB.IS",
+     "dev": -0.0172,
+     "close_old": 1.085859,
+     "close_new": 1.104722
+    },
+    {
+     "date": "2019-12-31",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0131,
+     "close_old": 1.272049,
+     "close_new": 1.255437
+    },
+    {
+     "date": "2019-12-31",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0154,
+     "close_old": 0.653264,
+     "close_new": 0.663433
+    },
+    {
+     "date": "2020-01-06",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0135,
+     "close_old": 1.220129,
+     "close_new": 1.203765
+    },
+    {
+     "date": "2020-01-07",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0134,
+     "close_old": 1.228782,
+     "close_new": 1.21241
+    },
+    {
+     "date": "2020-01-10",
+     "symbol": "ODAS.IS",
+     "dev": 0.0123,
+     "close_old": 1.279373,
+     "close_new": 1.263778
+    },
+    {
+     "date": "2020-01-13",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0141,
+     "close_old": 0.713565,
+     "close_new": 0.723716
+    },
+    {
+     "date": "2020-01-13",
+     "symbol": "TSKB.IS",
+     "dev": -0.0161,
+     "close_old": 1.160746,
+     "close_new": 1.179583
+    },
+    {
+     "date": "2020-01-14",
+     "symbol": "TSKB.IS",
+     "dev": -0.016,
+     "close_old": 1.160746,
+     "close_new": 1.179468
+    },
+    {
+     "date": "2020-01-15",
+     "symbol": "TSKB.IS",
+     "dev": -0.016,
+     "close_old": 1.160746,
+     "close_new": 1.179468
+    },
+    {
+     "date": "2020-01-21",
+     "symbol": "ODAS.IS",
+     "dev": -0.0102,
+     "close_old": 1.446725,
+     "close_new": 1.461591
+    },
+    {
+     "date": "2020-01-30",
+     "symbol": "TSKB.IS",
+     "dev": -0.0146,
+     "close_old": 1.282438,
+     "close_new": 1.301267
+    },
+    {
+     "date": "2020-02-06",
+     "symbol": "YKBNK.IS",
+     "dev": -0.016,
+     "close_old": 2.589813,
+     "close_new": 2.631635
+    },
+    {
+     "date": "2020-02-27",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0178,
+     "close_old": 12.081595,
+     "close_new": 11.868097
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ARCLK.IS",
+     "dev": -0.03,
+     "close_old": 15.963295,
+     "close_new": 16.45027
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0236,
+     "close_old": 18.888477,
+     "close_new": 19.339982
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "FROTO.IS",
+     "dev": -0.0293,
+     "close_old": 5.102101,
+     "close_new": 5.253727
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0121,
+     "close_old": 0.833477,
+     "close_new": 0.82344
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0156,
+     "close_old": 14.162346,
+     "close_new": 13.943599
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "MGROS.IS",
+     "dev": 0.029,
+     "close_old": 21.023245,
+     "close_new": 20.42274
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0222,
+     "close_old": 11.324577,
+     "close_new": 11.07602
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0142,
+     "close_old": 6.487924,
+     "close_new": 6.580727
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0179,
+     "close_old": 0.567837,
+     "close_new": 0.557748
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TCELL.IS",
+     "dev": -0.0182,
+     "close_old": 10.892875,
+     "close_new": 11.092713
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0187,
+     "close_old": 12.343361,
+     "close_new": 12.114872
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TOASO.IS",
+     "dev": -0.0205,
+     "close_old": 14.821625,
+     "close_new": 15.129252
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "TSKB.IS",
+     "dev": 0.018,
+     "close_old": 1.048416,
+     "close_new": 1.029678
+    },
+    {
+     "date": "2020-02-28",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0187,
+     "close_old": 5.4,
+     "close_new": 5.3
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "AKBNK.IS",
+     "dev": -0.0126,
+     "close_old": 5.563218,
+     "close_new": 5.633644
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0117,
+     "close_old": 16.547316,
+     "close_new": 16.742032
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "EREGL.IS",
+     "dev": -0.0118,
+     "close_old": 3.06111,
+     "close_new": 3.097364
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "GARAN.IS",
+     "dev": -0.0207,
+     "close_old": 7.895814,
+     "close_new": 8.06089
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0164,
+     "close_old": 0.872411,
+     "close_new": 0.886847
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0194,
+     "close_old": 14.493771,
+     "close_new": 14.777716
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0108,
+     "close_old": 2.557508,
+     "close_new": 2.585293
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "MGROS.IS",
+     "dev": -0.0119,
+     "close_old": 21.660885,
+     "close_new": 21.9202
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "PGSUS.IS",
+     "dev": -0.016,
+     "close_old": 11.314347,
+     "close_new": 11.496468
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "TCELL.IS",
+     "dev": -0.0113,
+     "close_old": 11.325386,
+     "close_new": 11.453546
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "THYAO.IS",
+     "dev": -0.0123,
+     "close_old": 11.80076,
+     "close_new": 11.94656
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "TSKB.IS",
+     "dev": -0.0169,
+     "close_old": 1.09522,
+     "close_new": 1.113876
+    },
+    {
+     "date": "2020-03-03",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0188,
+     "close_old": 5.79,
+     "close_new": 5.9
+    },
+    {
+     "date": "2020-03-04",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0172,
+     "close_old": 0.592963,
+     "close_new": 0.582877
+    },
+    {
+     "date": "2020-03-05",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0188,
+     "close_old": 20.649195,
+     "close_new": 21.040768
+    },
+    {
+     "date": "2020-03-05",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0135,
+     "close_old": 1.289356,
+     "close_new": 1.272052
+    },
+    {
+     "date": "2020-03-05",
+     "symbol": "TOASO.IS",
+     "dev": 0.0139,
+     "close_old": 15.539351,
+     "close_new": 15.324614
+    },
+    {
+     "date": "2020-03-06",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0165,
+     "close_old": 4.304025,
+     "close_new": 4.375415
+    },
+    {
+     "date": "2020-03-09",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0146,
+     "close_old": 1.185515,
+     "close_new": 1.168283
+    },
+    {
+     "date": "2020-03-09",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0301,
+     "close_old": 4.014083,
+     "close_new": 4.136637
+    },
+    {
+     "date": "2020-03-09",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0105,
+     "close_old": 13.968342,
+     "close_new": 13.8224
+    },
+    {
+     "date": "2020-03-10",
+     "symbol": "FROTO.IS",
+     "dev": 0.0112,
+     "close_old": 4.825949,
+     "close_new": 4.77217
+    },
+    {
+     "date": "2020-03-10",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0126,
+     "close_old": 13.628834,
+     "close_new": 13.458402
+    },
+    {
+     "date": "2020-03-10",
+     "symbol": "MGROS.IS",
+     "dev": 0.0166,
+     "close_old": 19.410402,
+     "close_new": 19.091531
+    },
+    {
+     "date": "2020-03-10",
+     "symbol": "SAHOL.IS",
+     "dev": 0.011,
+     "close_old": 7.06016,
+     "close_new": 6.982801
+    },
+    {
+     "date": "2020-03-12",
+     "symbol": "MGROS.IS",
+     "dev": -0.013,
+     "close_old": 17.910082,
+     "close_new": 18.144515
+    },
+    {
+     "date": "2020-03-12",
+     "symbol": "TOASO.IS",
+     "dev": -0.0278,
+     "close_old": 12.395024,
+     "close_new": 12.744992
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "ARCLK.IS",
+     "dev": 0.0285,
+     "close_old": 13.892666,
+     "close_new": 13.502027
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0135,
+     "close_old": 3.853004,
+     "close_new": 3.801508
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "EREGL.IS",
+     "dev": 0.0114,
+     "close_old": 2.944911,
+     "close_new": 2.911605
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0262,
+     "close_old": 0.774354,
+     "close_new": 0.79494
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0272,
+     "close_old": 12.448637,
+     "close_new": 12.792513
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "MGROS.IS",
+     "dev": -0.0156,
+     "close_old": 18.425817,
+     "close_new": 18.715875
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "TCELL.IS",
+     "dev": 0.0109,
+     "close_old": 10.332211,
+     "close_new": 10.220218
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "TOASO.IS",
+     "dev": 0.0199,
+     "close_old": 12.417809,
+     "close_new": 12.173632
+    },
+    {
+     "date": "2020-03-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0105,
+     "close_old": 0.898642,
+     "close_new": 0.889281
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0155,
+     "close_old": 4.738462,
+     "close_new": 4.665487
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0106,
+     "close_old": 18.791777,
+     "close_new": 18.991748
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0106,
+     "close_old": 3.653266,
+     "close_new": 3.614633
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "TCELL.IS",
+     "dev": 0.014,
+     "close_old": 9.803587,
+     "close_new": 9.667184
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0115,
+     "close_old": 9.863266,
+     "close_new": 9.977414
+    },
+    {
+     "date": "2020-03-16",
+     "symbol": "TOASO.IS",
+     "dev": -0.022,
+     "close_old": 11.02223,
+     "close_new": 11.267661
+    },
+    {
+     "date": "2020-03-17",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0116,
+     "close_old": 12.450307,
+     "close_new": 12.594953
+    },
+    {
+     "date": "2020-03-17",
+     "symbol": "GARAN.IS",
+     "dev": -0.012,
+     "close_old": 6.54563,
+     "close_new": 6.624631
+    },
+    {
+     "date": "2020-03-17",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0138,
+     "close_old": 0.741188,
+     "close_new": 0.751463
+    },
+    {
+     "date": "2020-03-17",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0125,
+     "close_old": 10.945101,
+     "close_new": 11.083104
+    },
+    {
+     "date": "2020-03-18",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0124,
+     "close_old": 11.122938,
+     "close_new": 10.985745
+    },
+    {
+     "date": "2020-03-18",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0154,
+     "close_old": 5.799694,
+     "close_new": 5.71086
+    },
+    {
+     "date": "2020-03-18",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0108,
+     "close_old": 14.663678,
+     "close_new": 14.50656
+    },
+    {
+     "date": "2020-03-18",
+     "symbol": "TSKB.IS",
+     "dev": -0.011,
+     "close_old": 0.842477,
+     "close_new": 0.851787
+    },
+    {
+     "date": "2020-03-19",
+     "symbol": "EREGL.IS",
+     "dev": -0.0117,
+     "close_old": 2.766982,
+     "close_new": 2.799645
+    },
+    {
+     "date": "2020-03-19",
+     "symbol": "FROTO.IS",
+     "dev": -0.0148,
+     "close_old": 2.936655,
+     "close_new": 2.980499
+    },
+    {
+     "date": "2020-03-19",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0121,
+     "close_old": 0.422109,
+     "close_new": 0.417044
+    },
+    {
+     "date": "2020-03-19",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0114,
+     "close_old": 13.800028,
+     "close_new": 13.643796
+    },
+    {
+     "date": "2020-03-19",
+     "symbol": "TOASO.IS",
+     "dev": -0.0234,
+     "close_old": 9.541206,
+     "close_new": 9.767231
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "EREGL.IS",
+     "dev": -0.0258,
+     "close_old": 2.788769,
+     "close_new": 2.861595
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0205,
+     "close_old": 0.69937,
+     "close_new": 0.713823
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0253,
+     "close_old": 11.042103,
+     "close_new": 10.765992
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0172,
+     "close_old": 5.938886,
+     "close_new": 5.837673
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0121,
+     "close_old": 0.422109,
+     "close_new": 0.417025
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "TAVHL.IS",
+     "dev": -0.0146,
+     "close_old": 13.744902,
+     "close_new": 13.946996
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "TCELL.IS",
+     "dev": -0.0233,
+     "close_old": 10.147994,
+     "close_new": 10.387414
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "TOASO.IS",
+     "dev": -0.0125,
+     "close_old": 9.786145,
+     "close_new": 9.908754
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "TSKB.IS",
+     "dev": -0.0108,
+     "close_old": 0.861199,
+     "close_new": 0.870582
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0193,
+     "close_old": 4.7,
+     "close_new": 4.61
+    },
+    {
+     "date": "2020-03-20",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 1.587305,
+     "close_new": 1.570642
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0115,
+     "close_old": 21.193127,
+     "close_new": 20.951379
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "FROTO.IS",
+     "dev": -0.0311,
+     "close_old": 3.213497,
+     "close_new": 3.315155
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0111,
+     "close_old": 10.500506,
+     "close_new": 10.384423
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "PETKM.IS",
+     "dev": -0.0203,
+     "close_old": 2.441666,
+     "close_new": 2.4917
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0124,
+     "close_old": 5.660501,
+     "close_new": 5.590493
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0119,
+     "close_old": 13.221199,
+     "close_new": 13.064996
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "TCELL.IS",
+     "dev": 0.0101,
+     "close_old": 10.876856,
+     "close_new": 10.767471
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "TOASO.IS",
+     "dev": 0.0123,
+     "close_old": 9.432978,
+     "close_new": 9.317794
+    },
+    {
+     "date": "2020-03-23",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0107,
+     "close_old": 1.470345,
+     "close_new": 1.486203
+    },
+    {
+     "date": "2020-03-25",
+     "symbol": "TUPRS.IS",
+     "dev": -0.0114,
+     "close_old": 6.806363,
+     "close_new": 6.88462
+    },
+    {
+     "date": "2020-03-26",
+     "symbol": "TCELL.IS",
+     "dev": -0.0135,
+     "close_old": 10.708656,
+     "close_new": 10.854302
+    },
+    {
+     "date": "2020-03-27",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0118,
+     "close_old": 0.422109,
+     "close_new": 0.42714
+    },
+    {
+     "date": "2020-03-27",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0186,
+     "close_old": 16.56111,
+     "close_new": 16.255184
+    },
+    {
+     "date": "2020-03-27",
+     "symbol": "TSKB.IS",
+     "dev": 0.011,
+     "close_old": 0.861199,
+     "close_new": 0.851799
+    },
+    {
+     "date": "2020-03-30",
+     "symbol": "FROTO.IS",
+     "dev": 0.0138,
+     "close_old": 3.43004,
+     "close_new": 3.383054
+    },
+    {
+     "date": "2020-03-30",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 1.578951,
+     "close_new": 1.562242
+    },
+    {
+     "date": "2020-03-31",
+     "symbol": "ENKAI.IS",
+     "dev": -0.031,
+     "close_old": 3.891662,
+     "close_new": 4.014303
+    },
+    {
+     "date": "2020-03-31",
+     "symbol": "FROTO.IS",
+     "dev": -0.0264,
+     "close_old": 3.454581,
+     "close_new": 3.546899
+    },
+    {
+     "date": "2020-03-31",
+     "symbol": "SKBNK.IS",
+     "dev": 0.011,
+     "close_old": 0.457285,
+     "close_new": 0.452295
+    },
+    {
+     "date": "2020-03-31",
+     "symbol": "TSKB.IS",
+     "dev": -0.0107,
+     "close_old": 0.87056,
+     "close_new": 0.879899
+    },
+    {
+     "date": "2020-03-31",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0152,
+     "close_old": 4.58,
+     "close_new": 4.650288
+    },
+    {
+     "date": "2020-04-01",
+     "symbol": "FROTO.IS",
+     "dev": -0.0109,
+     "close_old": 3.630703,
+     "close_new": 3.670674
+    },
+    {
+     "date": "2020-04-01",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0109,
+     "close_old": 0.457285,
+     "close_new": 0.452321
+    },
+    {
+     "date": "2020-04-02",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0108,
+     "close_old": 20.326864,
+     "close_new": 20.548442
+    },
+    {
+     "date": "2020-04-02",
+     "symbol": "EREGL.IS",
+     "dev": -0.0118,
+     "close_old": 2.748826,
+     "close_new": 2.781323
+    },
+    {
+     "date": "2020-04-02",
+     "symbol": "FROTO.IS",
+     "dev": -0.0265,
+     "close_old": 3.749803,
+     "close_new": 3.850603
+    },
+    {
+     "date": "2020-04-02",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0123,
+     "close_old": 5.904126,
+     "close_new": 5.977183
+    },
+    {
+     "date": "2020-04-02",
+     "symbol": "SKBNK.IS",
+     "dev": 0.011,
+     "close_old": 0.45226,
+     "close_new": 0.447332
+    },
+    {
+     "date": "2020-04-03",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0106,
+     "close_old": 0.442209,
+     "close_new": 0.446924
+    },
+    {
+     "date": "2020-04-03",
+     "symbol": "TSKB.IS",
+     "dev": 0.011,
+     "close_old": 0.861199,
+     "close_new": 0.851799
+    },
+    {
+     "date": "2020-04-06",
+     "symbol": "FROTO.IS",
+     "dev": -0.0131,
+     "close_old": 4.117925,
+     "close_new": 4.172151
+    },
+    {
+     "date": "2020-04-06",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0106,
+     "close_old": 0.457285,
+     "close_new": 0.462155
+    },
+    {
+     "date": "2020-04-06",
+     "symbol": "TSKB.IS",
+     "dev": 0.0107,
+     "close_old": 0.879921,
+     "close_new": 0.870599
+    },
+    {
+     "date": "2020-04-07",
+     "symbol": "KCHOL.IS",
+     "dev": 0.015,
+     "close_old": 12.026551,
+     "close_new": 11.847679
+    },
+    {
+     "date": "2020-04-07",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0157,
+     "close_old": 6.235727,
+     "close_new": 6.138772
+    },
+    {
+     "date": "2020-04-07",
+     "symbol": "TAVHL.IS",
+     "dev": 0.014,
+     "close_old": 16.995369,
+     "close_new": 16.758501
+    },
+    {
+     "date": "2020-04-08",
+     "symbol": "ENKAI.IS",
+     "dev": 0.013,
+     "close_old": 3.994753,
+     "close_new": 3.943239
+    },
+    {
+     "date": "2020-04-08",
+     "symbol": "FROTO.IS",
+     "dev": 0.0121,
+     "close_old": 4.258678,
+     "close_new": 4.207588
+    },
+    {
+     "date": "2020-04-09",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0213,
+     "close_old": 0.47236,
+     "close_new": 0.48253
+    },
+    {
+     "date": "2020-04-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.0103,
+     "close_old": 0.917364,
+     "close_new": 0.908007
+    },
+    {
+     "date": "2020-04-13",
+     "symbol": "TSKB.IS",
+     "dev": 0.0103,
+     "close_old": 0.917364,
+     "close_new": 0.908007
+    },
+    {
+     "date": "2020-04-15",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0148,
+     "close_old": 4.05592,
+     "close_new": 3.996388
+    },
+    {
+     "date": "2020-04-15",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0211,
+     "close_old": 12.59299,
+     "close_new": 12.330342
+    },
+    {
+     "date": "2020-04-15",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0146,
+     "close_old": 6.179112,
+     "close_new": 6.089656
+    },
+    {
+     "date": "2020-04-15",
+     "symbol": "SISE.IS",
+     "dev": -0.0108,
+     "close_old": 4.052791,
+     "close_new": 4.096607
+    },
+    {
+     "date": "2020-04-16",
+     "symbol": "SISE.IS",
+     "dev": -0.0146,
+     "close_old": 4.175603,
+     "close_new": 4.237014
+    },
+    {
+     "date": "2020-04-17",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0106,
+     "close_old": 0.47236,
+     "close_new": 0.477385
+    },
+    {
+     "date": "2020-04-20",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0105,
+     "close_old": 0.477385,
+     "close_new": 0.48241
+    },
+    {
+     "date": "2020-04-22",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0106,
+     "close_old": 0.477385,
+     "close_new": 0.47237
+    },
+    {
+     "date": "2020-04-22",
+     "symbol": "TSKB.IS",
+     "dev": 0.0101,
+     "close_old": 0.936086,
+     "close_new": 0.926707
+    },
+    {
+     "date": "2020-04-28",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0304,
+     "close_old": 22.180258,
+     "close_new": 22.865626
+    },
+    {
+     "date": "2020-04-28",
+     "symbol": "SKBNK.IS",
+     "dev": 0.01,
+     "close_old": 0.507536,
+     "close_new": 0.502468
+    },
+    {
+     "date": "2020-04-30",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0132,
+     "close_old": 4.062537,
+     "close_new": 4.009427
+    },
+    {
+     "date": "2020-05-04",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0109,
+     "close_old": 11.232507,
+     "close_new": 11.355333
+    },
+    {
+     "date": "2020-05-05",
+     "symbol": "SKBNK.IS",
+     "dev": -0.01,
+     "close_old": 0.502511,
+     "close_new": 0.507577
+    },
+    {
+     "date": "2020-05-08",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0107,
+     "close_old": 12.1579,
+     "close_new": 12.289201
+    },
+    {
+     "date": "2020-05-08",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0123,
+     "close_old": 2.279518,
+     "close_new": 2.251757
+    },
+    {
+     "date": "2020-05-11",
+     "symbol": "SASA.IS",
+     "dev": 0.0133,
+     "close_old": 0.179367,
+     "close_new": 0.17699
+    },
+    {
+     "date": "2020-05-12",
+     "symbol": "FROTO.IS",
+     "dev": -0.0138,
+     "close_old": 4.150406,
+     "close_new": 4.207921
+    },
+    {
+     "date": "2020-05-14",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0107,
+     "close_old": 12.248201,
+     "close_new": 12.379911
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "ARCLK.IS",
+     "dev": 0.03,
+     "close_old": 14.379353,
+     "close_new": 13.954564
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0304,
+     "close_old": 25.732271,
+     "close_new": 26.527848
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0109,
+     "close_old": 4.112822,
+     "close_new": 4.068417
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "MGROS.IS",
+     "dev": -0.0297,
+     "close_old": 30.456516,
+     "close_new": 31.375084
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "PGSUS.IS",
+     "dev": -0.0169,
+     "close_old": 12.091825,
+     "close_new": 12.297649
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0155,
+     "close_old": 6.818052,
+     "close_new": 6.712939
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "SISE.IS",
+     "dev": 0.0163,
+     "close_old": 4.440523,
+     "close_new": 4.368552
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "TCELL.IS",
+     "dev": -0.0294,
+     "close_old": 11.021027,
+     "close_new": 11.349607
+    },
+    {
+     "date": "2020-05-29",
+     "symbol": "YKBNK.IS",
+     "dev": -0.0218,
+     "close_old": 1.896412,
+     "close_new": 1.938224
+    },
+    {
+     "date": "2020-06-03",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0163,
+     "close_old": 26.20013,
+     "close_new": 26.629725
+    },
+    {
+     "date": "2020-06-04",
+     "symbol": "FROTO.IS",
+     "dev": -0.0194,
+     "close_old": 4.77838,
+     "close_new": 4.872225
+    },
+    {
+     "date": "2020-06-05",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0119,
+     "close_old": 27.359608,
+     "close_new": 27.034679
+    },
+    {
+     "date": "2020-06-05",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0159,
+     "close_old": 0.633163,
+     "close_new": 0.623169
+    },
+    {
+     "date": "2020-06-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0159,
+     "close_old": 1.188829,
+     "close_new": 1.170099
+    },
+    {
+     "date": "2020-06-16",
+     "symbol": "FROTO.IS",
+     "dev": -0.0122,
+     "close_old": 5.016578,
+     "close_new": 5.078125
+    },
+    {
+     "date": "2020-06-19",
+     "symbol": "TOASO.IS",
+     "dev": 0.0104,
+     "close_old": 15.311676,
+     "close_new": 15.153611
+    },
+    {
+     "date": "2020-06-24",
+     "symbol": "FROTO.IS",
+     "dev": -0.0142,
+     "close_old": 5.099586,
+     "close_new": 5.172499
+    },
+    {
+     "date": "2020-06-24",
+     "symbol": "ODAS.IS",
+     "dev": -0.0131,
+     "close_old": 1.641621,
+     "close_new": 1.663283
+    },
+    {
+     "date": "2020-06-30",
+     "symbol": "HALKB.IS",
+     "dev": 0.0109,
+     "close_old": 6.48,
+     "close_new": 6.41
+    },
+    {
+     "date": "2020-06-30",
+     "symbol": "TOASO.IS",
+     "dev": -0.0306,
+     "close_old": 16.900621,
+     "close_new": 17.426254
+    },
+    {
+     "date": "2020-07-08",
+     "symbol": "ODAS.IS",
+     "dev": 0.011,
+     "close_old": 2.0539,
+     "close_new": 2.031441
+    },
+    {
+     "date": "2020-07-09",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0183,
+     "close_old": 1.903747,
+     "close_new": 1.869198
+    },
+    {
+     "date": "2020-07-09",
+     "symbol": "FROTO.IS",
+     "dev": -0.0165,
+     "close_old": 5.215075,
+     "close_new": 5.30191
+    },
+    {
+     "date": "2020-07-09",
+     "symbol": "TSKB.IS",
+     "dev": 0.0159,
+     "close_old": 1.188829,
+     "close_new": 1.170131
+    },
+    {
+     "date": "2020-07-21",
+     "symbol": "FROTO.IS",
+     "dev": 0.0116,
+     "close_old": 5.619289,
+     "close_new": 5.554397
+    },
+    {
+     "date": "2020-08-04",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0146,
+     "close_old": 26.729012,
+     "close_new": 26.342474
+    },
+    {
+     "date": "2020-08-04",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0181,
+     "close_old": 2.529709,
+     "close_new": 2.575998
+    },
+    {
+     "date": "2020-08-04",
+     "symbol": "PETKM.IS",
+     "dev": -0.0219,
+     "close_old": 3.008333,
+     "close_new": 3.075031
+    },
+    {
+     "date": "2020-08-04",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0129,
+     "close_old": 12.573923,
+     "close_new": 12.412395
+    },
+    {
+     "date": "2020-08-05",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0109,
+     "close_old": 4.720481,
+     "close_new": 4.772434
+    },
+    {
+     "date": "2020-08-05",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0105,
+     "close_old": 0.69216,
+     "close_new": 0.684961
+    },
+    {
+     "date": "2020-08-06",
+     "symbol": "ENKAI.IS",
+     "dev": -0.029,
+     "close_old": 4.53522,
+     "close_new": 4.668607
+    },
+    {
+     "date": "2020-08-11",
+     "symbol": "FROTO.IS",
+     "dev": 0.0146,
+     "close_old": 6.460197,
+     "close_new": 6.366317
+    },
+    {
+     "date": "2020-08-17",
+     "symbol": "ODAS.IS",
+     "dev": 0.0131,
+     "close_old": 1.724077,
+     "close_new": 1.701597
+    },
+    {
+     "date": "2020-08-20",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0114,
+     "close_old": 20.016058,
+     "close_new": 20.246135
+    },
+    {
+     "date": "2020-08-24",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0106,
+     "close_old": 4.861281,
+     "close_new": 4.913158
+    },
+    {
+     "date": "2020-08-25",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0189,
+     "close_old": 27.847809,
+     "close_new": 28.378328
+    },
+    {
+     "date": "2020-08-31",
+     "symbol": "EREGL.IS",
+     "dev": 0.0125,
+     "close_old": 3.286913,
+     "close_new": 3.245998
+    },
+    {
+     "date": "2020-08-31",
+     "symbol": "HALKB.IS",
+     "dev": 0.0301,
+     "close_old": 5.06,
+     "close_new": 4.91
+    },
+    {
+     "date": "2020-08-31",
+     "symbol": "MGROS.IS",
+     "dev": -0.0238,
+     "close_old": 35.857674,
+     "close_new": 36.719826
+    },
+    {
+     "date": "2020-08-31",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0141,
+     "close_old": 0.69849,
+     "close_new": 0.688729
+    },
+    {
+     "date": "2020-08-31",
+     "symbol": "TAVHL.IS",
+     "dev": 0.025,
+     "close_old": 15.169503,
+     "close_new": 14.794956
+    },
+    {
+     "date": "2020-09-01",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0141,
+     "close_old": 0.69849,
+     "close_new": 0.688729
+    },
+    {
+     "date": "2020-09-03",
+     "symbol": "FROTO.IS",
+     "dev": 0.0118,
+     "close_old": 5.76726,
+     "close_new": 5.699456
+    },
+    {
+     "date": "2020-09-03",
+     "symbol": "ODAS.IS",
+     "dev": 0.0122,
+     "close_old": 1.859004,
+     "close_new": 1.836545
+    },
+    {
+     "date": "2020-09-14",
+     "symbol": "EKGYO.IS",
+     "dev": -0.011,
+     "close_old": 1.579539,
+     "close_new": 1.597013
+    },
+    {
+     "date": "2020-09-15",
+     "symbol": "FROTO.IS",
+     "dev": -0.0109,
+     "close_old": 6.658695,
+     "close_new": 6.731726
+    },
+    {
+     "date": "2020-09-16",
+     "symbol": "TOASO.IS",
+     "dev": -0.0103,
+     "close_old": 15.25915,
+     "close_new": 15.416728
+    },
+    {
+     "date": "2020-09-17",
+     "symbol": "FROTO.IS",
+     "dev": -0.0277,
+     "close_old": 6.438544,
+     "close_new": 6.619292
+    },
+    {
+     "date": "2020-09-18",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0282,
+     "close_old": 5.187342,
+     "close_new": 5.335642
+    },
+    {
+     "date": "2020-09-18",
+     "symbol": "TOASO.IS",
+     "dev": 0.0102,
+     "close_old": 15.469254,
+     "close_new": 15.311826
+    },
+    {
+     "date": "2020-09-18",
+     "symbol": "VAKBN.IS",
+     "dev": 0.01,
+     "close_old": 4.02,
+     "close_new": 3.98
+    },
+    {
+     "date": "2020-09-24",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0128,
+     "close_old": 6.284255,
+     "close_new": 6.365214
+    },
+    {
+     "date": "2020-09-30",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0163,
+     "close_old": 21.60885,
+     "close_new": 21.963672
+    },
+    {
+     "date": "2020-09-30",
+     "symbol": "SISE.IS",
+     "dev": 0.0163,
+     "close_old": 6.714937,
+     "close_new": 6.60661
+    },
+    {
+     "date": "2020-10-08",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0107,
+     "close_old": 6.745262,
+     "close_new": 6.817872
+    },
+    {
+     "date": "2020-10-12",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0108,
+     "close_old": 22.918476,
+     "close_new": 23.16809
+    },
+    {
+     "date": "2020-10-12",
+     "symbol": "ENKAI.IS",
+     "dev": 0.017,
+     "close_old": 5.276268,
+     "close_new": 5.187316
+    },
+    {
+     "date": "2020-10-22",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0304,
+     "close_old": 5.283679,
+     "close_new": 5.446807
+    },
+    {
+     "date": "2020-10-22",
+     "symbol": "EREGL.IS",
+     "dev": 0.0123,
+     "close_old": 3.667033,
+     "close_new": 3.622225
+    },
+    {
+     "date": "2020-10-22",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0236,
+     "close_old": 6.7857,
+     "close_new": 6.94765
+    },
+    {
+     "date": "2020-10-22",
+     "symbol": "TOASO.IS",
+     "dev": -0.0203,
+     "close_old": 17.89864,
+     "close_new": 18.26636
+    },
+    {
+     "date": "2020-10-26",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0168,
+     "close_old": 5.254037,
+     "close_new": 5.342964
+    },
+    {
+     "date": "2020-10-26",
+     "symbol": "FROTO.IS",
+     "dev": -0.0217,
+     "close_old": 7.062909,
+     "close_new": 7.218129
+    },
+    {
+     "date": "2020-10-26",
+     "symbol": "THYAO.IS",
+     "dev": 0.0103,
+     "close_old": 9.563696,
+     "close_new": 9.465995
+    },
+    {
+     "date": "2020-10-27",
+     "symbol": "ODAS.IS",
+     "dev": -0.016,
+     "close_old": 2.31626,
+     "close_new": 2.353708
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0105,
+     "close_old": 23.520197,
+     "close_new": 23.768729
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0112,
+     "close_old": 27.783443,
+     "close_new": 27.474895
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0295,
+     "close_old": 1.457365,
+     "close_new": 1.500982
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "FROTO.IS",
+     "dev": -0.0188,
+     "close_old": 7.636747,
+     "close_new": 7.781734
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0101,
+     "close_old": 6.567329,
+     "close_new": 6.633993
+    },
+    {
+     "date": "2020-10-30",
+     "symbol": "TOASO.IS",
+     "dev": -0.025,
+     "close_old": 17.110731,
+     "close_new": 17.54413
+    },
+    {
+     "date": "2020-11-03",
+     "symbol": "FROTO.IS",
+     "dev": 0.0111,
+     "close_old": 7.838853,
+     "close_new": 7.752255
+    },
+    {
+     "date": "2020-11-05",
+     "symbol": "TSKB.IS",
+     "dev": -0.0142,
+     "close_old": 1.956419,
+     "close_new": 1.984497
+    },
+    {
+     "date": "2020-11-06",
+     "symbol": "TSKB.IS",
+     "dev": 0.0232,
+     "close_old": 2.040667,
+     "close_new": 1.993897
+    },
+    {
+     "date": "2020-11-09",
+     "symbol": "EREGL.IS",
+     "dev": -0.0278,
+     "close_old": 4.099326,
+     "close_new": 4.214987
+    },
+    {
+     "date": "2020-11-17",
+     "symbol": "SAHOL.IS",
+     "dev": -0.015,
+     "close_old": 8.063581,
+     "close_new": 8.185045
+    },
+    {
+     "date": "2020-11-18",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0105,
+     "close_old": 8.40327,
+     "close_new": 8.492199
+    },
+    {
+     "date": "2020-11-23",
+     "symbol": "EREGL.IS",
+     "dev": -0.0132,
+     "close_old": 4.211125,
+     "close_new": 4.266912
+    },
+    {
+     "date": "2020-11-26",
+     "symbol": "FROTO.IS",
+     "dev": -0.0186,
+     "close_old": 8.827735,
+     "close_new": 8.993842
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "ASELS.IS",
+     "dev": 0.0132,
+     "close_old": 8.57501,
+     "close_new": 8.46221
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0184,
+     "close_old": 5.172523,
+     "close_new": 5.268758
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "EREGL.IS",
+     "dev": 0.0128,
+     "close_old": 4.158952,
+     "close_new": 4.106228
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "HALKB.IS",
+     "dev": -0.0169,
+     "close_old": 5.27,
+     "close_new": 5.359889
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0112,
+     "close_old": 14.628883,
+     "close_new": 14.465936
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "SISE.IS",
+     "dev": -0.0283,
+     "close_old": 5.965825,
+     "close_new": 6.137312
+    },
+    {
+     "date": "2020-11-30",
+     "symbol": "TSKB.IS",
+     "dev": -0.0265,
+     "close_old": 2.087471,
+     "close_new": 2.143594
+    },
+    {
+     "date": "2020-12-01",
+     "symbol": "MGROS.IS",
+     "dev": -0.0243,
+     "close_old": 38.933327,
+     "close_new": 39.891349
+    },
+    {
+     "date": "2020-12-11",
+     "symbol": "EREGL.IS",
+     "dev": -0.0112,
+     "close_old": 5.284403,
+     "close_new": 5.343954
+    },
+    {
+     "date": "2020-12-11",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0151,
+     "close_old": 4.874092,
+     "close_new": 4.948182
+    },
+    {
+     "date": "2020-12-11",
+     "symbol": "THYAO.IS",
+     "dev": -0.0104,
+     "close_old": 12.015676,
+     "close_new": 12.141701
+    },
+    {
+     "date": "2020-12-17",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0109,
+     "close_old": 5.394836,
+     "close_new": 5.454217
+    },
+    {
+     "date": "2020-12-31",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0101,
+     "close_old": 5.454288,
+     "close_new": 5.399639
+    },
+    {
+     "date": "2020-12-31",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0125,
+     "close_old": 31.467321,
+     "close_new": 31.076306
+    },
+    {
+     "date": "2020-12-31",
+     "symbol": "SAHOL.IS",
+     "dev": 0.013,
+     "close_old": 9.406162,
+     "close_new": 9.284544
+    },
+    {
+     "date": "2021-01-05",
+     "symbol": "EREGL.IS",
+     "dev": -0.0131,
+     "close_old": 5.366389,
+     "close_new": 5.437303
+    },
+    {
+     "date": "2021-01-06",
+     "symbol": "TSKB.IS",
+     "dev": -0.0108,
+     "close_old": 1.675593,
+     "close_new": 1.693833
+    },
+    {
+     "date": "2021-01-13",
+     "symbol": "FROTO.IS",
+     "dev": 0.0101,
+     "close_old": 11.548957,
+     "close_new": 11.43338
+    },
+    {
+     "date": "2021-01-14",
+     "symbol": "FROTO.IS",
+     "dev": 0.0132,
+     "close_old": 11.245796,
+     "close_new": 11.098628
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "ASELS.IS",
+     "dev": -0.0116,
+     "close_old": 11.834487,
+     "close_new": 11.973087
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0154,
+     "close_old": 37.57048,
+     "close_new": 38.154689
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0214,
+     "close_old": 2.590735,
+     "close_new": 2.535789
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "EREGL.IS",
+     "dev": -0.0122,
+     "close_old": 16.510412,
+     "close_new": 16.713203
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "FROTO.IS",
+     "dev": -0.015,
+     "close_old": 23.49066,
+     "close_new": 23.846008
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0167,
+     "close_old": 27.150343,
+     "close_new": 26.70022
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "SAHOL.IS",
+     "dev": -0.0197,
+     "close_old": 17.6509,
+     "close_new": 18.002204
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "SASA.IS",
+     "dev": 0.016,
+     "close_old": 1.823606,
+     "close_new": 1.794635
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "SISE.IS",
+     "dev": -0.0207,
+     "close_old": 18.089306,
+     "close_new": 18.467108
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0193,
+     "close_old": 43.327339,
+     "close_new": 42.498296
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "THYAO.IS",
+     "dev": 0.0118,
+     "close_old": 41.712955,
+     "close_new": 41.224509
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0109,
+     "close_old": 18.430782,
+     "close_new": 18.230777
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "TSKB.IS",
+     "dev": 0.0106,
+     "close_old": 1.812692,
+     "close_new": 1.79359
+    },
+    {
+     "date": "2022-05-10",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0194,
+     "close_old": 22.639633,
+     "close_new": 22.205499
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0343,
+     "close_old": 71.857346,
+     "close_new": 74.364004
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0235,
+     "close_old": 2.306945,
+     "close_new": 2.361899
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0371,
+     "close_old": 15.640271,
+     "close_new": 16.230815
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "EREGL.IS",
+     "dev": -0.0255,
+     "close_old": 13.10212,
+     "close_new": 13.4401
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "KCHOL.IS",
+     "dev": -0.0291,
+     "close_old": 34.105152,
+     "close_new": 35.111296
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0311,
+     "close_old": 11.453188,
+     "close_new": 11.814641
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "MGROS.IS",
+     "dev": 0.0215,
+     "close_old": 47.635189,
+     "close_new": 46.622433
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "ODAS.IS",
+     "dev": -0.016,
+     "close_old": 3.1,
+     "close_new": 3.15
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "PGSUS.IS",
+     "dev": -0.019,
+     "close_old": 37.339394,
+     "close_new": 38.055491
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0101,
+     "close_old": 53.789062,
+     "close_new": 53.246224
+    },
+    {
+     "date": "2022-06-27",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0114,
+     "close_old": 20.90276,
+     "close_new": 20.666496
+    },
+    {
+     "date": "2022-11-09",
+     "symbol": "ASELS.IS",
+     "dev": 0.0126,
+     "close_old": 18.925276,
+     "close_new": 18.687584
+    },
+    {
+     "date": "2022-11-09",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0172,
+     "close_old": 63.333706,
+     "close_new": 64.431994
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0204,
+     "close_old": 13.077479,
+     "close_new": 12.813803
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "ASELS.IS",
+     "dev": 0.0202,
+     "close_old": 20.372034,
+     "close_new": 19.963969
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0129,
+     "close_old": 4.989225,
+     "close_new": 4.925121
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "GARAN.IS",
+     "dev": 0.0137,
+     "close_old": 20.622385,
+     "close_new": 20.342393
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0139,
+     "close_old": 3.227057,
+     "close_new": 3.182604
+    },
+    {
+     "date": "2022-11-17",
+     "symbol": "TOASO.IS",
+     "dev": -0.0136,
+     "close_old": 96.985641,
+     "close_new": 98.316304
+    },
+    {
+     "date": "2022-11-29",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0226,
+     "close_old": 6.545497,
+     "close_new": 6.399019
+    },
+    {
+     "date": "2022-11-29",
+     "symbol": "THYAO.IS",
+     "dev": -0.0134,
+     "close_old": 116.151535,
+     "close_new": 117.714497
+    },
+    {
+     "date": "2022-11-29",
+     "symbol": "TOASO.IS",
+     "dev": -0.0136,
+     "close_old": 108.648956,
+     "close_new": 110.136207
+    },
+    {
+     "date": "2022-12-08",
+     "symbol": "ASELS.IS",
+     "dev": -0.0117,
+     "close_old": 25.377962,
+     "close_new": 25.676483
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0126,
+     "close_old": 14.470104,
+     "close_new": 14.288811
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "GARAN.IS",
+     "dev": 0.013,
+     "close_old": 22.961346,
+     "close_new": 22.664905
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "HALKB.IS",
+     "dev": 0.0159,
+     "close_old": 11.38,
+     "close_new": 11.2
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "ISCTR.IS",
+     "dev": 0.0152,
+     "close_old": 3.866993,
+     "close_new": 3.808777
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "SKBNK.IS",
+     "dev": 0.0141,
+     "close_old": 1.71236,
+     "close_new": 1.688312
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "TSKB.IS",
+     "dev": 0.0142,
+     "close_old": 4.054707,
+     "close_new": 3.997514
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "VAKBN.IS",
+     "dev": 0.029,
+     "close_old": 10.86,
+     "close_new": 10.55
+    },
+    {
+     "date": "2022-12-12",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0188,
+     "close_old": 10.393864,
+     "close_new": 10.200579
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "ARCLK.IS",
+     "dev": -0.0524,
+     "close_old": 93.237617,
+     "close_new": 98.250878
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "BIMAS.IS",
+     "dev": -0.0139,
+     "close_old": 59.520889,
+     "close_new": 60.354026
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0148,
+     "close_old": 23.707907,
+     "close_new": 23.360526
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "EREGL.IS",
+     "dev": 0.0195,
+     "close_old": 19.976631,
+     "close_new": 19.590378
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "FROTO.IS",
+     "dev": -0.0215,
+     "close_old": 34.522621,
+     "close_new": 35.274496
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "HALKB.IS",
+     "dev": -0.0357,
+     "close_old": 13.74,
+     "close_new": 14.24
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "ISCTR.IS",
+     "dev": -0.0138,
+     "close_old": 4.195515,
+     "close_new": 4.253676
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0229,
+     "close_old": 17.929342,
+     "close_new": 17.523435
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "PETKM.IS",
+     "dev": -0.0591,
+     "close_old": 18.08,
+     "close_new": 19.18
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "SASA.IS",
+     "dev": -0.0159,
+     "close_old": 6.021443,
+     "close_new": 6.11809
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "SKBNK.IS",
+     "dev": -0.0318,
+     "close_old": 1.869125,
+     "close_new": 1.929484
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "TKFEN.IS",
+     "dev": 0.0507,
+     "close_old": 42.623455,
+     "close_new": 40.514989
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "TOASO.IS",
+     "dev": -0.035,
+     "close_old": 109.823112,
+     "close_new": 113.737036
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "TSKB.IS",
+     "dev": -0.0182,
+     "close_old": 4.684379,
+     "close_new": 4.770184
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "VAKBN.IS",
+     "dev": -0.0669,
+     "close_old": 11.71,
+     "close_new": 12.52
+    },
+    {
+     "date": "2022-12-16",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0144,
+     "close_old": 10.472939,
+     "close_new": 10.32361
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0544,
+     "close_old": 15.7144,
+     "close_new": 14.882112
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "ARCLK.IS",
+     "dev": 0.0402,
+     "close_old": 117.271988,
+     "close_new": 112.651882
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "ASELS.IS",
+     "dev": 0.0537,
+     "close_old": 30.926285,
+     "close_new": 29.309091
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0325,
+     "close_old": 60.863125,
+     "close_new": 58.919203
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "EKGYO.IS",
+     "dev": 0.0706,
+     "close_old": 8.330634,
+     "close_new": 7.763113
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "ENKAI.IS",
+     "dev": 0.0816,
+     "close_old": 29.248436,
+     "close_new": 26.955801
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "EREGL.IS",
+     "dev": 0.0406,
+     "close_old": 20.150427,
+     "close_new": 19.348999
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "FROTO.IS",
+     "dev": 0.0283,
+     "close_old": 40.081749,
+     "close_new": 38.96188
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "GARAN.IS",
+     "dev": 0.0687,
+     "close_old": 23.817867,
+     "close_new": 22.236627
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "HALKB.IS",
+     "dev": 0.0421,
+     "close_old": 12.38,
+     "close_new": 11.87
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "ISCTR.IS",
+     "dev": 0.059,
+     "close_old": 4.120229,
+     "close_new": 3.88412
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "KCHOL.IS",
+     "dev": 0.0526,
+     "close_old": 70.257324,
+     "close_new": 66.657726
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "KRDMD.IS",
+     "dev": 0.0551,
+     "close_old": 18.830265,
+     "close_new": 17.820386
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "MGROS.IS",
+     "dev": 0.0333,
+     "close_old": 128.652512,
+     "close_new": 124.432864
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "ODAS.IS",
+     "dev": 0.0372,
+     "close_old": 10.14,
+     "close_new": 9.77
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "PETKM.IS",
+     "dev": 0.0499,
+     "close_old": 19.299999,
+     "close_new": 18.36
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "PGSUS.IS",
+     "dev": 0.0483,
+     "close_old": 97.69622,
+     "close_new": 93.092711
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0295,
+     "close_old": 38.076767,
+     "close_new": 36.970297
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "SASA.IS",
+     "dev": 0.0227,
+     "close_old": 5.015185,
+     "close_new": 4.902507
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "SISE.IS",
+     "dev": 0.0365,
+     "close_old": 40.915489,
+     "close_new": 39.449477
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "SKBNK.IS",
+     "dev": 0.05,
+     "close_old": 1.730448,
+     "close_new": 1.646028
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0466,
+     "close_old": 90.010315,
+     "close_new": 85.914494
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TCELL.IS",
+     "dev": 0.0428,
+     "close_old": 35.820351,
+     "close_new": 34.320189
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "THYAO.IS",
+     "dev": 0.0477,
+     "close_old": 138.522171,
+     "close_new": 132.074701
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TKFEN.IS",
+     "dev": 0.047,
+     "close_old": 45.16814,
+     "close_new": 43.095991
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TOASO.IS",
+     "dev": 0.0372,
+     "close_old": 128.60968,
+     "close_new": 123.913027
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TSKB.IS",
+     "dev": 0.0494,
+     "close_old": 3.959302,
+     "close_new": 3.768499
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "TUPRS.IS",
+     "dev": 0.0231,
+     "close_old": 45.188824,
+     "close_new": 44.157709
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "VAKBN.IS",
+     "dev": 0.0699,
+     "close_old": 11.41,
+     "close_new": 10.64
+    },
+    {
+     "date": "2023-01-05",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0611,
+     "close_old": 9.787628,
+     "close_new": 9.207792
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "AKBNK.IS",
+     "dev": 0.0118,
+     "close_old": 56.536343,
+     "close_new": 55.872906
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "BIMAS.IS",
+     "dev": 0.0101,
+     "close_old": 259.937073,
+     "close_new": 257.325795
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "GARAN.IS",
+     "dev": 0.0144,
+     "close_old": 103.90406,
+     "close_new": 102.421026
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "SAHOL.IS",
+     "dev": 0.0129,
+     "close_old": 89.021797,
+     "close_new": 87.882885
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "TCELL.IS",
+     "dev": 0.0144,
+     "close_old": 91.364494,
+     "close_new": 90.059302
+    },
+    {
+     "date": "2024-09-06",
+     "symbol": "YKBNK.IS",
+     "dev": 0.0155,
+     "close_old": 31.26,
+     "close_new": 30.780001
+    },
+    {
+     "date": "2025-05-08",
+     "symbol": "EKGYO.IS",
+     "dev": -0.0195,
+     "close_old": 11.519251,
+     "close_new": 11.74642
+    },
+    {
+     "date": "2025-05-08",
+     "symbol": "ENKAI.IS",
+     "dev": -0.0432,
+     "close_old": 59.25021,
+     "close_new": 61.865597
+    },
+    {
+     "date": "2025-05-08",
+     "symbol": "KRDMD.IS",
+     "dev": -0.0119,
+     "close_old": 23.42,
+     "close_new": 23.7
+    },
+    {
+     "date": "2025-05-08",
+     "symbol": "TAVHL.IS",
+     "dev": 0.0108,
+     "close_old": 219.498856,
+     "close_new": 217.130194
+    },
+    {
+     "date": "2025-05-08",
+     "symbol": "TKFEN.IS",
+     "dev": -0.0125,
+     "close_old": 118.93869,
+     "close_new": 120.431606
+    },
+    {
+     "date": "2026-03-19",
+     "symbol": "TOASO.IS",
+     "dev": 0.0666,
+     "close_old": 290.25,
+     "close_new": 271.539246
+    }
+   ]
+  },
+  "verify": {
+   "residual_max_abs_dev_after": 0.009991,
+   "band_violations_before": {
+    "close": {
+     "n": {
+      "2013-06..2020-03-12": 2,
+      "2020-03-13..2020-12-31": 5,
+      "2021+": 38
+     },
+     "cells_2021plus": [
+      {
+       "date": "2023-02-15",
+       "symbol": "AKBNK.IS",
+       "ratio": 1.1803
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "ARCLK.IS",
+       "ratio": 1.1112
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ARCLK.IS",
+       "ratio": 1.1873
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ASELS.IS",
+       "ratio": 1.2201
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "BIMAS.IS",
+       "ratio": 1.1253
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "EKGYO.IS",
+       "ratio": 1.204
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ENKAI.IS",
+       "ratio": 1.201
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "EREGL.IS",
+       "ratio": 1.1594
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "FROTO.IS",
+       "ratio": 1.1708
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "GARAN.IS",
+       "ratio": 1.1774
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "HALKB.IS",
+       "ratio": 1.1397
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "HALKB.IS",
+       "ratio": 1.1637
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "ISCTR.IS",
+       "ratio": 1.115
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ISCTR.IS",
+       "ratio": 1.1582
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "KCHOL.IS",
+       "ratio": 1.1485
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "KRDMD.IS",
+       "ratio": 1.2205
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "MGROS.IS",
+       "ratio": 1.1534
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ODAS.IS",
+       "ratio": 1.1898
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "PETKM.IS",
+       "ratio": 1.2017
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "PGSUS.IS",
+       "ratio": 1.2018
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SAHOL.IS",
+       "ratio": 1.1655
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SASA.IS",
+       "ratio": 1.1899
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SISE.IS",
+       "ratio": 1.1692
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "SKBNK.IS",
+       "ratio": 1.1355
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SKBNK.IS",
+       "ratio": 1.2066
+      },
+      {
+       "date": "2024-06-04",
+       "symbol": "SKBNK.IS",
+       "ratio": 0.7917
+      },
+      {
+       "date": "2026-10-19",
+       "symbol": "SKBNK.IS",
+       "ratio": 0.7542
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TAVHL.IS",
+       "ratio": 1.1941
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TCELL.IS",
+       "ratio": 1.1852
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "THYAO.IS",
+       "ratio": 1.2165
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TKFEN.IS",
+       "ratio": 1.1904
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TOASO.IS",
+       "ratio": 1.2103
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "TSKB.IS",
+       "ratio": 1.1202
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TSKB.IS",
+       "ratio": 1.1935
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TUPRS.IS",
+       "ratio": 1.1793
+      },
+      {
+       "date": "2022-12-19",
+       "symbol": "VAKBN.IS",
+       "ratio": 1.1759
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "VAKBN.IS",
+       "ratio": 1.1791
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "YKBNK.IS",
+       "ratio": 1.1535
+      }
+     ]
+    },
+    "open_gap": {
+     "n": {
+      "2013-06..2020-03-12": 2,
+      "2020-03-13..2020-12-31": 0,
+      "2021+": 31
+     },
+     "cells_2021plus": [
+      {
+       "date": "2023-02-15",
+       "symbol": "AKBNK.IS",
+       "ratio": 1.1314
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ARCLK.IS",
+       "ratio": 1.1611
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ASELS.IS",
+       "ratio": 1.153
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "EKGYO.IS",
+       "ratio": 1.1706
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ENKAI.IS",
+       "ratio": 1.1266
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "EREGL.IS",
+       "ratio": 1.1223
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "FROTO.IS",
+       "ratio": 1.1651
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "GARAN.IS",
+       "ratio": 1.1439
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "HALKB.IS",
+       "ratio": 1.1307
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ISCTR.IS",
+       "ratio": 1.1482
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "KCHOL.IS",
+       "ratio": 1.1212
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "KRDMD.IS",
+       "ratio": 1.2205
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "MGROS.IS",
+       "ratio": 1.1165
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "ODAS.IS",
+       "ratio": 1.1054
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "PETKM.IS",
+       "ratio": 1.1482
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "PGSUS.IS",
+       "ratio": 1.1958
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SAHOL.IS",
+       "ratio": 1.1199
+      },
+      {
+       "date": "2022-11-30",
+       "symbol": "SASA.IS",
+       "ratio": 0.8942
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SASA.IS",
+       "ratio": 1.1899
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SISE.IS",
+       "ratio": 1.1281
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "SKBNK.IS",
+       "ratio": 1.1549
+      },
+      {
+       "date": "2024-06-04",
+       "symbol": "SKBNK.IS",
+       "ratio": 0.8041
+      },
+      {
+       "date": "2026-10-19",
+       "symbol": "SKBNK.IS",
+       "ratio": 0.7653
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TAVHL.IS",
+       "ratio": 1.1609
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TCELL.IS",
+       "ratio": 1.129
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "THYAO.IS",
+       "ratio": 1.1826
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TKFEN.IS",
+       "ratio": 1.1084
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TOASO.IS",
+       "ratio": 1.1332
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TSKB.IS",
+       "ratio": 1.1369
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "TUPRS.IS",
+       "ratio": 1.1793
+      },
+      {
+       "date": "2023-02-15",
+       "symbol": "VAKBN.IS",
+       "ratio": 1.1684
+      }
+     ]
+    }
+   },
+   "band_violations_after": {
+    "close": {
+     "n": {
+      "2013-06..2020-03-12": 2,
+      "2020-03-13..2020-12-31": 4,
+      "2021+": 0
+     },
+     "cells_2021plus": []
+    },
+    "open_gap": {
+     "n": {
+      "2013-06..2020-03-12": 1,
+      "2020-03-13..2020-12-31": 0,
+      "2021+": 1
+     },
+     "cells_2021plus": [
+      {
+       "date": "2022-11-30",
+       "symbol": "SASA.IS",
+       "ratio": 0.8942
+      }
+     ]
+    }
+   }
+  },
+  "indicator_recompute_check_max_abs_diff": 1.9804247131105512e-10,
+  "isy_sha256": {
+   "AKBNK.IS": "1fa3591752528998ab8b36726881fd8fe9542b9a5dd0394d4f7cf79aa06a61f9",
+   "ARCLK.IS": "1dffb74d7885f732846f0ef2ef84e351269fd3634a064ddcb7fc806dcb0a9eec",
+   "ASELS.IS": "01d3df6c683d529e9b5c4fa05454ad8b05578182d3e4d31905df5e5645794701",
+   "BIMAS.IS": "2bd445d8edb423560dc2b8d3a421c636d44bd075c7d28a8295b07abf4fec14a1",
+   "EKGYO.IS": "6cd22b598f739f14d269ea87a3eb571fa93ada94db4fd9f66c9f02ec2e3bf9ce",
+   "ENKAI.IS": "45b86dc9152dbf2944a35e765780e6b1c01ba7376300ee508dc2b6214ece259e",
+   "EREGL.IS": "596e81093905f52060b9aaf0ab34bdd18124825186fa1589ea13230e348362c5",
+   "FROTO.IS": "5ade9e48736bd6b55c51f027724f211d08a9b68bcc1ab4e509cf9fbcae85379b",
+   "GARAN.IS": "e73d947adcd8321abc1b26c88e2e74331b5d6519fc1cb99ea588be152d3a9f10",
+   "HALKB.IS": "7ddcc073581e31e090c8235c6f4746393b5cd5645f61380be0a7f47dcc7b365e",
+   "ISCTR.IS": "34c2b50dd92a4c11d323093d328661fff9f8385f50c300d949603984808e130c",
+   "KCHOL.IS": "04085049a47fed47efb7dbdd88323b11a7777c3a923d03661b89ebebd83c3007",
+   "KRDMD.IS": "0950bc65dff972724c71adf3e50aeb27f929e7e766530a8053d8a340d10e26c9",
+   "MGROS.IS": "4f2f177b829769feccb56369e63d03040eadeaa9f6b25d5092e28c78674a9ade",
+   "ODAS.IS": "d52079a1f822e4b6f5d3f7c415b8e95e7ce8793dd8f69c42339112ed5fb2ae78",
+   "PETKM.IS": "3a3d21c93cacf0df660b14235d79f7cd2dda93da642d4e71a8fb8b24c6d3a62a",
+   "PGSUS.IS": "65cc9e8218040b957c7001405281b98a15dcfafb8e235f80a1610d4dec0b6b88",
+   "SAHOL.IS": "8afef39767cd6d00528821968dd61b1ece9282ed6141fff0fbf2c5f5d120b780",
+   "SASA.IS": "2ff5ace59208d60d1c2613b27d9c86ce54fbed5d4b90800296ec18a21fecd817",
+   "SISE.IS": "0c628ad8061c3f0c485288dbd61f4c9b55d357fafd9b137f9921a09af89340e9",
+   "SKBNK.IS": "1ce39402bbb0143b03a1f4e9b8d633bf61a2981999d12bd462c81641004a33db",
+   "TAVHL.IS": "33f18bebc66b63d9904a4d1323460d2dfee7267f86abfdd1d9f58bd5300512e0",
+   "TCELL.IS": "a475a32c5dcc18d6af503f8767d77a40e35773a667c9321037b028ba016cc8a1",
+   "THYAO.IS": "0ed3ffafdbd48cf334599a851b1be0ef992062a881b767ab63e31802d103f312",
+   "TKFEN.IS": "0e21a7c5a61cdb9c8e3992bb782205f03ced07eff53423f02f99d8af84ffa878",
+   "TOASO.IS": "1e04305b03d07e5e81a410b9efcec0848e48bd0c8228fec4f5e8a592497fe6b9",
+   "TSKB.IS": "265e8f914df796645f5aaa86cb04e525fbc44e142faa304e41cb771ec67c9e4b",
+   "TUPRS.IS": "66e6291b06f423a9070c2a55e098220d31881a2972a4d8124b392572472165ff",
+   "VAKBN.IS": "fd9a7b54de0f9ed74a9e7e814375bdac567f419f05fd6f3feae11ee434353a2d",
+   "YKBNK.IS": "f06d332544c3967aa2f6f25ca6389e3fe4e3f6b52864e8f60125622b30d857fa"
+  }
+ },
+ "data_fix_summary": {
+  "version": "m8-v1",
+  "close_tol": 0.01,
+  "median_window": 11,
+  "drop_sessions": {
+   "2023-02-08": {
+    "rows": 30,
+    "source": "Borsa Istanbul KAP aciklamasi 08/02/2023 (Haberturk aktarimi): 8 Subat 2023 islemlerinin tamami iptal, pay piyasasi 14 Subat aksamina kadar kapali; Is Yatirim verisinde bu gun yok"
+   }
+  },
+  "rights_fixes": [
+   {
+    "symbol": "SKBNK.IS",
+    "yf_boundary": "2024-06-04",
+    "ex_date": "2024-06-13",
+    "capital_from": 1860000000.0,
+    "capital_to": 2500000000.0,
+    "price": 1.0,
+    "cum_close_raw": 4.49,
+    "source": "Is Yatirim HisseTekil: 13/06/2024 ham kapanis 4,49 -> 3,71, sermaye 1,86 -> 2,5 milyar TL",
+    "factor": 0.801016,
+    "rows_scaled": 4987
+   },
+   {
+    "symbol": "SKBNK.IS",
+    "yf_boundary": "2026-10-19",
+    "ex_date": "2026-10-22",
+    "capital_from": 2500000000.0,
+    "capital_to": 3500000000.0,
+    "price": 1.0,
+    "cum_close_raw": 4.48,
+    "source": "Is Yatirim HisseTekil: 22/10/2026 ham kapanis 4,48 -> 3,21, sermaye 2,5 -> 3,5 milyar TL",
+    "factor": 0.778061,
+    "rows_scaled": 5581
+   }
+  ],
+  "indicator_recompute_check_max_abs_diff": 1.9804247131105512e-10,
+  "isy_sha256": {
+   "AKBNK.IS": "1fa3591752528998ab8b36726881fd8fe9542b9a5dd0394d4f7cf79aa06a61f9",
+   "ARCLK.IS": "1dffb74d7885f732846f0ef2ef84e351269fd3634a064ddcb7fc806dcb0a9eec",
+   "ASELS.IS": "01d3df6c683d529e9b5c4fa05454ad8b05578182d3e4d31905df5e5645794701",
+   "BIMAS.IS": "2bd445d8edb423560dc2b8d3a421c636d44bd075c7d28a8295b07abf4fec14a1",
+   "EKGYO.IS": "6cd22b598f739f14d269ea87a3eb571fa93ada94db4fd9f66c9f02ec2e3bf9ce",
+   "ENKAI.IS": "45b86dc9152dbf2944a35e765780e6b1c01ba7376300ee508dc2b6214ece259e",
+   "EREGL.IS": "596e81093905f52060b9aaf0ab34bdd18124825186fa1589ea13230e348362c5",
+   "FROTO.IS": "5ade9e48736bd6b55c51f027724f211d08a9b68bcc1ab4e509cf9fbcae85379b",
+   "GARAN.IS": "e73d947adcd8321abc1b26c88e2e74331b5d6519fc1cb99ea588be152d3a9f10",
+   "HALKB.IS": "7ddcc073581e31e090c8235c6f4746393b5cd5645f61380be0a7f47dcc7b365e",
+   "ISCTR.IS": "34c2b50dd92a4c11d323093d328661fff9f8385f50c300d949603984808e130c",
+   "KCHOL.IS": "04085049a47fed47efb7dbdd88323b11a7777c3a923d03661b89ebebd83c3007",
+   "KRDMD.IS": "0950bc65dff972724c71adf3e50aeb27f929e7e766530a8053d8a340d10e26c9",
+   "MGROS.IS": "4f2f177b829769feccb56369e63d03040eadeaa9f6b25d5092e28c78674a9ade",
+   "ODAS.IS": "d52079a1f822e4b6f5d3f7c415b8e95e7ce8793dd8f69c42339112ed5fb2ae78",
+   "PETKM.IS": "3a3d21c93cacf0df660b14235d79f7cd2dda93da642d4e71a8fb8b24c6d3a62a",
+   "PGSUS.IS": "65cc9e8218040b957c7001405281b98a15dcfafb8e235f80a1610d4dec0b6b88",
+   "SAHOL.IS": "8afef39767cd6d00528821968dd61b1ece9282ed6141fff0fbf2c5f5d120b780",
+   "SASA.IS": "2ff5ace59208d60d1c2613b27d9c86ce54fbed5d4b90800296ec18a21fecd817",
+   "SISE.IS": "0c628ad8061c3f0c485288dbd61f4c9b55d357fafd9b137f9921a09af89340e9",
+   "SKBNK.IS": "1ce39402bbb0143b03a1f4e9b8d633bf61a2981999d12bd462c81641004a33db",
+   "TAVHL.IS": "33f18bebc66b63d9904a4d1323460d2dfee7267f86abfdd1d9f58bd5300512e0",
+   "TCELL.IS": "a475a32c5dcc18d6af503f8767d77a40e35773a667c9321037b028ba016cc8a1",
+   "THYAO.IS": "0ed3ffafdbd48cf334599a851b1be0ef992062a881b767ab63e31802d103f312",
+   "TKFEN.IS": "0e21a7c5a61cdb9c8e3992bb782205f03ced07eff53423f02f99d8af84ffa878",
+   "TOASO.IS": "1e04305b03d07e5e81a410b9efcec0848e48bd0c8228fec4f5e8a592497fe6b9",
+   "TSKB.IS": "265e8f914df796645f5aaa86cb04e525fbc44e142faa304e41cb771ec67c9e4b",
+   "TUPRS.IS": "66e6291b06f423a9070c2a55e098220d31881a2972a4d8124b392572472165ff",
+   "VAKBN.IS": "fd9a7b54de0f9ed74a9e7e814375bdac567f419f05fd6f3feae11ee434353a2d",
+   "YKBNK.IS": "f06d332544c3967aa2f6f25ca6389e3fe4e3f6b52864e8f60125622b30d857fa"
+  },
+  "close_patch_n": 990,
+  "residual_max_abs_dev_after": 0.009991
+ },
+ "risk_free": {
+  "finite_rows": 3363,
+  "rows": 3364,
+  "first_nan_rows": 1,
+  "per_period_mean": 0.0006940972431352706,
+  "per_period_max": 0.007806355110931973
+ },
+ "npz": {
+  "path": "data/marl/panel_m8.npz",
+  "sha256": "2b7ea84c6c5ed2d74c0ca54fb76d71b94e86c66ba152b277c4be86a86d56364c",
+  "T": 3364,
+  "N": 30,
+  "first": "2013-06-03",
+  "last": "2026-11-09"
+ }
+}

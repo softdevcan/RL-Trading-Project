@@ -1674,7 +1674,7 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 **Sade:** Bir hisse güne en düşük fiyat sınırından (taban) açılırsa o gün satılamayacağını varsayan kural.
 
-**Teknik:** limit_down_gaps(dates): dönem bağımlı fiyat marjı − 0,005. Marj takvimi 2020-12-31'e kadar doğrulandı; sonrası için hata verir (önce kaynakla doğrulanmalı). Tavan alım engeli yoktur.
+**Teknik:** limit_down_gaps(dates): dönem bağımlı fiyat marjı − 0,005. 2020-03-13'ten beri marj %10 (Borsa İstanbul 2020/20 sayılı duyuru; 2021+ için yeni giriş yok). Takvim 2026-11-09'a kadar doğrulandı; sonrası için hata verir (önce kaynakla doğrulanmalı). Tavan alım engeli yoktur.
 
 - Kodda: [`marl/accounting.py::limit_down_gaps`](../marl/accounting.py)
 - Belgede: [phase-10-m2-design.md](development/phase-10-m2-design.md)
