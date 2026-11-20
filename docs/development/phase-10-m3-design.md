@@ -208,6 +208,20 @@ AUC değerleri `measurements/phase10-m3/pred_blocks*.json` → `auc_block_vs_lab
 - **GEÇTİ değil:** M8'e geçilmez. Toplayıcı incelenir; karar kullanıcıda. Eşik ya da tohum sonuca bakılarak değiştirilmez.
 - **Betimsel:** eski M3a'yla tohum başına SR farkı (bit-eşlik beklenmez), süre.
 
+### 5.4 Tekrar sonucu (2026-11-20): GEÇTİ — yeni toplayıcı öğrenme hattını bozmuyor
+
+**Kaynak:** `measurements/phase10-m3/m3a_batched_results.json` (`analyze_m3.py --root results/marl_m3a_batched`). Koşu izi: 6/6 koşu, F = 600.000, `--batched-env`, üç eş zamanlı; hepsi commit `a35dbc2`'ten, temiz ağaçla. Eğitim 274–282 sn/koşu; toplam ~10 dk (eski M3a ~50 dk). Sayılar dosyadan yuvarlanmıştır.
+
+| | Eski M3a (§5.2) | Toplu toplayıcı |
+|---|---|---|
+| Eğitim D (SE), tek yönlü p | +0,76 (0,08), 9e-24 | +0,82 (0,12), 7e-13 |
+| Doğrulama D (SE) | +0,82 (0,12) | +0,96 (0,18) |
+| Eğitim SR A1 (tohum 0, 1, 2) | 1,84 / 1,13 / 1,86 | 1,95 / 1,81 / 2,02 |
+| Eğitim SR S1 | 0,95 / 0,89 / 0,70 | 1,27 / 0,91 / 1,15 |
+| Devir A1 / S1 | 0,66 / 0,33 | 0,77 / 0,35 |
+
+**Okuma (§5.3):** üç koşul da sağlandı → **GEÇTİ**. Yeni toplayıcıyla pozitif kontrol aynı cevabı veriyor. M8 bu toplayıcıyla ön kaydedilebilir. Politikalar eskisiyle bit-eş değildir (beklenen); düzeyler benzer, iki pencerede de fark eskisinden biraz büyük. 3 tohumla iki toplayıcı arasında bir fark iddia edilmez. Tez bulgusu değildir.
+
 ## 6. ÖN KAYIT v1.1 — M3b maliyet kapısı ve M4 temel yapılandırması (2026-11-18, ilk M3b eğitiminden ÖNCE)
 
 Kapsam ve toplam süre kullanıcıya sunuldu ve onaylandı (2026-11-18). M3a'nın okuma kuralı ve eşikleri değiştirilmedi. v1.0 (`2462853`) hiç koşulmadan hakem-rl okumasıyla v1.1'e güncellendi (§8).
