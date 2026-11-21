@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.5 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v0.6 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -61,7 +61,7 @@
 - Boş kol: referans yapılandırmanın aynısı, yalnız tohumu farklı. 2k tohum koşulur; rastgele k / k bölmelerinde birincil istatistik hesaplanır; bu değerler boş dağılımı verir.
 - Ölçüm yeri: wf-v1 **2021 katının** eğitim (2013-06..2019) ve doğrulama (2020) pencereleri. Test yılları (2021+) okunmaz.
 - Önce **boyut ölçümü** (15–20 dk, GPU): 6 tohum, toplu ortam, 3 eş zamanlı koşu. Çıktı: tohum başına doğrulama Sharpe'ının yayılımı (σ_tohum). Bundan asıl ölçüm için gereken tohum sayısı ve M8 karşıtlığının en küçük saptanabilir etkisi (MDE) hesaplanır. Asıl ölçüm ayrı bir ön kayıtla koşulur.
-- Kullanım: birincil karşıtlığın etkisi boş dağılımın %95 üst ucunu aşmadıkça "fark var" yazılmaz.
+- Kullanım: birincil karşıtlığın etkisi boş dağılımın %95 üst ucunu aşmadıkça "fark var" yazılmaz. *(Ön kayıtta değişti, §6.4: boş dağılım eşli işaret-çevirme; boş kol negatif kontrol.)*
 
 ### 3.1 Boyut ölçümü — ÖN KAYIT v1.0 (2026-11-21, sonuçtan önce)
 
@@ -111,7 +111,7 @@ Kaynak: `measurements/phase10-m8/noise_size.json`. Okuyan `analyze_noise_m8.py` 
 
 | # | Madde | Öneri |
 |---|---|---|
-| K-M8-1 | **Çıkarım birimi.** K20 "kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi" diyor; M5 §4.11 bu serinin ortak HAC p'sinin tohum varyansını taşımadığını gösterdi | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Birincil çıkarım **tohum × kat düzeyinde**: eşli (aynı tohum, aynı kat) Sharpe farkları, tabakalı bootstrap güven aralığı. Ortak HAC p betimsel kalır. Karar eşiği §3'teki boş dağılımla. K20'nin "birleştirilmiş seri" maddesi bu kararla değişir (plan kaydı) |
+| K-M8-1 | **Çıkarım birimi.** K20 "kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi" diyor; M5 §4.11 bu serinin ortak HAC p'sinin tohum varyansını taşımadığını gösterdi | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Birincil çıkarım **tohum × kat düzeyinde**: eşli (aynı tohum, aynı kat) Sharpe farkları, tabakalı bootstrap güven aralığı. Ortak HAC p betimsel kalır. Karar eşiği §3'teki boş dağılımla. K20'nin "birleştirilmiş seri" maddesi bu kararla değişir (plan kaydı). **Uygulama (hakem-rl #B1 sonrası, §6.4):** eşli işaret-çevirme boş dağılımı + boş kol negatif kontrol |
 | K-M8-2 | **Doğrulayıcı kanıt** (Faz 9 plan: "yalnız 2021 katı + ön kayıt sonrası ileri veri mi") | **KARAR (2026-11-21, kullanıcı: öneri yönünde)** (§6.7): birincil okuma 6 katta; 2021 katı (hiç okunmamış tek kat) ayrıca raporlanır; ileri veri ayrı bir ekle |
 | K-M8-3 | **Kollar ve bütçe**: IPPO dahil mi, hangi iletişim kolları, sinyal kolları (M5 gerçek sinyal `O1_fark_yok`), kol budama kuralı (K20) | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Kollar: MAPPO-`none`, MAPPO-`gat`, SARL-eşmimari, SARL-ağırlık ve boş kol (MAPPO-`none`, ayrı 12 tohum). IPPO yok, sinyal kolu yok, budama yok. K-M8-7 ile `self` kolu eklendi (§6.2) |
 | K-M8-4 | **Seçim kuralı etkeni** (argmax ↔ son nokta; Faz 9 §9.12) | **Ön kayıtta sabitlendi** (§6.5): argmax birincil; son nokta ayrı kayıtla bir kez okunur, betimsel, deneme sayısına girer |
@@ -125,11 +125,15 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 
 ## 6. M8 ön kaydı — v1.0 TASLAK (2026-11-21, sonuçtan önce)
 
-**Durum:** TASLAK. Kullanıcı kararları tamam (K-M8-1..7). hakem-rl + hakem-finans okuması ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
+**Durum:** TASLAK v1.0-r1. Kullanıcı kararları tamam (K-M8-1..7). hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). İkinci okuma ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
 
 ### 6.1 Soru
 
-**H1 (birincil; plan §2.3):** Aynı gözlem, aynı eylem temsili, aynı paylaşımlı mimari, aynı α ve aynı tohumlarla, çok-ajanlı eğitim (MAPPO: ajan başına oran kırpması ve ajan başına değer) tek-ajanlı eğitimden (SARL-eşmimari: ortak oran kırpması, tek değer) örneklem dışında farklı bir maliyet sonrası fazla getiri Sharpe'ı üretir mi? İki yönlü.
+**H1 (birincil; plan §2.3):** Aynı gözlem, aynı eylem temsili, aynı paylaşımlı mimari, aynı α ve aynı tohumlarla, çok-ajanlı eğitim (MAPPO: ajan başına oran kırpması ve ajan başına değer) tek-ajanlı eğitimden (SARL-eşmimari: ortak oran kırpması, tek değer) **wf-v1'in 6 test yılında (2021–2026), bu dondurulmuş 30 hisselik evrende**, ortalama olarak farklı bir maliyet sonrası fazla getiri Sharpe'ı üretir mi? İki yönlü.
+
+**Kapsam (hakem-finans #1, #5).** Çıkarım bu 6 yıla koşulludur (sabit etki): tohum gürültüsünü kapsar, yıldan yıla etki değişkenliğini ve tek piyasa yolunu kapsamaz. Güç benzetiminde kat etkisi yıldan yıla değişirse (τ = 0,1), ortalama etki sıfırken kural %25 oranında FARK_VAR verir (`power_m8.json`, `olculen_tau0.1.size_at_0`). Bu "bu 6 yılda ortalama fark vardı" demektir, "genel olarak fark var" demek değildir. Genelleme için kat düzeyi tutarlılık eki (§6.4) ve ileri veri (§6.7) kullanılır. Yorum nominal TL ve yüksek enflasyon rejimine koşulludur.
+
+**Yorum sınırı (hakem-rl #B3).** Bütün kollar MAPPO için seçilmiş ortak yapılandırmayla eğitilir (§1; M3 §6.8): lr, 10 epoch, bölünmeyen 6000'lik parti, başlangıç std 0,12, aynı F. Aynı partide MAPPO 6000 × 30 ajan satırından, SARL 6000 örnekten gradyan alır. Etiket, bu ortak yapılandırma altında "algoritma + ayar" farkını ölçer. Ayarı eşitlenmiş bir SARL kolu yoktur. FARK_VAR_MARL, "MARL tek-ajandan üstündür" diye değil, "MAPPO-ayarlı ortak yapılandırmada MAPPO daha yüksek Sharpe verdi" diye yazılır. Plan §2.3'teki sonuç iddiası buna göre daralır.
 
 **İkincil (Holm, aile = 2):**
 - **H2:** MAPPO-`none` ↔ SARL-ağırlık. Aynı eylem temsili, farklı mimari (paylaşımsız düz MLP). Soru: paylaşımlı yerel mimari, merkezi tek aktöre göre fark yaratır mı?
@@ -156,7 +160,13 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
   - K20 kol budama kuralı uygulanmaz: kol sayısı baştan bütçeye sığdırıldı.
 - **Klasik baseline'lar** (betimsel; aynı yeni ortam muhasebesi, aynı maliyet, aynı test pencereleri):
   - 1/N günlük, al-tut (`m3_runner.rule_series`);
-  - min-varyans (Ledoit-Wolf daraltmalı) ve HRP: aylık yeniden dengeleme, yalnız geçmiş 252 seans; kodu A4;
+  - min-varyans (Ledoit-Wolf daraltmalı) ve HRP: aylık yeniden dengeleme; kodu A4. İleriye bakmama koşulları (hakem-finans #6; A4 testi bunları sınar):
+    - (a) Ağırlık, ayın ilk seansında t kapanışına kadarki 252 seanslık pencereden hesaplanır ve t+1 açılışında uygulanır; ay içinde fiyatla kayar.
+    - (b) Yalnız uzun pozisyon, Σw ≤ 1; kalan nakittir ve A8 faizi kazanır. Satış engeli, listeleme kilidi (20 seans) ve maliyet RL kollarıyla aynıdır.
+    - (c) Pencerede 252 geçerli getirisi olmayan ya da kilitli hisse o ay evrene girmez.
+    - (d) LW daraltması ve HRP bağlantı ağacı yalnız o pencereden kurulur.
+    - (e) 2021 katının ilk ağırlığı 2020 geçmişinden gelir.
+    - (f) Baseline'larla çıkarım testi yapılmaz; "RL > baseline" iddiası yazılmaz.
   - XU030 fiyat endeksi: aynı evren değil, temettüsüz, maliyetsiz. Kıyas değil, dipnotlu referans satırı (Faz 9 D1 beyanı).
 
 ### 6.3 Bölme, eğitim ve seçim
@@ -168,26 +178,45 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - **Koşu sayısı:** 6 kol (boş kol dahil) × 12 tohum × 6 kat = 432 koşu. Süre tahmini (boyut ölçümü ve M4 süre oranı): `none` türü ~1,6 dk etkin, gat/self ~2,0 dk; toplam ~12,5 sa, iki geceye bölünebilir. Süre tahmini ilk 3 koşuluk dalgada ölçülüp kayda yazılır. Koşucu kaldığı yerden sürer. Sıra kat → tohum → kol iç içedir; böylece yarıda kalan bir koşum her kolda dengeli kalır. Kısmi sonuç okunmaz.
 - **Hata kuralı:** çöken bir koşu aynı yapılandırma ve tohumla bir kez yeniden başlatılır; olay kayda yazılır. GPU'da bit-eşlik iddia edilmez (M3 §1). İkinci çöküşte hücre eksik sayılır (§6.6).
 
-### 6.4 Birincil istatistik ve karar kuralı (K-M8-1)
+### 6.4 Birincil istatistik ve karar kuralı (K-M8-1; hakem-rl #B1, #B2, #K3 sonrası)
 
-- **Hücre metriği:** SR_a(s, f) = kol a, tohum s, kat f'nin test yılı fazla getiri Sharpe'ı. Tanımı A8 risksiz faiz üstü, 20 bps, yıllık (`marl.selection.excess_sharpe(R, rf=R − X)`; seçim metriğiyle aynı). Tanımsızsa 0 alınır; sabit fazla getiri, yani tümüyle nakit demektir. Sayısı raporlanır.
-- **Etki:** Δ̄(a, b) = (1 / 6k) Σ_f Σ_s [SR_a(s, f) − SR_b(s, f)]. Eşleme aynı tohum ve aynı kat üzerinden.
-- **Belirsizlik (p_boot):** kat içinde tabakalı bootstrap; her katta 12 eşli fark yerine koyarak çekilir. B = 10.000, rastgele tohum 0. %95 yüzdelik güven aralığı; iki yönlü p_boot = 2 · min(P(Δ̄* ≤ 0), P(Δ̄* ≥ 0)).
-- **Gürültü tabanı (p_null; §3):** her katta M-none (201–212) ve boş kol (213–224) koşuları, yani aynı yapılandırmanın 24 koşusu birleştirilir. Her katta bağımsız rastgele 12 / 12 bölme yapılır ve Δ̄⁰ hesaplanır. R = 10.000, tohum 1. p_null = P(|Δ̄⁰| ≥ |Δ̄|).
-  - Önceden tanımlı bölme (201–212 ↔ 213–224) ayrıca raporlanır: kendi dağılımının içinde kalmalıdır (sağlık denetimi, karar değil).
-  - Beyan: aynı tohumun iki kolda paylaşılması eşli farkları birbirine bağlayabilir. Bağımsız koşulardan kurulan boş dağılım bu yüzden tutucu yanda kalır.
-- **H1 etiketi:**
-  - p_boot ≤ 0,05 ve p_null ≤ 0,05 → Δ̄ > 0 ise **FARK_VAR_MARL**, Δ̄ < 0 ise **FARK_VAR_SARL**;
-  - aksi hâlde **FARK_GÖZLENMEDİ**. Bu "eşdeğer" demek değildir. Güç beyanı: σ_tohum 0,155 ile iki yönlü %5'te MDE ≈ 0,072 Sharpe; σ'nın %80 üst sınırıyla ≈ 0,106 (§3.2). Bundan küçük farklar bu tasarımla ayırt edilemez.
-- **H2, H3:** p = max(p_boot, p_null); iki p'ye Holm (α 0,05). H3'ün boş dağılımı da `none` koşularından gelir. gat ↔ self gibi mimari-eş kolların eşli farkı daha az gürültülü olabilir (M4b'de SE yarıya indi), bu yüzden H3'te p_null tutucu yandadır (beyan). Etiketler H1 ile aynı adlarla: MARL yerine birinci kol, SARL yerine ikinci kol.
+Kural tek yerde, koddadır: `scripts/marl/m8_stats.py` (okuma ve güç benzetimi aynı fonksiyonu kullanır).
+
+- **Hücre metriği:** SR_a(s, f) = kol a, tohum s, kat f'nin test yılı fazla getiri Sharpe'ı. Tanımı A8 risksiz faiz üstü, 20 bps, yıllık (`marl.selection.excess_sharpe(R, rf=R − X)`; seçim metriğiyle aynı). Tanımsızsa 0 alınır; sabit fazla getiri, yani tümüyle nakit demektir. Kol başına tanımsız hücre sayısı raporlanır (§6.6).
+- **Etki:** d(s, f) = SR_a(s, f) − SR_b(s, f), eşleme aynı tohum ve aynı kat. Δ̄ = mevcut eşlerin eşit ağırlıklı ortalaması (72 eş).
+- **p_işaret (birincil boş dağılım):** eşli işaret-çevirme permütasyonu. Her eşin işareti bağımsız çevrilir. R = 10.000, tohum 1; p = (1 + #{|Δ̄⁰| ≥ |Δ̄|}) / (R + 1).
+  - Önceki taslaktaki eşsiz 12/12 permütasyon (M-none + boş kol havuzu) kaldırıldı (hakem-rl #B1). O düzen eşli istatistik için yanlış boş dağılımdı: S kollarının yayılımı M-none'dan büyükse H1/H2'de anti-tutucu, gat ↔ self'te aşırı tutucu kalıyordu.
+- **p_boot:** kat içinde tabakalı bootstrap; her katta eşler yerine koyarak çekilir. B = 10.000, tohum 0. %95 yüzdelik güven aralığı; p = min(1, 2 · min(1 + #{Δ̄* ≤ 0}, 1 + #{Δ̄* ≥ 0}) / (B + 1)).
+- **Boş kol = negatif kontrol** (K-M8-1'in gürültü tabanı amacı): M-none ↔ boş kol (201↔213, …, 212↔224) aynı kuralla okunur.
+  - Beklenen etiket FARK_GÖZLENMEDİ. FARK_VAR çıkarsa bütün etiketler `negatif_kontrol_uyarisi` taşır (kural gereği %5 olasılık; beyan).
+  - Ayrıca kat başına kol içi yayılım (sd_tohum) ve her kolun M-none'a yayılım oranı raporlanır (hakem-rl #B1).
+- **H1 etiketi:** p_işaret ≤ 0,05 ve p_boot ≤ 0,05 → Δ̄ > 0 ise **FARK_VAR_MARL**, Δ̄ < 0 ise **FARK_VAR_SARL**; aksi hâlde **FARK_GÖZLENMEDİ**. Bu "eşdeğer" demek değildir.
+  - **Kat tutarlılığı eki** (hakem-finans #1; etiketi değiştirmez): 6 kat ortalamasının tam işaret-çevirmesi (64 düzen). p ≤ 0,05 ise etikete `(katlar_tutarli)`, değilse `(yila_bagli)` eklenir. 6 katta bu fiilen 6/6 aynı işaret demektir (en küçük p 2/64).
+  - **Seçim kuralı eki** (hakem-rl #K2): `test_last` ile aynı istatistik aynı işareti ve p_max ≤ 0,10'u veriyorsa `(secime_dayanikli)`, değilse `(secime_duyarli)`.
+- **Güç (hakem-rl #B2, hakem-finans #3; `measurements/phase10-m8/power_m8.json`):** Bu kuralın kendisiyle benzetim yapıldı; 2.000 tekrar, F 6 × k 12. %80 güç için en küçük fark:
+
+  | Senaryo | Sıfırda etiket oranı | MDE₈₀ (Sharpe) |
+  |---|---|---|
+  | σ 0,155 (ölçülen), ρ 0 | 0,050 | 0,075 |
+  | σ 0,155, ρ 0,5 (tohum paylaşımı eşleri bağlarsa) | 0,041 | 0,054 |
+  | σ 0,226 (%80 üst sınır) | 0,052 | 0,107 |
+  | SARL kolunda σ × 1,5 | 0,044 | 0,095 |
+  | σ üst sınır ve SARL × 1,5 | 0,045 | 0,137 |
+  | σ 0,155, kat etkisi τ 0,1 | 0,249 | 0,096 |
+
+  - Beyan: MDE ~0,075 ile ~0,14 arasındadır. σ tek sözde kattan (2020), tek koldan (M-none) ve 6 tohumdan gelir. Okumada kat × kol σ'sı raporlanır ve MDE onunla yeniden hesaplanır; bu betimseldir.
+- **H2, H3:** p_max = max(p_işaret, p_boot); iki p_max'a Holm (α 0,05). Etiket adlarında MARL / SARL yerine kolların adı kullanılır. Eklerin ikisi de uygulanır.
 
 ### 6.5 Betimsel (kararları değiştirmez)
 
 - Kat başına Δ̄_f ve işaret sayısı; kollar için ortalama ± std ve rliable tipi aralıklar (`evaluation/seed_stats`).
+  - Δ̄_f'nin yanında: eğitim günü başına kare, kat başına ortalama nakit ağırlığı ve brüt maruziyet. Kol farkı seçim becerisinden mi, maruziyet farkından mı geliyor, okunabilsin (hakem-finans #5).
+  - Kat trendi (Δ̄_f ile kat sırasının Spearman ilişkisi). F sabitken geç katlarda eğitim günü başına kare azalır (≈ 370 → 200 geçiş; kaba hesap); kat × kol etkileşimi bunu gösterir (hakem-rl #K1).
+- İkincil metrik: ortalama günlük fazla getiri (yıllık); kat ve kol bazında (hakem-finans #5).
 - **Son nokta kuralı** (K-M8-4): `test_last` aynı istatistiklerle ayrı tabloda verilir. Seçilen nokta son noktayla aynıysa ikinci okuma aynı seridir; bu oran raporlanır.
-- **Maliyet ızgarası D4** (0 / 10 / 25 / 50 bps): ex post, aynı politika. Ağırlık yolu maliyetten bağımsız olduğu için (`accounting.step_fractional`) seri tam hesaplanır. Politika 20 bps ile eğitildi; başka maliyetle yeniden eğitilmiş politikanın sonucu değildir (beyan).
+- **Maliyet ızgarası D4** (0 / 10 / 25 / 50 bps): ex post, aynı politika. Ağırlık yolu maliyetten bağımsız olduğu için (`accounting.step_fractional`) seri tam hesaplanır. Politika 20 bps ile eğitildi; başka maliyetle yeniden eğitilmiş politikanın sonucu değildir (beyan). Maliyet oranı dönem boyunca sabittir. Fiyat limiti ve açılıştan dolum beyanı M2'dekiyle aynıdır (hakem-finans #8).
 - K20'deki birleştirilmiş günlük seri: ortak HAC p (`sharpe_diff_hac_pooled`), yalnız betimsel (K-M8-1).
-- DSR: N = okunan M8 yapılandırmaları (kol × seçim kuralı; boş kol ayrı yapılandırma sayılmaz). V denemeler arası SR varyansından. M2–M7 geliştirme koşuları 2021+'ı okumadığı için N'ye girmez (beyan).
+- DSR: N = okunan M8 yapılandırmaları (kol × seçim kuralı; boş kol ayrı yapılandırma sayılmaz). V denemeler arası SR varyansından. M2–M7 geliştirme koşuları 2021+'ı okumadığı için N'ye girmez. **N bir alt sınırdır:** eski ortamın 2022–2026'yı okuyan Faz 9 öncesi denemeleri sayılmadı. M8'de "en iyiyi seçme" olmadığı için DSR yalnız betimseldir ve kararı değiştirmez (hakem-finans #7).
 - Devir, nakit ağırlığı, satış engeli sayısı; klasik baseline tablosu (§6.2).
 - Kat başına doğrulama ↔ test ilişkisi: boyut ölçümünde r = −0,42 çıkmıştı.
 
@@ -197,6 +226,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - Panel SHA `panel_m8.json` ile aynı; graf SHA M4 kaydıyla aynı.
 - Kat pencereleri `evaluation/splits.py` wf-v1 ile aynı (A1'de kalan madde).
 - Yapılandırma ön kayıtla aynı: F, lr, maliyet, α, `n_envs`, kontrol noktası, kol ve tohum.
+- Tanımsız (tümüyle nakit) hücre: kol başına sayı. Bir kolda oran %10'u aşarsa ya da iki kol arasındaki fark %5 puanı aşarsa, o karşıtlık için "tanımsızlar düşürülmüş" duyarlılık satırı verilir ve etikete `tanimsiz_uyarisi` eklenir. Etiketin kendisi değişmez (hakem-rl #K5, hakem-finans #4).
 - Eksik hücre: her kolda 72 hücre beklenir. Herhangi bir kolda %10'dan fazla eksik hücre varsa (8 ve üstü) o kolun karşıtlıkları **EKSİK** olur. Daha azsa eşleşmeyen hücreler düşer ve sayısı raporlanır.
 - Deneme kaydı (C2): her kol ve seçim kuralı `evaluation/trial_registry` ile yazılır (A1'de kalan madde; ana venv okuma adımında).
 
@@ -206,7 +236,17 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - **Karar (2026-11-21, kullanıcı):**
   - Birincil okuma 6 katın hepsiyle yapılır; her katın açıklık bayrağı tabloda yer alır.
   - **2021 katı ayrıca raporlanır.** Bu yalnız Δ̄ ve güven aralığıdır, etiket yoktur. Tek katın MDE'si ~0,18 (iki yönlü, k 12).
-  - **İleri veri** (2026-11-10 ve sonrası): ön kayıttan sonra oluşan veride 2026 katının seçilmiş politikaları bir kez okunur. Bu, ayrı bir ön kayıt ekiyle ve en az 6 aylık veri birikince yapılır (wf-v2 değildir; yalnız tutma). Sonuç doğrulayıcı aile olarak ayrı raporlanır.
+  - **İleri veri** (hakem-finans #2):
+    - Başlangıç: ön kaydın **dondurulduğu commit tarihinden sonraki ilk seans**. 2026-11-10..dondurma arası veri hiçbir modelle okunmadı ama ileri veri sayılmaz.
+    - Politikalar: 2026 katının seçilmiş 12 politikası, her kolda. SHA'ları okuma JSON'unda sabitlenir; ileri okumada denetlenir.
+    - Zaman: en az 126 seans birikince, ayrı bir ön kayıt ekiyle, bir kez okunur.
+    - Panel: aynı veri kapısı ve `m8-v1` düzeltme kurallarıyla ayrı bir panel sürümü. wf-v2 değildir; yeniden eğitim yoktur, yalnız tutma.
+    - Ölçüt, önceden: ileri Δ̄ ve %95 GA hesaplanır (aynı `m8_stats`, tek kat).
+      - **destekler:** 6 kat etiketi FARK_VAR ise, ileri Δ̄ aynı işaretli ve GA 6 kat Δ̄'sini kapsıyor.
+      - **çelişir:** GA 0'ı ters işaretle dışlıyor.
+      - aksi **belirsiz**.
+      - 6 kat etiketi FARK_GÖZLENMEDİ ise ileri okuma yalnız betimseldir.
+    - Güç (kaba; σ'nın 1/√T ile büyüdüğü varsayımı): 126 seans ve k 12 ile MDE ≈ 0,25 Sharpe. Yalnız büyük farklar doğrulanabilir (beyan).
 - Gerekçe: açık pencereler başka bir model sınıfıyla okundu. M8 tasarımı bu pencerelerin sonucuna göre ayarlanmadı, ama araştırmacının bilgisi beyan edilir.
 
 ### 6.8 Sonuç görüldükten sonra yapılmayanlar
@@ -215,12 +255,30 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 
 ### 6.9 Dondurmadan önce gereken kod (A4)
 
+- **Durum (2026-11-21):** `run_m8.py` yazıldı (`--dry-run` 432 komut ön kayıtla aynı). Duman koşusu (eğitim ..2017, doğrulama 2018, test 2019; scratchpad, 2021+ okunmadı): M-gat, M-self, S-agr ve S-esm toplu ortam + kontrol noktası + `eval_fold_m8 --also-last` ile çalıştı. `m8_stats.py` ve `power_m8.py` yazıldı. `analyze_m8.py` ve min-var/HRP baseline'ları kaldı.
+
 - `scripts/marl/run_m8.py` (venv-marl): kat × tohum × kol koşucusu (§6.3 sırası, `wait_gpu`, kaldığı yerden sürme, `--dry-run`). Her koşu `train_m3.py --checkpoints 10` → `eval_fold_m8.py --also-last`.
 - `scripts/marl/analyze_m8.py` (ana venv): §6.4–§6.6 ve `--self-test` (sentetik kayıtla etiketler, Holm, eksik hücre, denetimler).
 - Min-varyans (LW) ve HRP kural baseline'ları, yeni ortam muhasebesiyle. Testi `test_marl_core`'a ya da ayrı bir teste eklenir.
 - Hepsi koşudan önce commit'lenir; koşular tek commit'ten, temiz ağaçtan yapılır.
 
+### 6.10 Hakem okumaları
+
+**İlk okuma (2026-11-21, paralel, ortak paket, taban 90f7f7b; koşu yok):**
+
+| Hakem | Karar | Bulgu | İşlem |
+|---|---|---|---|
+| hakem-rl | Büyük revizyon | B1 boş dağılım eşsiz, istatistik eşli | §6.4: eşli işaret-çevirme; boş kol negatif kontrol + yayılım oranı |
+| | | B2 MDE gerçek kuralla değil | `power_m8.py` benzetimi, §6.4 tablosu |
+| | | B3 SARL kolları MAPPO-ayarlı | §6.1 yorum sınırı; ayar-eşit SARL kolu yok (kullanıcı kararı K-M8-3 kapsamı) |
+| | | K1 F sabit / kat etkileşimi; K2 seçim ayrışması; K3 p tabanı; K4 havuz bağımlılığı; K5 tanımsız hücre | §6.5 kat trendi; §6.4 seçim eki; `m8_stats` p = (1+#)/(R+1); B1 ile kalktı; §6.6 |
+| hakem-finans | Küçük revizyon | 1 çıkarım 6 yıla koşullu (BÜYÜK) | §6.1 kapsam; §6.4 kat tutarlılığı eki; τ benzetimi |
+| | | 2 doğrulayıcı ölçüt ve ileri veri başlangıcı (BÜYÜK) | §6.7 |
+| | | 3 VE kuralının gücü; 4 tanımsız hücre; 5 rejim/maruziyet; 6 min-var/HRP; 7 DSR N; 8 maliyet beyanı | §6.4; §6.6; §6.5; §6.2; §6.5; §6.5 |
+
 ## Versiyon geçmişi
+
+- **v0.6 (2026-11-21):** Ön kayıt v1.0-r1: hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). Boş dağılım eşli işaret-çevirmeye geçti; boş kol negatif kontrol oldu. Güç gerçek kuralla benzetildi (`power_m8.json`, MDE 0,075–0,137). Kapsam 6 yıla koşullu yazıldı, kat tutarlılığı ve seçim kuralı ekleri, SARL yorum sınırı, ileri veri ölçütü, baseline ileriye bakmama koşulları eklendi. `run_m8.py`, `m8_stats.py`, `power_m8.py`. Koşu yok.
 
 - **v0.5 (2026-11-21):** M8 ön kaydı v1.0 TASLAK (§6). K-M8-3/5 KARAR (kullanıcı: öneri yönünde): k = 12, F = 600.000; kollar M-none, M-gat, S-esm, S-agr + boş kol; IPPO ve sinyal kolu yok. K-M8-4 sabitlendi, K-M8-6 konusuz. K-M8-7 KARAR: `self` kolu eklenir (H3 = gat ↔ self, 432 koşu). K-M8-2 KARAR: 6 kat birincil, 2021 ayrı, ileri veri ekle. Koşu yok.
 
