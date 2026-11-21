@@ -607,7 +607,7 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 **Teknik:** MARL kıyasında her gün, tek ajan kıyasında aylık olarak geçerli sembollere eşit ağırlık; ortamın aynı muhasebesi, fiyat dolgusu, projeksiyonu ve maliyetiyle.
 
-- Kodda: [`marl/m3_runner.py::rule_series`](../marl/m3_runner.py), [`evaluation/baselines.py::equal_weight`](../evaluation/baselines.py)
+- Kodda: [`marl/rule_baselines.py::rule_series`](../marl/rule_baselines.py), [`evaluation/baselines.py::equal_weight`](../evaluation/baselines.py)
 - İlgili: [Al-tut](#al-tut), [İşlem maliyeti (bps)](#islem-maliyeti)
 
 <a id="al-tut"></a>
@@ -618,7 +618,7 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 **Teknik:** İlk gün 1/N, sonra hedef = kaymış ağırlık (işlem yok; yalnız zorunlu dondurma), ortamın muhasebesiyle.
 
-- Kodda: [`marl/m3_runner.py::rule_series`](../marl/m3_runner.py)
+- Kodda: [`marl/rule_baselines.py::rule_series`](../marl/rule_baselines.py)
 - İlgili: [1/N (eşit ağırlık)](#baseline-1n)
 
 <a id="devir"></a>

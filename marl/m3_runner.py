@@ -9,11 +9,8 @@ Hiperparametre kaynagi (M3 on kaydi):
   [-B, B] logit oldugundan std 1,0 her gun ~tam devir uretir.
 - Degerlendirme: deterministik eylem (TanhNormal modu), tam pencere, kesirli mod, egitim norm_stats'i (B9).
 
-Baseline'lar (M2 §9 #11, hakem-finans F7/F10): ortamin AYNI muhasebesi (`accounting.step_fractional`), ayni
-`fill_prices` (kilit 20 + v0.7 marj takvimi), `project` (ayni Constraints), A8 rf, ayni maliyet:
-  ew   : her gun tam yatirimli 1/N (t'de gecerli semboller)
-  bh   : ilk gun 1/N, sonra hedef = kaymis agirlik (islem yok; yalniz zorunlu dondurma)
-  cash : tam nakit (X = 0)
+Baseline'lar (`rule_series`): `marl/rule_baselines.py` (saf cekirdek; ew, bh, cash + M8 minvar, hrp), buradan
+yeniden ihrac edilir.
 """
 from __future__ import annotations
 
@@ -26,8 +23,6 @@ from typing import Optional
 import numpy as np
 import torch
 
-from marl import accounting as A
-from marl import weights as W
 from marl.benchmarl_task import MarlTask, make_env
 
 
@@ -182,31 +177,5 @@ def deterministic_rollout(policy, env_cfg: dict) -> dict:
     return {k: (np.asarray(v) if k != 'date' else list(v)) for k, v in out.items()}
 
 
-def rule_series(arrays: dict, start_row: int, end_row: int, kind: str, cost_bps_roundtrip: float = 20.0,
-                limit_down_gap='schedule', constraints: W.Constraints = W.Constraints()) -> dict:
-    """Ortamin muhasebesiyle kural portfoyu (ew | bh | cash); karar satirlari [start_row, end_row)."""
-    if kind not in ('ew', 'bh', 'cash'):
-        raise ValueError(f"kind ew | bh | cash: {kind}")
-    ldg = A.limit_down_gaps(arrays['dates']) if limit_down_gap == 'schedule' else float(limit_down_gap)
-    px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, ldg)
-    cost = A.one_way_cost(cost_bps_roundtrip)
-    N = arrays['open'].shape[1]
-    w = np.r_[1.0, np.zeros(N)]
-    out = {k: [] for k in ('date', 'R', 'X', 'turnover', 'cash_weight')}
-    for t in range(start_row, end_row):
-        g_on, g_day, tradable = A.step_growth(px, t)
-        rf = float(arrays['rf'][t + 1])
-        v = px['valid'][t]
-        if kind == 'cash':
-            u = np.r_[1.0, np.zeros(N)]
-        elif kind == 'ew' or (kind == 'bh' and t == start_row):
-            u = np.r_[0.0, v.astype(float) / max(float(v.sum()), 1.0)]
-        else:   # bh: hedef = kaymis agirlik (gece kaymasi project icinde w~'ye esit -> islem yok)
-            drift = w * np.concatenate([[1.0 + rf], g_on])
-            u = drift / drift.sum()
-        res = A.step_fractional(w, u, g_on, g_day, tradable, rf, cost, constraints, None, px['no_sell'][t + 1])
-        w = res.w_next
-        for k, val in (('date', str(arrays['dates'][t + 1])), ('R', res.R), ('X', res.X),
-                       ('turnover', res.turnover), ('cash_weight', float(w[0]))):
-            out[k].append(val)
-    return {k: (np.asarray(v) if k != 'date' else list(v)) for k, v in out.items()}
+# Kural portfoyleri M8 A4'te saf cekirdege tasindi (ana venv de okur); davranis ayni (test_marl_m3 baseline testi).
+from marl.rule_baselines import rule_series  # noqa: E402,F401

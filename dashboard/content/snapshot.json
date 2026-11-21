@@ -408,9 +408,9 @@
   },
   {
    "ad": "Faz 10 M8, nihai koşumlar",
-   "durum": "planlı",
-   "sinif": "planli",
-   "siradaki": null
+   "durum": "ön kayıt v1.0 DONDURULDU (2026-11-21), koşu sırada",
+   "sinif": "bitti",
+   "siradaki": "2021 katı (run_m8.py --folds 2021), sonra sağlık kaydı ve kullanıcı onayı"
   },
   {
    "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
@@ -471,7 +471,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "a15bac821e26e03c4891a1346f07e76d03c0cb083e06d8cfff746d4d8a59b0db",
+   "tablo_sha256": "d4e7c5e355ae53704111759094eab689add59e279477f417f0b4fe67a81808a5",
    "uretim_commit": null
   }
  }

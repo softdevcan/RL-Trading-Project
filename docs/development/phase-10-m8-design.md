@@ -1,8 +1,8 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.7 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v1.0 · ön kayıt DONDURULDU · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
-**Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
+**Durum:** Ön kayıt (§6) DONDURULDU 2026-11-21; koşular yıl yıl (§6.3). §1–§5 tasarım geçmişidir. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
 ---
 
@@ -123,9 +123,9 @@ Kaynak: `measurements/phase10-m8/noise_size.json`. Okuyan `analyze_noise_m8.py` 
 
 A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (GPU boşken) → ön kayıt v1.0 (§6) + hakem-rl ve hakem-finans (paralel) → A4 kodu (koşucu, okuma, kural baseline'ları; self-test) → dondurma → M8 koşuları → faz kapanışında hakem-2.
 
-## 6. M8 ön kaydı — v1.0 TASLAK (2026-11-21, sonuçtan önce)
+## 6. M8 ön kaydı — v1.0 DONDURULDU (2026-11-21, sonuçtan önce)
 
-**Durum:** TASLAK v1.0-r2 (hakem okumaları tamam). Kullanıcı kararları tamam (K-M8-1..7). hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). İkinci okuma ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
+**Durum:** **DONDURULDU v1.0 (2026-11-21)**; dondurma commit'i bu satırı içeren commit, yerel etiket `m8-prereg-v1`. Kullanıcı kararları tamam (K-M8-1..7). hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması ve ikinci okuma işlendi (§6.10). A4 kodu commit'lendi (§6.9). Bu bölüm artık değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmadı.
 
 ### 6.1 Soru
 
@@ -175,7 +175,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - **Eğitim:** her (kol, tohum, kat) için ayrı koşu, F = 600.000 kare. Kare bütçesi katlar arasında sabittir; geç katlarda eğitim günü başına düşen kare azalır (beyan). Toplu toplayıcı `n_envs` 10, normalizasyon istatistiği kat eğitim penceresinden. Panel `panel_m8` (`m8-v1`, SHA 2b7ea84c…).
 - **Kontrol noktası:** eşit aralıklı 10 nokta. Doğrulama yılında belirlenimci tek geçiş, 20 bps. `val_excess_sharpe` en yüksek olan seçilir, eşitlikte en erken (`marl.selection`; `rl_folds` ile parite testli). Hiçbiri tanımlı değilse son nokta seçilir ve `degenerate` sayılır.
 - **Test:** seçilen noktayla bir kez (`eval_fold_m8.py`; çıktı varsa durur). `--also-last` ile son nokta ayrı kayıtla okunur (§6.5).
-- **Koşu sayısı:** 6 kol (boş kol dahil) × 12 tohum × 6 kat = 432 koşu. Süre tahmini (boyut ölçümü ve M4 süre oranı): `none` türü ~1,6 dk etkin, gat/self ~2,0 dk; toplam ~12,5 sa, iki geceye bölünebilir. Süre tahmini ilk 3 koşuluk dalgada ölçülüp kayda yazılır. Koşucu kaldığı yerden sürer. Sıra kat → tohum → kol iç içedir; böylece yarıda kalan bir koşum her kolda dengeli kalır. Kısmi sonuç okunmaz.
+- **Koşu sayısı:** 6 kol (boş kol dahil) × 12 tohum × 6 kat = 432 koşu. Süre tahmini (boyut ölçümü ve M4 süre oranı): `none` türü ~1,6 dk etkin, gat/self ~2,0 dk; toplam ~12,5 sa. **Yıl yıl koşulur (kullanıcı kararı 2026-11-21):** her kat ayrı bir parti (`run_m8.py --folds <yıl>`, ~2 sa, 72 koşu); parti sonunda `analyze_m8.py --status <yıl>` sağlık kaydı yazılır (biten/eksik hücre, çöküş, süre, commit, SHA, pencere, yapılandırma; test dosyası açılmaz, başarım yazılmaz) ve sonraki kat kullanıcı onayıyla başlar. Parçalar arasında ana ağaçta commit yapılmaz; sağlık kaydı önceki katlarla aynı commit'i denetler. Gerçek süre sağlık kaydına yazılır. Koşucu kaldığı yerden sürer. Sıra kat → tohum → kol iç içedir; böylece yarıda kalan bir koşum her kolda dengeli kalır. Kısmi sonuç okunmaz.
 - **Hata kuralı:** çöken bir koşu aynı yapılandırma ve tohumla bir kez yeniden başlatılır; olay kayda yazılır. GPU'da bit-eşlik iddia edilmez (M3 §1). İkinci çöküşte hücre eksik sayılır (§6.6).
 
 ### 6.4 Birincil istatistik ve karar kuralı (K-M8-1; hakem-rl #B1, #B2, #K3 sonrası)
@@ -257,7 +257,11 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 
 ### 6.9 Dondurmadan önce gereken kod (A4)
 
-- **Durum (2026-11-21):** `run_m8.py` yazıldı (`--dry-run` 432 komut ön kayıtla aynı). Duman koşusu (eğitim ..2017, doğrulama 2018, test 2019; scratchpad, 2021+ okunmadı): M-gat, M-self, S-agr ve S-esm toplu ortam + kontrol noktası + `eval_fold_m8 --also-last` ile çalıştı. `m8_stats.py` ve `power_m8.py` yazıldı. `analyze_m8.py` ve min-var/HRP baseline'ları kaldı.
+- **Durum (2026-11-21, ilk):** `run_m8.py` yazıldı (`--dry-run` 432 komut ön kayıtla aynı). Duman koşusu (eğitim ..2017, doğrulama 2018, test 2019; scratchpad, 2021+ okunmadı): M-gat, M-self, S-agr ve S-esm toplu ortam + kontrol noktası + `eval_fold_m8 --also-last` ile çalıştı. `m8_stats.py` ve `power_m8.py` yazıldı. `analyze_m8.py` ve min-var/HRP baseline'ları kaldı.
+- **Durum (2026-11-21, dondurma): A4 tamam.**
+  - `marl/rule_baselines.py` (saf çekirdek): `rule_series` buraya taşındı (ew/bh/cash davranışı aynı, `test_marl_m3` 20/20) ve `minvar`/`hrp` eklendi. Ledoit-Wolf sklearn formülüyle aynı; uzun-yalnız min-varyans hızlandırılmış izdüşümlü gradyan; HRP tekli bağlantı + ters varyanslı ikiye bölme. Test `tests/test_marl_baselines.py` (7): LW ve SLSQP paritesi, HRP köşegende ters varyans, (e) kesilmiş panelle aynı ağırlık (gerçek panelde 2021 katının ilk ağırlığı ≤ 2020-12-31), ay başı dengeleme, geç listelenen hisse evren dışı.
+  - `scripts/marl/analyze_m8.py` (ana venv): `--status` sağlık kaydı ve nihai okuma; `--self-test` 11/11 (dikilen etki, ters işaret ve Holm, eksik hücre → EKSİK, kirli ağaç → UYARILI, tanımsız %12,5 → uyarı + duyarlılık satırı, yapılandırma/pencere sapması, sağlık kaydı test dosyası açmaz, deneme kaydı). Nihai okuma, 6 katın sağlık kaydı yoksa durur.
+  - Uygulama ayrıntıları (sonuçtan önce sabitlendi): ortak HAC (§6.5) kat başına, o katın 12 tohum çiftiyle hesaplanır (katların tarihleri farklı). DSR serisi her yapılandırmanın tohum ortalaması günlük fazla getirisidir, katlar ardışık eklenir; N = 10 (5 kol × 2 seçim kuralı). D4 ex post: R′ = (1 + R)(1 − c′τ)/(1 − cτ) − 1 (ağırlık yolu maliyetten bağımsız). Deneme kaydı (`kind='marl_m8'`, `--register`) protokolde yalnız ölçülen maddeleri beyan eder (eğitim penceresi ölçeği, wf-v1, doğrulama seçimi, pencere açıklığı, HPO yok); ölçülmeyen maddeler açık kalır, kayıt N sayımı içindir.
 
 - `scripts/marl/run_m8.py` (venv-marl): kat × tohum × kol koşucusu (§6.3 sırası, `wait_gpu`, kaldığı yerden sürme, `--dry-run`). Her koşu `train_m3.py --checkpoints 10` → `eval_fold_m8.py --also-last`.
 - `scripts/marl/analyze_m8.py` (ana venv): §6.4–§6.6 ve `--self-test` (sentetik kayıtla etiketler, Holm, eksik hücre, denetimler).
@@ -281,6 +285,8 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 **İkinci okuma (2026-11-21, SendMessage, fark 90f7f7b..cd70cca; koşu yok):** hakem-finans **Kabul**: iki BÜYÜK kapandı, yeni BÜYÜK yok. hakem-rl **Küçük revizyon**: B1–B3 kapandı (B3 kapsam daraltmayla). Üç yeni KÜÇÜK not vardı (K-a etiketin yazımı, K-b benzetim R/B, K-c normal varsayımı); §6.4'e işlendi. Finans notu (e) testi §6.2'ye eklendi. Yeni okuma gerekmez. Ön kayıt metni A4 kodu bitince dondurulur.
 
 ## Versiyon geçmişi
+
+- **v1.0 (2026-11-21):** Ön kayıt DONDURULDU (yerel etiket `m8-prereg-v1`). A4 bitti: `marl/rule_baselines.py` (min-var LW, HRP; `rule_series` taşındı), `tests/test_marl_baselines.py` (7), `scripts/marl/analyze_m8.py` (sağlık kaydı + nihai okuma, öz-test 11). Kullanıcı kararı: koşu yıl yıl partiler, her parti sonunda sağlık kaydı ve onay (§6.3). Koşu yok.
 
 - **v0.7 (2026-11-21):** İkinci hakem okuması (hakem-finans Kabul; hakem-rl Küçük revizyon, notlar işlendi). Ön kayıt metni tamam; dondurma A4 kodunu bekliyor.
 

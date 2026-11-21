@@ -110,6 +110,9 @@ python tests/test_rl_walk_forward.py       # Faz 9/R1 + P4 + M8 secim kurali: wf
 python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri 5+ln N, projeksiyon (500 rastgele), muhasebe
                                            #          elle hesap + maliyet bir kez + katki, K5 emir + apply_decisions gidis-donus,
                                            #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel, M8 m8-v1 veri duzeltmesi, M8 secim kurali rl_folds paritesi (63, ~5 sn; ana venv)
+python tests/test_marl_baselines.py         # Faz 10/M8 A4 kural portfoyleri (marl/rule_baselines.py): Ledoit-Wolf sklearn paritesi, uzun-yalniz min-var SLSQP,
+                                           #          HRP kosegende ters varyans, (e) kesilmis panelle ayni agirlik (gercek panel 2021), ay basi dengeleme (7, ~2 sn; ana venv)
+python scripts/marl/analyze_m8.py --self-test  # M8 okuma: etiketler, Holm, eksik -> EKSIK, kirli agac -> UYARILI, tanimsiz uyarisi, --status test acmaz, deneme kaydi (11, ~40 sn; ana venv)
 venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
                                            #          listeleme kilidi, satis engeli + kontrol kolu, DSR yalniz alpha=0 + isinma bekcisi, TorchRL sarmalayici (36, ~10 sn; YALNIZ venv-marl)
