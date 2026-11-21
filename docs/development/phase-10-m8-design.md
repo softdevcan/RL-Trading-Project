@@ -49,6 +49,7 @@
     - iki SARL kolunda kısa MAPPO koşusu ve tohum belirlenimciliği; kaydet/yükle ve belirlenimci değerlendirme.
   - **BİTTİ (2026-11-21).** `marl/sarl.py` (yalnız venv-marl), `make_env` `single_agent` anahtarı, `m3_runner` `rowshared` modeli, `train_m3.py --sarl {agirlik, esmimari}`. Testler `test_marl_sarl` 4/4; diğer venv-marl testleri ve `test_marl_core` yeşil. Komut satırı denemesi: `panel_m8`, toplu toplayıcı, kontrol noktaları ve `eval_fold_m8` çalışıyor. SARL-eşmimari politikası 77.826 parametre; MARL paylaşımlı politikasıyla aynı.
 - **A3 — Okuma kodu.** Çıkarım birimi ve gürültü tabanı kuralı (§3) koşudan önce yazılır ve sentetik kayıtla sınanır (`--self-test`, M5 kalıbı).
+  - Boyut ölçümü okuması `scripts/marl/analyze_noise_m8.py` koşudan önce yazıldı (2026-11-21), `--self-test` 12/12. Betik Sharpe tanımını, σ_tohum'u, 10 ayrık 3/3 bölmeyi ve MDE formülünü sınıyor. Kayıt denetimleri de var: git izi, pencereler 2019/2020, panel SHA, ön kayıt yapılandırması; eksik tohum ya da işlemsiz seri olursa etiket düşüyor. M8 birincil karşıtlık okuması ön kayıt v1.0 ile yazılır.
 
 ## 3. Gürültü tabanı dağılımı (engel 2)
 
