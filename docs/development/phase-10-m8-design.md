@@ -112,12 +112,12 @@ Kaynak: `measurements/phase10-m8/noise_size.json`. Okuyan `analyze_noise_m8.py` 
 | # | Madde | Öneri |
 |---|---|---|
 | K-M8-1 | **Çıkarım birimi.** K20 "kat × tohum üzerinden birleştirilmiş örneklem dışı günlük getiri serisi" diyor; M5 §4.11 bu serinin ortak HAC p'sinin tohum varyansını taşımadığını gösterdi | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Birincil çıkarım **tohum × kat düzeyinde**: eşli (aynı tohum, aynı kat) Sharpe farkları, tabakalı bootstrap güven aralığı. Ortak HAC p betimsel kalır. Karar eşiği §3'teki boş dağılımla. K20'nin "birleştirilmiş seri" maddesi bu kararla değişir (plan kaydı) |
-| K-M8-2 | **Doğrulayıcı kanıt** (Faz 9 plan: "yalnız 2021 katı + ön kayıt sonrası ileri veri mi") | **ÖNERİ, karar bekliyor** (§6.7): birincil okuma 6 katta; 2021 katı (hiç okunmamış tek kat) ayrıca raporlanır; ileri veri ayrı bir ekle |
-| K-M8-3 | **Kollar ve bütçe**: IPPO dahil mi, hangi iletişim kolları, sinyal kolları (M5 gerçek sinyal `O1_fark_yok`), kol budama kuralı (K20) | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Kollar: MAPPO-`none`, MAPPO-`gat`, SARL-eşmimari, SARL-ağırlık ve boş kol (MAPPO-`none`, ayrı 12 tohum). IPPO yok, sinyal kolu yok, budama yok. Ek madde K-M8-7 (§6.2) |
+| K-M8-2 | **Doğrulayıcı kanıt** (Faz 9 plan: "yalnız 2021 katı + ön kayıt sonrası ileri veri mi") | **KARAR (2026-11-21, kullanıcı: öneri yönünde)** (§6.7): birincil okuma 6 katta; 2021 katı (hiç okunmamış tek kat) ayrıca raporlanır; ileri veri ayrı bir ekle |
+| K-M8-3 | **Kollar ve bütçe**: IPPO dahil mi, hangi iletişim kolları, sinyal kolları (M5 gerçek sinyal `O1_fark_yok`), kol budama kuralı (K20) | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Kollar: MAPPO-`none`, MAPPO-`gat`, SARL-eşmimari, SARL-ağırlık ve boş kol (MAPPO-`none`, ayrı 12 tohum). IPPO yok, sinyal kolu yok, budama yok. K-M8-7 ile `self` kolu eklendi (§6.2) |
 | K-M8-4 | **Seçim kuralı etkeni** (argmax ↔ son nokta; Faz 9 §9.12) | **Ön kayıtta sabitlendi** (§6.5): argmax birincil; son nokta ayrı kayıtla bir kez okunur, betimsel, deneme sayısına girer |
 | K-M8-5 | **Eğitim bütçesi** (kare sayısı) ve tohum sayısı | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** k = 12 tohum, F = 600.000 her katta |
 | K-M8-6 | **Tahmin hedefi**: SARL kolunun `pit_v1` mi `pit_v2` mi kullanacağı (plan §3.1.3) | **Konusuz** (§6.2): M8'de sinyal kolu yok |
-| K-M8-7 | **gat kolunun kontrolü** (yeni, §6.2) | **ÖNERİ, karar bekliyor:** mimari-eş iletişimsiz `self` kolu eklenir (+72 koşu, ~+2,4 sa) |
+| K-M8-7 | **gat kolunun kontrolü** (yeni, §6.2) | **KARAR (2026-11-21, kullanıcı: öneri yönünde).** Mimari-eş iletişimsiz `self` kolu eklenir (+72 koşu, ~+2,4 sa); H3 = gat ↔ self |
 
 ## 5. Sıra
 
@@ -125,7 +125,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 
 ## 6. M8 ön kaydı — v1.0 TASLAK (2026-11-21, sonuçtan önce)
 
-**Durum:** TASLAK. K-M8-2 ve K-M8-7 kararı, hakem-rl + hakem-finans okuması ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
+**Durum:** TASLAK. Kullanıcı kararları tamam (K-M8-1..7). hakem-rl + hakem-finans okuması ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
 
 ### 6.1 Soru
 
@@ -133,7 +133,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 
 **İkincil (Holm, aile = 2):**
 - **H2:** MAPPO-`none` ↔ SARL-ağırlık. Aynı eylem temsili, farklı mimari (paylaşımsız düz MLP). Soru: paylaşımlı yerel mimari, merkezi tek aktöre göre fark yaratır mı?
-- **H3 (G1, iletişim):** MAPPO-`gat` ↔ kontrolü. Kontrol K-M8-7'ye bağlı: öneri `self` (aynı katmanlar ve parametre, yalnız kendine dikkat; M4b). `self` eklenmezse kontrol `none` olur ve fark "iletişim + mimari" diye adlandırılır (M4a §3.7).
+- **H3 (G1, iletişim):** MAPPO-`gat` ↔ MAPPO-`self` (K-M8-7). `self` aynı katmanlara ve parametre sayısına sahip, yalnız kendine dikkat ediyor (M4b). Böylece fark mimariden değil, ajanlar arası bilgi yolundan gelir (M4a §3.7 karışması kapanır).
 
 ### 6.2 Kollar
 
@@ -143,7 +143,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 | **S-esm** | SARL-eşmimari: tek-ajan PPO, `RowSharedPolicy` (M-none ajan MLP'siyle aynı katmanlar, 77.826 parametre) | 201–212 |
 | **S-agr** | SARL-ağırlık: tek-ajan PPO, düz gözlemden 2N çıkışlı MLP, z₀ = 0 | 201–212 |
 | **M-gat** | MAPPO + `gat` (graf maskeli dikkat, `sector+mst`, 78.982 parametre; M4) | 201–212 |
-| **M-self** (K-M8-7) | MAPPO + `self` (gat ile aynı katmanlar, birim maske; M4b) | 201–212 |
+| **M-self** | MAPPO + `self` (gat ile aynı katmanlar, birim maske; M4b) | 201–212 |
 | **Boş kol** | M-none'ın aynısı, yalnız tohum farklı | 213–224 |
 
 - Tohumlar daha önce kullanılmadı (M3–M7: 0–14; boyut ölçümü: 101–106).
@@ -165,7 +165,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - **Eğitim:** her (kol, tohum, kat) için ayrı koşu, F = 600.000 kare. Kare bütçesi katlar arasında sabittir; geç katlarda eğitim günü başına düşen kare azalır (beyan). Toplu toplayıcı `n_envs` 10, normalizasyon istatistiği kat eğitim penceresinden. Panel `panel_m8` (`m8-v1`, SHA 2b7ea84c…).
 - **Kontrol noktası:** eşit aralıklı 10 nokta. Doğrulama yılında belirlenimci tek geçiş, 20 bps. `val_excess_sharpe` en yüksek olan seçilir, eşitlikte en erken (`marl.selection`; `rl_folds` ile parite testli). Hiçbiri tanımlı değilse son nokta seçilir ve `degenerate` sayılır.
 - **Test:** seçilen noktayla bir kez (`eval_fold_m8.py`; çıktı varsa durur). `--also-last` ile son nokta ayrı kayıtla okunur (§6.5).
-- **Koşu sayısı:** 5 kol × 12 tohum × 6 kat = 360 koşu; K-M8-7 kabul edilirse 432. Süre tahmini (boyut ölçümü ve M4 süre oranı): `none` türü ~1,6 dk etkin, gat/self ~2,0 dk. Toplam ~10 sa; `self` ile ~12,5 sa. Koşucu kaldığı yerden sürer. Sıra kat → tohum → kol iç içedir; böylece yarıda kalan bir koşum her kolda dengeli kalır. Kısmi sonuç okunmaz.
+- **Koşu sayısı:** 6 kol (boş kol dahil) × 12 tohum × 6 kat = 432 koşu. Süre tahmini (boyut ölçümü ve M4 süre oranı): `none` türü ~1,6 dk etkin, gat/self ~2,0 dk; toplam ~12,5 sa, iki geceye bölünebilir. Süre tahmini ilk 3 koşuluk dalgada ölçülüp kayda yazılır. Koşucu kaldığı yerden sürer. Sıra kat → tohum → kol iç içedir; böylece yarıda kalan bir koşum her kolda dengeli kalır. Kısmi sonuç okunmaz.
 - **Hata kuralı:** çöken bir koşu aynı yapılandırma ve tohumla bir kez yeniden başlatılır; olay kayda yazılır. GPU'da bit-eşlik iddia edilmez (M3 §1). İkinci çöküşte hücre eksik sayılır (§6.6).
 
 ### 6.4 Birincil istatistik ve karar kuralı (K-M8-1)
@@ -179,7 +179,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - **H1 etiketi:**
   - p_boot ≤ 0,05 ve p_null ≤ 0,05 → Δ̄ > 0 ise **FARK_VAR_MARL**, Δ̄ < 0 ise **FARK_VAR_SARL**;
   - aksi hâlde **FARK_GÖZLENMEDİ**. Bu "eşdeğer" demek değildir. Güç beyanı: σ_tohum 0,155 ile iki yönlü %5'te MDE ≈ 0,072 Sharpe; σ'nın %80 üst sınırıyla ≈ 0,106 (§3.2). Bundan küçük farklar bu tasarımla ayırt edilemez.
-- **H2, H3:** p = max(p_boot, p_null); iki p'ye Holm (α 0,05). Etiketler H1 ile aynı adlarla: MARL yerine birinci kol, SARL yerine ikinci kol.
+- **H2, H3:** p = max(p_boot, p_null); iki p'ye Holm (α 0,05). H3'ün boş dağılımı da `none` koşularından gelir. gat ↔ self gibi mimari-eş kolların eşli farkı daha az gürültülü olabilir (M4b'de SE yarıya indi), bu yüzden H3'te p_null tutucu yandadır (beyan). Etiketler H1 ile aynı adlarla: MARL yerine birinci kol, SARL yerine ikinci kol.
 
 ### 6.5 Betimsel (kararları değiştirmez)
 
@@ -200,10 +200,10 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 - Eksik hücre: her kolda 72 hücre beklenir. Herhangi bir kolda %10'dan fazla eksik hücre varsa (8 ve üstü) o kolun karşıtlıkları **EKSİK** olur. Daha azsa eşleşmeyen hücreler düşer ve sayısı raporlanır.
 - Deneme kaydı (C2): her kol ve seçim kuralı `evaluation/trial_registry` ile yazılır (A1'de kalan madde; ana venv okuma adımında).
 
-### 6.7 Doğrulayıcı kanıt ve pencere açıklığı (K-M8-2, öneri)
+### 6.7 Doğrulayıcı kanıt ve pencere açıklığı (K-M8-2, kullanıcı kararı)
 
 - Faz 9 §9.11'e göre 2022-07-18..2026-08-28 penceresi eski ortamda (tek ajan, Faz 9 öncesi ve R1) okundu. Hiç okunmamış tek kat 2021. Yeni ortam ve M2–M7 geliştirmesi 2021+'ı hiç okumadı.
-- **Öneri:**
+- **Karar (2026-11-21, kullanıcı):**
   - Birincil okuma 6 katın hepsiyle yapılır; her katın açıklık bayrağı tabloda yer alır.
   - **2021 katı ayrıca raporlanır.** Bu yalnız Δ̄ ve güven aralığıdır, etiket yoktur. Tek katın MDE'si ~0,18 (iki yönlü, k 12).
   - **İleri veri** (2026-11-10 ve sonrası): ön kayıttan sonra oluşan veride 2026 katının seçilmiş politikaları bir kez okunur. Bu, ayrı bir ön kayıt ekiyle ve en az 6 aylık veri birikince yapılır (wf-v2 değildir; yalnız tutma). Sonuç doğrulayıcı aile olarak ayrı raporlanır.
@@ -222,7 +222,7 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 
 ## Versiyon geçmişi
 
-- **v0.5 (2026-11-21):** M8 ön kaydı v1.0 TASLAK (§6). K-M8-3/5 KARAR (kullanıcı: öneri yönünde): k = 12, F = 600.000; kollar M-none, M-gat, S-esm, S-agr + boş kol; IPPO ve sinyal kolu yok. K-M8-4 sabitlendi, K-M8-6 konusuz. Yeni K-M8-7 (gat kontrolü `self`) ve K-M8-2 öneri olarak kullanıcıda. Koşu yok.
+- **v0.5 (2026-11-21):** M8 ön kaydı v1.0 TASLAK (§6). K-M8-3/5 KARAR (kullanıcı: öneri yönünde): k = 12, F = 600.000; kollar M-none, M-gat, S-esm, S-agr + boş kol; IPPO ve sinyal kolu yok. K-M8-4 sabitlendi, K-M8-6 konusuz. K-M8-7 KARAR: `self` kolu eklenir (H3 = gat ↔ self, 432 koşu). K-M8-2 KARAR: 6 kat birincil, 2021 ayrı, ileri veri ekle. Koşu yok.
 
 - **v0.4 (2026-11-21):** Okuma betiği `analyze_noise_m8.py` koşudan önce yazıldı (self-test 12/12). Gürültü tabanı boyut ölçümü koşuldu ve okundu (§3.2): σ_tohum 0,155, MDE k 12'de 0,064. K-M8-3/5 kullanıcı kararı bekliyor.
 
