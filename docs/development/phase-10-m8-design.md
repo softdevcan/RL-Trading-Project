@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.6 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v0.7 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -125,7 +125,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
 
 ## 6. M8 ön kaydı — v1.0 TASLAK (2026-11-21, sonuçtan önce)
 
-**Durum:** TASLAK v1.0-r1. Kullanıcı kararları tamam (K-M8-1..7). hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). İkinci okuma ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
+**Durum:** TASLAK v1.0-r2 (hakem okumaları tamam). Kullanıcı kararları tamam (K-M8-1..7). hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). İkinci okuma ve A4 kodu (§6.9) tamamlanınca **DONDURULUR**. Dondurulduktan sonra bu bölüm değişmez; değişiklik yeni sürümdür (v2.0) ve deneme sayısına eklenir. 2021+ test yılları dondurmadan önce hiçbir M8 koşusunda okunmaz.
 
 ### 6.1 Soru
 
@@ -165,7 +165,7 @@ A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (G
     - (b) Yalnız uzun pozisyon, Σw ≤ 1; kalan nakittir ve A8 faizi kazanır. Satış engeli, listeleme kilidi (20 seans) ve maliyet RL kollarıyla aynıdır.
     - (c) Pencerede 252 geçerli getirisi olmayan ya da kilitli hisse o ay evrene girmez.
     - (d) LW daraltması ve HRP bağlantı ağacı yalnız o pencereden kurulur.
-    - (e) 2021 katının ilk ağırlığı 2020 geçmişinden gelir.
+    - (e) 2021 katının ilk ağırlığı 2020 geçmişinden gelir. Test, ilk ağırlığın yalnız 2020-12-31 ve öncesindeki veriden hesaplandığını doğrular (hakem-finans 2. okuma).
     - (f) Baseline'larla çıkarım testi yapılmaz; "RL > baseline" iddiası yazılmaz.
   - XU030 fiyat endeksi: aynı evren değil, temettüsüz, maliyetsiz. Kıyas değil, dipnotlu referans satırı (Faz 9 D1 beyanı).
 
@@ -205,6 +205,8 @@ Kural tek yerde, koddadır: `scripts/marl/m8_stats.py` (okuma ve güç benzetimi
   | σ 0,155, kat etkisi τ 0,1 | 0,249 | 0,096 |
 
   - Beyan: MDE ~0,075 ile ~0,14 arasındadır. σ tek sözde kattan (2020), tek koldan (M-none) ve 6 tohumdan gelir. Okumada kat × kol σ'sı raporlanır ve MDE onunla yeniden hesaplanır; bu betimseldir.
+- **Etiketin yazımı (hakem-rl 2. okuma K-a, hakem-finans 2. okuma #1):** FARK_VAR_* etiketi tablo, özet ve tez metninde her zaman "6 yılda ortalama" ifadesiyle ve ekleriyle (`katlar_tutarli` / `yila_bagli`, seçim eki, uyarılar) aynı satırda verilir; tek başına yazılmaz. H1 sonucu "ayar-eşit karşıtlık" diye anılmaz (§6.1 yorum sınırı).
+- **Benzetim notu (2. okuma K-b, K-c):** benzetimde R = B = 2.000, okumada 10.000. Benzetim normal dağılımlı hata varsayar. Gerçek Sharpe farkları çarpıksa MDE yaklaşıktır.
 - **H2, H3:** p_max = max(p_işaret, p_boot); iki p_max'a Holm (α 0,05). Etiket adlarında MARL / SARL yerine kolların adı kullanılır. Eklerin ikisi de uygulanır.
 
 ### 6.5 Betimsel (kararları değiştirmez)
@@ -276,7 +278,11 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 | | | 2 doğrulayıcı ölçüt ve ileri veri başlangıcı (BÜYÜK) | §6.7 |
 | | | 3 VE kuralının gücü; 4 tanımsız hücre; 5 rejim/maruziyet; 6 min-var/HRP; 7 DSR N; 8 maliyet beyanı | §6.4; §6.6; §6.5; §6.2; §6.5; §6.5 |
 
+**İkinci okuma (2026-11-21, SendMessage, fark 90f7f7b..cd70cca; koşu yok):** hakem-finans **Kabul**: iki BÜYÜK kapandı, yeni BÜYÜK yok. hakem-rl **Küçük revizyon**: B1–B3 kapandı (B3 kapsam daraltmayla). Üç yeni KÜÇÜK not vardı (K-a etiketin yazımı, K-b benzetim R/B, K-c normal varsayımı); §6.4'e işlendi. Finans notu (e) testi §6.2'ye eklendi. Yeni okuma gerekmez. Ön kayıt metni A4 kodu bitince dondurulur.
+
 ## Versiyon geçmişi
+
+- **v0.7 (2026-11-21):** İkinci hakem okuması (hakem-finans Kabul; hakem-rl Küçük revizyon, notlar işlendi). Ön kayıt metni tamam; dondurma A4 kodunu bekliyor.
 
 - **v0.6 (2026-11-21):** Ön kayıt v1.0-r1: hakem-rl (Büyük revizyon) ve hakem-finans (Küçük revizyon, 2 BÜYÜK) ilk okuması işlendi (§6.10). Boş dağılım eşli işaret-çevirmeye geçti; boş kol negatif kontrol oldu. Güç gerçek kuralla benzetildi (`power_m8.json`, MDE 0,075–0,137). Kapsam 6 yıla koşullu yazıldı, kat tutarlılığı ve seçim kuralı ekleri, SARL yorum sınırı, ileri veri ölçütü, baseline ileriye bakmama koşulları eklendi. `run_m8.py`, `m8_stats.py`, `power_m8.py`. Koşu yok.
 
