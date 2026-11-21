@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v0.3 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v0.4 TASLAK · 2026-11-21 · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** TASLAK. Koşu yok. Bu belge dondurulmadan (ön kayıt v1.0) hiçbir M8 koşusu başlamaz. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -81,6 +81,32 @@
 
 **Sınırlar (önceden).** Tek bir örneklem dışı yıl (2020, COVID oynaklığı) yayılımı tipik olmayan biçimde büyütebilir; okuma bunu beyan eder. Sonuç M8 karar eşiğini değiştirmez, yalnız boyutu belirler. Ek tohum ya da başka bir pencere ancak yeni bir ön kayıtla.
 
+### 3.2 Boyut ölçümü — okuma (2026-11-21)
+
+Kaynak: `measurements/phase10-m8/noise_size.json`. Okuyan `analyze_noise_m8.py` @ 3bb10ed; koşular aynı commit'ten, temiz ağaçtan. Etiket **TAMAM**: 6/6 tohum, seçimi tanımsız tohum yok, her tohumda 10 ayrı ağırlık. Git izi, pencereler (2019 / 2020, 251 gün), panel SHA ve yapılandırma denetimleri doğru. Süre: 3 eş zamanlı koşu ~4 dk 47 sn; koşu başına etkin ~1,6 dk (eğitim 4,5 dk).
+
+| Tohum | Seçilen adım | Doğrulama 2019 Sharpe (seçilen) | 2020 fazla getiri Sharpe |
+|---|---|---|---|
+| 101 | 540.000 | −0,03 | 0,59 |
+| 102 | 420.000 | −0,08 | 0,68 |
+| 103 | 300.000 | 0,75 | 0,43 |
+| 104 | 360.000 | 0,39 | 0,83 |
+| 105 | 60.000 | 0,53 | 0,55 |
+| 106 | 360.000 | 0,38 | 0,43 |
+
+- **σ_tohum = 0,155** (2020; ortalama 0,59, aralık 0,43..0,83). Seçilen noktanın doğrulama Sharpe'ı daha geniş yayılıyor (sd 0,32).
+- **Boş dağılım ilk bakış:** 10 ayrık 3 / 3 bölme. En büyük |D| = 0,23; çeyrekler 0,05 / 0,09 / 0,14. Tek kat, 3'er tohum: aynı yapılandırmanın iki grubu arasında 0,2 Sharpe fark kendiliğinden çıkabiliyor.
+- **MDE** (eşli, k × 6 kat, tek yönlü %5, güç %80, σ_fark = √2 · σ_tohum; varsayımlar §3.1):
+
+  | k | 6 | 8 | 12 | 16 | 24 |
+  |---|---|---|---|---|---|
+  | MDE (Sharpe) | 0,091 | 0,079 | 0,064 | 0,056 | 0,045 |
+
+- **Beyan (betimsel; ön kayıtta yoktu, karar değiştirmez):**
+  - σ 6 tohumdan kestirildi ve belirsizliği büyük. χ²(5) güven aralığı %95'te 0,10..0,38; tek yönlü %80 üst sınır 0,23. Bu üst sınırla MDE 1,46 katına çıkar (k 12 → 0,094).
+  - Seçilen noktanın doğrulama Sharpe'ı ile 2020 Sharpe'ı arasındaki ilişki 6 tohumda negatif (r = −0,42). Doğrulamada seçim bu katta örneklem dışını iyi öngörmüyor; 6 noktayla bundan sonuç çıkmaz. K-M8-4 (son nokta etkeni) bu nedenle ön kayıtta tutulmalı.
+  - 2020 tek bir yıl (COVID oynaklığı).
+
 ## 4. Karar bekleyen maddeler (kullanıcı)
 
 | # | Madde | Öneri |
@@ -97,6 +123,8 @@
 A1 kat koşucusu → A2 SARL kolları → gürültü tabanı boyut ölçümü (GPU boşken) → ön kayıt v1.0 + hakem-rl ve hakem-finans (paralel) → dondurma → M8 koşuları → faz kapanışında hakem-2.
 
 ## Versiyon geçmişi
+
+- **v0.4 (2026-11-21):** Okuma betiği `analyze_noise_m8.py` koşudan önce yazıldı (self-test 12/12). Gürültü tabanı boyut ölçümü koşuldu ve okundu (§3.2): σ_tohum 0,155, MDE k 12'de 0,064. K-M8-3/5 kullanıcı kararı bekliyor.
 
 - **v0.3 (2026-11-21):** A2 SARL kolları bitti (`marl/sarl.py`: tek-ajan görünümü + `RowSharedPolicy`; `train_m3.py --sarl`); K-M8-1 KARAR (kullanıcı): birincil çıkarım tohum × kat düzeyinde. `test_marl_sarl` 4.
 

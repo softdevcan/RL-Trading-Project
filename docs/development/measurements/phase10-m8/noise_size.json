@@ -1,0 +1,290 @@
+{
+ "preregistration": "phase-10-m8-design.md §3.1 ON KAYIT v1.0",
+ "seeds": [
+  101,
+  102,
+  103,
+  104,
+  105,
+  106
+ ],
+ "seeds_found": [
+  101,
+  102,
+  103,
+  104,
+  105,
+  106
+ ],
+ "missing": [],
+ "per_seed": {
+  "s101": {
+   "val_sharpe_selected": -0.028652820525899864,
+   "test_sharpe_2020": 0.5851119340009037,
+   "test_mean_excess_daily": 0.0006593609690253986,
+   "test_days": 251,
+   "selected_step": 540000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": -0.09279779284283217,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  },
+  "s102": {
+   "val_sharpe_selected": -0.08358568783878344,
+   "test_sharpe_2020": 0.6807194160134871,
+   "test_mean_excess_daily": 0.0008660986421461656,
+   "test_days": 251,
+   "selected_step": 420000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": -0.1629227904102139,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  },
+  "s103": {
+   "val_sharpe_selected": 0.7501224234421541,
+   "test_sharpe_2020": 0.4273284935628152,
+   "test_mean_excess_daily": 0.0005001174117778975,
+   "test_days": 251,
+   "selected_step": 300000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": 0.7164491933285487,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  },
+  "s104": {
+   "val_sharpe_selected": 0.38742156833447994,
+   "test_sharpe_2020": 0.8334477178742196,
+   "test_mean_excess_daily": 0.0009318526088043179,
+   "test_days": 251,
+   "selected_step": 360000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": 0.3398359967989926,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  },
+  "s105": {
+   "val_sharpe_selected": 0.5285316431956696,
+   "test_sharpe_2020": 0.5524213806301445,
+   "test_mean_excess_daily": 0.0006408926470971658,
+   "test_days": 251,
+   "selected_step": 60000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": 0.21814661113408113,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  },
+  "s106": {
+   "val_sharpe_selected": 0.37924775860230814,
+   "test_sharpe_2020": 0.4323138765237314,
+   "test_mean_excess_daily": 0.000556513316062064,
+   "test_days": 251,
+   "selected_step": 360000,
+   "degenerate": false,
+   "n_valid": 10,
+   "n_distinct": 10,
+   "val_sharpe_last": 0.15064484366623898,
+   "checks": {
+    "train_clean": true,
+    "eval_clean": true,
+    "train_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "eval_commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+    "val_window_ok": true,
+    "test_window_ok": true,
+    "panel_sha_ok": true,
+    "config_ok": true,
+    "config_detail": {
+     "frames": true,
+     "checkpoints": true,
+     "cost_bps": true,
+     "lr": true,
+     "batched_env": true,
+     "train_end": true
+    },
+    "seed_ok": true
+   }
+  }
+ },
+ "label": "TAMAM",
+ "n_degenerate": 0,
+ "n_test_sharpe_undefined": 0,
+ "checks_all": {
+  "train_clean": true,
+  "eval_clean": true,
+  "val_window_ok": true,
+  "test_window_ok": true,
+  "panel_sha_ok": true,
+  "config_ok": true,
+  "seed_ok": true
+ },
+ "commits": [
+  "3bb10ed142386effc6e4227d0763c7b13eae7be2"
+ ],
+ "test_sharpe_2020": {
+  "mean": 0.5852238031008836,
+  "sd_seed": 0.15499865148158615,
+  "min": 0.4273284935628152,
+  "max": 0.8334477178742196,
+  "n": 6
+ },
+ "val_sharpe_selected": {
+  "mean": 0.3221808142016548,
+  "sd": 0.3227873514012569,
+  "n": 6
+ },
+ "sigma_seed": 0.15499865148158615,
+ "null_3v3": {
+  "n_splits": 10,
+  "D": [
+   -0.04167437715029643,
+   0.22907177239063975,
+   0.041720880894589696,
+   -0.03835078850968576,
+   0.06014449075685857,
+   -0.12720640073919154,
+   -0.207278070143467,
+   0.1435397488017448,
+   0.06346807939746923,
+   -0.12388281209858076
+  ],
+  "abs_max": 0.22907177239063975,
+  "abs_quartiles": [
+   0.046326783360156915,
+   0.093675445748025,
+   0.1394564117861065
+  ],
+  "note": "isaret keyfi (A ilk tohumu icerir); 10 bolme bagimsiz degil"
+ },
+ "mde": {
+  "assumption": "normal yaklasim; sigma_fark = sqrt(2) sigma_tohum; kollar ve katlar bagimsiz, katlar arasi ayni varyans (beyan)",
+  "alpha_one_sided": 0.05,
+  "power": 0.8,
+  "folds": 6,
+  "table": [
+   {
+    "k": 6,
+    "n_pairs": 36,
+    "mde_sharpe": 0.09083971015839859
+   },
+   {
+    "k": 8,
+    "n_pairs": 48,
+    "mde_sharpe": 0.07866949666958852
+   },
+   {
+    "k": 12,
+    "n_pairs": 72,
+    "mde_sharpe": 0.06423337505402416
+   },
+   {
+    "k": 16,
+    "n_pairs": 96,
+    "mde_sharpe": 0.05562773456759856
+   },
+   {
+    "k": 24,
+    "n_pairs": 144,
+    "mde_sharpe": 0.045419855079199295
+   }
+  ]
+ },
+ "provenance": {
+  "commit": "3bb10ed142386effc6e4227d0763c7b13eae7be2",
+  "git_status_porcelain": "",
+  "script_sha256": "fa0bbe2358eaf29bfb5932f3cba7ffbe1fcbce9f261810762b4df4752545c5e4"
+ }
+}
