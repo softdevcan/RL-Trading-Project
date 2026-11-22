@@ -20,6 +20,9 @@ python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinanc
 python tests/test_paper_portfolio.py      # Kagit portfoy: ortalama maliyet,
                                            #        gerceklesmis/gerceklesmemis kar,
                                            #        cift uygulama bekcisi (43 kontrol)
+python tests/test_paper_execution.py      # Faz 11 S7: Uygula ertesi ACILIS fiyatiyla (reprice_to_open, next_session_opens),
+                                           #        409 ertesi seans yok, decision_close eski davranis, canli gozlem
+                                           #        uyarilari K13 (4 kontrol, ag yok)
 python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans),
                                            #        taslak satir, kapsam esigi,
                                            #        panel onbellegi (21 kontrol)

@@ -97,7 +97,12 @@
   kar/zarari sahte gosterirdi.
 - `POST /portfolio/reset` gecmis dosyalarina DOKUNMAZ (trade_decisions.json,
   portfolio_history.csv); silmek geri alinamaz, ayri bir istek olmali.
-- Test: `python tests/test_paper_portfolio.py` (43 kontrol)
+- **Yurutme ertesi ACILISTA (Faz 11 S7, K-F11-5):** `/apply-decision` varsayilan `execution=next_open`;
+  `portfolio.reprice_to_open` adedi korur, fiyat/maliyet/gelir/komisyonu t+1 acilisiyla yeniden hesaplar. Ertesi
+  seans yoksa 409 (pano bilgi olarak gosterir). Eski ayni-gun kapanisi yalniz `execution=decision_close`.
+- **Canli gozlem (K13 ACIK):** `build_live_state` egitim `price_stats`'ini KULLANMIYOR (50/50 yedek) ve legacy ADX
+  kuruyor; `/daily-decision` ozeti `observation_warnings` tasir. Duzeltmek canli karari degistirir: plana ekletmeden yapma.
+- Test: `python tests/test_paper_portfolio.py` (43 kontrol), `python tests/test_paper_execution.py` (4)
 
 ## Panel tazeligi ve yfinance taslak satiri (ONEMLI)
 - **Tazelik olcutu takvim gunu DEGIL, kapanmis olmasi beklenen son SEANS.**
