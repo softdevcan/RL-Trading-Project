@@ -154,3 +154,32 @@ def apply_to_holdings(decisions: List[dict], holdings, cash: float) -> tuple[np.
 
 def decisions_by_symbol(decisions: List[dict]) -> Dict[str, dict]:
     return {d['symbol']: d for d in decisions}
+
+
+def step_integer(holdings, cash: float, value: float, w_prev, u, px: dict, t: int, g_on, g_day, tradable, rf: float,
+                 no_sell, cost: float, symbols, constraints=None, groups=None) -> dict:
+    """Tam sayi modunda bir adim t -> t+1 (tasarim §4; eskiden `MarlPortfolioEnv._step_integer`). Ortam ve Faz 11
+    defteri (`sim_ledger`, urun portfoyu) AYNI fonksiyonu cagirir. Nakit gece rf kazanir; yurutme t+1 acilisi
+    (islem goremeyen hisse t kapanisiyla degerlenir); `rebalance_orders` -> `apply_to_holdings`; deger t+1 kapanisi."""
+    from marl.weights import Constraints, project
+    constraints = Constraints() if constraints is None else constraints
+    t1 = t + 1
+    cf, of = px['close'], px['open']
+    cash = cash * (1.0 + rf)
+    p_exec = np.where(tradable, of[t1], cf[t])
+    p_exec = np.where(np.isfinite(p_exec), p_exec, 1.0)  # listelenmemis: adet 0, fiyat onemsiz
+    v_pre = cash + float(np.dot(holdings, p_exec))
+    w_tilde = np.concatenate([[cash], holdings * p_exec]) / v_pre
+    w_star, rep = project(u, w_tilde, tradable, constraints, groups, no_sell)
+    dec, summ = rebalance_orders(w_star, p_exec, holdings, cash, cost, symbols, tradable, no_sell=no_sell)
+    h, cash = apply_to_holdings(dec, holdings, cash)
+    comm = np.array([d['commission'] for d in dec])
+    p_close = np.where(np.isfinite(cf[t1]), cf[t1], p_exec)
+    v_next = cash + float(np.dot(h, p_close))
+    R = v_next / value - 1.0
+    X = R - rf
+    w_exec = h * p_exec / v_pre
+    k = w_prev[1:] * (g_on - 1.0 - rf) + w_exec * (g_day - 1.0) - comm / v_pre
+    return {'R': R, 'X': X, 'k': k, 'turnover': float(summ['turnover']), 'projection': rep,
+            'weight_gap': summ['weight_gap'], 'decisions': dec, 'holdings': h, 'cash': cash, 'value': v_next,
+            'w': np.concatenate([[cash], h * p_close]) / v_next, 'commission': float(comm.sum())}

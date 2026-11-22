@@ -23,6 +23,7 @@ NAV_GROUPS = [
     ("Islem", [
         {"label": "Trading", "icon": "bi bi-graph-up-arrow", "href": "/dash/daily-trading"},
         {"label": "Tahmin", "icon": "bi bi-lightning-charge", "href": "/dash/prediction"},
+        {"label": "Simulasyon", "icon": "bi bi-cash-coin", "href": "/dash/simulation"},
     ]),
     ("Sistem", [
         {"label": "Egitim", "icon": "bi bi-cpu", "href": "/dash/training"},
