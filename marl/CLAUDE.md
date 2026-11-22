@@ -21,6 +21,10 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `frozen.py` (Faz 11 S0): dondurulmus M8 politika arsivi `data/marl/frozen/<ad>/` (git disi, ortak, salt okunur) ve
   `verify_archive` (dosya SHA + `params_sha` + on kayit listesi). ANA venv (torch tembel import; BenchMARL yok). `state_digest`
   TEK tanim burada; `m3_runner` ithal eder. Arsiv ustune yazilmaz; gunluk is (S4) her calismadan once dogrular.
+- `sim_ledger.py` (Faz 11 S3): sanal para defteri, ANA venv. Ortamin AYNI cekirdegi (`step_fractional`, `fill_prices` +
+  `limit_down_gaps`, `project`, A8 rf); politika `FrozenPolicy` TEK gozlemle, kural `rule_baselines` ile ayni karar. 2026
+  penceresi 72/72 M8 serisiyle bit-es (`scripts/marl/s3_parity.py`). `env.py`/`rule_series` muhasebesi degisirse parite
+  yeniden kosulur. `LedgerState` JSON gidis-donusu kayipsiz; kaldigi yerden devam tam kosuyla bit-es KALMALI (S4).
 - `forward_panel.py` (Faz 11 S1): M8 ileri paneli, ANA venv (data/ import eder). Dondurulmus kaynak `data/marl/frozen/m8-source/`
   (`data/bist` CSV'si OKUNMAZ; uygulama onu gunceller). Panel her seferinde bastan kurulur ve onceki panelle bit-es denetlenir;
   ileri satirlar append-only (`data/marl/forward/m8/rows.csv`). Kapanis capraz denetimi NEDENSEL getiri kurali (m8-v1 merkezi
@@ -66,6 +70,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   kontrol noktasiz kosuyla bit-es KALMALI); `eval_fold_m8.py` testi YALNIZ secilen noktayla BIR KEZ okur, cikti varsa
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
+- `python tests/test_marl_sim_ledger.py` (4, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi)
 - `python tests/test_marl_forward_panel.py` (4, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, append + B0 + mutasyon)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)
