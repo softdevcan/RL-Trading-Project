@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.8 TASLAK · 2026-11-22 · S0, S2, S1, S3, S4 ve S5 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor
+**Sürüm:** v0.9 · 2026-11-22 · S0–S5 ve S7 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -45,7 +45,7 @@
 | **S4** | Günlük iş ve geriye dönük doldurma | **BİTTİ (§3.5).** Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
 | **S5** | Pano (K27) | **BİTTİ (§3.7).** Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
 | **S6** | İleri veri ön kayıt eki | **Ek v0.3 + okuma betiği hazır (§3.6); dondurma bekliyor.** M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
-| **S7** | Kağıt portföy uyumu (K13, §8 #18) | Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
+| **S7** | Kağıt portföy uyumu (K13, §8 #18) | **BİTTİ (§3.8).** Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
 
 **Sıra:** S0 → S2 (spike, sonra 72 politika) → S1 → S3 → S6 → S4 → S5 → S7.
 - S0 ve S6 düşük maliyetli ama geri dönüşü zor. Önce gelir.
@@ -69,6 +69,26 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.8 S7 sonucu (2026-11-22; `tests/test_paper_execution.py` 4)
+
+- **"Uygula" ertesi açılışta yürütür (K-F11-5, öneri uygulandı; plan §8 #18).**
+  - `POST /trading/apply-decision?execution=next_open` varsayılan.
+  - Karar t kapanışında verilir; işlem t+1 seansının açılış fiyatıyla yapılır, simülasyon defteriyle aynı yürütme zamanı (`portfolio.reprice_to_open`, `daily_trading.next_session_opens`).
+  - Adet aynı kalır. Maliyet, gelir ve komisyon açılış fiyatıyla ve kararın kendi komisyon oranıyla yeniden hesaplanır.
+  - Açılışı olmayan sembolde işlem yapılmaz. Nakit yetmezse mevcut bekçi işlemi atlar ve bildirir.
+  - **Ertesi seans henüz yoksa 409.** Pano bunu hata değil bekleme olarak gösterir (mavi bilgi kutusu).
+  - Eski davranış yalnız açıkça `execution=decision_close` ile; yanıtta sınırlılık notu var.
+- **Canlı gözlem uyarıları (K13; davranış değişmedi).** `/daily-decision` özeti `observation_warnings` taşır; pano karar kartlarının altında gösterir.
+  - **Bulgu:** canlı karar (`build_live_state`) eğitim `price_stats`'ını ŞU AN KULLANMIYOR. Fiyatlar 50/50 yedek ölçekle z-skorlanıyor, gösterge legacy ADX.
+  - Bu yüzden her modelde en az bir uyarı çıkar. Ek uyarılar: `causal` fiyat tanımı, `wilder` ADX, meta yok.
+  - **Düzeltme bu paketin kapsamı dışı** (canlı karar davranışını değiştirir). Faz 10 K13 kararı yeni modellerde istatistiğin kullanılmasını öngörüyor → açık ürün işi.
+- **Test:**
+  - `test_paper_execution` 4,
+  - `test_paper_portfolio` 43, `test_daily_trading_tz` 18, `test_panel_freshness` 21, `test_trade_universe` 22,
+  - `test_prediction_regression` GEÇTİ (golden değişmedi),
+  - `test_dash_props` 4, `test_theme_contrast` 92.
+  - `tests/test_daily_trading.py` otomatik test değil: açık sunucuya ve sabit model adına bağlı, `input()` bekliyor. Kabul ölçütündeki yeri `test_paper_execution`'la karşılandı.
 
 ### 3.7 S5 sonucu (2026-11-22; `tests/test_marl_forward_api.py` 5, `tests/test_marl_sim_ledger.py` 5)
 
@@ -268,6 +288,8 @@
 
 | # | Konu | Öneri |
 |---|---|---|
+**Karar (2026-11-22, kullanıcı): K-F11-1..6'da öneriler uygulanır.** S4 (K-F11-3, -4), S5 (K-F11-1, -2, -6) ve S7 (K-F11-5) buna göre kuruldu.
+
 | K-F11-1 | Panoda varsayılan görünüm | M-none (12 tohumun ortalaması ± std) + 1/N + min-varyans yan yana. Diğer kollar seçilebilir |
 | K-F11-2 | Tam sayı lot mu, kesirli mi | Dondurulmuş defterler **kesirli** (backtest ile aynı; ileri test için şart). Ürün portföyü isteğe bağlı tam sayı lot (K5 `rebalance_orders`); farkı panoda gösterilir |
 | K-F11-3 | Dondurulmuş defterlerin sahibi | Ortak, salt okunur araştırma alanı (yönetici yazar, herkes okur). Kullanıcı çalışma alanlarına kopyalanmaz |
@@ -277,6 +299,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.9 (2026-11-22):** S7 bitti (§3.8): "Uygula" ertesi açılışta (K-F11-5), canlı gözlem uyarıları (K13; canlı karar price_stats'ı kullanmıyor bulgusu, açık ürün işi). K-F11-1..6 kullanıcı kararı yazıldı.
 - **v0.8 (2026-11-22):** S5 bitti (§3.7): simülasyon panosu, aynı pencere karşılaştırması, kol ort. ± std, ürün portföyü tam lot (K-F11-1, -2, -6 önerileri); `orders.step_integer` (ortam ve defter aynı fonksiyon).
 - **v0.7 (2026-11-22):** S6 eki v0.3 (hakem Kabul) + okuma betiği (öz-test 9/9); dondurma onayı bekliyor.
 - **v0.6 (2026-11-22):** S4 bitti (§3.5): günlük iş idempotent, boşluk doldurma bit-eş; marj kapsamı düzeneği (tarihli kaynak denetimi + 31 gün; S1 açık maddesi kapandı); uygulama içi tetik (K-F11-4 öneri). K-F11-1..6 kullanıcı: öneriler uygulanır. S6 eki v0.3 taslak, hakem Kabul, dondurma onayı bekliyor.

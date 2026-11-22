@@ -648,6 +648,50 @@ def build_live_state(
 
 # ==================== PRICE HELPERS ====================
 
+def next_session_opens(market_data: pd.DataFrame, after_date: str) -> Tuple[Optional[str], Dict[str, float]]:
+    """Faz 11 S7: `after_date`'ten SONRAKI ilk seansin acilis fiyatlari (K-F11-5).
+
+    Seans, sembollerin en az MIN_SESSION_COVERAGE'inda gecerli acilis olan ilk gundur (karar tarafindaki tek seans
+    kurali ile ayni esik). Yoksa (None, {}): ertesi seans henuz acilmadi ya da veri gelmedi.
+    """
+    if market_data is None or market_data.empty or 'open' not in market_data.columns:
+        return None, {}
+    after = pd.to_datetime(after_date).date()
+    n_sym = market_data.index.get_level_values('symbol').nunique()
+    floor = max(1, int(round(n_sym * MIN_SESSION_COVERAGE)))
+    for day in sorted(market_data.index.get_level_values('date').unique()):
+        if day.date() <= after:
+            continue
+        rows = market_data.xs(day, level='date')
+        op = rows['open']
+        ok = op.notna() & (op > 0)
+        if int(ok.sum()) >= floor:
+            return day.strftime('%Y-%m-%d'), {str(sym): float(v) for sym, v in op[ok].items()}
+    return None, {}
+
+
+def observation_warnings(meta: Optional[dict]) -> List[str]:
+    """Faz 11 S7 (K13): canli gozlem egitimdekinden farkli kurulursa uyari (davranis degismez; Faz 10 plani §6 K13:
+    eski modellerde uyari, yaklasik geri doldurma yok). Canli karar bugun fiyatlari 50/50 yedek olcekle ve legacy ADX ile
+    kuruyor (`build_live_state`)."""
+    if not meta:
+        return ["Model tanim dosyasi yok (eski model): canli gozlem egitimdeki fiyat olcegiyle kurulamiyor; fiyatlar "
+                "50/50 yedek olcekle z-skorlaniyor. Kararlar egitimdeki davranisi yansitmayabilir (K13)."]
+    out = []
+    if not meta.get("price_stats"):
+        out.append("Modelin egitim fiyat olcegi (price_stats) kayitli degil: canli gozlem 50/50 yedek olcekle (K13).")
+    else:
+        out.append("Canli karar egitim fiyat olcegini (price_stats) henuz kullanmiyor; fiyatlar 50/50 yedek olcekle "
+                   "z-skorlaniyor (K13 acik is).")
+    mode = (meta.get("price_norm") or {}).get("mode")
+    if mode and mode != "stats":
+        out.append(f"Model '{mode}' fiyat tanimiyla egitildi; canli gozlem bu tanimi uretmiyor (K25/K13).")
+    adx = (meta.get("indicator_spec") or {}).get("adx")
+    if adx and adx != "legacy":
+        out.append(f"Model ADX '{adx}' ile egitildi; canli gozlem legacy ADX kullaniyor (K18/K13).")
+    return out
+
+
 def get_current_prices(market_data: pd.DataFrame, target_date: str) -> Dict[str, float]:
     """
     Get current prices for all symbols

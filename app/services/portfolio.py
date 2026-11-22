@@ -226,6 +226,41 @@ def apply_decisions(
     return out, summary
 
 
+DEFAULT_COMMISSION_RATE = 0.001
+
+
+def reprice_to_open(decisions: List[dict], open_prices: Dict[str, float], exec_date: str) -> Tuple[List[dict], List[str]]:
+    """Faz 11 S7 (K-F11-5, plan §8 #18): karar t kapanisinda, yurutme t+1 ACILISINDA.
+
+    Karardaki adet ayni kalir; fiyat ertesi seansin acilisi olur, maliyet/gelir/komisyon o fiyatla ve kararin kendi
+    komisyon oraniyla yeniden hesaplanir (oran = komisyon / (adet x karar fiyati); yoksa %0,1). Acilis fiyati olmayan
+    sembolun islemi yapilmaz (executed=False, sebep yazilir). Kararin fiyati `decision_price` alaninda kalir.
+    Nakit yetmezse `apply_decisions` islemi atlar ve bildirir (mevcut bekci).
+    """
+    out, missing = [], []
+    for d in decisions:
+        d2 = dict(d)
+        qty = int(d.get("shares", 0) or 0)
+        if d.get("executed") and d.get("action") in ("BUY", "SELL") and qty > 0:
+            sym = d["symbol"]
+            px0 = float(d.get("price") or 0.0)
+            com0 = float(d.get("commission") or 0.0)
+            rate = com0 / (qty * px0) if px0 > 0 and com0 > 0 else DEFAULT_COMMISSION_RATE
+            p = float(open_prices.get(sym) or 0.0)
+            if p <= 0:
+                d2.update(executed=False, reason=f"{exec_date} acilis fiyati yok; islem yapilmadi")
+                missing.append(sym)
+            else:
+                d2.update(decision_price=px0, price=p, execution="next_open", execution_date=exec_date,
+                          commission=qty * p * rate)
+                if d["action"] == "BUY":
+                    d2["cost"] = qty * p * (1 + rate)
+                else:
+                    d2["revenue"] = qty * p * (1 - rate)
+        out.append(d2)
+    return out, missing
+
+
 def value_portfolio(portfolio: dict, prices: Dict[str, float]) -> dict:
     """Portfoyu VERILEN fiyatlarla degerle (mark-to-market).
 

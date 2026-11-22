@@ -2015,6 +2015,7 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
         simulate_portfolio_after_trades,
         save_daily_decision
     )
+    from app.services.daily_trading import observation_warnings, read_model_meta
     try:
         logger.info(f"Daily decision request for model: {request.model_name}")
 
@@ -2175,7 +2176,9 @@ async def get_daily_decision(request: DailyDecisionRequest, user: RequireWriter)
             "risk_mode": request.risk_mode,
             "max_shares_per_trade": request.max_shares_per_trade,
             "actual_date": actual_date,
-            "requested_date": target_date
+            "requested_date": target_date,
+            # Faz 11 S7 (K13): canli gozlem egitimdekinden farkliysa uyari (davranis degismez)
+            "observation_warnings": observation_warnings(read_model_meta(model_path)),
         }
 
         # 10. Save decision
@@ -2296,21 +2299,31 @@ async def reset_portfolio_endpoint(
     return pf.value_portfolio(fresh, {})
 
 
+EXECUTION_MODES = ("next_open", "decision_close")
+
+
 @router.post("/apply-decision")
-async def apply_decision(date: str, user: RequireWriter):
+async def apply_decision(date: str, user: RequireWriter, execution: str = "next_open"):
     """
     Apply a saved decision and update portfolio history
 
     Args:
         date: Date of the decision to apply (YYYY-MM-DD)
+        execution: Faz 11 S7 (K-F11-5, plan §8 #18). 'next_open' (varsayilan): karar t kapanisinda, islem t+1
+            ACILIS fiyatiyla (simulasyon defteriyle ayni yurutme zamani); ertesi seans henuz yoksa 409.
+            'decision_close': eski davranis (karar ve islem ayni kapanis fiyati; ileriye bakis sinirliligi, beyan).
 
     Returns:
         Success message and updated portfolio
     """
     from app.services.daily_trading import (
         append_to_portfolio_history,
+        fetch_latest_market_data,
         load_portfolio_history,
+        next_session_opens,
     )
+    if execution not in EXECUTION_MODES:
+        raise HTTPException(status_code=422, detail=f"execution {EXECUTION_MODES} icinden olmali")
 
     try:
         logger.info(f"Applying decision for date: {date}")
@@ -2334,32 +2347,52 @@ async def apply_decision(date: str, user: RequireWriter):
             )
 
         decision_data = all_decisions[date]
+        decisions = decision_data.get("decisions", [])
+        exec_prices = _decision_prices(decision_data)
+        execution_info = {"mode": execution}
+
+        from app.services import portfolio as pf
+
+        if execution == "next_open" and date not in (pf.load_portfolio().get("applied_dates") or []):
+            traded = sorted({d["symbol"] for d in decisions if d.get("executed")})
+            if traded:
+                today = datetime.now().strftime("%Y-%m-%d")
+                days = (datetime.now() - datetime.strptime(date, "%Y-%m-%d")).days
+                market = await fetch_latest_market_data(symbols=traded, target_date=today,
+                                                        lookback_days=max(days, 0) + 10)
+                exec_date, opens = next_session_opens(market, date)
+                if exec_date is None:
+                    raise HTTPException(status_code=409, detail=(
+                        f"{date} karari ertesi seansin ACILIS fiyatiyla uygulanir; acilis fiyati henuz yok. "
+                        "Ertesi seans acildiktan sonra tekrar deneyin."))
+                decisions, missing = pf.reprice_to_open(decisions, opens, exec_date)
+                exec_prices = {**exec_prices, **opens}
+                execution_info.update(date=exec_date, missing_open=missing)
+        elif execution == "decision_close":
+            execution_info["note"] = ("karar ve islem ayni kapanis fiyatiyla (eski davranis): gercekte o fiyattan "
+                                      "islem yapilamaz; sinirlilik")
 
         # Kagit portfoyu ilerlet. Eskiden yalnizca `portfolio_after` anlik
         # goruntusu CSV'ye yaziliyordu; portfoyun kendisi hicbir yerde
         # tutulmadigi icin ertesi gunun karari yine sifirdan basliyordu.
-        from app.services import portfolio as pf
-
         before = pf.load_portfolio()
-        after, apply_summary = pf.apply_decisions(
-            before, decision_data.get("decisions", []), date
-        )
+        after, apply_summary = pf.apply_decisions(before, decisions, date)
         if apply_summary["already_applied"]:
             # Iki kez uygulamak pozisyonu iki katina cikarirdi.
-            valuation = pf.value_portfolio(after, _decision_prices(decision_data))
+            valuation = pf.value_portfolio(after, exec_prices)
             return {
                 "message": f"{date} tarihli karar zaten uygulanmis",
                 "already_applied": True,
                 "portfolio": valuation,
                 "summary": decision_data["summary"],
+                "execution": execution_info,
             }
 
         pf.save_portfolio(after)
 
-        # Degerleme kararin KENDI fiyatlariyla yapilir: o gunun kapanisidir ve
-        # islemler de o fiyatlarla simule edilmistir.
-        prices = _decision_prices(decision_data)
-        valuation = pf.value_portfolio(after, prices)
+        # Degerleme islem fiyatlariyla: 'next_open'da ertesi acilis (islemin yapildigi fiyat), 'decision_close'da
+        # kararin kapanisi. Sonraki gunlerin kar/zarari /portfolio ucunda guncel fiyatla olusur.
+        valuation = pf.value_portfolio(after, exec_prices)
 
         # Gercek gunluk getiri: bir onceki kaydin toplam degerine gore.
         # `decision_data["summary"]["daily_return_pct"]` BU DEGILDIR — orada
@@ -2400,6 +2433,7 @@ async def apply_decision(date: str, user: RequireWriter):
             "applied": apply_summary,
             "daily_return_pct": daily_return_pct,
             "summary": decision_data["summary"],
+            "execution": execution_info,
         }
 
     except HTTPException:
