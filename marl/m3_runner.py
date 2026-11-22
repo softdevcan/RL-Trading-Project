@@ -14,7 +14,6 @@ yeniden ihrac edilir.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import tempfile
@@ -35,14 +34,7 @@ def checkpoint_iters(frames: int, frames_per_batch: int, k: int) -> list:
     return [int(round(i * n / k)) for i in range(1, k + 1)]
 
 
-def state_digest(sd: dict) -> str:
-    """state_dict ozeti; tensor olmayan girdiler (TensorDict ust verisi, or. torch.Size) repr ile."""
-    h = hashlib.sha256()
-    for name in sorted(sd):
-        v = sd[name]
-        h.update(name.encode())
-        h.update(v.detach().cpu().contiguous().numpy().tobytes() if torch.is_tensor(v) else repr(v).encode())
-    return h.hexdigest()
+from marl.frozen import state_digest  # noqa: E402,F401  (tek tanim; Faz 11 S0 arsivi ayni ozeti ana venv'de denetler)
 
 
 def _checkpoint_saver(out_dir: str, iters: list):
