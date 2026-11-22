@@ -2,7 +2,12 @@
 Run the FastAPI server
 """
 
+import os
+
 import uvicorn
+
+# Faz 11 S4: gelistirme sunucusunda M8 ileri veri gunluk isi acik (ortam degiskeniyle kapatilabilir)
+os.environ.setdefault("MARL_FORWARD_AUTORUN", "true")
 from app.core.config import get_settings
 
 if __name__ == "__main__":

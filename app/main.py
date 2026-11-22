@@ -35,7 +35,14 @@ async def lifespan(app: FastAPI):
     else:
         print("Auth:       KAPALI (AUTH_ENABLED=False) — sunucuda kullanmayin!")
 
+    if settings.MARL_FORWARD_AUTORUN:
+        from app.services import marl_forward
+        print(f"MARL ileri veri isi: {'ACIK' if marl_forward.start_scheduler() else 'arsiv yok, KAPALI'}")
+
     yield
+    if settings.MARL_FORWARD_AUTORUN:
+        from app.services import marl_forward
+        marl_forward.stop_scheduler()
     print(f"Shutting down {settings.API_TITLE}")
 
 
@@ -68,6 +75,7 @@ app.add_middleware(
 # Include routers
 from app.auth.routes import router as auth_router
 from app.api.routes import admin as admin_routes
+from app.api.routes import marl as marl_routes
 from app.api.routes import account as account_routes
 
 app.include_router(auth_router)                      # /login, /auth/*
@@ -79,6 +87,7 @@ app.include_router(trading.router, prefix="/api")
 app.include_router(hyperopt.router, prefix="/api")
 app.include_router(prediction.router, prefix="/api")
 app.include_router(config.router, prefix="/api")
+app.include_router(marl_routes.router, prefix="/api")      # /api/marl/* (Faz 11)
 
 # Serve static files (legacy UI kept as reference)
 if not os.path.exists("static"):

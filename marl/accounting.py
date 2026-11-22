@@ -55,16 +55,21 @@ PRICE_MARGIN_VERIFIED_UNTIL = '2026-11-09'   # veri son gunu; kaynaklar 2026-11-
 LIMIT_TOLERANCE = 0.005
 
 
-def limit_down_gaps(dates) -> np.ndarray:
+def limit_down_gaps(dates, verified_until: str | None = None) -> np.ndarray:
     """[T] satir basina taban esigi (marj_t - 0,005); `fill_prices(limit_down_gap=...)` girdisi.
 
     dates: 'YYYY-MM-DD' dizgileri (panel `dates`). Dogrulanmis kapsamin disindaki tarih -> ValueError
     (veri yenilenince marj once kaynakla ve veri denetimiyle yeniden dogrulanip kapsam uzatilir; sessiz varsayilan yok).
+    verified_until: Faz 11 S4 ileri kapsam (`marl.margin_coverage.coverage_until`: tarihli kaynak denetimi + gun kapisi
+    bant denetimi); None = `PRICE_MARGIN_VERIFIED_UNTIL` (ortam ve M8 bu yolu kullanir). Sabitten geriye gidemez.
     """
+    until = PRICE_MARGIN_VERIFIED_UNTIL if verified_until is None else str(verified_until)[:10]
+    if until < PRICE_MARGIN_VERIFIED_UNTIL:
+        raise ValueError(f"verified_until {until} < {PRICE_MARGIN_VERIFIED_UNTIL} (kapsam geriye gitmez)")
     d = np.asarray([str(x)[:10] for x in dates])
     last = max(d.tolist()) if d.size else ''
-    if d.size and (last > PRICE_MARGIN_VERIFIED_UNTIL or not all(len(x) == 10 and x[4] == '-' for x in d)):
-        raise ValueError(f"fiyat marji takvimi yalniz {PRICE_MARGIN_VERIFIED_UNTIL}'e kadar dogrulandi "
+    if d.size and (last > until or not all(len(x) == 10 and x[4] == '-' for x in d)):
+        raise ValueError(f"fiyat marji takvimi yalniz {until}'e kadar dogrulandi "
                          f"(son tarih {last}); tasarim §2.5 v0.7. Sentetik/duyarlilik icin sabit esik ver")
     m = np.full(d.shape, PRICE_MARGIN_PRE_BISTECH)
     for start, margin in PRICE_MARGIN_SCHEDULE:

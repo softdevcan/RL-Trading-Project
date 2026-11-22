@@ -128,6 +128,10 @@ class Settings(BaseSettings):
     # gelistirme icin. Sunucuda ASLA False birakilmaz.
     AUTH_ENABLED: bool = True
 
+    # Faz 11 S4: M8 ileri veri gunluk isi (app/services/marl_forward.py). Varsayilan KAPALI: Docker imajinda
+    # data/marl yok ve testler uygulamayi acar; run_server.py (gelistirme makinesi) acar.
+    MARL_FORWARD_AUTORUN: bool = False
+
     # Kullanici deposu. SQLite tek dosya; Docker volume'una bind edilir.
     # Postgres'e gecis: sadece bu URL degisir.
     AUTH_DB_URL: str = "sqlite:///data/auth/auth.db"

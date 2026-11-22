@@ -35,7 +35,7 @@ ROW_KEYS = ('date', 'row', 'R', 'X', 'rf', 'turnover', 'cost_frac', 'cash_weight
 class Market:
     """Panel -> defterin ortak girdileri (tasinmis fiyat, islem/satis maskeleri, ham ozellik). Bir kez kurulur."""
 
-    def __init__(self, arrays: dict, cost_bps_roundtrip: float = COST_BPS_ROUNDTRIP):
+    def __init__(self, arrays: dict, cost_bps_roundtrip: float = COST_BPS_ROUNDTRIP, verified_until: str | None = None):
         if 'rf' not in arrays:
             raise ValueError("arrays['rf'] yok: A8 risksiz faiz zorunlu")
         self.arrays = arrays
@@ -43,8 +43,9 @@ class Market:
         self.symbols = [str(s) for s in arrays['symbols']]
         self.N = len(self.symbols)
         self.rf = np.asarray(arrays['rf'], dtype=np.float64)
-        # Ortamla ayni: limit_down_gap='schedule' (dogrulanmis kapsam disi tarih -> ValueError, sessiz gecmez)
-        self.px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, A.limit_down_gaps(self.dates))
+        # Ortamla ayni: limit_down_gap='schedule' (dogrulanmis kapsam disi tarih -> ValueError, sessiz gecmez);
+        # ileri gunlerde kapsam `margin_coverage.coverage_until` (S4)
+        self.px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, A.limit_down_gaps(self.dates, verified_until))
         self.cost = A.one_way_cost(cost_bps_roundtrip)
         self.feat, self.ok = OS.compute_raw_features(arrays)
         self.panel_sha256 = arrays.get('sha256')
