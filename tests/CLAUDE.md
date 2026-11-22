@@ -113,7 +113,8 @@ python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri
 python tests/test_marl_baselines.py         # Faz 10/M8 A4 kural portfoyleri (marl/rule_baselines.py): Ledoit-Wolf sklearn paritesi, uzun-yalniz min-var SLSQP,
                                            #          HRP kosegende ters varyans, (e) kesilmis panelle ayni agirlik (gercek panel 2021), ay basi dengeleme (7, ~2 sn; ana venv)
 python tests/test_marl_frozen.py            # Faz 11/S0 dondurulmus M8 arsivi (marl/frozen.py): kur + dogrula, tek bayt / agirlik degisimi
-                                           #          (params_sha) / on kayit listesi farki yakalanir; gercek arsiv varsa 72/72 (3, ~20 sn; ana venv, torch)
+                                           #          (params_sha) / on kayit listesi farki yakalanir; gercek arsiv varsa 72/72; S2 sade ileri gecis (marl/frozen_policy.py)
+                                           #          her kol turunden 6 politika venv-marl referansiyla bit-es + gat maskesi mutasyonu (referans varsa) (4, ~25 sn; ana venv, torch)
 python scripts/marl/analyze_m8.py --self-test  # M8 okuma: etiketler, Holm, eksik -> EKSIK, kirli agac -> UYARILI, tanimsiz uyarisi, --status test acmaz, deneme kaydi (11, ~40 sn; ana venv)
 venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,
