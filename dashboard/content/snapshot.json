@@ -410,7 +410,7 @@
    "ad": "Faz 10 M8, nihai koşumlar",
    "durum": "bitti, okundu (2026-11-22)",
    "sinif": "bitti",
-   "siradaki": "Hakem-2 kapanışı; ileri veri okuması (2026-11-23'ten itibaren ≥ 126 seans, §6.7)"
+   "siradaki": "Vision G1 ifadesi (kullanıcı kararı); ileri veri okuması (2026-11-23'ten itibaren ≥ 126 seans, §6.7)"
   },
   {
    "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
@@ -471,7 +471,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "ca9083f7c943e8b68c81b0b86c049be9f268bc7760590478d1421f518e7c7aff",
+   "tablo_sha256": "b6eed69ee0fc4f53db24f667ed390cd815f18b09411a5a048adabeef00e4231b",
    "uretim_commit": null
   }
  }

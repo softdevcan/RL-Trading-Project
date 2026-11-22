@@ -329,7 +329,7 @@ Bütün sayılar `docs/development/measurements/phase10-m8/m8_reading.json` dosy
 
 - Ortalama günlük devir (Σ|Δw|, `arms.*.per_fold_turnover`, 6 kat ortalaması): M-none 0,28, boş kol 0,29; M-gat 0,49, M-self 0,51; S-agr 0,65, S-esm 0,66. 20 bps gidiş-dönüşte (tek yön 10 bps) bu kabaca yılda M-none'da ~%7, S kollarında ~%16 maliyet sürüklemesi demektir (devir × 0,001 × 252; kaba hesap).
 - Nakit ağırlığı 6 kat ortalamasında her kolda %1–5; kat düzeyinde S-esm 2024'te %13 (`per_fold_cash`).
-- Okuma: maliyetsiz durumda H2'de ±0,1 içinde fark görülmedi; H1 farkının yaklaşık yarısı kalır ve sıfırdan ayrışır (betimsel). Etiketler 20 bps'de, ön kayıtlı maliyetle konmuştur.
+- Okuma: maliyetsiz durumda H2'de ±0,14 içinde fark görülmedi (tohum kümeli GA [−0,14, 0,13]; kat içi GA [−0,11, 0,09]); H1 farkının yaklaşık yarısı kalır ve sıfırdan ayrışır (betimsel). Etiketler 20 bps'de, ön kayıtlı maliyetle konmuştur.
   - H2'nin içeriği bir "seçim becerisi" farkı değil, **devir farkıdır**: aynı maliyetle eğitilen SARL-ağırlık kolu M-none'ın ~2,3 katı işlem yapıyor.
   - Düşük devir MAPPO'nun genel bir özelliği değil, M-none'ın özelliğidir: M-gat ve M-self de MAPPO ama devirleri 0,49–0,51.
   - Bu, §6.1'deki yorum sınırını (SARL kolları MAPPO-ayarlı, ayar-eşit SARL kolu yok) somutlaştırır.
@@ -415,6 +415,7 @@ Kaynak: `scripts/marl/m8_robustness.py` (koşudan önce commit'lendi, 1fa82c1), 
   - §7.5 sonuçtan sonra eklenen betimsel sağlamlık (`m8_robustness.py`): tohum kümelemesi, 0 bps karşıtlıkları, eşli/kümeli MDE, bir katı dışarıda bırakma.
   - §7.3(a) başlığı daraltıldı (H1'in yarısı maliyetten bağımsız); §7.3(c) yeniden yazıldı (tohum kümelemesi).
   - Rakam düzeltmeleri: DSR, nakit. Yazım kuralı "M-none". Etiketler değişmedi.
+  - İkinci okuma (SendMessage, fark fcd60f0..8fde83f): **Kabul**. KÜÇÜK K-1 (0 bps H2 aralığı tohum kümeli GA ile) işlendi.
 
 - **v1.1 (2026-11-22):** §7 okuma. 432/432 koşu, denetimler tamam.
   - H1 FARK_VAR_MARL (yila_bagli), H2 FARK_VAR_M-none (katlar_tutarli), H3 ve NK FARK_GOZLENMEDI.
