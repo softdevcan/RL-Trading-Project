@@ -410,9 +410,13 @@ def register_callbacks(app):
                 "'Portfoyu elle gir' anahtarini kapatip karari yenileyin.",
                 color="warning", dismissable=True,
             )]
-        result = api.apply_decision(decision_date)
-        if not result:
-            return [dbc.Alert("Uygulama basarisiz.", color="danger", dismissable=True)]
+        raw = api.apply_decision_raw(decision_date)
+        if not raw.get("ok"):
+            detail = (raw.get("body") or {}).get("detail") or "Uygulama basarisiz."
+            # 409: ertesi seans acilisi henuz yok (Faz 11 S7, K-F11-5) — hata degil, bekleme
+            return [dbc.Alert(str(detail), color="info" if raw.get("status") == 409 else "danger",
+                              dismissable=True)]
+        result = raw.get("body") or {}
         if result.get("already_applied"):
             return [dbc.Alert(
                 f"{decision_date} tarihli karar zaten uygulanmis — portfoy degismedi.",
@@ -420,8 +424,10 @@ def register_callbacks(app):
             )]
         applied = result.get("applied") or {}
         val = result.get("portfolio") or {}
+        ex = result.get("execution") or {}
+        when = (f"{ex['date']} acilis fiyatiyla " if ex.get("date") else "")
         msg = [html.I(className="bi bi-check-circle me-2"),
-               f"{applied.get('executed_trades', 0)} islem uygulandi. "
+               f"{applied.get('executed_trades', 0)} islem {when}uygulandi. "
                f"Toplam deger {_money(val.get('total_value'))}, "
                f"kar/zarar {_signed_money(val.get('total_pnl'))} "
                f"({_signed_pct(val.get('total_pnl_pct'))})."]
@@ -634,12 +640,19 @@ def _render_summary_cards(result):
     else:
         net_color, net_prefix = BLUE, ""
 
-    return dbc.Row([
+    cards = dbc.Row([
         dbc.Col(_mini_card("Al Toplam", f"₺{total_buy:,.2f}", GREEN), xs=6, md=3, className="mb-3"),
         dbc.Col(_mini_card("Sat Toplam", f"₺{total_sell:,.2f}", RED), xs=6, md=3, className="mb-3"),
         dbc.Col(_mini_card("Net Nakit Akisi", f"{net_prefix}₺{net:,.2f}", net_color), xs=6, md=3, className="mb-3"),
         dbc.Col(_mini_card("Islem Sayisi", str(n_executed), PURPLE), xs=6, md=3, className="mb-3"),
     ])
+    # Faz 11 S7 (K13 + K-F11-5): canli gozlem uyarilari ve yurutme zamani notu
+    warns = list((result.get("summary") or {}).get("observation_warnings") or [])
+    notes = [html.Li(w) for w in warns] + [html.Li(
+        "Uygula: islemler kararin kapanisindan degil, ERTESI SEANSIN ACILIS fiyatiyla yapilir (simulasyon "
+        "defteriyle ayni yurutme zamani). Tutarlar acilis fiyatina gore degisebilir.")]
+    return html.Div([cards, dbc.Alert(html.Ul(notes, className="mb-0 small"),
+                                      color="warning" if warns else "secondary", className="py-2")])
 
 
 def _mini_card(title, value, color):

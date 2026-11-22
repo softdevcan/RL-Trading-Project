@@ -341,6 +341,11 @@ def apply_decision(date: str) -> Dict:
     return _post("/trading/apply-decision", params={"date": date}) or {}
 
 
+def apply_decision_raw(date: str, execution: str = "next_open") -> Dict:
+    """Faz 11 S7: hata govdesiyle (409 = ertesi acilis henuz yok). {'ok', 'status', 'body'}."""
+    return _post_raw(f"/trading/apply-decision?date={date}&execution={execution}")
+
+
 def get_latest_portfolio() -> Dict:
     return _get("/trading/latest-portfolio") or {}
 
