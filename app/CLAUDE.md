@@ -14,6 +14,12 @@
   `train_batch(user_id=)` arka plan gorevinde calisma alanini sarmalar (thread'e de tasinir)
 - Detay: `docs/development/phase-7-auth.md`, `docs/development/phase-6-backend-performance.md`
 
+## MARL ileri veri isi (Faz 11 S4)
+- `app/services/marl_forward.py` zamanlar, isi `marl/forward_job.run_daily` yapar. Defter ORTAK arastirma alani
+  (`data/marl/forward/m8/ledger`), kullanici calisma alanina yazilmaz -> is kullanici kimligi TASIMAZ (bilincli).
+- `MARL_FORWARD_AUTORUN` varsayilan False (testler TestClient ile lifespan acar; Docker'da data/marl yok);
+  `run_server.py` True yapar. Uclar `/api/marl/forward/status` (CurrentUser), `/run` (RequireAdmin + denetim).
+
 ## Yapit silme (Faz 8/I)
 - Model: `DELETE /api/trading/models/{name}` (RequireWriter). Panoda: Modeller
   sayfasinda cok secimli liste + "Secilenleri sil".

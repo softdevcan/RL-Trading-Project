@@ -1,7 +1,7 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.5 TASLAK · 2026-11-22 · S0, S2, S1 ve S3 bitti (dal `feat/phase11-s3`)
-**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4).**
+**Sürüm:** v0.6 TASLAK · 2026-11-22 · S0, S2, S1, S3 ve S4 bitti (dal `feat/phase11-s4`); S6 eki taslak (dal `feat/phase11-s6`)
+**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
 - [M8 tasarımı](phase-10-m8-design.md) §6.7 (ileri veri), §7 (okuma; §7.3 b kural portföyleri, §7.5 tohum kümelemesi).
@@ -42,7 +42,7 @@
 | **S1** | İleri panel | **BİTTİ (§3.3).** `prepare_panel_m2.py --data-fix m8-v1` hattıyla artımlı panel sürümü (`panel_m8_fwd`). Günlük ek: yfinance artımlı çekim → veri kapısı → `m8-v1` kuralları. 2026-11-09 sonrası fiyat marjı takvimi için `PRICE_MARGIN_VERIFIED_UNTIL` kaynakla yeniden denetlenir (`price_limit_audit_m8.py`) | Geçmiş satırlar `panel_m8.npz` ile bit-eş. Veri kapısı reddettiği günü yazmaz, sebebini kaydeder. Marj kapsamı dışındaki gün hata verir (sessiz geçmez) |
 | **S2** | Politika aktarımı (K9) | **BİTTİ (§3.2).** BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
 | **S3** | Simülasyon motoru ve defter | **BİTTİ (§3.4).** Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
-| **S4** | Günlük iş ve geriye dönük doldurma | Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
+| **S4** | Günlük iş ve geriye dönük doldurma | **BİTTİ (§3.5).** Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
 | **S5** | Pano (K27) | Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
 | **S6** | İleri veri ön kayıt eki | M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
 | **S7** | Kağıt portföy uyumu (K13, §8 #18) | Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
@@ -69,6 +69,38 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.5 S4 sonucu (2026-11-22; `tests/test_marl_forward_job.py`, `tests/test_marl_forward_api.py`)
+
+- **Kabul kapısı geçti** (test 2–3; gerçek kaynak + 6 sentetik ileri gün, 2 politika + 2 kural):
+  - aynı gün ikinci çalışma dosyalara dokunmuyor (SHA aynı),
+  - 4 gün boşluk sonrası tek çalışma = her gün çalışma = tek seferde = `sim_ledger` doğrudan koşusu (satırlar ve durum bit-eş).
+- **İş (`marl/forward_job.py`, ana venv).** `run_daily` sırası:
+  1. arşiv doğrulama (72 SHA),
+  2. S1 panel güncellemesi (ağ hatası, panelde zaten olan günleri bekletmez),
+  3. marj kapsamı,
+  4. defterlerin kaldığı yerden ilerlemesi (72 politika + ew, bh, minvar, hrp).
+  - Kilit dosyası iki çalışmanın üst üste binmesini engeller.
+  - Her çalışma `data/marl/forward/m8/log.jsonl`'a `kind: ledger` kaydı yazar: kapsam, seans sayısı, durum, hata.
+- **Defter deposu** `data/marl/forward/m8/ledger/` (git dışı; ortak araştırma alanı, K-F11-3):
+  - `state.json`: `LedgerState`, atomik yazım,
+  - `rows.csv`: yalnız eklenir; `%.17g` yazılır, `round_trip` okunur, kayıpsız.
+  - Çökme kurtarma: durumdan fazla satır atılır; eksik satır bozulma sayılır, hata verir.
+  - Depo yalnız ilk ileri gün (2026-11-23) panelde olunca kurulur (ek §3: ilk defter kaydı dondurmadan sonra). Bugünkü gerçek çalışma: `baslamadi`, depo yok.
+- **Marj kapsamı (S1 açık maddesi kapandı; M2 tasarımı §2.5 v0.11).**
+  - Kapsam = min(panel son günü, son tarihli kaynak denetimi + 31 gün).
+  - Kaynak denetimi `marl/margin_source_checks.json`: elle okunur, kayıt eklenir. İlk kayıt 2026-11-20, kapsam ufku 2026-12-21. **Ayda bir yeniden denetim gerekir;** yoksa defter durur ve sebep log'a yazılır.
+  - Veri denetimi S1 gün kapısı (±%10,5).
+  - `limit_down_gaps(verified_until=None)` varsayılanı değişmedi: `test_marl_core` 63, `test_marl_env` 36.
+- **Tetik (K-F11-4, öneri uygulandı).** `app/services/marl_forward.py`:
+  - sunucu açılışında 60 sn sonra bir kez (kaçırılan günleri doldurur),
+  - sonra 30 dakikada bir: hafta içi 19:00 TRT sonrası, günde en çok 4 deneme; günün seansı deftere girince o gün biter.
+  - Ayar `MARL_FORWARD_AUTORUN` varsayılan KAPALI: testler uygulamayı açar, Docker imajında `data/marl` yok. `run_server.py` açar.
+  - Elle: `POST /api/marl/forward/run` (RequireAdmin + denetim kaydı) ya da `scripts/marl/forward_daily_m8.py`.
+  - Okuma: `GET /api/marl/forward/status` (CurrentUser).
+- **Test:**
+  - `test_marl_forward_job` 4: kapsam kuralı, bit-eş doldurma, idempotent, kurtarma ve bekçiler.
+  - `test_marl_forward_api` 4: ayar kapalı, 401/200, viewer 403 / admin 200 + denetim, zamanlayıcı kuralı.
 
 ### 3.4 S3 sonucu (2026-11-22; `measurements/phase11-s3/s3_parity.json`)
 
@@ -197,6 +229,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.6 (2026-11-22):** S4 bitti (§3.5): günlük iş idempotent, boşluk doldurma bit-eş; marj kapsamı düzeneği (tarihli kaynak denetimi + 31 gün; S1 açık maddesi kapandı); uygulama içi tetik (K-F11-4 öneri). K-F11-1..6 kullanıcı: öneriler uygulanır. S6 eki v0.3 taslak, hakem Kabul, dondurma onayı bekliyor.
 - **v0.5 (2026-11-22):** S3 bitti (§3.4): `marl/sim_ledger.py` kesirli defter; 2026 test penceresi 72/72 politika M8 test serisiyle bit-eş, 4/4 kural portföyü `rule_series` ile bit-eş ve M8 okumasındaki Sharpe ile aynı. Durum JSON'la kaldığı yerden devam bit-eş (S4 temeli). Marj kapsamı açık maddesi sürüyor.
 - **v0.4 (2026-11-22):** S1 bitti (§3.3): ileri panel append-only, dondurulmuş kaynaktan baştan kurulum, önceki satırlar bit-eş; 9 gerçek seans eklendi (yama 0). Kapanış çapraz denetimi nedensel getiri kuralıyla (m8-v1 merkezi medyanı ileriye bakıyordu). Açık: marj doğrulama kapsamının uzatılması S4 ön koşulu.
 - **v0.3 (2026-11-22):** S2 bitti (§3.2): sade ileri geçiş 72/72 bit-eş (logit farkı 0; ölçüt ≤ 1e-6); referans R serisi M8 test kaydıyla 72/72 aynı. Kurallar: tek gözlemle çağrı (toplu çağrı ≤ 5e-6 farklı), referans kol başına ayrı süreç.

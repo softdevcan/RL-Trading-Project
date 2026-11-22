@@ -1,0 +1,13 @@
+[
+ {
+  "checked": "2026-11-20",
+  "schedule_unchanged": true,
+  "result": "Takvime yeni giris yok: Borsa Istanbul 2020/20 sayili duyuru (13/03/2020'den 'ikinci bir duyuruya kadar' paylarda fiyat marji %10) yururlukte.",
+  "sources": [
+   "https://borsaistanbul.com/piyasalar/pay-piyasasi/piyasa-isleyisi",
+   "https://borsaistanbul.com/piyasalar/pay-piyasasi/pazarlar",
+   "https://www.borsaistanbul.com/en/markets/viop/futures/single-stock-futures"
+  ],
+  "ref": "docs/development/phase-10-m2-design.md §2.5 (2026-11-20)"
+ }
+]
