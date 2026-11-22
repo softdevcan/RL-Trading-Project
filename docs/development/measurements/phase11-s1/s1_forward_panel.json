@@ -1,0 +1,206 @@
+{
+ "update": {
+  "as_of": "2026-11-22T16:21+03:00",
+  "fetch": "20261122T162109",
+  "commit": "df521b22f9ebc4ee9a6cfa06d038400c88a737bb",
+  "source_manifest_csv_sha256": "3aec450d56bc4d75a3c58b60ed6f4bd7798cbc1ed82be6bf8f588c6ebae9c561",
+  "candidates": [
+   "2026-11-10",
+   "2026-11-11",
+   "2026-11-12",
+   "2026-11-13",
+   "2026-11-16",
+   "2026-11-17",
+   "2026-11-18",
+   "2026-11-19",
+   "2026-11-20"
+  ],
+  "days": [
+   {
+    "date": "2026-11-10",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-11",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-12",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-13",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-16",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-17",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-18",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-19",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   },
+   {
+    "date": "2026-11-20",
+    "accept": true,
+    "skip": false,
+    "reason": null,
+    "rf_age_days": 0,
+    "n_rows": 30,
+    "n_patched": 0
+   }
+  ],
+  "fetch_sha256": {
+   "yf": {
+    "AKBNK.IS": "deed627d1a839b3121bc26822813ed9240966b779878327de2f55c4fdc20c45d",
+    "ARCLK.IS": "990e0fc995a5e2caeca571672103442094a680d579b9c9a624e0925c83e9afe1",
+    "ASELS.IS": "5802c2e02a8d6f4a052b6946dfcd79e6226a3b24fc56ba4a42ebbe8b79131232",
+    "BIMAS.IS": "7d08eadfdc2e19add44d0107761f8a7a6712ebcd95636daa1eb02c6e4011d557",
+    "EKGYO.IS": "d639989546153272b724c2e612c3232323d88ab02bc3f079c53ac5aded81f617",
+    "ENKAI.IS": "ff85216fb35b701240f12fed70a19155a8c369947d278a2d2a6a3247836aa9fc",
+    "EREGL.IS": "adca9e16da21d9e32bb461521c9eb64af226fc988b636ab6c3eba49534dc6053",
+    "FROTO.IS": "16fa82c1aa5bdf32bb15bb5c07aa99ca8d5d8ccc42145fad9228e16df7244120",
+    "GARAN.IS": "6006d4a52f70fdd7258c31d742f0901aa5068019510d9c713307aa3258318e74",
+    "HALKB.IS": "31a58f3e40096738a308737ef22716468d4ca26e4ac8eb45d89805a9d0228862",
+    "ISCTR.IS": "dca12be98c1019947e134f9f3f4643d654c27cacd8472b548714ff6d4d76729b",
+    "KCHOL.IS": "5ff72b5bc091d1bfffadf5a415d34a8af457e9bf6af05e6000af4dd85958dab7",
+    "KRDMD.IS": "7add8eacac05e96547a3513e38dfc6f60cec24320eb5ec08eb12df70a6926380",
+    "MGROS.IS": "d2f9dcf42693335254e4c64984deeab3301bbc13e97b6f019c4c66ce7f24c2aa",
+    "ODAS.IS": "2abc7bc18c2753fe74fb4faf9fee41bd81551b9548f62c3d417b250e0c7da436",
+    "PETKM.IS": "bebfd44176efc6149d1ff8c90a48a36510495a69e1aad0ed86bb4ea5b538f59e",
+    "PGSUS.IS": "7913d5c9a281634ff88198eb4ca54da9dcc31113ee4b9c2f575f823236b3e08a",
+    "SAHOL.IS": "9b08ee4f0beab70af5695bc3f1487e61d6155c3aa3efaf266274af37017a3040",
+    "SASA.IS": "46adfa595d5321139fff5fb266a13ae5754342a8193a11639b6629e83fb1698f",
+    "SISE.IS": "7b6e997cfd538ed92ad552ac965a733726d3690fe6d7a9e8f1bf62c371958f6f",
+    "SKBNK.IS": "6962cdf947ea699160c7b028b44f810da639cb6225a8e33a25217e44ff065db0",
+    "TAVHL.IS": "a0f708ba28a31984b0b2e77464473b57fdaefc45c835284e86c8c7d1dc448d4f",
+    "TCELL.IS": "eb01be3cc830ae0a7d4ec5dc5b0ecb9faf72381c2b8d645b618c5b64e15a5c98",
+    "THYAO.IS": "45344b58dd378bc1b3de50d9b112b5b61bf91f0fd0dff50e14d27eb5acfcdf39",
+    "TKFEN.IS": "03c172e0921213a3df6d69c0e53dc3e46559eae1977d7613ee3d814360affe3e",
+    "TOASO.IS": "b2fde48c3e8a42de355556800ca43543875450be44fba9b02fe4991c63f5c9a3",
+    "TSKB.IS": "1c6a9a621be479c6d2b0fa3079bb416cb4e86e0f2542f10f630ed0f529df9cda",
+    "TUPRS.IS": "5a612e31c5a7d8d0fd2e71c9270744518ebf8de18484e0edc8060126dc21ecd7",
+    "VAKBN.IS": "9c3c83f17951493b745297441c78b6087df63ac738cb9a5f1ab5ffeee53ced35",
+    "YKBNK.IS": "5a0f56ed8772da17fd6ff4c6e31c27dd6205c273b19256dff76cf57f5d3442c1"
+   },
+   "isy": {
+    "AKBNK.IS": "dabbfd91bbdbf1af56e1db0fb42488aa56cb14541f506e40bdd5cf6b720286e6",
+    "ARCLK.IS": "197ae0aa8ffd12b5771b468a11f8869a89149d5fe3e0febcb8eb39dd1a0c73c8",
+    "ASELS.IS": "4bf0a871f4660cd20e587f98ad530dac453b2f6734bdf561726381e016f6598e",
+    "BIMAS.IS": "9814ac850813c52cf4089152e840b4676503b8be95347c3df0fe373b7e898e74",
+    "EKGYO.IS": "dde7bab6c17258d0461278879f14ec7f3fd55d7ad449a519b5e047f4a1b94338",
+    "ENKAI.IS": "05add9a6ac0ce2e81600cf83a28767069224f4ce53cb3d928818aeb67df32903",
+    "EREGL.IS": "f10f07ca3e663e82b3aa866db332a7a28e7d322ff633dd0429e9b19e835a5fca",
+    "FROTO.IS": "619e8856e8d190cda736060fe6946f88b9c93a0818b210c1e373781afe1c5d29",
+    "GARAN.IS": "aabf7916749930c954ee416f56d60652a139704ad49d1efa67f7ec49e34dd65d",
+    "HALKB.IS": "2a4037415f77db9f0e936cc6b6e3be95fa0edd87d148c8f8bb27c6a228e39e22",
+    "ISCTR.IS": "c92b6f5a9f461fcd30e01feeaefae567a268c8be5f3d035b1f279bb1eb8ebf5a",
+    "KCHOL.IS": "5cfc44569d9df57ef072b9adf65e2c8891a027c5651f85cc27d2bb6fd8d16c1c",
+    "KRDMD.IS": "99e0a630f2acd20c57de59f89add995bdab1313cbe3d9ad98a87ebd377b1d29c",
+    "MGROS.IS": "786b26f2b839e10f97e74b45a1ce6461cef576fe2557f469e229bc391ae5b14a",
+    "ODAS.IS": "e1d19aa901c154d6feae6e367e58661f6528c8194f80927f17e99b50b66a07c1",
+    "PETKM.IS": "a15547ee3937b60148aae3eda1117d3bbe929d0067da4014e9d25dd472139c4b",
+    "PGSUS.IS": "0e8f0af15d7e1431d8084d2478a9229cf432615d9366719b1dbefcc48bf34d41",
+    "SAHOL.IS": "9d35c137e23f4e475ff1ec85ee934e9414df31ac42a0ce335d3978fae59d380d",
+    "SASA.IS": "734b50a31fbbe1d181a31cb7d77e66c86d5f8bfe9a2f7f7547877b802064ca99",
+    "SISE.IS": "4f69ee24ebfd3fb45ca11a6ec40d358575d0af54adbadf8cee46e2ee07a7e85b",
+    "SKBNK.IS": "408d31dc55b3aa8be62d6e133b7d30814f0da7b78ee41027b5834bc60698b048",
+    "TAVHL.IS": "783bb6b6fe82c7802173cc8f92167fbcc24b6e0c9da26e02fcdc946e023f5e71",
+    "TCELL.IS": "3ca071850822201fbee1380d53e7013dbf2a0790c0a531732a7575fd88d13507",
+    "THYAO.IS": "fac7ec01e488bb78ffedc040cb7592a727f37f1d2ac3bceaf760a02ea7fc2b1b",
+    "TKFEN.IS": "404e7e71f5dc9ddd737200b18bb4165067ccffea5192295340ec1e7d94c430e6",
+    "TOASO.IS": "dafd04bca642fb096b60b81a41aeb5223b269a40b94fb28a937263975e554a47",
+    "TSKB.IS": "671a40cd9f696fe820aa093fe7cf894745c9914dd7f9e4d930427c921235f128",
+    "TUPRS.IS": "380f8216937110a2218180776b2e1c76e6c0282e5b29ec34429c03765f2dc95c",
+    "VAKBN.IS": "780245988b94426fbd02f274d9a80fe5f253534acae3d6a9662dab5c3a829dee",
+    "YKBNK.IS": "8bd8ef9e5ce12cfa9cbf4b97cf61ab48a0b9d0a4324513c6961e1e00c1d947cf"
+   },
+   "rf": "86917c4a1f7c6aff04512017334284f049e734c9edfc066b50c5703eda0d6ed0"
+  },
+  "prefix": {
+   "prefix_rows": 3364,
+   "new_rows": 9,
+   "keys": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "rsi",
+    "cci",
+    "adx",
+    "macd",
+    "rf"
+   ]
+  },
+  "panel": {
+   "path": "data/marl/forward/m8/panel_m8_fwd.npz",
+   "sha256": "5ce7b7c5dc3d4d153e92b7518d9afe675508305593fbeb99508bfcbae72a2c83",
+   "T": 3373,
+   "N": 30,
+   "first": "2013-06-03",
+   "last": "2026-11-20"
+  },
+  "new_dates": [
+   "2026-11-10",
+   "2026-11-11",
+   "2026-11-12",
+   "2026-11-13",
+   "2026-11-16",
+   "2026-11-17",
+   "2026-11-18",
+   "2026-11-19",
+   "2026-11-20"
+  ],
+  "n_patched": 0,
+  "max_abs_isy_dev": 9.906032951629745e-08
+ }
+}

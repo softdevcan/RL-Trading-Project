@@ -1,7 +1,7 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.3 TASLAK · 2026-11-22 · S0 ve S2 bitti (dal `feat/phase11-s2`)
-**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2).**
+**Sürüm:** v0.4 TASLAK · 2026-11-22 · S0, S2 ve S1 bitti (dal `feat/phase11-s1`)
+**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3).**
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
 - [M8 tasarımı](phase-10-m8-design.md) §6.7 (ileri veri), §7 (okuma; §7.3 b kural portföyleri, §7.5 tohum kümelemesi).
@@ -39,7 +39,7 @@
 | # | Paket | İçerik | Kabul ölçütü |
 |---|---|---|---|
 | **S0** | Dondurulmuş politika arşivi | **BİTTİ (§3.1).** 2026 katının seçilmiş politikaları (72) + `meta.json`, `norm_stats.json` salt okunur bir yapıt deposuna kopyalanır; SHA manifesti `forward_policies_2026` ile karşılaştırılır. Tüm `results/marl_m8/` için yedek (git dışı) | Manifest SHA'ları 72/72 eşleşir. Yedekten geri yükleme bir kez denenir |
-| **S1** | İleri panel | `prepare_panel_m2.py --data-fix m8-v1` hattıyla artımlı panel sürümü (`panel_m8_fwd`). Günlük ek: yfinance artımlı çekim → veri kapısı → `m8-v1` kuralları. 2026-11-09 sonrası fiyat marjı takvimi için `PRICE_MARGIN_VERIFIED_UNTIL` kaynakla yeniden denetlenir (`price_limit_audit_m8.py`) | Geçmiş satırlar `panel_m8.npz` ile bit-eş. Veri kapısı reddettiği günü yazmaz, sebebini kaydeder. Marj kapsamı dışındaki gün hata verir (sessiz geçmez) |
+| **S1** | İleri panel | **BİTTİ (§3.3).** `prepare_panel_m2.py --data-fix m8-v1` hattıyla artımlı panel sürümü (`panel_m8_fwd`). Günlük ek: yfinance artımlı çekim → veri kapısı → `m8-v1` kuralları. 2026-11-09 sonrası fiyat marjı takvimi için `PRICE_MARGIN_VERIFIED_UNTIL` kaynakla yeniden denetlenir (`price_limit_audit_m8.py`) | Geçmiş satırlar `panel_m8.npz` ile bit-eş. Veri kapısı reddettiği günü yazmaz, sebebini kaydeder. Marj kapsamı dışındaki gün hata verir (sessiz geçmez) |
 | **S2** | Politika aktarımı (K9) | **BİTTİ (§3.2).** BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
 | **S3** | Simülasyon motoru ve defter | Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
 | **S4** | Günlük iş ve geriye dönük doldurma | Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
@@ -69,6 +69,49 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.3 S1 sonucu (2026-11-22; `measurements/phase11-s1/s1_forward_panel.json`)
+
+- **Kabul kapısı geçti.**
+  - Geçmiş satırlar `panel_m8.npz` ile bit-eş: 3.364 satır × 10 dizi (OHLCV, RSI, CCI, ADX, MACD, rf).
+  - Gerçek çekimle 9 yeni seans eklendi (2026-11-10 → 11-20). Panel `data/marl/forward/m8/panel_m8_fwd.npz` (git dışı), 3.373 satır.
+  - İş Yatırım çapraz denetiminde yama gerekmedi; en büyük fark 1e-7.
+  - Aynı gün ikinci çalıştırma dosyaları değiştirmedi.
+  - Yeni 270 hücre geçerli. Eğitim `norm_stats`'ı ile gözlem kırpma oranı 11 özelliğin hepsinde 0; 2026 test penceresinde en çok %0,8.
+- **Yapı (`marl/forward_panel.py`, `scripts/marl/forward_panel_m8.py`):**
+  - **Dondurulmuş kaynak.** `data/marl/frozen/m8-source/` altında `panel_m8`'in kaynak CSV'si ve m8-v1 İş Yatırım dosyaları; SHA'lar panel meta'sıyla aynı.
+    - Uygulamanın veri sayfası `data/bist/stock_data_with_indicators.csv`'yi artımlı güncelleyebilir; ileri hat o dosyayı okumaz.
+  - **Panel her güncellemede baştan kurulur.** M8 hattının aynı fonksiyonlarıyla: `apply_m8_v1` → ileri satırlar → `recompute_indicators` → `with_adx('wilder')` → `prepare_rl_panel` → `build_arrays` → rf.
+    - Önceki panelin tüm satırları bit-eş denetlenir; uyuşmazlıkta yazılmaz.
+    - İleri satırlar yalnız eklenir (`rows.csv`, append-only).
+  - **Zincir.** Yeni gün = son yazılı kapanış × taze yfinance (auto_adjust) oranı.
+    - Temettü ve bölünme o günün getirisine yansır; geçmiş yeniden düzeltilmez.
+    - Hacim aynı ölçekle bölünür (ciro korunur).
+  - **Çapraz kaynak (m8-v1'in nedensel karşılığı).** Yeni günün getirisi İş Yatırım düzeltilmiş kapanış getirisinden %1'den (m8-v1 `CLOSE_TOL`) fazla saparsa:
+    - kapanış İş Yatırım getirisiyle zincirlenir,
+    - yüksek/düşük, İş Yatırım gün içi uçlarıyla genişletilir.
+  - **Neden m8-v1'in kendisi değil.** m8-v1'in 11 seanslık merkezi medyanı 5 seans ileriye bakar. Geriye dönük bir medyan da kaynaklar arası kalıcı seviye adımında yanlış yama yapardı.
+    - Ölçüm (2021+, panel ve İş Yatırım önbelleği): iki kaynağın günlük düzeltilmiş getiri farkı %1'i 11 hücrede aştı (geçmiş kesik çubuklar).
+    - Son günde iki kaynağın ham kapanışı birebir aynı.
+  - **Gün kapısı.** İlk engelde durur; sonraki günler yazılmaz, sebep `log.jsonl`'a yazılır. Sebepler:
+    - seans değil (yfinance satırı sembollerin yarısından az: atlanır),
+    - kesim saati öncesi (aynı gün 19:00 TRT'den önce),
+    - İş Yatırım bekleniyor,
+    - rf bayat (d−1'de bilinen fonlama gözlemi 5 günden eski),
+    - marj bandı dışı (kapanış ya da açılış ±%10,5 dışında: veri hatası ya da marj değişikliği adayı, elle inceleme),
+    - yfinance çapası yok.
+  - **Risksiz faiz.** EVDS'ten çekilir, ileri deponun kendi kopyasına yazılır; ortak `data/macro/risk_free.csv` değişmez. Taze seri geçmiş rf'yi değiştirmedi (bit-eş).
+  - Ham çekimler `fetch/<zaman>/` altında SHA'larıyla saklanır.
+- **Açık kalan (S4 ön koşulu).** `PRICE_MARGIN_VERIFIED_UNTIL` hâlâ 2026-11-09; kapsam dışındaki ileri gün `limit_down_gaps`'te hata verir (test 4). Ölçüt bu; sessiz geçmez.
+  - S4 defteri ileri günleri işlemeden önce kapsam uzatılmalı. Bunun için bir kayıt düzeneği gerekir:
+    - kaynak denetimi tarihi (son: 2026-11-20, M2 tasarımı §2.5),
+    - ve gün kapısının bant denetimi; 9 gün için 0 ihlal.
+  - Sabiti her gün elle değiştirmek sürdürülemez; düzenek S4'te kurulur.
+- **Test:** `tests/test_marl_forward_panel.py` 4 kontrol:
+  - sıfır satırla bit-eş,
+  - zincir kuralı (temettü, kesik çubuk, yama eşiği),
+  - gün kapısının her sebebi,
+  - gerçek kaynak + 3 sentetik gün: önceki satırlar bit-eş, sonraki gün öncekileri değiştirmez, mutasyonlar yakalanır, marj kapsamı hatası.
 
 ### 3.2 S2 sonucu (2026-11-22; `measurements/phase11-s2/s2_parity.json`)
 
@@ -124,6 +167,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.4 (2026-11-22):** S1 bitti (§3.3): ileri panel append-only, dondurulmuş kaynaktan baştan kurulum, önceki satırlar bit-eş; 9 gerçek seans eklendi (yama 0). Kapanış çapraz denetimi nedensel getiri kuralıyla (m8-v1 merkezi medyanı ileriye bakıyordu). Açık: marj doğrulama kapsamının uzatılması S4 ön koşulu.
 - **v0.3 (2026-11-22):** S2 bitti (§3.2): sade ileri geçiş 72/72 bit-eş (logit farkı 0; ölçüt ≤ 1e-6); referans R serisi M8 test kaydıyla 72/72 aynı. Kurallar: tek gözlemle çağrı (toplu çağrı ≤ 5e-6 farklı), referans kol başına ayrı süreç.
 - **v0.2 (2026-11-22):** S0 bitti (§3.1): arşiv 72/72 doğrulandı, harici disk yedeği ve geri yükleme denemesi geçti. Politika sayısı 60 → 72 düzeltildi (boş kol ön kayıt listesinde).
 - **v0.1 (2026-11-22):** İlk taslak. Faz 10 araştırma kapanışından sonra kullanıcı niyetiyle yazıldı. Kod yok.
