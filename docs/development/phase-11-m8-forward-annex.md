@@ -1,6 +1,6 @@
 # M8 ileri veri ön kayıt eki (Faz 11 S6)
 
-**Sürüm:** v0.2 TASLAK · 2026-11-22 · dondurulmadı (hakem-finans + hakem-rl ilk okuma işlendi)
+**Sürüm:** v0.3 TASLAK · 2026-11-22 · dondurulmadı. Hakem-finans ve hakem-rl ikinci okuma: Kabul; küçük notlar işlendi
 **Neyin eki:** M8 ön kaydı v1.0 (`phase-10-m8-design.md` §6, etiket `m8-prereg-v1`, commit 1f89895) §6.7 "ileri veri" maddesi. Ana metin değişmez; bu ek yalnız §6.7'nin bıraktığı uygulama ayrıntılarını okumadan önce sabitler.
 **Dondurma:** kullanıcı onayıyla commit + etiket `m8-forward-annex-v1`. S4 günlük işi ilk ileri günü (2026-11-23) defterlemeden önce yapılır.
 **Okuma:** bir kez, §2'deki pencere tamamlanınca. Ara okuma yok (§9).
@@ -17,7 +17,7 @@
 - **Politikalar:** 2026 katının seçilmiş (argmax) politikaları, kol başına 12, toplam 72. SHA'lar `m8_reading.json` → `forward_policies_2026` alanında; arşiv `data/marl/frozen/m8-2026` (S0, `verify_archive`).
 - **Çıkarım yolu (hakem-rl #3):** M8 test serisini üreten yolun aynısı. S3'te 2026 penceresinde 72/72 bit-eş gösterildi (`measurements/phase11-s3/s3_parity.json`); parite o pencereyle sınırlıdır.
   - **Gözlem:** `obs_spec.local_obs`, yalnız politikanın kendi eğitim `norm_stats`'ıyla ölçeklenir. İleri veriden hiçbir istatistik (ölçek, kırpma sınırı, seçim) politikaya girmez. Kırpma ±5 (eğitimle aynı).
-  - **Eylem:** deterministik (`TanhNormal` ortalaması); `FrozenPolicy` tek gözlemle, CPU'da, float32.
+  - **Eylem:** deterministik, a = B · clamp(tanh(loc), ±(1 − ε_float32)). loc ağın çıktısının ilk yarısıdır, B = `model_meta.logit_bound`. TorchRL 0.7 `TanhNormal.deterministic_sample` ile aynı işlem sırasıdır. `FrozenPolicy` tek gözlemle, CPU'da, float32 çağrılır. Kırpma ±5 = `obs_spec.CLIP`.
 - **Karşıtlıklar ve eşleme (§6.2, §6.4):**
   - H1: M-none ↔ S-esm.
   - H2: M-none ↔ S-agr.
@@ -53,16 +53,19 @@
     - taban panel `panel_m8.npz` `2b7ea84c…` (kaynak manifest'i `data/marl/frozen/m8-source/manifest.json`),
     - kod dosyaları: dondurma commit'indeki hâlleri.
   - Her çekimin ham dosyası SHA'sıyla `data/marl/forward/m8/fetch/` altında, günlüğü `log.jsonl`'da.
+  - **Zincir oranı (hakem-finans 2. okuma Y1):** oran, aynı taze çekimin yfinance `auto_adjust=True` serisinden hesaplanır: yeni gün kapanışı / çapa günü kapanışı. Çapa ve yeni gün aynı çekimde olduğu için ex-date günü temettü ya da bedelsiz düzeltmesi çapaya da uygulanır. Oran toplam getiriyi verir, sahte düşüş göstermez. Ham fiyat kullanılmaz. Kalan tutarsızlık İş Yatırım %1 denetimine düşer.
   - **Kaynağın geriye dönük düzeltmesi (hakem-finans #2) bit-eş denetimini kırmaz.** Panel yfinance geçmişinden değil, dondurulmuş kaynak + `rows.csv`'den kurulur. Yeni gün = son yazılı kapanış × taze yfinance oranı. yfinance'in sonradan geçmişi yeniden düzeltmesi yazılı satırları değiştirmez; yalnız o günkü oranı belirler.
 - **Risksiz faiz (hakem-finans #3):**
   - Kaynak ve gecikme: EVDS fonlama oranı (`MacroDataFetcher().fetch_risk_free`), A8 gecikmesiyle (t'de bilinen oran).
   - Her çekim ileri deponun kendi kopyasına SHA'sıyla yazılır; ortak `data/macro/risk_free.csv` kullanılmaz.
   - Bayatlık eşiği: d−1'de bilinen son gözlem 5 günden eskiyse gün bekler (`rf_bayat`).
-  - rf panelin bir dizisidir; bit-eş denetimine girer. EVDS geçmişi revize ederse denetim kırılır ve gün yazılmaz. Kural:
-    - önceki satırların rf'si korunur,
-    - yalnız yeni gözlemler eklenir,
-    - olay tarihli olarak `log.jsonl`'a yazılır,
-    - tüm stratejilere aynı uygulanır.
+  - rf panelin bir dizisidir; bit-eş denetimine girer.
+  - **EVDS geçmişi revize ederse** (hakem-finans 2. okuma Y2):
+    1. Önce denetim kırılır ve gün yazılmaz (otomatik durma).
+    2. Sonra elle düzeltme: ileri deponun rf kopyası, önceki satırların rf'si korunarak ve yalnız yeni gözlemler eklenerek birleştirilir.
+    3. Düzeltme olay tarihli olarak `log.jsonl`'a yazılır ve tüm stratejilere aynı uygulanır.
+    4. Gün ancak bundan sonra yazılır.
+  - Revize edilmiş geçmiş değer hiçbir zaman kullanılmaz.
 - **Sapma: m8-v1 yerine nedensel karşılığı.** §6.7 ileri paneli "aynı veri kapısı ve `m8-v1` düzeltme kurallarıyla" kurmayı söyler. Uygulanan kural farklıdır:
   - **Neden:** m8-v1'in kapanış yaması 11 seanslık merkezi medyana dayanır, yani 5 seans ileriye bakar. İleri veride gün kapandığında bu bilgi yoktur; kural gerçek zamanlı uygulanamaz.
   - **Uygulanan:** aynı eşik (`panel_fix.CLOSE_TOL` %1), nedensel karşılaştırmayla. Yeni günün yfinance getirisi İş Yatırım düzeltilmiş kapanış getirisinden %1'den fazla saparsa:
@@ -142,6 +145,7 @@ Bu yüzden H1/H2 etiketi her yerde (tablo, özet, tez) aynı satırda şunlarla 
   - blok indisleri `evaluation.regime_contrast.circular_block_indices`,
   - her tekrarda hücre SR'si yeniden hesaplanır; tanımsızsa 0 (§6.4 ile aynı).
 - Δ̄ için %95 yüzdelik GA.
+- **Kabalık beyanı (hakem-rl 2. okuma #4):** 126 günde ~13 blok, GA'yı kaba yapar. Bu GA §6.1(b) kapısını belirler. Duyarlılık için blok 5 ve 20 ile aynı GA ayrı satırlarda verilir; kapı blok 10'la okunur.
 
 ### 6.4 Betimsel
 
@@ -151,7 +155,10 @@ Bu yüzden H1/H2 etiketi her yerde (tablo, özet, tez) aynı satırda şunlarla 
 - devir, nakit ağırlığı, satış engeli,
 - XU030 referans satırı ("kıyas değil", D1),
 - gerçekleşen tohum sd'siyle MDE.
-- **Girdi desteği (hakem-rl #5):** özellik başına, eğitim `norm_stats`'ıyla kırpılan gözlem oranı. Kötü bir ileri sonucun dağılım kaymasıyla birlikte olup olmadığı okunabilsin.
+- **Girdi desteği (hakem-rl #5, 2. okuma #5):** özellik başına, eğitim `norm_stats`'ıyla iki oran:
+  - kırpılan (|z| > 5) gözlem oranı,
+  - |z| > 3 olan gözlem oranı, eğitim penceresindeki aynı oranın yanında.
+  - Amaç: kötü bir ileri sonucun dağılım kaymasıyla birlikte olup olmadığı okunabilsin.
 
 ## 7. Okuma öncesi denetimler (biri bozuksa sonuçlar `UYARILI`)
 
@@ -179,6 +186,9 @@ Bu yüzden H1/H2 etiketi her yerde (tablo, özet, tez) aynı satırda şunlarla 
 
 `scripts/marl/analyze_forward_m8.py`, S4 defter biçimi kurulunca ve **ilk ileri gün defterlenmeden önce** self-testiyle commit'lenir (hakem-rl #6). SHA'sı okuma JSON'una yazılır.
 
+- **Gecikme sınırı (hakem-rl 2. okuma #6):** betik ilk günden önce hazır değilse defter yine çalışır. Bu durumda betik ileri defteri hiç okumadan, yalnız sentetik kayıtla self-test edilir ve **en geç 5. ileri seanstan önce** commit'lenir. Geç kalırsa, okuma JSON'unda beyan edilir.
+- **Self-test:** çıkarım yolunu (§1: eylem tanımı, kırpma ±5) M8 test kaydındaki bir politikayla bir kez eşler.
+
 - **Çıktı şeması (sabit):**
   - `checks` (§7),
   - `contrasts.<H1|H2|H3|NK>`: `delta_bar`, `ci95`, `p_signflip`, `p_bootstrap`, `verdict` (H1/H2), `ga0`, `path_ci95`, `path_verdict`, `width_ratio`, `cluster` {`p_exact`, `t_ci95`, `mde80`}, `undefined`, `missing`,
@@ -202,10 +212,13 @@ Bu yüzden H1/H2 etiketi her yerde (tablo, özet, tez) aynı satırda şunlarla 
 | Okuma | hakem-finans | hakem-rl |
 |---|---|---|
 | İlk (v0.1, 2026-11-22) | Küçük rev.: 2 BÜYÜK (#1 tohum GA'sı piyasa yolunu kapsamıyor, #2 sapma kanıtı + kaynak düzeltmesi kuralı), 7 KÜÇÜK | Küçük rev.: 3 BÜYÜK (#1 "destekler" geniş GA'da ucuz, #2 seed_cluster tek katta tanımsız, #3 çıkarım yolu sabitlenmemiş), 5 KÜÇÜK |
+| İkinci (v0.2, SendMessage) | **Kabul**; 2 KÜÇÜK (Y1 zincir oranı serisi, Y2 rf kuralı çelişkisi) | **Kabul**; 4 KÜÇÜK (#3 eylem tanımı, #4 bootstrap kabalığı, #5 eğitim aralığı dışı oran, #6 betik gecikme sınırı) |
+| İşleme (v0.3) | Y1 → §3 zincir oranı; Y2 → §3 rf sırası | #3 → §1, §8 self-test; #4 → §6.3; #5 → §6.4; #6 → §8 |
 | İşleme (v0.2) | #1, #9 → §6.1; #2 → §3; #3 → §3; #4 → §7; #5 → §6.3; #6 → §2; #7 → §5; #8 → §5 | #1, #7 → §6.1; #2 → §6.2; #3 → §1; #4 → §7; #5 → §6.4; #6 → §8; #8 → §2 |
 
 ## Versiyon geçmişi
 
+- **v0.3 (2026-11-22):** ikinci okumalar Kabul; küçük notlar işlendi: eylem tanımı, zincir oranı serisi, rf revizyon sırası, blok 5/20 duyarlılığı, |z| > 3 oranı, betik için 5. seans sınırı.
 - **v0.2 (2026-11-22):** hakem ilk okumaları işlendi:
   - §6.1 etiket yazımı (tohum GA'sı + gün bloklu GA + NK yan yana; `yol_farkli`'da tez cümlesi yok),
   - §6.2 tek katlı kümeleme,

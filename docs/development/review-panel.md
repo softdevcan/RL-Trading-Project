@@ -125,3 +125,7 @@ Uzmanlaşmış ve daha ucuz hakemler, ortak bir inceleme paketi ve son kapıda t
 | 2026-11-21 | Faz 10 M8 ön kaydı v1.0-r1 | hakem-finans, ikinci okuma (SendMessage) | ~66 bin (önceki bağlamla) | 1 | ~0,4 dk | Kabul; KÜÇÜK notlar (etiket eki her yerde, baseline (e) testi) |
 | 2026-11-22 | Faz 10 kapanışı (M8 okuması) | hakem-2 (opus), son kapı | ~104 bin | 20 | ~4,8 dk | Paketle. Büyük revizyon, yalnız metin: tohum kümelemesi (sahte yineleme), maliyet başlığı H1 için aşıyor, G1–G5 uzlaşması; 8 KÜÇÜK. Kendi salt okuma hesabı yaptı; sayılar `m8_robustness.py` ile depoda yeniden üretildi |
 | 2026-11-22 | Faz 10 kapanışı (M8 okuması) | hakem-2, ikinci okuma (SendMessage) | ~127 bin (önceki bağlamla) | 6 | ~0,9 dk | Kabul; 3 KÜÇÜK (0 bps aralığı kümeli GA, vision G1 kullanıcı kararı, durum ifadeleri) işlendi |
+| 2026-11-22 | Faz 11 S6 M8 ileri veri ön kayıt eki v0.1 | hakem-finans (sonnet) | ~41 bin | 5 | ~1,2 dk | Paralel, ortak paket. Küçük rev.: 2 BÜYÜK (tohum GA'sı piyasa yolunu kapsamıyor; sapma kanıtı + kaynak düzeltmesi kuralı), 7 KÜÇÜK |
+| 2026-11-22 | Faz 11 S6 ek v0.1 | hakem-rl (sonnet) | ~40 bin | 6 | ~1,1 dk | Küçük rev.: 3 BÜYÜK (geniş GA'da 'destekler' ucuz; seed_cluster tek katta tanımsız; çıkarım yolu sabitlenmemiş), 5 KÜÇÜK |
+| 2026-11-22 | Faz 11 S6 ek v0.2 | hakem-finans, ikinci okuma (SendMessage) | ~50 bin (önceki bağlamla) | 2 | ~2,1 dk | Kabul; 2 KÜÇÜK işlendi (v0.3) |
+| 2026-11-22 | Faz 11 S6 ek v0.2 | hakem-rl, ikinci okuma (SendMessage) | ~49 bin (önceki bağlamla) | 3 | ~2,3 dk | Kabul; 4 KÜÇÜK işlendi (v0.3) |
