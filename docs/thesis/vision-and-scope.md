@@ -187,7 +187,7 @@ MARL'ta iletişim tasarımı aktif bir araştırma alanıdır. Temel yaklaşıml
 
 | Kod | v0.1 iddiası | Hüküm (Ekim 2026, v0.3) | En yakın çalışmalar | Savunulabilir dar ifade |
 |---|---|---|---|---|
-| G1 | İletişim mimarilerinin karşılaştırması yok | **Kısmen kapandı** (finansta emir yürütmede yapılmış); portföy + GNN kolu için **açık** — Hung & Huang (2026) tam metni okununca kesinleşir | Fang vd. KDD 2023; Zhang Sci Rep 2025; Hung & Huang 2026 | Portföy yönetiminde iletişimsiz / dikkat / GAT'ın eşit bütçe, çoklu tohum ve aralık tahminiyle ilk karşılaştırması |
+| G1 | İletişim mimarilerinin karşılaştırması yok | **Kısmen kapandı** (finansta emir yürütmede yapılmış); portföy + GNN kolu için **açık** — Hung & Huang (2026) tam metni okununca kesinleşir | Fang vd. KDD 2023; Zhang Sci Rep 2025; Hung & Huang 2026 | **(v0.3.1, M8 sonrası, kullanıcı kararı 2026-11-22)** Portföy yönetiminde (BIST-30) graf maskeli dikkat (GAT) ile mimari-eş öz-dikkat iletişiminin, iletişimsiz bir kolla birlikte, eşit bütçe, 12 tohum × 6 yıllık ileri yürüyen bölme ve ön kayıtlı eşli testle karşılaştırılması: gat ↔ self Sharpe farkı gözlenmedi (tohum kümeli %95 GA [−0,14, 0,12]). "İlk" denmez; dikkat (attn) kolu nihai koşuda yok |
 | G2 | Tahmin güveninin iletişime beslenmesinin karşılığı yok | **Kısmen kapandı**; v0.3'te **bir kez daha daraldı**: log-güven önseli DebUnc ölçeklemesiyle eşdeğer | Zhang 2025 (konsensüs ağırlığı); ADMAC AAAI 2024; IMMAC AAMAS 2021; DebUnc EMNLP-F 2025; CAROC IJGS 2025; Öztürk 2026 | Harici, denetimli ve **kalibre** bir topluluk tahmincisinin güvenini, sürekli eylemli MARL'da (a) gücü öğrenilen bir dikkat önseli olarak (β·log c; β=1 DebUnc'un özel hâli), (b) alıcı tarafında öz-güven geçidi olarak kullanmak. Kalibrasyonun katkısı ayrı bir kalibresiz-güven koluyla sınanır |
 | G3 | Sektör-bazlı MARL az | **Kısmen kapandı** (hiyerarşik sektör dağıtıcılar var); eşdüzeyli + iletişimli sektör ajanları için **açık** | MPLS 2025; MAMA 2025; Sun vd. 2025; Yan vd. 2025 | Merkezi bir dağıtıcı ajan olmadan, öğrenilmiş iletişimle koordine olan eşdüzeyli sektör ajanları |
 | G4 | BIST'te multi-agent DRL yok denecek kadar az | DRL için iddia **yanlış ifade edilmiş**; MARL için **açık** (YÖK taraması bekliyor) | Candar & Üstündağ 2022; Beyhan vd. 2026 | Erişilebilen literatürde BIST-30'da ilk MARL uygulaması |
@@ -197,7 +197,7 @@ MARL'ta iletişim tasarımı aktif bir araştırma alanıdır. Temel yaklaşıml
 - **G1:** Ön kayıtlı tek iletişim karşıtlığı gat ↔ self idi; FARK_GOZLENMEDI, tohum kümeli %95 GA [−0,14, 0,12] Sharpe.
   - M8'de dikkat (attn) kolu yok.
   - İletişimsiz ↔ iletişimli karşılaştırması yalnız betimsel ve iletişimin aleyhine (devir daha yüksek).
-  - Yukarıdaki "iletişimsiz / dikkat / GAT … ilk karşılaştırması" ifadesi bu kanıtı aşıyor ve daraltılmalı. Yeni ifade kullanıcı kararı bekliyor.
+  - Tablodaki G1 dar ifadesi bu kanıta göre daraltıldı (v0.3.1, kullanıcı kararı 2026-11-22). Eski ifade: "iletişimsiz / dikkat / GAT'ın eşit bütçe, çoklu tohum ve aralık tahminiyle ilk karşılaştırması".
 - **G2:** M8'de sınanmadı (M5 gerçek sinyal kollarında fark tespit edilmedi).
 - **G3:** Faz 10'da sınanmadı; hisse başına ajan seçildi.
 - **G4:** M8 BIST-30'da çok ajanlı bir uygulamadır. "İlk" ifadesi YÖK taraması tamamlanmadan kullanılmaz.
@@ -674,6 +674,10 @@ Bu belge **yaşayan bir dokümandır**:
   - §9 seçilmiş kaynakçadan otomatik üretildi.
 
   Kod değişikliği yok.
+- **v0.3.1 (2026-11-22):** Faz 10 M8 sonrası (kullanıcı kararı).
+  - §2.5'e M8 kanıt notu eklendi.
+  - G1 dar ifadesi M8 kanıtına göre daraltıldı: "ilk" kaldırıldı, sonuç (gat ↔ self farkı gözlenmedi) ve kapsam (attn kolu yok) yazıldı.
+  - Kaynak tabanı ve diğer hükümler değişmedi.
 
 ---
 

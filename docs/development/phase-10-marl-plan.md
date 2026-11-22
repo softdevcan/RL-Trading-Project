@@ -639,7 +639,7 @@ Yanıt değerleri: **Kabul** = plana işlendi · **Kısmen** = gerekçeli sını
   - Eşler 12 tohum kümesidir. H1 ve H2 tohum kümeli testte de sağlam.
   - Kural portföyleri (1/N, al-tut, min-var, HRP; 6 kat ortalaması Sharpe 0,54–0,61) 20 bps'de öğrenen kolların hepsinin üstünde; en iyi öğrenen kol M-none 0,31. Maliyetsiz durumda en iyi öğrenen kollar 1/N ile aynı düzeyde.
 - **G1–G5 ile ilişki** (vision §2.5; vision belgesine M8 notu eklendi):
-  - **G1** (iletişim mimarilerinin karşılaştırması): ön kayıtlı tek iletişim karşıtlığı gat ↔ self idi ve fark gözlenmedi. M4b bir pozitif kontroldü (dikilmiş komşu sinyali, G metriği); M8 ise gerçek veride Sharpe'ı ölçtü, yani farklı bir soruyu sınadı. M8'de attn kolu yok. İletişimli kollar ↔ iletişimsiz M-none ön kayıtlı bir karşıtlık değil; betimsel olarak iletişimli kolların ortalaması daha düşük (0,04–0,05 ↔ 0,31), devirleri daha yüksek (0,49–0,51 ↔ 0,28). Vision'daki G1 dar ifadesi ("iletişimsiz / dikkat / GAT … ilk karşılaştırması") bu kanıtla daraltılmalı. Yeni ifade kullanıcı kararıdır.
+  - **G1** (iletişim mimarilerinin karşılaştırması): ön kayıtlı tek iletişim karşıtlığı gat ↔ self idi ve fark gözlenmedi. M4b bir pozitif kontroldü (dikilmiş komşu sinyali, G metriği); M8 ise gerçek veride Sharpe'ı ölçtü, yani farklı bir soruyu sınadı. M8'de attn kolu yok. İletişimli kollar ↔ iletişimsiz M-none ön kayıtlı bir karşıtlık değil; betimsel olarak iletişimli kolların ortalaması daha düşük (0,04–0,05 ↔ 0,31), devirleri daha yüksek (0,49–0,51 ↔ 0,28). Vision'daki G1 dar ifadesi bu kanıtla daraltıldı (vision v0.3.1, kullanıcı kararı 2026-11-22).
   - **G2** (güven-ağırlıklı mesaj): M8'de sınanmadı (M8 tasarımı §6.2 sapma beyanı). M5 gerçek sinyal kollarında `O1_fark_yok`.
   - **G3** (eşdüzeyli sektör ajanları): Faz 10'da sınanmadı. Seçenek A (hisse başına ajan) G3'ü erteledi (§0 madde 3).
   - **G4** (BIST'te MARL): M8 BIST-30'da çok ajanlı bir uygulamadır. "İlk" ifadesi YÖK taraması tamamlanmadan kullanılmaz (§2.3).
@@ -654,7 +654,7 @@ Yanıt değerleri: **Kabul** = plana işlendi · **Kısmen** = gerekçeli sını
 | K27 pano: ajan türü seçimi + karşılaştırma | Ürün; tez sonucu değil | Sonraki faz (ürün entegrasyonu) |
 | K13 canlı normalizasyon, K14 strateji başına kağıt portföy, §8 #18 kağıt portföy yürütme fiyatı | Ürün; tez sonucu değil | Sonraki faz (ürün entegrasyonu) |
 | Makale 2 (B5 + K0–K4) | Faz 10'un parçası değil | §4 diyagramı, ayrı iş |
-| Vision §2.5 G1 dar ifadesinin M8 kanıtıyla daraltılması | Tez iddiası; kullanıcı kararı (hakem-2 ikinci okuma K-2). Tez metnine geçmeden yapılır | Kullanıcı kararı, sonra vision v0.4 |
+| ~~Vision §2.5 G1 dar ifadesinin M8 kanıtıyla daraltılması~~ | **Yapıldı** (kullanıcı kararı 2026-11-22; vision v0.3.1) | — |
 
 **Sonraki faz (kullanıcı niyeti, 2026-11-22; plan yazılmadı).** MARL karar yolunun panoya ve kağıt portföye entegrasyonu: sanal parayla simülasyon. Ön koşullar plan yazılırken netleşir: K2/K5/K6 paritesi (canlı karar ortamla aynı fonksiyonları çağırır), §8 #18 (t+1 açılış yürütmesi), K14 (strateji başına portföy), kural portföylerinin aynı simülasyonda yan yana koşması (§7.3 b).
 

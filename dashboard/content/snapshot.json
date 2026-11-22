@@ -410,13 +410,19 @@
    "ad": "Faz 10 M8, nihai koşumlar",
    "durum": "bitti, okundu (2026-11-22)",
    "sinif": "bitti",
-   "siradaki": "Vision G1 ifadesi (kullanıcı kararı); ileri veri okuması (2026-11-23'ten itibaren ≥ 126 seans, §6.7)"
+   "siradaki": "İleri veri okuması (2026-11-23'ten itibaren ≥ 126 seans, §6.7)"
   },
   {
    "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
    "durum": "planlı",
    "sinif": "planli",
    "siradaki": "M2 + karar katmanından (K1–K10) sonra"
+  },
+  {
+   "ad": "Faz 11 entegrasyon + sanal para simülasyonu",
+   "durum": "plan v0.1 TASLAK (2026-11-22)",
+   "sinif": "planli",
+   "siradaki": "Kullanıcı kararları K-F11-1..6, sonra S0 arşiv"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -471,7 +477,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "b6eed69ee0fc4f53db24f667ed390cd815f18b09411a5a048adabeef00e4231b",
+   "tablo_sha256": "245585b6b76fdb01766cc756cb9876cbbdb348e4d73aa3ddbf212c49243ae18c",
    "uretim_commit": null
   }
  }
