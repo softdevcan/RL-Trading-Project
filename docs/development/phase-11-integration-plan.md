@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.7 TASLAK · 2026-11-22 · S0, S2, S1, S3 ve S4 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor (dal `feat/phase11-s6`)
+**Sürüm:** v0.8 TASLAK · 2026-11-22 · S0, S2, S1, S3, S4 ve S5 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -43,7 +43,7 @@
 | **S2** | Politika aktarımı (K9) | **BİTTİ (§3.2).** BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
 | **S3** | Simülasyon motoru ve defter | **BİTTİ (§3.4).** Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
 | **S4** | Günlük iş ve geriye dönük doldurma | **BİTTİ (§3.5).** Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
-| **S5** | Pano (K27) | Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
+| **S5** | Pano (K27) | **BİTTİ (§3.7).** Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
 | **S6** | İleri veri ön kayıt eki | **Ek v0.3 + okuma betiği hazır (§3.6); dondurma bekliyor.** M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
 | **S7** | Kağıt portföy uyumu (K13, §8 #18) | Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
 
@@ -69,6 +69,33 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.7 S5 sonucu (2026-11-22; `tests/test_marl_forward_api.py` 5, `tests/test_marl_sim_ledger.py` 5)
+
+- **Sayfa** `/dash/simulation` ("Simulasyon", İşlem grubu; `dashboard/pages/simulation.py`).
+  - **Durum kartları:** ileri seans n/126, son defter günü, son çalışma, marj denetiminin geçerlilik sonu.
+  - **Yönetici "Şimdi çalıştır" düğmesi.** Sayfa açılışta işin durumunu sorar; iş çalışıyorsa yoklama açılır (pano uzun iş kuralı).
+- **Karşılaştırma yalnız aynı pencere ve aynı maliyetteki defterler arasında.** Pencere seçimi iki seçenekli:
+  - **İleri veri** (2026-11-23 →; ara görünüm notuyla: tez sonucu değil, ek §9),
+  - **2026 test penceresi** (M8'de okunmuş geçmiş; S3 defteriyle yeniden oynatım, arşiv SHA'sıyla anahtarlı önbellek).
+- **Kol çizgisi** 12 tohumun ortalaması ± std bandı, N gösterilir. **Varsayılan görünüm (K-F11-1):** MARL iletişimsiz + 1/N + min-varyans; diğer kollar ve kurallar seçilebilir.
+  - Özet tablo: toplam getiri, fazla getiri Sharpe, en büyük düşüş, devir ve nakit; her biri ortalama ± std.
+- **Ürün portföyü (K-F11-2):** seçilen strateji, kullanıcının sermayesiyle (varsayılan 100.000 TL, K-F11-6) tam sayı lotla oynatılır ve kesirli defterle karşılaştırılır.
+  - Gösterilenler: son değer farkı, yıllık izleme hatası, ortalama ağırlık açığı (yuvarlama), emir sayısı.
+  - Ürün portföyü ileri teste girmez ve kayıt tutmaz (hesap anlık).
+  - Kullanıcı başına kalıcı ürün portföyü bu pakette yok. Kâğıt portföy akışı S7'de.
+  - Tam sayı muhasebesi ortamla aynı fonksiyon: `orders.step_integer`, `MarlPortfolioEnv._step_integer`'dan taşındı. main'deki ortamla 80 adım bit-eş, `test_marl_env` 36; M2 tasarımı v0.12.
+- **Eski tek ajan modelleri** ayrı kartta, "doğrudan kıyaslanmaz" notuyla (Modeller ve Günlük karar sayfalarına bağlantı).
+- **Uçlar:**
+  - `GET /api/marl/forward/view?window=&keys=` ve `GET /api/marl/forward/product?sid=&capital=&window=` (CurrentUser; geçersiz girdi 422).
+  - Veri katmanı `marl/forward_views.py`.
+- **Ölçüm (2026 penceresi; betimsel, yeni iddia değil):**
+  - 1/N fazla getiri Sharpe'ı defterden −1,045; `m8_reading.json` baselines.2026 ile aynı.
+  - Tam lot 1e9 sermayede kesirliye yakınsar (< 1e-4, test 5).
+- **Test:**
+  - `test_marl_forward_api` 5: 401/200/422, sayfa ve iki callback 200, grafik 5 iz.
+  - `test_marl_sim_ledger` 5: tam sayı modu.
+  - `test_dash_props` 4, `test_theme_contrast` 92, `test_topbar` 43, `test_account_profile` 84.
 
 ### 3.6 S6 durumu (2026-11-22; ek `phase-11-m8-forward-annex.md` v0.3)
 
@@ -250,6 +277,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.8 (2026-11-22):** S5 bitti (§3.7): simülasyon panosu, aynı pencere karşılaştırması, kol ort. ± std, ürün portföyü tam lot (K-F11-1, -2, -6 önerileri); `orders.step_integer` (ortam ve defter aynı fonksiyon).
 - **v0.7 (2026-11-22):** S6 eki v0.3 (hakem Kabul) + okuma betiği (öz-test 9/9); dondurma onayı bekliyor.
 - **v0.6 (2026-11-22):** S4 bitti (§3.5): günlük iş idempotent, boşluk doldurma bit-eş; marj kapsamı düzeneği (tarihli kaynak denetimi + 31 gün; S1 açık maddesi kapandı); uygulama içi tetik (K-F11-4 öneri). K-F11-1..6 kullanıcı: öneriler uygulanır. S6 eki v0.3 taslak, hakem Kabul, dondurma onayı bekliyor.
 - **v0.5 (2026-11-22):** S3 bitti (§3.4): `marl/sim_ledger.py` kesirli defter; 2026 test penceresi 72/72 politika M8 test serisiyle bit-eş, 4/4 kural portföyü `rule_series` ile bit-eş ve M8 okumasındaki Sharpe ile aynı. Durum JSON'la kaldığı yerden devam bit-eş (S4 temeli). Marj kapsamı açık maddesi sürüyor.
