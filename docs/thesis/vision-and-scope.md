@@ -193,6 +193,16 @@ MARL'ta iletişim tasarımı aktif bir araştırma alanıdır. Temel yaklaşıml
 | G4 | BIST'te multi-agent DRL yok denecek kadar az | DRL için iddia **yanlış ifade edilmiş**; MARL için **açık** (YÖK taraması bekliyor) | Candar & Üstündağ 2022; Beyhan vd. 2026 | Erişilebilen literatürde BIST-30'da ilk MARL uygulaması |
 | G5 | İletişimin rejime göre değeri araştırılmamış | **Kısmen kapandı** (LLM ajanlarında, kesitsel piyasa türüne göre) | Shi & Hollifield 2025 (ön baskı) | Öğrenilmiş sayısal iletişimin marjinal katkısının önceden tanımlı **zamansal** rejimlere koşullu ölçümü |
 
+**Faz 10 M8 kanıtı (2026-11-22; tablo hükümleri değişmedi; [M8 tasarımı](../development/phase-10-m8-design.md) §7, [Faz 10 planı](../development/phase-10-marl-plan.md) §9):**
+- **G1:** Ön kayıtlı tek iletişim karşıtlığı gat ↔ self idi; FARK_GOZLENMEDI, tohum kümeli %95 GA [−0,14, 0,12] Sharpe.
+  - M8'de dikkat (attn) kolu yok.
+  - İletişimsiz ↔ iletişimli karşılaştırması yalnız betimsel ve iletişimin aleyhine (devir daha yüksek).
+  - Yukarıdaki "iletişimsiz / dikkat / GAT … ilk karşılaştırması" ifadesi bu kanıtı aşıyor ve daraltılmalı. Yeni ifade kullanıcı kararı bekliyor.
+- **G2:** M8'de sınanmadı (M5 gerçek sinyal kollarında fark tespit edilmedi).
+- **G3:** Faz 10'da sınanmadı; hisse başına ajan seçildi.
+- **G4:** M8 BIST-30'da çok ajanlı bir uygulamadır. "İlk" ifadesi YÖK taraması tamamlanmadan kullanılmaz.
+- **G5:** M6/M7'de tanı ve pilotlar yapıldı; M8'de rejime koşullu okuma yok.
+
 ---
 
 ## 3. Tasarım Seçenekleri ve Değerlendirme

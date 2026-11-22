@@ -1,6 +1,6 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v1.1 · ön kayıt DONDURULDU 2026-11-21 · okuma 2026-11-22 (§7) · dal `feat/phase10-m8-prereg`
+**Sürüm:** v1.2 · ön kayıt DONDURULDU 2026-11-21 · okuma 2026-11-22 (§7) · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
 **Durum:** Ön kayıt (§6) DONDURULDU 2026-11-21; 432 koşu bitti ve okundu 2026-11-22 (§7). §1–§5 tasarım geçmişidir. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
@@ -311,11 +311,15 @@ Bütün sayılar `docs/development/measurements/phase10-m8/m8_reading.json` dosy
   - H1: +0,46 / +1,30 / +0,55 / +0,37 / +0,23 / −0,12. Aynı işaret 5/6, kat işaret-çevirme p 0,0625, bu yüzden `yila_bagli`.
   - H2: +0,61 / +0,67 / +0,01 / +0,04 / +0,23 / +0,13. 6/6, p 0,031.
 - **2021 katı ayrı (§6.7; etiket yok, 12 eş):** H1 +0,46 [0,11, 0,81], H2 +0,61 [0,30, 0,92], H3 −0,17 [−0,44, 0,07], NK −0,28 [−0,64, 0,09].
-- **Güç (betimsel, ölçülen σ ile yeniden):** MDE₈₀ H1 0,28, H2 0,16, H3 0,26, NK 0,21 (`mde_recomputed`). Bunlar ön kayıttaki 0,075–0,137 aralığının üstünde. Ölçülen tohum yayılımı boyut ölçümündeki σ 0,155'ten büyük çıktı: kat × kol sd_tohum 0,13–1,33. Etiketler bu güçle okunur. H3'teki "fark gözlenmedi" ~0,26'dan küçük farkları dışlamaz.
+- **Güç (betimsel, ölçülen σ ile yeniden):** `mde_recomputed` MDE₈₀ H1 0,28, H2 0,16, H3 0,26, NK 0,21.
+  - Bu ölçü iki kolun σ'sını eşlemesiz (ρ = 0) toplar. Ön kayıttaki benzetimle (0,075–0,137) karşılaştırılabilir, ama kullanılan eşli testin MDE'si değildir (hakem-2 #4).
+  - Ölçülen tohum yayılımı boyut ölçümündeki σ 0,155'ten büyük çıktı: kat × kol sd_tohum 0,13–1,33.
+  - Eşli ve tohum kümeli MDE'ler §7.5'te. "Gözlenmedi" etiketleri MDE ile değil, §7.5'teki tohum kümeli GA ile okunur.
+- **Bir katı dışarıda bırakma (§7.5):** H1 Δ̄ 0,30–0,58; en küçük değer 2022 çıkınca (2022 katı +1,30). H2 0,20–0,34. Yön her durumda korunuyor; H1'in büyüklüğü 2022 katına duyarlı.
 
 ### 7.3 Betimsel bulgular (kararları değiştirmez; §6.5)
 
-**(a) Farkın kaynağı işlem maliyeti.** D4 ızgarasında aynı politikalar ex post yeniden fiyatlandı (`cost_grid_delta`):
+**(a) H2'nin farkı maliyet sürüklemesiyle açıklanıyor; H1'in yaklaşık yarısı maliyetten bağımsız kalıyor.** D4 ızgarasında aynı politikalar ex post yeniden fiyatlandı (`cost_grid_delta`). 0 bps'de aynı karşıtlık kuralıyla (betimsel, §7.5): H1 +0,24 [0,08, 0,40], p_max 0,016; H2 −0,01 [−0,11, 0,09], p_max 0,91.
 
 | Δ̄ | 0 bps | 10 | 20 (birincil) | 25 | 50 |
 |---|---|---|---|---|---|
@@ -323,43 +327,94 @@ Bütün sayılar `docs/development/measurements/phase10-m8/m8_reading.json` dosy
 | H2 | −0,01 | +0,14 | +0,28 | +0,35 | +0,71 |
 | H3 | −0,02 | −0,02 | −0,01 | −0,01 | +0,01 |
 
-- Ortalama günlük devir: M-none 0,28, boş kol 0,29; M-gat 0,49, M-self 0,51; S-agr 0,65, S-esm 0,66 (`arms.*.per_fold_turnover`, 6 kat ortalaması). Nakit ağırlığı her kolda %1–5.
-- Okuma: maliyetsiz durumda H2 farkı sıfırdır, H1 farkının yaklaşık yarısı kalır. Etiketler 20 bps'de, ön kayıtlı maliyetle konmuştur.
-  - H2'nin içeriği bir "seçim becerisi" farkı değil, **devir farkıdır**: aynı maliyetle eğitilen SARL-ağırlık kolu çok ajanlı kolun ~2,3 katı işlem yapıyor.
-  - H1'in bir kısmı maliyetsiz durumda da sürüyor.
+- Ortalama günlük devir (Σ|Δw|, `arms.*.per_fold_turnover`, 6 kat ortalaması): M-none 0,28, boş kol 0,29; M-gat 0,49, M-self 0,51; S-agr 0,65, S-esm 0,66. 20 bps gidiş-dönüşte (tek yön 10 bps) bu kabaca yılda M-none'da ~%7, S kollarında ~%16 maliyet sürüklemesi demektir (devir × 0,001 × 252; kaba hesap).
+- Nakit ağırlığı 6 kat ortalamasında her kolda %1–5; kat düzeyinde S-esm 2024'te %13 (`per_fold_cash`).
+- Okuma: maliyetsiz durumda H2'de ±0,1 içinde fark görülmedi; H1 farkının yaklaşık yarısı kalır ve sıfırdan ayrışır (betimsel). Etiketler 20 bps'de, ön kayıtlı maliyetle konmuştur.
+  - H2'nin içeriği bir "seçim becerisi" farkı değil, **devir farkıdır**: aynı maliyetle eğitilen SARL-ağırlık kolu M-none'ın ~2,3 katı işlem yapıyor.
+  - Düşük devir MAPPO'nun genel bir özelliği değil, M-none'ın özelliğidir: M-gat ve M-self de MAPPO ama devirleri 0,49–0,51.
   - Bu, §6.1'deki yorum sınırını (SARL kolları MAPPO-ayarlı, ayar-eşit SARL kolu yok) somutlaştırır.
-- **Yazım kuralı:** H1/H2 bir tez metninde "çok ajanlı yapı daha iyi portföy seçiyor" diye yazılmaz. Doğru ifade "aynı maliyet ve ayarla eğitilen çok ajanlı politika daha az devirle daha yüksek maliyet sonrası Sharpe verdi (6 yılda ortalama)" olur.
+- **Yazım kuralı:** H1/H2 bir tez metninde "çok ajanlı yapı daha iyi portföy seçiyor" diye yazılmaz. Doğru ifade: "aynı maliyet ve ayarla eğitilen iletişimsiz paylaşımlı MAPPO (M-none) daha az devirle daha yüksek maliyet sonrası Sharpe verdi (6 yılda ortalama); H1'de farkın yaklaşık yarısı maliyetsiz durumda da sürüyor".
 
-**(b) Kural portföyleri öğrenen kolların hepsinin üstünde.** 6 kat ortalaması Sharpe (`baselines`; aynı muhasebe, 20 bps):
+**(b) Kural portföyleri 6 kat ortalamasında öğrenen kolların hepsinin üstünde.** 6 kat ortalaması Sharpe (`baselines`; aynı muhasebe, 20 bps):
 - Öğrenen kollar: M-none 0,31, boş kol 0,24, M-self 0,05, M-gat 0,04, S-agr 0,03, S-esm −0,15.
 - Kural portföyleri: 1/N 0,54, al-tut 0,57, min-varyans 0,61, HRP 0,61.
+- 0 bps'de (§7.5) M-none ve S-agr (0,557 / 0,563) 1/N (0,556) ve al-tut (0,571) ile aynı düzeyde, min-varyans ve HRP'nin (0,628 / 0,621) altında. Maliyetsiz durumda öğrenen kolların en iyisi en basit kurala ancak yetişiyor.
+- Kat düzeyinde istisna var: 2021'de M-none 0,85 ve boş kol 1,12, en iyi kural portföyü (al-tut) 0,72.
 
 Bu bir ön kayıt hipotezi değildir ve test edilmedi: kural portföyleri kat başına tek seridir, eşli bir karşıtlık yok. Yine de her raporda öğrenen kolların yanında verilir. M8 "MARL tek ajandan iyi mi" sorusunu yanıtlar, "MARL basit kurallardan iyi mi" sorusunu yanıtlamaz.
 
-**(c) Seçim kuralı ve negatif kontrol.** Son nokta (`test_last`) okumasında NK Δ̄ +0,215 [0,066, 0,365], p_max 0,011 çıktı. Aynı yapılandırmanın iki tohum grubu bu kuralla "fark" verdi. Bu sonuç:
-- Birincil kural (doğrulama argmax'ı) için uyarı değildir (§6.4).
-- Son nokta kuralıyla okunan eklerin (`secime_dayanikli/duyarli`) gürültüye karşı ~0,2 Sharpe düzeyinde duyarlı olduğunu gösterir; beyan edilir.
+**(c) Seçim kuralı ve negatif kontrol.** Son nokta (`test_last`) okumasında NK Δ̄ +0,215 [0,066, 0,365], p_max 0,011 çıktı: aynı yapılandırmanın iki tohum grubu bu kuralla "fark" verdi.
+- Birincil kural (doğrulama argmax'ı) için uyarı değildir (§6.4); etiketler değişmez (§6.8).
+- Olası açıklama tohum kümelemesidir (§7.5; hakem-2 #1). Aynı tohum numarası altı katta yeniden kullanıldığı için 72 eş bağımsız değil, 12 tohum kümesidir. Eş düzeyindeki test bu bağımlılığı yok sayar ve fazla iyimserdir.
+  - NK-son'da tohum etkisi anlamlı: F 3,23 (11, 55 sd), p 0,002.
+  - Tohum kümeli tam işaret-çevirmede NK-son p 0,107, t-GA [−0,05, 0,48].
+- Aynı kümeli testte H1 ve H2 her iki seçim kuralında da sağlam (§7.5), yani `secime_dayanikli` ekleri tutuyor.
 - Seçilen nokta son noktayla %12–26 oranında aynı (`share_last_equals_argmax`).
 
 **(d) Zaman yönü.** H1 kat trendi Spearman −0,83: fark geç katlarda küçülüyor. Eğitim günü başına kare 377'den 211'e iniyor (`per_fold`, F sabit; hakem-rl #K1). İkisi aynı yönde; bu tasarım ayrımı yapmaz. Doğrulama ↔ test ilişkisi kat başına 0,04–0,57.
 
 **(e) Diğer.**
 - Kat başına ortak HAC p'leri (`hac_pooled`) yalnız betimseldir; çoğu katta > 0,05.
-- DSR (N = 10, alt sınır): M-none|argmax 0,67, diğerleri 0,16–0,39. M8 en iyiyi seçmez.
+- DSR (N = 10, alt sınır): M-none 0,67 / 0,64 (argmax / son), diğerleri 0,16–0,39. M8 en iyiyi seçmez.
 - rliable (`rliable`; boş kol hariç beş kol): IQM hepsinde < 0 (M-none −0,05). Medyan M-self'te 0,00, diğerlerinde < 0. Ortalama ile medyan arasındaki fark büyük ölçüde 2022 katından gelir: bu katta kural portföylerinin Sharpe'ı da ~3,6.
 - 2026 katının test penceresi wf-v1 gereği 2026-10-31'de biter.
 
 ### 7.4 Sonuç ve sınırlar
 
 - **H1 ve H2:** 2021–2026'da, 20 bps maliyetle, aynı ayarlarla eğitilen çok ajanlı MAPPO (iletişimsiz) iki SARL kolundan daha yüksek maliyet sonrası Sharpe verdi.
-  - H1 farkı yıla bağlı (5/6 kat; 2026'da ters). H2 farkı katlarda tutarlı.
-  - Farkın H2'de tamamı, H1'de yaklaşık yarısı daha düşük devirden geliyor.
-- **H3:** iki iletişim türü arasında fark gözlenmedi.
-- **Öğrenen kollar ve kurallar:** hiçbir öğrenen kol basit kural portföylerini geçmedi (betimsel).
+  - H1 farkı yıla bağlı (5/6 kat; 2026'da ters) ve büyüklüğü 2022 katına duyarlı. H2 farkı katlarda tutarlı.
+  - H2'de maliyetsiz durumda fark görülmedi (devir farkı); H1'de farkın yaklaşık yarısı maliyetsiz durumda da sürüyor.
+- **H3:** iki iletişim türü arasında fark gözlenmedi; kümeli %95 GA [−0,14, 0,12].
+- **Öğrenen kollar ve kurallar:** 6 kat ortalamasında, 20 bps'de hiçbir öğrenen kol basit kural portföylerini geçmedi. Maliyetsiz durumda en iyi öğrenen kollar 1/N ile aynı düzeyde, min-varyans ve HRP'nin altında (betimsel).
+- **Bağımlılık:** eşler 12 tohum kümesidir (§7.5). H1 ve H2 kümeli testte de sağlam. İleri veri ekinde ve sonraki ön kayıtlarda bu bağımlılık baştan beyan edilir; birincil istatistik tohum kümesini hesaba katar.
 - **Kapsam:** çıkarım 6 yıla ve tek piyasa yoluna koşulludur (§6.1), nominal TL'dir; 2022–2026 pencereleri araştırmacıya açıktı (§6.7).
 - **İleri veri (§6.7):** başlangıç dondurmadan sonraki ilk seans, 2026-11-23. 2026 katının seçilmiş politikaları, kol başına 12, SHA'larıyla `forward_policies_2026` alanında sabitlendi. En az 126 seans birikince ayrı ön kayıt ekiyle bir kez okunur. Ölçüt §6.7'dedir; H1 ve H2 FARK_VAR olduğu için "destekler / çelişir / belirsiz" kuralı uygulanır.
 
+### 7.5 Sonuçtan sonra eklenen betimsel sağlamlık (hakem-2 kapanış okuması; etiketleri değiştirmez)
+
+Kaynak: `scripts/marl/m8_robustness.py` (koşudan önce commit'lendi, 1fa82c1), çıktı `docs/development/measurements/phase10-m8/m8_robustness.json`. Bu analizler ön kayıtta yoktu. Sonuç görüldükten sonra, hakem-2'nin bulguları (#1, #2, #4, #7, #11) üzerine eklendi. Karar kuralını ve etiketleri değiştirmez (§6.8).
+
+**Tohum kümelemesi.** Tohum başına 6 kat ortalaması alınır (12 değer). Tam işaret-çevirme 4.096 düzen, t GA serbestlik derecesi 11. Tohum etkisi F iki yönlüdür (kat etkisi çıkarılmış, 11 ve 55 sd).
+
+| Karşıtlık (kural) | Δ̄ | Kümeli p | Kümeli t-GA | Tohum etkisi F (p) | MDE₈₀ eşli kat içi | MDE₈₀ kümeli |
+|---|---|---|---|---|---|---|
+| H1 (argmax) | +0,465 | 0,0005 | [0,31, 0,62] | 0,57 (0,84) | 0,25 | 0,21 |
+| H1 (son) | +0,455 | 0,0005 | [0,30, 0,61] | 0,50 (0,90) | 0,26 | 0,21 |
+| H2 (argmax) | +0,281 | 0,0020 | [0,16, 0,41] | 1,02 (0,44) | 0,16 | 0,17 |
+| H2 (son) | +0,332 | 0,0068 | [0,14, 0,53] | 1,49 (0,16) | 0,21 | 0,27 |
+| H3 (argmax) | −0,010 | 0,87 | [−0,14, 0,12] | 3,46 (0,001) | 0,11 | 0,19 |
+| H3 (son) | +0,035 | 0,53 | [−0,09, 0,16] | 1,96 (0,050) | 0,12 | 0,17 |
+| NK (argmax) | +0,073 | 0,53 | [−0,15, 0,29] | 2,75 (0,007) | 0,19 | 0,31 |
+| NK (son) | +0,215 | 0,107 | [−0,05, 0,48] | 3,23 (0,002) | 0,22 | 0,37 |
+
+**"Gözlenmedi" etiketlerinin okunuşu.**
+- H3: kümeli %95 GA [−0,14, 0,12] dışındaki farklar dışlanır; daha küçük farklar dışlanamaz.
+- NK: kümeli %95 GA [−0,15, 0,29].
+- gat ile self arasında aynı kat ve aynı tohumdaki korelasyon 0,61–0,93 (`within_fold_arm_corr`). Eşli kat içi MDE bu yüzden eşlemesiz ölçüden küçük.
+
+**0 bps** (argmax; aynı `m8_stats.contrast`, R = B = 10.000):
+
+| Karşıtlık | Δ̄ | %95 GA | p_max | Kümeli p |
+|---|---|---|---|---|
+| H1 | +0,237 | [0,08, 0,40] | 0,016 | 0,002 |
+| H2 | −0,007 | [−0,11, 0,09] | 0,91 | 0,92 |
+| H3 | −0,022 | [−0,09, 0,05] | 0,56 | 0,72 |
+| NK | +0,070 | [−0,05, 0,19] | 0,34 | 0,49 |
+
+**6 kat ortalaması Sharpe, 0 bps.**
+- Kural portföyleri: 1/N 0,556, al-tut 0,571, min-varyans 0,628, HRP 0,621.
+- Öğrenen kollar: M-none 0,557, S-agr 0,563, boş kol 0,487, M-self 0,485, M-gat 0,463, S-esm 0,319.
+
+**Bir katı dışarıda bırakma** (argmax, `leave_one_fold_out_delta`):
+- H1: 0,30 (2022 çıkınca) – 0,58 (2026 çıkınca).
+- H2: 0,20–0,34.
+
 ## Versiyon geçmişi
+
+- **v1.2 (2026-11-22):** hakem-2 kapanış okuması (Büyük revizyon; yalnız metin) işlendi.
+  - §7.5 sonuçtan sonra eklenen betimsel sağlamlık (`m8_robustness.py`): tohum kümelemesi, 0 bps karşıtlıkları, eşli/kümeli MDE, bir katı dışarıda bırakma.
+  - §7.3(a) başlığı daraltıldı (H1'in yarısı maliyetten bağımsız); §7.3(c) yeniden yazıldı (tohum kümelemesi).
+  - Rakam düzeltmeleri: DSR, nakit. Yazım kuralı "M-none". Etiketler değişmedi.
 
 - **v1.1 (2026-11-22):** §7 okuma. 432/432 koşu, denetimler tamam.
   - H1 FARK_VAR_MARL (yila_bagli), H2 FARK_VAR_M-none (katlar_tutarli), H3 ve NK FARK_GOZLENMEDI.

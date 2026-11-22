@@ -621,21 +621,30 @@ Yanıt değerleri: **Kabul** = plana işlendi · **Kısmen** = gerekçeli sını
 
 ---
 
-## 9. Araştırma kapanışı (2026-11-22; hakem-2 kapanış okuması bekliyor)
+## 9. Araştırma kapanışı (2026-11-22; hakem-2 kapanış okuması Büyük revizyon → işlendi, ikinci okuma bekliyor)
 
 **Kapsam.** Faz 10'un araştırma zinciri bitti: M1 → M2 → M3/M4 → M5 → M6/M7 → M8 ön kayıt → nihai koşumlar (§4 diyagramı). Durum ve kanıt [sistem haritasında](system-map.md); her milestone'un sonucu kendi tasarım belgesinde. Bu bölüm yalnız kapanışı ve devredilen işleri kaydeder; yeni hipotez eklemez.
 
-**Birincil sonuç (M8, [M8 tasarımı](phase-10-m8-design.md) §7; `measurements/phase10-m8/m8_reading.json`).** 432/432 koşu, ön kayıt v1.0 değişmeden okundu.
-- **H1:** MAPPO-`none` ↔ SARL-eşmimari (§2.3'ün birincil karşıtlığı): FARK_VAR_MARL (yila_bagli, secime_dayanikli; 6 yılda ortalama), Δ̄ +0,47.
-- **H2:** MAPPO-`none` ↔ SARL-ağırlık: FARK_VAR (katlar_tutarli; 6 yılda ortalama), Δ̄ +0,28.
-- **H3:** gat ↔ self ve negatif kontrol: FARK_GOZLENMEDI.
-- **Betimsel:**
-  - Fark devir/maliyet kaynaklı: 0 bps'de H2 sıfır, H1 yarıya iniyor.
-  - Kural portföyleri (1/N, al-tut, min-var, HRP; 6 kat ortalaması Sharpe 0,54–0,61) öğrenen kolların hepsinin üstünde (en iyi M-none 0,31).
-- **G1–G5 ile ilişki** (vision §2.5):
-  - G1 (iletişim mimarilerinin karşılaştırması): H3'te gat ↔ self farkı gözlenmedi; M4b pilot işareti (gat ↔ self) nihai koşuda tekrarlanmadı. İletişimli kollar ↔ iletişimsiz M-none ön kayıtlı bir karşıtlık değil. Betimsel olarak iletişimli kolların ortalaması daha düşük (0,04–0,05 ↔ 0,31), devirleri daha yüksek (0,49–0,51 ↔ 0,28).
-  - G2 güven-ağırlıklı mesaj M8'de sınanmadı (M8 tasarımı §6.2 sapma beyanı; M5'te `O1_fark_yok`).
-  - Tez metni bu sonuçları §7.3(a)'daki yazım kuralıyla verir.
+**Birincil sonuç (M8, [M8 tasarımı](phase-10-m8-design.md) §7; `measurements/phase10-m8/m8_reading.json`, sağlamlık `m8_robustness.json`).** 432/432 koşu, ön kayıt v1.0 değişmeden okundu. Etiketler `label_full` alanıyla, bütün ekleriyle verilir (M8 §6.4 yazım kuralı).
+- **H1:** MAPPO-`none` ↔ SARL-eşmimari (§2.3'ün birincil karşıtlığı).
+  - Etiket: FARK_VAR_MARL (yila_bagli, secime_dayanikli; 6 yılda ortalama), Δ̄ +0,47.
+- **H2:** MAPPO-`none` ↔ SARL-ağırlık.
+  - Etiket: FARK_VAR_M-none (katlar_tutarli, secime_dayanikli; 6 yılda ortalama), Δ̄ +0,28.
+- **H3:** gat ↔ self.
+  - Etiket: FARK_GOZLENMEDI (yila_bagli, secime_duyarli; 6 yılda ortalama).
+  - Tohum kümeli %95 GA [−0,14, 0,12].
+- **Negatif kontrol:** FARK_GOZLENMEDI (yila_bagli, secime_dayanikli; 6 yılda ortalama).
+- **Betimsel (M8 §7.3, §7.5):**
+  - H2'nin farkı maliyet sürüklemesiyle açıklanıyor: 0 bps'de ±0,1 içinde fark görülmedi. H1'in yaklaşık yarısı maliyetten bağımsız kalıyor (0 bps +0,24 [0,08, 0,40]).
+  - Eşler 12 tohum kümesidir. H1 ve H2 tohum kümeli testte de sağlam.
+  - Kural portföyleri (1/N, al-tut, min-var, HRP; 6 kat ortalaması Sharpe 0,54–0,61) 20 bps'de öğrenen kolların hepsinin üstünde; en iyi öğrenen kol M-none 0,31. Maliyetsiz durumda en iyi öğrenen kollar 1/N ile aynı düzeyde.
+- **G1–G5 ile ilişki** (vision §2.5; vision belgesine M8 notu eklendi):
+  - **G1** (iletişim mimarilerinin karşılaştırması): ön kayıtlı tek iletişim karşıtlığı gat ↔ self idi ve fark gözlenmedi. M4b bir pozitif kontroldü (dikilmiş komşu sinyali, G metriği); M8 ise gerçek veride Sharpe'ı ölçtü, yani farklı bir soruyu sınadı. M8'de attn kolu yok. İletişimli kollar ↔ iletişimsiz M-none ön kayıtlı bir karşıtlık değil; betimsel olarak iletişimli kolların ortalaması daha düşük (0,04–0,05 ↔ 0,31), devirleri daha yüksek (0,49–0,51 ↔ 0,28). Vision'daki G1 dar ifadesi ("iletişimsiz / dikkat / GAT … ilk karşılaştırması") bu kanıtla daraltılmalı. Yeni ifade kullanıcı kararıdır.
+  - **G2** (güven-ağırlıklı mesaj): M8'de sınanmadı (M8 tasarımı §6.2 sapma beyanı). M5 gerçek sinyal kollarında `O1_fark_yok`.
+  - **G3** (eşdüzeyli sektör ajanları): Faz 10'da sınanmadı. Seçenek A (hisse başına ajan) G3'ü erteledi (§0 madde 3).
+  - **G4** (BIST'te MARL): M8 BIST-30'da çok ajanlı bir uygulamadır. "İlk" ifadesi YÖK taraması tamamlanmadan kullanılmaz (§2.3).
+  - **G5** (rejime koşullu iletişim değeri): M6/M7'de tanı ve pilotlar yapıldı (M6b FARK_YOK; M7b betimsel). M8'de rejime koşullu okuma yapılmadı.
+  - Tez metni bu sonuçları M8 §7.3(a)'daki yazım kuralıyla verir.
 
 **Devredilenler (Faz 10 kapanışını beklemez).**
 
@@ -714,4 +723,5 @@ Bu planda geçen sayısal durum bilgileri aşağıdaki komutlardan alındı (202
 - **2026-11-20 (M8 engel 1b; kullanıcı kararı: `m8-v1`, kapsam genişletilmez):** M8 paneli `m8-v1` ile kuruldu ([M2 tasarımı](phase-10-m2-design.md) §6.1 v0.10; `measurements/phase10-m8/panel_m8.json`): 2013-06..2026-11-09, T 3.364. İptal seansı atıldı, SKBNK'ye iki çarpan uygulandı, 990 kapanış İş Yatırım ile yamandı; 2021+ bant dışı kapanış 38 → 0. Varsayılan hat M2 paneliyle bit-eş. Kalan M8 engelleri: gürültü tabanı dağılımı, ön kayıt. Performans okunmadı.
 - **2026-11-21 (M8 ön kayıt hazırlığı; [M8 tasarımı](phase-10-m8-design.md) v0.3):** M8'den önce eksik iki altyapı yapıldı. A1 kat koşucusu: eşit aralıklı 10 kontrol noktası, doğrulamada `rl_folds` kuralıyla seçim, test yalnız seçilenle bir kez. A2 SARL kolları (K15): `marl/sarl.py`, aynı çekirdek üstünde tek-ajan görünümü; eşmimari politika MARL ajan MLP'siyle aynı. **K-M8-1 KARAR (kullanıcı):** K20'deki "kat × tohum üzerinden birleştirilmiş günlük getiri serisi" yerine birincil çıkarım tohum × kat düzeyinde (eşli Sharpe farkları, tabakalı bootstrap GA). Karar eşiği gürültü tabanı dağılımından; birleşik serinin HAC p'si betimsel. Gerekçe M5 §4.11. Koşu yok.
 - **2026-11-21 (M8 boyut ölçümü + ön kayıt v1.0 TASLAK; [M8 tasarımı](phase-10-m8-design.md) v0.5):** Gürültü tabanı boyut ölçümü (6 tohum, sözde kat 2020): σ_tohum 0,155, MDE k 12'de 0,064 (tek yönlü) ve 0,072 (iki yönlü) (§3.2). **K-M8-3/5 KARAR (kullanıcı):** k = 12, F = 600.000; kollar MAPPO-`none`, MAPPO-`gat`, SARL-eşmimari, SARL-ağırlık ve boş kol (12 ek tohum). Plandan sapmalar beyan edildi (M8 tasarımı §6.2): IPPO yok (§2.3 azaltması yapılmaz), H1 yalnız `none`'da kurulur, sinyal kolu yok (G2 M8'de sınanmaz), K20 kol budaması uygulanmaz. K-M8-2 KARAR: 6 kat birincil, 2021 katı ayrı, ileri veri ekle. K-M8-7 KARAR: `self` kolu eklenir (H3 = gat ↔ self; 432 koşu, ~12,5 sa). Koşu yok.
-- **2026-11-22 (M8 nihai koşumlar + araştırma kapanışı, §9):** 432/432 koşu okundu ([M8 tasarımı](phase-10-m8-design.md) §7): H1 FARK_VAR_MARL (yila_bagli), H2 FARK_VAR (katlar_tutarli), H3 ve negatif kontrol FARK_GOZLENMEDI; fark devir/maliyet kaynaklı, kural portföyleri öğrenen kolların üstünde (betimsel). Ürün işleri (K13, K14, K27, §8 #18) ve ileri veri okuması devredildi. Hakem-2 kapanış okuması bekliyor.
+- **2026-11-22 (M8 nihai koşumlar + araştırma kapanışı, §9):** 432/432 koşu okundu ([M8 tasarımı](phase-10-m8-design.md) §7): H1 FARK_VAR_MARL (yila_bagli, secime_dayanikli; 6 yılda ortalama), H2 FARK_VAR_M-none (katlar_tutarli, secime_dayanikli; 6 yılda ortalama), H3 ve negatif kontrol FARK_GOZLENMEDI. Betimsel: H2'nin farkı maliyet sürüklemesiyle açıklanıyor, H1'in yaklaşık yarısı maliyetten bağımsız; kural portföyleri 20 bps'de öğrenen kolların üstünde. Ürün işleri (K13, K14, K27, §8 #18) ve ileri veri okuması devredildi. Hakem-2 kapanış okuması bekliyor.
+- **2026-11-22 (hakem-2 kapanış okuması: Büyük revizyon, yalnız metin):** M8 §7.5 betimsel sağlamlık (`m8_robustness.py`; tohum kümelemesi, 0 bps, eşli MDE). §9 daraltıldı: maliyet ifadesi, tam etiket yazımı, G1–G5 ilişkisi (vision §2.5'e M8 notu). Etiketler değişmedi.
