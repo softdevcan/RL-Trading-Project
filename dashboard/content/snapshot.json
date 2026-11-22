@@ -420,9 +420,9 @@
   },
   {
    "ad": "Faz 11 entegrasyon + sanal para simülasyonu",
-   "durum": "plan v0.1 TASLAK (2026-11-22)",
-   "sinif": "planli",
-   "siradaki": "Kullanıcı kararları K-F11-1..6, sonra S0 arşiv"
+   "durum": "plan v0.2 TASLAK; S0 bitti (2026-11-22)",
+   "sinif": "bitti",
+   "siradaki": "Kullanıcı kararları K-F11-1..6, sonra S2 politika aktarımı spike'ı"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -477,7 +477,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "245585b6b76fdb01766cc756cb9876cbbdb348e4d73aa3ddbf212c49243ae18c",
+   "tablo_sha256": "c980c17febe7218dc31cd25a8a671add53b4aaf74348dc88bc1e418abf407789",
    "uretim_commit": null
   }
  }

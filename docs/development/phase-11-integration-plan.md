@@ -1,7 +1,7 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.1 TASLAK · 2026-11-22 · dal `feat/phase10-m8-prereg` (Faz 10 kapanış PR'ı ile birlikte)
-**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. Kod yok.
+**Sürüm:** v0.2 TASLAK · 2026-11-22 · S0 bitti (dal `feat/phase11-s0`)
+**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1).**
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
 - [M8 tasarımı](phase-10-m8-design.md) §6.7 (ileri veri), §7 (okuma; §7.3 b kural portföyleri, §7.5 tohum kümelemesi).
@@ -13,7 +13,7 @@
 
 1. **Simülasyon ile ileri veri testi aynı iştir.** M8 ön kaydı (§6.7) 2026 katının seçilmiş politikalarını (kol başına 12; SHA'ları `m8_reading.json` → `forward_policies_2026`), dondurmadan sonraki ilk seanstan (2026-11-23) itibaren en az 126 seansla bir kez okur. Her gün çalışan sanal para simülasyonu bu günleri biriktirir. 126 seans ~6 ay eder, ~Haziran 2027. Bu süre kısaltılamaz.
 2. **İki tür portföy ayrı tutulur.**
-   - **Dondurulmuş (araştırma) defterleri:** M8'in 60 politikası (5 kol × 12 tohum) ve 4 kural portföyü (1/N, al-tut, min-varyans, HRP). Hiçbiri değiştirilmez, yeniden eğitilmez. İleri veri okuması bunlardan yapılır.
+   - **Dondurulmuş (araştırma) defterleri:** M8'in 72 politikası (6 kol × 12 tohum, boş kol dahil; ön kayıt listesi `forward_policies_2026`) ve 4 kural portföyü (1/N, al-tut, min-varyans, HRP). Hiçbiri değiştirilmez, yeniden eğitilmez. İleri veri okuması bunlardan yapılır.
    - **Ürün portföyleri:** kullanıcının seçtiği ya da yeniden eğittiği stratejiler. İleri teste girmez.
 3. **Kural portföyleri her ekranda öğrenen kolların yanında durur.** M8'de 20 bps'de 6 kat ortalamasında hiçbir öğrenen kol bunları geçmedi (M8 §7.3 b). Simülasyonda yalnız RL'yi göstermek yanıltıcı olur.
 4. **Kabul kapısı parite:** simülasyon defteri, aynı politika ve aynı pencere için M8 değerlendirmesiyle (`eval_fold_m8.py`) aynı günlük getiri serisini üretmeli (§3, S3). Bu sağlanmadan simülasyon sonucu ileri veri sayılmaz.
@@ -38,18 +38,37 @@
 
 | # | Paket | İçerik | Kabul ölçütü |
 |---|---|---|---|
-| **S0** | Dondurulmuş politika arşivi | 2026 katının seçilmiş politikaları (60) + `meta.json`, `norm_stats.json` salt okunur bir yapıt deposuna kopyalanır; SHA manifesti `forward_policies_2026` ile karşılaştırılır. Tüm `results/marl_m8/` için yedek (git dışı) | Manifest SHA'ları 60/60 eşleşir. Yedekten geri yükleme bir kez denenir |
+| **S0** | Dondurulmuş politika arşivi | **BİTTİ (§3.1).** 2026 katının seçilmiş politikaları (72) + `meta.json`, `norm_stats.json` salt okunur bir yapıt deposuna kopyalanır; SHA manifesti `forward_policies_2026` ile karşılaştırılır. Tüm `results/marl_m8/` için yedek (git dışı) | Manifest SHA'ları 60/60 eşleşir. Yedekten geri yükleme bir kez denenir |
 | **S1** | İleri panel | `prepare_panel_m2.py --data-fix m8-v1` hattıyla artımlı panel sürümü (`panel_m8_fwd`). Günlük ek: yfinance artımlı çekim → veri kapısı → `m8-v1` kuralları. 2026-11-09 sonrası fiyat marjı takvimi için `PRICE_MARGIN_VERIFIED_UNTIL` kaynakla yeniden denetlenir (`price_limit_audit_m8.py`) | Geçmiş satırlar `panel_m8.npz` ile bit-eş. Veri kapısı reddettiği günü yazmaz, sebebini kaydeder. Marj kapsamı dışındaki gün hata verir (sessiz geçmez) |
-| **S2** | Politika aktarımı (K9) | BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 60/60 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
+| **S2** | Politika aktarımı (K9) | BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
 | **S3** | Simülasyon motoru ve defter | Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
 | **S4** | Günlük iş ve geriye dönük doldurma | Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
 | **S5** | Pano (K27) | Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
 | **S6** | İleri veri ön kayıt eki | M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
 | **S7** | Kağıt portföy uyumu (K13, §8 #18) | Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
 
-**Sıra:** S0 → S2 (spike, sonra 60 politika) → S1 → S3 → S6 → S4 → S5 → S7.
+**Sıra:** S0 → S2 (spike, sonra 72 politika) → S1 → S3 → S6 → S4 → S5 → S7.
 - S0 ve S6 düşük maliyetli ama geri dönüşü zor. Önce gelir.
 - S3'ün parite kapısı geçmeden S4 ve S5'e başlanmaz.
+
+### 3.1 S0 sonucu (2026-11-22; `measurements/phase11-s0/s0_archive.json`)
+
+- **Arşiv:** `data/marl/frozen/m8-2026/` (git dışı, ortak). 72 politika × 5 dosya (seçilen kontrol noktası, `meta.json`, `norm_stats.json`, `train.json`, `fold_eval.json`) ve `manifest.json`.
+  - Manifest kaynağı `m8_reading.json`; dosyanın SHA-256'sı manifestte kayıtlı.
+  - Doğrulama (`marl/frozen.verify_archive`) üç şeyi denetler:
+    - her dosyanın SHA-256'sı,
+    - politika özeti `params_sha`: ana venv'de, eğitimdeki `state_digest` tanımıyla yeniden hesaplanır,
+    - ön kayıt listesiyle birebir eşlik: 72/72.
+  - Ana venv'de torch ile yüklenir; BenchMARL gerekmez. Bu, S2 için iyi işarettir.
+- **Yedek:** harici diske (kullanıcı kararı: yerel HDD; bulut şimdilik yok), 8.660 dosya, 2,76 GB.
+  - Kapsam: `results/marl_m8` ve `data/marl` (panel, İş Yatırım kaynak önbelleği, arşiv dahil).
+  - Her dosya hedefte yeniden hash'lendi; hepsi eşleşti. Yedek artımlıdır: `archive_s0.py --backup <hedef>` yeniden koşulunca yalnız değişen dosyaları kopyalar.
+- **Geri yükleme denemesi:** yedekten geçici dizine alınan arşiv, `verify_archive` ile 72/72 doğrulandı.
+- **Kod:**
+  - `marl/frozen.py`: `state_digest` artık tek tanım; `m3_runner` buradan ithal eder (`test_marl_m3` 20/20).
+  - `scripts/marl/archive_s0.py`.
+  - `tests/test_marl_frozen.py`: 3 kontrol.
+- **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
 
 **Kaba efor** (tek geliştirici, gün; ölçüm değil): S0 0,5 · S1 2–3 · S2 2–3 · S3 3–4 · S4 1–2 · S5 4–6 · S6 0,5 · S7 1–2 → ≈ 14–21.
 
@@ -82,4 +101,5 @@
 
 ## Versiyon geçmişi
 
+- **v0.2 (2026-11-22):** S0 bitti (§3.1): arşiv 72/72 doğrulandı, harici disk yedeği ve geri yükleme denemesi geçti. Politika sayısı 60 → 72 düzeltildi (boş kol ön kayıt listesinde).
 - **v0.1 (2026-11-22):** İlk taslak. Faz 10 araştırma kapanışından sonra kullanıcı niyetiyle yazıldı. Kod yok.
