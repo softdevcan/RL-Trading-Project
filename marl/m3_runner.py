@@ -9,14 +9,12 @@ Hiperparametre kaynagi (M3 on kaydi):
   [-B, B] logit oldugundan std 1,0 her gun ~tam devir uretir.
 - Degerlendirme: deterministik eylem (TanhNormal modu), tam pencere, kesirli mod, egitim norm_stats'i (B9).
 
-Baseline'lar (M2 §9 #11, hakem-finans F7/F10): ortamin AYNI muhasebesi (`accounting.step_fractional`), ayni
-`fill_prices` (kilit 20 + v0.7 marj takvimi), `project` (ayni Constraints), A8 rf, ayni maliyet:
-  ew   : her gun tam yatirimli 1/N (t'de gecerli semboller)
-  bh   : ilk gun 1/N, sonra hedef = kaymis agirlik (islem yok; yalniz zorunlu dondurma)
-  cash : tam nakit (X = 0)
+Baseline'lar (`rule_series`): `marl/rule_baselines.py` (saf cekirdek; ew, bh, cash + M8 minvar, hrp), buradan
+yeniden ihrac edilir.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -25,17 +23,66 @@ from typing import Optional
 import numpy as np
 import torch
 
-from marl import accounting as A
-from marl import weights as W
 from marl.benchmarl_task import MarlTask, make_env
+
+
+def checkpoint_iters(frames: int, frames_per_batch: int, k: int) -> list:
+    """M8 (tasarim A1): egitim butcesi boyunca esit aralikli k kontrol noktasinin iterasyon numaralari (1 tabanli;
+    sonuncusu son iterasyon = egitimin son modeli; `rl_folds` izgarasiyla ayni ilke)."""
+    n = -(-int(frames) // int(frames_per_batch))
+    if not 1 <= k <= n:
+        raise ValueError(f"kontrol noktasi sayisi 1..{n} olmali: {k}")
+    return [int(round(i * n / k)) for i in range(1, k + 1)]
+
+
+def state_digest(sd: dict) -> str:
+    """state_dict ozeti; tensor olmayan girdiler (TensorDict ust verisi, or. torch.Size) repr ile."""
+    h = hashlib.sha256()
+    for name in sorted(sd):
+        v = sd[name]
+        h.update(name.encode())
+        h.update(v.detach().cpu().contiguous().numpy().tobytes() if torch.is_tensor(v) else repr(v).encode())
+    return h.hexdigest()
+
+
+def _checkpoint_saver(out_dir: str, iters: list):
+    """Yalniz politika agirliklarini secili iterasyonlarin sonunda yazar; RNG'ye ve egitime dokunmaz."""
+    from benchmarl.experiment.callback import Callback
+
+    class CheckpointSaver(Callback):
+        def __init__(self):
+            super().__init__()
+            self.k, self.index = 0, []
+
+        def on_setup(self):
+            if len(self.experiment.group_map) != 1:
+                raise ValueError("kontrol noktasi kaydi tek ajan grubu ister")
+
+        def on_train_end(self, training_td, group):
+            self.k += 1
+            if self.k not in iters:
+                return
+            sd = {n: (t.detach().cpu().clone() if torch.is_tensor(t) else t)
+                  for n, t in self.experiment.policy.state_dict().items()}
+            name = f'ckpt_{self.k:04d}.pt'
+            torch.save(sd, os.path.join(out_dir, name))
+            self.index.append({'iter': self.k, 'frames': int(self.experiment.total_frames), 'file': name,
+                               'params_sha': state_digest(sd)})
+            with open(os.path.join(out_dir, 'index.json'), 'w', encoding='utf-8') as fh:
+                json.dump(self.index, fh, indent=1)
+
+    return CheckpointSaver()
 
 
 def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames: int = 30_000,
                      frames_per_batch: int = 6000, epochs: int = 10, n_envs: int = 10, parallel: bool = False,
                      train_device: str = 'cpu', sampling_device: str = 'cpu', init_std: float = 0.12,
-                     lr: Optional[float] = None, save_folder: Optional[str] = None, model: Optional[dict] = None):
+                     lr: Optional[float] = None, save_folder: Optional[str] = None, model: Optional[dict] = None,
+                     checkpoints: int = 0, checkpoint_dir: Optional[str] = None):
     """`model`: None -> BenchMARL MLP politikasi (M3, M4 `none` kolu); dict -> M4 iletisim kolu
-    (`marl.comm_models.CommPolicyConfig` alanlari: kind, hidden, heads, rounds, edges). Elestirmen her zaman MLP."""
+    (`marl.comm_models.CommPolicyConfig` alanlari: kind, hidden, heads, rounds, edges). Elestirmen her zaman MLP.
+    `checkpoints` > 0 (M8, tasarim A1): esit aralikli politika agirliklari `checkpoint_dir`'e (index.json ile);
+    0 iken Experiment cagrisi oncekiyle ayni."""
     from benchmarl.algorithms import IppoConfig, MappoConfig
     from benchmarl.experiment import Experiment, ExperimentConfig
     from benchmarl.models.mlp import MlpConfig
@@ -63,11 +110,20 @@ def build_experiment(task_cfg: dict, algo: str = 'mappo', seed: int = 0, frames:
     task = MarlTask.PORTFOLIO.update_config(dict(task_cfg))
     if model is None:
         policy_cfg = MlpConfig.get_from_yaml()
+    elif model.get('kind') == 'rowshared':               # M8 A2: SARL-esmimari (marl/sarl.py)
+        from marl.sarl import RowSharedConfig
+        policy_cfg = RowSharedConfig(n_rows=int(model['n_rows']), num_cells=list(model['num_cells']))
     else:
         from marl.comm_models import CommPolicyConfig
         policy_cfg = CommPolicyConfig(**model)
+    kw = {}
+    if checkpoints:
+        if not checkpoint_dir:
+            raise ValueError("checkpoints > 0 icin checkpoint_dir gerekli")
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        kw['callbacks'] = [_checkpoint_saver(checkpoint_dir, checkpoint_iters(frames, frames_per_batch, checkpoints))]
     return Experiment(task=task, algorithm_config=algo_cfg, model_config=policy_cfg,
-                      critic_model_config=MlpConfig.get_from_yaml(), seed=seed, config=cfg)
+                      critic_model_config=MlpConfig.get_from_yaml(), seed=seed, config=cfg, **kw)
 
 
 def save_policy(exp, task_cfg: dict, run_meta: dict, out_dir: str) -> dict:
@@ -84,15 +140,16 @@ def save_policy(exp, task_cfg: dict, run_meta: dict, out_dir: str) -> dict:
     return meta
 
 
-def load_policy(run_dir: str):
-    """Kayitli politikayi ayni yapiyla yeniden kur (egitim yapilmaz)."""
+def load_policy(run_dir: str, weights: Optional[str] = None):
+    """Kayitli politikayi ayni yapiyla yeniden kur (egitim yapilmaz). `weights`: varsayilan `policy.pt`;
+    M8 kontrol noktasi icin `ckpt/ckpt_XXXX.pt`."""
     with open(os.path.join(run_dir, 'meta.json'), encoding='utf-8') as fh:
         meta = json.load(fh)
     b = meta['build']
     exp = build_experiment(meta['task_cfg'], algo=b['algo'], seed=b['seed'], frames=b['frames_per_batch'],
                            frames_per_batch=b['frames_per_batch'], epochs=b['epochs'], n_envs=1,
                            init_std=b['init_std'], lr=b.get('lr'), model=b.get('model'))
-    exp.policy.load_state_dict(torch.load(os.path.join(run_dir, 'policy.pt'), map_location='cpu'))
+    exp.policy.load_state_dict(torch.load(os.path.join(run_dir, weights or 'policy.pt'), map_location='cpu'))
     return exp, meta
 
 
@@ -120,31 +177,5 @@ def deterministic_rollout(policy, env_cfg: dict) -> dict:
     return {k: (np.asarray(v) if k != 'date' else list(v)) for k, v in out.items()}
 
 
-def rule_series(arrays: dict, start_row: int, end_row: int, kind: str, cost_bps_roundtrip: float = 20.0,
-                limit_down_gap='schedule', constraints: W.Constraints = W.Constraints()) -> dict:
-    """Ortamin muhasebesiyle kural portfoyu (ew | bh | cash); karar satirlari [start_row, end_row)."""
-    if kind not in ('ew', 'bh', 'cash'):
-        raise ValueError(f"kind ew | bh | cash: {kind}")
-    ldg = A.limit_down_gaps(arrays['dates']) if limit_down_gap == 'schedule' else float(limit_down_gap)
-    px = A.fill_prices(arrays['open'], arrays['close'], A.LISTING_LOCKOUT, ldg)
-    cost = A.one_way_cost(cost_bps_roundtrip)
-    N = arrays['open'].shape[1]
-    w = np.r_[1.0, np.zeros(N)]
-    out = {k: [] for k in ('date', 'R', 'X', 'turnover', 'cash_weight')}
-    for t in range(start_row, end_row):
-        g_on, g_day, tradable = A.step_growth(px, t)
-        rf = float(arrays['rf'][t + 1])
-        v = px['valid'][t]
-        if kind == 'cash':
-            u = np.r_[1.0, np.zeros(N)]
-        elif kind == 'ew' or (kind == 'bh' and t == start_row):
-            u = np.r_[0.0, v.astype(float) / max(float(v.sum()), 1.0)]
-        else:   # bh: hedef = kaymis agirlik (gece kaymasi project icinde w~'ye esit -> islem yok)
-            drift = w * np.concatenate([[1.0 + rf], g_on])
-            u = drift / drift.sum()
-        res = A.step_fractional(w, u, g_on, g_day, tradable, rf, cost, constraints, None, px['no_sell'][t + 1])
-        w = res.w_next
-        for k, val in (('date', str(arrays['dates'][t + 1])), ('R', res.R), ('X', res.X),
-                       ('turnover', res.turnover), ('cash_weight', float(w[0]))):
-            out[k].append(val)
-    return {k: (np.asarray(v) if k != 'date' else list(v)) for k, v in out.items()}
+# Kural portfoyleri M8 A4'te saf cekirdege tasindi (ana venv de okur); davranis ayni (test_marl_m3 baseline testi).
+from marl.rule_baselines import rule_series  # noqa: E402,F401

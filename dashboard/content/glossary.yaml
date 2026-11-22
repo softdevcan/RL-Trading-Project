@@ -641,7 +641,7 @@
   teknik: >-
     MARL kıyasında her gün, tek ajan kıyasında aylık olarak geçerli sembollere eşit ağırlık; ortamın aynı muhasebesi,
     fiyat dolgusu, projeksiyonu ve maliyetiyle.
-  kodda: [marl/m3_runner.py::rule_series, evaluation/baselines.py::equal_weight]
+  kodda: [marl/rule_baselines.py::rule_series, evaluation/baselines.py::equal_weight]
   ilgili: [al-tut, islem-maliyeti]
 
 - id: al-tut
@@ -651,7 +651,7 @@
     İlk gün parayı eşit bölüp sonra hiç işlem yapmamak.
   teknik: >-
     İlk gün 1/N, sonra hedef = kaymış ağırlık (işlem yok; yalnız zorunlu dondurma), ortamın muhasebesiyle.
-  kodda: [marl/m3_runner.py::rule_series]
+  kodda: [marl/rule_baselines.py::rule_series]
   ilgili: [baseline-1n]
 
 - id: devir

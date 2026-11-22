@@ -13,7 +13,11 @@ model_meta'si (K1), is parcacigi, git izi; `--save-dir` verilirse politika + nor
   # M5 S-msg kolu (M5 tasarimi §4): guvenle agirlikli gat; z_scale egitim satirlarindan burada olculur
   venv-marl\\Scripts\\python scripts/marl/train_m3.py ... --comm gat --conf-mode zlogodds --beta-mode learned
 
-Pencere: egitim WARMUP_ROWS .. 2018-12-31 (M2 §9.1 bolmesi; 2021+ okunmaz).
+Pencere: egitim WARMUP_ROWS .. 2018-12-31 (M2 §9.1 bolmesi; 2021+ okunmaz). Varsayilanlar M3-M7 kosulariyla ayni.
+
+  # M8 kat kosusu (M8 tasarimi A1): wf-v1 kati, panel_m8, 10 kontrol noktasi (degerlendirme eval_fold_m8.py)
+  venv-marl\\Scripts\\python scripts/marl/train_m3.py --panel data/marl/panel_m8.npz --train-end 2019-12-31 \\
+      --checkpoints 10 --batched-env ... --save-dir <kosu> --out <json>
 Tohum bit-esligi: OMP/MKL_NUM_THREADS=1 torch import'undan once (test_marl_m3 [3]).
 """
 from __future__ import annotations
@@ -116,11 +120,25 @@ def conf_scalars(exp) -> dict | None:
     return out
 
 
+def sarl_model(a, n_symbols: int):
+    """M8 tasarimi A2: SARL-agirlik -> None (BenchMARL MLP, duz gozlem, merkezi aktor); SARL-esmimari -> satir
+    paylasimli MLP, MARL ajan MLP'siyle ayni hucreler (MlpConfig varsayilani Linear + Tanh + normsuz olmali)."""
+    if a.sarl == 'agirlik':
+        return None
+    import torch.nn as nn
+    from benchmarl.models.mlp import MlpConfig
+    mc = MlpConfig.get_from_yaml()
+    if mc.layer_class is not nn.Linear or mc.activation_class is not nn.Tanh or mc.norm_class is not None:
+        raise SystemExit('MlpConfig varsayilani degismis: RowSharedPolicy esitligi Linear/Tanh/normsuz ister')
+    return {'kind': 'rowshared', 'n_rows': int(n_symbols), 'num_cells': list(mc.num_cells)}
+
+
 def train_task_cfg(a, end_row: int, warmup: int) -> dict:
-    return dict(panel_path=PANEL, start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
+    return dict(panel_path=getattr(a, 'panel', PANEL), start_row=warmup, end_row=end_row, mode='train', alpha=a.alpha,
                 cost_bps_roundtrip=a.cost_bps, reward_term='excess', reward_scale=100.0, episode_len=a.episode_len,
                 use_state=a.use_state, pred_path=a.pred_path, extras_path=a.extras_path,
-                **({'batched': True} if a.batched_env else {}))   # kapaliyken gorev konfigurasyonu eskisiyle ayni
+                **({'batched': True} if a.batched_env else {}),    # kapaliyken gorev konfigurasyonu eskisiyle ayni
+                **({'single_agent': True} if getattr(a, 'sarl', 'none') != 'none' else {}))   # M8 A2
 
 
 def main():
@@ -162,9 +180,19 @@ def main():
     ap.add_argument('--shuffle-seed', type=int, default=None, help='derangement tohumu (varsayilan --seed)')
     ap.add_argument('--conf-temp-seed', type=int, default=None,
                     help='GLM: gonderici basina sicaklik T_j ~ log-tekduze comm_models.GLM_TEMP_RANGE [0,25; 4] ureteci (yalniz guven terimi)')
+    ap.add_argument('--sarl', choices=('none', 'agirlik', 'esmimari'), default='none',
+                    help='M8 tasarimi A2 (K15): tek-ajan kontrol kolu (marl/sarl.py); none = MARL (M3-M7 ile ayni)')
+    ap.add_argument('--panel', default=PANEL, help='M8: data/marl/panel_m8.npz (M8 tasarimi A1)')
+    ap.add_argument('--train-end', default=TRAIN_END, help='egitim son tarihi (dahil); M8: wf-v1 katinin dogrulama oncesi')
+    ap.add_argument('--checkpoints', type=int, default=0,
+                    help='M8: esit aralikli kontrol noktasi sayisi (--save-dir/ckpt); 0 = kapali (M3-M7 ile ayni)')
     ap.add_argument('--save-dir', default=None)
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
+    if a.checkpoints and not a.save_dir:
+        raise SystemExit('--checkpoints --save-dir ister')
+    if a.sarl != 'none' and (a.comm != 'none' or a.conf_mode != 'none' or a.use_state):
+        raise SystemExit('--sarl iletisim/guven kolu ve --use-state ile kullanilmaz (M8 tasarimi A2)')
     os.environ.setdefault('OMP_NUM_THREADS', str(a.threads))
     os.environ.setdefault('MKL_NUM_THREADS', str(a.threads))
 
@@ -176,14 +204,17 @@ def main():
     from marl.m3_runner import build_experiment, save_policy
 
     torch.set_num_threads(a.threads)
-    arrays = PN.load_npz(PANEL)
+    arrays = PN.load_npz(a.panel)
     dates = arrays['dates']
-    end_row = int(np.flatnonzero(dates <= TRAIN_END)[-1])
+    end_row = int(np.flatnonzero(dates <= a.train_end)[-1])
     tcfg = train_task_cfg(a, end_row, OS.WARMUP_ROWS)
     build = dict(algo=a.algo, seed=a.seed, frames=a.frames, frames_per_batch=a.frames_per_batch, epochs=a.epochs,
                  n_envs=a.n_envs, parallel=a.parallel, init_std=a.init_std, lr=a.lr,
-                 model=comm_model(a, [str(s) for s in arrays['symbols']], conf_fields(a, arrays, end_row)))
-    exp = build_experiment(tcfg, train_device=a.train_device, sampling_device=a.sampling_device, **build)
+                 model=(sarl_model(a, len(arrays['symbols'])) if a.sarl != 'none' else
+                        comm_model(a, [str(s) for s in arrays['symbols']], conf_fields(a, arrays, end_row))))
+    ckpt_dir = os.path.join(a.save_dir, 'ckpt') if a.checkpoints else None
+    exp = build_experiment(tcfg, train_device=a.train_device, sampling_device=a.sampling_device, **build,
+                           **({'checkpoints': a.checkpoints, 'checkpoint_dir': ckpt_dir} if a.checkpoints else {}))
     t0 = time.perf_counter()
     exp.run()
     wall = time.perf_counter() - t0
@@ -198,6 +229,7 @@ def main():
         'policy_params': sum(p.numel() for p in exp.policy.parameters()), 'critic': critic_summary(exp),
         'graph_sha256': (hashlib.sha256(open(a.graph, 'rb').read()).hexdigest() if a.comm == 'gat' else None),
         'policy_sha256': policy_digest(exp), 'conf_scalars_final': conf_scalars(exp),
+        'checkpoints': (json.load(open(os.path.join(ckpt_dir, 'index.json'), encoding='utf-8')) if ckpt_dir else None),
         'env': {'python': platform.python_version(), 'os': platform.platform(), 'torch': torch.__version__,
                 'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
                 'threads': torch.get_num_threads(), 'omp': os.environ.get('OMP_NUM_THREADS')},

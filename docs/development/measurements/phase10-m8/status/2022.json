@@ -1,0 +1,70 @@
+{
+ "fold": "2022",
+ "prereg": "phase-10-m8-design.md §6 ON KAYIT v1.0",
+ "written": "2026-11-22T00:07:15",
+ "note": "SAGLIK kaydi; test dosyasi acilmadi, basarim yok (on kayit §6.3)",
+ "cells_done": 72,
+ "cells_expected": 72,
+ "per_arm": {
+  "M-none": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  },
+  "S-esm": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  },
+  "S-agr": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  },
+  "M-gat": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  },
+  "M-self": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  },
+  "null": {
+   "done": 12,
+   "expected": 12,
+   "degenerate_selection": 0
+  }
+ },
+ "missing": [],
+ "failures": [],
+ "n_retry_success": 0,
+ "wall_minutes": 164.8,
+ "mean_minutes_per_run_by_arm": {
+  "M-none": 5.95,
+  "S-esm": 5.8,
+  "S-agr": 4.68,
+  "M-gat": 9.19,
+  "M-self": 9.17,
+  "null": 6.04
+ },
+ "checks": {
+  "n": 72,
+  "commits": [
+   "1f898956c08a9c2f5ca2a41b5f8dd12a7bbff676"
+  ],
+  "single_commit": true,
+  "all_clean": true,
+  "panel_sha_ok": true,
+  "graph_sha_ok": true,
+  "windows_ok": true,
+  "config_ok": true,
+  "all_ok": true
+ },
+ "commit_same_as_previous_folds": true,
+ "previous_folds": [
+  "2021"
+ ],
+ "ok": true
+}
