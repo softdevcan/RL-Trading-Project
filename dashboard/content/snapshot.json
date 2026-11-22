@@ -420,9 +420,9 @@
   },
   {
    "ad": "Faz 11 entegrasyon + sanal para simülasyonu",
-   "durum": "plan v0.3 TASLAK; S0 ve S2 bitti (2026-11-22)",
+   "durum": "plan v0.4 TASLAK; S0, S2 ve S1 bitti (2026-11-22)",
    "sinif": "bitti",
-   "siradaki": "Kullanıcı kararları K-F11-1..6; sonra S1 ileri panel"
+   "siradaki": "Kullanıcı kararları K-F11-1..6; sonra S3 simülasyon defteri (seri paritesi)"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -477,7 +477,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "01c4ad5dec955d8535b027593eb21140af81aabfac2ffcb9e140f4e5c002583a",
+   "tablo_sha256": "af5690c44c7b2010b0c15f494298868bec86522e0fcb25c2b12d0116bdba4fa1",
    "uretim_commit": null
   }
  }

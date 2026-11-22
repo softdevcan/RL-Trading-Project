@@ -112,6 +112,9 @@ python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri
                                            #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel, M8 m8-v1 veri duzeltmesi, M8 secim kurali rl_folds paritesi (63, ~5 sn; ana venv)
 python tests/test_marl_baselines.py         # Faz 10/M8 A4 kural portfoyleri (marl/rule_baselines.py): Ledoit-Wolf sklearn paritesi, uzun-yalniz min-var SLSQP,
                                            #          HRP kosegende ters varyans, (e) kesilmis panelle ayni agirlik (gercek panel 2021), ay basi dengeleme (7, ~2 sn; ana venv)
+python tests/test_marl_forward_panel.py     # Faz 11/S1 M8 ileri paneli (marl/forward_panel.py): sifir satirla panel_m8 bit-es (rf dahil), zincir
+                                           #          (temettu, kesik cubuk yamasi, %1 esik), gun kapisi sebepleri, 3 sentetik gun: onceki satirlar bit-es + B0 +
+                                           #          mutasyon + marj kapsami hatasi (4, ~15 sn; ana venv, ag yok)
 python tests/test_marl_frozen.py            # Faz 11/S0 dondurulmus M8 arsivi (marl/frozen.py): kur + dogrula, tek bayt / agirlik degisimi
                                            #          (params_sha) / on kayit listesi farki yakalanir; gercek arsiv varsa 72/72; S2 sade ileri gecis (marl/frozen_policy.py)
                                            #          her kol turunden 6 politika venv-marl referansiyla bit-es + gat maskesi mutasyonu (referans varsa) (4, ~25 sn; ana venv, torch)
