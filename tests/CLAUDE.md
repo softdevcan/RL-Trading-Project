@@ -126,6 +126,8 @@ python tests/test_marl_forward_panel.py     # Faz 11/S1 M8 ileri paneli (marl/fo
 python tests/test_marl_frozen.py            # Faz 11/S0 dondurulmus M8 arsivi (marl/frozen.py): kur + dogrula, tek bayt / agirlik degisimi
                                            #          (params_sha) / on kayit listesi farki yakalanir; gercek arsiv varsa 72/72; S2 sade ileri gecis (marl/frozen_policy.py)
                                            #          her kol turunden 6 politika venv-marl referansiyla bit-es + gat maskesi mutasyonu (referans varsa) (4, ~25 sn; ana venv, torch)
+python scripts/marl/analyze_forward_m8.py --self-test  # Faz 11/S6 ileri veri okumasi (ek phase-11-m8-forward-annex.md): vektor SR = excess_sharpe, pencere tam 126,
+                                           #          karar kurallari, sema, gun bloklu GA ortak indis, tanimsiz/EKSIK, cikarim yolu M8 ile bit-es, tek okuma (9, ~15 sn; ana venv)
 python scripts/marl/analyze_m8.py --self-test  # M8 okuma: etiketler, Holm, eksik -> EKSIK, kirli agac -> UYARILI, tanimsiz uyarisi, --status test acmaz, deneme kaydi (11, ~40 sn; ana venv)
 venv-marl\Scripts\python tests/test_marl_env.py  # Faz 10/M2 PettingZoo ortami: parallel_api_test, acik hatalar, tohum,
                                            #          K2 60 adim, deger = prod(1+R), eksik hucre, held-out olcek, tam sayi <-> kesirli,

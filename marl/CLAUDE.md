@@ -80,6 +80,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `python tests/test_marl_forward_panel.py` (4, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, append + B0 + mutasyon)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)
+- `python scripts/marl/analyze_forward_m8.py --self-test` (9, ana venv; S6 ileri veri okumasi; kural ek `phase-11-m8-forward-annex.md`, koda ustun)
 - `python scripts/marl/analyze_m8.py --self-test` (11, ana venv; M8 okuma + `--status` saglik kaydi)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)
 - `venv-marl\Scripts\python tests/test_marl_m3.py` (20, yalniz venv-marl; BenchMARL gorevi, bolum sonu bootstrap, tohum, kaydet/yukle, deterministik eval, baseline, R7, M8 kontrol noktalari)

@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.6 TASLAK · 2026-11-22 · S0, S2, S1, S3 ve S4 bitti (dal `feat/phase11-s4`); S6 eki taslak (dal `feat/phase11-s6`)
+**Sürüm:** v0.7 TASLAK · 2026-11-22 · S0, S2, S1, S3 ve S4 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor (dal `feat/phase11-s6`)
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -44,7 +44,7 @@
 | **S3** | Simülasyon motoru ve defter | **BİTTİ (§3.4).** Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
 | **S4** | Günlük iş ve geriye dönük doldurma | **BİTTİ (§3.5).** Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
 | **S5** | Pano (K27) | Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
-| **S6** | İleri veri ön kayıt eki | M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
+| **S6** | İleri veri ön kayıt eki | **Ek v0.3 + okuma betiği hazır (§3.6); dondurma bekliyor.** M8 §6.7 ölçütü sabit kalır. Ek, okumadan önce yazılır: tohum kümelemesi baştan beyan edilir ve kümeli istatistik eklenir (M8 §7.4, §7.5), panel sürümü ve SHA'lar sabitlenir | Ek, 126. seanstan önce commit'lenir ve dondurulur (etiket) |
 | **S7** | Kağıt portföy uyumu (K13, §8 #18) | Mevcut tek ajan günlük kararı: eski modellerde normalizasyon uyarısı (K13). Kullanıcının elle "Uygula" akışı kalır ama yürütme fiyatı ertesi açılış olur ya da fark sınırlılık olarak gösterilir (§6 K-F11-5) | `test_daily_trading`, `test_daily_trading_tz`, `test_paper_portfolio` yeşil. Golden değişmez |
 
 **Sıra:** S0 → S2 (spike, sonra 72 politika) → S1 → S3 → S6 → S4 → S5 → S7.
@@ -69,6 +69,27 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.6 S6 durumu (2026-11-22; ek `phase-11-m8-forward-annex.md` v0.3)
+
+- **Ek v0.3.** M8 §6.7'nin uygulama ayrıntıları:
+  - pencere tam ilk 126 seans (2026-11-23'ten),
+  - m8-v1 yerine nedensel kapanış denetimi (sapma beyanı),
+  - etiketin yazımı: tohum GA'sı + gün bloklu GA + NK yan yana; `yol_farkli`'da tez cümlesi kurulmaz,
+  - tek katlı tohum kümelemesi, tanımsız ve eksik hücre kuralları (12 hücrede ≥ 2).
+- **Hakemler.** hakem-finans + hakem-rl ilk okuma Küçük rev. (2 + 3 BÜYÜK) → işlendi → ikinci okuma ikisi de **Kabul**. Maliyet kaydı `review-panel.md`.
+- **Okuma betiği** `scripts/marl/analyze_forward_m8.py`, ilk ileri günden önce commit'lendi (ek §8). Öz-test 9/9:
+  - vektör SR = `excess_sharpe`,
+  - pencere tam 126 seans,
+  - karar kuralları,
+  - şema,
+  - gün bloklu GA ortak indis,
+  - tanımsız / EKSİK,
+  - çıkarım yolu M8 kaydıyla bit-eş,
+  - tek okuma.
+
+  Gerçek okuma 126 seanstan önce durur; çıktı dosyası varsa durur.
+- **Dondurma:** kullanıcı onayıyla etiket `m8-forward-annex-v1`, ilk ileri gün defterlenmeden önce (2026-11-23 19:00 TRT sonrası iş). Okuma denetimi (§7) depo kuruluşunun etiketten sonra olduğunu denetler.
 
 ### 3.5 S4 sonucu (2026-11-22; `tests/test_marl_forward_job.py`, `tests/test_marl_forward_api.py`)
 
@@ -229,6 +250,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.7 (2026-11-22):** S6 eki v0.3 (hakem Kabul) + okuma betiği (öz-test 9/9); dondurma onayı bekliyor.
 - **v0.6 (2026-11-22):** S4 bitti (§3.5): günlük iş idempotent, boşluk doldurma bit-eş; marj kapsamı düzeneği (tarihli kaynak denetimi + 31 gün; S1 açık maddesi kapandı); uygulama içi tetik (K-F11-4 öneri). K-F11-1..6 kullanıcı: öneriler uygulanır. S6 eki v0.3 taslak, hakem Kabul, dondurma onayı bekliyor.
 - **v0.5 (2026-11-22):** S3 bitti (§3.4): `marl/sim_ledger.py` kesirli defter; 2026 test penceresi 72/72 politika M8 test serisiyle bit-eş, 4/4 kural portföyü `rule_series` ile bit-eş ve M8 okumasındaki Sharpe ile aynı. Durum JSON'la kaldığı yerden devam bit-eş (S4 temeli). Marj kapsamı açık maddesi sürüyor.
 - **v0.4 (2026-11-22):** S1 bitti (§3.3): ileri panel append-only, dondurulmuş kaynaktan baştan kurulum, önceki satırlar bit-eş; 9 gerçek seans eklendi (yama 0). Kapanış çapraz denetimi nedensel getiri kuralıyla (m8-v1 merkezi medyanı ileriye bakıyordu). Açık: marj doğrulama kapsamının uzatılması S4 ön koşulu.
