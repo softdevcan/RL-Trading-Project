@@ -76,12 +76,21 @@ def main():
     ap.add_argument('--seed', default=None)
     ap.add_argument('--k', type=int, default=256)
     a = ap.parse_args()
+    with open(os.path.join(ARCHIVE, 'manifest.json'), encoding='utf-8') as fh:
+        man = json.load(fh)
+    if a.arm is None:
+        # Kol basina AYRI surec: BenchMARL gorev yapilandirmasi sinif duzeyinde tutulur (MarlTask.PORTFOLIO.update_config
+        # birlestirir); SARL kolunun single_agent anahtari ayni surecte sonraki MARL koluna tasar. eval_fold_m8 de her
+        # politikayi ayri surecte yukler.
+        import subprocess
+        for arm in sorted({p['arm'] for p in man['policies']}):
+            cmd = [sys.executable, os.path.abspath(__file__), '--arm', arm, '--k', str(a.k)]
+            subprocess.run(cmd + (['--seed', a.seed] if a.seed else []), check=True)
+        return
     import numpy as np
 
     from marl.m3_runner import load_policy
 
-    with open(os.path.join(ARCHIVE, 'manifest.json'), encoding='utf-8') as fh:
-        man = json.load(fh)
     todo = [p for p in man['policies'] if (a.arm in (None, p['arm'])) and (a.seed in (None, p['seed']))]
     for p in todo:
         t0 = time.time()
