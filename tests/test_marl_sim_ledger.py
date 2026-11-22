@@ -8,6 +8,7 @@ Kontroller (dondurulmus arsiv ve panel_m8 yoksa ATLANIR; tam 72 politika parites
      bit-es (politika + minvar: ay basi dengeleme baslangic satirina bagli). Sermaye R'yi degistirmez, deger = sermaye x
      prod(1 + R).
   3. Mutasyon: maliyet 10 bps, durum agirliginda 1e-12 kayma ve yanlis baslangic satiri (minvar) seriyi degistirir.
+  5. Tam sayi mod (S5 urun portfoyu, orders.step_integer): JSON devam bit-es, 1e9 sermayede kesirliye yakinsar.
   4. Ileri panel (varsa): fiyat marji dogrulanmis kapsami disindaki gun Market kurulumunda hata verir (S4 on kosulu;
      sessiz gecmez).
 
@@ -111,6 +112,21 @@ s_w = SL.series(SL.run(mk, SL.RuleStrategy('minvar'), SL.LedgerState.start(TS + 
 ok3 &= str(mk.dates[TS + 3])[:7] == str(mk.dates[TS + 2])[:7]       # ay basi degil: fark baslangic kuralindan
 ok3 &= not np.array_equal(s_w['R'], ser['minvar']['R'][3:])
 check("3. mutasyon: maliyet 10 bps, durum agirliginda 1e-12 kayma, kaydirilmis baslangic seriyi degistirir", ok3)
+
+# 5 (S5 urun portfoyu: tam sayi mod) -------------------------------------------------------------------------------
+pi = pol('M-none', 's201')
+sti = SL.LedgerState.start(TS, mk.N, 100_000.0, integer=True)
+_, ia = SL.run(mk, pi, sti, cut)
+sti2 = SL.LedgerState.from_json(sti.to_json())
+_, ib = SL.run(mk, pi, sti2, TE)
+_, ifull = SL.run(mk, pi, SL.LedgerState.start(TS, mk.N, 100_000.0, integer=True), TE)
+ok5 = [r['R'] for r in ia + ib] == [r['R'] for r in ifull] and sti2.integer and sti2.holdings.dtype.kind == 'i'
+big = SL.series(SL.run(mk, SL.RuleStrategy('ew'), SL.LedgerState.start(TS, mk.N, 1e9, integer=True), TE)[1])
+frac = full(SL.RuleStrategy('ew'))
+ok5 &= abs(big['value'][-1] / 1e9 / (frac['value'][-1] / SL.INITIAL_CAPITAL) - 1) < 1e-4
+ok5 &= not np.array_equal(SL.series(ifull)['R'], ser['M-none']['R'])          # 100k'da yuvarlama farki var
+check("5. tam sayi mod (urun portfoyu): JSON durumla devam bit-es, adet tam sayi; 1e9 sermayede kesirliye yakinsar "
+      "(< 1e-4), 100k'da fark var", ok5)
 
 # 4 ---------------------------------------------------------------------------------------------------------------
 fwd = os.path.join('data', 'marl', 'forward', 'm8', 'panel_m8_fwd.npz')

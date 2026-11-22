@@ -24,6 +24,7 @@ import numpy as np
 
 from marl import accounting as A
 from marl import obs_spec as OS
+from marl import orders as O
 from marl import rule_baselines as RB
 from marl import weights as W
 
@@ -65,22 +66,38 @@ class LedgerState:
     value: float
     n_steps: int = 0
     meta: dict = field(default_factory=dict)
+    holdings: np.ndarray | None = None   # tam sayi modu (urun portfoyu, K-F11-2); None = kesirli (dondurulmus defter)
+    cash: float | None = None
 
     @classmethod
-    def start(cls, start_row: int, n: int, capital: float = INITIAL_CAPITAL, meta: dict | None = None):
+    def start(cls, start_row: int, n: int, capital: float = INITIAL_CAPITAL, meta: dict | None = None,
+              integer: bool = False):
         w = np.zeros(n + 1)
         w[0] = 1.0
-        return cls(int(start_row), int(start_row), w, float(capital), 0, dict(meta or {}))
+        st = cls(int(start_row), int(start_row), w, float(capital), 0, dict(meta or {}))
+        if integer:
+            st.holdings, st.cash = np.zeros(n, dtype=np.int64), float(capital)
+        return st
+
+    @property
+    def integer(self) -> bool:
+        return self.holdings is not None
 
     def to_json(self) -> str:
-        return json.dumps({'start_row': self.start_row, 't': self.t, 'w': [float(x) for x in self.w],
-                           'value': self.value, 'n_steps': self.n_steps, 'meta': self.meta}, ensure_ascii=False)
+        d = {'start_row': self.start_row, 't': self.t, 'w': [float(x) for x in self.w], 'value': self.value,
+             'n_steps': self.n_steps, 'meta': self.meta}
+        if self.integer:
+            d.update(holdings=[int(x) for x in self.holdings], cash=self.cash)
+        return json.dumps(d, ensure_ascii=False)
 
     @classmethod
     def from_json(cls, s: str):
         d = json.loads(s)
-        return cls(int(d['start_row']), int(d['t']), np.asarray(d['w'], dtype=np.float64), float(d['value']),
-                   int(d['n_steps']), d.get('meta', {}))
+        st = cls(int(d['start_row']), int(d['t']), np.asarray(d['w'], dtype=np.float64), float(d['value']),
+                 int(d['n_steps']), d.get('meta', {}))
+        if 'holdings' in d:
+            st.holdings, st.cash = np.asarray(d['holdings'], dtype=np.int64), float(d['cash'])
+        return st
 
 
 class RuleStrategy:
@@ -147,8 +164,22 @@ def step(mk: Market, strategy, st: LedgerState) -> dict:
     g_on, g_day, tradable = A.step_growth(mk.px, t)
     rf = float(mk.rf[t + 1])
     u = strategy.target(mk, st, t, g_on, rf)
+    no_sell = mk.px['no_sell'][t + 1]
+    if st.integer:
+        # Tam sayi modu: ortamla AYNI fonksiyon (orders.step_integer); gozlem gercek (tam sayi) agirliktan
+        v0 = st.value
+        r = O.step_integer(st.holdings, st.cash, st.value, st.w, u, mk.px, t, g_on, g_day, tradable, rf, no_sell,
+                           mk.cost, mk.symbols)
+        st.holdings, st.cash, st.value, st.w = r['holdings'], r['cash'], r['value'], r['w']
+        st.t = t + 1
+        st.n_steps += 1
+        return {'date': str(mk.dates[t + 1]), 'row': t + 1, 'R': r['R'], 'X': r['X'], 'rf': rf,
+                'turnover': r['turnover'], 'cost_frac': r['commission'] / v0, 'cash_weight': float(r['w'][0]),
+                'value': st.value, 'n_sell_blocked': int(r['projection'].get('n_sell_blocked', 0)),
+                'w': r['w'].copy(), 'weight_gap': float(r['weight_gap']),
+                'n_orders': int(sum(d['executed'] for d in r['decisions']))}
     res = A.step_fractional(st.w, u, g_on, g_day, tradable, rf, mk.cost, W.Constraints(), None,
-                            mk.px['no_sell'][t + 1])
+                            no_sell)
     st.w = res.w_next
     st.value *= 1.0 + res.R
     st.t = t + 1

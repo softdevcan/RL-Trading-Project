@@ -116,10 +116,11 @@ python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_
                                            #          ilk ileri gun yokken depo yok, her gun = 4 gun bosluk sonrasi = tek seferde = dogrudan defter (bit-es),
                                            #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri (4, ~10 sn; ana venv, ag yok)
 python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
-                                           #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali (4, ~10 sn)
+                                           #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + /dash/simulation
+                                           #          sayfa ve callback'leri (5, ~20 sn; arsiv yoksa 5 atlanir)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
-                                           #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi (4, ~4 sn; ana venv, torch)
+                                           #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi; S5 tam sayi mod (5, ~5 sn; ana venv, torch)
 python tests/test_marl_forward_panel.py     # Faz 11/S1 M8 ileri paneli (marl/forward_panel.py): sifir satirla panel_m8 bit-es (rf dahil), zincir
                                            #          (temettu, kesik cubuk yamasi, %1 esik), gun kapisi sebepleri, 3 sentetik gun: onceki satirlar bit-es + B0 +
                                            #          mutasyon + marj kapsami hatasi (4, ~15 sn; ana venv, ag yok)

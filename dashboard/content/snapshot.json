@@ -420,9 +420,9 @@
   },
   {
    "ad": "Faz 11 entegrasyon + sanal para simülasyonu",
-   "durum": "plan v0.6 TASLAK; S0, S2, S1, S3 ve S4 bitti (2026-11-22)",
+   "durum": "plan v0.8 TASLAK; S0, S2, S1, S3, S4 ve S5 bitti (2026-11-22)",
    "sinif": "bitti",
-   "siradaki": "S6 ekinin dondurulması (kullanıcı onayı, 2026-11-23'ten önce); S5 pano; S7 kâğıt portföy"
+   "siradaki": "S6 ekinin dondurulması (kullanıcı onayı, 2026-11-23 akşamından önce); S7 kâğıt portföy"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -477,7 +477,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "d042b6847e3d505333be0a9b58bd3ab135230550feecc992c6459609024a97ba",
+   "tablo_sha256": "ed1d07bbc79ccedbdab1e28068c1e3b4642b0ac59d1884562689af07958789d5",
    "uretim_commit": null
   }
  }

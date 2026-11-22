@@ -7,6 +7,7 @@ Ne dogrular (ag yok; is tetigi sahte fonksiyonla degistirilir):
   2. GET /api/marl/forward/status: oturumsuz 401; viewer 200 (ozet alanlari).
   3. POST /api/marl/forward/run: viewer 403 (RequireAdmin), admin 200 + tetik cagrildi + denetim kaydi.
   4. Zamanlayici kurali: hafta sonu / kesim saatinden once / gun bitti / deneme siniri -> calismaz; hafta ici 19+ calisir.
+  5. S5 gorunum ve urun portfoyu uclari (401/200/422) + pano sayfasi ve callback'leri (arsiv varsa).
 """
 from __future__ import annotations
 
@@ -92,6 +93,49 @@ with TestClient(app) as c:
     check(f"3. run: viewer {rv.status_code} (403 beklenir), admin {ra.status_code} + tetik + denetim kaydi",
           rv.status_code == 403 and ra.status_code == 200 and ra.json().get('started') is True and calls == ['manual']
           and n_audit == 1)
+
+# 5 S5: gorunum + urun portfoyu uclari ve pano sayfasi (dondurulmus arsiv varsa)
+HAVE = os.path.exists(os.path.join('data', 'marl', 'frozen', 'm8-2026', 'manifest.json')) and     os.path.exists(os.path.join('data', 'marl', 'panel_m8.npz'))
+if HAVE:
+    from app.main import _dash_app
+
+    def fire(client, fragment, inputs, states=None):
+        key = next(k for k in _dash_app.callback_map if fragment in k)
+        entry = _dash_app.callback_map[key]
+
+        def one(part):
+            cid, _, prop = part.partition(".")
+            return {"id": cid, "property": prop.split("@")[0]}
+        outs = [one(x) for x in key[2:-2].split("...")] if key.startswith("..") else one(key)
+        body = {"output": key, "outputs": outs,
+                "inputs": [dict(d, value=v) for d, v in zip(entry["inputs"], inputs)],
+                "state": [dict(d, value=v) for d, v in zip(entry.get("state") or [], states or [])],
+                "changedPropIds": [f"{d['id']}.{d['property']}" for d in entry["inputs"]]}
+        return client.post("/dash/_dash-update-component", json=body, headers=csrf(client))
+
+    with TestClient(app) as c:
+        u0 = c.get("/api/marl/forward/view", params={"window": "test2026"}).status_code
+        login(c, "viewer@test.local", "ViewerPass1")
+        rv = c.get("/api/marl/forward/view", params={"window": "test2026", "keys": "M-none,rule/ew"})
+        v = rv.json() if rv.status_code == 200 else {}
+        ok5 = u0 == 401 and rv.status_code == 200 and v.get('n_sessions') == 207 and v['lines']['M-none']['n'] == 12
+        ok5 &= c.get("/api/marl/forward/view", params={"window": "test2026", "keys": "yok"}).status_code == 422
+        ok5 &= c.get("/api/marl/forward/view", params={"window": "baska"}).status_code == 422
+        rp = c.get("/api/marl/forward/product", params={"sid": "rule/ew", "capital": 100000, "window": "test2026"})
+        ok5 &= rp.status_code == 200 and len(rp.json().get('dates', [])) == 207
+        ok5 &= c.get("/api/marl/forward/product", params={"sid": "rule/ew", "capital": 0}).status_code == 422
+        ok5 &= c.get("/api/marl/forward/product", params={"sid": "policy/x/s1", "capital": 1e5,
+                                                           "window": "test2026"}).status_code == 422
+        rpage = fire(c, "page-content.children", ["/dash/simulation"])
+        rview = fire(c, "sim-chart.figure", ["test2026", ["M-none", "rule/ew", "rule/minvar"]])
+        fig = (rview.json().get("response", {}).get("sim-chart", {}).get("figure", {}) if rview.status_code == 200 else {})
+        rprod = fire(c, "sim-product-out.children", [1], ["policy/M-none/s201", 100000, "test2026"])
+        ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and rview.status_code == 200
+        ok5 &= len(fig.get("data", [])) == 5 and rprod.status_code == 200    # M-none bant (2) + ort. + 2 kural
+    check(f"5. S5: view 401/200 (207 seans, M-none N=12), gecersiz anahtar/pencere 422, urun 200 / sermaye 0 / "
+          f"bilinmeyen strateji 422; pano sayfasi + grafik + urun callback'i 200", ok5)
+else:
+    print("[ATLANDI] 5. dondurulmus arsiv yok")
 
 TRT = MF.TRT
 MF._state['attempts'].clear()

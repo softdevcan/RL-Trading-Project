@@ -525,3 +525,23 @@ def get_gold_prices() -> Dict:
 
 def get_gold_history() -> Dict:
     return _get("/prediction/gold/history") or {}
+
+
+# ── Faz 11: MARL ileri veri simulasyonu ──────────────────────────────────────
+
+def get_marl_forward_status() -> Dict:
+    return _get("/marl/forward/status") or {}
+
+
+def run_marl_forward() -> Dict:
+    return _post("/marl/forward/run") or {}
+
+
+def get_marl_forward_view(window: str, keys: List[str]) -> Dict:
+    # 2026 penceresinin ilk hesabi ~10 sn (sonra onbellek)
+    return _get("/marl/forward/view", params={"window": window, "keys": ",".join(keys)}, timeout=120) or {}
+
+
+def get_marl_product(sid: str, capital: float, window: str) -> Dict:
+    return _get("/marl/forward/product", params={"sid": sid, "capital": capital, "window": window}, timeout=120) or {}
+

@@ -21,6 +21,10 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `frozen.py` (Faz 11 S0): dondurulmus M8 politika arsivi `data/marl/frozen/<ad>/` (git disi, ortak, salt okunur) ve
   `verify_archive` (dosya SHA + `params_sha` + on kayit listesi). ANA venv (torch tembel import; BenchMARL yok). `state_digest`
   TEK tanim burada; `m3_runner` ithal eder. Arsiv ustune yazilmaz; gunluk is (S4) her calismadan once dogrular.
+- `forward_views.py` (Faz 11 S5): pano veri katmani (pencere 'forward' | 'test2026'; kol ort. +- std; urun portfoyu tam sayi
+  lot). Karsilastirma YALNIZ ayni pencere ve maliyet. 2026 onbellegi `data/marl/forward/m8/cache/` (arsiv SHA anahtarli).
+- `orders.step_integer` (Faz 11 S5): tam sayi modu adimi; ortam (`_step_integer`) ve defter (`LedgerState(integer=True)`) AYNI
+  fonksiyonu cagirir. Kesirli yol (`step_fractional`) ayri ve S3 paritesiyle sabit.
 - `forward_job.py` (Faz 11 S4): gunluk is `run_daily` (arsiv dogrula -> S1 panel -> marj kapsami -> defter); ANA venv. Defter deposu
   `data/marl/forward/m8/ledger/` (state.json atomik + rows.csv yalniz eklenir, `%.17g` yaz / `round_trip` oku). Depo YALNIZ ilk
   ileri gun (2026-11-23) panelde olunca kurulur (S6 eki §3). Idempotent ve bosluk doldurma bit-es KALMALI (test_marl_forward_job).
@@ -76,7 +80,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
 - `python tests/test_marl_forward_job.py` (4, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler)
-- `python tests/test_marl_sim_ledger.py` (4, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi)
+- `python tests/test_marl_sim_ledger.py` (5, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi, S5 tam sayi mod)
 - `python tests/test_marl_forward_panel.py` (4, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, append + B0 + mutasyon)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)

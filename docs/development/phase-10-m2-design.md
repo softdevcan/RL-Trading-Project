@@ -538,6 +538,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.12 (2026-11-22):** tam sayı modu adımı `MarlPortfolioEnv._step_integer`'dan saf çekirdeğe `orders.step_integer`'a taşındı (Faz 11 S5: ortam ve defter/ürün portföyü aynı fonksiyonu çağırır). Davranış değişmedi: main'deki ortamla 80 adım, 100k ve 1e9 sermayede bit-eş; `test_marl_env` 36.
 - **v0.11 (2026-11-22):** §2.5 ileri günler için marj kapsamı düzeneği (Faz 11 S4; `marl/margin_coverage.py`, `limit_down_gaps(verified_until=)`); varsayılan davranış değişmedi.
 - **v0.10 (2026-11-20):** §6.1 KARAR (kullanıcı): `m8-v1` uygulandı (`marl/panel_fix.py`, `prepare_panel_m2.py --data-fix m8-v1`; varsayılan hat M2 paneliyle bit-eş). `test_marl_core` 62.
 - **v0.9 (2026-11-20):** §6.1 M8 paneli ikinci kaynakla denetlendi (İş Yatırım; `measurements/phase10-m8/cross_source_audit.json`): kesik gün çubukları, SKBNK'nin yanlış günden düzeltilmiş iki bedelli artırımı, 2023-02-08 iptal seansı. Düzeltme önerisi `m8-v1` kullanıcı kararını bekliyor. Kod davranışı değişmedi.

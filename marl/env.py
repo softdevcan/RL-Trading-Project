@@ -24,7 +24,7 @@ from pettingzoo import ParallelEnv
 from marl import obs_spec as OS
 from marl.accounting import (LISTING_LOCKOUT, DifferentialSharpe, limit_down_gaps, margin_schedule_meta, agent_rewards, fill_prices, one_way_cost,
                              step_fractional, step_growth)
-from marl.orders import apply_to_holdings, rebalance_orders
+from marl.orders import step_integer
 from marl.weights import Constraints, logit_bound, project, target_weights
 
 REWARD_TERMS = ('excess', 'differential')
@@ -167,28 +167,11 @@ class MarlPortfolioEnv(ParallelEnv):
         return self._obs(), {a: {} for a in self.agents}
 
     def _step_integer(self, u, g_on, g_day, tradable, rf, no_sell):
-        t, t1 = self.t, self.t + 1
-        cf, of = self.px['close'], self.px['open']
-        w_prev = self.w
-        cash = self.cash * (1.0 + rf)
-        p_exec = np.where(tradable, of[t1], cf[t])
-        p_exec = np.where(np.isfinite(p_exec), p_exec, 1.0)  # listelenmemis: adet 0, fiyat onemsiz
-        v_pre = cash + float(np.dot(self.holdings, p_exec))
-        w_tilde = np.concatenate([[cash], self.holdings * p_exec]) / v_pre
-        w_star, rep = project(u, w_tilde, tradable, self.constraints, self.groups, no_sell)
-        dec, summ = rebalance_orders(w_star, p_exec, self.holdings, cash, self.cost, self.symbols, tradable,
-                                     no_sell=no_sell)
-        h, cash = apply_to_holdings(dec, self.holdings, cash)
-        comm = np.array([d['commission'] for d in dec])
-        p_close = np.where(np.isfinite(cf[t1]), cf[t1], p_exec)
-        v_next = cash + float(np.dot(h, p_close))
-        R = v_next / self.value - 1.0
-        X = R - rf
-        w_exec = h * p_exec / v_pre
-        k = w_prev[1:] * (g_on - 1.0 - rf) + w_exec * (g_day - 1.0) - comm / v_pre
-        self.holdings, self.cash, self.value = h, cash, v_next
-        self.w = np.concatenate([[cash], h * p_close]) / v_next
-        return R, X, k, float(summ['turnover']), rep, summ['weight_gap'], dec
+        # Faz 11 S5: govde `orders.step_integer`'a tasindi (defter ve urun portfoyu ayni fonksiyonu cagirir)
+        r = step_integer(self.holdings, self.cash, self.value, self.w, u, self.px, self.t, g_on, g_day, tradable, rf,
+                         no_sell, self.cost, self.symbols, self.constraints, self.groups)
+        self.holdings, self.cash, self.value, self.w = r['holdings'], r['cash'], r['value'], r['w']
+        return r['R'], r['X'], r['k'], r['turnover'], r['projection'], r['weight_gap'], r['decisions']
 
     def step(self, actions):
         z = np.array([float(np.asarray(actions[a]).reshape(-1)[0]) for a in self.possible_agents])
