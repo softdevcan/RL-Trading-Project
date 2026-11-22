@@ -18,6 +18,9 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   gorunumu (ajan `agent_0`, grup 'agent'; odul = ajan odullerinin ortalamasi); `RowSharedPolicy` (esmimari) MARL ajan
   MLP'siyle ayni katmanlar. Gorevde `single_agent=True`, egitici `--sarl {agirlik, esmimari}`; varsayilan MARL (bit-es).
 - `marl/__init__.py` alt modul import ETMEZ (ana venv'de `import marl.orders` pettingzoo istemesin).
+- `frozen.py` (Faz 11 S0): dondurulmus M8 politika arsivi `data/marl/frozen/<ad>/` (git disi, ortak, salt okunur) ve
+  `verify_archive` (dosya SHA + `params_sha` + on kayit listesi). ANA venv (torch tembel import; BenchMARL yok). `state_digest`
+  TEK tanim burada; `m3_runner` ithal eder. Arsiv ustune yazilmaz; gunluk is (S4) her calismadan once dogrular.
 - Eski ortam `env/trading_env.py` ve state space'i DEGISMEZ; yeni ortam oraya konmadi (tasarim §1).
 
 ## Kurallar
@@ -53,6 +56,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   kontrol noktasiz kosuyla bit-es KALMALI); `eval_fold_m8.py` testi YALNIZ secilen noktayla BIR KEZ okur, cikti varsa
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
+- `python tests/test_marl_frozen.py` (3, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)
 - `python scripts/marl/analyze_m8.py --self-test` (11, ana venv; M8 okuma + `--status` saglik kaydi)
 - `venv-marl\Scripts\python tests/test_marl_env.py` (36, yalniz venv-marl)

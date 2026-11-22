@@ -1,0 +1,33 @@
+{
+ "plan": "phase-11-integration-plan.md §3 S0",
+ "name": "m8-2026",
+ "fold": "2026",
+ "archive": {
+  "built_now": false,
+  "manifest_sha256": "53db7f0d574bc937a8cd636817c5c76ecd659ba0286826b35ae2dc35c2b5697b",
+  "source_reading_sha256": "baab8ae431be4fb1e050663862a632ee6119fe78c9b78e300c82c0551804ad8a",
+  "n_policies": 72,
+  "n_files": 360,
+  "digest_checked": true,
+  "forward_checked": true
+ },
+ "backup": {
+  "target": "harici disk (komut satirinda verildi; yol kaydedilmez)",
+  "n_files": 8660,
+  "bytes": 2759246526,
+  "copied": 8660,
+  "skipped_same_sha": 0,
+  "files_listing_sha256": "2532660855dfa2126692af794e120e6fe92584875da6e738957762c9291a4f2e",
+  "verify": {
+   "n_files_rehashed": 8660,
+   "all_match": true
+  }
+ },
+ "restore_test": {
+  "restored_from_backup": true,
+  "n_policies": 72,
+  "n_files": 360,
+  "digest_checked": true,
+  "forward_checked": true
+ }
+}
