@@ -107,5 +107,32 @@ if os.path.exists(os.path.join(real, 'manifest.json')):
 else:
     print("[ATLANDI] 3. gercek arsiv yok (scripts/marl/archive_s0.py --archive)")
 
+# 4. Faz 11 S2: sade ileri gecis (marl/frozen_policy.py) venv-marl referansiyla bit-es, her kol turunden bir politika
+REF = os.path.join('results', 'marl_s2', 'ref')
+picks = [('M-none', 's201'), ('null', 's213'), ('S-esm', 's201'), ('S-agr', 's201'), ('M-gat', 's201'),
+         ('M-self', 's201')]
+if os.path.exists(os.path.join(real, 'manifest.json')) and all(
+        os.path.exists(os.path.join(REF, a, f'{s}.npz')) for a, s in picks):
+    import numpy as np
+    from marl.frozen_policy import FrozenPolicy
+    ok4, kinds = True, set()
+    for a, s in picks:
+        fp = FrozenPolicy(os.path.join(real, a, s))
+        r = np.load(os.path.join(REF, a, f'{s}.npz'))
+        obs = r['win_obs'].reshape(-1, fp.n_agents, fp.obs_dim)
+        ok4 &= np.array_equal(np.stack([fp.act(o) for o in obs]), r['win_action'].reshape(obs.shape[0], -1))
+        ok4 &= np.array_equal(fp.act(r['rand_obs'].reshape(-1, fp.n_agents, fp.obs_dim)),
+                              r['rand_action'].reshape(-1, fp.n_agents))
+        kinds.add(fp.kind)
+    # mutasyon: gat maskesi kaldirilinca (tam bagli dikkat) ayni gozlemde eylem degisir
+    fp = FrozenPolicy(os.path.join(real, 'M-gat', 's201'))
+    r = np.load(os.path.join(REF, 'M-gat', 's201.npz'))
+    fp.mask = torch.zeros_like(fp.mask)
+    ok4 &= not np.array_equal(fp.act(r['rand_obs']), r['rand_action'])
+    check(f"4. sade ileri gecis venv-marl referansiyla bit-es ({len(picks)} politika, {len(kinds)} tur); "
+          f"gat maskesi bozulunca ayrisir", ok4 and len(kinds) == 4)
+else:
+    print("[ATLANDI] 4. S2 referansi yok (venv-marl: scripts/marl/s2_parity_ref.py)")
+
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

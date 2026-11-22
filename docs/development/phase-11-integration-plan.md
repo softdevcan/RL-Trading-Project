@@ -1,7 +1,7 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.2 TASLAK · 2026-11-22 · S0 bitti (dal `feat/phase11-s0`)
-**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1).**
+**Sürüm:** v0.3 TASLAK · 2026-11-22 · S0 ve S2 bitti (dal `feat/phase11-s2`)
+**Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2).**
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
 - [M8 tasarımı](phase-10-m8-design.md) §6.7 (ileri veri), §7 (okuma; §7.3 b kural portföyleri, §7.5 tohum kümelemesi).
@@ -38,9 +38,9 @@
 
 | # | Paket | İçerik | Kabul ölçütü |
 |---|---|---|---|
-| **S0** | Dondurulmuş politika arşivi | **BİTTİ (§3.1).** 2026 katının seçilmiş politikaları (72) + `meta.json`, `norm_stats.json` salt okunur bir yapıt deposuna kopyalanır; SHA manifesti `forward_policies_2026` ile karşılaştırılır. Tüm `results/marl_m8/` için yedek (git dışı) | Manifest SHA'ları 60/60 eşleşir. Yedekten geri yükleme bir kez denenir |
+| **S0** | Dondurulmuş politika arşivi | **BİTTİ (§3.1).** 2026 katının seçilmiş politikaları (72) + `meta.json`, `norm_stats.json` salt okunur bir yapıt deposuna kopyalanır; SHA manifesti `forward_policies_2026` ile karşılaştırılır. Tüm `results/marl_m8/` için yedek (git dışı) | Manifest SHA'ları 72/72 eşleşir. Yedekten geri yükleme bir kez denenir |
 | **S1** | İleri panel | `prepare_panel_m2.py --data-fix m8-v1` hattıyla artımlı panel sürümü (`panel_m8_fwd`). Günlük ek: yfinance artımlı çekim → veri kapısı → `m8-v1` kuralları. 2026-11-09 sonrası fiyat marjı takvimi için `PRICE_MARGIN_VERIFIED_UNTIL` kaynakla yeniden denetlenir (`price_limit_audit_m8.py`) | Geçmiş satırlar `panel_m8.npz` ile bit-eş. Veri kapısı reddettiği günü yazmaz, sebebini kaydeder. Marj kapsamı dışındaki gün hata verir (sessiz geçmez) |
-| **S2** | Politika aktarımı (K9) | BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
+| **S2** | Politika aktarımı (K9) | **BİTTİ (§3.2).** BenchMARL politikasından ağırlıklar okunur, sade bir ileri geçişe aktarılır: M-none / S-esm / S-agr için paylaşımlı MLP, M-gat / M-self için `comm_models` ileri geçişi. Ana venv'de çalışır, `venv-marl` import etmez | Aynı gözlemde logit farkı ≤ 1e-6, 72/72 politika (`venv-marl` eval çıktısıyla). Önce bir spike: tek politika (M-none s201) |
 | **S3** | Simülasyon motoru ve defter | Strateji başına defter (K14): kesirli mod, `accounting.step_fractional`, t+1 açılış yürütmesi, rf A8. Kural portföyleri `marl.rule_baselines.rule_series` ile aynı defter biçiminde | **Parite:** 2026 test penceresi (2026-01-01..2026-10-31) defterden yeniden oynatıldığında her politikanın günlük R serisi `eval_fold_m8.py` test serisiyle bit-eş (ya da ≤ 1e-12). Kural portföyleri `m8_reading.json` → `baselines.2026` ile aynı Sharpe |
 | **S4** | Günlük iş ve geriye dönük doldurma | Seans kapanışından sonra (BIST kapanışı + veri gecikmesi) çalışan iş: panel eki → karar → defter. İdempotent; kaçırılan günleri sırayla doldurur. Tetik `app/services/background_jobs.py` ya da işletim sistemi zamanlayıcısı (§6 K-F11-4) | Aynı gün iki kez çalışınca defter değişmez. 5 gün boşluk sonrası doldurma, günlük çalışmayla bit-eş |
 | **S5** | Pano (K27) | Strateji seçimi (eski tek ajan / SARL / MARL / kural), karşılaştırma görünümü (yalnız aynı pencere ve aynı maliyetteki defterler yan yana), tohum dağılımı (ortalama ± std, 12 tohum), N, "tez sonucu değildir" notu. Eski ortam modelleri ayrı sekmede, "doğrudan kıyaslanmaz" notuyla | `dashboard/CLAUDE.md` kuralları (tema, uzun işler). Yazma uçları RBAC'li (test) |
@@ -69,6 +69,29 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.2 S2 sonucu (2026-11-22; `measurements/phase11-s2/s2_parity.json`)
+
+- **Kabul kapısı geçti: 72/72.** Logit farkı ölçüt ≤ 1e-6. Ölçülen en büyük fark **0**: eylem 72/72 politikada bit-eş, loc (tanh öncesi) de 0.
+  - Karşılaştırma iki girdi kümesinde yapıldı:
+    - 2026 test penceresi: 207 gün × 30 ajan.
+    - Rastgele gözlem: 256 adet, N(0, 3²), tohum 20261122. ±5 kırpma sınırının dışına taşar, tanh doygunluğunu da yoklar.
+  - Mimari dağılımı: `mlp` 24 (M-none, null), `comm` 24 (M-gat, M-self), `rowshared` 12 (S-esm), `sarl_agr` 12 (S-agr).
+- **Referansın kendisi denetlendi.** Referans `scripts/marl/s2_parity_ref.py` ile üretildi: venv-marl, BenchMARL `load_policy`, deterministik keşif. Referans penceresinin günlük R serisi, M8 test kaydıyla (`results/marl_m8/2026/.../test_argmax.npz`) 72/72 birebir aynı. Yani karşılaştırılan çıktı, M8'in okuduğu davranışın ta kendisi.
+- **Kod:** `marl/frozen_policy.py` → `FrozenPolicy(dizin).act(gözlem[N, d])`.
+  - Ana venv'de çalışır, düz torch kullanır; BenchMARL / TorchRL import etmez.
+  - Deterministik eylem: `B · clamp(tanh(loc), ±(1 − ε))`. Bu, TorchRL 0.7 `TanhNormal.deterministic_sample` ile aynı işlem sırasıdır; ε float32 çözünürlüğü, B = `logit_bound`.
+  - M5 güven terimli iletişim kolları aktarılmadı; M8'de yoklar, gelirlerse açık hata verir.
+- **İki bulgu (kurala bağlandı):**
+  1. **Çağrı biçimi.** Aynı gözlem kümesi toplu (`[T, N, d]`) ve tek tek verildiğinde eylem en çok 5,0e-6 farklı çıkıyor. En büyüğü S-agr'de: 1.320 girdili matris çarpımında float32 toplama sırası değişiyor.
+     - Parite, referansla aynı çağrı biçiminde ölçüldü: pencere gün gün, rastgele küme toplu.
+     - **Kural:** canlı ve simülasyon yolu politikayı TEK gözlemle çağırır; M8 değerlendirmesi de böyle çağırıyordu. Toplu yol yalnız çözümleme içindir (`frozen_policy` belgesi).
+     - S3 seri paritesi bu kuralla ölçülecek.
+  2. **Süreç içi durum.** BenchMARL görev yapılandırması sınıf düzeyinde tutuluyor (`MarlTask.PORTFOLIO.update_config` birleştirir). Bir SARL kolunun `single_agent` anahtarı, aynı süreçte yüklenen sonraki MARL koluna taşıyor ve yükleme hata veriyor.
+     - M8 her politikayı ayrı süreçte yüklediği için M8 sonuçlarını etkilemez.
+     - Referans betiği artık kol başına ayrı süreç açar.
+     - Ana venv yolu (`frozen_policy`) bu durumu taşımaz.
+- **Test:** `tests/test_marl_frozen.py` 4. kontrol. Her mimariden bir politika (6) referansla bit-eş; gat maskesi bozulunca çıktı ayrışır (mutasyon). Referans dosyaları yoksa kontrol atlanır.
 
 **Kaba efor** (tek geliştirici, gün; ölçüm değil): S0 0,5 · S1 2–3 · S2 2–3 · S3 3–4 · S4 1–2 · S5 4–6 · S6 0,5 · S7 1–2 → ≈ 14–21.
 
@@ -101,5 +124,6 @@
 
 ## Versiyon geçmişi
 
+- **v0.3 (2026-11-22):** S2 bitti (§3.2): sade ileri geçiş 72/72 bit-eş (logit farkı 0; ölçüt ≤ 1e-6); referans R serisi M8 test kaydıyla 72/72 aynı. Kurallar: tek gözlemle çağrı (toplu çağrı ≤ 5e-6 farklı), referans kol başına ayrı süreç.
 - **v0.2 (2026-11-22):** S0 bitti (§3.1): arşiv 72/72 doğrulandı, harici disk yedeği ve geri yükleme denemesi geçti. Politika sayısı 60 → 72 düzeltildi (boş kol ön kayıt listesinde).
 - **v0.1 (2026-11-22):** İlk taslak. Faz 10 araştırma kapanışından sonra kullanıcı niyetiyle yazıldı. Kod yok.
