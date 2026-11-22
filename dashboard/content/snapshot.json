@@ -408,9 +408,9 @@
   },
   {
    "ad": "Faz 10 M8, nihai koşumlar",
-   "durum": "ön kayıt v1.0 DONDURULDU (2026-11-21), koşu sırada",
+   "durum": "bitti, okundu (2026-11-22)",
    "sinif": "bitti",
-   "siradaki": "2021 katı (run_m8.py --folds 2021), sonra sağlık kaydı ve kullanıcı onayı"
+   "siradaki": "Hakem-2 kapanışı; ileri veri okuması (2026-11-23'ten itibaren ≥ 126 seans, §6.7)"
   },
   {
    "ad": "K27 pano: ajan türü seçimi + karşılaştırma",
@@ -471,7 +471,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "d4e7c5e355ae53704111759094eab689add59e279477f417f0b4fe67a81808a5",
+   "tablo_sha256": "84f0821eecbe0ea0b20003c78b408af010b7bcde25d845212d694353c0ba30a1",
    "uretim_commit": null
   }
  }

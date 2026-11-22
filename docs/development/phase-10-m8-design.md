@@ -1,8 +1,8 @@
 # Faz 10 M8 — Nihai koşumlar: tasarım ve ön kayıt
 
-**Sürüm:** v1.0 · ön kayıt DONDURULDU · 2026-11-21 · dal `feat/phase10-m8-prereg`
+**Sürüm:** v1.1 · ön kayıt DONDURULDU 2026-11-21 · okuma 2026-11-22 (§7) · dal `feat/phase10-m8-prereg`
 **Üst belge:** [phase-10-marl-plan.md](phase-10-marl-plan.md) §2.3 (birincil karşıtlık), §3.2.4 (kollar), §3.2.8 (toplama düzeni), §6 K15 (SARL kolları), K20 (walk-forward, çıkarım birimi, güç).
-**Durum:** Ön kayıt (§6) DONDURULDU 2026-11-21; koşular yıl yıl (§6.3). §1–§5 tasarım geçmişidir. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
+**Durum:** Ön kayıt (§6) DONDURULDU 2026-11-21; 432 koşu bitti ve okundu 2026-11-22 (§7). §1–§5 tasarım geçmişidir. Bu belge yeni bir hipotez eklemez; planın M8'e bıraktığı maddeleri tek yerde toplar. Karar bekleyen maddeler §4'te.
 
 ---
 
@@ -284,7 +284,87 @@ Ek tohum ya da kol eklemek; kol, kat ya da hücre çıkarmak (§6.6 dışında);
 
 **İkinci okuma (2026-11-21, SendMessage, fark 90f7f7b..cd70cca; koşu yok):** hakem-finans **Kabul**: iki BÜYÜK kapandı, yeni BÜYÜK yok. hakem-rl **Küçük revizyon**: B1–B3 kapandı (B3 kapsam daraltmayla). Üç yeni KÜÇÜK not vardı (K-a etiketin yazımı, K-b benzetim R/B, K-c normal varsayımı); §6.4'e işlendi. Finans notu (e) testi §6.2'ye eklendi. Yeni okuma gerekmez. Ön kayıt metni A4 kodu bitince dondurulur.
 
+## 7. Okuma (2026-11-22; ön kayıt v1.0, sonuçtan sonra yazıldı)
+
+Bütün sayılar `docs/development/measurements/phase10-m8/m8_reading.json` dosyasından gelir (`analyze_m8.py --out ... --register`, commit e8b0a40; betik SHA-256'sı `provenance` alanında). Yıl yıl sağlık kayıtları aynı dizinde, `status/` altında. Okuma bir kez yapıldı. §6.8'deki hiçbir madde (eşik, test, kol, kat, seçim kuralı, maliyet) sonuçtan sonra değiştirilmedi.
+
+### 7.1 Denetimler (§6.6)
+
+- **Koşu:** 432/432 (6 kol × 12 tohum × 6 kat). Eksik hücre 0, tanımsız (tümüyle nakit) hücre 0, çökme ya da yeniden deneme 0. Kat başına duvar süresi 162–166 dk (3 eş zamanlı koşu).
+- **Kaynak:** her kayıt tek commit'ten (1f89895) ve temiz ağaçtan. Panel SHA, graf SHA, kat pencereleri ve yapılandırma ön kayıtla aynı (`checks.all_ok = true`). Etiketlerde `UYARILI` yok.
+- **Deneme kaydı:** `kind='marl_m8'` ile 864 kayıt yazıldı (432 hücre × 2 seçim kuralı).
+- **Pencere açıklığı (§6.7):** 2021 açık değil. 2022–2026 katları, Faz 9 öncesinde eski tek ajanlı ortamla okunmuş pencerelerle örtüşür (`fold_exposure`).
+
+### 7.2 Etiketler (§6.4)
+
+Δ̄ eşli Sharpe farkıdır (yıllık, A8 risksiz faiz üstü, 20 bps), 72 eş. GA kat içi tabakalı bootstrap %95 aralığıdır.
+
+| Karşıtlık | Δ̄ | %95 GA | p_işaret | p_boot | Etiket (tam yazım) |
+|---|---|---|---|---|---|
+| H1 M-none ↔ S-esm | +0,465 | [0,301, 0,635] | 0,0001 | 0,0002 | FARK_VAR_MARL (yila_bagli, secime_dayanikli; 6 yılda ortalama) |
+| H2 M-none ↔ S-agr | +0,281 | [0,174, 0,386] | 0,0001 | 0,0002 | FARK_VAR_M-none (katlar_tutarli, secime_dayanikli; 6 yılda ortalama), Holm p 0,0004 |
+| H3 M-gat ↔ M-self | −0,010 | [−0,082, 0,062] | 0,809 | 0,794 | FARK_GOZLENMEDI (yila_bagli, secime_duyarli; 6 yılda ortalama), Holm p 0,809 |
+| NK M-none ↔ boş kol | +0,073 | [−0,055, 0,203] | 0,339 | 0,268 | FARK_GOZLENMEDI (yila_bagli, secime_dayanikli; 6 yılda ortalama) |
+
+- **Negatif kontrol** beklenen etiketi verdi. `negatif_kontrol_uyarisi` uygulanmadı.
+- **Kat başına Δ̄** (`per_fold_delta`, 2021→2026):
+  - H1: +0,46 / +1,30 / +0,55 / +0,37 / +0,23 / −0,12. Aynı işaret 5/6, kat işaret-çevirme p 0,0625, bu yüzden `yila_bagli`.
+  - H2: +0,61 / +0,67 / +0,01 / +0,04 / +0,23 / +0,13. 6/6, p 0,031.
+- **2021 katı ayrı (§6.7; etiket yok, 12 eş):** H1 +0,46 [0,11, 0,81], H2 +0,61 [0,30, 0,92], H3 −0,17 [−0,44, 0,07], NK −0,28 [−0,64, 0,09].
+- **Güç (betimsel, ölçülen σ ile yeniden):** MDE₈₀ H1 0,28, H2 0,16, H3 0,26, NK 0,21 (`mde_recomputed`). Bunlar ön kayıttaki 0,075–0,137 aralığının üstünde. Ölçülen tohum yayılımı boyut ölçümündeki σ 0,155'ten büyük çıktı: kat × kol sd_tohum 0,13–1,33. Etiketler bu güçle okunur. H3'teki "fark gözlenmedi" ~0,26'dan küçük farkları dışlamaz.
+
+### 7.3 Betimsel bulgular (kararları değiştirmez; §6.5)
+
+**(a) Farkın kaynağı işlem maliyeti.** D4 ızgarasında aynı politikalar ex post yeniden fiyatlandı (`cost_grid_delta`):
+
+| Δ̄ | 0 bps | 10 | 20 (birincil) | 25 | 50 |
+|---|---|---|---|---|---|
+| H1 | +0,24 | +0,35 | +0,47 | +0,52 | +0,81 |
+| H2 | −0,01 | +0,14 | +0,28 | +0,35 | +0,71 |
+| H3 | −0,02 | −0,02 | −0,01 | −0,01 | +0,01 |
+
+- Ortalama günlük devir: M-none 0,28, boş kol 0,29; M-gat 0,49, M-self 0,51; S-agr 0,65, S-esm 0,66 (`arms.*.per_fold_turnover`, 6 kat ortalaması). Nakit ağırlığı her kolda %1–5.
+- Okuma: maliyetsiz durumda H2 farkı sıfırdır, H1 farkının yaklaşık yarısı kalır. Etiketler 20 bps'de, ön kayıtlı maliyetle konmuştur.
+  - H2'nin içeriği bir "seçim becerisi" farkı değil, **devir farkıdır**: aynı maliyetle eğitilen SARL-ağırlık kolu çok ajanlı kolun ~2,3 katı işlem yapıyor.
+  - H1'in bir kısmı maliyetsiz durumda da sürüyor.
+  - Bu, §6.1'deki yorum sınırını (SARL kolları MAPPO-ayarlı, ayar-eşit SARL kolu yok) somutlaştırır.
+- **Yazım kuralı:** H1/H2 bir tez metninde "çok ajanlı yapı daha iyi portföy seçiyor" diye yazılmaz. Doğru ifade "aynı maliyet ve ayarla eğitilen çok ajanlı politika daha az devirle daha yüksek maliyet sonrası Sharpe verdi (6 yılda ortalama)" olur.
+
+**(b) Kural portföyleri öğrenen kolların hepsinin üstünde.** 6 kat ortalaması Sharpe (`baselines`; aynı muhasebe, 20 bps):
+- Öğrenen kollar: M-none 0,31, boş kol 0,24, M-self 0,05, M-gat 0,04, S-agr 0,03, S-esm −0,15.
+- Kural portföyleri: 1/N 0,54, al-tut 0,57, min-varyans 0,61, HRP 0,61.
+
+Bu bir ön kayıt hipotezi değildir ve test edilmedi: kural portföyleri kat başına tek seridir, eşli bir karşıtlık yok. Yine de her raporda öğrenen kolların yanında verilir. M8 "MARL tek ajandan iyi mi" sorusunu yanıtlar, "MARL basit kurallardan iyi mi" sorusunu yanıtlamaz.
+
+**(c) Seçim kuralı ve negatif kontrol.** Son nokta (`test_last`) okumasında NK Δ̄ +0,215 [0,066, 0,365], p_max 0,011 çıktı. Aynı yapılandırmanın iki tohum grubu bu kuralla "fark" verdi. Bu sonuç:
+- Birincil kural (doğrulama argmax'ı) için uyarı değildir (§6.4).
+- Son nokta kuralıyla okunan eklerin (`secime_dayanikli/duyarli`) gürültüye karşı ~0,2 Sharpe düzeyinde duyarlı olduğunu gösterir; beyan edilir.
+- Seçilen nokta son noktayla %12–26 oranında aynı (`share_last_equals_argmax`).
+
+**(d) Zaman yönü.** H1 kat trendi Spearman −0,83: fark geç katlarda küçülüyor. Eğitim günü başına kare 377'den 211'e iniyor (`per_fold`, F sabit; hakem-rl #K1). İkisi aynı yönde; bu tasarım ayrımı yapmaz. Doğrulama ↔ test ilişkisi kat başına 0,04–0,57.
+
+**(e) Diğer.**
+- Kat başına ortak HAC p'leri (`hac_pooled`) yalnız betimseldir; çoğu katta > 0,05.
+- DSR (N = 10, alt sınır): M-none|argmax 0,67, diğerleri 0,16–0,39. M8 en iyiyi seçmez.
+- rliable (`rliable`; boş kol hariç beş kol): IQM hepsinde < 0 (M-none −0,05). Medyan M-self'te 0,00, diğerlerinde < 0. Ortalama ile medyan arasındaki fark büyük ölçüde 2022 katından gelir: bu katta kural portföylerinin Sharpe'ı da ~3,6.
+- 2026 katının test penceresi wf-v1 gereği 2026-10-31'de biter.
+
+### 7.4 Sonuç ve sınırlar
+
+- **H1 ve H2:** 2021–2026'da, 20 bps maliyetle, aynı ayarlarla eğitilen çok ajanlı MAPPO (iletişimsiz) iki SARL kolundan daha yüksek maliyet sonrası Sharpe verdi.
+  - H1 farkı yıla bağlı (5/6 kat; 2026'da ters). H2 farkı katlarda tutarlı.
+  - Farkın H2'de tamamı, H1'de yaklaşık yarısı daha düşük devirden geliyor.
+- **H3:** iki iletişim türü arasında fark gözlenmedi.
+- **Öğrenen kollar ve kurallar:** hiçbir öğrenen kol basit kural portföylerini geçmedi (betimsel).
+- **Kapsam:** çıkarım 6 yıla ve tek piyasa yoluna koşulludur (§6.1), nominal TL'dir; 2022–2026 pencereleri araştırmacıya açıktı (§6.7).
+- **İleri veri (§6.7):** başlangıç dondurmadan sonraki ilk seans, 2026-11-23. 2026 katının seçilmiş politikaları, kol başına 12, SHA'larıyla `forward_policies_2026` alanında sabitlendi. En az 126 seans birikince ayrı ön kayıt ekiyle bir kez okunur. Ölçüt §6.7'dedir; H1 ve H2 FARK_VAR olduğu için "destekler / çelişir / belirsiz" kuralı uygulanır.
+
 ## Versiyon geçmişi
+
+- **v1.1 (2026-11-22):** §7 okuma. 432/432 koşu, denetimler tamam.
+  - H1 FARK_VAR_MARL (yila_bagli), H2 FARK_VAR_M-none (katlar_tutarli), H3 ve NK FARK_GOZLENMEDI.
+  - Betimsel: fark devir/maliyet kaynaklı (H2 0 bps'de sıfır); kural portföyleri öğrenen kolların üstünde.
+  - Ön kayıt değişmedi.
 
 - **v1.0 (2026-11-21):** Ön kayıt DONDURULDU (yerel etiket `m8-prereg-v1`). A4 bitti: `marl/rule_baselines.py` (min-var LW, HRP; `rule_series` taşındı), `tests/test_marl_baselines.py` (7), `scripts/marl/analyze_m8.py` (sağlık kaydı + nihai okuma, öz-test 11). Kullanıcı kararı: koşu yıl yıl partiler, her parti sonunda sağlık kaydı ve onay (§6.3). Koşu yok.
 
