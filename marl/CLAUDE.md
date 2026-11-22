@@ -21,6 +21,11 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `frozen.py` (Faz 11 S0): dondurulmus M8 politika arsivi `data/marl/frozen/<ad>/` (git disi, ortak, salt okunur) ve
   `verify_archive` (dosya SHA + `params_sha` + on kayit listesi). ANA venv (torch tembel import; BenchMARL yok). `state_digest`
   TEK tanim burada; `m3_runner` ithal eder. Arsiv ustune yazilmaz; gunluk is (S4) her calismadan once dogrular.
+- `forward_job.py` (Faz 11 S4): gunluk is `run_daily` (arsiv dogrula -> S1 panel -> marj kapsami -> defter); ANA venv. Defter deposu
+  `data/marl/forward/m8/ledger/` (state.json atomik + rows.csv yalniz eklenir, `%.17g` yaz / `round_trip` oku). Depo YALNIZ ilk
+  ileri gun (2026-11-23) panelde olunca kurulur (S6 eki §3). Idempotent ve bosluk doldurma bit-es KALMALI (test_marl_forward_job).
+- `margin_coverage.py` (Faz 11 S4): ileri marj kapsami = min(panel son gunu, son kaynak denetimi + 31 gun); denetim kaydi
+  `margin_source_checks.json` (git'te, ELLE eklenir; aylik). `limit_down_gaps(verified_until=None)` varsayilani sabit (ortam/M8).
 - `sim_ledger.py` (Faz 11 S3): sanal para defteri, ANA venv. Ortamin AYNI cekirdegi (`step_fractional`, `fill_prices` +
   `limit_down_gaps`, `project`, A8 rf); politika `FrozenPolicy` TEK gozlemle, kural `rule_baselines` ile ayni karar. 2026
   penceresi 72/72 M8 serisiyle bit-es (`scripts/marl/s3_parity.py`). `env.py`/`rule_series` muhasebesi degisirse parite
@@ -29,7 +34,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   (`data/bist` CSV'si OKUNMAZ; uygulama onu gunceller). Panel her seferinde bastan kurulur ve onceki panelle bit-es denetlenir;
   ileri satirlar append-only (`data/marl/forward/m8/rows.csv`). Kapanis capraz denetimi NEDENSEL getiri kurali (m8-v1 merkezi
   medyani ileriye bakar, ileri veride KULLANMA). rf ileri deponun kendi kopyasindan; ortak risk_free.csv'ye yazma.
-  Guncelleme `scripts/marl/forward_panel_m8.py --update`. Marj kapsami (`PRICE_MARGIN_VERIFIED_UNTIL`) uzatilmadan ileri gun defterde hata.
+  Guncelleme `scripts/marl/forward_panel_m8.py --update` (gunluk is bunu cagirir). Ileri gun marj kapsami `margin_coverage` (S4).
 - `frozen_policy.py` (Faz 11 S2): dondurulmus politikanin sade ileri gecisi, ANA venv (duz torch; BenchMARL/TorchRL YOK).
   `FrozenPolicy(dizin).act(obs[N, d])` = egitimdeki deterministik eylem, 72/72 bit-es (`scripts/marl/s2_parity.py`). TEK
   gozlemle cagir: toplu cagri float32 toplama sirasini degistirir (S-agr ~5e-6). Ag yapisi egitim kodundan kopya oldugu
@@ -70,6 +75,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   kontrol noktasiz kosuyla bit-es KALMALI); `eval_fold_m8.py` testi YALNIZ secilen noktayla BIR KEZ okur, cikti varsa
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
+- `python tests/test_marl_forward_job.py` (4, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler)
 - `python tests/test_marl_sim_ledger.py` (4, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi)
 - `python tests/test_marl_forward_panel.py` (4, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, append + B0 + mutasyon)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)

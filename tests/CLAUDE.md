@@ -112,6 +112,11 @@ python tests/test_marl_core.py            # Faz 10/M2 saf cekirdek: logit siniri
                                            #          listeleme kilidi B0, satis engeli (taban acilis; maske B0, K5 bekcisi, v0.7 donem bagimli marj), gozlem B0 + mutasyon + K2 bit-es, panel, M8 m8-v1 veri duzeltmesi, M8 secim kurali rl_folds paritesi (63, ~5 sn; ana venv)
 python tests/test_marl_baselines.py         # Faz 10/M8 A4 kural portfoyleri (marl/rule_baselines.py): Ledoit-Wolf sklearn paritesi, uzun-yalniz min-var SLSQP,
                                            #          HRP kosegende ters varyans, (e) kesilmis panelle ayni agirlik (gercek panel 2021), ay basi dengeleme (7, ~2 sn; ana venv)
+python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_job.py) + marj kapsami (marl/margin_coverage.py): kapsam kurali,
+                                           #          ilk ileri gun yokken depo yok, her gun = 4 gun bosluk sonrasi = tek seferde = dogrudan defter (bit-es),
+                                           #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri (4, ~10 sn; ana venv, ag yok)
+python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
+                                           #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali (4, ~10 sn)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
                                            #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi (4, ~4 sn; ana venv, torch)

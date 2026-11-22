@@ -147,6 +147,8 @@ Fark günlük getiri ölçeğinde küçük, ama sıfır değil. Nihai backtest'l
 
     Alt Pazar, YİP ve PÖİP genel kuralla zaten %10; bu yüzden panelin 30 hissesi pazar üyeliğinden bağımsız olarak %10'a tabidir. **Kapsam sınırı:** duyuru arşivi tek tek taranmadı. Belge zinciri, ara dönemde başlayıp biten geçici bir marj duyurusunu tek başına dışlamaz (bitmiş bir duyuru dipnotta görünmez). Bu boşluğu veri denetimi kapatır.
 
+    **İleri günler (Faz 11 S4, 2026-11-22).** M8 sonrası ileri veri için kapsam sabitten değil, `marl/margin_coverage.py`'den gelir: kapsam = min(ileri panelin son günü, son tarihli kaynak denetimi + 31 gün). Kaynak denetimleri `marl/margin_source_checks.json`'da (git'te; ilk kayıt 2026-11-20, yukarıdaki kaynaklar). Veri denetimi S1 gün kapısıdır: açılış ya da kapanış ±%10,5 dışındaki gün panele yazılmaz. `accounting.limit_down_gaps(dates, verified_until=None)`: None = `PRICE_MARGIN_VERIFIED_UNTIL` (ortam ve M8 davranışı değişmedi, bit-eş); kapsam geriye gitmez. Takvim değişikliği bildiren denetim kapsamı durdurur. Plan `phase-11-integration-plan.md` §3.5.
+
     **Veri denetimi** (`scripts/marl/price_limit_audit_m8.py` → `measurements/phase10-m8/price_limit_audit.json`; betik `88be7ff`'te commit'lendi, koşu temiz ağaçta; performans okunmadı). Oran Xₜ/Cₜ₋₁, X = açılış, yüksek, düşük, kapanış. 2021–2026'nın her yılında kapanışlar ±%9,5–10,5'te yığılıyor (±%10 duvarı). ±%20 döneminde 67 kapanış ±%10,5–20,5 aralığında; 2021+'da açıklanan iki küme dışında hiç yok:
     - 2023-02-15 (30 hücre): 8 Şubat 2023 işlemlerinin tamamı iptal edildi (Borsa İstanbul KAP açıklaması; [Habertürk, 08/02/2023](https://www.haberturk.com/son-dakika-haberi-borsa-5-gun-kapali-kalacak-bugunku-islemler-iptal-3563788-ekonomi)), baz fiyat 7 Şubat kapanışı. Ona göre 30 hissenin kapanışı 1,0983–1,1000, yani tam tavan: %10'un doğrudan sınaması.
     - 2022-12-19 (7 hücre): 2022-12-16 satırı kısmi gün kaydı (hacim, komşu 10 seansın medyanının 0,29 katı). İki günlük oran ≤ 1,2096 < 1,10² = 1,21.
@@ -536,6 +538,7 @@ Paket istemin içinde verildi (`review-panel.md`). Maliyet: hakem-rl ~33 bin tok
 
 ## Versiyon geçmişi
 
+- **v0.11 (2026-11-22):** §2.5 ileri günler için marj kapsamı düzeneği (Faz 11 S4; `marl/margin_coverage.py`, `limit_down_gaps(verified_until=)`); varsayılan davranış değişmedi.
 - **v0.10 (2026-11-20):** §6.1 KARAR (kullanıcı): `m8-v1` uygulandı (`marl/panel_fix.py`, `prepare_panel_m2.py --data-fix m8-v1`; varsayılan hat M2 paneliyle bit-eş). `test_marl_core` 62.
 - **v0.9 (2026-11-20):** §6.1 M8 paneli ikinci kaynakla denetlendi (İş Yatırım; `measurements/phase10-m8/cross_source_audit.json`): kesik gün çubukları, SKBNK'nin yanlış günden düzeltilmiş iki bedelli artırımı, 2023-02-08 iptal seansı. Düzeltme önerisi `m8-v1` kullanıcı kararını bekliyor. Kod davranışı değişmedi.
 - **v0.8 (2026-11-20):** §2.5 fiyat marjı kapsamı 2021+'ya uzatıldı (M8 engel 1a; kullanıcı onayı): takvime yeni giriş yok, `PRICE_MARGIN_VERIFIED_UNTIL` 2026-11-09; birincil kaynak Borsa İstanbul 2020/20 sayılı duyuru; veri denetimi `measurements/phase10-m8/price_limit_audit.json`. Panel 2021+ için açık veri maddeleri (2023-02-08 iptal edilen seans, 2022-12-16 kısmi gün, SKBNK) listelendi. `test_marl_core` 61.
