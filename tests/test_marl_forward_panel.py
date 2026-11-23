@@ -138,8 +138,18 @@ if have_src:
         pd.concat([base, ext]).to_csv(rfc)
         a3 = FP.build_arrays(SRC, fwd, rf_csv=rfc)
         a2 = FP.build_arrays(SRC, fwd[fwd['date'] < days[-1]], rf_csv=rfc)
+        # Gunluk is onceki gunleri rows.csv'den geri okur: yaz -> oku -> yeniden kur, bellekteki kurulumla bit-es olmali
+        # (2026-11-23 bulgusu: varsayilan read_csv 1 ULP saptirdi, check_prefix ilk gercek gunu reddetti).
+        rpath = os.path.join(tmp, 'rows.csv')
+        fwd[fwd['date'] < days[-1]].to_csv(rpath, index=False)
+        a2_csv = FP.build_arrays(SRC, FP.read_rows(rpath), rf_csv=rfc)
+        a2_lossy = FP.build_arrays(SRC, pd.read_csv(rpath, dtype={'date': str}), rf_csv=rfc)
     p3 = FP.check_prefix(a3, REF)
     p23 = FP.check_prefix(a3, a2)
+    rt_ok = FP.check_prefix(a3, a2_csv)['new_rows'] == 1
+    rt_ok &= raises(lambda: FP.check_prefix(a3, a2_lossy))   # bekci varsayilan ayristiricinin kaybini yakaliyor
+    check("4a. rows.csv yaz/oku (round_trip) sonrasi yeniden kurulum bit-es; varsayilan read_csv'nin 1 ULP kaybi "
+          "check_prefix'te yakalaniyor", rt_ok)
     last = fwd[fwd['date'] == days[-1]].set_index('symbol')['close'].reindex(a3['symbols']).to_numpy()
     ok4 = p3['new_rows'] == 3 and p23['new_rows'] == 1 and np.array_equal(a3['close'][-1], last)
     ok4 &= np.isfinite(a3['rsi'][-3:]).all() and np.isfinite(a3['adx'][-3:]).all() and np.isfinite(a3['rf'][-3:]).all()

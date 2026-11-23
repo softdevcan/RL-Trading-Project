@@ -125,8 +125,8 @@ python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
                                            #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi; S5 tam sayi mod (5, ~5 sn; ana venv, torch)
 python tests/test_marl_forward_panel.py     # Faz 11/S1 M8 ileri paneli (marl/forward_panel.py): sifir satirla panel_m8 bit-es (rf dahil), zincir
-                                           #          (temettu, kesik cubuk yamasi, %1 esik), gun kapisi sebepleri, 3 sentetik gun: onceki satirlar bit-es + B0 +
-                                           #          mutasyon + marj kapsami hatasi (4, ~15 sn; ana venv, ag yok)
+                                           #          (temettu, kesik cubuk yamasi, %1 esik), gun kapisi sebepleri, rows.csv yaz/oku (round_trip) bit-es + varsayilan read_csv kaybi yakalanir, 3 sentetik gun: onceki satirlar bit-es + B0 +
+                                           #          mutasyon + marj kapsami hatasi (5, ~15 sn; ana venv, ag yok)
 python tests/test_marl_frozen.py            # Faz 11/S0 dondurulmus M8 arsivi (marl/frozen.py): kur + dogrula, tek bayt / agirlik degisimi
                                            #          (params_sha) / on kayit listesi farki yakalanir; gercek arsiv varsa 72/72; S2 sade ileri gecis (marl/frozen_policy.py)
                                            #          her kol turunden 6 politika venv-marl referansiyla bit-es + gat maskesi mutasyonu (referans varsa) (4, ~25 sn; ana venv, torch)

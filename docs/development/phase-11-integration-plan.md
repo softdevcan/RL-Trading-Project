@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.9 · 2026-11-22 · S0–S5 ve S7 bitti; S6 eki v0.3 + okuma betiği hazır, dondurma kullanıcı onayı bekliyor
+**Sürüm:** v0.10 · 2026-11-23 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,15 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.9 İlk gerçek günlük çalışma bulgusu (2026-11-23; `tests/test_marl_forward_panel.py` 5)
+
+- **Ne oldu.** 2026-11-23 21:30 TRT ilk gerçek ileri gün çalışmasında panel güncellemesi `check_prefix` bekçisinde durdu: "ileri panel önceki satırları değiştirdi". Defter kurulmadı (`baslamadi`), hiçbir dosya yazılmadı; bekçi tasarlandığı gibi çalıştı.
+- **Neden.** `scripts/marl/forward_panel_m8.py` önceki ileri satırları `rows.csv`'den pandas'ın varsayılan float ayrıştırıcısıyla okuyordu. Bu ayrıştırıcı son basamakta (1 ULP) sapabiliyor: 2026-11-10..20 arasındaki 9 seansta 12–69 hücre, en büyük fark 6,8e-13 (CCI), fiyatlarda 5,7e-14. Geçmiş 3.364 satır etkilenmedi. 2026-11-22'deki ikinci çalışmada yeni gün olmadığı için panel yeniden kurulmamış, hata ilk yeni günde görüldü.
+- **Doğrulama (salt okuma, dosya yazmadan).** Aynı `rows.csv` `float_precision='round_trip'` ile okununca yeniden kurulan panel diskteki panelle 10 dizide bit-eş (fark 0).
+- **Düzeltme.** `marl/forward_panel.py::read_rows` (round_trip) tek okuma yolu; S4 defteri zaten `round_trip` okuyordu (`forward_job.py`). Davranış değişikliği yok: diskteki panel ve satırlar aynı, yalnız geri okuma kayıpsız.
+- **Test boşluğu kapandı.** S1 test 4 ileri satırları bellekten veriyordu; CSV'ye yazma ve geri okuma yolu denenmiyordu. Yeni kontrol 4a: yaz → `read_rows` → yeniden kurulum bit-eş; varsayılan `read_csv` ile aynı yol `check_prefix`'te hata veriyor (bekçinin bu kaybı yakaladığının kanıtı).
+- **Ek (S6) ile ilişki.** Okuma kuralları ve pencere değişmedi; defter deposu yine ilk ileri gün panelde olunca, etiketten sonra kurulur.
 
 ### 3.8 S7 sonucu (2026-11-22; `tests/test_paper_execution.py` 4)
 
@@ -299,6 +308,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.10 (2026-11-23):** İlk gerçek günlük çalışmada `rows.csv` geri okuma 1 ULP kaybı prefix bekçisinde yakalandı (§3.9); `read_rows` round_trip, test 4a. Davranış değişmedi.
 - **v0.9 (2026-11-22):** S7 bitti (§3.8): "Uygula" ertesi açılışta (K-F11-5), canlı gözlem uyarıları (K13; canlı karar price_stats'ı kullanmıyor bulgusu, açık ürün işi). K-F11-1..6 kullanıcı kararı yazıldı.
 - **v0.8 (2026-11-22):** S5 bitti (§3.7): simülasyon panosu, aynı pencere karşılaştırması, kol ort. ± std, ürün portföyü tam lot (K-F11-1, -2, -6 önerileri); `orders.step_integer` (ortam ve defter aynı fonksiyon).
 - **v0.7 (2026-11-22):** S6 eki v0.3 (hakem Kabul) + okuma betiği (öz-test 9/9); dondurma onayı bekliyor.
