@@ -113,6 +113,13 @@ def load_source(dest: str = SOURCE):
 # ---------------------------------------------------------------------------------------------------------------------
 # Panel kurulumu
 # ---------------------------------------------------------------------------------------------------------------------
+def read_rows(path: str) -> pd.DataFrame:
+    """rows.csv'yi kayipsiz oku. pandas varsayilan float ayristiricisi son basamakta (1 ULP) sapabilir; o zaman
+    yeniden kurulan panel onceki satirlarla bit-es olmaz ve `check_prefix` her yeni gunu reddeder (2026-11-23 ilk
+    gercek gun bulgusu, plan §3.9). to_csv en kisa geri-donuslu yazimi kullanir; round_trip ile okuma tam aynisini verir."""
+    return pd.read_csv(path, dtype={'date': str}, float_precision='round_trip')
+
+
 def rows_frame(rows: pd.DataFrame, columns) -> pd.DataFrame:
     """rows.csv (date, symbol, OHLCV, ...) -> kaynak df bicimi ((symbol, date) indeks, kaynak sutunlari; gostergeler NaN)."""
     if rows is None or not len(rows):

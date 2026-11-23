@@ -36,7 +36,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   yeniden kosulur. `LedgerState` JSON gidis-donusu kayipsiz; kaldigi yerden devam tam kosuyla bit-es KALMALI (S4).
 - `forward_panel.py` (Faz 11 S1): M8 ileri paneli, ANA venv (data/ import eder). Dondurulmus kaynak `data/marl/frozen/m8-source/`
   (`data/bist` CSV'si OKUNMAZ; uygulama onu gunceller). Panel her seferinde bastan kurulur ve onceki panelle bit-es denetlenir;
-  ileri satirlar append-only (`data/marl/forward/m8/rows.csv`). Kapanis capraz denetimi NEDENSEL getiri kurali (m8-v1 merkezi
+  ileri satirlar append-only (`data/marl/forward/m8/rows.csv`; YALNIZ `forward_panel.read_rows` ile oku: varsayilan `read_csv` 1 ULP saptirir, prefix bekcisi reddeder). Kapanis capraz denetimi NEDENSEL getiri kurali (m8-v1 merkezi
   medyani ileriye bakar, ileri veride KULLANMA). rf ileri deponun kendi kopyasindan; ortak risk_free.csv'ye yazma.
   Guncelleme `scripts/marl/forward_panel_m8.py --update` (gunluk is bunu cagirir). Ileri gun marj kapsami `margin_coverage` (S4).
 - `frozen_policy.py` (Faz 11 S2): dondurulmus politikanin sade ileri gecisi, ANA venv (duz torch; BenchMARL/TorchRL YOK).
@@ -81,7 +81,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `python tests/test_marl_core.py` (63, ana venv)
 - `python tests/test_marl_forward_job.py` (4, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler)
 - `python tests/test_marl_sim_ledger.py` (5, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi, S5 tam sayi mod)
-- `python tests/test_marl_forward_panel.py` (4, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, append + B0 + mutasyon)
+- `python tests/test_marl_forward_panel.py` (5, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, rows.csv yaz/oku round_trip bit-es, append + B0 + mutasyon)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)
 - `python scripts/marl/analyze_forward_m8.py --self-test` (9, ana venv; S6 ileri veri okumasi; kural ek `phase-11-m8-forward-annex.md`, koda ustun)

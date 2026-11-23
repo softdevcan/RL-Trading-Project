@@ -98,7 +98,7 @@ def update(as_of: datetime) -> dict:
     panel_path = os.path.join(root, FP.PANEL_FWD)
     rows_path = os.path.join(root, FP.ROWS)
     ref = PN.load_npz(panel_path if os.path.exists(panel_path) else FP.PANEL_M8)
-    old_rows = pd.read_csv(rows_path, dtype={'date': str}) if os.path.exists(rows_path) else None
+    old_rows = FP.read_rows(rows_path) if os.path.exists(rows_path) else None
     symbols = [str(s) for s in ref['symbols']]
     anc = FP.anchors(ref)
     d_prev = str(ref['dates'][-1])
