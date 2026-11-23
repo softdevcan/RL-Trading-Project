@@ -119,7 +119,7 @@ python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_
                                            #          ilk ileri gun yokken depo yok, her gun = 4 gun bosluk sonrasi = tek seferde = dogrudan defter (bit-es),
                                            #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri (4, ~10 sn; ana venv, ag yok)
 python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
-                                           #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + /dash/simulation
+                                           #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + lot tablosu muhasebesi (lot x kapanis + nakit = deger) + /dash/simulation
                                            #          sayfa ve callback'leri (5, ~20 sn; arsiv yoksa 5 atlanir)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;

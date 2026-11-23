@@ -123,6 +123,12 @@ if HAVE:
         ok5 &= c.get("/api/marl/forward/view", params={"window": "baska"}).status_code == 422
         rp = c.get("/api/marl/forward/product", params={"sid": "rule/ew", "capital": 100000, "window": "test2026"})
         ok5 &= rp.status_code == 200 and len(rp.json().get('dates', [])) == 207
+        pj = rp.json() if rp.status_code == 200 else {}
+        hold = pj.get('holdings') or []
+        # Lot tablosu muhasebesi: sum(lot * kapanis) + nakit = tam sayi defterinin son degeri; adetler tam sayi, eksi yok
+        ok5 &= bool(hold) and all(isinstance(h['lots'], int) and h['lots'] >= 0 for h in hold)
+        ok5 &= abs(sum(h['market_value'] for h in hold) + pj['cash_integer_tl'] - pj['value_integer'][-1]) \
+            <= 1e-6 * pj['value_integer'][-1]
         ok5 &= c.get("/api/marl/forward/product", params={"sid": "rule/ew", "capital": 0}).status_code == 422
         ok5 &= c.get("/api/marl/forward/product", params={"sid": "policy/x/s1", "capital": 1e5,
                                                            "window": "test2026"}).status_code == 422
@@ -132,8 +138,10 @@ if HAVE:
         rprod = fire(c, "sim-product-out.children", [1], ["policy/M-none/s201", 100000, "test2026"])
         ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and rview.status_code == 200
         ok5 &= len(fig.get("data", [])) == 5 and rprod.status_code == 200    # M-none bant (2) + ort. + 2 kural
+        ok5 &= "Eldeki hisseler" in rprod.text
     check(f"5. S5: view 401/200 (207 seans, M-none N=12), gecersiz anahtar/pencere 422, urun 200 / sermaye 0 / "
-          f"bilinmeyen strateji 422; pano sayfasi + grafik + urun callback'i 200", ok5)
+          f"bilinmeyen strateji 422; lot tablosu: lot x kapanis + nakit = tam sayi deger; pano sayfasi + grafik + "
+          f"urun callback'i (lot tablosuyla) 200", ok5)
 else:
     print("[ATLANDI] 5. dondurulmus arsiv yok")
 

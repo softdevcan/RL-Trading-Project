@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.10 · 2026-11-23 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9
+**Sürüm:** v0.11 · 2026-11-23 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,14 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.10 Ürün portföyü lot tablosu (2026-11-23; `tests/test_marl_forward_api.py` 5)
+
+- **Kullanıcı isteği:** hangi hissede kaç lot olduğu tabloda görünsün.
+- **Sayfa** (`/dash/simulation`, Ürün portföyü → Hesapla): kartların altında "Eldeki hisseler" tablosu. Sütunlar: hisse, lot (1 lot = 1 pay), kapanış, piyasa değeri, tam lot ağırlığı, kesirli defterin aynı günkü ağırlığı, son gün işlemi (alınan + / satılan − adet); altta nakit ve toplam satırı.
+- **Veri:** `forward_views.product` yanıtına `holdings`, `holdings_date`, `cash_integer_tl`, `cash_weight_frac` eklendi. `sim_ledger.step` tam sayı modunun gün satırı eldeki adedi ve nakdi taşıyor; kesirli yol ve defter deposu değişmedi.
+- **Sınırlılık:** fiyatlar yfinance düzeltilmiş kapanış (marl/CLAUDE.md: tam sayı modunda lot/fiyat seviyesi iddiası yok). Ürün portföyü anlık hesaptır, ileri teste girmez.
+- **Test:** S5 kontrolüne muhasebe özdeşliği eklendi: Σ lot × kapanış + nakit = tam sayı defterinin son değeri (göreli 1e-6), adetler tam sayı ve negatif değil; ürün callback'i tabloyu içeriyor.
 
 ### 3.9 İlk gerçek günlük çalışma bulgusu (2026-11-23; `tests/test_marl_forward_panel.py` 5)
 
@@ -308,6 +316,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.11 (2026-11-23):** Ürün portföyü lot tablosu (§3.10; kullanıcı isteği).
 - **v0.10 (2026-11-23):** İlk gerçek günlük çalışmada `rows.csv` geri okuma 1 ULP kaybı prefix bekçisinde yakalandı (§3.9); `read_rows` round_trip, test 4a. Davranış değişmedi.
 - **v0.9 (2026-11-22):** S7 bitti (§3.8): "Uygula" ertesi açılışta (K-F11-5), canlı gözlem uyarıları (K13; canlı karar price_stats'ı kullanmıyor bulgusu, açık ürün işi). K-F11-1..6 kullanıcı kararı yazıldı.
 - **v0.8 (2026-11-22):** S5 bitti (§3.7): simülasyon panosu, aynı pencere karşılaştırması, kol ort. ± std, ürün portföyü tam lot (K-F11-1, -2, -6 önerileri); `orders.step_integer` (ortam ve defter aynı fonksiyon).

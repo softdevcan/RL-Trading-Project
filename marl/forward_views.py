@@ -146,9 +146,22 @@ def product(sid: str, capital: float, window: str = 'forward') -> dict:
     _, it = SL.run(mk, FJ.make_strategy(sid), SL.LedgerState.start(r0, mk.N, capital, integer=True), te)
     vf, vi = np.array([r['value'] for r in fr]), np.array([r['value'] for r in it])
     dR = np.array([a['R'] - b['R'] for a, b in zip(it, fr)])
+    # Lot tablosu: son gun kapanisinda eldeki adet (1 lot = 1 pay), kapanis fiyati, piyasa degeri, agirlik; kesirli
+    # defterin ayni gunku agirligi ve son gunku alim/satim (adet farki). Fiyatlar yfinance duzeltilmis kapanis.
+    h_last = np.asarray(it[-1]['holdings'], dtype=np.int64)
+    h_prev = np.asarray(it[-2]['holdings'], dtype=np.int64) if len(it) > 1 else np.zeros_like(h_last)
+    close = np.asarray(mk.px['close'][te], dtype=np.float64)
+    w_int, w_frac = np.asarray(it[-1]['w'][1:]), np.asarray(fr[-1]['w'][1:])
+    holdings = [{'symbol': s.replace('.IS', ''), 'lots': int(h_last[i]), 'close': float(close[i]),
+                 'market_value': float(h_last[i] * close[i]), 'weight': float(w_int[i]), 'weight_frac': float(w_frac[i]),
+                 'traded_lots': int(h_last[i] - h_prev[i])}
+                for i, s in enumerate(mk.symbols) if h_last[i] != 0 or h_prev[i] != 0 or w_frac[i] > 1e-4]
+    holdings.sort(key=lambda x: -x['market_value'])
     return {'sid': sid, 'label': ARM_LABELS.get(sid, sid), 'window': window, 'capital': capital,
             'dates': [r['date'] for r in fr], 'value_fractional': vf.tolist(), 'value_integer': vi.tolist(),
             'final_diff_pct': float(vi[-1] / vf[-1] - 1), 'tracking_error_ann': float(dR.std(ddof=1) * np.sqrt(252))
             if dR.size > 1 else 0.0, 'mean_weight_gap': float(np.mean([r['weight_gap'] for r in it])),
             'n_orders': int(sum(r['n_orders'] for r in it)), 'last_cash_integer': float(it[-1]['cash_weight']),
-            'last_weights_integer': {s: float(w) for s, w in zip(mk.symbols, it[-1]['w'][1:]) if w > 1e-9}}
+            'last_weights_integer': {s: float(w) for s, w in zip(mk.symbols, it[-1]['w'][1:]) if w > 1e-9},
+            'holdings_date': str(it[-1]['date']), 'holdings': holdings, 'cash_integer_tl': float(it[-1]['cash']),
+            'cash_weight_frac': float(fr[-1]['w'][0])}
