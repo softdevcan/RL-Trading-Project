@@ -564,7 +564,15 @@ SB3 → PettingZoo+RLlib geçişinde:
 
 ### 6.2 Makale Hedefleri
 
-Tezin modüler yapısı **3-4 bağımsız makale** çıkartma potansiyeline sahip:
+> **v0.3.2 (2026-11-23, TASLAK): bu bölümün yerini [publication-plan.md](publication-plan.md) aldı.** M8 kanıtıyla (Faz 10 planı §9) aşağıdaki v0.3 planı artık uyuşmuyor:
+> - Makale 1'in çerçevesi kanıtla desteklenmiyor. G2 M8'de sınanmadı, iletişim karşıtlığında fark gözlenmedi. Yerine P1 geliyor: ön kayıtlı MARL ↔ SARL ↔ kural portföyleri karşılaştırması.
+> - Makale 2 = P3; ön koşul B5 + B10.
+> - Makale 3 askıya alınması önerildi (K-Y5).
+> - Makale 4, P1'in Türkçe sürümü olduğu için çift yayın riski taşıyordu. Yerine P4b geliyor: BIST'te ML/DRL Türkçe derlemesi.
+>
+> Mekân taraması ve kullanıcı kararları (K-Y1..K-Y6) o belgede. Aşağıdaki metin v0.3 olarak tarihsel kayıttır.
+
+Tezin modüler yapısı **3-4 bağımsız makale** çıkartma potansiyeline sahip (v0.3):
 
 **Makale 1 (Ana — flagship):**
 - Başlık: *"Prediction-Augmented Communicating Agents for Portfolio Management in Emerging Markets"*
@@ -678,6 +686,7 @@ Bu belge **yaşayan bir dokümandır**:
   - §2.5'e M8 kanıt notu eklendi.
   - G1 dar ifadesi M8 kanıtına göre daraltıldı: "ilk" kaldırıldı, sonuç (gat ↔ self farkı gözlenmedi) ve kapsam (attn kolu yok) yazıldı.
   - Kaynak tabanı ve diğer hükümler değişmedi.
+- **v0.3.2 (2026-11-23, TASLAK):** §6.2 makale hedeflerinin yerini [publication-plan.md](publication-plan.md) v0.1 aldı. Bu belge M8 kanıtına göre bir yayın portföyü (P1–P4b, B1–B2), Türkiye merkezli dergi ve konferans taraması ve karar bekleyen konuları (K-Y1..K-Y6) içeriyor. §6.1 tez bölüm planının yeniden çerçevelenmesi ayrı bir karar (K-Y4). G1–G5 hükümleri değişmedi.
 
 ---
 
