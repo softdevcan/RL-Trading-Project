@@ -146,6 +146,41 @@ def _pm(m, s, fmt):
     return fmt(m) + ("" if s is None else f" ± {abs(s) * (100 if fmt is _pct else 1):.2f}" + ("%" if fmt is _pct else ""))
 
 
+def _tl(x):
+    return f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _holdings_table(r: dict):
+    """Urun portfoyunun son gun kapanisindaki lot tablosu (hisse, adet, fiyat, deger, agirlik, son gun islemi)."""
+    rows_in = r.get("holdings") or []
+    if not rows_in:
+        return None
+    rows = [{"symbol": h["symbol"], "lots": f"{h['lots']:,}".replace(",", "."), "close": _tl(h["close"]),
+             "value": _tl(h["market_value"]), "w": f"{h['weight'] * 100:.2f}%",
+             "wf": f"{h['weight_frac'] * 100:.2f}%",
+             "trade": "—" if h["traded_lots"] == 0 else f"{h['traded_lots']:+,}".replace(",", ".")}
+            for h in rows_in]
+    total = sum(h["market_value"] for h in rows_in) + r["cash_integer_tl"]
+    rows.append({"symbol": "Nakit", "lots": "", "close": "", "value": _tl(r["cash_integer_tl"]),
+                 "w": f"{r['last_cash_integer'] * 100:.2f}%", "wf": f"{r['cash_weight_frac'] * 100:.2f}%", "trade": ""})
+    rows.append({"symbol": "Toplam", "lots": "", "close": "", "value": _tl(total), "w": "100.00%", "wf": "100.00%",
+                 "trade": ""})
+    table = DataTable(
+        columns=[{"name": "Hisse", "id": "symbol"}, {"name": "Lot", "id": "lots"},
+                 {"name": "Kapanis (TL)", "id": "close"}, {"name": "Piyasa degeri (TL)", "id": "value"},
+                 {"name": "Agirlik (lot)", "id": "w"}, {"name": "Kesirli agirlik", "id": "wf"},
+                 {"name": "Son gun islem (lot)", "id": "trade"}],
+        data=rows, sort_action="none", **TABLE_STYLES,
+        style_cell_conditional=numeric_columns("lots", "close", "value", "w", "wf", "trade"),
+        style_data_conditional=tone_rules_formatted("trade") + [
+            {"if": {"filter_query": '{symbol} = "Toplam" || {symbol} = "Nakit"'}, "fontWeight": "600"}],
+    )
+    foot = html.P(f"{r['holdings_date']} kapanisi itibariyla · {r['label']} · 1 lot = 1 pay · fiyatlar duzeltilmis "
+                  "kapanis (yfinance) · son gun islem: o gunun acilisinda alinan (+) / satilan (−) adet",
+                  className="small mt-1 mb-3", style={"color": TEXT_MUTED})
+    return html.Div([html.H6("Eldeki hisseler", className="mt-2"), table, foot])
+
+
 def register_callbacks(app):
     @app.callback(
         Output("sim-chart", "figure"), Output("sim-table", "children"), Output("sim-note", "children"),
@@ -225,7 +260,7 @@ def register_callbacks(app):
             dbc.Col(create_metric_card("Ort. agirlik acigi", f"{r['mean_weight_gap'] * 100:.2f}%", "yuvarlama"), md=3),
             dbc.Col(create_metric_card("Emir sayisi", str(r["n_orders"]), "tam sayi lot"), md=3),
         ], className="mb-2")
-        return html.Div([cards, dcc.Graph(figure=fig, config={"displayModeBar": False})])
+        return html.Div([cards, _holdings_table(r), dcc.Graph(figure=fig, config={"displayModeBar": False})])
 
     @app.callback(
         Output("sim-run-msg", "children"), Output("sim-poll", "disabled", allow_duplicate=True),
