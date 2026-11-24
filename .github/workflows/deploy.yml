@@ -96,7 +96,7 @@ jobs:
           username: ${{ secrets.VDS_USER }}
           key: ${{ secrets.VDS_SSH_KEY }}
           port: ${{ secrets.VDS_PORT || 22 }}
-          source: docker-compose.yml,docker-compose.prod.yml,.env.production.example,scripts/deploy/vds_deploy.sh
+          source: docker-compose.yml,docker-compose.prod.yml,docker-compose.proxy.yml,.env.production.example,scripts/deploy/vds_deploy.sh
           target: ${{ vars.VDS_PATH || '/opt/rltrading' }}
 
       - name: Dagit (saglik denetimi gecmezse onceki surume doner)

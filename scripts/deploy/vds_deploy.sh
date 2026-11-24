@@ -15,6 +15,10 @@ STATE=.deploy-state
 export BIND_ADDR="${BIND_ADDR:-127.0.0.1}"
 IMAGE="${IMAGE:-ghcr.io/softdevcan/rl-trading-project}"
 COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.prod.yml)
+# Ters vekil konteyneri (Nginx Proxy Manager vb.) kullaniliyorsa uygulama onun agina da baglanir (docker-compose.proxy.yml).
+if [ -f .env ] && grep -Eq '^[[:space:]]*PROXY_NETWORK[[:space:]]*=[[:space:]]*[^[:space:]]' .env; then
+  COMPOSE+=(-f docker-compose.proxy.yml)
+fi
 
 state() { [ -f "$STATE" ] && sed -n "s/^$1=//p" "$STATE" | tail -1 || true; }
 prev="$(state IMAGE_TAG)"

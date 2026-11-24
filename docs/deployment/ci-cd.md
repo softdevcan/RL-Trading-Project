@@ -57,7 +57,15 @@ Piyasa verisi named volume'lerde boş başlar; uygulama kendisi çeker.
 
 ### 2.2 Cloudflare
 
-Varsayım: **Cloudflare Tunnel** (`cloudflared`) VDS'de çalışıyor. Public hostname `rl.softdevcan.com` →
+**Bu VDS'de (2026-11-24): Cloudflare DNS → Nginx Proxy Manager (konteyner, 80/443) → uygulama.**
+- `.env`'e `PROXY_NETWORK=<NPM'in Docker ağı>` yazılır; betik `docker-compose.proxy.yml`'i ekler ve uygulama o ağa
+  da bağlanır. Ağ adı: `docker inspect nginx-proxy-manager-app-1 -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'`.
+- NPM → Proxy Hosts → Add: domain `rl.softdevcan.com`, scheme `http`, forward hostname `rltrading`, port `8000`,
+  "Websockets Support" açık; SSL sekmesinde sertifika (diğer sitelerdeki gibi).
+- Host portu yine `127.0.0.1:8000`'e bağlı kalır (sunucuda `curl` için); dışarıdan yalnız NPM üzerinden erişilir.
+- `X-Forwarded-For`'u NPM yazar; Cloudflare'in eklediği istemci IP'si başta kalır.
+
+Diğer yol, **Cloudflare Tunnel** (`cloudflared` host'ta servis): public hostname `rl.softdevcan.com` →
 servis `http://localhost:8000` (sunucuda 8000 doluysa `.env`'de `HOST_PORT` ve tünel hedefi birlikte değişir).
 Aynı VDS'de başka projeler varsa mevcut tünele yeni bir hostname eklemek yeterli; yeni tünel gerekmez.
 - Betik portu `127.0.0.1:8000`'e bağlar (`BIND_ADDR`); uygulama dışarıya yalnız tünelden açılır. Giriş
