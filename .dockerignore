@@ -3,6 +3,10 @@
 # (the Gymnasium trading environment) and must stay in the image — do not
 # add it here.
 venv/
+# Faz 10 MARL ortami (egitim; uretim kodu ona bagimli degil, K9) ve MARL arastirma verisi (dondurulmus arsiv, ileri
+# defter ~2,8 GB; git disi, ortak arastirma alani). Imaja girmez; ileri veri isi Docker'da kapali (MARL_FORWARD_AUTORUN).
+venv-marl/
+data/marl/
 .git/
 .gitignore
 

@@ -15,11 +15,13 @@ services:
     image: rltrading:latest
     container_name: rltrading
 
-    # Host:container. Put a reverse proxy (nginx/Caddy) in front for HTTPS —
-    # see docs/deployment/docker.md. To keep it off the public internet and
-    # only reachable by the proxy, change to "127.0.0.1:8000:8000".
+    # Host:container. Put a reverse proxy (nginx/Caddy) or Cloudflare Tunnel in
+    # front for HTTPS — see docs/deployment/docker.md, ci-cd.md. BIND_ADDR
+    # varsayilani 0.0.0.0 (yerel kullanim degismez); VDS dagitim betigi
+    # (scripts/deploy/vds_deploy.sh) 127.0.0.1 verir: port yalniz tunel/vekile
+    # acik kalir, X-Forwarded-For disaridan sahte gelemez.
     ports:
-      - "8000:8000"
+      - "${BIND_ADDR:-0.0.0.0}:8000:8000"
 
     # Secrets and config at runtime — never baked into the image.
     env_file:

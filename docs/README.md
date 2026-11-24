@@ -8,6 +8,7 @@ Bu klasör, **RL Trading System** projesinin tüm dokümantasyonunu içerir. Faz
 docs/
 ├── guides/            # Kullanım kılavuzları (aktif)
 ├── development/       # Geliştirme notları ve mimari (aktif)
+├── deployment/        # Sunucu kurulumu (Docker) ve CI/CD
 ├── thesis/            # Tez vizyonu, kapsam ve yol haritası (aktif)
 ├── reference/         # Harici referans materyaller (PDF'ler, tez)
 └── archive/           # Tamamlanmış faz/sprint dokümanları (arşiv)
@@ -23,6 +24,13 @@ Günlük kullanım için başvuru dokümanları:
 - [**ACADEMIC_GUIDE.md**](guides/ACADEMIC_GUIDE.md) — Akademik analiz, metrik hesaplamaları, LaTeX çıktısı
 - [**API_HYPEROPT_GUIDE.md**](guides/API_HYPEROPT_GUIDE.md) — Hiperparametre optimizasyonu (Optuna + RL algoritmaları)
 - [**GPU_PERFORMANCE_GUIDE.md**](guides/GPU_PERFORMANCE_GUIDE.md) — GPU performans testleri ve ipuçları
+
+---
+
+## 🚀 Deployment — Sunucu ve CI/CD
+
+- [**docker.md**](deployment/docker.md) — Docker ile tek sunuculu kurulum: volume'ler, `.env`, modellerin kopyalanması, yedek, HTTPS
+- [**ci-cd.md**](deployment/ci-cd.md) — GitHub Actions → GHCR → VDS (2026-11-24): PR'da imaj + sağlık denetimi, sürüm etiketiyle otomatik dağıtım, sağlıksız sürümde geri dönüş; Cloudflare Tunnel, gizliler, kapsam dışı (M8 defteri yerelde)
 
 ---
 

@@ -1,0 +1,116 @@
+# Dagitim (docs/deployment/ci-cd.md): surum etiketi (v*.*.*) itilince imaj derlenir, GHCR'ye itilir
+# (ghcr.io/softdevcan/rl-trading-project:<etiket> + latest), sonra SSH ile VDS'de scripts/deploy/vds_deploy.sh calisir.
+# Elle: Actions -> Deploy -> Run workflow (etiket girilir; geri donus icin eski etiket).
+#
+# Gerekli: 'production' ortami; gizliler VDS_HOST, VDS_USER, VDS_SSH_KEY (istege bagli VDS_PORT);
+# degisken VDS_PATH (varsayilan /opt/rltrading). Yerel etiketler (m8-forward-annex-v1 gibi) v*.*.* kalibina uymaz.
+name: Deploy
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Dagitilacak surum etiketi (or. v2.24.0)'
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/softdevcan/rl-trading-project
+
+jobs:
+  build:
+    name: Imaj derle + GHCR
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - id: v
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "gecersiz etiket: $TAG"; exit 1; }
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.v.outputs.tag }}
+
+      - name: Etiket app/__init__.py surumuyle ayni mi
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          v=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' app/__init__.py)
+          echo "__version__=$v etiket=$TAG"
+          test "v$v" = "$TAG"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derle ve it
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.v.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.v.outputs.tag }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: VDS'ye dagit
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://rl.softdevcan.com
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.tag }}
+
+      - name: Compose dosyalari ve dagitim betigini kopyala
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT || 22 }}
+          source: docker-compose.yml,docker-compose.prod.yml,.env.production.example,scripts/deploy/vds_deploy.sh
+          target: ${{ vars.VDS_PATH || '/opt/rltrading' }}
+
+      - name: Dagit (saglik denetimi gecmezse onceki surume doner)
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_DIR: ${{ vars.VDS_PATH || '/opt/rltrading' }}
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.VDS_SSH_KEY }}
+          port: ${{ secrets.VDS_PORT || 22 }}
+          envs: TAG,GHCR_USER,GHCR_TOKEN,APP_DIR
+          command_timeout: 15m
+          script: bash "$APP_DIR/scripts/deploy/vds_deploy.sh"
