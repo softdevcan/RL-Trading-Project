@@ -51,6 +51,11 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Imajin kodunun commit'i (imajda git yok). M8 ileri veri cekim kaydi bunu yazar (plan §3.12).
+# CI/Deploy build-arg ile verir; elle derlemede bos kalir.
+ARG GIT_COMMIT=""
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 # Non-root user for security.
 RUN useradd --create-home --uid 10001 appuser
 WORKDIR /app
@@ -69,7 +74,8 @@ COPY --chown=appuser:appuser . .
 # ile acilmaz). Named volume ilk olusurken mount noktasinin sahipligini
 # image'dan devralir; dizin image'da yoksa root:root olusur ve appuser
 # (uid 10001) yazamaz. Bu yuzden hepsi burada olusturulup chown edilir.
-RUN mkdir -p models results logs workspaces \
+# data/marl: Faz 11 M8 ileri veri deposu (VDS'de bind mount, plan §3.12); kod imajdan, veri bagli dizinden.
+RUN mkdir -p models results logs workspaces data/marl \
         data/bist data/gold data/macro data/fundamental \
         data/predictions data/live_trading data/auth \
     && chown -R appuser:appuser /app

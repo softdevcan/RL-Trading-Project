@@ -33,7 +33,7 @@ if grep -Eiq '^[[:space:]]*AUTH_ENABLED[[:space:]]*=[[:space:]]*"?false' .env; t
   echo "AUTH_ENABLED=False ile sunucuya cikilmaz (pano ve API herkese acik kalir)"; exit 1
 fi
 # Konteyner uid 10001 ile calisir; bind mount dizinleri yoksa Docker root:root acar ve uygulama yazamaz.
-mkdir -p models workspaces
+mkdir -p models workspaces data/marl
 chown 10001:10001 workspaces 2>/dev/null || true
 
 if [ -n "${GHCR_TOKEN:-}" ]; then
