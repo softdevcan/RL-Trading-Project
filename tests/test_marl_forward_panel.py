@@ -10,6 +10,8 @@ Kontroller:
   4. Gercek kaynak + 3 sentetik ileri gun: onceki satirlar bit-es, 3 yeni satir; 2 gunluk panel 3 gunlugun basi (B0:
      sonraki gun eklemek oncekileri degistirmez); mutasyon: ileri satir dondurulmus gune duserse ve onceki panelin bir
      degeri degisirse hata. Fiyat marji dogrulanmis kapsam disindaki ileri gun hata verir (sessiz gecmez).
+  5. Is Yatirim cekimi (sahte yanit): eski yanit ve hata yeniden istenir, en yeni yanit saklanir; hep eski / hep hata
+     -> gun kapisi isy_bekleniyor; beklenen gun yoksa tek istek.
 
 ~30 sn.
     python tests/test_marl_forward_panel.py
@@ -164,6 +166,54 @@ if have_src:
           "dondurulmus gune duserse ve onceki deger degisirse hata; marj kapsami disindaki gun hata", ok4)
 else:
     print("[ATLANDI] 4. dondurulmus kaynak yok")
+
+# 5 ---------------------------------------------------------------------------------------------------------------
+# Is Yatirim cekimi (plan §3.11): ayni URL bazen bir onceki gunde biten eski yanit veriyor, bazen zaman asimina dusuyor.
+import importlib.util  # noqa: E402
+import json  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location('forward_panel_m8', os.path.join('scripts', 'marl', 'forward_panel_m8.py'))
+FPM = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(FPM)
+
+
+def isy_body(days):
+    return json.dumps({'ok': True, 'value': [{'HGDG_TARIH': f'{d[8:]}-{d[5:7]}-{d[:4]}', 'HGDG_KAPANIS': 1.0,
+                                              'HG_KAPANIS': 1.0, 'HG_MIN': 1.0, 'HG_MAX': 1.0} for d in days]}).encode()
+
+
+OLD, NEW = isy_body(['2030-01-02']), isy_body(['2030-01-02', '2030-01-03'])
+script = {'A': [OLD, OLD, NEW], 'B': [TimeoutError('askida'), NEW], 'C': [OLD] * 9, 'E': [TimeoutError('x')] * 9}
+calls = {k: [] for k in script}
+
+
+def fake_get(url):
+    code = url.split('hisse=')[1].split('&')[0]
+    calls[code].append(url)
+    r = script[code][len(calls[code]) - 1]
+    if isinstance(r, Exception):
+        raise r
+    return r
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    data, shas, rep = FPM.fetch_isy([f'{c}.IS' for c in script], '2030-01-01', '2030-01-03', tmp, want=D,
+                                    get=fake_get, wait=0)
+    with open(os.path.join(tmp, 'A.json'), 'rb') as fh:
+        saved_a = fh.read()
+ok5 = rep['A.IS']['tries'] == 3 and D in data['A.IS'].index and saved_a == NEW
+ok5 &= '&_=' not in calls['A'][0] and all('&_=' in u for u in calls['A'][1:])     # ilk istek eski URL'yle ayni
+ok5 &= rep['B.IS']['tries'] == 2 and len(rep['B.IS']['errors']) == 1 and D in data['B.IS'].index
+ok5 &= rep['C.IS']['tries'] == FPM.ISY_TRIES and D not in data['C.IS'].index    # hep eski: kapi isy_bekleniyor der
+ok5 &= 'E.IS' not in data and 'E.IS' not in shas and len(rep['E.IS']['errors']) == FPM.ISY_TRIES
+rows5, rep5 = FP.chain_day(D, {s: (A0, 1.0) for s in data},
+                           {s: yfdf([(A0, 1, 1, 1, 1, 1), (D, 1, 1, 1, 1, 1)]) for s in data}, data)
+ok5 &= FP.day_gate(D, A0, rows5, rep5, len(data), rate, late)['reason'] == 'isy_bekleniyor'
+data_p, _, rep_p = FPM.fetch_isy(['A.IS'], '2030-01-01', '2030-01-03', tempfile.mkdtemp(), want=None,
+                                 get=lambda u: NEW, wait=0)
+ok5 &= rep_p['A.IS']['tries'] == 1
+check("5. Is Yatirim cekimi: eski yanit / hata yeniden istenir (yeniden denemede zaman damgasi), en yeni yanit saklanir; "
+      "hep eski ya da hep hata -> gun kapisi isy_bekleniyor; want yoksa tek istek", ok5)
 
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)
