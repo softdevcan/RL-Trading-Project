@@ -19,9 +19,10 @@ services:
     # front for HTTPS — see docs/deployment/docker.md, ci-cd.md. BIND_ADDR
     # varsayilani 0.0.0.0 (yerel kullanim degismez); VDS dagitim betigi
     # (scripts/deploy/vds_deploy.sh) 127.0.0.1 verir: port yalniz tunel/vekile
-    # acik kalir, X-Forwarded-For disaridan sahte gelemez.
+    # acik kalir, X-Forwarded-For disaridan sahte gelemez. HOST_PORT: ayni
+    # sunucuda 8000'i baska proje kullaniyorsa (.env'de, varsayilan 8000).
     ports:
-      - "${BIND_ADDR:-0.0.0.0}:8000:8000"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT:-8000}:8000"
 
     # Secrets and config at runtime — never baked into the image.
     env_file:

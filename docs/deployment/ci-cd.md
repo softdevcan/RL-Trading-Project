@@ -58,7 +58,8 @@ Piyasa verisi named volume'lerde boş başlar; uygulama kendisi çeker.
 ### 2.2 Cloudflare
 
 Varsayım: **Cloudflare Tunnel** (`cloudflared`) VDS'de çalışıyor. Public hostname `rl.softdevcan.com` →
-servis `http://localhost:8000`.
+servis `http://localhost:8000` (sunucuda 8000 doluysa `.env`'de `HOST_PORT` ve tünel hedefi birlikte değişir).
+Aynı VDS'de başka projeler varsa mevcut tünele yeni bir hostname eklemek yeterli; yeni tünel gerekmez.
 - Betik portu `127.0.0.1:8000`'e bağlar (`BIND_ADDR`); uygulama dışarıya yalnız tünelden açılır. Giriş
   hız sınırı `X-Forwarded-For`'a bakar (`app/auth/routes.py::client_ip`); port dışarıya açık olsaydı bu başlık
   sahte gönderilebilirdi.
