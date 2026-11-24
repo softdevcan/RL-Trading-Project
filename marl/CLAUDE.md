@@ -81,7 +81,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `python tests/test_marl_core.py` (63, ana venv)
 - `python tests/test_marl_forward_job.py` (4, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler)
 - `python tests/test_marl_sim_ledger.py` (5, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi, S5 tam sayi mod)
-- `python tests/test_marl_forward_panel.py` (5, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, rows.csv yaz/oku round_trip bit-es, append + B0 + mutasyon)
+- `python tests/test_marl_forward_panel.py` (6, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, rows.csv yaz/oku round_trip bit-es, append + B0 + mutasyon, Is Yatirim eski yanit/hata yeniden istenir)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)
 - `python tests/test_marl_baselines.py` (7, ana venv; M8 A4 kural portfoyleri: LW/SLSQP paritesi, HRP, ileriye bakmama (e), ay basi dengeleme)
 - `python scripts/marl/analyze_forward_m8.py --self-test` (9, ana venv; S6 ileri veri okumasi; kural ek `phase-11-m8-forward-annex.md`, koda ustun)

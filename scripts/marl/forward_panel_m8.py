@@ -59,24 +59,70 @@ def fetch_yf(symbols, start: str, end: str, out_dir: str) -> tuple[dict, dict]:
     return data, shas
 
 
-def fetch_isy(symbols, start: str, end: str, out_dir: str) -> tuple[dict, dict]:
+# Is Yatirim ayni URL'ye istekten istege farkli yanit veriyor: bazi yanitlar bir onceki gunde bitiyor (eski onbellek;
+# 2026-11-24 olcumu, plan §3.11). Beklenen gun yanitta yoksa sembol yeniden istenir (yeniden denemede URL'ye zaman
+# damgasi eklenir). Veri kurali degismez: kabul edilen yanit yine ham haliyle ve SHA'siyla saklanir, kapi ayni.
+ISY_SOCKET_TIMEOUT = 30            # sn, soket islemi basina
+ISY_DEADLINE = 60                  # sn, istek basina toplam (soket zaman asimi her okumada sifirlaniyor)
+ISY_TRIES = 6                      # sembol basina en fazla istek
+ISY_RETRY_WAIT = 3.0               # sn, denemeler arasi
+
+
+def _isy_get(url: str) -> bytes:
+    t0 = time.monotonic()
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    chunks = []
+    with urllib.request.urlopen(req, timeout=ISY_SOCKET_TIMEOUT) as r:
+        while True:
+            b = r.read(65536)
+            if not b:
+                break
+            chunks.append(b)
+            if time.monotonic() - t0 > ISY_DEADLINE:
+                raise TimeoutError(f'toplam sure {ISY_DEADLINE} sn asildi')
+    return b''.join(chunks)
+
+
+def isy_last_date(v: dict) -> str | None:
+    """HisseTekil yanitinin son gunu ('YYYY-MM-DD'); bos yanitta None."""
+    ds = [x['HGDG_TARIH'] for x in v.get('value') or [] if x.get('HGDG_TARIH')]
+    return max(f'{d[6:10]}-{d[3:5]}-{d[0:2]}' for d in ds) if ds else None
+
+
+def fetch_isy(symbols, start: str, end: str, out_dir: str, want: str | None = None,
+              get=_isy_get, wait: float = ISY_RETRY_WAIT) -> tuple[dict, dict, dict]:
+    """Donus (veri, sha, deneme raporu). want: beklenen son gun; yanit bu gunu icermiyorsa ISY_TRIES'a kadar yeniden
+    istenir. Butun denemeler hatali ya da yanitsizsa sembol veride olmaz (kapi 'isy_bekleniyor' der, gun yazilmaz)."""
     from marl import panel_fix as PF
     a = pd.Timestamp(start).strftime('%d-%m-%Y')
     b = pd.Timestamp(end).strftime('%d-%m-%Y')
-    shas = {}
+    shas, report = {}, {}
     for s in symbols:
         code = s.replace('.IS', '')
-        req = urllib.request.Request(ISY_URL.format(s=code, a=a, b=b), headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=120) as r:
-            body = r.read()
-        v = json.loads(body.decode('utf-8'))
-        if not v.get('ok'):
-            raise RuntimeError(f'Is Yatirim {code}: hatali yanit')
+        url = ISY_URL.format(s=code, a=a, b=b)
+        body, last, errors, k = None, None, [], 0
+        for k in range(1, ISY_TRIES + 1):
+            try:
+                raw = get(url if k == 1 else f'{url}&_={int(time.time() * 1000)}')
+                v = json.loads(raw.decode('utf-8'))
+                if not v.get('ok'):
+                    raise RuntimeError('hatali yanit')
+                lt = isy_last_date(v)
+                if body is None or (lt or '') >= (last or ''):
+                    body, last = raw, lt
+                if want is None or (last or '') >= want:
+                    break
+            except Exception as e:  # ag/bicim hatasi: yeniden dene; sonunda yoksa sembol eksik kalir
+                errors.append(f'{type(e).__name__}: {e}'[:120])
+            time.sleep(wait)
+        report[s] = {'tries': k, 'last': last, 'errors': errors}
+        if body is None:
+            continue
         with open(os.path.join(out_dir, f'{code}.json'), 'wb') as fh:
             fh.write(body)
         shas[s] = _sha_bytes(body)
-        time.sleep(1.0)
-    return {s: PF.load_isy(s, cache=out_dir) for s in symbols if shas.get(s)}, shas
+        time.sleep(wait / 3)
+    return {s: PF.load_isy(s, cache=out_dir) for s in symbols if shas.get(s)}, shas, report
 
 
 def fetch_rf(path: str) -> str:
@@ -108,13 +154,15 @@ def update(as_of: datetime) -> dict:
     start = (pd.Timestamp(min(v[0] for v in anc.values())) - timedelta(days=10)).strftime('%Y-%m-%d')
     end = (as_of + timedelta(days=1)).strftime('%Y-%m-%d')
     yf, yf_sha = fetch_yf(symbols, start, end, fdir)
-    isy, isy_sha = fetch_isy(symbols, start, as_of.strftime('%Y-%m-%d'), fdir)
+    cands = sorted({d for y in yf.values() for d in y.index if d > d_prev})
+    today = as_of.strftime('%Y-%m-%d')
+    want = max((d for d in cands if d <= today), default=None)
+    isy, isy_sha, isy_rep = fetch_isy(symbols, start, today, fdir, want=want)
     rf_path = os.path.join(fdir, FP.RF_FILE)
     rf_sha = fetch_rf(rf_path)
     from evaluation.risk_free import load_annual_rate
     rate = load_annual_rate(rf_path)
 
-    cands = sorted({d for y in yf.values() for d in y.index if d > d_prev})
     days, new_rows = [], []
     for d in cands:
         rows, rep = FP.chain_day(d, anc, yf, isy)
@@ -132,7 +180,8 @@ def update(as_of: datetime) -> dict:
     out = {'as_of': as_of.isoformat(timespec='minutes'), 'fetch': stamp, 'commit': git_head(),
            'source_manifest_csv_sha256': src_man['csv_sha256'], 'candidates': cands,
            'days': [{k: v for k, v in g.items() if k != 'symbols_report'} for g in days],
-           'fetch_sha256': {'yf': yf_sha, 'isy': isy_sha, 'rf': rf_sha}}
+           'fetch_sha256': {'yf': yf_sha, 'isy': isy_sha, 'rf': rf_sha},
+           'isy_fetch': {'want': want, 'retried': {s: r for s, r in isy_rep.items() if r['tries'] > 1 or r['errors']}}}
     if new_rows:
         add = pd.DataFrame(new_rows)
         allrows = add if old_rows is None else pd.concat([old_rows, add], ignore_index=True)

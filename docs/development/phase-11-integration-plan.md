@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.11 · 2026-11-23 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10
+**Sürüm:** v0.12 · 2026-11-24 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,14 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.11 İş Yatırım eski yanıt ve zaman aşımı (2026-11-24; `tests/test_marl_forward_panel.py` 6)
+
+- **Ne oldu.** 2026-11-24 seansı 20:46, 21:16 ve 21:46 denemelerinde `isy_bekleniyor` ile durdu. 22:16 denemesinde tek bir İş Yatırım isteği (EKGYO) 120 sn'de zaman aşımına düştü ve bu hata bütün panel güncellemesini düşürdü (log `panel_update.error`, 22:18). Defter 2026-11-23'te kaldı; hiçbir gün yanlış yazılmadı, kapı tasarlandığı gibi durdu.
+- **Neden (ham yanıtlar `data/marl/forward/m8/fetch/<zaman>/`).** Gecikme sembol sembol yayımlama değil. Aynı URL istekten isteğe farklı yanıt veriyor: kimi yanıt 24 Kasım'ı içeriyor, kimi bir önceki günde bitiyor (ARCLK 20:46'da var, 21:16'da yok, 21:46'da var; TSKB tersi). Üç denemenin birleşiminde 30 sembolün 23'ünde 24 Kasım en az bir kez geldi. Kapı tek denemede 30/30 istediği için bu düzende neredeyse hiç açılmaz. Ayrıca tek isteğin hatası yeniden denenmeden bütün işi düşürüyordu; `urlopen(timeout=120)` her okumada sıfırlandığı için istek başına toplam süre sınırı da yoktu.
+- **Düzeltme (`scripts/marl/forward_panel_m8.py::fetch_isy`).** Beklenen gün (yfinance'ta bugüne kadarki son aday seans) yanıtta yoksa sembol en çok 6 kez, 3 sn arayla yeniden istenir; yeniden denemede URL'ye zaman damgası eklenir (ilk istek eskisiyle aynı). İstek başına toplam süre 60 sn. Hata ya da hep eski yanıt sembolü eksik bırakır (kapı `isy_bekleniyor` der); önceden bir hata bütün işi düşürüyordu. Denemeler log'a `isy_fetch` olarak yazılır.
+- **Veri kuralı değişmedi.** Kaynak, %1 çapraz denetim, kapı ve ham yanıtın SHA'sıyla saklanması aynı; yalnız eski önbellekten gelen yanıt reddediliyor. S6 eki okuma kuralları ve pencere değişmedi.
+- **Seçenekler (kullanıcıyla 2026-11-24).** Başka kaynak ya da yalnız yfinance, dondurulmuş çapraz denetim kuralını pencere içinde değiştirirdi (sapma beyanı gerekir); önce bu düzeltme denendi.
 
 ### 3.10 Ürün portföyü lot tablosu (2026-11-23; `tests/test_marl_forward_api.py` 5)
 
@@ -316,6 +324,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.12 (2026-11-24):** İş Yatırım eski yanıt / zaman aşımı (§3.11): `fetch_isy` beklenen günü yeniden ister, istek başına toplam süre sınırı; veri kuralı aynı. Test 5.
 - **v0.11 (2026-11-23):** Ürün portföyü lot tablosu (§3.10; kullanıcı isteği).
 - **v0.10 (2026-11-23):** İlk gerçek günlük çalışmada `rows.csv` geri okuma 1 ULP kaybı prefix bekçisinde yakalandı (§3.9); `read_rows` round_trip, test 4a. Davranış değişmedi.
 - **v0.9 (2026-11-22):** S7 bitti (§3.8): "Uygula" ertesi açılışta (K-F11-5), canlı gözlem uyarıları (K13; canlı karar price_stats'ı kullanmıyor bulgusu, açık ürün işi). K-F11-1..6 kullanıcı kararı yazıldı.
