@@ -177,7 +177,8 @@ def step(mk: Market, strategy, st: LedgerState) -> dict:
                 'turnover': r['turnover'], 'cost_frac': r['commission'] / v0, 'cash_weight': float(r['w'][0]),
                 'value': st.value, 'n_sell_blocked': int(r['projection'].get('n_sell_blocked', 0)),
                 'w': r['w'].copy(), 'weight_gap': float(r['weight_gap']),
-                'n_orders': int(sum(d['executed'] for d in r['decisions']))}
+                'n_orders': int(sum(d['executed'] for d in r['decisions'])),
+                'holdings': r['holdings'].copy(), 'cash': float(r['cash'])}     # urun portfoyu lot tablosu (S5)
     res = A.step_fractional(st.w, u, g_on, g_day, tradable, rf, mk.cost, W.Constraints(), None,
                             no_sell)
     st.w = res.w_next
