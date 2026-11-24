@@ -57,6 +57,13 @@ jobs:
           echo "oturumsuz /api/marl/forward/status -> $code"
           test "$code" = 401
 
+      - name: M8 ileri veri isinin dosyalari imajda mi (Faz 11 §3.12)
+        run: |
+          docker exec rlt sh -c 'for f in scripts/marl/forward_panel_m8.py scripts/marl/handover_parity.py \
+            docs/development/measurements/phase10-m8/m8_reading.json marl/margin_source_checks.json; do
+            test -f "$f" || { echo "imajda yok: $f"; exit 1; }; done; test -d data/marl && echo "dosyalar tamam"'
+          docker exec rlt python -c "import importlib.util as u; s=u.spec_from_file_location('m','scripts/marl/forward_panel_m8.py'); m=u.module_from_spec(s); s.loader.exec_module(m); c=m.git_head(); print('commit:', c); assert c == '${{ github.sha }}'"
+
       - name: Konteyner gunlugu
         if: always()
         run: docker logs rlt 2>&1 | tail -60 || true
