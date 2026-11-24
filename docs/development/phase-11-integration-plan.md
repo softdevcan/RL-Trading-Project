@@ -80,6 +80,12 @@
 - **İmaj.** Günlük işin okuduğu `scripts/marl/forward_panel_m8.py`, `m8_reading.json` ve devir betiği imaja alınır (`.dockerignore`). İmajda git yok: çekim kaydındaki commit derlemede gömülen `GIT_COMMIT`'ten (önceden `git` yoksa iş çökerdi). VDS'de `./data/marl` bind mount (`docker-compose.prod.yml`), sahibi uid 10001.
 - **Veri kuralı ve ek (S6) değişmedi.** Politikalar, kapı, %1 çapraz denetim, okuma kuralları ve pencere aynı; hesaplama ortamı değişikliği okumada beyan edilir.
 - **Açık maddeler.** (a) Yedek yönü tersine döndü: defterin aslı VDS'de; E: diskine yedek VDS'den çekilerek alınmalı. (b) Aylık marj denetimi kaydı (`marl/margin_source_checks.json`) imajın içinde: her denetimden sonra yeni sürüm dağıtılır (sonraki ufuk 2026-12-21).
+- **Devir sonucu (2026-11-25 00:50 TRT; `measurements/phase11-handover/`).**
+  - Kopya: devir kümesi 1.045 dosya, her dosyanın SHA-256'sı iki tarafta aynı (`local_before.json`, `vds_after.json` → `digest`). Arşiv doğrulaması VDS'de 72/72.
+  - Defter paritesi VDS'de **`fark_var`** (kabul ölçütü bit-eşlik; sağlanmadı). Ortam: yerel Python 3.12.5 / torch 2.6.0+cu124 / Windows; VDS Python 3.13.18 / torch 2.9.0+cpu / Linux; numpy ikisinde 2.2.6. Fark yalnız dikkatli iki MARL kolunda (M-gat, M-self; 152 satırın 53'ü): portföy değeri en çok 3,9e-4 TL (100.000 TL'de ~4e-9 göreli), günlük getiri `R` 2,6e-9, devir 2,5e-7. M-none, S-agr, S-esm, boş kol, 1/N ve al-tut bit-eş; min-varyans ve HRP ≤ 3e-11 TL.
+  - Politika çıktısı (`logits_compare.json`, `handover_parity.py --logits-out`; her politika iki makinede aynı iki gözlemle): en büyük `loc` farkı 1,64e-7 (M-gat), 1,49e-7 (M-self), diğer kollar 0; eylem farkı ≤ 1,3e-6. S2 kabul ölçütü (logit farkı ≤ 1e-6) VDS'de de sağlanıyor.
+  - **Kullanıcı kararı (2026-11-25): beyanla devir.** 2026-11-23 ve 2026-11-24 seansları yerelde yazıldığı gibi kalır; 2026-11-25'ten itibaren VDS yazar. **Sapma beyanı (ileri veri okumasına girer):** 126 seanslık pencerenin ilk 2 seansı ile kalanı farklı hesaplama ortamında üretildi; ortam farkı dikkatli iki kolda float32 son basamak düzeyinde (yukarıdaki büyüklükler), karar kuralı, politika ağırlıkları, veri ve maliyet aynı. Ortamı yerel ile eşitlemek (temel imaj Python 3.12 / torch 2.6) Windows ↔ Linux işlemci kütüphanesi farkı yüzünden bit-eşliği garanti etmediği için seçilmedi.
+  - VDS `.env`: `MARL_FORWARD_WRITER_ID=vds`, `MARL_FORWARD_AUTORUN=True` (v2.25.1). Yerel kopyada `WRITER=vds`: yerel iş `yazar_degil` döner.
 
 ### 3.11 İş Yatırım eski yanıt ve zaman aşımı (2026-11-24; `tests/test_marl_forward_panel.py` 6)
 
