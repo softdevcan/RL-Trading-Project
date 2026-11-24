@@ -1,63 +1,21 @@
 # syntax=docker/dockerfile:1
+#
+# Uygulama imaji = bagimlilik temeli (docker/base.Dockerfile: Python, torch CPU, requirements.txt) + KOD.
+# Temel imaj yalniz requirements.txt ya da base.Dockerfile degisince yeniden derlenir ve etiketi icerik ozetidir
+# (scripts/deploy/base_tag.sh). Bu yuzden bir surum guncellemesinde sunucu yalniz birkac MB'lik kod katmanini indirir;
+# ~3 GB'lik kutuphane katmani bir kez iner (docs/deployment/ci-cd.md §6).
+#
+# CI/Deploy BASE_IMAGE'i build-arg ile verir. Yerelde:
+#   docker build -f docker/base.Dockerfile -t rltrading-base:local .
+#   docker build --build-arg BASE_IMAGE=rltrading-base:local -t rltrading:local .
+ARG BASE_IMAGE=rltrading-base:local
+FROM ${BASE_IMAGE}
 
-# ── Stage 1: builder ────────────────────────────────────────────────────────
-# Compile/download all wheels into a virtualenv here so the runtime image
-# doesn't carry build toolchains.
-FROM python:3.13-slim AS builder
-
-# Build deps needed by some scientific wheels (numba/llvmlite, catboost, etc.)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        gcc \
-        g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Isolated venv keeps the runtime copy simple: just grab /opt/venv.
-ENV VIRTUAL_ENV=/opt/venv
-RUN python -m venv "$VIRTUAL_ENV"
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# Install torch first from the CPU-only index so we never pull the multi-GB
-# CUDA build. Pin matches requirements.txt (torch==2.9.0).
-RUN pip install --no-cache-dir \
-        --extra-index-url https://download.pytorch.org/whl/cpu \
-        torch==2.9.0
-
-# Remaining deps. torch is already satisfied so pip skips it. The CPU index is
-# passed again so any torch-adjacent resolution also stays CPU.
-COPY requirements.txt .
-RUN pip install --no-cache-dir \
-        --extra-index-url https://download.pytorch.org/whl/cpu \
-        -r requirements.txt
-
-# ── Stage 2: runtime ────────────────────────────────────────────────────────
-FROM python:3.13-slim AS runtime
-
-# libgomp1: OpenMP runtime required by lightgbm/xgboost/numba at import time.
-# curl: used by the container HEALTHCHECK.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgomp1 \
-        curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy the ready-built venv from the builder stage.
-ENV VIRTUAL_ENV=/opt/venv
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Never buffer stdout/err (clean docker logs); no .pyc writes.
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
-
-# Imajin kodunun commit'i (imajda git yok). M8 ileri veri cekim kaydi bunu yazar (plan §3.12).
-# CI/Deploy build-arg ile verir; elle derlemede bos kalir.
+# Imajin kodunun commit'i (imajda git yok). M8 ileri veri cekim kaydi bunu yazar (Faz 11 plan §3.12).
+# CI/Deploy build-arg ile verir; elle derlemede bos kalir. Yalniz kod katmanlarini etkiler.
 ARG GIT_COMMIT=""
 ENV GIT_COMMIT=${GIT_COMMIT}
 
-# Non-root user for security.
-RUN useradd --create-home --uid 10001 appuser
 WORKDIR /app
 
 # Application source only — data/models/results/logs come in as volumes at
@@ -75,10 +33,13 @@ COPY --chown=appuser:appuser . .
 # image'dan devralir; dizin image'da yoksa root:root olusur ve appuser
 # (uid 10001) yazamaz. Bu yuzden hepsi burada olusturulup chown edilir.
 # data/marl: Faz 11 M8 ileri veri deposu (VDS'de bind mount, plan §3.12); kod imajdan, veri bagli dizinden.
+# Kod zaten COPY --chown ile appuser'in; burada yalniz yeni dizinler (tum /app'i chown -R etmek katmani sisirirdi).
 RUN mkdir -p models results logs workspaces data/marl \
         data/bist data/gold data/macro data/fundamental \
         data/predictions data/live_trading data/auth \
-    && chown -R appuser:appuser /app
+    && chown appuser:appuser models results logs workspaces data data/marl \
+        data/bist data/gold data/macro data/fundamental \
+        data/predictions data/live_trading data/auth
 
 USER appuser
 

@@ -25,6 +25,7 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/softdevcan/rl-trading-project
+  BASE_REPO: ghcr.io/softdevcan/rl-trading-base
 
 jobs:
   build:
@@ -56,30 +57,41 @@ jobs:
           echo "__version__=$v etiket=$TAG"
           test "v$v" = "$TAG"
 
-      - uses: docker/setup-buildx-action@v3
-
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Derle ve it
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          build-args: |
-            GIT_COMMIT=${{ steps.sha.outputs.sha }}
-          tags: |
-            ${{ env.IMAGE }}:${{ steps.v.outputs.tag }}
-            ${{ env.IMAGE }}:latest
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.v.outputs.tag }}
-            org.opencontainers.image.revision=${{ steps.sha.outputs.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Bagimlilik temeli (docker/base.Dockerfile) yalniz requirements.txt ya da base.Dockerfile degisince derlenir;
+      # etiketi icerik ozeti. Varsa oldugu gibi kullanilir: kutuphane katmani surumden surume AYNI kalir ve sunucu
+      # onu bir kez indirir (docs/deployment/ci-cd.md §6).
+      - name: Temel imaj (yoksa derle ve it)
+        run: |
+          base="${BASE_REPO}:$(bash scripts/deploy/base_tag.sh)"
+          echo "BASE=$base" >> "$GITHUB_ENV"
+          if docker manifest inspect "$base" >/dev/null 2>&1; then
+            echo "temel imaj var: $base"
+          else
+            echo "temel imaj yok, derleniyor: $base"
+            docker build -f docker/base.Dockerfile -t "$base" .
+            docker push "$base"
+          fi
+
+      - name: Uygulama imajini derle ve it
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+          SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          docker build --build-arg BASE_IMAGE="$BASE" --build-arg GIT_COMMIT="$SHA" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.version="$TAG" \
+            --label org.opencontainers.image.revision="$SHA" \
+            --label rltrading.base="$BASE" \
+            -t "$IMAGE:$TAG" -t "$IMAGE:latest" .
+          docker push "$IMAGE:$TAG"
+          docker push "$IMAGE:latest"
+          docker history --format '{{.Size}} {{.CreatedBy}}' "$IMAGE:$TAG" | head -6
 
   deploy:
     name: VDS'ye dagit

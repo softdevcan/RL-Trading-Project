@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -25,18 +26,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      # Temel imaj (docker/base.Dockerfile) GHCR'de varsa cekilir; yoksa (requirements.txt degisen PR) burada derlenir,
+      # ITILMEZ (itme yalniz Deploy'da).
+      - name: Temel imaj
+        run: |
+          base="ghcr.io/softdevcan/rl-trading-base:$(bash scripts/deploy/base_tag.sh)"
+          echo "BASE=$base" >> "$GITHUB_ENV"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin || true
+          if docker pull -q "$base"; then
+            echo "temel imaj GHCR'den: $base"
+          else
+            echo "temel imaj yok, yerelde derleniyor: $base"
+            docker build -f docker/base.Dockerfile -t "$base" .
+          fi
 
       - name: Derle
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          load: true
-          build-args: |
-            GIT_COMMIT=${{ github.sha }}
-          tags: rltrading:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker build --build-arg BASE_IMAGE="$BASE" --build-arg GIT_COMMIT="${{ github.sha }}" -t rltrading:ci .
 
       - name: Ac ve /health bekle
         run: |
