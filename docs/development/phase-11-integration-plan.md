@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.12 · 2026-11-24 · S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.13 · 2026-11-25 · İleri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,17 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.12 İleri veri deposunun VDS'ye devri (2026-11-25; `tests/test_marl_forward_job.py` 5, `scripts/marl/handover_parity.py`)
+
+- **Kullanıcı kararı (2026-11-25).** Defterin tek yazarı VDS olur: sunucu sürekli açık, pano her yerden erişilir. Önceki karar (2026-11-24, `docs/deployment/ci-cd.md` §4: "şimdilik yerelde") bununla değişti.
+- **Neden ayrı paket.** Ön kayıtlı ileri testin verisi pencere içinde makine değiştiriyor. İki koşul: (1) iki makine aynı anda yazmamalı (iki ayrı defter), (2) yeni makine aynı günler için aynı sayıyı üretmeli.
+- **Tek yazar (`marl/forward_job.writer_check`).** `data/marl/forward/m8/WRITER` dosyası varsa içindeki kimlik `MARL_FORWARD_WRITER_ID` ile aynı değilse iş hiçbir dosyaya (defter, günlük, kilit) dokunmadan `yazar_degil` döner. Devirde iki kopyaya da `WRITER=vds` yazılır; VDS `.env`'i `MARL_FORWARD_WRITER_ID=vds`, `MARL_FORWARD_AUTORUN=True`. Yereldeki kopya salt okunur ayna olur.
+- **Devir paritesi (`scripts/marl/handover_parity.py`).** Diskteki defteri aynı ileri panel ve dondurulmuş arşivden geçici dizinde baştan kurar; her satırı (`written_at` hariç) ve durum JSON'unu karşılaştırır. Gerçek depoya ve günlüğe dokunmaz. Yerelde 2026-11-25 (2 seans, 76 strateji, 152 satır) `bit_es`; mutasyon (bir `R` değerinde 1e-17) `fark_var`. Kabul: VDS imajında (torch 2.9.0 CPU; yerel 2.6.0) aynı betik `bit_es` der; demezse devir durur, fark ve ortam bu bölüme yazılır.
+- **Taşınan küme (~160 MB).** `frozen/m8-2026` (72 politika), `frozen/m8-source`, `forward/m8` (panel, defter, çekimler, günlük), `panel_m8.npz`. Kopya her dosyanın SHA-256'sıyla iki tarafta karşılaştırılır (`--digest`). Eğitim koşuları (`results/marl_m8`) taşınmaz.
+- **İmaj.** Günlük işin okuduğu `scripts/marl/forward_panel_m8.py`, `m8_reading.json` ve devir betiği imaja alınır (`.dockerignore`). İmajda git yok: çekim kaydındaki commit derlemede gömülen `GIT_COMMIT`'ten (önceden `git` yoksa iş çökerdi). VDS'de `./data/marl` bind mount (`docker-compose.prod.yml`), sahibi uid 10001.
+- **Veri kuralı ve ek (S6) değişmedi.** Politikalar, kapı, %1 çapraz denetim, okuma kuralları ve pencere aynı; hesaplama ortamı değişikliği okumada beyan edilir.
+- **Açık maddeler.** (a) Yedek yönü tersine döndü: defterin aslı VDS'de; E: diskine yedek VDS'den çekilerek alınmalı. (b) Aylık marj denetimi kaydı (`marl/margin_source_checks.json`) imajın içinde: her denetimden sonra yeni sürüm dağıtılır (sonraki ufuk 2026-12-21).
 
 ### 3.11 İş Yatırım eski yanıt ve zaman aşımı (2026-11-24; `tests/test_marl_forward_panel.py` 6)
 
@@ -324,6 +335,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.13 (2026-11-25):** İleri veri deposunun VDS'ye devri (§3.12; kullanıcı kararı): tek yazar `WRITER`, devir paritesi betiği, imajda günlük iş dosyaları ve `GIT_COMMIT`.
 - **v0.12 (2026-11-24):** İş Yatırım eski yanıt / zaman aşımı (§3.11): `fetch_isy` beklenen günü yeniden ister, istek başına toplam süre sınırı; veri kuralı aynı. Test 5.
 - **v0.11 (2026-11-23):** Ürün portföyü lot tablosu (§3.10; kullanıcı isteği).
 - **v0.10 (2026-11-23):** İlk gerçek günlük çalışmada `rows.csv` geri okuma 1 ULP kaybı prefix bekçisinde yakalandı (§3.9); `read_rows` round_trip, test 4a. Davranış değişmedi.

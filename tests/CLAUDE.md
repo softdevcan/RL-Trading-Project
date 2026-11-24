@@ -117,7 +117,7 @@ python tests/test_marl_baselines.py         # Faz 10/M8 A4 kural portfoyleri (ma
                                            #          HRP kosegende ters varyans, (e) kesilmis panelle ayni agirlik (gercek panel 2021), ay basi dengeleme (7, ~2 sn; ana venv)
 python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_job.py) + marj kapsami (marl/margin_coverage.py): kapsam kurali,
                                            #          ilk ileri gun yokken depo yok, her gun = 4 gun bosluk sonrasi = tek seferde = dogrudan defter (bit-es),
-                                           #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri (4, ~10 sn; ana venv, ag yok)
+                                           #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri, tek yazar WRITER (5, ~10 sn; ana venv, ag yok)
 python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
                                            #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + lot tablosu muhasebesi (lot x kapanis + nakit = deger) + /dash/simulation
                                            #          sayfa ve callback'leri (5, ~20 sn; arsiv yoksa 5 atlanir)

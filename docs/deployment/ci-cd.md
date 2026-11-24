@@ -105,9 +105,10 @@ Settings → Environments → `production` (isteğe bağlı: "Required reviewers
 
 ## 4. Kapsam dışı ve açık maddeler
 
-- **M8 ileri veri defteri VDS'de çalışmaz** (kullanıcı kararı 2026-11-24). İmajda `data/marl` yok
-  (`.dockerignore`), `MARL_FORWARD_AUTORUN` varsayılan kapalı; VDS panosunda simülasyon sayfası arşiv yok der.
-  Defteri VDS'ye taşımak ayrı paket: 2,8 GB arşiv kopyası + SHA doğrulaması + tek yazar devri (yerelde iş kapanır).
+- **M8 ileri veri defteri (güncelleme 2026-11-25):** kullanıcı kararıyla tek yazarı VDS oldu (Faz 11 planı §3.12).
+  Veri `/opt/rltrading/data/marl` (bind mount, sahibi uid 10001; imaja girmez), `.env`'de
+  `MARL_FORWARD_AUTORUN=True` ve `MARL_FORWARD_WRITER_ID=vds`. Yerel kopya salt okunur ayna (`WRITER` dosyası).
+  Aylık marj denetimi kaydı imajda: denetimden sonra yeni sürüm etiketi.
 - **Python testleri CI'da yok.** Çoğu git dışı veriye bağlı (panel, arşiv); veri gerektirmeyen alt küme temiz
   bir klonda ölçülüp ayrı iş olarak eklenecek.
 - SSH yalnız Cloudflare Access arkasındaysa §2.3 notu.

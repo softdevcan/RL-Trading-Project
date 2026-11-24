@@ -134,7 +134,12 @@ def fetch_rf(path: str) -> str:
 
 
 def git_head() -> str:
-    return subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+    """Calisan kodun commit'i. Docker imajinda git ve .git yok: derlemede gomulen GIT_COMMIT kullanilir (plan §3.12)."""
+    try:
+        out = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
+    except (FileNotFoundError, OSError):
+        out = ''
+    return out or os.environ.get('GIT_COMMIT', '')
 
 
 def update(as_of: datetime) -> dict:

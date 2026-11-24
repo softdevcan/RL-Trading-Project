@@ -10,3 +10,8 @@ services:
   rltrading:
     image: ${IMAGE:-ghcr.io/softdevcan/rl-trading-project}:${IMAGE_TAG:-latest}
     pull_policy: missing
+    volumes:
+      # Faz 11 M8 ileri veri deposu (plan phase-11-integration-plan.md §3.12): dondurulmus arsiv (frozen/), ileri panel
+      # ve defter (forward/m8/), panel_m8.npz. Ortak arastirma alani; tek yazari bu sunucu (.env'de
+      # MARL_FORWARD_AUTORUN=True, MARL_FORWARD_WRITER_ID = forward/m8/WRITER icerigi). Sahibi uid 10001.
+      - ./data/marl:/app/data/marl

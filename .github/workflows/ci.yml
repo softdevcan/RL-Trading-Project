@@ -32,6 +32,8 @@ jobs:
         with:
           context: .
           load: true
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           tags: rltrading:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

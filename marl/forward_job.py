@@ -209,10 +209,29 @@ def _log(entry: dict) -> None:
         fh.write(json.dumps({'kind': 'ledger', **entry}, ensure_ascii=False, default=str) + '\n')
 
 
+WRITER = 'WRITER'                     # ileri deponun tek yazari (plan §3.12): dosyadaki kimlik = MARL_FORWARD_WRITER_ID
+WRITER_ENV = 'MARL_FORWARD_WRITER_ID'
+
+
+def writer_check(root: str | None = None) -> dict:
+    """Depoda WRITER dosyasi varsa yalniz ayni kimlikle calisan surec yazar (iki makine iki ayri defter uretmesin).
+    Dosya yoksa (devirden once, testler) serbest."""
+    p = os.path.join(root or FP.FWD_ROOT, WRITER)
+    if not os.path.exists(p):
+        return {'ok': True, 'writer': None}
+    with open(p, encoding='utf-8') as fh:
+        want = fh.read().strip()
+    have = os.environ.get(WRITER_ENV, '').strip()
+    return {'ok': have == want, 'writer': want, 'this': have or None}
+
+
 def run_daily(as_of: datetime | None = None, update_panel: bool = True, store_dir: str = LEDGER_DIR) -> dict:
     """Panel -> karar -> defter. as_of TRT (None = simdi). Ag: yalniz update_panel=True iken (S1 cekimi)."""
     from zoneinfo import ZoneInfo
     as_of = as_of or datetime.now(ZoneInfo('Europe/Istanbul'))
+    wc = writer_check()
+    if not wc['ok']:   # baska makinenin deposu: hicbir dosyaya (gunluk dahil) dokunulmaz
+        return {'as_of': as_of.isoformat(timespec='minutes'), 'status': 'yazar_degil', 'writer': wc}
     rep = {'as_of': as_of.isoformat(timespec='minutes'), 'started': datetime.now().isoformat(timespec='seconds')}
     with JobLock(os.path.join(FP.FWD_ROOT, LOCK)):
         try:

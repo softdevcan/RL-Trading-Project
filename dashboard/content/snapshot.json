@@ -426,9 +426,9 @@
   },
   {
    "ad": "Sunucu dağıtımı (VDS, CI/CD)",
-   "durum": "kuruldu, ilk dağıtım bekliyor (2026-11-24)",
+   "durum": "çalışıyor (v2.24.0, 2026-11-25)",
    "sinif": "planli",
-   "siradaki": "VDS gizlileri + Cloudflare Tunnel, ilk sürüm etiketi; CI'a veri gerektirmeyen Python testleri"
+   "siradaki": "Devir paritesi VDS'de bit_es; yedeğin VDS'den çekilmesi; CI'a veri gerektirmeyen Python testleri"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -483,7 +483,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "37201d196c05f18244db9bc7d80ff0e75591df40e2d7ba254bca970b5ee81d7e",
+   "tablo_sha256": "b0fa54fe6d4cb2c52e9f1a8b9b5b1d9455c8807f680968e279ec7eb76aca668c",
    "uretim_commit": null
   }
  }

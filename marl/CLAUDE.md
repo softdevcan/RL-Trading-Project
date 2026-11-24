@@ -28,6 +28,9 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
 - `forward_job.py` (Faz 11 S4): gunluk is `run_daily` (arsiv dogrula -> S1 panel -> marj kapsami -> defter); ANA venv. Defter deposu
   `data/marl/forward/m8/ledger/` (state.json atomik + rows.csv yalniz eklenir, `%.17g` yaz / `round_trip` oku). Depo YALNIZ ilk
   ileri gun (2026-11-23) panelde olunca kurulur (S6 eki §3). Idempotent ve bosluk doldurma bit-es KALMALI (test_marl_forward_job).
+  TEK YAZAR (plan §3.12, 2026-11-25'ten VDS): `forward/m8/WRITER` icerigi = `MARL_FORWARD_WRITER_ID` olmayan surec hicbir
+  dosyaya dokunmaz ('yazar_degil'). Yereldeki kopya salt okunur ayna; makine devrinde once `scripts/marl/handover_parity.py`
+  (defteri gecici dizinde bastan kurar, bit-es ister) iki makinede kosulur. Imajda git yok: commit `GIT_COMMIT` build-arg'indan.
 - `margin_coverage.py` (Faz 11 S4): ileri marj kapsami = min(panel son gunu, son kaynak denetimi + 31 gun); denetim kaydi
   `margin_source_checks.json` (git'te, ELLE eklenir; aylik). `limit_down_gaps(verified_until=None)` varsayilani sabit (ortam/M8).
 - `sim_ledger.py` (Faz 11 S3): sanal para defteri, ANA venv. Ortamin AYNI cekirdegi (`step_fractional`, `fill_prices` +
@@ -79,7 +82,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   kontrol noktasiz kosuyla bit-es KALMALI); `eval_fold_m8.py` testi YALNIZ secilen noktayla BIR KEZ okur, cikti varsa
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
-- `python tests/test_marl_forward_job.py` (4, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler)
+- `python tests/test_marl_forward_job.py` (5, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler, tek yazar WRITER)
 - `python tests/test_marl_sim_ledger.py` (5, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi, S5 tam sayi mod)
 - `python tests/test_marl_forward_panel.py` (6, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, rows.csv yaz/oku round_trip bit-es, append + B0 + mutasyon, Is Yatirim eski yanit/hata yeniden istenir)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)

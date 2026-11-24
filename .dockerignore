@@ -79,7 +79,12 @@ scripts/
 # Docker'da son eslesen kural kazanir, bu yuzden dislanan dizinden tek dosya
 # geri alinabilir (git'ten farkli).
 !scripts/create_admin.py
+# Faz 11 M8 ileri veri isi imajda calisir (plan §3.12): panel guncelleme betigi, devir paritesi betigi
+# ve on kayit listesi (forward_policies_2026) imaja girer.
+!scripts/marl/forward_panel_m8.py
+!scripts/marl/handover_parity.py
 docs/
+!docs/development/measurements/phase10-m8/m8_reading.json
 *.ipynb
 .ipynb_checkpoints/
 reviews/

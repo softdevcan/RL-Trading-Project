@@ -11,6 +11,7 @@ Kontroller:
   3. Idempotent: ayni gun ikinci calisma dosyalara dokunmaz (SHA ayni).
   4. Kurtarma ve bekciler: rows.csv'ye fazladan satir (cokme) atilir ve sonuc ayni; strateji kumesi farki, panelin
      geri gitmesi ve baslangic satirinin degismesi hata.
+  5. Tek yazar (plan §3.12): depoda WRITER varsa farkli kimlik 'yazar_degil' doner, depoya dokunmaz.
 
 ~30 sn.
     python tests/test_marl_forward_job.py
@@ -171,6 +172,33 @@ rows.head(len(rows) - 2).to_csv(os.path.join(short, FJ.ROWS), index=False, float
 ok4 &= raises(lambda: FJ.load_store(short))
 check("4. cokme kurtarma (fazla satir atilir, sonuc ayni); strateji kumesi farki, panel geri gitmesi, baslangic "
       "degisimi, eksik satir hata", ok4)
+
+# 5 ---------------------------------------------------------------------------------------------------------------
+# Tek yazar (plan §3.12): depoda WRITER varsa yalniz ayni MARL_FORWARD_WRITER_ID ile yazilir; digeri hicbir dosyaya
+# (gunluk ve kilit dahil) dokunmadan 'yazar_degil' doner.
+from marl import forward_panel as FP5  # noqa: E402
+
+wdir = tempfile.mkdtemp()
+old_root, old_env = FP5.FWD_ROOT, os.environ.pop(FJ.WRITER_ENV, None)
+try:
+    FP5.FWD_ROOT = wdir
+    ok5 = FJ.writer_check()['ok']                                  # WRITER yok: serbest
+    with open(os.path.join(wdir, FJ.WRITER), 'w', encoding='utf-8') as fh:
+        fh.write('vds\n')
+    r5 = FJ.run_daily(update_panel=False)
+    ok5 &= r5['status'] == 'yazar_degil' and sorted(os.listdir(wdir)) == [FJ.WRITER]
+    os.environ[FJ.WRITER_ENV] = 'yerel'
+    ok5 &= not FJ.writer_check()['ok']
+    os.environ[FJ.WRITER_ENV] = 'vds'
+    ok5 &= FJ.writer_check()['ok']
+finally:
+    FP5.FWD_ROOT = old_root
+    os.environ.pop(FJ.WRITER_ENV, None)
+    if old_env is not None:
+        os.environ[FJ.WRITER_ENV] = old_env
+    shutil.rmtree(wdir, ignore_errors=True)
+check("5. tek yazar: WRITER yoksa serbest; varsa farkli/bos kimlik 'yazar_degil' ve depoya (gunluk, kilit) dokunmaz; "
+      "ayni kimlik yazar", ok5)
 
 shutil.rmtree(tmp, ignore_errors=True)
 print(f"\n{'=' * 60}\nSonuc: {passed} gecti, {failed} kaldi")
