@@ -112,6 +112,10 @@ Dashboard: `http://SUNUCU_IP:8000/dash/`
 
 ## 7. Güncelleme (yeni kod / yeni model)
 
+> VDS'de kod güncellemesi artık GitHub Actions ile otomatik: sürüm etiketi itilince imaj GHCR'den çekilir,
+> sağlık denetimi geçmezse önceki sürüme dönülür. Bkz. [ci-cd.md](ci-cd.md). Aşağıdaki elle yol yerel ya da
+> CI'sız kurulum içindir.
+
 Kod güncellemesi:
 
 ```bash

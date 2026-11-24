@@ -425,6 +425,12 @@
    "siradaki": "S6 ekinin dondurulması (kullanıcı onayı, 2026-11-23 akşamından önce); ileri okuma 126. seansta (~2027-05); açık ürün işi K13 canlı ölçek"
   },
   {
+   "ad": "Sunucu dağıtımı (VDS, CI/CD)",
+   "durum": "kuruldu, ilk dağıtım bekliyor (2026-11-24)",
+   "sinif": "planli",
+   "siradaki": "VDS gizlileri + Cloudflare Tunnel, ilk sürüm etiketi; CI'a veri gerektirmeyen Python testleri"
+  },
+  {
    "ad": "Canlı karar paritesi (K13)",
    "durum": "açık",
    "sinif": "planli",
@@ -477,7 +483,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "4c7194b662dbf03f541e46a1798015886edb5504aaf5f73c41da705fd5de18a5",
+   "tablo_sha256": "37201d196c05f18244db9bc7d80ff0e75591df40e2d7ba254bca970b5ee81d7e",
    "uretim_commit": null
   }
  }

@@ -1,0 +1,60 @@
+# CI: her PR'da ve main'e her push'ta uretim imaji derlenir, acilir ve iki seyi denetler (docs/deployment/ci-cd.md):
+#   1. /health 200 doner (imaj veri olmadan acilabiliyor),
+#   2. kimlik kapisi acik: oturumsuz /api istegi 401 (AUTH_ENABLED=False ile cikilmaz).
+# Python testleri burada kosmaz: cogu git disi veriye (panel, arsiv) bagli; ayri is olarak eklenir.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Imaj derle + saglik
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Derle
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: rltrading:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Ac ve /health bekle
+        run: |
+          docker run -d --name rlt -p 127.0.0.1:8000:8000 \
+            -e DEBUG=False -e AUTH_ENABLED=True \
+            -e JWT_SECRET_KEY="$(openssl rand -base64 48)" \
+            rltrading:ci
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/health; then echo; exit 0; fi
+            sleep 3
+          done
+          docker logs rlt
+          exit 1
+
+      - name: Kimlik kapisi acik mi
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/marl/forward/status)
+          echo "oturumsuz /api/marl/forward/status -> $code"
+          test "$code" = 401
+
+      - name: Konteyner gunlugu
+        if: always()
+        run: docker logs rlt 2>&1 | tail -60 || true

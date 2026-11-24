@@ -113,3 +113,11 @@ data/marl/
 
 # Ucuncu taraf API semasi (KAP VYK, MKK gelistirme agi gecidi); depoya girmez
 docs/apispec.json
+
+# SSH anahtarlari ve sertifikalar (depo herkese acik; deploy anahtari ~/.ssh/ altinda tutulur)
+*_deploy
+*_deploy.pub
+id_rsa*
+id_ed25519*
+*.pem
+*.key

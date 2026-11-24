@@ -1,0 +1,15 @@
+# Ters vekil konteyneri (Nginx Proxy Manager, Caddy, Traefik) ayni sunucuda bir Docker aginda calisiyorsa:
+# uygulama o aga da baglanir, vekil hedefi `rltrading:8000` olur, host'ta disariya port acilmaz.
+# .env'de PROXY_NETWORK=<vekilin agi> verilince scripts/deploy/vds_deploy.sh bu dosyayi kendisi ekler.
+# Vekilin agini bulmak:
+#   docker inspect <vekil-konteyner> -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+services:
+  rltrading:
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:?PROXY_NETWORK .env icinde verilmeli}
