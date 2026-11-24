@@ -2,7 +2,7 @@
 # Every target maps to a plain `docker compose ...` command, so you can always
 # run those directly (see docs/deployment/docker.md) if `make` isn't available.
 
-.PHONY: help dirs build up down restart logs ps shell admin health prune
+.PHONY: help dirs base build up down restart logs ps shell admin health prune
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -15,10 +15,13 @@ dirs: ## Create the bind-mounted dirs with the container's UID (run once, before
 	-chown -R 10001:10001 workspaces data/auth 2>/dev/null || \
 		echo "chown atlandi (root degilsiniz veya Docker Desktop kullaniyorsunuz)"
 
-build: ## Build the image
+base: ## Build the dependency base image (only needed when requirements.txt changes)
+	docker build -f docker/base.Dockerfile -t rltrading-base:local .
+
+build: base ## Build the image
 	docker compose build
 
-up: dirs ## Build (if needed) and start in the background
+up: dirs base ## Build (if needed) and start in the background
 	docker compose up -d --build
 
 down: ## Stop and remove the container

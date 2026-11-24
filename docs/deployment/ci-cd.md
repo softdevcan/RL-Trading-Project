@@ -122,3 +122,19 @@ Settings → Environments → `production` (isteğe bağlı: "Required reviewers
   sürümde otomatik geri dönüş (çıkış 1), aynı sürümü yeniden açma, `--rollback`, `AUTH_ENABLED=false` reddi.
 - İmaj derlemesi ve konteyner sağlık denetimi bu PR'ın CI koşusunda (yerelde Docker servisi kapalıydı).
 - İlk gerçek dağıtım VDS gizlileri girilince ilk sürüm etiketiyle.
+
+## 6. İmaj katmanları: kütüphaneler bir kez iner (2026-11-25)
+
+- **Sorun.** İlk tasarımda kütüphaneler (torch CPU + `requirements.txt`, açık hâli 2,95 GB) uygulama imajının içinde
+  derleniyordu. Etiket derlemesi GitHub önbelleğine ulaşamayınca kütüphaneler sıfırdan kuruluyor ve `pip install`
+  bayt bayt aynı katmanı üretmediği için katman yeni sayılıyordu. Ölçüm: `v2.24.0` ↔ `v2.25.0` yalnız 4/10 katman
+  ortak; her sürüm VDS'de 1 GB'tan fazla indirme ve 4,2 GB disk.
+- **Çözüm.** İki imaj:
+  - `ghcr.io/softdevcan/rl-trading-base:<özet>` ([docker/base.Dockerfile](../../docker/base.Dockerfile)): Python,
+    torch, kütüphaneler. Etiket = `requirements.txt` + `base.Dockerfile` içerik özeti (`scripts/deploy/base_tag.sh`).
+    Deploy, bu etiket GHCR'de yoksa bir kez derleyip iter; varsa dokunmaz.
+  - Uygulama imajı (`Dockerfile`): `FROM` temel + kod (~3 MB). Sıradan bir sürümde VDS yalnız kod katmanlarını indirir.
+- **Kütüphane güncellemesi** (`requirements.txt` değişince): özet değişir, temel bir kez yeniden derlenir ve VDS onu bir
+  kez indirir. Bu bilinçli bir maliyettir.
+- **Disk.** `vds_deploy.sh` başarılı dağıtımdan sonra çalışan ve bir önceki sürümü tutar, eskilerini siler.
+- **Yerelde Docker:** `make base` (bir kez; kütüphaneler değişince yeniden), sonra `make up`.

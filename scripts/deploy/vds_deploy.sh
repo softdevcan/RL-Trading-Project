@@ -62,6 +62,11 @@ up "$TAG"
 if healthy; then
   new_prev="$prev"; [ "$prev" = "$TAG" ] && new_prev="$(state PREV_TAG)"
   printf 'IMAGE_TAG=%s\nPREV_TAG=%s\nDEPLOYED_AT=%s\n' "$TAG" "$new_prev" "$(date -Is)" > "$STATE"
+  # Calisan ve bir onceki surum (geri donus) kalir; daha eskileri silinir. Ortak temel katmanlar silinmez
+  # (calisan imaj kullaniyor), yalniz o surumlerin kod katmanlari gider.
+  for t in $(docker image ls "$IMAGE" --format '{{.Tag}}'); do
+    case "$t" in "$TAG"|"$new_prev") ;; *) docker rmi "$IMAGE:$t" >/dev/null 2>&1 && echo "silindi: $IMAGE:$t" || true ;; esac
+  done
   docker image prune -f >/dev/null || true
   echo "dagitildi: $TAG"
   exit 0
