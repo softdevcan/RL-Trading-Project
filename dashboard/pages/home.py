@@ -1,332 +1,367 @@
 """
-Dashboard home page – system overview, portfolio chart, algorithm comparison.
+Ana sayfa (Faz 11 §3.14): sistemin bugünkü hâli tek bakışta.
 
-API endpoints used:
-  GET /api/trading/health
-  GET /api/trading/models
-  GET /api/trading/models/{name}/metrics
-  GET /api/trading/portfolio-history
+Sıra:
+  1. Durum şeridi: ileri veri testi seansı n/126, son günlük çalışma (TRT), fiyat marjı denetiminin geçerlilik ufku,
+     sürüm. Kaynak `/api/marl/forward/status`.
+  2. "Öne çıkan model": M8 nihai testinin (2021–2026, 20 bps, ön kayıtlı) özeti. Öğrenen kolların ortalama fazla Sharpe'ı
+     kural portföylerinin yanında. Bir SIRALAMA DEĞİL: M8 en iyi kolu seçmez (M8 §6.5); "MARL tek ajandan iyi mi"
+     sorusunu yanıtlar, "basit kurallardan iyi mi" sorusunu yanıtlamaz (§7.3(b)). Sayılar `dashboard/content/snapshot.json`
+     `m8_ozet` alanından (scripts/build_guide.py üretir; kaynak JSON + alan yolu). Pano ölçüm dosyası açmaz.
+  3. Simülasyon: dondurulmuş defterlerin ileri veri (ARA GÖRÜNÜM) ya da 2026 test penceresi görünümü; kol 12 tohum
+     ortalaması ± std. Kaynak `/api/marl/forward/view`. Ayrıntı `/dash/simulation`.
+  4. Önceki fazların tek ajanlı modelleri (Faz 1–9) ve tahmin modelleri: katlanır bölüm; M8 ile aynı protokolde değil.
+
+API: GET /api/trading/health, /api/marl/forward/status, /api/marl/forward/view, /api/trading/models,
+     /api/prediction/models
 """
 
-import logging
+from __future__ import annotations
 
-from dash import html, dcc
-from dash import Input, Output
+import json
+import logging
+import os
+
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
+from dash import Input, Output, dcc, html
+
+import dashboard.api_client as api
+from dashboard.components.metric_card import create_metric_card
+from dashboard.components.page_header import create_page_header
+from dashboard.components.state_block import create_state_block
+from dashboard.pages.simulation import LABELS as SIM_LABELS
+from dashboard.pages.simulation import (NOTE_FORWARD, NOTE_TEST, READ_SESSIONS, RUN_STATUS, _num, d_full, d_short,
+                                        spct)
+from dashboard.theme import (CARD2, GOLD, GREEN, RED, TEXT, TEXT_MUTED, YELLOW, algo_badge_class, apply_theme_template,
+                             empty_figure, plot_palette, plot_rgba)
 
 _log = logging.getLogger(__name__)
 
-from dashboard.theme import (
-    CARD2, TEXT, TEXT_MUTED, GREEN, RED, YELLOW, GOLD, algo_badge_class, empty_figure,
-    apply_theme_template, plot_palette, plot_rgba, algo_plot_colors,
-)
-from dashboard.components.metric_card import (
-    create_metric_card, tone_color, tone_for_number,
-)
-from dashboard.components.page_header import create_page_header
-from dashboard.components.state_block import create_state_block
-import dashboard.api_client as api
+CONTENT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "content")
+SIM_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # simülasyon sayfasının varsayılanı (K-F11-1)
+RULE_LABELS = {"minvar": "Min-varyans (aylık)", "hrp": "HRP (aylık)", "bh": "Al-tut", "ew": "1/N eşit ağırlık"}
+ARM_SHORT = {"M-none": "MARL iletişimsiz (MAPPO)", "null": "Boş kol (negatif kontrol)", "M-self": "MARL kendine dikkat",
+             "M-gat": "MARL graf dikkati", "S-agr": "SARL ağırlık", "S-esm": "SARL eşmimari"}
+LEARNED_NOTE = ("Boş kol bir negatif kontroldür (aynı yapılandırmanın ikinci tohum grubu), aday model değildir.")
 
 
-# ── Layout ───────────────────────────────────────────────────────────────────
+# ── veri ─────────────────────────────────────────────────────────────────────
+def load_m8_summary() -> dict | None:
+    """snapshot.json -> m8_ozet (yoksa None; sayfa yine kurulur)."""
+    try:
+        with open(os.path.join(CONTENT_DIR, "snapshot.json"), encoding="utf-8") as fh:
+            return json.load(fh).get("m8_ozet")
+    except (OSError, ValueError) as exc:
+        _log.warning("snapshot.json okunamadi: %s", exc)
+        return None
 
-def layout():
+
+def featured(m8: dict) -> dict:
+    """Öğrenen kollar arasında (boş kol hariç: negatif kontrol) ortalaması en yüksek kol ve en yüksek kural portföyü."""
+    cands = [a for a in m8["kollar"] if a["kol"] != "null"]
+    arm = max(cands, key=lambda a: a["ort"])
+    rule = max(m8["kurallar"], key=lambda r: r["ort"])
+    return {"arm": arm, "rule": rule, "rules_above": sum(r["ort"] > arm["ort"] for r in m8["kurallar"]),
+            "n_rules": len(m8["kurallar"])}
+
+
+def sr(x: float) -> str:
+    """Sharpe: Türkçe ondalık virgül, gerçek eksi."""
+    return ("−" if x < 0 else "") + _num(x, 2)
+
+
+def _version() -> str:
+    try:
+        from app import __version__
+        return f"v{__version__}"
+    except Exception:  # pragma: no cover - pano tek basina
+        return "—"
+
+
+# ── 1. durum şeridi ──────────────────────────────────────────────────────────
+def status_values(st: dict) -> dict:
+    """Saf: forward status sözlüğü -> şerit metinleri (test edilebilir)."""
+    st = st or {}
+    if st.get("available") is False or not st:
+        return {"forward": "—", "forward_sub": "Dondurulmuş M8 arşivi bu sunucuda yok",
+                "run": "—", "run_sub": "", "margin": "—", "margin_sub": ""}
+    n, need = int(st.get("n_sessions") or 0), int(st.get("read_sessions") or READ_SESSIONS)
+    last = st.get("last_run") or {}
+    fin = (last.get("finished_trt") or "")[:16].replace("T", " ")
+    run = "çalışıyor" if st.get("running") else RUN_STATUS.get(last.get("status"), last.get("status") or "—")
+    mc = last.get("margin_coverage") or {}
+    return {"forward": f"{n} / {need}",
+            "forward_sub": f"Son defter günü {d_full(st['last_date']) if st.get('last_date') else '—'}",
+            "run": run, "run_sub": f"{fin} TRT" if fin else "",
+            "margin": d_full(mc["horizon_end"]) if mc.get("horizon_end") else "—",
+            "margin_sub": f"Son denetim {d_full(mc['last_check'])}" if mc.get("last_check") else ""}
+
+
+def _strip(vals: dict) -> dbc.Row:
+    def col(card):
+        return dbc.Col(card, lg=3, sm=6, xs=12, className="mb-3")
+    return dbc.Row([
+        col(create_metric_card("İleri veri testi", vals["forward"], vals["forward_sub"], icon="bi bi-hourglass-split")),
+        col(create_metric_card("Son günlük çalışma", vals["run"], vals["run_sub"], icon="bi bi-arrow-repeat")),
+        col(create_metric_card("Fiyat marjı geçerli", vals["margin"], vals["margin_sub"], icon="bi bi-shield-check")),
+        col(create_metric_card("Sürüm", _version(), "Faz 11: entegrasyon + sanal para", icon="bi bi-tag")),
+    ], className="mb-2", id="home-strip")
+
+
+# ── 2. öne çıkan model (M8) ──────────────────────────────────────────────────
+def m8_figure(m8: dict, theme: str | None = None):
+    """Yatay çubuk: öğrenen kollar ve kural portföyleri, 6 yıl ortalaması fazla Sharpe (20 bps). Öne çıkan kol vurgulu."""
+    p = plot_palette(theme)
+    top = featured(m8)["arm"]["kol"]
+    rows = [(RULE_LABELS.get(r["kural"], r["kural"]), r["ort"], None, "rule") for r in m8["kurallar"]]
+    rows += [(ARM_SHORT.get(a["kol"], a["kol"]), a["ort"], a["std"], "top" if a["kol"] == top else
+              ("null" if a["kol"] == "null" else "arm")) for a in m8["kollar"]]
+    rows.sort(key=lambda r: r[1])
+    color = {"rule": p["gold"], "top": p["blue"], "arm": plot_rgba("blue", 0.38, theme), "null": plot_rgba("muted", 0.45, theme)}
+    hover = [(f"{n}<br>ort. {sr(v)} · ± std {sr(s)} (72 hücre: 12 tohum × 6 yıl)" if s is not None
+              else f"{n}<br>ort. {sr(v)} (6 yıl; kural tek seri)") for n, v, s, _ in rows]
+    fig = go.Figure(go.Bar(
+        y=[r[0] for r in rows], x=[r[1] for r in rows], orientation="h",
+        marker={"color": [color[r[3]] for r in rows]}, text=[sr(r[1]) for r in rows], textposition="outside",
+        hovertext=hover, hoverinfo="text", cliponaxis=False))
+    fig.add_vline(x=0, line={"color": p["line"], "width": 1})
+    lo, hi = min(0.0, min(r[1] for r in rows)), max(r[1] for r in rows)
+    pad = 0.12 * (hi - lo)                       # dış etiketler (eksi çubukta solda) eksen yazısına binmesin
+    fig.update_layout(height=330, margin={"l": 10, "r": 40, "t": 8, "b": 36}, showlegend=False, separators=",.",
+                      xaxis={"title": "Fazla Sharpe, 6 yıl ortalaması (20 bps)", "zeroline": False,
+                             "range": [lo - (pad if lo < 0 else 0), hi + pad]},
+                      yaxis={"automargin": True}, bargap=0.28)
+    apply_theme_template(fig, theme)
+    return fig
+
+
+def featured_block(m8: dict | None):
+    if not m8:
+        return create_state_block("empty", "M8 özeti bulunamadı (snapshot.json). `python scripts/build_guide.py` kos.")
+    f = featured(m8)
+    arm, rule = f["arm"], f["rule"]
+    hero = html.Div([
+        html.Div([
+            html.Div("Öğrenen modeller arasında en yüksek ortalama", className="home-kicker"),
+            html.Div(ARM_SHORT.get(arm["kol"], arm["kol"]), className="home-hero-name"),
+            html.Div([html.Span(sr(arm["ort"]), className="home-hero-value"),
+                      html.Span(f"fazla Sharpe · ± std {sr(arm['std'])} · {m8['hucre_kol_basi']} hücre "
+                                f"(12 tohum × {len(m8['katlar'])} yıl) · {m8['maliyet_bps']} bps", className="home-muted")],
+                     className="home-hero-line"),
+        ], className="home-hero-main"),
+        html.Div([
+            html.Div("Aynı maliyetle en yüksek kural portföyü", className="home-kicker"),
+            html.Div(RULE_LABELS.get(rule["kural"], rule["kural"]), className="home-hero-name"),
+            html.Div([html.Span(sr(rule["ort"]), className="home-hero-value home-hero-rule"),
+                      html.Span("6 yıl ortalaması, öğrenme yok", className="home-muted")], className="home-hero-line"),
+        ], className="home-hero-side"),
+    ], className="home-hero")
+    note = html.Ul([
+        html.Li(f"{f['n_rules']} kural portföyünün {f['rules_above']}'ü öğrenen kolların hepsinin üstünde. M8 \"çok ajanlı "
+                "öğrenme tek ajandan iyi mi\" sorusunu yanıtlar; \"basit kurallardan iyi mi\" sorusunu yanıtlamaz."),
+        html.Li("Bu bir sıralama değildir: M8 en iyi kolu seçmez. Kol karşılaştırmaları ön kayıtlı eşli testlerle yapıldı; "
+                "etiketleri Rehber'deki M8 kartlarında."),
+        html.Li(["Tohumlar arası yayılım büyük (± std); tek bir tohum ya da yıl sonuç değildir. ", LEARNED_NOTE]),
+    ], className="home-notes")
     return html.Div([
-        # Auto-refresh interval (every 30 s)
-        dcc.Interval(id="home-interval", interval=30_000, n_intervals=0),
-
-        create_page_header(
-            "Dashboard",
-            "Sistem ozeti ve portfoy performansi",
-            actions=html.Div(id="home-status-badge"),
-        ),
-
-        # Metric cards row
-        dbc.Row([
-            dbc.Col(create_metric_card("Toplam Getiri", "—", "", icon="bi bi-graph-up",
-                                       card_id="home-metric-return", tone="auto"),
-                    md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Sharpe Orani", "—", "", icon="bi bi-calculator",
-                                       card_id="home-metric-sharpe"),
-                    md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Max Drawdown", "—", "", icon="bi bi-arrow-down-circle",
-                                       card_id="home-metric-drawdown", tone="loss"),
-                    md=2, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Portfoy Degeri", "—", "", icon="bi bi-wallet2",
-                                       card_id="home-metric-portfolio"),
-                    md=3, sm=4, xs=6, className="mb-3"),
-            dbc.Col(create_metric_card("Toplam Islem", "—", "", icon="bi bi-arrow-left-right",
-                                       card_id="home-metric-trades"),
-                    md=3, sm=4, xs=6, className="mb-3"),
-        ], className="mb-4"),
-
-        # Charts row
-        dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Performansi", className="card-title-sm")),
-                    dbc.CardBody(dcc.Graph(id="home-portfolio-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ]),
-            ], md=8, className="mb-4"),
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span("Algoritma Karsilastirma", className="card-title-sm")),
-                    dbc.CardBody(dcc.Graph(id="home-algo-chart", figure=empty_figure(), config={"displayModeBar": False})),
-                ]),
-            ], md=4, className="mb-4"),
-        ]),
-
-        # Models row: RL models + Prediction models side by side
-        dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span("RL Modeller", className="card-title-sm")),
-                    dbc.CardBody(html.Div(id="home-models-list", children=create_state_block("loading"))),
-                ]),
-            ], md=6, className="mb-4"),
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span("Tahmin Modelleri (XGBoost)", className="card-title-sm")),
-                    dbc.CardBody(html.Div(id="home-pred-models-list", children=create_state_block("loading"))),
-                ]),
-            ], md=6, className="mb-4"),
-        ]),
+        hero,
+        dcc.Graph(id="home-m8-chart", figure=empty_figure(), config={"displayModeBar": False}),
+        note,
+        html.Div([dbc.Button([html.I(className="bi bi-book me-1"), "M8 kartları (Rehber)"], href="/dash/guide#rehber-deneyler",
+                             color="secondary", outline=True, size="sm", className="me-2"),
+                  html.Span(f"Kaynak: {m8['kaynak'].rsplit('/', 1)[-1]} · {m8['on_kayit']}", className="home-src")],
+                 className="home-actions"),
     ])
 
 
-# ── Callbacks ─────────────────────────────────────────────────────────────────
-
-def register_callbacks(app):
-
-    @app.callback(
-        Output("home-status-badge", "children"),
-        Input("home-interval", "n_intervals"),
-    )
-    def update_status(n):
-        data = api.get_health()
-        status = data.get("status", "unknown")
-        color = "success" if status == "healthy" else "danger"
-        return dbc.Badge(
-            [html.I(className=f"bi bi-circle-fill me-1", style={"fontSize": "8px"}), status.upper()],
-            color=color, pill=True,
-        )
-
-    @app.callback(
-        [
-            Output("home-metric-return", "children"),
-            Output("home-metric-sharpe", "children"),
-            Output("home-metric-drawdown", "children"),
-            Output("home-metric-portfolio", "children"),
-            Output("home-metric-trades", "children"),
-            Output("home-portfolio-chart", "figure"),
-            Output("home-algo-chart", "figure"),
-            Output("home-models-list", "children"),
-            Output("home-pred-models-list", "children"),
-        ],
-        Input("home-interval", "n_intervals"),
-    )
-    def update_home(n):
-        models = api.get_models()
-        history = api.get_portfolio_history()
-
-        # ── Fetch each model's metrics once, reuse for both the best-model
-        # summary below and the algo comparison chart (was fetched twice) ──
-        metrics_by_model = {
-            m.get("name", ""): api.get_model_metrics(m.get("name", ""))
-            for m in models
-        }
-
-        # ── Aggregate metrics from best model ──────────────────────────────
-        total_return = sharpe = drawdown = portfolio = trades = "—"
-        return_tone = drawdown_tone = "neutral"
-        if models:
-            best = None
-            best_sharpe = -999
-            for m in models:
-                metrics = metrics_by_model.get(m.get("name", ""))
-                sr = metrics.get("sharpe_ratio", -999) if metrics else -999
-                if sr > best_sharpe:
-                    best_sharpe = sr
-                    best = metrics
-            if best:
-                ret = api.model_return(best)
-                total_return = f"{ret:.1%}" if ret is not None else "—"
-                return_tone = tone_for_number(ret)
-                sharpe = f"{best.get('sharpe_ratio', 0):.2f}"
-                dd = best.get("max_drawdown", 0) or 0
-                drawdown = f"{dd:.1%}"
-                # Drawdown negatif gelir; sifirdan uzaklasmasi kotudur
-                drawdown_tone = "loss" if dd else "neutral"
-                pv = best.get("final_portfolio_value", 0) or 0
-                portfolio = f"₺{pv:,.0f}"
-                trades = str(best.get("total_trades", 0) or 0)
-
-        metric_return = _metric_val(total_return, return_tone)
-        metric_sharpe = _metric_val(sharpe)
-        metric_drawdown = _metric_val(drawdown, drawdown_tone)
-        metric_portfolio = _metric_val(portfolio)
-        metric_trades = _metric_val(trades)
-
-        # ── Portfolio performance chart ────────────────────────────────────
-        portfolio_fig = _build_portfolio_chart(history)
-
-        # ── Algorithm comparison chart ─────────────────────────────────────
-        algo_fig = _build_algo_chart(models, metrics_by_model)
-
-        # ── RL Models list ─────────────────────────────────────────────────
-        models_list = _build_models_list(models)
-
-        # ── Prediction models list ──────────────────────────────────────────
-        try:
-            pred_models = api.get_prediction_models() or []
-            pred_models_list = _build_pred_models_list(pred_models)
-        except Exception as exc:
-            _log.warning("get_prediction_models failed: %s", exc)
-            pred_models_list = dbc.Alert(
-                "Tahmin modelleri yuklenemedi (backend ulasilamiyor olabilir).",
-                color="warning", dismissable=True, className="mb-0",
-            )
-
-        return (
-            metric_return, metric_sharpe, metric_drawdown,
-            metric_portfolio, metric_trades,
-            portfolio_fig, algo_fig, models_list, pred_models_list,
-        )
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _metric_val(value, tone: str = "neutral"):
-    """Kart degeri. Boyut/agirlik `.metric-value` sinifindan gelir — burada
-    tekrar tanimlanirsa kart olcegi sayfadan sayfaya kayiyor (C.1/C.3)."""
-    return html.Span(value, className="metric-value",
-                     style={"color": tone_color(tone)})
-
-
-def _build_portfolio_chart(history):
-    # Dallanma KAYIT uzerinden yapilir: uc {"history": []} donebiliyor, yani
-    # `history` dogru ama icinde kayit yok. Onceki kurgu (`if history:` ->
-    # `if records:`) o durumda hicbir dala girmeyip cizgisiz, mesajsiz,
-    # varsayilan -1..6 eksenli bos bir grafik birakiyordu — panoda boyle
-    # gorundu, gorsel dogrulamada yakalandi.
-    records = history.get("history", []) if isinstance(history, dict) else []
-
-    if not records:
-        fig = empty_figure("Portfoy gecmisi yok")
-    else:
-        fig = go.Figure()
-        dates = [r.get("date", "") for r in records]
-        values = [r.get("value", 0) for r in records]
-        fig.add_trace(go.Scatter(
-            x=dates, y=values,
-            mode="lines",
-            fill="tozeroy",
-            fillcolor=plot_rgba("blue", 0.15),
-            line={"color": plot_palette()["blue"], "width": 2},
-            name="Portfoy",
-            hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
-        ))
-
-    apply_theme_template(fig)
-    fig.update_layout(showlegend=False, height=280, margin={"l": 50, "r": 10, "t": 10, "b": 40})
-    return fig
-
-
-def _build_algo_chart(models, metrics_by_model=None):
+# ── 3. simülasyon ────────────────────────────────────────────────────────────
+def sim_figure(view: dict, theme: str | None = None):
+    """Toplam getiri (%): kol ortalaması ± std bandı + kural portföyleri (kesirli defter, aynı maliyet)."""
+    dates = (view or {}).get("dates") or []
+    lines = (view or {}).get("lines") or {}
+    if not dates or not lines:
+        return empty_figure("Henüz ileri veri seansı yok" if (view or {}).get("window") == "forward" else "Veri yok")
+    p = plot_palette(theme)
+    cap = float(view.get("capital") or 100_000)
+    colors = {"M-none": "blue", "rule/ew": "orange", "rule/minvar": "gold"}
     fig = go.Figure()
-    if not models:
-        return empty_figure("Model yok")
-
-    if metrics_by_model is None:
-        metrics_by_model = {m.get("name", ""): api.get_model_metrics(m.get("name", "")) for m in models}
-
-    names, sharpes = [], []
-    for m in models:
-        metrics = metrics_by_model.get(m.get("name", ""))
-        if metrics:
-            algo = m.get("algorithm", "UNK").upper()
-            names.append(algo)
-            sharpes.append(metrics.get("sharpe_ratio", 0) or 0)
-
-    if not names:
-        return empty_figure("Metrik yok")
-
-    algo_hex = algo_plot_colors()
-    colors = [algo_hex.get(n, plot_palette()["blue"]) for n in names]
-    fig.add_trace(go.Bar(
-        x=names, y=sharpes,
-        marker_color=colors,
-        name="Sharpe",
-        hovertemplate="<b>%{x}</b><br>Sharpe: %{y:.2f}<extra></extra>",
-    ))
-    apply_theme_template(fig)
-    fig.update_layout(showlegend=False, height=280, margin={"l": 40, "r": 10, "t": 10, "b": 40})
+    if len(dates) <= 40:                         # kısa pencere: tarih ekseni saat çizer; seans etiketiyle göster
+        dates = [d_short(d) for d in dates]
+    for key, ln in lines.items():
+        mean = [v / cap - 1 for v in ln["mean"]]
+        c = colors.get(key, "purple")
+        if ln.get("n", 1) > 1:
+            up = [(m + s) / cap - 1 for m, s in zip(ln["mean"], ln["std"])]
+            lo = [(m - s) / cap - 1 for m, s in zip(ln["mean"], ln["std"])]
+            fig.add_trace(go.Scatter(x=dates + dates[::-1], y=up + lo[::-1], fill="toself", line={"width": 0},
+                                     fillcolor=plot_rgba(c, 0.14, theme), hoverinfo="skip", showlegend=False))
+        label = SIM_LABELS.get(key, ln["label"]) + (f" (ort., N={ln['n']})" if ln.get("n", 1) > 1 else "")
+        fig.add_trace(go.Scatter(x=dates, y=mean, mode="lines+markers" if len(dates) <= 10 else "lines", name=label,
+                                 line={"color": p[c], "width": 2.2 if key in ("M-none",) else 1.6},
+                                 hovertemplate="%{x}<br>%{y:+.2%}<extra>" + label + "</extra>"))
+    fig.add_hline(y=0, line={"color": p["line"], "width": 1})
+    fig.update_layout(height=280, margin={"l": 10, "r": 10, "t": 8, "b": 10}, separators=",.",
+                      yaxis={"tickformat": "+.1%", "automargin": True},
+                      legend={"orientation": "h", "y": -0.18, "x": 0, "font": {"size": 11}})
+    apply_theme_template(fig, theme)
     return fig
+
+
+def sim_table(view: dict):
+    rows = (view or {}).get("table") or []
+    if not rows:
+        return html.Div()
+
+    def pm(r, f):
+        if r.get(f) is None:
+            return "—"
+        s = spct(r[f], 2)
+        return s + (f" ± {_num(r[f + '_std'] * 100, 2)}" if r.get(f + "_std") is not None else "")
+    body = [html.Tr([html.Td(SIM_LABELS.get(r["key"], r["label"]) + (f" (N={r['n']})" if r["n"] > 1 else "")),
+                     html.Td(pm(r, "cum_return"), className="home-num"),
+                     html.Td(pm(r, "max_drawdown"), className="home-num")]) for r in rows]
+    return html.Table([html.Thead(html.Tr([html.Th("Strateji"), html.Th("Toplam getiri", className="home-num"),
+                                           html.Th("En büyük düşüş", className="home-num")])),
+                       html.Tbody(body)], className="home-table")
+
+
+def sim_note(view: dict) -> str:
+    v = view or {}
+    n = v.get("n_sessions") or 0
+    base = NOTE_FORWARD if v.get("window") == "forward" else NOTE_TEST
+    return f"{n} seans · {v.get('cost_bps_roundtrip', 20):g} bps gidiş-dönüş · " + base
+
+
+# ── 4. önceki fazlar ─────────────────────────────────────────────────────────
+def _build_models_list(models):
+    if not models:
+        return create_state_block("empty", "Eğitilmiş tek ajanlı model bulunamadı.")
+    rows = []
+    for m in models:
+        algo = m.get("algorithm", "—").upper()
+        rows.append(dbc.Row([
+            dbc.Col(dbc.Badge(algo, pill=True, className=algo_badge_class(algo)), width="auto"),
+            dbc.Col(html.Span(m.get("name", "—"), style={"color": TEXT, "fontSize": "13px"}), width=5),
+            dbc.Col(html.Small(f"Faz {m.get('phase', '—')}", style={"color": TEXT_MUTED}), width="auto"),
+            dbc.Col(html.Small(str(m.get("created_at", m.get("timestamp", "—")))[:10], style={"color": TEXT_MUTED}),
+                    width="auto", className="ms-auto"),
+        ], className="align-items-center py-2", style={"borderBottom": f"1px solid {CARD2}"}))
+    return html.Div(rows)
 
 
 def _build_pred_models_list(models):
-    """XGBoost prediction modelleri listesi."""
     if not models:
-        return html.P("Egitilmis tahmin modeli yok. Tahmin sayfasindan model egitebilirsiniz.",
+        return html.P("Eğitilmiş tahmin modeli yok. Tahmin sayfasından model eğitebilirsiniz.",
                       style={"color": TEXT_MUTED, "fontSize": "13px"})
-
     rows = []
     for m in sorted(models, key=lambda x: (x.get("symbol", ""), x.get("horizon", ""))):
-        sym     = m.get("symbol", "?")
         horizon = m.get("horizon", "?")
-        saved   = (m.get("saved_at", "") or "")[:10] or "—"
-        n_feat  = len(m.get("feature_cols", []))
-        mape    = m.get("test_mape")
-        dir_acc = m.get("test_direction_accuracy")
-
-        h_badge = dbc.Badge(
-            "Gunluk" if horizon == "daily" else "Haftalik",
-            color="primary" if horizon == "daily" else "info",
-            pill=True, className="me-2",
-        )
-        perf_parts = []
+        mape, dir_acc = m.get("test_mape"), m.get("test_direction_accuracy")
+        perf = []
         if mape is not None:
-            clr = GREEN if mape < 3 else (YELLOW if mape < 7 else RED)
-            perf_parts.append(html.Small(f"MAPE {mape:.1f}%", style={"color": clr, "marginRight": "8px"}))
+            perf.append(html.Small(f"MAPE {mape:.1f}%", style={"color": GREEN if mape < 3 else (YELLOW if mape < 7 else RED),
+                                                                "marginRight": "8px"}))
         if dir_acc is not None:
-            clr = GREEN if dir_acc >= 55 else RED
-            perf_parts.append(html.Small(f"Yon {dir_acc:.0f}%", style={"color": clr}))
-        if not perf_parts:
-            perf_parts = [html.Small(f"{n_feat} ozellik", style={"color": TEXT_MUTED})]
+            perf.append(html.Small(f"Yön {dir_acc:.0f}%", style={"color": GREEN if dir_acc >= 55 else RED}))
+        if not perf:
+            perf = [html.Small(f"{len(m.get('feature_cols', []))} özellik", style={"color": TEXT_MUTED})]
+        rows.append(dbc.Row([
+            dbc.Col(html.Span(m.get("symbol", "?"), style={"color": GOLD, "fontWeight": "600", "fontSize": "13px"}), width=3),
+            dbc.Col(dbc.Badge("Günlük" if horizon == "daily" else "Haftalık",
+                              color="primary" if horizon == "daily" else "info", pill=True, className="me-2"), width="auto"),
+            dbc.Col(html.Span(perf), width=4),
+            dbc.Col(html.Small((m.get("saved_at", "") or "")[:10] or "—", style={"color": TEXT_MUTED}), width="auto",
+                    className="ms-auto"),
+        ], className="align-items-center py-2", style={"borderBottom": f"1px solid {CARD2}"}))
+    return html.Div([html.P(f"{len(models)} model", style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "8px"}),
+                     *rows])
 
-        rows.append(
-            dbc.Row([
-                dbc.Col(html.Span(sym, style={"color": GOLD, "fontWeight": "600", "fontSize": "13px"}), width=3),
-                dbc.Col(h_badge, width="auto"),
-                dbc.Col(html.Span(perf_parts), width=4),
-                dbc.Col(html.Small(saved, style={"color": TEXT_MUTED}), width="auto", className="ms-auto"),
-            ], className="align-items-center py-2", style={"borderBottom": f"1px solid {CARD2}"})
-        )
+
+# ── sayfa ────────────────────────────────────────────────────────────────────
+def layout():
+    m8 = load_m8_summary()
+    status = api.get_marl_forward_status()
     return html.Div([
-        html.P(f"{len(models)} model egitildi",
-               style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "8px"}),
-        *rows,
+        dcc.Interval(id="home-interval", interval=300_000, n_intervals=0),     # defter günde bir değişir
+        create_page_header(
+            "Dashboard",
+            "Sistemin bugünkü hâli: son sınavın (M8) sonucu ve dondurulmuş modellerin sanal para simülasyonu",
+            actions=html.Div(id="home-status-badge"),
+        ),
+        html.Div(_strip(status_values(status)), id="home-strip-wrap"),
+        dbc.Row([
+            dbc.Col(dbc.Card([
+                dbc.CardHeader(html.Div([html.Span("Öne çıkan model · M8 nihai testi (2021–2026)", className="card-title-sm"),
+                                         html.Span("Ön kayıtlı nihai deney", className="home-badge")],
+                                        className="home-card-head")),
+                dbc.CardBody(featured_block(m8)),
+            ], className="h-100"), lg=7, className="mb-4"),
+            dbc.Col(dbc.Card([
+                dbc.CardHeader(html.Div([
+                    html.Span("Simülasyon · dondurulmuş defterler", className="card-title-sm"),
+                    dbc.RadioItems(id="home-sim-window", inline=True, value="forward", className="home-window",
+                                   options=[{"label": "İleri veri", "value": "forward"},
+                                            {"label": "2026 test", "value": "test2026"}]),
+                ], className="home-card-head")),
+                dbc.CardBody([
+                    dcc.Loading(dcc.Graph(id="home-sim-chart", figure=empty_figure(), config={"displayModeBar": False})),
+                    html.Div(id="home-sim-table"),
+                    html.Div(id="home-sim-note", className="home-note mt-2"),
+                    html.Div(dbc.Button([html.I(className="bi bi-cash-coin me-1"), "Simülasyon ayrıntısı"],
+                                        href="/dash/simulation", color="primary", size="sm"), className="home-actions"),
+                ]),
+            ], className="h-100"), lg=5, className="mb-4"),
+        ]),
+        html.Details([
+            html.Summary("Önceki fazların modelleri (tek ajan, Faz 1–9) ve tahmin modelleri", className="home-legacy-sum"),
+            html.P("Bu modeller M8 ile aynı protokolde (kat, tohum, maliyet, ön kayıt) değerlendirilmedi; yukarıdaki "
+                   "sonuçlarla karşılaştırılmaz. Günlük karar ve kâğıt portföy bunları kullanır.", className="home-muted mt-2"),
+            dbc.Row([
+                dbc.Col(dbc.Card([dbc.CardHeader(html.Span("Tek ajanlı RL modelleri", className="card-title-sm")),
+                                  dbc.CardBody(html.Div(id="home-models-list", children=create_state_block("loading")))]),
+                        md=6, className="mb-3"),
+                dbc.Col(dbc.Card([dbc.CardHeader(html.Span("Tahmin modelleri", className="card-title-sm")),
+                                  dbc.CardBody(html.Div(id="home-pred-models-list",
+                                                        children=create_state_block("loading")))]),
+                        md=6, className="mb-3"),
+            ]),
+        ], className="home-legacy"),
     ])
 
 
-def _build_models_list(models):
-    if not models:
-        return create_state_block("empty", "Egitilmis model bulunamadi.")
+def register_callbacks(app):
 
-    rows = []
-    for m in models:
-        name = m.get("name", "—")
-        algo = m.get("algorithm", "—").upper()
-        phase = m.get("phase", "—")
-        created = m.get("created_at", m.get("timestamp", "—"))
-        badge_class = algo_badge_class(algo)
-        rows.append(
-            dbc.Row([
-                dbc.Col(dbc.Badge(algo, pill=True, className=badge_class), width="auto"),
-                dbc.Col(html.Span(name, style={"color": TEXT, "fontSize": "13px"}), width=5),
-                dbc.Col(html.Small(f"Faz {phase}", style={"color": TEXT_MUTED}), width="auto"),
-                dbc.Col(html.Small(str(created)[:10], style={"color": TEXT_MUTED}), width="auto", className="ms-auto"),
-            ], className="align-items-center py-2", style={"borderBottom": f"1px solid {CARD2}"})
-        )
-    return html.Div(rows)
+    @app.callback(Output("home-status-badge", "children"), Output("home-strip-wrap", "children"),
+                  Input("home-interval", "n_intervals"))
+    def update_status(_n):
+        status = api.get_health().get("status", "unknown")
+        badge = dbc.Badge([html.I(className="bi bi-circle-fill me-1", style={"fontSize": "8px"}),
+                           "SAĞLIKLI" if status == "healthy" else status.upper()],
+                          color="success" if status == "healthy" else "danger", pill=True)
+        return badge, _strip(status_values(api.get_marl_forward_status()))
+
+    @app.callback(Output("home-m8-chart", "figure"), Input("home-interval", "n_intervals"))
+    def update_m8(_n):
+        m8 = load_m8_summary()
+        return m8_figure(m8) if m8 else empty_figure("M8 özeti yok")
+
+    @app.callback(Output("home-sim-chart", "figure"), Output("home-sim-table", "children"),
+                  Output("home-sim-note", "children"),
+                  Input("home-sim-window", "value"), Input("home-interval", "n_intervals"))
+    def update_sim(window, _n):
+        view = api.get_marl_forward_view(window or "forward", SIM_KEYS)
+        if not view:
+            return empty_figure("Simülasyon verisi alınamadı (arşiv yok ya da sunucuya ulaşılamıyor)"), html.Div(), ""
+        return sim_figure(view), sim_table(view), sim_note(view)
+
+    @app.callback(Output("home-models-list", "children"), Output("home-pred-models-list", "children"),
+                  Input("home-interval", "n_intervals"))
+    def update_legacy(_n):
+        models = _build_models_list(api.get_models())
+        try:
+            preds = _build_pred_models_list(api.get_prediction_models() or [])
+        except Exception as exc:
+            _log.warning("get_prediction_models failed: %s", exc)
+            preds = dbc.Alert("Tahmin modelleri yüklenemedi.", color="warning", className="mb-0")
+        return models, preds

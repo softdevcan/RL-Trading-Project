@@ -22,10 +22,10 @@ from marl import sim_ledger as SL
 from marl.selection import excess_sharpe
 
 ARMS = ('M-none', 'S-esm', 'S-agr', 'M-gat', 'M-self', 'null')
-ARM_LABELS = {'M-none': 'MARL (iletisimsiz, MAPPO)', 'S-esm': 'SARL esmimari', 'S-agr': 'SARL agirlik',
-              'M-gat': 'MARL graf dikkati', 'M-self': 'MARL kendine dikkat (kontrol)', 'null': 'Bos kol (negatif kontrol)',
-              'rule/ew': '1/N esit agirlik', 'rule/bh': 'Al-tut', 'rule/minvar': 'Min-varyans (aylik)',
-              'rule/hrp': 'HRP (aylik)'}
+ARM_LABELS = {'M-none': 'MARL iletişimsiz (MAPPO)', 'S-esm': 'SARL eşmimari', 'S-agr': 'SARL ağırlık',
+              'M-gat': 'MARL graf dikkati', 'M-self': 'MARL kendine dikkat (kontrol)', 'null': 'Boş kol (negatif kontrol)',
+              'rule/ew': '1/N eşit ağırlık', 'rule/bh': 'Al-tut', 'rule/minvar': 'Min-varyans (aylık)',
+              'rule/hrp': 'HRP (aylık)'}             # yalnız görüntü etiketi (pano); hesaba girmez
 DEFAULT_VIEW = ('M-none', 'rule/ew', 'rule/minvar')        # K-F11-1
 WINDOWS = ('forward', 'test2026')
 CACHE_DIR = os.path.join('data', 'marl', 'forward', 'm8', 'cache')

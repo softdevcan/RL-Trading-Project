@@ -42,7 +42,7 @@ def _route_index() -> dict[str, tuple[str, str]]:
         for item in items:
             index[item["href"]] = (group, item["label"])
     # Menude yer almayan ama gezilebilen sayfa
-    index["/dash/account"] = ("Hesap", "Hesabim")
+    index["/dash/account"] = ("Hesap", "Hesabım")
     return index
 
 
@@ -50,12 +50,13 @@ ROUTE_INDEX = _route_index()
 
 # Belgelenen akis: veri indir -> egit -> analiz. Slot bos kalabilir.
 NEXT_STEP = {
-    "/dash/": ("Veri durumu", "bi bi-database", "/dash/data"),
-    "/dash/data": ("Egitime gec", "bi bi-cpu", "/dash/training"),
-    "/dash/training": ("Modelleri karsilastir", "bi bi-diagram-3", "/dash/models"),
-    "/dash/models": ("Gunluk karar", "bi bi-graph-up-arrow", "/dash/daily-trading"),
-    "/dash/hyperopt": ("Egitime gec", "bi bi-cpu", "/dash/training"),
-    "/dash/prediction": ("Hiper parametre", "bi bi-sliders", "/dash/hyperopt"),
+    "/dash/": ("Simülasyon", "bi bi-cash-coin", "/dash/simulation"),           # Faz 11 §3.14
+    "/dash/simulation": ("M8 sonuçları (Rehber)", "bi bi-book", "/dash/guide"),
+    "/dash/data": ("Eğitime geç", "bi bi-cpu", "/dash/training"),
+    "/dash/training": ("Modelleri karşılaştır", "bi bi-diagram-3", "/dash/models"),
+    "/dash/models": ("Günlük karar", "bi bi-graph-up-arrow", "/dash/daily-trading"),
+    "/dash/hyperopt": ("Eğitime geç", "bi bi-cpu", "/dash/training"),
+    "/dash/prediction": ("Hiperparametre", "bi bi-sliders", "/dash/hyperopt"),
     "/dash/daily-trading": ("Akademik analiz", "bi bi-journal-bookmark", "/dash/academic"),
 }
 
@@ -72,7 +73,7 @@ def _search_options() -> list[dict]:
         for group, items in groups
         for item in items
     ]
-    options.append({"label": "Hesap · Hesabim", "value": "/dash/account"})
+    options.append({"label": "Hesap · Hesabım", "value": "/dash/account"})
     return options + _glossary_options()
 
 

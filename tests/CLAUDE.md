@@ -120,7 +120,8 @@ python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_
                                            #          idempotent (SHA), cokme kurtarma + strateji/panel/baslangic bekcileri, tek yazar WRITER (5, ~10 sn; ana venv, ag yok)
 python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
                                            #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + lot tablosu muhasebesi (lot x kapanis + nakit = deger) + /dash/simulation
-                                           #          sayfa ve callback'leri (5, ~20 sn; arsiv yoksa 5 atlanir)
+                                           #          sayfa ve callback'leri; §3.14 ana sayfa: one cikan M-none (bos kol haric) + kurallar ustte, M8 grafigi = snapshot
+                                           #          m8_ozet, 2026 test kutusu, son calisma TRT damgasi (6, ~25 sn; arsiv yoksa 5-6 atlanir)
 python tests/test_marl_sim_book.py          # Faz 11 §3.13 simulasyon sayfasi gunluk defteri (forward_views.daily_book): gercek step_integer ile sentetik gunler;
                                            #          sum(katki)+faiz-komisyon = dV, lot x fiyat + nakit = deger, ort. maliyet bagimsiz denetim, islem goremeyen hissede emir yok,
                                            #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi), ileri pencere on kayit dili (5, ~3 sn; ana venv, VERI GEREKMEZ)
@@ -156,7 +157,8 @@ python scripts/marl/analyze_m5.py --self-test  # M5 mekanizma okumasi: H2 (i)-(v
 python scripts/marl/analyze_m5real.py --self-test  # M5 gercek sinyal okumasi: O1-O4 oncelik sirasi, siralama tabani (b), tabansiz ikincil, boyut tanisi, O3 negatif notu, brut SR, eksik kol (9, ~10 sn; ana venv)
 python scripts/marl/analyze_m6sreg.py --self-test  # M6b S-reg kisa pilot okumasi: FARK_YOK / BOZULMA / IYILESME_ISARETI, ters isaretli tohum, dogrulama celiskisi, eksik tohum (6, ~5 sn; ana venv)
 python tests/test_guide.py                 # K28 R1 sistem sozlugu: sema, ilgili + kisaltma baglantisi, kod/belge yollari, kaynak
-                                           #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla; R2 Rehber sayfasi kurulus + arama + menu; R3 deney kartlari kaynaga esit + snapshot/harita bayatligi (9, ~5 sn; ana venv)
+                                           #          literature-table'da, yasakli ifade, docs/sozluk.md tazeligi; her biri mutasyonla; R2 Rehber sayfasi kurulus + arama + menu; R3 deney kartlari kaynaga esit + snapshot/harita bayatligi;
+                                           #          kademeye gore rozet (M8 nihai), ana sayfa M8 ozeti (m8_ozet) kaynaga esit, bilinmeyen kademe mutasyonu (9, ~5 sn; ana venv)
 python scripts/analyze_milestone0.py --self-test  # M0' m0p-v2 analizi sentetik kayitla: hucre/N sayimi, 2021 dogrulayici penceresi,
                                            #          sifir etkide red yok, PC060 tespiti, Q3 okuma kurali, eksik kayitta durur (9, ~5 sn)
 ```

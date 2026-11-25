@@ -36,10 +36,38 @@
     Çok ajanlı sistemin adım adım kurulduğu aşamalar. Her aşama bir öncekinin üstüne bir parça ekler ve kendi denetimiyle kapanır.
   teknik: >-
     M1 çerçeve denemesi (BenchMARL/TorchRL), M2 ortam ve muhasebe çekirdeği, M3 öğrenme ve pozitif kontrol, M4 iletişim
-    kolları, M5 tahmin sinyali ve güvenle ağırlıklı iletişim. M6–M8 Faz 10 planında tanımlı sonraki aşamalardır; uzun
-    koşular M8'den önce yapılır.
+    kolları, M5 tahmin sinyali ve güvenle ağırlıklı iletişim, M6 rejim, M7 yorumlanabilirlik, M8 ön kayıtlı nihai
+    koşumlar (2026-11-22'de okundu). Faz 11 M8 politikalarını dondurup ileri veride izler.
   belgede: [docs/development/phase-10-marl-plan.md]
-  ilgili: [m3, m4, m5, gelistirme-kapisi]
+  ilgili: [m3, m4, m5, m8, gelistirme-kapisi]
+
+- id: m8
+  terim: M8 (nihai koşumlar)
+  kategori: sistem
+  sade: >-
+    Çok ajanlı sistemin, kuralları önceden yazılıp dondurulmuş büyük son sınavı. Altı yılın her biri ayrı test edildi ve sonuç bir kez okundu.
+  teknik: >-
+    Ön kayıt v1.0 (etiket m8-prereg-v1): 6 kol × 12 tohum × 6 kat (2021–2026, wf-v1) = 432 koşu, 20 bps maliyet. H1
+    M-none ↔ S-esm, H2 M-none ↔ S-agr, H3 M-gat ↔ M-self, boş kol negatif kontrol; eşli işaret-çevirme + bootstrap,
+    H2/H3 Holm. Kural portföyleri ölçüte girmez, her raporda yanında verilir. M8 en iyi kolu seçmez (§6.5).
+  belgede: [docs/development/phase-10-m8-design.md]
+  kodda: [scripts/marl/analyze_m8.py]
+  ilgili: [on-kayit, mappo, sarl, kural-portfoyleri, ileri-veri-testi, m-asamalari]
+  uyari: >-
+    M8 "MARL tek ajandan iyi mi" sorusunu yanıtlar, "MARL basit kurallardan iyi mi" sorusunu yanıtlamaz.
+
+- id: ileri-veri-testi
+  terim: İleri veri testi (sanal para simülasyonu)
+  kategori: sistem
+  sade: >-
+    Dondurulmuş modellerin, eğitimden sonra gelen gerçek günlerde sanal parayla izlenmesi. Sonuç, yeterli gün birikince bir kez okunur.
+  teknik: >-
+    Faz 11: M8'in 2026 katından seçilmiş 72 politika (kol başına 12) ve 4 kural portföyü, 2026-11-23'ten itibaren her
+    akşam aynı defterle ilerletilir; tam 126 seansta ön kayıt ekine göre bir kez okunur. Pano ara görünümdür, hiçbir
+    kural ona göre değişmez. Defterin tek yazarı sunucudur (WRITER).
+  belgede: [docs/development/phase-11-integration-plan.md, docs/development/phase-11-m8-forward-annex.md]
+  kodda: [marl/forward_job.py::status, marl/forward_views.py::view]
+  ilgili: [m8, on-kayit, kagit-portfoy, okuma-kurali]
 
 - id: m3
   terim: M3a / M3b
@@ -414,7 +442,8 @@
     Önceden yazılmış bir sınamadan geçen bulgu doğrulayıcı, sonuca bakarak fark edilen ama sınanmamış işaret keşifseldir. Keşifsel bir işaret tez bulgusu sayılmaz, yeni bir ön kayıtla sınanır.
   teknik: >-
     Geliştirme pilotları (M3–M5) keşifsel ya da geliştirme kapısıdır; doğrulayıcı sınama M8 ön kaydında ve dokunulmamış
-    pencerede (m0p-v2 doğrulayıcı penceresi) yapılır. Rehber kartlarında "tez bulgusu değil" rozeti bu ayrımı gösterir.
+    pencerede (m0p-v2 doğrulayıcı penceresi) yapılır. Rehber kartlarında "tez bulgusu değil" ve "ön kayıtlı nihai deney"
+    rozetleri bu ayrımı gösterir.
   belgede: [docs/development/phase-10-marl-plan.md]
   ilgili: [on-kayit, gelistirme-kapisi, okuma-o1-o4, pencereler]
 
@@ -654,6 +683,17 @@
   kodda: [marl/rule_baselines.py::rule_series]
   ilgili: [baseline-1n]
 
+
+- id: kural-portfoyleri
+  terim: Kural portföyleri (1/N, al-tut, min-varyans, HRP)
+  kategori: degerlendirme
+  sade: >-
+    Öğrenme içermeyen, sabit bir kuralla ağırlık veren basit stratejiler. Öğrenen modellerin her raporda yanında gösterilir.
+  teknik: >-
+    1/N her gün eşit ağırlık, al-tut ilk gün 1/N sonra işlem yok; min-varyans (uzun-yalnız, Ledoit-Wolf kovaryans) ve HRP
+    ay başında 252 günlük pencereyle yeniden dengelenir. Ortamın muhasebesi ve aynı maliyetle (rule_series).
+  kodda: [marl/rule_baselines.py::rule_series, marl/rule_baselines.py::hrp, marl/rule_baselines.py::minvar_long_only]
+  ilgili: [baseline-1n, al-tut, islem-maliyeti, m8]
 - id: devir
   terim: Devir
   kategori: degerlendirme
@@ -834,6 +874,18 @@
   kodda: [marl/m3_runner.py::build_experiment]
   ilgili: [ippo, elestirmen, ctde, ppo]
   kaynak: ["Yu vd. (2022)"]
+
+- id: sarl
+  terim: SARL (tek ajanlı kıyas kolları)
+  kategori: marl
+  sade: >-
+    Bütün portföy kararını tek bir ajanın verdiği kıyas düzeni. Çok ajanlı eğitimin bir şey katıp katmadığı buna göre ölçülür.
+  teknik: >-
+    M8 iki SARL kolu: S-esm (eşmimari; M-none ajan MLP'siyle aynı katmanlar, ortak oran kırpması ve tek değer) ve S-agr
+    (düz gözlemden 2N çıkışlı tek MLP). Aynı gözlem, eylem temsili, maliyet ve tohumlar.
+  kodda: [marl/sarl.py::SarlPortfolioEnv, marl/sarl.py::RowSharedPolicy]
+  belgede: [docs/development/phase-10-m8-design.md]
+  ilgili: [mappo, m8, parametre-paylasimi]
 
 - id: ippo
   terim: IPPO

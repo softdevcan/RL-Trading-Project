@@ -12,6 +12,7 @@ Ne dogrular (ag yok; is tetigi sahte fonksiyonla degistirilir):
 from __future__ import annotations
 
 import json
+import re
 import os
 import sys
 import tempfile
@@ -101,7 +102,8 @@ if HAVE:
     from app.main import _dash_app
 
     def fire(client, fragment, inputs, states=None):
-        key = next(k for k in _dash_app.callback_map if fragment in k)
+        # kimlik sinirinda eslesme: 'sim-chart.figure' ana sayfanin 'home-sim-chart.figure'ini secmesin (§3.14)
+        key = next(k for k in _dash_app.callback_map if re.search(r'(^|\.)' + re.escape(fragment), k))
         entry = _dash_app.callback_map[key]
 
         def one(part):
@@ -156,6 +158,33 @@ if HAVE:
     check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "
           f"200 / sermaye 0 / bilinmeyen strateji 422; lot tablosu ve gunluk defter: lot x kapanis + nakit = deger; "
           f"pano sayfasi + gorunum + defter + render callback'leri 200 (grafik 9 iz)", ok5)
+
+    # 6 §3.14 ana sayfa: sayfa + M8 ozeti (snapshot) + simulasyon kutusu + durum seridi (TRT saati)
+    from dashboard.pages import home as H
+    with TestClient(app) as c:
+        login(c, "viewer@test.local", "ViewerPass1")
+        hp = fire(c, "page-content.children", ["/dash/"])
+        htxt = json.dumps(hp.json(), ensure_ascii=False) if hp.status_code == 200 else ""
+        rm8 = fire(c, "home-m8-chart.figure", [0])
+        m8fig = rm8.json().get("response", {}).get("home-m8-chart", {}).get("figure", {}) if rm8.status_code == 200 else {}
+        rsim = fire(c, "home-sim-chart.figure", ["test2026", 0])
+        sresp = rsim.json().get("response", {}) if rsim.status_code == 200 else {}
+        rst = fire(c, "home-strip-wrap.children", [0])
+        st = c.get("/api/marl/forward/status").json()
+    m8 = H.load_m8_summary()
+    f = H.featured(m8)
+    bars = (m8fig.get("data") or [{}])[0]
+    ok6 = hp.status_code == 200 and "Öne çıkan model" in htxt and "MARL iletişimsiz (MAPPO)" in htxt
+    # one cikan = bos kol haric en yuksek ortalama; kurallar ondan yukarida; cubuk degerleri ozetle ayni (10 cubuk)
+    ok6 &= f["arm"]["kol"] == "M-none" and f["rules_above"] == 4 and len(bars.get("x", [])) == 10
+    ok6 &= sorted(bars.get("x", [])) == sorted([a["ort"] for a in m8["kollar"]] + [r["ort"] for r in m8["kurallar"]])
+    # 2026 test: M-none bant + 3 cizgi; tablo 3 satir; durum seridi 200
+    ok6 &= len(sresp.get("home-sim-chart", {}).get("figure", {}).get("data", [])) == 4 and rst.status_code == 200
+    ok6 &= "Toplam getiri" in json.dumps(sresp.get("home-sim-table", {}), ensure_ascii=False)
+    lr = st.get("last_run") or {}
+    ok6 &= (not lr.get("finished")) or (lr.get("finished_trt") or "").endswith("+03:00")
+    check("6. §3.14 ana sayfa: sayfa 200 + one cikan M-none (bos kol haric), 4 kural ustte, M8 grafigi 10 cubuk = "
+          "snapshot ozeti; 2026 test kutusu 4 iz + tablo; durum seridi 200; son calisma TRT damgali", ok6)
 else:
     print("[ATLANDI] 5. dondurulmus arsiv yok")
 

@@ -2,6 +2,123 @@
  "not": "URETILDI: scripts/build_guide.py <- dashboard/content/guide.yaml + kaynaklar. ELLE DUZENLEME.",
  "kartlar": [
   {
+   "id": "m8-h1",
+   "baslik": "M8 · H1: Çok ajanlı eğitim, tek ajanlı eğitimden iyi mi?",
+   "soru": "Aynı gözlem, aynı mimari ve aynı tohumlarla, her hisseye bir ajanın baktığı çok ajanlı eğitim (MAPPO, iletişimsiz) ile bütün kararı tek ajanın verdiği eğitim (SARL eşmimari) karşılaştırıldı. Altı yılın her biri ayrı test, işlem maliyeti 20 baz puan, kol başına 12 tohum.",
+   "okuma": "Çok ajanlı eğitim maliyet sonrası daha yüksek Sharpe verdi. Fark yıla bağlı: altı yılın beşinde aynı yönde, son yılda ters; büyüklüğü tek bir yıla duyarlı. Farkın yaklaşık yarısı maliyetsiz durumda da sürüyor, kalanı daha az işlem yapmaktan geliyor. \"Daha iyi hisse seçiyor\" denmez.",
+   "etiket": "FARK VAR: MARL",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+    "alan": "contrasts.H1.label",
+    "ham": "FARK_VAR_MARL"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, 6 yılda ortalama (MAPPO − SARL eşmimari)",
+     "deger": "+0,47",
+     "ham": 0.4650973808922396,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "contrasts.H1.delta_bar"
+    },
+    {
+     "ad": "Aynı fark maliyetsiz (betimsel)",
+     "deger": "+0,24",
+     "ham": 0.23728592229728068,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "descriptive.cost_grid_delta.H1.0"
+    }
+   ],
+   "belge": "docs/development/phase-10-m8-design.md",
+   "terimler": [
+    "m8",
+    "mappo",
+    "sarl",
+    "devir",
+    "islem-maliyeti",
+    "on-kayit"
+   ],
+   "kademe": "nihai",
+   "rozet": "Ön kayıtlı nihai deney"
+  },
+  {
+   "id": "m8-h2",
+   "baslik": "M8 · H2: Paylaşımlı yerel mimari, tek merkezi karar vericiden iyi mi?",
+   "soru": "Aynı çok ajanlı kol, bütün hisselerin ağırlığını tek bir ağdan veren tek ajanlı kolla (SARL ağırlık) karşılaştırıldı. Aynı maliyet, aynı tohumlar, altı yıl.",
+   "okuma": "Fark her yılda aynı yönde. Ama maliyetsiz durumda fark kalmıyor: tek ajanlı kol çok daha fazla işlem yapıyor ve fark maliyetten geliyor. Bu bir seçim becerisi farkı değil, işlem sıklığı farkıdır.",
+   "etiket": "FARK VAR: M-none",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+    "alan": "contrasts.H2.label",
+    "ham": "FARK_VAR_M-none"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, 6 yılda ortalama (MAPPO − SARL ağırlık)",
+     "deger": "+0,28",
+     "ham": 0.28092468429810763,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "contrasts.H2.delta_bar"
+    },
+    {
+     "ad": "Aynı fark maliyetsiz (betimsel)",
+     "deger": "−0,01",
+     "ham": -0.006695495845774551,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "descriptive.cost_grid_delta.H2.0"
+    }
+   ],
+   "belge": "docs/development/phase-10-m8-design.md",
+   "terimler": [
+    "m8",
+    "mappo",
+    "sarl",
+    "devir",
+    "holm"
+   ],
+   "kademe": "nihai",
+   "rozet": "Ön kayıtlı nihai deney"
+  },
+  {
+   "id": "m8-h3",
+   "baslik": "M8 · H3: Ajanların birbirini dinlemesi fark yaratıyor mu?",
+   "soru": "Komşularını dinleyebilen ajanlar (graf dikkati) ile aynı mimaride yalnız kendini dinleyenler karşılaştırıldı. Fark mimariden değil, yalnız ajanlar arası bilgi yolundan gelebilir.",
+   "okuma": "İki iletişim türü arasında fark gözlenmedi. Bu \"iletişim işe yaramaz\" demek değil: bu güçle küçük bir farkı ayırt edemiyoruz.",
+   "etiket": "FARK GÖZLENMEDİ",
+   "etiket_kaynak": {
+    "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+    "alan": "contrasts.H3.label",
+    "ham": "FARK_GOZLENMEDI"
+   },
+   "sayilar": [
+    {
+     "ad": "Sharpe farkı, 6 yılda ortalama (graf dikkati − kendine dikkat)",
+     "deger": "−0,01",
+     "ham": -0.009789164330341358,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "contrasts.H3.delta_bar"
+    },
+    {
+     "ad": "Bu düzende tespit edilebilecek en küçük fark (betimsel)",
+     "deger": "0,26",
+     "ham": 0.25680735833938273,
+     "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+     "alan": "contrasts.H3.mde_recomputed.mde80"
+    }
+   ],
+   "belge": "docs/development/phase-10-m8-design.md",
+   "terimler": [
+    "m8",
+    "iletisim-kollari",
+    "graf",
+    "dikkat",
+    "guc",
+    "mde",
+    "etiket-gozlenmedi"
+   ],
+   "kademe": "nihai",
+   "rozet": "Ön kayıtlı nihai deney"
+  },
+  {
    "id": "p5-kapi",
    "baslik": "P5: Gerçek tahmin sinyali bilgi taşıyor mu?",
    "soru": "Tahmin hattının gerçek sinyali, ertesi günün yönünü yazı-turadan daha iyi biliyor mu? Her hisse ayrı ayrı ve çoklu test düzeltmesiyle sınandı.",
@@ -35,6 +152,7 @@
     "pit-tablosu",
     "mde"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -71,6 +189,7 @@
     "d-farki",
     "etiket-gecti"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -106,6 +225,7 @@
     "etiket-kismi",
     "tohum"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -142,6 +262,7 @@
     "kol-kodlari-m4",
     "etiket-kismi"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -178,6 +299,7 @@
     "komsu-sinyali",
     "gelistirme-kapisi"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -215,6 +337,7 @@
     "etiket-kismi",
     "tohum"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -252,6 +375,7 @@
     "mde",
     "siralama-tabani"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   },
   {
@@ -288,6 +412,7 @@
     "rejim",
     "etiket-gozlenmedi"
    ],
+   "kademe": "gelistirme",
    "rozet": "Tez bulgusu değil"
   }
  ],
@@ -449,6 +574,86 @@
    "siradaki": "Dört 2026 tam metni, YÖK taraması"
   }
  ],
+ "m8_ozet": {
+  "kaynak": "docs/development/measurements/phase10-m8/m8_reading.json",
+  "katlar": [
+   "2021",
+   "2022",
+   "2023",
+   "2024",
+   "2025",
+   "2026"
+  ],
+  "hucre_kol_basi": 72,
+  "maliyet_bps": 20,
+  "kollar": [
+   {
+    "kol": "M-none",
+    "ort": 0.31055651309889803,
+    "std": 1.5842559739655186,
+    "alan": "descriptive.arms.M-none.mean_sr"
+   },
+   {
+    "kol": "null",
+    "ort": 0.2373198068901329,
+    "std": 1.4823539249261388,
+    "alan": "descriptive.arms.null.mean_sr"
+   },
+   {
+    "kol": "M-self",
+    "ort": 0.05127162839626051,
+    "std": 1.4809081979304464,
+    "alan": "descriptive.arms.M-self.mean_sr"
+   },
+   {
+    "kol": "M-gat",
+    "ort": 0.04148246406591914,
+    "std": 1.4959306746817482,
+    "alan": "descriptive.arms.M-gat.mean_sr"
+   },
+   {
+    "kol": "S-agr",
+    "ort": 0.02963182880079038,
+    "std": 1.3924702172452619,
+    "alan": "descriptive.arms.S-agr.mean_sr"
+   },
+   {
+    "kol": "S-esm",
+    "ort": -0.15454086779334164,
+    "std": 1.3489341990987698,
+    "alan": "descriptive.arms.S-esm.mean_sr"
+   }
+  ],
+  "kurallar": [
+   {
+    "kural": "minvar",
+    "ort": 0.6127944606167307,
+    "alan": "baselines.<kat>.minvar.sr (6 kat ortalamasi)"
+   },
+   {
+    "kural": "hrp",
+    "ort": 0.6106337038119691,
+    "alan": "baselines.<kat>.hrp.sr (6 kat ortalamasi)"
+   },
+   {
+    "kural": "bh",
+    "ort": 0.5675702014093114,
+    "alan": "baselines.<kat>.bh.sr (6 kat ortalamasi)"
+   },
+   {
+    "kural": "ew",
+    "ort": 0.5391714674386037,
+    "alan": "baselines.<kat>.ew.sr (6 kat ortalamasi)"
+   }
+  ],
+  "etiketler": {
+   "H1": "FARK_VAR_MARL (yila_bagli, secime_dayanikli; 6 yilda ortalama)",
+   "H2": "FARK_VAR_M-none (katlar_tutarli, secime_dayanikli; 6 yilda ortalama)",
+   "H3": "FARK_GOZLENMEDI (yila_bagli, secime_duyarli; 6 yilda ortalama)",
+   "NK": "FARK_GOZLENMEDI (yila_bagli, secime_dayanikli; 6 yilda ortalama)"
+  },
+  "on_kayit": "phase-10-m8-design.md §6 ON KAYIT v1.0"
+ },
  "kaynaklar": {
   "docs/development/measurements/phase10-m3/m3a_results.json": {
    "sha256": "2fc71e9785a767217333d4104cedb2c766003e97783d8ba1b6506e2d1349dcd7",
@@ -478,12 +683,16 @@
    "sha256": "f5d92e2fc7e44c0843693f81e204cec95a0efb26460dfa1f692f77b0efa2fcb7",
    "uretim_commit": "a207e67ddda5b09c1e5f2ca04e3a6e05ca293073"
   },
+  "docs/development/measurements/phase10-m8/m8_reading.json": {
+   "sha256": "4dd03a3e8a0830b38008d5480e931e45e9a026d1935a0659344b2a839ccee5eb",
+   "uretim_commit": "1f898956c08a9c2f5ca2a41b5f8dd12a7bbff676"
+  },
   "docs/development/measurements/phase10-p5/gate_pit_v2_sensitivity.json": {
    "sha256": "ba21c3ff7c29ac14b9fdeb5122e4c0dd62a1079d1f424604df3705a1e5202bbb",
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "8cfcc4d12f2eca6ad1b588a94335e80a057608193f10e0e9f9cbfd9dc3a6bba0",
+   "tablo_sha256": "f753b8f65d944522e2a38e17d00d51fca5b5965a615b7af4fc4e2dc0db18c243",
    "uretim_commit": null
   }
  }
