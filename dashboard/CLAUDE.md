@@ -83,6 +83,14 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   `snapshot.json`'dan (uretilir; kaynak JSON + alan). Sayfa olcum dosyasi acmaz (imajda `docs/` yok).
 - Terim capasi `#terim-<id>`; sinif ailesi `guide-` (custom.css, tema testinde taranir).
 
+### Ana sayfa (Faz 11 §3.14)
+- "Öne çıkan model" bir SIRALAMA DEĞİL: M8 en iyi kolu seçmez. Öğrenen kolların en yükseği (boş kol hariç, negatif
+  kontrol) aynı maliyetteki kural portföylerinin YANINDA gösterilir. İleri veri (126 seans dolmadan) "en iyi" seçiminde
+  kullanılmaz; simülasyon kutusu ara görünüm uyarısını taşır.
+- Sayılar `snapshot.json` `m8_ozet`'ten (build_guide üretir); sayfa ölçüm dosyası açmaz. M8 okuması değişirse
+  `python scripts/build_guide.py`.
+- Günlük işin saat damgaları saat dilimsiz; panoda `finished_trt` kullan (VDS UTC).
+
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
 - `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
   **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat

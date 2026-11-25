@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.14 · 2026-11-25 · Simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.15 · 2026-11-25 · Ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,25 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.14 Ana sayfa ve arayüzün güncel duruma getirilmesi (2026-11-25; kullanıcı isteği; `tests/test_marl_forward_api.py` 6, `tests/test_guide.py` 9)
+
+- **Kullanıcı isteği (2026-11-25).** Pano ana sayfasında simülasyon sonuçları ve en iyi performans veren model gösterilsin; arayüz sistemin bugünkü hâlini yansıtsın. Ana sayfa Faz 1–3 döneminin tek ajanlı modellerini "en iyi model" diye gösteriyordu; rehberde M8 yoktu ve "son sınav dönemine bakılmadı" yazıyordu.
+- **"En iyi model" nasıl gösterilir (ön kayıt sınırı).** M8 en iyi kolu seçmez (M8 §6.5); "MARL tek ajandan iyi mi" sorusunu yanıtlar, "basit kurallardan iyi mi" sorusunu yanıtlamaz (§7.3(b)). Bu yüzden kart bir sıralama değil:
+  - öğrenen kollar arasında 72 hücre ortalaması en yüksek olan (boş kol hariç; o negatif kontrol) M-none, yanında aynı maliyette en yüksek kural portföyü (min-varyans) ve "4 kural portföyünün 4'ü öğrenen kolların hepsinin üstünde" cümlesi;
+  - çubuk grafik 6 kol + 4 kural, 6 yıl ortalaması fazla Sharpe (20 bps), ± std yalnız ipucunda;
+  - "Ön kayıtlı nihai deney" rozeti; etiketler Rehber'deki M8 kartlarında.
+  - İleri veri (126 seansı dolmamış) "en iyi" seçiminde KULLANILMAZ; simülasyon kutusu ara görünüm uyarısını taşır (ek §9).
+- **Sayıların kaynağı.** Pano ölçüm dosyası açmaz (imajda `docs/` yok). `scripts/build_guide.py` `snapshot.json`'a `m8_ozet` yazar: kol ortalamaları `descriptive.arms.<kol>.mean_sr`, kural ortalamaları `baselines.<kat>.<kural>.sr` 6 kat ortalaması (M8 §7.3(b) ile aynı: 1/N 0,54, al-tut 0,57, min-var 0,61, HRP 0,61; M-none 0,31). Kaynak SHA ve üretim commit'i `kaynaklar`'da; test kaynağa eşitliği denetler.
+- **Ana sayfa (`dashboard/pages/home.py`).** Sıra: durum şeridi (ileri veri seansı n/126, son günlük çalışma TRT, marj denetimi ufku, sürüm) → öne çıkan model (M8) ve simülasyon kutusu (ileri veri / 2026 test; kol 12 tohum ort. ± std, 1/N, min-varyans) → katlanır "önceki fazların modelleri" (M8 ile aynı protokolde değil, karşılaştırılmaz). Yenileme 30 sn → 5 dk (defter günde bir değişir); her model için metrik isteği atılan eski "en iyi model" kartları kaldırıldı.
+- **Rehber (`guide.yaml`, `glossary.yaml`).** M8 H1/H2/H3 kartları "Ön kayıtlı nihai deney" rozetiyle (yeni kart alanı `kademe: nihai`; R-K4 geliştirme kapıları için aynen geçerli, `system-guide-plan.md` §16). Bayat metin düzeltildi: "son sınav dönemine bakılmadı", "son sınav henüz açılmadı", "M6–M8 sonraki aşamalar", "simülasyonu hızlandırmak planda". Yeni maddeler: simülasyon panosu sonuç değildir; öğrenen modeller basit kurallardan iyi değildir; ana sayfadaki kart bir sıralama değildir (SSS). Sözlüğe `m8`, `sarl`, `ileri-veri-testi`, `kural-portfoyleri`.
+- **Düzeltmeler.**
+  - Son çalışma saati: günlük `finished` damgası saat dilimsiz `datetime.now()`; VDS konteyneri UTC olduğu için pano 19:16'yı 16:16 gösteriyordu. `marl_forward.info()` `finished_trt` ekler (sunucu kendi günlüğünü okur: naive → yerel → TRT). Defter ve günlük biçimi değişmedi.
+  - Menü Türkçe karakterle; Simülasyon Analiz grubunda Dashboard'un altında; "Trading" → "Günlük karar". Üst çubuk "sıradaki adım": Dashboard → Simülasyon → Rehber.
+  - Simülasyon sayfası: lejant çizim alanının üstüne alındı (4 satıra sarılınca çizgilere biniyordu); kıyas etiketleri Türkçe (`forward_views.ARM_LABELS`, yalnız görüntü etiketi).
+  - `test_marl_forward_api` callback bulucusu kimlik sınırında eşleşir: `sim-chart.figure` ana sayfanın `home-sim-chart.figure`'ını seçip kontrol 5'i yanlış düşürüyordu.
+- **Test.** `test_marl_forward_api` 6 (yeni 6: ana sayfa + öne çıkan M-none + 4 kural üstte + grafik = snapshot özeti + 2026 test kutusu + TRT damgası; arşivli makinede koşuldu, §3.13'ün koşulamayan 5. kontrolü de burada geçti), `test_guide` 9 (kademe rozeti, M8 özeti kaynağa eşit, bilinmeyen kademe mutasyonu), `test_theme_contrast` 92 (`home-` sınıf ailesi taranıyor), `test_dash_props` 4, `test_topbar` 43, `test_marl_sim_book` 5. Görsel kontrol: yerel sunucu + Edge (Playwright), açık ve koyu tema; ana sayfa, simülasyon ve rehber; konsol hatası 0.
+- **Kapsam dışı (ayrı paket).** Eski sayfaların (Eğitim, Tahmin, Modeller, Akademik, Günlük karar, Veri, Hiperparametre) iç metinleri hâlâ Türkçe karaktersiz ve tek ajanlı döneme göre yazılı; ayrı bir arayüz paketi olarak önerildi.
 
 ### 3.13 Simülasyon sayfası yeniden tasarımı (2026-11-25; kullanıcı isteği; `tests/test_marl_sim_book.py` 5)
 
@@ -366,6 +385,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.15 (2026-11-25):** Ana sayfa ve arayüz güncel duruma (§3.14; kullanıcı isteği): M8 özeti (sıralama değil; kural portföyleri yanında) + simülasyon kutusu + durum şeridi; rehberde M8 kartları (`kademe: nihai`), bayat metinler; son çalışma saati TRT; menü Türkçe. Test 6 + 9.
 - **v0.14 (2026-11-25):** Simülasyon sayfası yeniden tasarımı (§3.13; kullanıcı isteği): eldeki hisseler, gün özeti, gün seçimi; `forward_views.daily_book`, tam sayı satırında `fills`/`p_close`. Test 5.
 - **v0.13 (2026-11-25):** İleri veri deposunun VDS'ye devri (§3.12; kullanıcı kararı): tek yazar `WRITER`, devir paritesi betiği, imajda günlük iş dosyaları ve `GIT_COMMIT`.
 - **v0.12 (2026-11-24):** İş Yatırım eski yanıt / zaman aşımı (§3.11): `fetch_isy` beklenen günü yeniden ister, istek başına toplam süre sınırı; veri kuralı aynı. Test 5.

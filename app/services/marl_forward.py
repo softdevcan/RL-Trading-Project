@@ -95,9 +95,24 @@ def stop_scheduler() -> None:
     _state['scheduler'] = False
 
 
+def to_trt(ts: str | None) -> str | None:
+    """Gunlugun `started`/`finished` damgasi saat dilimsiz `datetime.now()` (forward_job): YAZAN surecin yerel saati.
+    VDS konteyneri UTC, gelistirme makinesi TRT; bu yuzden pano ham damgayi TRT sanip 3 saat geri gosteriyordu
+    (Faz 11 §3.14). Sunucu kendi gunlugunu okur, yerel dilim yazanla aynidir: naive -> yerel -> TRT."""
+    if not ts:
+        return None
+    try:
+        d = datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+    return (d.astimezone() if d.tzinfo is None else d).astimezone(TRT).isoformat(timespec='minutes')
+
+
 def info() -> dict:
     from marl import forward_job as FJ
     out = FJ.status() if available() else {'available': False}
+    if out.get('last_run'):
+        out['last_run']['finished_trt'] = to_trt(out['last_run'].get('finished'))
     out.update({'available': available(), 'scheduler': _state['scheduler'], 'running': background_jobs.is_running(JOB_NAME),
                 'cutoff_hour_trt': CUTOFF_HOUR, 'attempts_today': _state['attempts'].get(datetime.now(TRT).date().isoformat(), 0)})
     return out

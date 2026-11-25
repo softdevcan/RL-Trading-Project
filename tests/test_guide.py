@@ -191,18 +191,27 @@ guide_y = BG.load_guide()
 snap = BG.build_snapshot(guide_y)
 ok_cards = True
 for c in snap['kartlar']:
-    ok_cards &= 1 <= len(c['sayilar']) <= BG.MAX_CARD_NUMBERS and c['rozet'] == BG.BADGE
+    ok_cards &= 1 <= len(c['sayilar']) <= BG.MAX_CARD_NUMBERS and c['rozet'] == BG.BADGES[c['kademe']]
     for n in c['sayilar']:
         src = json.load(open(os.path.join(ROOT, *n['kaynak'].split('/')), encoding='utf-8'))
         ok_cards &= bool(n['kaynak'] and n['alan'] and n['deger']) and float(BG.field(src, n['alan'])) == n['ham']
     lab_src = json.load(open(os.path.join(ROOT, *c['etiket_kaynak']['kaynak'].split('/')), encoding='utf-8'))
     ok_cards &= BG.field(lab_src, c['etiket_kaynak']['alan']) == c['etiket_kaynak']['ham']
+# Faz 11 §3.14: M8 kartlari "nihai" rozetli, digerleri "tez bulgusu degil"; ana sayfa ozeti kaynaga esit
+ok_cards &= {c['kademe'] for c in snap['kartlar'] if c['id'].startswith('m8-')} == {'nihai'} and all(
+    c['rozet'] == BG.BADGE for c in snap['kartlar'] if not c['id'].startswith('m8-'))
+m8s, m8j = snap['m8_ozet'], json.load(open(os.path.join(ROOT, *BG.M8_READING.split('/')), encoding='utf-8'))
+ok_cards &= all(a['ort'] == m8j['descriptive']['arms'][a['kol']]['mean_sr'] for a in m8s['kollar']) and all(
+    abs(r['ort'] - sum(m8j['baselines'][f][r['kural']]['sr'] for f in m8j['baselines']) / 6) < 1e-12
+    for r in m8s['kurallar']) and len(m8s['kollar']) == 6 and BG.M8_READING in snap['kaynaklar']
 e_clean = BG.check_guide(guide_y, terms)
 g_bad = copy.deepcopy(guide_y)
 g_bad['deneyler']['kartlar'][1]['sayilar'][0]['alan'] = 'train.olmayan_alan'
+g_kad = copy.deepcopy(guide_y)
+g_kad['deneyler']['kartlar'][0]['kademe'] = 'bilinmeyen'
 g_three = copy.deepcopy(guide_y)
 g_three['deneyler']['kartlar'][1]['sayilar'] *= 2
-e_bad, e_three = BG.check_guide(g_bad, terms), BG.check_guide(g_three, terms)
+e_bad, e_three, e_kad = BG.check_guide(g_bad, terms), BG.check_guide(g_three, terms), BG.check_guide(g_kad, terms)
 
 tmp = tempfile.mkdtemp(prefix='guide_r3_')
 for rel in list(snap['kaynaklar']):
@@ -223,9 +232,11 @@ mp = os.path.join(tmp, *guide_y['neredeyiz']['kaynak'].split('/'))
 md = open(mp, encoding='utf-8').read()
 open(mp, 'w', encoding='utf-8').write(md.replace('| Faz 1–3, 6–8 | bitti |', '| Faz 1–3, 6–8 | sürüyor |', 1))
 stages_change = [a['sinif'] for a in BG.parse_status_table(open(mp, encoding='utf-8').read())][0] == 'suruyor'
-check(f"{len(snap['kartlar'])} kart: 1-2 sayi, her sayi kaynak alanina esit, etiket kaynaktan, rozet var; check_guide temiz; "
+check(f"{len(snap['kartlar'])} kart: 1-2 sayi, her sayi kaynak alanina esit, etiket kaynaktan, kademeye gore rozet (M8 nihai); "
+      "ana sayfa M8 ozeti kaynaga esit; bilinmeyen kademe yakalanir; check_guide temiz; "
       "cozulmeyen alan ve 3 sayili kart yakalanir; kaynak JSON ya da harita degisince snapshot degisir",
       ok_cards and e_clean == [] and any('olmayan_alan' in x for x in e_bad) and any('1-2 sayi' in x for x in e_three)
+      and any('kademe' in x for x in e_kad)
       and same_copy and json_changes and stages_change and len(snap['asamalar']) > 0, f"{e_clean[:3]}")
 
 print("\n" + "=" * 60)

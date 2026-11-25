@@ -51,6 +51,7 @@ DEFAULT_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # K-F11-1
 SEEDS = list(range(201, 213))
 READ_SESSIONS = 126
 FORWARD_START = "2026-11-23"
+RUN_STATUS = {"yazildi": "yazıldı", "degisiklik_yok": "değişiklik yok"}     # forward_job durum kodu -> metin
 RANGES = [{"label": "1A", "value": "1m"}, {"label": "3A", "value": "3m"}, {"label": "Tümü", "value": "all"}]
 RANGE_LEN = {"1m": 21, "3m": 63, "all": None}
 LINE_KEYS = ("orange", "purple", "cyan", "gold", "yellow")    # kıyas çizgileri; mavi incelenen portföyün
@@ -227,7 +228,8 @@ def main_figure(book: dict, view: dict, i: int, rng: str, focus_label: str, them
             fig.add_trace(go.Scatter(x=x, y=up, line={"width": 0}, showlegend=False, hoverinfo="skip"), 1, 1)
             fig.add_trace(go.Scatter(x=x, y=lo, line={"width": 0}, fill="tonexty", fillcolor=plot_rgba(
                 LINE_KEYS[n_line % len(LINE_KEYS)], 0.13, theme), showlegend=False, hoverinfo="skip"), 1, 1)
-        name = line["label"] + (f" (ort. ± std, N={line['n']})" if line["n"] > 1 else "")
+        # Türkçe etiket sayfanın kendi sözlüğünden (API etiketi ASCII); §3.14
+        name = LABELS.get(key, line["label"]) + (f" (ort. ± std, N={line['n']})" if line["n"] > 1 else "")
         fig.add_trace(go.Scatter(x=x, y=m, name=name, line={"color": c, "width": 1.6, "dash": "dash"},
                                  hovertemplate="%{y:,.0f} TL<extra>" + LABELS.get(key, key) + "</extra>"), 1, 1)
     fig.add_trace(go.Scatter(x=xs, y=ys, name=f"{focus_label} · incelenen (tam lot)",
@@ -249,8 +251,11 @@ def main_figure(book: dict, view: dict, i: int, rng: str, focus_label: str, them
     if k0 <= i:
         for r in (1, 2, 3):
             fig.add_vline(x=dates[i], line={"color": p["muted"], "width": 1, "dash": "dot"}, row=r, col=1)
-    fig.update_layout(height=600, margin={"l": 64, "r": 16, "t": 10, "b": 30}, hovermode="x unified",
-                      separators=",.", bargap=0.35, legend={"orientation": "h", "y": 1.06, "x": 0})
+    # Lejant çizim alanının ÜSTÜNDE: y=1.06 + t=10 iken 4 satıra sarılan lejant çizgilerin üstüne biniyordu (§3.14)
+    n_leg = len(((view or {}).get("lines") or {})) + 1
+    fig.update_layout(height=600 + 20 * ((n_leg + 1) // 2), margin={"l": 64, "r": 16, "t": 14 + 22 * ((n_leg + 1) // 2),
+                      "b": 30}, hovermode="x unified", separators=",.", bargap=0.35,
+                      legend={"orientation": "h", "yanchor": "bottom", "y": 1.01, "x": 0, "font": {"size": 11.5}})
     fig.update_xaxes(tickformat="%d.%m.%y", hoverformat="%d.%m.%Y")      # plotly yerel ay adları İngilizce
     fig.update_yaxes(title_text="Değer (TL)", tickformat=",.0f", row=1, col=1)
     fig.update_yaxes(title_text="Gün K/Z", tickformat=",.0f", row=2, col=1)
@@ -471,9 +476,10 @@ def banner(window: str, status: dict) -> list:
                           className="mb-0")]
     n, need = int(s.get("n_sessions") or 0), int(s.get("read_sessions") or READ_SESSIONS)
     last = s.get("last_run") or {}
-    run_txt = "çalışıyor" if s.get("running") else (last.get("status") or "—")
+    run_txt = "çalışıyor" if s.get("running") else RUN_STATUS.get(last.get("status"), last.get("status") or "—")
     margin = (last.get("margin_coverage") or {}).get("horizon_end") or "—"
-    meta = (f"Son defter günü {s.get('last_date') or '—'} · son çalışma {run_txt} {last.get('finished') or ''} · "
+    fin = (last.get("finished_trt") or "")[:16].replace("T", " ")     # TRT (§3.14); ham `finished` yazanin yerel saati
+    meta = (f"Son defter günü {s.get('last_date') or '—'} · son çalışma {run_txt} {fin + ' TRT' if fin else ''} · "
             f"marj denetimi geçerli {margin}")
     if window == "forward":
         title, text = "Ara görünüm — tez sonucu değildir", NOTE_FORWARD

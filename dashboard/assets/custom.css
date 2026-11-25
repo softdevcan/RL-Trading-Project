@@ -1189,6 +1189,12 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .guide-label-gecmedi    { color: var(--rlt-loss); }
 .guide-badge { font-size: 12px; color: var(--rlt-muted); border: 1px dashed var(--rlt-border-strong); border-radius: 4px;
                padding: 0 6px; }
+/* Faz 11 §3.14: on kayitli nihai deney (M8) kartlari gelistirme kapilarindan gorsel olarak ayrilir */
+.guide-label-fark       { color: var(--rlt-primary); }
+.guide-badge-gelistirme { }
+.guide-badge-nihai      { color: var(--rlt-text); border-style: solid; border-color: var(--rlt-primary); }
+.guide-exp-gelistirme   { }
+.guide-exp-nihai        { border-left: 3px solid var(--rlt-primary-fill); }
 .guide-exp-q { color: var(--rlt-text); font-size: 13px; line-height: 1.5; margin: 0 0 8px; }
 .guide-nums  { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
 .guide-num   { flex: 1 1 130px; border: 1px solid var(--rlt-border); border-radius: var(--rlt-radius-sm); padding: 6px 8px;
@@ -1242,3 +1248,31 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .sim-legend-name { flex: 1; color: var(--rlt-text); }
 .sim-legend-val { color: var(--rlt-muted); font-variant-numeric: tabular-nums; }
 .sim-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+/* ── Ana sayfa (Faz 11 §3.14) ─────────────────────────────────────────────── */
+.home-card-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; }
+.home-badge { font-size: 11.5px; color: var(--rlt-text); border: 1px solid var(--rlt-primary); border-radius: 4px; padding: 0 6px; }
+.home-window .form-check-label { font-size: 12.5px; color: var(--rlt-muted); }
+.home-hero { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-bottom: 6px; }
+.home-hero-main { flex: 3 1 260px; min-width: 0; }
+.home-hero-side { flex: 2 1 200px; min-width: 0; padding-left: 16px; border-left: 1px solid var(--rlt-border); }
+.home-kicker { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--rlt-muted); margin-bottom: 2px; }
+.home-hero-name { font-weight: 600; color: var(--rlt-text); font-size: 15px; margin-bottom: 2px; }
+.home-hero-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.home-hero-value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--rlt-primary);
+                   font-variant-numeric: tabular-nums; }
+.home-hero-rule { color: var(--rlt-gold); }
+.home-muted { color: var(--rlt-muted); font-size: 12.5px; }
+.home-notes { color: var(--rlt-text); font-size: 12.5px; line-height: 1.5; padding-left: 18px; margin: 4px 0 10px; }
+.home-notes li { margin-bottom: 3px; }
+.home-note { font-size: 12.5px; color: var(--rlt-muted); background: var(--rlt-surface-2); border-radius: var(--rlt-radius-sm);
+             padding: 8px 10px; }
+.home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.home-src { font-size: 11.5px; color: var(--rlt-muted); }
+.home-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.home-table th { color: var(--rlt-muted); font-weight: 500; font-size: 12px; border-bottom: 1px solid var(--rlt-border);
+                 padding: 4px 6px; }
+.home-table td { color: var(--rlt-text); border-bottom: 1px solid var(--rlt-border); padding: 5px 6px; }
+.home-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.home-legacy { margin-bottom: 24px; }
+.home-legacy-sum { cursor: pointer; color: var(--rlt-text); font-weight: 600; font-size: 14px; }

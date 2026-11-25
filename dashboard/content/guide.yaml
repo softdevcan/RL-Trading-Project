@@ -15,7 +15,10 @@ ne_yapar:
     - >-
       Ayrı bir tahmin hattı, her hisse için ertesi günün yönüne dair bir olasılık üretir. Bu tahminin ajanlara bir şey
       katıp katmadığı, kullanılmadan önce ayrı bir testle (bilgi kapısı) sınanır.
-  terimler: [bist30, ajan, marl, odul, k12, bilgi-kapisi]
+    - >-
+      Son sınav (M8) bitti ve bir kez okundu. O sınavın modelleri donduruldu; şimdi sunucuda her akşam gerçek yeni günlerde
+      sanal parayla izleniyorlar (ileri veri testi). Bu izleme yeterli gün birikince bir kez okunacak.
+  terimler: [bist30, ajan, marl, odul, k12, bilgi-kapisi, m8, ileri-veri-testi]
 
 akis:
   baslik: Veri nasıl akar?
@@ -65,10 +68,21 @@ ne_degildir:
         Aşamaların ara denetimleri az tohumla koşulan pilotlardır. "İşaret var" ya da "gözlenmedi" sonucu, büyük ve ön
         kayıtlı bir deneyin yerini tutmaz.
       terim: gelistirme-kapisi
-    - baslik: Son sınav dönemine bakılmadı.
+    - baslik: Son sınav bir kez okundu; sonucu görüp ayar değiştirilmedi.
       metin: >-
-        2021 ve sonrası son sınav için ayrıldı; geliştirme sırasında bu dönemin başarımı okunmuyor.
-      terim: pencereler
+        2021 ve sonrası son sınav için ayrılmıştı. M8 bu dönemi, kuralları önceden dondurulmuş olarak bir kez okudu. 2022
+        ve sonrası geliştirme sırasında araştırmacıya kısmen açıktı; bu M8 belgesinde beyan edildi.
+      terim: m8
+    - baslik: Simülasyon panosu bir sonuç değildir.
+      metin: >-
+        Dondurulmuş modellerin yeni günlerdeki sanal para defteri panoda her gün görünür. Bu bir ara görünümdür: yeterli
+        gün birikmeden okunmaz ve hiçbir kural ona göre değiştirilmez.
+      terim: ileri-veri-testi
+    - baslik: Öğrenen modeller basit kurallardan iyi değildir.
+      metin: >-
+        Son sınavda hiçbir öğrenen kol, aynı maliyetle basit kural portföylerini (eşit ağırlık, en düşük oynaklık) geçmedi.
+        Sınav "çok ajanlı öğrenme tek ajandan iyi mi" sorusunu yanıtlar, "basit kurallardan iyi mi" sorusunu değil.
+      terim: kural-portfoyleri
     - baslik: Geçmiş testlerin bilinen açıkları var.
       metin: >-
         Geçmişe dönük testlerde gelecekten bilgi taşıyabilen bilinen metodolojik açıklar yol haritasında listeli ve
@@ -85,9 +99,83 @@ neredeyiz:
 deneyler:
   baslik: "Deneyler: ne sorduk, ne bulduk?"
   aciklama: >-
-    Her kart bir geliştirme kapısıdır: sistemin bir parçasının çalışıp çalışmadığına bakılan ara denetim. Etiket ve sayılar
-    ölçüm dosyasından okunur ve kaynağıyla gösterilir. Hiçbiri tez bulgusu değildir.
+    İlk üç kart ön kayıtlı nihai deneyin (M8) sonucudur: kuralları önceden dondurulmuş, bir kez okunmuş tez bulgusu.
+    Geri kalan her kart bir geliştirme kapısıdır: sistemin bir parçasının çalışıp çalışmadığına bakılan ara denetim; tez
+    bulgusu değildir. Etiket ve sayılar ölçüm dosyasından okunur ve kaynağıyla gösterilir.
   kartlar:
+    - id: m8-h1
+      kademe: nihai
+      baslik: "M8 · H1: Çok ajanlı eğitim, tek ajanlı eğitimden iyi mi?"
+      soru: >-
+        Aynı gözlem, aynı mimari ve aynı tohumlarla, her hisseye bir ajanın baktığı çok ajanlı eğitim (MAPPO, iletişimsiz)
+        ile bütün kararı tek ajanın verdiği eğitim (SARL eşmimari) karşılaştırıldı. Altı yılın her biri ayrı test, işlem
+        maliyeti 20 baz puan, kol başına 12 tohum.
+      etiket: {kaynak: docs/development/measurements/phase10-m8/m8_reading.json, alan: contrasts.H1.label}
+      sayilar:
+        - ad: Sharpe farkı, 6 yılda ortalama (MAPPO − SARL eşmimari)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: contrasts.H1.delta_bar
+          ondalik: 2
+          isaret: true
+        - ad: Aynı fark maliyetsiz (betimsel)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: descriptive.cost_grid_delta.H1.0
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Çok ajanlı eğitim maliyet sonrası daha yüksek Sharpe verdi. Fark yıla bağlı: altı yılın beşinde aynı yönde, son yılda
+        ters; büyüklüğü tek bir yıla duyarlı. Farkın yaklaşık yarısı maliyetsiz durumda da sürüyor, kalanı daha az işlem
+        yapmaktan geliyor. "Daha iyi hisse seçiyor" denmez.
+      belge: docs/development/phase-10-m8-design.md
+      terimler: [m8, mappo, sarl, devir, islem-maliyeti, on-kayit]
+
+    - id: m8-h2
+      kademe: nihai
+      baslik: "M8 · H2: Paylaşımlı yerel mimari, tek merkezi karar vericiden iyi mi?"
+      soru: >-
+        Aynı çok ajanlı kol, bütün hisselerin ağırlığını tek bir ağdan veren tek ajanlı kolla (SARL ağırlık)
+        karşılaştırıldı. Aynı maliyet, aynı tohumlar, altı yıl.
+      etiket: {kaynak: docs/development/measurements/phase10-m8/m8_reading.json, alan: contrasts.H2.label}
+      sayilar:
+        - ad: Sharpe farkı, 6 yılda ortalama (MAPPO − SARL ağırlık)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: contrasts.H2.delta_bar
+          ondalik: 2
+          isaret: true
+        - ad: Aynı fark maliyetsiz (betimsel)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: descriptive.cost_grid_delta.H2.0
+          ondalik: 2
+          isaret: true
+      okuma: >-
+        Fark her yılda aynı yönde. Ama maliyetsiz durumda fark kalmıyor: tek ajanlı kol çok daha fazla işlem yapıyor ve
+        fark maliyetten geliyor. Bu bir seçim becerisi farkı değil, işlem sıklığı farkıdır.
+      belge: docs/development/phase-10-m8-design.md
+      terimler: [m8, mappo, sarl, devir, holm]
+
+    - id: m8-h3
+      kademe: nihai
+      baslik: "M8 · H3: Ajanların birbirini dinlemesi fark yaratıyor mu?"
+      soru: >-
+        Komşularını dinleyebilen ajanlar (graf dikkati) ile aynı mimaride yalnız kendini dinleyenler karşılaştırıldı. Fark
+        mimariden değil, yalnız ajanlar arası bilgi yolundan gelebilir.
+      etiket: {kaynak: docs/development/measurements/phase10-m8/m8_reading.json, alan: contrasts.H3.label}
+      sayilar:
+        - ad: Sharpe farkı, 6 yılda ortalama (graf dikkati − kendine dikkat)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: contrasts.H3.delta_bar
+          ondalik: 2
+          isaret: true
+        - ad: Bu düzende tespit edilebilecek en küçük fark (betimsel)
+          kaynak: docs/development/measurements/phase10-m8/m8_reading.json
+          alan: contrasts.H3.mde_recomputed.mde80
+          ondalik: 2
+      okuma: >-
+        İki iletişim türü arasında fark gözlenmedi. Bu "iletişim işe yaramaz" demek değil: bu güçle küçük bir farkı
+        ayırt edemiyoruz.
+      belge: docs/development/phase-10-m8-design.md
+      terimler: [m8, iletisim-kollari, graf, dikkat, guc, mde, etiket-gozlenmedi]
+
     - id: p5-kapi
       baslik: "P5: Gerçek tahmin sinyali bilgi taşıyor mu?"
       soru: >-
@@ -278,9 +366,15 @@ sss:
   sorular:
     - soru: Bu sistem para kazandırıyor mu?
       cevap: >-
-        Bunu bilmiyoruz ve böyle bir iddiamız yok. Sonuçlar geçmiş veride üretildi ve çoğu, cevabı bilerek konmuş sahte
-        bir ipucuyla yapılan denetimlerden geliyor. Son sınav dönemi (2021 ve sonrası) henüz açılmadı.
-      terimler: [pozitif-kontrol, pencereler]
+        Bunu bilmiyoruz ve böyle bir iddiamız yok. Son sınavda (2021–2026, geçmiş veri) hiçbir öğrenen model basit kural
+        portföylerini aynı maliyetle geçmedi. Dondurulmuş modeller şimdi yeni günlerde sanal parayla izleniyor; bu izleme
+        yeterli gün birikmeden okunmaz.
+      terimler: [m8, kural-portfoyleri, ileri-veri-testi]
+    - soru: Ana sayfadaki "öne çıkan model" en iyi model mi?
+      cevap: >-
+        Hayır, bir sıralama değil. Son sınav en iyi kolu seçmez; ana sayfa öğrenen kollar arasında ortalaması en yüksek
+        olanı, aynı maliyetteki kural portföylerinin yanında gösterir. Kural portföyleri öğrenen kolların hepsinin üstünde.
+      terimler: [m8, kural-portfoyleri, sharpe]
     - soru: Neden sahte bir ipucu kullanılıyor?
       cevap: >-
         Gerçek tahmin sinyalinde şu an yön bilgisi tespit edilmedi. Bilgi taşımayan bir sinyalle, sistemin bir ipucunu
@@ -304,5 +398,5 @@ sss:
     - soru: Eğitim sırasında ekran kartı neden az çalışıyor?
       cevap: >-
         Zamanın çoğu işlemcide çalışan piyasa simülasyonunda geçiyor. Ağ küçük olduğu için ekran kartı işini kısa sürede
-        bitirip bir sonraki veriyi bekliyor. Uzun koşulardan önce simülasyonu hızlandırmak planda.
+        bitirip bir sonraki veriyi bekliyor. M8'den önce simülasyon toplu çalışacak biçimde hızlandırıldı.
       terimler: [kare, ajan]

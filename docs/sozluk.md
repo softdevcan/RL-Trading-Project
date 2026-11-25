@@ -4,14 +4,14 @@
 
 Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. Her terimde önce **sade** tanım (konuyu bilmeyen biri için), sonra **teknik** tanım (koddaki karşılığıyla) gelir. Sözlük deney sonucu içermez; sonuçlar ilgili tasarım belgelerindedir.
 
-**Terim sayısı:** 177 · **Tek kaynak:** [`dashboard/content/glossary.yaml`](../dashboard/content/glossary.yaml) · **Plan:** [system-guide-plan.md](development/system-guide-plan.md)
+**Terim sayısı:** 181 · **Tek kaynak:** [`dashboard/content/glossary.yaml`](../dashboard/content/glossary.yaml) · **Plan:** [system-guide-plan.md](development/system-guide-plan.md)
 
 ## İçindekiler
 
-- **[Sistem ve aşamalar](#kat-sistem)** — [Faz](#faz), [Milestone 0'](#milestone-0p), [M1–M8 (Faz 10 aşamaları)](#m-asamalari), [M3a / M3b](#m3), [M4a / M4b](#m4), [M5](#m5), [K-kararları](#k-kararlari), [K12 yürütme ufku](#k12), [Ön kayıt](#on-kayit), [Hakem paneli](#hakem-paneli), [Geliştirme kapısı](#gelistirme-kapisi), [Deneme kaydı (N)](#deneme-kaydi), [Ansari replikasyonu](#ansari-replikasyonu), [Faz 9 paketleri (A–G, P, R)](#faz-9-paketleri), [Bilinen açıklar (Y kodları)](#bilinen-aciklar), [Protokol açık (protocol_open)](#protokol-acik), [Okuma kuralı (okuma tablosu)](#okuma-kurali), [Durma kuralı](#durma-kurali), [Yasak kurtarma yolları](#yasak-kurtarma), [Ölçüm arşivi](#olcum-arsivi)
+- **[Sistem ve aşamalar](#kat-sistem)** — [Faz](#faz), [Milestone 0'](#milestone-0p), [M1–M8 (Faz 10 aşamaları)](#m-asamalari), [M8 (nihai koşumlar)](#m8), [İleri veri testi (sanal para simülasyonu)](#ileri-veri-testi), [M3a / M3b](#m3), [M4a / M4b](#m4), [M5](#m5), [K-kararları](#k-kararlari), [K12 yürütme ufku](#k12), [Ön kayıt](#on-kayit), [Hakem paneli](#hakem-paneli), [Geliştirme kapısı](#gelistirme-kapisi), [Deneme kaydı (N)](#deneme-kaydi), [Ansari replikasyonu](#ansari-replikasyonu), [Faz 9 paketleri (A–G, P, R)](#faz-9-paketleri), [Bilinen açıklar (Y kodları)](#bilinen-aciklar), [Protokol açık (protocol_open)](#protokol-acik), [Okuma kuralı (okuma tablosu)](#okuma-kurali), [Durma kuralı](#durma-kurali), [Yasak kurtarma yolları](#yasak-kurtarma), [Ölçüm arşivi](#olcum-arsivi)
 - **[Deney kodları ve etiketler](#kat-deney)** — [Pozitif kontrol (PC060-K12)](#pozitif-kontrol), [Karıştırılmış kontrol](#karistirilmis-kontrol), [Komşu sinyali (σ)](#komsu-sinyali), [Kol](#kol), [A1 / S1 / A1c / S1c](#kol-kodlari-m3), [N / A / G / Z × X / S](#kol-kodlari-m4), [G0 / GL / GLS / GLM / GD](#kol-kodlari-m5), [GEÇTİ](#etiket-gecti), [KISMİ](#etiket-kismi), [GÖZLENMEDİ](#etiket-gozlenmedi), [PİLOT_İŞARETİ](#etiket-pilot), [Tohum](#tohum), [Gürültü tabanı](#gurultu-tabani), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4), [Keşifsel ve doğrulayıcı bulgu](#kesifsel), [R0-N / SR-N](#kol-kodlari-m6), [T0-N / SO / SO-S / SO-S2 / T0-G / SB / SB-S / SB-S2](#kol-kodlari-m5-gercek), [Sıralama tabanı](#siralama-tabani)
-- **[Değerlendirme ve istatistik](#kat-degerlendirme)** — [Sharpe oranı](#sharpe), [Fazla getiri](#fazla-getiri), [Risksiz faiz (A8)](#risksiz-faiz), [D (Sharpe farkı)](#d-farki), [Ortak HAC](#hac), [Tek yönlü p](#tek-yonlu-p), [Holm düzeltmesi](#holm), [Benjamini–Hochberg (BH-FDR)](#bh-fdr), [Güç](#guc), [En küçük tespit edilebilir etki (MDE)](#mde), [Güven aralığı (GA)](#guven-araligi), [Eğitim / doğrulama / test penceresi](#pencereler), [1/N (eşit ağırlık)](#baseline-1n), [Al-tut](#al-tut), [Devir](#devir), [İşlem maliyeti (bps)](#islem-maliyeti), [Deflated Sharpe (DSR)](#dsr), [Aşırı uyum olasılığı (PBO)](#pbo), [Model güven kümesi (MCS)](#mcs), [Ledoit–Wolf Sharpe farkı testi](#lw-bootstrap), [Blok bootstrap](#blok-bootstrap), [Diebold–Mariano testi](#diebold-mariano), [Sortino ve Calmar oranları](#sortino-calmar), [Getiri birimi (nominal / reel / USD)](#getiri-birimi), [Tohum gereksinimi](#tohum-gereksinimi), [Tohumlar arası özet (IQM, iyileşme olasılığı)](#tohum-ozetleri)
-- **[Çok ajanlı öğrenme](#kat-marl)** — [S-reg (rejim yayın bloğu)](#s-reg), [Dikkat testleri (maskeleme, tek biçimli dikkat, karıştırılmış mesaj)](#dikkat-testleri), [Çok ajanlı pekiştirmeli öğrenme (MARL)](#marl), [Ajan](#ajan), [MAPPO](#mappo), [IPPO](#ippo), [Merkezi eğitim, merkezi olmayan yürütme (CTDE)](#ctde), [Eleştirmen](#elestirmen), [Parametre paylaşımı (K24)](#parametre-paylasimi), [İletişim kolları (none / attn / gat / self)](#iletisim-kollari), [Dikkat (attention)](#dikkat), [Graf (sektör + MST)](#graf), [α (ödül karışımı)](#alfa), [Logit sınırı (5 + ln N)](#logit-siniri), [S-obs](#s-obs), [S-msg](#s-msg), [β (güven ağırlığı)](#beta), [Güven geçidi](#guven-gecidi), [Kare (frame)](#kare), [Bölüm (episode)](#bolum), [BenchMARL / TorchRL](#benchmarl), [Muhasebe (kesirli adım)](#muhasebe), [Hedef ağırlık izdüşümü (risk projeksiyonu)](#izdusum), [Emir dönüşümü](#emir-donusumu), [zlogodds güven terimi](#zlogodds), [Başlangıç eylem gürültüsü (init_std)](#init-std), [Deterministik değerlendirme](#deterministik-degerlendirme)
+- **[Değerlendirme ve istatistik](#kat-degerlendirme)** — [Sharpe oranı](#sharpe), [Fazla getiri](#fazla-getiri), [Risksiz faiz (A8)](#risksiz-faiz), [D (Sharpe farkı)](#d-farki), [Ortak HAC](#hac), [Tek yönlü p](#tek-yonlu-p), [Holm düzeltmesi](#holm), [Benjamini–Hochberg (BH-FDR)](#bh-fdr), [Güç](#guc), [En küçük tespit edilebilir etki (MDE)](#mde), [Güven aralığı (GA)](#guven-araligi), [Eğitim / doğrulama / test penceresi](#pencereler), [1/N (eşit ağırlık)](#baseline-1n), [Al-tut](#al-tut), [Kural portföyleri (1/N, al-tut, min-varyans, HRP)](#kural-portfoyleri), [Devir](#devir), [İşlem maliyeti (bps)](#islem-maliyeti), [Deflated Sharpe (DSR)](#dsr), [Aşırı uyum olasılığı (PBO)](#pbo), [Model güven kümesi (MCS)](#mcs), [Ledoit–Wolf Sharpe farkı testi](#lw-bootstrap), [Blok bootstrap](#blok-bootstrap), [Diebold–Mariano testi](#diebold-mariano), [Sortino ve Calmar oranları](#sortino-calmar), [Getiri birimi (nominal / reel / USD)](#getiri-birimi), [Tohum gereksinimi](#tohum-gereksinimi), [Tohumlar arası özet (IQM, iyileşme olasılığı)](#tohum-ozetleri)
+- **[Çok ajanlı öğrenme](#kat-marl)** — [S-reg (rejim yayın bloğu)](#s-reg), [Dikkat testleri (maskeleme, tek biçimli dikkat, karıştırılmış mesaj)](#dikkat-testleri), [Çok ajanlı pekiştirmeli öğrenme (MARL)](#marl), [Ajan](#ajan), [MAPPO](#mappo), [SARL (tek ajanlı kıyas kolları)](#sarl), [IPPO](#ippo), [Merkezi eğitim, merkezi olmayan yürütme (CTDE)](#ctde), [Eleştirmen](#elestirmen), [Parametre paylaşımı (K24)](#parametre-paylasimi), [İletişim kolları (none / attn / gat / self)](#iletisim-kollari), [Dikkat (attention)](#dikkat), [Graf (sektör + MST)](#graf), [α (ödül karışımı)](#alfa), [Logit sınırı (5 + ln N)](#logit-siniri), [S-obs](#s-obs), [S-msg](#s-msg), [β (güven ağırlığı)](#beta), [Güven geçidi](#guven-gecidi), [Kare (frame)](#kare), [Bölüm (episode)](#bolum), [BenchMARL / TorchRL](#benchmarl), [Muhasebe (kesirli adım)](#muhasebe), [Hedef ağırlık izdüşümü (risk projeksiyonu)](#izdusum), [Emir dönüşümü](#emir-donusumu), [zlogodds güven terimi](#zlogodds), [Başlangıç eylem gürültüsü (init_std)](#init-std), [Deterministik değerlendirme](#deterministik-degerlendirme)
 - **[Tek ajan ve genel pekiştirmeli öğrenme](#kat-rl)** — [Politika](#politika), [Gözlem](#gozlem), [Ödül](#odul), [EMA Sharpe düzeyi](#ema-sharpe), [PPO](#ppo), [Eylem](#eylem), [Tek ajan ortamı (TradingEnv)](#tek-ajan-ortami), [Gymnasium](#gymnasium), [Stable-Baselines3](#sb3), [A2C](#a2c), [TD3](#td3), [SAC](#sac), [Hiperparametre optimizasyonu](#hpo), [Kayan pencereli bölme (wf-v1)](#walk-forward), [Kontrol noktası seçimi](#kontrol-noktasi-secimi), [Moody–Saffell Dₜ terimi](#moody-saffell), [PSR ödülü](#psr-odulu), [ATR ve Kelly pozisyon boyutlandırma](#atr-kelly), [Türbülans endeksi](#turbulans), [Gözlem sağlığı (obs_health)](#gozlem-sagligi), [Fiyat ölçeği (price_norm)](#fiyat-olcegi), [Eksik veri modu](#eksik-veri-modu)
 - **[Tahmin hattı](#kat-tahmin)** — [AUC](#auc), [P tablosu (pit_v1 / pit_v2)](#pit-tablosu), [Bilgi kapısı (İ3)](#bilgi-kapisi), [Kalibrasyon (sıcaklık)](#kalibrasyon), [Tahmin topluluğu (stacking ensemble)](#tahmin-ensemble), [Gradyan artırma modelleri (XGBoost, LightGBM, CatBoost)](#gbm-modelleri), [BiLSTM](#bilstm), [TFT](#tft), [Yön başı](#yon-basi), [Meta-öğrenici](#meta-ogrenici), [Örneklem dışı tahmin (OOF)](#oof), [Çapa (yeniden eğitim noktası)](#capa), [Arındırma ve ambargo (purge / embargo)](#arindirma), [Tahmin ufku](#tahmin-ufku), [p_up_cal (kalibre edilmiş yükseliş olasılığı)](#p-up-cal), [ECE](#ece), [Brier skoru ve BSS](#brier), [TATS](#tats), [Yön isabeti (TDA ve direction_accuracy)](#tda), [ICEEMDAN gürültü ayrıştırma](#iceemdan), [SHAP açıklaması](#shap), [Tahmin izleyici (tracker)](#tahmin-izleyici), [Maske nedeni (mask_reason)](#mask-reason)
 - **[Veri](#kat-veri)** — [HMM rejimi (ikinci tanım)](#hmm-rejim), [BIST-30](#bist30), [Panel](#panel), [Listeleme kilidi](#listeleme-kilidi), [Satış engeli (taban açılış)](#satis-engeli), [Nokta-zamanlılık (B0)](#nokta-zamanlilik), [OHLCV](#ohlcv), [yfinance](#yfinance), [Düzeltilmiş fiyat](#duzeltilmis-fiyat), [Teknik göstergeler (MACD, RSI, CCI, ADX)](#teknik-gostergeler), [ADX (Wilder)](#adx), [RL veri kapısı](#veri-kapisi), [Hayalet gün ve bayat hücre](#hayalet-gun), [Eksik hücre](#eksik-hucre), [EVDS (TCMB)](#evds), [Makro veri (yurt içi)](#makro-veri), [Küresel makro (VIX, US10Y, DXY)](#kuresel-makro), [Endeks serileri (XU100, XU030)](#endeks-serileri), [Piyasa rejimi](#rejim), [Sembol evreni (E0)](#evren), [Tarihsel üyelik (E1)](#tarihsel-uyelik), [Sektör grupları (E2)](#sektor-gruplari), [KAP](#kap), [Temel veri (fundamentals)](#temel-veri)
@@ -50,10 +50,36 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 **Sade:** Çok ajanlı sistemin adım adım kurulduğu aşamalar. Her aşama bir öncekinin üstüne bir parça ekler ve kendi denetimiyle kapanır.
 
-**Teknik:** M1 çerçeve denemesi (BenchMARL/TorchRL), M2 ortam ve muhasebe çekirdeği, M3 öğrenme ve pozitif kontrol, M4 iletişim kolları, M5 tahmin sinyali ve güvenle ağırlıklı iletişim. M6–M8 Faz 10 planında tanımlı sonraki aşamalardır; uzun koşular M8'den önce yapılır.
+**Teknik:** M1 çerçeve denemesi (BenchMARL/TorchRL), M2 ortam ve muhasebe çekirdeği, M3 öğrenme ve pozitif kontrol, M4 iletişim kolları, M5 tahmin sinyali ve güvenle ağırlıklı iletişim, M6 rejim, M7 yorumlanabilirlik, M8 ön kayıtlı nihai koşumlar (2026-11-22'de okundu). Faz 11 M8 politikalarını dondurup ileri veride izler.
 
 - Belgede: [phase-10-marl-plan.md](development/phase-10-marl-plan.md)
-- İlgili: [M3a / M3b](#m3), [M4a / M4b](#m4), [M5](#m5), [Geliştirme kapısı](#gelistirme-kapisi)
+- İlgili: [M3a / M3b](#m3), [M4a / M4b](#m4), [M5](#m5), [M8 (nihai koşumlar)](#m8), [Geliştirme kapısı](#gelistirme-kapisi)
+
+<a id="m8"></a>
+
+### M8 (nihai koşumlar)
+
+**Sade:** Çok ajanlı sistemin, kuralları önceden yazılıp dondurulmuş büyük son sınavı. Altı yılın her biri ayrı test edildi ve sonuç bir kez okundu.
+
+**Teknik:** Ön kayıt v1.0 (etiket m8-prereg-v1): 6 kol × 12 tohum × 6 kat (2021–2026, wf-v1) = 432 koşu, 20 bps maliyet. H1 M-none ↔ S-esm, H2 M-none ↔ S-agr, H3 M-gat ↔ M-self, boş kol negatif kontrol; eşli işaret-çevirme + bootstrap, H2/H3 Holm. Kural portföyleri ölçüte girmez, her raporda yanında verilir. M8 en iyi kolu seçmez (§6.5).
+
+- Kodda: [`scripts/marl/analyze_m8.py`](../scripts/marl/analyze_m8.py)
+- Belgede: [phase-10-m8-design.md](development/phase-10-m8-design.md)
+- İlgili: [Ön kayıt](#on-kayit), [MAPPO](#mappo), [SARL (tek ajanlı kıyas kolları)](#sarl), [Kural portföyleri (1/N, al-tut, min-varyans, HRP)](#kural-portfoyleri), [İleri veri testi (sanal para simülasyonu)](#ileri-veri-testi), [M1–M8 (Faz 10 aşamaları)](#m-asamalari)
+
+**Uyarı:** M8 "MARL tek ajandan iyi mi" sorusunu yanıtlar, "MARL basit kurallardan iyi mi" sorusunu yanıtlamaz.
+
+<a id="ileri-veri-testi"></a>
+
+### İleri veri testi (sanal para simülasyonu)
+
+**Sade:** Dondurulmuş modellerin, eğitimden sonra gelen gerçek günlerde sanal parayla izlenmesi. Sonuç, yeterli gün birikince bir kez okunur.
+
+**Teknik:** Faz 11: M8'in 2026 katından seçilmiş 72 politika (kol başına 12) ve 4 kural portföyü, 2026-11-23'ten itibaren her akşam aynı defterle ilerletilir; tam 126 seansta ön kayıt ekine göre bir kez okunur. Pano ara görünümdür, hiçbir kural ona göre değişmez. Defterin tek yazarı sunucudur (WRITER).
+
+- Kodda: [`marl/forward_job.py::status`](../marl/forward_job.py), [`marl/forward_views.py::view`](../marl/forward_views.py)
+- Belgede: [phase-11-integration-plan.md](development/phase-11-integration-plan.md), [phase-11-m8-forward-annex.md](development/phase-11-m8-forward-annex.md)
+- İlgili: [M8 (nihai koşumlar)](#m8), [Ön kayıt](#on-kayit), [Kağıt portföy](#kagit-portfoy), [Okuma kuralı (okuma tablosu)](#okuma-kurali)
 
 <a id="m3"></a>
 
@@ -419,7 +445,7 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 **Sade:** Önceden yazılmış bir sınamadan geçen bulgu doğrulayıcı, sonuca bakarak fark edilen ama sınanmamış işaret keşifseldir. Keşifsel bir işaret tez bulgusu sayılmaz, yeni bir ön kayıtla sınanır.
 
-**Teknik:** Geliştirme pilotları (M3–M5) keşifsel ya da geliştirme kapısıdır; doğrulayıcı sınama M8 ön kaydında ve dokunulmamış pencerede (m0p-v2 doğrulayıcı penceresi) yapılır. Rehber kartlarında "tez bulgusu değil" rozeti bu ayrımı gösterir.
+**Teknik:** Geliştirme pilotları (M3–M5) keşifsel ya da geliştirme kapısıdır; doğrulayıcı sınama M8 ön kaydında ve dokunulmamış pencerede (m0p-v2 doğrulayıcı penceresi) yapılır. Rehber kartlarında "tez bulgusu değil" ve "ön kayıtlı nihai deney" rozetleri bu ayrımı gösterir.
 
 - Belgede: [phase-10-marl-plan.md](development/phase-10-marl-plan.md)
 - İlgili: [Ön kayıt](#on-kayit), [Geliştirme kapısı](#gelistirme-kapisi), [Gerçek sinyal okumaları (O1–O4)](#okuma-o1-o4), [Eğitim / doğrulama / test penceresi](#pencereler)
@@ -620,6 +646,17 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 
 - Kodda: [`marl/rule_baselines.py::rule_series`](../marl/rule_baselines.py)
 - İlgili: [1/N (eşit ağırlık)](#baseline-1n)
+
+<a id="kural-portfoyleri"></a>
+
+### Kural portföyleri (1/N, al-tut, min-varyans, HRP)
+
+**Sade:** Öğrenme içermeyen, sabit bir kuralla ağırlık veren basit stratejiler. Öğrenen modellerin her raporda yanında gösterilir.
+
+**Teknik:** 1/N her gün eşit ağırlık, al-tut ilk gün 1/N sonra işlem yok; min-varyans (uzun-yalnız, Ledoit-Wolf kovaryans) ve HRP ay başında 252 günlük pencereyle yeniden dengelenir. Ortamın muhasebesi ve aynı maliyetle (rule_series).
+
+- Kodda: [`marl/rule_baselines.py::rule_series`](../marl/rule_baselines.py), [`marl/rule_baselines.py::hrp`](../marl/rule_baselines.py), [`marl/rule_baselines.py::minvar_long_only`](../marl/rule_baselines.py)
+- İlgili: [1/N (eşit ağırlık)](#baseline-1n), [Al-tut](#al-tut), [İşlem maliyeti (bps)](#islem-maliyeti), [M8 (nihai koşumlar)](#m8)
 
 <a id="devir"></a>
 
@@ -825,6 +862,18 @@ Projede geçen aşama adları, deney kodları, etiketler ve yöntem terimleri. H
 - Kodda: [`marl/m3_runner.py::build_experiment`](../marl/m3_runner.py)
 - İlgili: [IPPO](#ippo), [Eleştirmen](#elestirmen), [Merkezi eğitim, merkezi olmayan yürütme (CTDE)](#ctde), [PPO](#ppo)
 - Kaynak: Yu vd. (2022)
+
+<a id="sarl"></a>
+
+### SARL (tek ajanlı kıyas kolları)
+
+**Sade:** Bütün portföy kararını tek bir ajanın verdiği kıyas düzeni. Çok ajanlı eğitimin bir şey katıp katmadığı buna göre ölçülür.
+
+**Teknik:** M8 iki SARL kolu: S-esm (eşmimari; M-none ajan MLP'siyle aynı katmanlar, ortak oran kırpması ve tek değer) ve S-agr (düz gözlemden 2N çıkışlı tek MLP). Aynı gözlem, eylem temsili, maliyet ve tohumlar.
+
+- Kodda: [`marl/sarl.py::SarlPortfolioEnv`](../marl/sarl.py), [`marl/sarl.py::RowSharedPolicy`](../marl/sarl.py)
+- Belgede: [phase-10-m8-design.md](development/phase-10-m8-design.md)
+- İlgili: [MAPPO](#mappo), [M8 (nihai koşumlar)](#m8), [Parametre paylaşımı (K24)](#parametre-paylasimi)
 
 <a id="ippo"></a>
 

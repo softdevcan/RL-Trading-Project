@@ -14,29 +14,30 @@ from dashboard.theme import BLUE, BORDER, TEXT, TEXT_MUTED, SIDEBAR_STYLE
 
 # Gruplar sirayla cizilir; admin grubu yalnizca admin icin eklenir.
 NAV_GROUPS = [
+    # Faz 11 §3.14: Simulasyon (M8 ileri veri testi) ana sayfanin hemen altinda; etiketler Turkce karakterle.
     ("Analiz", [
         {"label": "Dashboard", "icon": "bi bi-speedometer2", "href": "/dash/"},
+        {"label": "Simülasyon", "icon": "bi bi-cash-coin", "href": "/dash/simulation"},
         {"label": "Rehber", "icon": "bi bi-book", "href": "/dash/guide"},
         {"label": "Modeller", "icon": "bi bi-diagram-3", "href": "/dash/models"},
         {"label": "Akademik", "icon": "bi bi-journal-bookmark", "href": "/dash/academic"},
     ]),
-    ("Islem", [
-        {"label": "Trading", "icon": "bi bi-graph-up-arrow", "href": "/dash/daily-trading"},
+    ("İşlem", [
+        {"label": "Günlük karar", "icon": "bi bi-graph-up-arrow", "href": "/dash/daily-trading"},
         {"label": "Tahmin", "icon": "bi bi-lightning-charge", "href": "/dash/prediction"},
-        {"label": "Simulasyon", "icon": "bi bi-cash-coin", "href": "/dash/simulation"},
     ]),
     ("Sistem", [
-        {"label": "Egitim", "icon": "bi bi-cpu", "href": "/dash/training"},
+        {"label": "Eğitim", "icon": "bi bi-cpu", "href": "/dash/training"},
         {"label": "Veri", "icon": "bi bi-database", "href": "/dash/data"},
-        {"label": "HiperParam", "icon": "bi bi-sliders", "href": "/dash/hyperopt"},
+        {"label": "Hiperparametre", "icon": "bi bi-sliders", "href": "/dash/hyperopt"},
     ]),
 ]
 
-ADMIN_GROUP = ("Yonetim", [
-    {"label": "Kullanicilar", "icon": "bi bi-people", "href": "/dash/users"},
+ADMIN_GROUP = ("Yönetim", [
+    {"label": "Kullanıcılar", "icon": "bi bi-people", "href": "/dash/users"},
 ])
 
-ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
+ROLE_LABELS = {"admin": "Yönetici", "user": "Kullanıcı", "viewer": "İzleyici"}
 
 
 def _nav_link(item: dict) -> html.Div:
@@ -97,7 +98,7 @@ def _account_link(user: dict) -> html.Div:
     """
     name = display_name()
     role = user.get("role")
-    subtitle = ROLE_LABELS.get(role, role) if role else "Kimlik dogrulama kapali"
+    subtitle = ROLE_LABELS.get(role, role) if role else "Kimlik doğrulama kapalı"
     email = user.get("email", "")
     return html.Div(
         dbc.NavLink(
@@ -118,8 +119,8 @@ def _account_link(user: dict) -> html.Div:
             active="exact",
             className="sidebar-account",
         ),
-        title=(f"{email} - Hesabim, gorunum ve guvenlik" if email
-               else "Hesabim - gorunum ayarlari"),
+        title=(f"{email} - Hesabım, görünüm ve güvenlik" if email
+               else "Hesabım - görünüm ayarları"),
     )
 
 
@@ -141,7 +142,7 @@ def _user_footer():
             html.Div(
                 html.A(
                     [html.I(className="bi bi-box-arrow-right"),
-                     html.Span("Cikis", className="nav-label ms-1")],
+                     html.Span("Çıkış", className="nav-label ms-1")],
                     href="/logout",
                     className="sidebar-logout",
                 ),

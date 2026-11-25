@@ -204,9 +204,18 @@ def render(terms: list) -> str:
 GUIDE = os.path.join(ROOT, 'dashboard', 'content', 'guide.yaml')
 SNAPSHOT = os.path.join(ROOT, 'dashboard', 'content', 'snapshot.json')
 GUIDE_SECTIONS = ('ne_yapar', 'akis', 'neredeyiz', 'deneyler', 'ne_degildir', 'sss')
-LABELS = {'GECTI': 'GEÇTİ', 'KISMI': 'KISMİ', 'GOZLENMEDI': 'GÖZLENMEDİ', 'PILOT_ISARETI': 'PİLOT_İŞARETİ'}
+LABELS = {'GECTI': 'GEÇTİ', 'KISMI': 'KISMİ', 'GOZLENMEDI': 'GÖZLENMEDİ', 'PILOT_ISARETI': 'PİLOT_İŞARETİ',
+          # M8 on kayitli etiketleri (phase-10-m8-design.md §6.5); etiket adinda kolun adi gecer
+          'FARK_VAR_MARL': 'FARK VAR: MARL', 'FARK_VAR_M-none': 'FARK VAR: M-none', 'FARK_GOZLENMEDI': 'FARK GÖZLENMEDİ'}
 MAX_CARD_NUMBERS = 2          # R-K4
-BADGE = 'Tez bulgusu değil'   # R-K4: her kartta zorunlu
+BADGE = 'Tez bulgusu değil'   # R-K4: gelistirme kapisi kartlarinda zorunlu
+# Faz 11 §3.14: on kayitli nihai deney (M8) kartlari "tez bulgusu degil" tasiyamaz; rozetleri ayri ve yine zorunlu.
+BADGES = {'gelistirme': BADGE, 'nihai': 'Ön kayıtlı nihai deney'}
+# Ana sayfanin "one cikan model" ozeti (Faz 11 §3.14): pano olcum dosyasi acmaz, sayilar buradan kaynakli gelir.
+M8_READING = 'docs/development/measurements/phase10-m8/m8_reading.json'
+M8_ARMS = ('M-none', 'null', 'M-self', 'M-gat', 'S-agr', 'S-esm')
+M8_RULES = ('minvar', 'hrp', 'bh', 'ew')
+M8_COST_BPS = 20              # on kayitli maliyet (gidis-donus), M8 §6
 DONE_WORDS = ('bitti', 'donduruldu', 'kapandı', 'kapandi')
 
 
@@ -311,6 +320,8 @@ def check_guide(guide: dict, terms: list, root: str = ROOT) -> list:
         texts += [c['baslik'], c['soru'], c['okuma']] + [n['ad'] for n in c['sayilar']]
         if not os.path.isfile(os.path.join(root, *c['belge'].split('/'))):
             err.append(f"kart {cid}: belge yok: {c['belge']}")
+        if c.get('kademe', 'gelistirme') not in BADGES:
+            err.append(f"kart {cid}: kademe {c.get('kademe')!r} bilinmiyor {sorted(BADGES)}")
         if not 1 <= len(c['sayilar']) <= MAX_CARD_NUMBERS:
             err.append(f'kart {cid}: 1-{MAX_CARD_NUMBERS} sayi olmali')
         for spec in [c['etiket'], *c['sayilar']]:
@@ -357,15 +368,36 @@ def build_snapshot(guide: dict, root: str = ROOT) -> dict:
                          'ham': float(v), 'kaynak': n['kaynak'], 'alan': n['alan']})
         cards.append({'id': c['id'], 'baslik': c['baslik'], 'soru': c['soru'].strip(), 'okuma': c['okuma'].strip(),
                       'etiket': label, 'etiket_kaynak': {'kaynak': e['kaynak'], 'alan': e['alan'], 'ham': ev},
-                      'sayilar': nums, 'belge': c['belge'], 'terimler': c.get('terimler', []), 'rozet': BADGE})
+                      'sayilar': nums, 'belge': c['belge'], 'terimler': c.get('terimler', []),
+                      'kademe': c.get('kademe', 'gelistirme'), 'rozet': BADGES[c.get('kademe', 'gelistirme')]})
     rel = guide['neredeyiz']['kaynak']
     with open(os.path.join(root, *rel.split('/')), encoding='utf-8') as fh:
         table = status_table_text(fh.read())   # metin kipi CRLF'yi zaten '\n' yapar
     stages = parse_status_table(table)
     # Yalniz durum tablosunun ozeti: haritanin baska satiri (or. 'Son guncelleme') rehberi bayatlatmaz.
     sources[rel] = {'tablo_sha256': hashlib.sha256(table.encode('utf-8')).hexdigest(), 'uretim_commit': None}
+    m8, js = build_m8_summary(root, cache)
+    sources.setdefault(M8_READING, _source_rec(M8_READING, js, root))
     return {'not': 'URETILDI: scripts/build_guide.py <- dashboard/content/guide.yaml + kaynaklar. ELLE DUZENLEME.',
-            'kartlar': cards, 'asamalar': stages, 'kaynaklar': dict(sorted(sources.items()))}
+            'kartlar': cards, 'asamalar': stages, 'm8_ozet': m8, 'kaynaklar': dict(sorted(sources.items()))}
+
+
+def build_m8_summary(root: str = ROOT, cache: dict | None = None) -> tuple[dict, dict]:
+    """Ana sayfa ozeti: M8 okumasindan ogrenen kollarin 72 hucre ortalama Sharpe'i (+- std) ve kural portfoylerinin 6 kat
+    ortalamasi (ayni muhasebe, 20 bps; M8 §7.3(b) ile ayni tanim). Siralama YOK: M8 en iyiyi secmez (§6.5); sayfa
+    ogrenen kollarin en yuksegini kurallarin yaninda gosterir. Her alan kaynak JSON'daki yoluyla birlikte yazilir."""
+    cache = {} if cache is None else cache
+    arms_raw, js = _resolve({'kaynak': M8_READING, 'alan': 'descriptive.arms'}, root, cache)
+    base = field(js, 'baselines')
+    folds = sorted(base)
+    arms = [{'kol': a, 'ort': float(arms_raw[a]['mean_sr']), 'std': float(arms_raw[a]['std_sr']),
+             'alan': f'descriptive.arms.{a}.mean_sr'} for a in M8_ARMS]
+    rules = [{'kural': r, 'ort': float(sum(base[f][r]['sr'] for f in folds) / len(folds)),
+              'alan': f'baselines.<kat>.{r}.sr (6 kat ortalamasi)'} for r in M8_RULES]
+    labels = {h: field(js, f'contrasts.{h}.label_full') for h in ('H1', 'H2', 'H3', 'NK')}
+    return {'kaynak': M8_READING, 'katlar': folds, 'hucre_kol_basi': int(field(js, 'contrasts.H1.n_pairs')),
+            'maliyet_bps': M8_COST_BPS, 'kollar': arms, 'kurallar': rules, 'etiketler': labels,
+            'on_kayit': field(js, 'prereg')}, js
 
 
 def snapshot_text(snap: dict) -> str:

@@ -56,7 +56,8 @@ def load_snapshot() -> dict:
 STAGE_GROUPS = (("suruyor", "Sürüyor", "bi bi-play-circle"), ("bitti", "Bitti", "bi bi-check-circle"),
                 ("planli", "Planlı ya da açık", "bi bi-circle"))
 LABEL_CLASS = {"GEÇTİ": "gecti", "KISMİ": "kismi", "GÖZLENMEDİ": "gozlenmedi", "PİLOT_İŞARETİ": "pilot",
-               "GEÇMEDİ": "gecmedi"}
+               "GEÇMEDİ": "gecmedi", "FARK VAR: MARL": "fark", "FARK VAR: M-none": "fark",
+               "FARK GÖZLENMEDİ": "gozlenmedi"}
 
 
 def fold(text: str) -> str:
@@ -191,7 +192,8 @@ def section_stages(g: dict, snap: dict) -> dbc.Card:
 
 def experiment_card(c: dict, names: dict) -> html.Div:
     head = html.Div([html.Span(c["etiket"], className=f"guide-label guide-label-{LABEL_CLASS.get(c['etiket'], 'kismi')}"),
-                     html.Span(c["rozet"], className="guide-badge")], className="guide-exp-tags")
+                     html.Span(c["rozet"], className=f"guide-badge guide-badge-{c.get('kademe', 'gelistirme')}")],
+                    className="guide-exp-tags")
     nums = [html.Div([html.Div(n["deger"], className="guide-num-value"), html.Div(n["ad"], className="guide-num-name"),
                       html.Div(f"{n['kaynak'].rsplit('/', 1)[-1]} · {n['alan']}", className="guide-num-src",
                                title=n["kaynak"])], className="guide-num") for n in c["sayilar"]]
@@ -203,7 +205,7 @@ def experiment_card(c: dict, names: dict) -> html.Div:
         html.P([html.Strong("Okuma: "), c["okuma"]], className="guide-exp-read"),
         html.Div(links, className="guide-chips"),
         html.P(f"Belge: {c['belge']}", className="guide-meta mt-2"),
-    ], id=f"deney-{c['id']}", className="guide-exp")
+    ], id=f"deney-{c['id']}", className=f"guide-exp guide-exp-{c.get('kademe', 'gelistirme')}")
 
 
 def section_experiments(g: dict, snap: dict, names: dict) -> dbc.Card:

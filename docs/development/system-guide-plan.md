@@ -196,10 +196,18 @@ Sıra R1 → R2 → R3 → R4. R1 tek başına değer üretir (okunabilir sözl�
 - **Terimler (2026-11-20):** 98 yeni terim; sözlük 171 terim, 8 kategori (sistem 20, deney 15, değerlendirme 26, MARL 25, tek ajan RL 22, tahmin 23, veri 23, yazılım ve ürün 17). Envanterdeki (§4) her kategori dolu. Her teknik tanım koddan okundu; `kodda` yolları ve `::ad`'lar test [3] ile denetleniyor. Plandaki tahminle iki ayrışma beyan: ensemble meta-öğrenicisinin kurucu varsayılanı `'xgboost'` (alan kural dosyası "Ridge (default)" diyordu; terimde varsayılan iddia edilmedi) ve `seeds_needed` güven aralığı alt ucu değil, güç formülü (tek yönlü %5, %80 güç). Gerçek sinyal kollarının (M5 §5) kol kodları M5 gerçek sinyal PR'ına bırakıldı (o dal henüz main'de değil).
 - **R4 kapandı.** Açık kalan: tarayıcıda görsel denetim (üst çubuk araması ve yeni terimler).
 
+## 16. M8 nihai deney kartları ve R-K4'ün inceltilmesi (2026-11-25; Faz 11 §3.14)
+
+- **Neden:** R-K4 ("tez bulgusu değil" rozeti zorunlu) bütün kartlar geliştirme kapısıyken konmuştu. M8 ön kayıtlı nihai deneydir; aynı rozet onun için yanlış olurdu, rozetsiz kart da R-K4'ü delerdi.
+- **Kural:** kart alanı `kademe` (`gelistirme` varsayılan, `nihai`). Rozet kademeden gelir ve yine zorunludur: `gelistirme` → "Tez bulgusu değil" (R-K4 aynen), `nihai` → "Ön kayıtlı nihai deney". Bilinmeyen kademe `check_guide`'da hata. En fazla 2 sayı ve kaynak kuralı ikisinde de aynı.
+- **Kartlar:** M8 H1, H2, H3 (`m8_reading.json`): etiket ön kayıtlı etiket, sayılar 6 yıl ortalaması Δ̄ ve maliyetsiz Δ̄ (H1, H2; betimsel) ya da MDE₈₀ (H3). Okuma metni M8 §7.3–§7.4 yazım kuralına uyar ("daha iyi hisse seçiyor" denmez).
+- **Ana sayfa özeti:** `snapshot.json` `m8_ozet` (kol ve kural ortalamaları, alan yollarıyla); ana sayfa ölçüm dosyası açmaz.
+
 ---
 
 ## Versiyon geçmişi
 
+- **v0.9 (2026-11-25):** M8 nihai deney kartları, `kademe` alanı, R-K4 inceltildi (§16); ana sayfa için `m8_ozet`.
 - **v0.8 (2026-11-20):** R4 kalan 98 terim (§15); sözlük 171 terim. R4 kapandı.
 - **v0.7 (2026-11-20):** R4 üst çubuk araması (§15). Kalan: terimler.
 - **v0.6 (2026-11-19):** R4 kısmi (§14): SSS bölümü, çapaya kaydırma. Kalan: terimler, üst çubuk araması.

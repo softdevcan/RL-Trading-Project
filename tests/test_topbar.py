@@ -22,6 +22,7 @@ Ne dogrular (Faz 8, G):
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -127,7 +128,7 @@ def main() -> int:
         crumb = r.json()["response"]["topbar-crumb"]["children"]
         check("Grup dogru", crumb[0]["props"]["children"] == "Sistem",
               f"(got {crumb[0]['props']['children']!r})")
-        check("Sayfa adi dogru", crumb[2]["props"]["children"] == "Egitim",
+        check("Sayfa adi dogru", crumb[2]["props"]["children"] == "Eğitim",
               f"(got {crumb[2]['props']['children']!r})")
 
         r = fire(c, "topbar-crumb", ["/dash/"])
@@ -187,12 +188,13 @@ def main() -> int:
     print("\n6) Arama secenekleri role duyarli")
     with TestClient(app) as c:
         login(c, "user@test.local", "UserPass1234")
-        layout = c.get("/dash/_dash-layout").text
-        check("user Yonetim grubunu gormuyor", "Yonetim" not in layout)
+        # JSON unicode kacisli gelir; Turkce etiket (Faz 11 §3.14) icin coz
+        layout = json.dumps(c.get("/dash/_dash-layout").json(), ensure_ascii=False)
+        check("user Yonetim grubunu gormuyor", "Yönetim" not in layout)
     with TestClient(app) as c:
         login(c, "root@test.local", "RootPass1234")
-        layout = c.get("/dash/_dash-layout").text
-        check("admin Yonetim grubunu goruyor", "Yonetim" in layout)
+        layout = json.dumps(c.get("/dash/_dash-layout").json(), ensure_ascii=False)
+        check("admin Yonetim grubunu goruyor", "Yönetim" in layout)
 
     print("\n7) Yapisal bekci")
     # Menuye madde eklenip ROUTE_INDEX'e eklenmezse ust cubuk o sayfada
