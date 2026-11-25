@@ -775,6 +775,22 @@ async def get_data_status():
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@router.get("/data/catalog")
+async def get_data_catalog():
+    """Faz 11 §3.17: diskteki veri setleri gruplu — ham piyasa (bu sayfadan güncellenir), referans serileri (betik),
+    M8 ve ileri veri (dondurulmuş / sunucu işi), evren. Salt okuma, ağ yok."""
+    from app.services import data_catalog, marl_forward
+    status = (await get_data_status()).get("status", {})
+    try:
+        forward = marl_forward.info()
+    except Exception as exc:  # pragma: no cover - katalog ileri veri olmadan da kurulur
+        logger.warning(f"Katalog: ileri veri durumu okunamadi: {exc}")
+        forward = {"available": False}
+    out = data_catalog.build_catalog(status, _count_missing_trading_days, forward)
+    out["status"] = status          # pano tek istekle hem haritayi hem guncelleme kartinin durumunu alir
+    return out
+
+
 @router.post("/data/update")
 async def update_data(request: DataUpdateRequest, user: RequireWriter):
     """Seçili veri kaynaklarını güncelle (incremental veya tam)."""

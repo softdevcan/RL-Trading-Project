@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.17 · 2026-11-26 · Açılır listeler ve takvim, koyu tema §3.16; arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.18 · 2026-11-26 · Veri sayfası veri haritası §3.17; açılır listeler ve takvim, koyu tema §3.16; arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,46 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.17 Veri sayfası: veri haritası (2026-11-26; kullanıcı bildirimi; `tests/test_data_catalog.py` 2)
+
+- **Kullanıcı bildirimi.** Veri sayfasında "veri kaynağı karmaşıklığı".
+- **Ölçülen.**
+  - Sayfa yalnız dört ham kaynağı tanıyordu (BIST-30, altın, makro, fundamental).
+  - Diskte bunların dışında da veri vardı, sayfada hiçbiri yoktu:
+    - değerlendirmenin referans serileri (`data/macro`: risksiz faiz, TÜFE, USD/TRY, XU030, XU100; her birinin `_source.json` kaynak kaydı),
+    - tarihsel evren (`data/universe`),
+    - M8'in dondurulmuş kaynağı ve paneli, ileri veri paneli (`data/marl`),
+    - iki eski panel yedeği (`data/bist/backup_*`).
+  - "12 iş günü eksik" uyarısı, sunucunun her akşam güncellediği M8 ileri verisinin de eksik olduğu izlenimini veriyordu.
+  - Makro güncellemesi risksiz faizi de yeniliyor; sayfa bunu söylemiyordu.
+  - "Veri Kaynağı Özeti" kartı rozetlerle, "BIST-30 Hisse Listesi" kartı hisse çipleriyle aynı bilgiyi tekrarlıyordu.
+- **Katalog (`app/services/data_catalog.py`, `GET /api/trading/data/catalog`).** Salt okuma, ağ yok. Her veri setini tek satırda verir: grup, yol, son tarih, durum, kaynak, kullanan, güncelleme yolu.
+  - **Gruplar:** ham piyasa (bu sayfa), referans serileri, M8 ve ileri veri, evren.
+  - **Ham kaynaklar:** durum `/data/status`'tan gelir; aynı hesap iki kez yapılmaz, uç `status`'u da döndürür ve pano tek istek atar.
+  - **Güncelleme yolları koddan doğrulandı:**
+    - risksiz faiz `/data/update` makro dalında yenilenir;
+    - USD/TRY ve XU100 için komut `python -m data.index_fetcher`;
+    - TÜFE ve XU030 için komut satırı yok, fonksiyon adı yazılır.
+  - **Risksiz faizin "kullanan" metni:** M8 paneli kendi dondurulmuş kopyasını taşır, ileri veri işi kendi çekimini yapar. Dosya güncellemesi M8'i etkilemez.
+  - **Yedekler:** `backup_2026-07-27`'yi R1 ölçüm betikleri okur (`measure_r1_exposure.py`, `measure_r1_folds.py`); sayfa "silmeyin" der.
+- **Sayfa (`dashboard/pages/data.py`).** Sıra:
+  1. Kapsam notu: Güncelle yalnız ham piyasa verisini yazar; M8 ve ileri veri bu sayfadan etkilenmez.
+  2. Veri haritası: dört grup tablosu ve yedek notu.
+  3. "Ham piyasa verisini güncelle" (eski kontroller).
+  4. Katlanır "Tüm CSV dosyaları", grup sütunuyla.
+  - Kaldırılanlar: "Veri Kaynağı Özeti" ve "BIST-30 Hisse Listesi" kartları, ölü kod `_render_source_details`, `_bist30_badges`.
+  - Başlık "Veri".
+- **Test.**
+  - `test_data_catalog` 2 (veri gerektirmez):
+    - dört grup;
+    - ham durumu `/data/status`'tan (eksik gün, okunamadı, anlık görüntü);
+    - "Bu sayfa: Güncelle" yalnız ham grupta (sayfanın vaadi);
+    - ileri veri n/126 ya da "bu sunucuda yok";
+    - `group_of` yol eşlemesi (Windows ayıracı dahil).
+  - `test_theme_contrast` 97 (`data-` sınıf ailesi taranıyor), `test_dash_props` 4.
+  - Uç: oturumsuz 401, izleyici 200 (13 satır).
+  - Görsel kontrol: iki temada yapıldı, konsol hatası 0.
 
 ### 3.16 Açılır listeler ve takvim, koyu tema (2026-11-26; kullanıcı bildirimi; `tests/test_theme_contrast.py` 97)
 
@@ -418,6 +458,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.18 (2026-11-26):** Veri sayfası veri haritası (§3.17; kullanıcı bildirimi): katalog ucu, dört grup (ham / referans / M8 ve ileri veri / evren), kapsam notu, tekrarlayan kartlar kaldırıldı. Test 2.
 - **v0.17 (2026-11-26):** Açılır listeler ve takvim koyu temada (§3.16; kullanıcı bildirimi): beyaz arama satırı, metin arkası kutu, seçili/hover ayrımı, takvim morları; Dropdown ve takvim Türkçe. Test 97.
 - **v0.16 (2026-11-25):** Arayüz metinleri ve kullanılabilirlik (§3.15; kullanıcı isteği): 9 sayfa Türkçe karakter (AST ile görünen dizeler), `fmt.py` Türkçe para/saat/durum, veri dosya listesi sayfalı tablo, boş durumlar, tek ajanlı sayfalara kapsam notu, hiperparametre durum rozeti hatası.
 - **v0.15 (2026-11-25):** Ana sayfa ve arayüz güncel duruma (§3.14; kullanıcı isteği): M8 özeti (sıralama değil; kural portföyleri yanında) + simülasyon kutusu + durum şeridi; rehberde M8 kartları (`kademe: nihai`), bayat metinler; son çalışma saati TRT; menü Türkçe. Test 6 + 9.

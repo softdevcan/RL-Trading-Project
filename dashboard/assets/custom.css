@@ -1358,3 +1358,29 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 /* Faz 11 §3.15: sayfa basligi altindaki kapsam notu (tek ajanli sayfalar, bilgi kapisi) */
 .page-scope-note { font-size: 12.5px; color: var(--rlt-muted); margin: 6px 0 0; max-width: 900px; }
 .page-scope-note a { color: var(--rlt-primary); }
+
+/* ── Veri sayfasi: veri haritasi (Faz 11 §3.17) ─────────────────────────────── */
+.data-muted { color: var(--rlt-muted); font-size: 12.5px; }
+.data-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.data-scope-note { font-size: 13px; background-color: var(--rlt-surface-2) !important; color: var(--rlt-text) !important;
+                   border: 1px solid var(--rlt-border) !important; }
+.data-map-group { margin-bottom: 18px; }
+.data-map-group:last-of-type { margin-bottom: 10px; }
+.data-map-head { display: flex; align-items: center; color: var(--rlt-text); margin-bottom: 2px; }
+.data-map-title { font-weight: 600; font-size: 14px; }
+.data-map-scroll { overflow-x: auto; }
+.data-map-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-map-table th { color: var(--rlt-muted); font-weight: 600; font-size: 11px; text-transform: uppercase;
+                     letter-spacing: .05em; border-bottom: 1px solid var(--rlt-border-strong); padding: 6px 8px;
+                     white-space: nowrap; }
+.data-map-table td { color: var(--rlt-text); border-bottom: 1px solid var(--rlt-border); padding: 8px; vertical-align: top; }
+.data-map-name { font-weight: 600; }
+.data-map-sub { color: var(--rlt-muted); font-size: 11.5px; word-break: break-all; }
+.data-map-date { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.data-map-badge { font-weight: 600; white-space: nowrap; }
+.data-map-table td:nth-child(3) { white-space: nowrap; }
+.data-map-used { min-width: 180px; }
+.data-map-upd { min-width: 200px; }
+.data-map-upd code { color: var(--rlt-text); background: var(--rlt-surface-2); border-radius: 4px; padding: 1px 5px;
+                     font-size: 11.5px; word-break: break-word; }
+.data-files-sum { cursor: pointer; color: var(--rlt-text); font-weight: 600; font-size: 14px; }
