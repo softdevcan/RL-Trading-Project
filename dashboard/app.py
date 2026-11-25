@@ -14,6 +14,10 @@ import os
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 
+# §3.16: dcc.Dropdown ic metinleri Turkce; sayfalar ve ust cubuk Dropdown kurmadan ONCE
+from dashboard.components import dropdown_tr
+dropdown_tr.install()
+
 from dashboard.theme import BG, CONTENT_STYLE, RED, TEXT_MUTED
 from dashboard.components.sidebar import create_sidebar
 from dashboard.components import topbar

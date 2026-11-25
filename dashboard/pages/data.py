@@ -259,6 +259,7 @@ def layout():
                         ),
                         dcc.DatePickerRange(
                             id="data-date-range",
+                            first_day_of_week=1,          # Türkiye: hafta pazartesi başlar (§3.16)
                             start_date=str(five_years_ago),
                             end_date=str(today),
                             display_format="YYYY-MM-DD",

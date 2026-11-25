@@ -347,6 +347,34 @@ def main() -> int:
     check("Kendi siniflarimiz custom.css'te tanimli", not undefined_css,
           f"tanimsiz: {undefined_css}")
 
+    print("\n11) Acilir liste ve takvim (Faz 11 §3.16; koyu temada olculen hatalar)")
+    # Olculen: arama satirinin KAPSAYICISI Dash varsayilaniyla beyazdi; secili takvim gunu ve odak Dash morundaydi;
+    # coklu secimde secili satirlarin hepsi hover renginde. Bekci kurallarin var oldugunu ve renk TOKEN'i
+    # kullandigini denetler (kazandigini gorsel kontrol gosterdi; bkz. dashboard/CLAUDE.md "test seciciyi denetler").
+    def rule_body(selector: str) -> str:
+        m = re.search(re.escape(selector) + r"\s*(?:,[^{]*)?\{([^}]*)\}", custom_css)
+        return m.group(1) if m else ""
+    search_bg = rule_body(".dash-dropdown-search-container")
+    sel_day = rule_body(".dash-datepicker-calendar-date-selected")
+    check("Arama kapsayicisinin zemini token (beyaz kalmaz)", "var(--rlt-surface)" in search_bg, search_bg[:80])
+    check("Secili takvim gunu tema rengi (Dash moru degil)", "var(--rlt-primary-fill)" in sel_day, sel_day[:80])
+    check("Coklu secimde secili satir hover ile ayni boyanmaz",
+          '.dash-dropdown-option[aria-selected="true"] { background-color: transparent' in custom_css)
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from dashboard.components import dropdown_tr
+    dropdown_tr.install()
+    from dash import dcc
+    d = dcc.Dropdown(id="_t", options=[])
+    check("dcc.Dropdown ic metinleri Turkce varsayilan ({num_selected} yer tutucusu)",
+          d.labels.get("search") == "Ara" and "{num_selected}" in d.labels.get("selected_count", ""),
+          str(getattr(d, "labels", None)))
+    js_path = os.path.join(ROOT, "dashboard", "assets", "datepicker-tr.js")
+    tr_js = open(js_path, encoding="utf-8").read() if os.path.exists(js_path) else ""
+    days = dict(re.findall(r'(\w+): "([^"]+)"', tr_js[tr_js.find("var DAYS"):tr_js.find("};", tr_js.find("var DAYS"))]))
+    check("Takvim gun cevirisi cakismasiz (hedef kaynak anahtar degil; 'Sa' hatasi)",
+          len(days) == 7 and not set(days.values()) & set(days), str(days))
+
     print("\n" + "=" * 60)
     print(f"  Gecen: {len(PASSED)}   Kalan: {len(FAILED)}")
     if FAILED:
