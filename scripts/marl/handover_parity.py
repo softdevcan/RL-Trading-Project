@@ -96,11 +96,46 @@ def parity(store_dir: str = FJ.LEDGER_DIR) -> dict:
                     'machine': platform.machine(), 'git_commit': os.environ.get('GIT_COMMIT') or None}}
 
 
+def logits_probe(store_dir: str = FJ.LEDGER_DIR) -> dict:
+    """Politika ciktisi duzeyinde ortam karsilastirmasi (S2 olcutu: ayni gozlemde logit farki <= 1e-6). Her politika
+    iki gozlemle cagrilir; ikisi de iki makinede ayni dosyalardan kurulur: ilk karar satiri + baslangic portfoyu ve
+    defterdeki son karar satiri + defterdeki portfoy. Donus: politika -> [{t, loc, act}] (float32 degerleri float)."""
+    from marl import sim_ledger as SL
+    meta, states, rows = FJ.load_store(store_dir)
+    path = os.path.join(FP.FWD_ROOT, FP.PANEL_FWD)
+    arrays = FJ.truncate(PN.load_npz(path if os.path.exists(path) else FP.PANEL_M8), str(rows['date'].max()))
+    mk = SL.Market(arrays, verified_until=meta.get('verified_until'))
+    r0 = FJ.start_row(arrays['dates'])
+    out = {}
+    for sid in FJ.strategy_ids():
+        if not sid.startswith('policy/'):
+            continue
+        strat = FJ.make_strategy(sid)
+        st0 = SL.LedgerState.start(r0, mk.N, float(meta.get('capital', SL.INITIAL_CAPITAL)), meta={'sid': sid})
+        res = []
+        for st, t in ((st0, r0), (states[sid], states[sid].t)):
+            o = strat.obs(mk, st, t)
+            res.append({'t': int(t), 'loc': [float(x) for x in np.asarray(strat.policy.loc(o)).reshape(-1)],
+                        'act': [float(x) for x in np.asarray(strat.policy.act(o)).reshape(-1)]})
+        out[sid] = res
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=None)
+    ap.add_argument('--logits-out', default=None, help='politika ciktilari (loc, act) bu JSON dosyasina; iki makinede kosup karsilastir')
     ap.add_argument('--digest', action='store_true', help='devir kumesindeki (HANDOVER) her dosyanin SHA-256 ozeti de yazilir')
     a = ap.parse_args()
+    if a.logits_out:
+        probe = logits_probe()
+        os.makedirs(os.path.dirname(a.logits_out) or '.', exist_ok=True)
+        with open(a.logits_out, 'w', encoding='utf-8') as fh:
+            json.dump({'env': {'python': platform.python_version(), 'numpy': np.__version__,
+                               'torch': __import__('torch').__version__, 'machine': platform.machine(),
+                               'git_commit': os.environ.get('GIT_COMMIT') or None}, 'policies': probe}, fh)
+        print(f'politika ciktilari yazildi: {len(probe)} politika')
+        return
     res = parity()
     if a.digest:
         tree = tree_digest()

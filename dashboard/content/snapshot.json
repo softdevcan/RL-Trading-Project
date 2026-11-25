@@ -428,7 +428,7 @@
    "ad": "Sunucu dağıtımı (VDS, CI/CD)",
    "durum": "çalışıyor (v2.24.0, 2026-11-25)",
    "sinif": "planli",
-   "siradaki": "Devir paritesi VDS'de bit_es; yedeğin VDS'den çekilmesi; CI'a veri gerektirmeyen Python testleri"
+   "siradaki": "Yedeğin VDS'den çekilmesi; CI'a veri gerektirmeyen Python testleri"
   },
   {
    "ad": "Canlı karar paritesi (K13)",
@@ -483,7 +483,7 @@
    "uretim_commit": "0e9d374"
   },
   "docs/development/system-map.md": {
-   "tablo_sha256": "6838a4b453faa99902a9974f9b2554ce5377a7c6efa5caf28fc055468459b138",
+   "tablo_sha256": "8cfcc4d12f2eca6ad1b588a94335e80a057608193f10e0e9f9cbfd9dc3a6bba0",
    "uretim_commit": null
   }
  }

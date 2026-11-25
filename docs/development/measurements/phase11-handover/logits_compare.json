@@ -1,0 +1,27 @@
+{
+ "max_abs_loc": 1.6391277313232422e-07,
+ "max_abs_act": 1.3113021850585938e-06,
+ "by_arm_max_loc": {
+  "M-gat": 1.6391277313232422e-07,
+  "M-none": 0.0,
+  "M-self": 1.4901161193847656e-07,
+  "S-agr": 0.0,
+  "S-esm": 0.0,
+  "null": 0.0
+ },
+ "threshold_s2": 1e-06,
+ "env_local": {
+  "python": "3.12.5",
+  "numpy": "2.2.6",
+  "torch": "2.6.0+cu124",
+  "machine": "AMD64",
+  "git_commit": null
+ },
+ "env_vds": {
+  "python": "3.13.18",
+  "numpy": "2.2.6",
+  "torch": "2.9.0+cpu",
+  "machine": "x86_64",
+  "git_commit": "018485bce7af6119cad5acad7eae6f3a19f1c7c6"
+ }
+}
