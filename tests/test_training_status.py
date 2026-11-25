@@ -146,7 +146,7 @@ def main() -> int:
               poll is not None and poll.disabled is False,
               f"(got {getattr(poll, 'disabled', 'yok')})")
         check("Kosum surerken ilerleme blogu basiliyor",
-              content is not None and "egitiliyor" in str(content.children).lower(),
+              content is not None and "eğitiliyor" in str(content.children).lower(),
               f"(got {str(getattr(content, 'children', ''))[:120]})")
 
         set_state(is_training=False, state="idle", current_step=0, total_steps=0)

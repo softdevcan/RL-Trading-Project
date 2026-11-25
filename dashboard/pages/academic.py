@@ -16,7 +16,7 @@ from dashboard.theme import (
     TEXT, TEXT_MUTED, GREEN, RED, BLUE, PURPLE, algo_badge_class, empty_figure,
     apply_theme_template, plot_palette, algo_plot_colors,
 )
-from dashboard.components.page_header import create_page_header
+from dashboard.components.page_header import LEGACY_NOTE, create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
@@ -29,13 +29,14 @@ def layout():
         dcc.Store(id="academic-report-store", data={}),
 
         create_page_header("Akademik Analiz",
-                           "Model performans raporu ve akademik metrikler"),
+                           "Tek ajanlı modellerin performans raporu ve akademik metrikleri",
+                           note=LEGACY_NOTE),
 
         # Generate report button + status
         dbc.Row([
             dbc.Col([
                 dbc.Button(
-                    [html.I(className="bi bi-file-earmark-bar-graph me-2"), "Rapor Olustur"],
+                    [html.I(className="bi bi-file-earmark-bar-graph me-2"), "Rapor Oluştur"],
                     id="academic-report-btn",
                     color="primary",
                     className="me-3",
@@ -55,22 +56,23 @@ def layout():
 
         # Comparison table
         dbc.Card([
-            dbc.CardHeader(html.Span("Model Karsilastirma Tablosu", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Model Karşılaştırma Tablosu", className="card-title-sm")),
             dbc.CardBody(html.Div(id="academic-comparison-table")),
-        ], className="mb-4"),
+        ], className="mb-4", id="academic-table-card"),
 
-        # Charts – 4 charts
-        dbc.Row([
+        # Charts – 4 charts. Veri yokken gizlenir (§3.15): dort bos kutu yerine tek bos durum + yonlendirme.
+        html.Div(id="academic-empty"),
+        html.Div(id="academic-charts", children=[dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Karsilastirma", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Portföy Karşılaştırma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-portfolio-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
                 ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Risk-Getiri Dagilimi", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Risk-Getiri Dağılımı", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-scatter-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
                 ]),
@@ -79,19 +81,19 @@ def layout():
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Metrik Karsilastirma", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Metrik Karşılaştırma", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-metrics-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
                 ]),
             ], md=6, className="mb-4"),
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Kazanma Orani", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Kazanma Oranı", className="card-title-sm")),
                     dbc.CardBody(dcc.Graph(id="academic-winrate-chart", figure=empty_figure(),
                                           config={"displayModeBar": False})),
                 ]),
             ], md=6, className="mb-4"),
-        ]),
+        ])]),
     ])
 
 
@@ -110,7 +112,7 @@ def register_callbacks(app):
         result = api.generate_report()
         if result:
             return False, dbc.Spinner(size="sm", color="primary")
-        return True, dbc.Alert("Rapor baslatılamadı.", color="danger")
+        return True, dbc.Alert("Rapor başlatılamadı.", color="danger")
 
     @app.callback(
         [
@@ -120,6 +122,9 @@ def register_callbacks(app):
             Output("academic-scatter-chart", "figure"),
             Output("academic-metrics-chart", "figure"),
             Output("academic-winrate-chart", "figure"),
+            Output("academic-charts", "style"),
+            Output("academic-table-card", "style"),
+            Output("academic-empty", "children"),
         ],
         [Input("academic-refresh-btn", "n_clicks"), Input("academic-poll", "n_intervals")],
         prevent_initial_call=False,
@@ -135,7 +140,24 @@ def register_callbacks(app):
         metrics_fig = _build_metrics_chart(comparison)
         winrate_fig = _build_winrate_chart(comparison)
 
-        return best_cards, cmp_table, port_fig, scatter_fig, metrics_fig, winrate_fig
+        models = comparison.get("models", comparison.get("results", [])) if comparison else []
+        if not models:
+            return ([], html.Div(), port_fig, scatter_fig, metrics_fig, winrate_fig, {"display": "none"},
+                    {"display": "none"}, _empty_guide())
+        return best_cards, cmp_table, port_fig, scatter_fig, metrics_fig, winrate_fig, {}, {}, html.Div()
+
+
+def _empty_guide():
+    """Veri yokken tek kart: ne yapilacagi + kisayollar (dort bos grafik yerine)."""
+    return dbc.Card(dbc.CardBody([
+        create_state_block("empty", "Henüz değerlendirilmiş tek ajanlı model yok.",
+                           "Eğitim sayfasından bir model eğitin; bitince burada karşılaştırılır. Çok ajanlı nihai "
+                           "testin (M8) sonuçları Dashboard ve Rehber'de."),
+        html.Div([dbc.Button([html.I(className="bi bi-cpu me-1"), "Eğitime git"], href="/dash/training",
+                             color="primary", size="sm", className="me-2"),
+                  dbc.Button([html.I(className="bi bi-speedometer2 me-1"), "Dashboard"], href="/dash/",
+                             color="secondary", outline=True, size="sm")], className="text-center mt-2"),
+    ]), className="mb-4")
 
     @app.callback(
         Output("academic-poll", "disabled", allow_duplicate=True),
@@ -154,10 +176,10 @@ def register_callbacks(app):
 def _render_best_cards(best):
     """4 best model cards: Sharpe, Return, Drawdown, WinRate."""
     categories = [
-        ("En Iyi Sharpe", "sharpe", BLUE, "bi bi-calculator"),
-        ("En Iyi Getiri", "return", GREEN, "bi bi-graph-up"),
+        ("En İyi Sharpe", "sharpe", BLUE, "bi bi-calculator"),
+        ("En İyi Getiri", "return", GREEN, "bi bi-graph-up"),
         ("Min Drawdown", "drawdown", RED, "bi bi-shield-check"),
-        ("En Iyi WinRate", "winrate", PURPLE, "bi bi-trophy"),
+        ("En İyi WinRate", "winrate", PURPLE, "bi bi-trophy"),
     ]
     cols = []
     for label, key, color, icon in categories:
@@ -183,7 +205,7 @@ def _render_best_cards(best):
 def _render_comparison_table(comparison):
     models = comparison.get("models", comparison.get("results", [])) if comparison else []
     if not models:
-        return create_state_block("empty", "Karsilastirma verisi yok.")
+        return create_state_block("empty", "Karşılaştırma verisi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Model", className="section-title"), width=3),
@@ -291,14 +313,14 @@ def _build_winrate_chart(comparison):
     fig = go.Figure()
     fig.add_trace(go.Bar(name="Kazanma %", x=names, y=winrates,
                           marker_color=P["green"], yaxis="y1"))
-    fig.add_trace(go.Scatter(name="Islem Sayisi", x=names, y=trades,
+    fig.add_trace(go.Scatter(name="İşlem Sayısı", x=names, y=trades,
                               mode="lines+markers", marker={"color": P["orange"]},
                               yaxis="y2"))
     apply_theme_template(fig)
     fig.update_layout(
         height=300,
         yaxis={"title": "Kazanma %"},
-        yaxis2={"title": "Islem Sayisi", "overlaying": "y", "side": "right"},
+        yaxis2={"title": "İşlem Sayısı", "overlaying": "y", "side": "right"},
         legend={"orientation": "h", "y": 1.1},
     )
     return fig

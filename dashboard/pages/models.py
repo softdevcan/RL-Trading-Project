@@ -16,12 +16,13 @@ from dashboard.theme import (
     TEXT, TEXT_MUTED, GREEN, RED, empty_figure, apply_theme_template, plot_palette,
     plot_rgba,
 )
-from dashboard.components.page_header import create_page_header
+from dashboard.components.page_header import LEGACY_NOTE, create_page_header
 from dashboard.components.state_block import create_state_block
 from dashboard.components.table import (
     TABLE_STYLES, numeric_columns, tone_rules_formatted,
 )
 import dashboard.api_client as api
+import dashboard.components.fmt as F
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -32,25 +33,26 @@ def layout():
         # Silme sonrasi listeyi tazeler
         dcc.Store(id="models-delete-tick", data=0),
 
-        create_page_header("Model Karsilastirma",
-                           "Birden fazla modeli karsilastir ve detaylari incele"),
+        create_page_header("Model Karşılaştırma",
+                           "Birden fazla modeli karşılaştır ve detayları incele",
+                           note=LEGACY_NOTE),
 
         # Model selection
         dbc.Card([
             dbc.CardBody([
                 dbc.Row([
                     dbc.Col([
-                        html.Label("Model Sec", className="section-title"),
+                        html.Label("Model Seç", className="section-title"),
                         dbc.Checklist(id="models-checklist", options=[], value=[], inline=False),
                     ], md=4),
                     dbc.Col([
-                        dbc.Button([html.I(className="bi bi-check-all me-1"), "Tumu Sec"],
+                        dbc.Button([html.I(className="bi bi-check-all me-1"), "Tümü Seç"],
                                    id="models-select-all", size="sm", color="primary", outline=True, className="me-2"),
-                        dbc.Button([html.I(className="bi bi-x-lg me-1"), "Tumu Kaldir"],
+                        dbc.Button([html.I(className="bi bi-x-lg me-1"), "Tümü Kaldır"],
                                    id="models-deselect-all", size="sm", color="secondary", outline=True),
                     ], md=4, className="d-flex align-items-end"),
                     dbc.Col([
-                        dbc.Button([html.I(className="bi bi-trash me-1"), "Secilenleri sil"],
+                        dbc.Button([html.I(className="bi bi-trash me-1"), "Seçilenleri sil"],
                                    id="models-delete-btn", size="sm", color="danger",
                                    outline=True, disabled=True),
                     ], md=2, className="d-flex align-items-end"),
@@ -69,7 +71,7 @@ def layout():
                 dbc.ModalHeader(dbc.ModalTitle("Modelleri sil")),
                 dbc.ModalBody(html.Div(id="models-delete-body")),
                 dbc.ModalFooter([
-                    dbc.Button("Vazgec", id="models-delete-cancel",
+                    dbc.Button("Vazgeç", id="models-delete-cancel",
                                color="secondary", outline=True, className="me-2"),
                     dbc.Button([html.I(className="bi bi-trash me-1"), "Sil"],
                                id="models-delete-confirm", color="danger"),
@@ -82,7 +84,7 @@ def layout():
 
         # Comparison table
         dbc.Card([
-            dbc.CardHeader(html.Span("Karsilastirma Tablosu", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Karşılaştırma Tablosu", className="card-title-sm")),
             dbc.CardBody([
                 DataTable(
                     id="models-table",
@@ -196,13 +198,13 @@ def register_callbacks(app):
             return False, no_update
         names = selected or []
         body = html.Div([
-            html.P(f"{len(names)} model kalici olarak silinecek. Bu islem geri alinamaz.",
+            html.P(f"{len(names)} model kalıcı olarak silinecek. Bu işlem geri alınamaz.",
                    style={"color": TEXT}),
             html.Ul([html.Li(n, style={"color": TEXT_MUTED, "fontSize": "13px"})
                      for n in names]),
             html.Small(
-                "Model dosyasi ve varsa metrik JSON'u silinir. Ortak (kullanici "
-                "oncesi) dizindeki modeller salt-okunurdur ve atlanir.",
+                "Model dosyası ve varsa metrik JSON'u silinir. Ortak (kullanıcı "
+                "öncesi) dizindeki modeller salt-okunurdur ve atlanır.",
                 style={"color": TEXT_MUTED},
             ),
         ])
@@ -252,7 +254,12 @@ def register_callbacks(app):
     )
     def update_comparison(selected, models):
         if not selected:
-            return [], empty_figure("Model secilmedi")
+            # §3.15: bos grafik 450 px yer kaplamasin; model hic yoksa ne yapilacagini soyle
+            msg = ("Henüz tek ajanlı model yok — Eğitim sayfasından eğitin" if not models
+                   else "Karşılaştırmak için yukarıdan model seçin")
+            fig = empty_figure(msg)
+            fig.update_layout(height=160)
+            return [], fig
 
         rows = []
         names, sharpes, sortinos, calmars = [], [], [], []
@@ -366,10 +373,10 @@ def _build_modal_portfolio_chart(metrics):
             fill="tozeroy",
             fillcolor=plot_rgba("blue", 0.15),
             line={"color": plot_palette()["blue"], "width": 2},
-            name="Portfoy",
+            name="Portföy",
         ))
     else:
-        return empty_figure("Portfoy gecmisi yok")
+        return empty_figure("Portföy geçmişi yok")
     apply_theme_template(fig)
     fig.update_layout(height=300, showlegend=False)
     return fig
@@ -385,7 +392,7 @@ def _build_activity_chart(metrics):
     fig.add_trace(go.Bar(name="Al", x=["Al", "Sat", "Bekle"], y=[buy, sell, hold],
                          marker_color=[P["green"], P["red"], P["yellow"]]))
     apply_theme_template(fig)
-    fig.update_layout(height=250, showlegend=False, title_text="Islem Aktivitesi")
+    fig.update_layout(height=250, showlegend=False, title_text="İşlem Aktivitesi")
     return fig
 
 
@@ -398,8 +405,8 @@ def _render_modal_metrics(metrics):
         ("Sortino", "sortino_ratio", False),
         ("Calmar", "calmar_ratio", False),
         ("Max Drawdown", "max_drawdown", True),
-        ("Kazanma Orani", "win_rate", True),
-        ("Toplam Islem", "total_trades", False),
+        ("Kazanma Oranı", "win_rate", True),
+        ("Toplam İşlem", "total_trades", False),
     ]
     rows = []
     for label, key, is_pct in keys:
@@ -415,12 +422,12 @@ def _render_modal_metrics(metrics):
 def _render_trades_table(metrics):
     trades = metrics.get("trades") or metrics.get("trade_history") or []
     if not trades:
-        return create_state_block("empty", "Islem gecmisi yok.")
+        return create_state_block("empty", "İşlem geçmişi yok.")
 
     header = dbc.Row([
         dbc.Col(html.Small("Tarih", className="section-title"), width=3),
         dbc.Col(html.Small("Sembol", className="section-title"), width=3),
-        dbc.Col(html.Small("Islem", className="section-title"), width=2),
+        dbc.Col(html.Small("İşlem", className="section-title"), width=2),
         dbc.Col(html.Small("Fiyat", className="section-title"), width=2),
         dbc.Col(html.Small("Adet", className="section-title"), width=2),
     ])
@@ -432,7 +439,7 @@ def _render_trades_table(metrics):
             dbc.Col(html.Small(str(t.get("date", "—"))[:10], style={"color": TEXT_MUTED}), width=3),
             dbc.Col(html.Small(t.get("symbol", "—"), style={"color": TEXT}), width=3),
             dbc.Col(dbc.Badge(action, style={"backgroundColor": color}, pill=True), width=2),
-            dbc.Col(html.Small(f"₺{t.get('price', 0):,.2f}", style={"color": TEXT}), width=2),
+            dbc.Col(html.Small(F.money(t.get('price', 0)), style={"color": TEXT}), width=2),
             dbc.Col(html.Small(str(t.get("quantity", t.get("shares", "—"))), style={"color": TEXT}), width=2),
         ], className="py-1 border-bottom"))
     return html.Div(rows, className="mt-3")

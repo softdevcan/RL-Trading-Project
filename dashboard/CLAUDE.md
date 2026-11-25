@@ -91,6 +91,13 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   `python scripts/build_guide.py`.
 - Günlük işin saat damgaları saat dilimsiz; panoda `finished_trt` kullan (VDS UTC).
 
+### Turkce metin ve bicim (Faz 11 §3.15)
+- Ekranda gorunen metin Turkce karakterle yazilir; kimlik, className, value, API anahtari ASCII kalir.
+- Para / yuzde / saat / is durumu `dashboard/components/fmt.py`'den (`money`, `signed_pct`, `dt_trt`, `status`).
+  Sayfada `f"₺{x:,.2f}"` yazma. Kimlik kayitlari naive UTC: `dt_trt` TRT'ye cevirip "TRT" etiketiyle yazar.
+- `<html lang="tr">` (app.py): CSS `text-transform: uppercase` i -> İ icin sart.
+- Tek ajanli (Faz 1-9) sayfalar `create_page_header(note=LEGACY_NOTE)` tasir.
+
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
 - `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
   **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat

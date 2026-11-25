@@ -27,6 +27,9 @@ from dashboard.theme import CARD2, TEXT, TEXT_MUTED, BLUE, RED
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
+import dashboard.components.fmt as F
+from dash.dash_table import DataTable
+from dashboard.components.table import TABLE_STYLES, numeric_columns
 
 # BIST-30 sembolleri ve kısa adlar — tek kaynak data/universe/bist30_panel.json (Faz 9 E0, Y11)
 from data.bist30_symbols import BIST30_SYMBOLS as _UNIVERSE, STOCK_INFO as _INFO
@@ -829,38 +832,39 @@ def _render_update_result(result: dict) -> Any:
 
 
 def _render_dataset_list(datasets: list) -> Any:
+    """Mevcut CSV dosyalari: klasor + ad + boyut + degisiklik, aranabilir/siralanabilir, sayfali tablo.
+
+    Faz 11 §3.15: onceki hali `data/**/*.csv`'nin tamamini (ileri veri onbellegi dahil yuzlerce dosya) alt alta
+    yaziyordu; sayfa ~15.000 piksel uzuyordu ve ayni ad (raw_stock_data.csv) farkli klasorlerde ayirt edilemiyordu.
+    """
     if not datasets:
         return create_state_block("empty", "Kayıtlı veri seti yok.")
-
     rows = []
     for ds in datasets:
-        name = ds.get("name", ds.get("filename", "—"))
-        size = ds.get("size_mb", ds.get("size", "—"))
-        size_str = f"{size} MB" if isinstance(size, (int, float)) else str(size)
-        modified = str(
-            ds.get("modified_at", ds.get("modified", ds.get("created", "—")))
-        )[:10]
-        rows.append(
-            dbc.Row([
-                dbc.Col(html.Span(name, style={"color": TEXT, "fontSize": "12px"}), width=6),
-                dbc.Col(html.Small(size_str, style={"color": TEXT_MUTED}), width=3),
-                dbc.Col(html.Small(modified, style={"color": TEXT_MUTED}), width=3),
-            ], className="py-2 border-bottom",
-               style={"borderColor": CARD2 + " !important"})
-        )
+        path = str(ds.get("filepath") or ds.get("filename") or "")
+        folder = os.path.dirname(os.path.relpath(path, "data")) if path else ""
+        size = ds.get("size_mb", ds.get("size"))
+        rows.append({
+            "klasor": (folder or ".").replace(os.sep, "/"),
+            "dosya": ds.get("name", ds.get("filename", "—")),
+            "boyut": F.num(size, 2) + " MB" if isinstance(size, (int, float)) else str(size or "—"),
+            "boyut_mb": size if isinstance(size, (int, float)) else 0,
+            "tarih": str(ds.get("modified_at", ds.get("modified", ds.get("created", "—"))))[:16].replace("T", " "),
+        })
+    rows.sort(key=lambda r: r["tarih"], reverse=True)
+    n_dirs = len({r["klasor"] for r in rows})
+    total = sum(r["boyut_mb"] for r in rows)
     return html.Div([
-        dbc.Row([
-            dbc.Col(html.Small("Dosya", style={"color": TEXT_MUTED, "fontWeight": "600",
-                                               "textTransform": "uppercase",
-                                               "fontSize": "11px"}), width=6),
-            dbc.Col(html.Small("Boyut", style={"color": TEXT_MUTED, "fontWeight": "600",
-                                               "textTransform": "uppercase",
-                                               "fontSize": "11px"}), width=3),
-            dbc.Col(html.Small("Tarih", style={"color": TEXT_MUTED, "fontWeight": "600",
-                                               "textTransform": "uppercase",
-                                               "fontSize": "11px"}), width=3),
-        ]),
-        html.Div(rows),
+        html.P(f"{len(rows)} dosya · {n_dirs} klasör · toplam {F.num(total, 1)} MB. Sütun başlığından sıralayın; "
+               "başlığın altındaki kutuya yazarak süzün (örneğin klasörde bist).",
+               style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "8px"}),
+        DataTable(
+            columns=[{"name": "Klasör", "id": "klasor"}, {"name": "Dosya", "id": "dosya"},
+                     {"name": "Boyut", "id": "boyut"}, {"name": "Değişiklik", "id": "tarih"}],
+            data=rows, page_size=12, sort_action="native", filter_action="native",
+            filter_options={"case": "insensitive", "placeholder_text": "süz..."},
+            **TABLE_STYLES, style_cell_conditional=numeric_columns("boyut"),
+        ),
     ])
 
 

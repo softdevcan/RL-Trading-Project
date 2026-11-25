@@ -18,12 +18,13 @@ from dash.dash_table import DataTable
 from dashboard.components.page_header import create_page_header
 from dashboard.components.table import TABLE_STYLES, numeric_columns
 import dashboard.api_client as api
+import dashboard.components.fmt as F
 from dashboard.theme import TEXT_MUTED, BORDER
 
 ROLE_OPTIONS = [
-    {"label": "Yonetici (admin)", "value": "admin"},
-    {"label": "Kullanici (user)", "value": "user"},
-    {"label": "Izleyici (viewer)", "value": "viewer"},
+    {"label": "Yönetici (admin)", "value": "admin"},
+    {"label": "Kullanıcı (user)", "value": "user"},
+    {"label": "İzleyici (viewer)", "value": "viewer"},
 ]
 
 
@@ -44,16 +45,16 @@ def layout():
         dcc.Store(id="users-refresh-tick", data=0),
 
         create_page_header(
-            "Kullanici Yonetimi",
-            "Hesaplari yonetici acar; kullanici ilk giriste parolasini degistirir. "
-            "Her kullanicinin modelleri, sonuclari ve gunluk kararlari kendi calisma alaninda tutulur.",
+            "Kullanıcı Yönetimi",
+            "Hesapları yönetici açar; kullanıcı ilk girişte parolasını değiştirir. "
+            "Her kullanıcının modelleri, sonuçları ve günlük kararları kendi çalışma alanında tutulur.",
         ),
 
         html.Div(id="users-alert"),
 
         # Yeni kullanici
         dbc.Card([
-            dbc.CardHeader(html.Span("Yeni Kullanici", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Yeni Kullanıcı", className="card-title-sm")),
             dbc.CardBody([
                 dbc.Row([
                     dbc.Col([
@@ -69,12 +70,12 @@ def layout():
                         dbc.Select(id="users-new-role", options=ROLE_OPTIONS, value="user"),
                     ], md=3),
                     dbc.Col([
-                        dbc.Button([html.I(className="bi bi-person-plus me-1"), "Olustur"],
+                        dbc.Button([html.I(className="bi bi-person-plus me-1"), "Oluştur"],
                                    id="users-create-btn", color="primary", className="w-100"),
                     ], md=2, className="d-flex align-items-end"),
                 ], className="g-3"),
                 html.Small(
-                    "Parola otomatik uretilir ve yalnizca bir kez gosterilir.",
+                    "Parola otomatik üretilir ve yalnızca bir kez gösterilir.",
                     style={"color": TEXT_MUTED},
                 ),
             ]),
@@ -84,7 +85,7 @@ def layout():
         dbc.Card([
             dbc.CardHeader(
                 dbc.Row([
-                    dbc.Col(html.Span("Kullanicilar", className="card-title-sm")),
+                    dbc.Col(html.Span("Kullanıcılar", className="card-title-sm")),
                     dbc.Col(
                         dbc.Button([html.I(className="bi bi-arrow-clockwise me-1"), "Yenile"],
                                    id="users-refresh-btn", size="sm", color="secondary", outline=True),
@@ -97,15 +98,15 @@ def layout():
 
         # Denetim kaydi
         dbc.Card([
-            dbc.CardHeader(html.Span("Denetim Kaydi (son 100)", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Denetim Kaydı (son 100)", className="card-title-sm")),
             dbc.CardBody(DataTable(
                 id="users-audit-table",
                 columns=[
                     {"name": "Zaman", "id": "ts"},
-                    {"name": "Kullanici", "id": "email"},
-                    {"name": "Islem", "id": "action"},
+                    {"name": "Kullanıcı", "id": "email"},
+                    {"name": "İşlem", "id": "action"},
                     {"name": "Hedef", "id": "target"},
-                    {"name": "Sonuc", "id": "success"},
+                    {"name": "Sonuç", "id": "success"},
                     {"name": "IP", "id": "ip"},
                 ],
                 data=[],
@@ -130,7 +131,7 @@ def _user_row(user: dict):
     if not active:
         badges.append(dbc.Badge("pasif", color="danger", className="me-2"))
     if user.get("must_change_password"):
-        badges.append(dbc.Badge("parola degistirmeli", color="warning", className="me-2"))
+        badges.append(dbc.Badge("parola değiştirmeli", color="warning", className="me-2"))
 
     return dbc.Row([
         dbc.Col([
@@ -140,11 +141,11 @@ def _user_row(user: dict):
         dbc.Col(html.Div(badges), md=2),
         dbc.Col([
             html.Small(
-                f"Son giris: {(user.get('last_login_at') or '-')[:19].replace('T', ' ')}",
+                f"Son giriş: {F.dt_trt(user.get('last_login_at'))}",
                 style={"color": TEXT_MUTED, "display": "block"},
             ),
             html.Small(
-                f"Calisma alani: {_fmt_size(workspace.get('bytes', 0))} / {workspace.get('files', 0)} dosya",
+                f"Çalışma alanı: {_fmt_size(workspace.get('bytes', 0))} / {workspace.get('files', 0)} dosya",
                 style={"color": TEXT_MUTED},
             ),
         ], md=3),
@@ -158,14 +159,14 @@ def _user_row(user: dict):
             dbc.ButtonGroup([
                 dbc.Button(html.I(className="bi bi-check2-circle"),
                            id={"type": "users-save-btn", "id": uid},
-                           size="sm", color="primary", outline=True, title="Rolu kaydet"),
+                           size="sm", color="primary", outline=True, title="Rolü kaydet"),
                 dbc.Button(html.I(className="bi bi-key"),
                            id={"type": "users-reset-btn", "id": uid},
-                           size="sm", color="warning", outline=True, title="Parola sifirla"),
+                           size="sm", color="warning", outline=True, title="Parola sıfırla"),
                 dbc.Button(html.I(className="bi bi-slash-circle" if active else "bi bi-check-circle"),
                            id={"type": "users-toggle-btn", "id": uid},
                            size="sm", color="secondary", outline=True,
-                           title="Pasiflestir" if active else "Aktiflestir"),
+                           title="Pasifleştir" if active else "Aktifleştir"),
                 dbc.Button(html.I(className="bi bi-trash"),
                            id={"type": "users-delete-btn", "id": uid},
                            size="sm", color="danger", outline=True, title="Sil"),
@@ -191,7 +192,7 @@ def register_callbacks(app):
     def _load(_clicks, _tick):
         users = api.list_users()
         if not users:
-            body = html.Div("Kullanici bulunamadi veya yetkiniz yok.",
+            body = html.Div("Kullanıcı bulunamadı veya yetkiniz yok.",
                             style={"color": TEXT_MUTED, "padding": "12px"})
         else:
             body = html.Div([_user_row(u) for u in users])
@@ -230,16 +231,16 @@ def register_callbacks(app):
             detail = result.get("body", {}).get("detail", "Bilinmeyen hata")
             if isinstance(detail, list):  # pydantic dogrulama hatasi
                 detail = "; ".join(str(item.get("msg", item)) for item in detail)
-            return _alert(f"Olusturulamadi: {detail}"), no_update, no_update, no_update
+            return _alert(f"Oluşturulamadı: {detail}"), no_update, no_update, no_update
 
         body = result.get("body", {})
         temp = body.get("temporary_password", "")
         message = [
-            html.Div(f"{body.get('user', {}).get('email')} olusturuldu."),
+            html.Div(f"{body.get('user', {}).get('email')} oluşturuldu."),
             html.Div([
-                "Gecici parola: ",
+                "Geçici parola: ",
                 html.Code(temp, style={"fontSize": "14px"}),
-                html.Span(" — bu parola bir daha gosterilmez, kullaniciya guvenli sekilde iletin.",
+                html.Span(" — bu parola bir daha gösterilmez, kullanıcıya güvenli şekilde iletin.",
                           style={"opacity": .85}),
             ]) if temp else None,
         ]
@@ -271,7 +272,7 @@ def register_callbacks(app):
             result = api.update_user(user_id, {"role": roles.get(user_id)})
             if not result:
                 return _alert("Rol guncellenemedi (son admin devre disi birakilamaz olabilir)"), next_tick
-            return _alert(f"Rol guncellendi: {result.get('user', {}).get('email')}", "success"), next_tick
+            return _alert(f"Rol güncellendi: {result.get('user', {}).get('email')}", "success"), next_tick
 
         if action == "users-reset-btn":
             result = api.reset_user_password(user_id)
@@ -279,8 +280,8 @@ def register_callbacks(app):
                 return _alert(f"Sifirlanamadi: {result.get('body', {}).get('detail')}"), next_tick
             temp = result.get("body", {}).get("temporary_password", "")
             return _alert([
-                "Parola sifirlandi. Gecici parola: ", html.Code(temp),
-                " — tum aktif oturumlari kapatildi.",
+                "Parola sıfırlandı. Geçici parola: ", html.Code(temp),
+                " — tüm aktif oturumları kapatıldı.",
             ], "success"), next_tick
 
         if action == "users-toggle-btn":
@@ -295,9 +296,9 @@ def register_callbacks(app):
         if action == "users-delete-btn":
             result = api.delete_user(user_id)
             if not result:
-                return _alert("Silinemedi (kendi hesabiniz veya son admin olabilir)"), next_tick
+                return _alert("Silinemedi (kendi hesabınız veya son admin olabilir)"), next_tick
             return _alert(
-                f"{result.get('email')} silindi. Calisma alani dosyalari korundu: "
+                f"{result.get('email')} silindi. Çalışma alanı dosyaları korundu: "
                 f"{result.get('workspace_kept')}", "success",
             ), next_tick
 
