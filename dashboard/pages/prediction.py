@@ -817,7 +817,7 @@ def _render_gold_cards(gold):
     items = [
         ("TRY/gram", gold.get("try_per_gram", gold.get("price_try", "—")), GOLD),
         ("USD/oz",   gold.get("usd_per_oz",   gold.get("price_usd", "—")), GREEN),
-        ("Degisim %", gold.get("change_pct",   gold.get("daily_change", "—")), BLUE),
+        ("Değişim %", gold.get("change_pct",   gold.get("daily_change", "—")), BLUE),
     ]
     cols = []
     for label, val, color in items:

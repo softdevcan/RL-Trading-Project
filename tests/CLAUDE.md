@@ -55,7 +55,7 @@ python tests/test_macro_pit.py             # Faz 9/B1-B3: EVDS ayristirma, acikl
 python tests/test_theme_contrast.py        # Faz 8: token kontrasti, kacak hex,
                                            #        ucuncu parti cakismasi, kendi
                                            #        CSS siniflarimiz, devre disi
-                                           #        varyantlar (92 kontrol)
+                                           #        varyantlar; §3.16 acilir liste + takvim bekcisi (97 kontrol)
 python tests/test_theme_preference.py      # Faz 8: 3 durumlu tema, sema gocu, CSRF (31 kontrol)
 python tests/test_topbar.py                # Faz 8/G: ust cubuk, kirinti, arama (+ K28 R4 sozluk),
                                            #          bildirimler (43 kontrol)

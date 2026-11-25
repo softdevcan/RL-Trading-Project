@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.16 · 2026-11-25 · Arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.17 · 2026-11-26 · Açılır listeler ve takvim, koyu tema §3.16; arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,20 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.16 Açılır listeler ve takvim, koyu tema (2026-11-26; kullanıcı bildirimi; `tests/test_theme_contrast.py` 97)
+
+- **Kullanıcı bildirimi.** Koyu temada açılır liste seçimlerinde kötü deneyim. Önce ölçüldü: yerel sunucu + Edge, koyu ve açık tema, 7 açılır liste (tekli, çoklu, aramalı, üst çubuk araması) ve 2 tarih seçici; ekran görüntüsü ve hesaplanmış stil.
+- **Ölçülen sorunlar ve çözüm (`dashboard/assets/custom.css`).**
+  - Arama satırının kapsayıcısı (`.dash-dropdown-search-container`) Dash varsayılanıyla beyazdı (255,255,255): koyu menünün ortasında beyaz çerçeve + Dash'in mor odak kenarı. → yüzey tokenı, alt çizgi, birincil renkte odak.
+  - Seçenek metninin span'i satırdan ayrı bir zemin alıyordu (metnin arkasında koyu kutu). → iç span'ler saydam.
+  - Çoklu seçimde seçili satırların hepsi "üzerine gelinmiş" renginde: fare nerede, belli değildi. → çoklu seçimde satır boyanmaz, durum onay kutusunda (birincil renk); üzerine gelinen satır `surface-hover`; tekli seçimde seçili satır birincil tonda + solda şerit, gereksiz radyo düğmesi gizli.
+  - Takvim: Dash 4 `td.dash-datepicker-calendar-date-*` çiziyor; eski `[role="gridcell"] button` kuralları uymuyordu. Seçili gün ve odak çerçevesi Dash morunda (127,75,196). → birincil renk, ay dışı günler soluk, gezinme düğmeleri tema renginde.
+- **Türkçe iç metinler.**
+  - `dcc.Dropdown`: "Search", "Select All", "Deselect All", "N selected", "No options found" → `dashboard/components/dropdown_tr.py` (`labels` varsayılanı, `app.py` sayfalardan önce kurar; çağrıda açık `labels` kazanır). Sayı yer tutucusu `{num_selected}`: belgede yok, tarayıcıda denenerek bulundu (`{num}`, `{count}` çizilmiyor).
+  - Takvim: ay ve gün adları bileşende sabit İngilizce, dil seçeneği yok, tarayıcı dili (tr-TR ile denendi) etkilemiyor. `dashboard/assets/datepicker-tr.js` yalnız takvim kapsamında tam eşleşen metni çevirir (SVG grafik eksenleri kapsam dışı). İlk sürümde Salı "Sa" İngilizce Saturday "Sa" ile çakışıp ikinci turda "Ct" oldu (tarayıcıda yakalandı); üç harfli kısaltmalar (Pzt, Sal, Çar, Per, Cum, Cmt, Paz). Hafta pazartesi başlar (`first_day_of_week=1`).
+- **Test.** `test_theme_contrast` 92 → 97 (bölüm 11): arama kapsayıcısı ve seçili gün token kullanıyor, çoklu seçimde seçili satır boyanmıyor, Dropdown Türkçe varsayılanı + `{num_selected}`, gün çevirisi çakışmasız (mutasyon: "Sa" → "Sa" yakalanır). `test_dash_props` 4, `test_topbar` 43, `test_account_profile` 84, `test_guide` 9. Görsel: iki tema, 9 bileşen; konsol hatası 0.
+- **Sınır.** Yerel `<select>` (Kullanıcılar sayfasında rol) tarayıcının kendi açılır penceresi; `color-scheme: dark` ile koyu çizilir, ekran görüntüsüne girmediği için görsel olarak doğrulanmadı.
 
 ### 3.15 Arayüz metinleri ve kullanılabilirlik (2026-11-25; kullanıcı isteği; mevcut testler, beklentileri güncellendi)
 
@@ -404,6 +418,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.17 (2026-11-26):** Açılır listeler ve takvim koyu temada (§3.16; kullanıcı bildirimi): beyaz arama satırı, metin arkası kutu, seçili/hover ayrımı, takvim morları; Dropdown ve takvim Türkçe. Test 97.
 - **v0.16 (2026-11-25):** Arayüz metinleri ve kullanılabilirlik (§3.15; kullanıcı isteği): 9 sayfa Türkçe karakter (AST ile görünen dizeler), `fmt.py` Türkçe para/saat/durum, veri dosya listesi sayfalı tablo, boş durumlar, tek ajanlı sayfalara kapsam notu, hiperparametre durum rozeti hatası.
 - **v0.15 (2026-11-25):** Ana sayfa ve arayüz güncel duruma (§3.14; kullanıcı isteği): M8 özeti (sıralama değil; kural portföyleri yanında) + simülasyon kutusu + durum şeridi; rehberde M8 kartları (`kademe: nihai`), bayat metinler; son çalışma saati TRT; menü Türkçe. Test 6 + 9.
 - **v0.14 (2026-11-25):** Simülasyon sayfası yeniden tasarımı (§3.13; kullanıcı isteği): eldeki hisseler, gün özeti, gün seçimi; `forward_views.daily_book`, tam sayı satırında `fills`/`p_close`. Test 5.

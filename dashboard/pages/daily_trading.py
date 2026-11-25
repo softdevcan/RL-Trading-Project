@@ -72,6 +72,7 @@ def layout():
                         html.Label("Tarih", className="section-title"),
                         dcc.DatePickerSingle(
                             id="dt-date",
+                            first_day_of_week=1,          # Türkiye: hafta pazartesi başlar (§3.16)
                             date=str(date.today()),
                             display_format="YYYY-MM-DD",
                             className="mb-3",

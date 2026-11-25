@@ -97,6 +97,10 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   Sayfada `f"₺{x:,.2f}"` yazma. Kimlik kayitlari naive UTC: `dt_trt` TRT'ye cevirip "TRT" etiketiyle yazar.
 - `<html lang="tr">` (app.py): CSS `text-transform: uppercase` i -> İ icin sart.
 - Tek ajanli (Faz 1-9) sayfalar `create_page_header(note=LEGACY_NOTE)` tasir.
+- `dcc.Dropdown` ic metinleri `components/dropdown_tr.py` varsayilanindan (sayi yer tutucusu `{num_selected}`);
+  takvim ay/gun adlari `assets/datepicker-tr.js` (ceviri hedefi kaynak anahtarla CAKISMAMALI: "Sa" dersi).
+- Dash 4 acilir liste/takvim DOM'u: `.dash-dropdown-*`, `.dash-options-list-*`, `td.dash-datepicker-calendar-date-*`.
+  Yeni kural yazinca koyu temada hesaplanmis stile bak (beyaz arama kapsayicisi boyle bulundu).
 
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
 - `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede

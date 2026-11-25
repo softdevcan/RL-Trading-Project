@@ -609,6 +609,58 @@ button.dash-dropdown:focus-visible {
 }
 .dash-dropdown-action-button:hover { background-color: var(--rlt-surface-hover) !important; }
 
+/* ── Açılır liste: koyu tema düzeltmeleri (Faz 11 §3.16; kullanıcı bildirimi) ──────────────────────────────
+   Ölçülen (Edge, koyu tema, hesaplanmış stil):
+   1. Arama satırının KAPSAYICISI (.dash-dropdown-search-container) Dash varsayılanıyla BEYAZ kalıyordu; koyu
+      menünün ortasında beyaz bir çerçeve + Dash'in mor odak kenarı.
+   2. Seçenek metninin span'i satırdan ayrı bir arka plan alıyordu (metnin arkasında koyu kutu).
+   3. Çoklu seçimde seçili satırların HEPSİ üzerine gelinmiş renginde: fare nerede, belli değildi.
+   Kural: üzerine gelinen / klavyeyle vurgulanan satır = surface-hover; tekli seçimde seçili satır = birincil
+   rengin hafif tonu + solda şerit; çoklu seçimde seçim durumunu onay kutusu gösterir (satır boyanmaz). */
+.dash-dropdown-search-container {
+  background-color: var(--rlt-surface) !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rlt-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 6px 8px !important;
+}
+.dash-dropdown-search-container:focus-within { box-shadow: none !important; outline: none !important; }
+.dash-dropdown-search:focus,
+.dash-dropdown-search-container input:focus {
+  outline: none !important;
+  border-color: var(--rlt-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rlt-primary) 22%, transparent) !important;
+}
+.dash-dropdown-search-icon { color: var(--rlt-muted) !important; }
+
+.dash-dropdown-option,
+.dash-options-list-option { border-radius: 4px; margin: 1px 4px; cursor: pointer; }
+.dash-dropdown-option span,
+.dash-options-list-option span { background: transparent !important; color: inherit !important; }
+
+/* sıfırla: önceki genel kural seçili satırı da hover rengine boyuyordu */
+.dash-dropdown-option[aria-selected="true"] { background-color: transparent !important; }
+.dash-dropdown-option:hover,
+.dash-dropdown-option[data-highlighted] { background-color: var(--rlt-surface-hover) !important; }
+/* tekli seçim: seçili satır birincil tonda, solda şerit */
+.dash-dropdown-option[aria-selected="true"]:has(input[type="radio"]) {
+  background-color: color-mix(in srgb, var(--rlt-primary) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 var(--rlt-primary);
+  font-weight: 600;
+}
+.dash-dropdown-option[aria-selected="true"]:has(input[type="radio"]):hover {
+  background-color: color-mix(in srgb, var(--rlt-primary) 24%, transparent) !important;
+}
+/* çoklu seçim: satır boyanmaz, durum onay kutusunda; kalın yazı yok (hepsi seçiliyken liste bağırıyordu) */
+.dash-dropdown-option[aria-selected="true"]:has(input[type="checkbox"]) { font-weight: 500; }
+/* tekli seçimde radyo düğmesi gereksiz gürültü: seçili satır zaten vurgulu */
+.dash-options-list-option-wrapper:has(input[type="radio"]) { display: none !important; }
+.dash-options-list-option-checkbox { accent-color: var(--rlt-primary-fill); cursor: pointer; }
+.dash-dropdown-content { padding-bottom: 4px; }
+.dash-dropdown-options { border: 0 !important; box-shadow: none !important; }
+
 /* ── dcc.Dropdown (react-select — eski surumler) ────────────────────────── */
 .dash-dropdown .Select-control,
 .Select-control {
@@ -836,6 +888,32 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
   background-color: var(--rlt-surface) !important;
   color: var(--rlt-text) !important;
 }
+
+/* Dash 4 takvimi td.dash-datepicker-calendar-date-* ciziyor; yukaridaki gridcell kurallari bu yapiya uymuyor ve
+   secili gun Dash'in morunda (127,75,196), odak cercevesi de morda kaliyordu (Faz 11 §3.16, olculdu). */
+.dash-datepicker-calendar { border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+.dash-datepicker-calendar thead th span { color: var(--rlt-muted) !important; -webkit-text-fill-color: var(--rlt-muted) !important;
+                                          font-size: 11.5px; font-weight: 600; }
+.dash-datepicker-calendar td[class*="dash-datepicker-calendar-date"] { border-radius: 6px; cursor: pointer; }
+.dash-datepicker-calendar td[class*="dash-datepicker-calendar-date"]:hover,
+.dash-datepicker-calendar-date-highlighted:not(.dash-datepicker-calendar-date-selected) {
+  background-color: var(--rlt-surface-hover) !important;
+}
+.dash-datepicker-calendar-date-selected,
+.dash-datepicker-calendar-date-selected:hover {
+  background-color: var(--rlt-primary-fill) !important;
+  outline: none !important;
+}
+.dash-datepicker-calendar-date-selected span { color: var(--rlt-on-fill) !important; -webkit-text-fill-color: var(--rlt-on-fill) !important;
+                                               font-weight: 600; }
+.dash-datepicker-calendar-date-outside span { color: var(--rlt-muted) !important; -webkit-text-fill-color: var(--rlt-muted) !important;
+                                              opacity: .6; }
+.dash-datepicker-calendar td[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
+.dash-datepicker-calendar td:focus-visible { outline: 2px solid var(--rlt-primary) !important; outline-offset: -2px; }
+.dash-datepicker-input-wrapper,
+.dash-datepicker-input-wrapper:focus-within { outline-color: var(--rlt-primary) !important; }
+.dash-datepicker-month-nav { color: var(--rlt-text) !important; border-radius: 6px !important; }
+.dash-datepicker-month-nav:hover { background-color: var(--rlt-surface-hover) !important; }
 
 /* ── Tablolar (C.6) ─────────────────────────────────────────────────────── */
 .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
