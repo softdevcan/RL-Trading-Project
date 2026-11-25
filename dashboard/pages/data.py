@@ -1,12 +1,16 @@
 """
-Veri Yönetimi sayfası.
+Veri sayfası (Faz 11 §3.17 yeniden düzen).
 
-Veri kaynaklarını seçip incremental veya tam güncelleme yapılır.
-Her kaynak için son tarih ve eksik gün sayısı gösterilir.
-BIST güncellemesinde hangi hisselerin indirileceği seçilebilir.
+Soru: hangi veri neyi besler, nasıl güncellenir? Sıra:
+  1. Kapsam notu: Güncelle yalnız ham piyasa verisini yazar; M8'in dondurulmuş kaynağı ve ileri veri paneli ayrıdır.
+  2. Veri haritası (`/trading/data/catalog`): dört grup — ham piyasa (bu sayfa), değerlendirme referans serileri (betik),
+     M8 ve ileri veri (dondurulmuş / sunucunun günlük işi), evren — her satırda son tarih, durum, kullanan, güncelleme yolu.
+  3. Ham piyasa verisini güncelle: kaynak, hisse, altın seçenekleri, tarih aralığı, Güncelle / Yeniden indir.
+  4. Tüm CSV dosyaları (katlanır; grup sütunlu).
+Önceki "Veri Kaynağı Özeti" (haritayla aynı bilgi) ve alttaki "BIST-30 Hisse Listesi" (hisse çipleriyle aynı) kaldırıldı.
 
 API endpoint'leri:
-  GET  /api/trading/data/status
+  GET  /api/trading/data/catalog   (harita + ham kaynak durumu, tek istek)
   POST /api/trading/data/update
   GET  /api/trading/data/list
 
@@ -30,6 +34,7 @@ import dashboard.api_client as api
 import dashboard.components.fmt as F
 from dash.dash_table import DataTable
 from dashboard.components.table import TABLE_STYLES, numeric_columns
+from app.services.data_catalog import group_of
 
 # BIST-30 sembolleri ve kısa adlar — tek kaynak data/universe/bist30_panel.json (Faz 9 E0, Y11)
 from data.bist30_symbols import BIST30_SYMBOLS as _UNIVERSE, STOCK_INFO as _INFO
@@ -75,36 +80,32 @@ def layout():
 
     return html.Div([
         create_page_header(
-            "Veri Yönetimi",
-            "Veri kaynaklarını seçin, eksik günleri güncelleyin veya tümünü yeniden indirin.",
+            "Veri",
+            "Hangi veri neyi besler, nerede durur, nasıl güncellenir.",
+            actions=dbc.Button([html.I(className="bi bi-arrow-clockwise me-1"), "Durumu yenile"],
+                               id="data-status-refresh-btn", size="sm", color="secondary", outline=True),
         ),
+        dbc.Alert([
+            html.I(className="bi bi-info-circle me-2"),
+            html.Strong("Güncelle düğmesi yalnız ham piyasa verisini yazar. "),
+            "M8'in dondurulmuş kaynağı ve ileri veri paneli ayrı tutulur ve bu sayfadan etkilenmez: ileri veri "
+            "panelini sunucunun günlük işi her akşam kendisi günceller. Aşağıdaki \"iş günü eksik\" uyarıları "
+            "yalnız ilgili satırın verisi içindir.",
+        ], color="secondary", className="data-scope-note mb-3"),
+        dbc.Card([
+            dbc.CardHeader(html.Span("Veri haritası", className="card-title-sm")),
+            dbc.CardBody(dcc.Loading(html.Div(id="data-info-panel"), type="dot", color=BLUE)),
+        ], className="mb-4"),
 
         dcc.Store(id="data-status-store"),
         dcc.Store(id="data-earliest-store"),
 
         # ── Kaynak seçim + durum kartı ─────────────────────────────────────
         dbc.Card([
-            dbc.CardHeader(
-                dbc.Row([
-                    dbc.Col(
-                        html.Span(
-                            "Veri Kaynakları",
-                            className="card-title-sm",
-                        ),
-                        className="d-flex align-items-center",
-                    ),
-                    dbc.Col(
-                        dbc.Button(
-                            [html.I(className="bi bi-arrow-clockwise me-1"), "Durumu Yenile"],
-                            id="data-status-refresh-btn",
-                            size="sm",
-                            color="secondary",
-                            outline=True,
-                        ),
-                        width="auto",
-                    ),
-                ], className="align-items-center"),
-            ),
+            dbc.CardHeader(html.Div([
+                html.Span("Ham piyasa verisini güncelle", className="card-title-sm"),
+                html.Small("Tek ajanlı RL, tahmin hattı ve günlük karar bu dosyaları okur.", className="data-muted"),
+            ], className="data-card-head")),
             dbc.CardBody([
                 dbc.Row([
                     # Sol: kaynak toggle'ları
@@ -307,36 +308,11 @@ def layout():
             ]),
         ], className="mb-4"),
 
-        # ── Veri özeti + dosya listesi ───────────────────────────────────────
-        dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span(
-                        "Veri Kaynağı Özeti",
-                        className="card-title-sm",
-                    )),
-                    dbc.CardBody(html.Div(id="data-info-panel")),
-                ]),
-            ], md=5, className="mb-4"),
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardHeader(html.Span(
-                        "Mevcut Dosyalar",
-                        className="card-title-sm",
-                    )),
-                    dbc.CardBody(html.Div(id="data-list-panel")),
-                ]),
-            ], md=7, className="mb-4"),
-        ]),
-
-        # ── BIST-30 referans listesi ─────────────────────────────────────────
-        dbc.Card([
-            dbc.CardHeader(html.Span(
-                "BIST-30 Hisse Listesi",
-                className="card-title-sm",
-            )),
-            dbc.CardBody(_bist30_badges()),
-        ]),
+        # ── Tum CSV dosyalari (katlanir) ──────────────────────────────────────
+        html.Details([
+            html.Summary("Tüm CSV dosyaları (klasör, grup, boyut)", className="data-files-sum"),
+            dbc.Card(dbc.CardBody(html.Div(id="data-list-panel")), className="mt-2"),
+        ], className="data-files mb-4"),
     ])
 
 
@@ -521,13 +497,14 @@ def register_callbacks(app):
             Output("data-source-status-badges", "children"),
             Output("data-source-checklist", "value"),
             Output("data-list-panel", "children"),
+            Output("data-info-panel", "children"),
         ],
         Input("data-status-refresh-btn", "n_clicks"),
         prevent_initial_call=False,
     )
     def refresh_status(_n):
-        status_resp = api.get_data_status()
-        source_status = status_resp.get("status", {}) if status_resp else {}
+        catalog = api.get_data_catalog()
+        source_status = catalog.get("status", {}) if catalog else {}
         datasets = api.get_data_list()
 
         default_checked = [
@@ -542,21 +519,8 @@ def register_callbacks(app):
             _render_status_badges(source_status),
             default_checked if default_checked else SOURCE_VALUES,
             _render_dataset_list(datasets),
+            render_catalog(catalog),
         )
-
-    # Veri özeti paneli — status store değişince güncellenir, kaynak seçiminden bağımsız
-    @app.callback(
-        Output("data-info-panel", "children"),
-        Input("data-status-store", "data"),
-        prevent_initial_call=False,
-    )
-    def update_info_panel(source_status):
-        if not source_status:
-            return html.P(
-                "Durumu yenilemek için 'Durumu Yenile' butonuna basın.",
-                style={"color": TEXT_MUTED, "fontSize": "13px"},
-            )
-        return _render_source_details(source_status)
 
     # Incremental güncelleme
     @app.callback(
@@ -618,6 +582,53 @@ def register_callbacks(app):
 
 # ── Render yardımcıları ────────────────────────────────────────────────────────
 
+GROUP_ICON = {"ham": "bi bi-cloud-download", "referans": "bi bi-rulers", "m8": "bi bi-lock", "evren": "bi bi-diagram-3"}
+
+
+def _is_command(text: str) -> bool:
+    return text.startswith(("python ", "Komut yok"))
+
+
+def render_catalog(cat: dict) -> Any:
+    """Veri haritası: grup başlığı + açıklama + satır tablosu (saf: katalog sözlüğü -> bileşen)."""
+    rows = (cat or {}).get("rows") or []
+    if not rows:
+        return create_state_block("error", "Veri haritası alınamadı.", "Sunucuya ulaşılamıyor olabilir.")
+    out = []
+    for g in cat.get("groups", []):
+        grows = [r for r in rows if r["group"] == g["key"]]
+        if not grows:
+            continue
+        body = []
+        for r in grows:
+            upd = r.get("update") or "—"
+            body.append(html.Tr([
+                html.Td([html.Div(r["name"], className="data-map-name"),
+                         html.Div(" · ".join(x for x in (r.get("path"), r.get("source")) if x), className="data-map-sub")]),
+                html.Td(r.get("last_date") or "—", className="data-map-date"),
+                html.Td(dbc.Badge(r.get("state") or "—", color=r.get("tone") or "secondary", className="data-map-badge")),
+                html.Td(r.get("used_by") or "—", className="data-map-used"),
+                html.Td(html.Code(upd) if _is_command(upd) else upd, className="data-map-upd"),
+            ]))
+        out.append(html.Div([
+            html.Div([html.I(className=f"{GROUP_ICON.get(g['key'], 'bi bi-folder')} me-2"),
+                      html.Span(g["title"], className="data-map-title")], className="data-map-head"),
+            html.P(g["note"], className="data-muted mb-2"),
+            html.Div(html.Table([
+                html.Thead(html.Tr([html.Th("Veri"), html.Th("Son tarih"), html.Th("Durum"), html.Th("Kullanan"),
+                                    html.Th("Nasıl güncellenir")])),
+                html.Tbody(body),
+            ], className="data-map-table"), className="data-map-scroll"),
+        ], className="data-map-group"))
+    backups = cat.get("backups") or []
+    if backups:
+        out.append(html.P([html.I(className="bi bi-archive me-2"),
+                           f"Yedekler (data/bist): {', '.join(backups)}. Elle alınmış eski panel kopyaları; "
+                           "backup_2026-07-27'yi R1 ölçüm betikleri karşılaştırma için okur, silmeyin."],
+                          className="data-muted mb-0"))
+    return html.Div(out)
+
+
 def _render_status_badges(source_status: dict) -> Any:
     """Her kaynak için durum badge'i döndür (checklist satırlarıyla hizalı)."""
     if not source_status:
@@ -669,114 +680,6 @@ def _render_status_badges(source_status: dict) -> Any:
 
     return html.Div(rows)
 
-
-def _render_source_details(source_status: dict) -> Any:
-    """Tüm kaynakların özet bilgilerini göster (kaynak seçiminden bağımsız)."""
-    cards = []
-
-    for src in ALL_SOURCES:
-        key = src["value"]
-        info = source_status.get(key, {})
-
-        if not info:
-            continue
-
-        exists = info.get("exists", False)
-        error = info.get("error")
-
-        # Gold has a list of files — aggregate for display
-        if key == "gold" and exists:
-            gold_files = info.get("files", [])
-            last_dates = [f["last_date"] for f in gold_files if f.get("last_date")]
-            last_date = max(last_dates) if last_dates else None
-            missings = [f["missing_days"] for f in gold_files if f.get("missing_days") is not None]
-            missing = min(missings) if missings else None
-            all_symbols = []
-            for f in gold_files:
-                all_symbols += f.get("symbols", [])
-            symbols = list(dict.fromkeys(all_symbols))
-            file_names = [os.path.basename(f["file"]) for f in gold_files if f.get("file")]
-            file_name = ", ".join(file_names) if file_names else "—"
-        else:
-            last_date = info.get("last_date", "—")
-            missing = info.get("missing_days")
-            symbols = info.get("symbols", [])
-            file_name = info.get("file", "—")
-            if isinstance(file_name, str) and file_name not in ("—", ""):
-                file_name = os.path.basename(file_name)
-
-        # fundamental verisi tarihsiz (snapshot); özel badge
-        if key == "fundamental":
-            if error:
-                status_badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
-            elif not exists:
-                status_badge = dbc.Badge("Veri yok", color="secondary", pill=True)
-            else:
-                status_badge = dbc.Badge(f"Snapshot · {len(symbols)} hisse", color="info", pill=True)
-        else:
-            if error:
-                status_badge = dbc.Badge(f"Hata: {str(error)[:40]}", color="danger", pill=True)
-            elif not exists:
-                status_badge = dbc.Badge("Veri yok", color="secondary", pill=True)
-            elif missing == 0:
-                status_badge = dbc.Badge("Güncel ✓", color="success", pill=True)
-            else:
-                status_badge = dbc.Badge(
-                    f"{missing} iş günü eksik" if missing else "Var", color="warning", pill=True,
-                )
-
-        rows = [
-            ("Durum", status_badge),
-            ("Dosya", html.Small(file_name, style={"color": TEXT, "fontSize": "12px"})),
-        ]
-        if key != "fundamental":
-            rows.append(("Son Tarih", last_date or "—"))
-
-        if key == "bist_stocks" and symbols:
-            rows.append(("Hisseler", f"{len(symbols)} adet"))
-            rows.append(("Semboller", html.Small(
-                ", ".join(s.replace(".IS", "") for s in symbols[:8])
-                + ("…" if len(symbols) > 8 else ""),
-                style={"color": TEXT, "fontSize": "11px"},
-            )))
-        elif key == "gold" and symbols:
-            rows.append(("Seriler", ", ".join(symbols)))
-        elif key == "macro" and symbols:
-            rows.append(("Sütunlar", f"{len(symbols)} adet"))
-        elif key == "fundamental" and symbols:
-            rows.append(("Hisseler", html.Small(
-                ", ".join(s.replace(".IS", "") for s in symbols[:10])
-                + ("…" if len(symbols) > 10 else ""),
-                style={"color": TEXT, "fontSize": "11px"},
-            )))
-
-        detail_rows = []
-        for label, value in rows:
-            detail_rows.append(
-                dbc.Row([
-                    dbc.Col(
-                        html.Small(label, style={"color": TEXT_MUTED}), width=5,
-                    ),
-                    dbc.Col(
-                        html.Span(value, style={"color": TEXT, "fontSize": "13px"})
-                        if isinstance(value, str)
-                        else value,
-                        width=7,
-                    ),
-                ], className="py-1 border-bottom",
-                   style={"borderColor": CARD2 + " !important"})
-            )
-
-        cards.append(html.Div([
-            html.Small(
-                src["label"],
-                style={"color": TEXT, "fontWeight": "600", "display": "block",
-                       "marginBottom": "8px", "marginTop": "12px"},
-            ),
-            html.Div(detail_rows),
-        ]))
-
-    return html.Div(cards)
 
 
 def _render_update_result(result: dict) -> Any:
@@ -847,6 +750,7 @@ def _render_dataset_list(datasets: list) -> Any:
         size = ds.get("size_mb", ds.get("size"))
         rows.append({
             "klasor": (folder or ".").replace(os.sep, "/"),
+            "grup": group_of(path),
             "dosya": ds.get("name", ds.get("filename", "—")),
             "boyut": F.num(size, 2) + " MB" if isinstance(size, (int, float)) else str(size or "—"),
             "boyut_mb": size if isinstance(size, (int, float)) else 0,
@@ -857,10 +761,10 @@ def _render_dataset_list(datasets: list) -> Any:
     total = sum(r["boyut_mb"] for r in rows)
     return html.Div([
         html.P(f"{len(rows)} dosya · {n_dirs} klasör · toplam {F.num(total, 1)} MB. Sütun başlığından sıralayın; "
-               "başlığın altındaki kutuya yazarak süzün (örneğin klasörde bist).",
+               "başlığın altındaki kutuya yazarak süzün (örneğin grupta ham).",
                style={"color": TEXT_MUTED, "fontSize": "12px", "marginBottom": "8px"}),
         DataTable(
-            columns=[{"name": "Klasör", "id": "klasor"}, {"name": "Dosya", "id": "dosya"},
+            columns=[{"name": "Grup", "id": "grup"}, {"name": "Klasör", "id": "klasor"}, {"name": "Dosya", "id": "dosya"},
                      {"name": "Boyut", "id": "boyut"}, {"name": "Değişiklik", "id": "tarih"}],
             data=rows, page_size=12, sort_action="native", filter_action="native",
             filter_options={"case": "insensitive", "placeholder_text": "süz..."},
@@ -869,22 +773,3 @@ def _render_dataset_list(datasets: list) -> Any:
     ])
 
 
-def _bist30_badges() -> html.Div:
-    cols = 6
-    rows = []
-    for i in range(0, len(BIST30_SYMBOLS), cols):
-        chunk = BIST30_SYMBOLS[i:i + cols]
-        rows.append(
-            dbc.Row([
-                dbc.Col(
-                    dbc.Badge(
-                        sym, color="primary", pill=True,
-                        style={"fontSize": "11px"},
-                    ),
-                    width=12 // cols,
-                    className="mb-2",
-                )
-                for sym, _ in chunk
-            ])
-        )
-    return html.Div(rows)

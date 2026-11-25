@@ -29,6 +29,8 @@ python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans)
 python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
+python tests/test_data_catalog.py           # Faz 11 §3.17 veri katalogu: 4 grup, ham durumu /data/status'tan, "Bu sayfa: Guncelle"
+                                           #        yalniz ham grupta, ileri veri n/126, group_of yol eslemesi (2, veri gerektirmez)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
 python tests/test_workspace_isolation.py   # Faz 7: izolasyon + RBAC + CV deney dizini (20 kontrol)
 python tests/test_prediction_regression.py # Faz 6: golden davranis dondurma; CPU'ya sabit (~1 dk), YESIL (K1 2026-11-15

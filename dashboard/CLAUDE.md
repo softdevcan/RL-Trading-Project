@@ -102,6 +102,11 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
 - Dash 4 acilir liste/takvim DOM'u: `.dash-dropdown-*`, `.dash-options-list-*`, `td.dash-datepicker-calendar-date-*`.
   Yeni kural yazinca koyu temada hesaplanmis stile bak (beyaz arama kapsayicisi boyle bulundu).
 
+### Veri sayfasi (Faz 11 §3.17)
+- Veri haritasi `app/services/data_catalog.py` + `GET /api/trading/data/catalog` (ayni yanit `status`'u da tasir: tek istek).
+  Yeni bir veri seti eklenirse katalogda grubuna ekle; "Bu sayfa: Guncelle" YALNIZ `/data/update`'in yazdiklari icin
+  (test bunu denetler). M8 / ileri veri bu sayfadan guncellenmez.
+
 ### Uzun suren isler ve sayfa gezinmesi (ONEMLI)
 - `display_page` yalnizca `page-content`'i degistirir; sayfa her gezinmede
   **yeniden uretilir**. `dcc.Interval(disabled=True)` + "yalnizca Baslat

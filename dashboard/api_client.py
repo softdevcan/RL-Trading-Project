@@ -309,6 +309,11 @@ def get_data_info() -> Dict:
     return _get("/trading/data/info") or {}
 
 
+def get_data_catalog() -> Dict:
+    """Faz 11 §3.17: gruplu veri haritasi + ham kaynak durumu ('status')."""
+    return _get("/trading/data/catalog", timeout=60) or {}
+
+
 def get_data_list() -> List[Dict]:
     data = _get("/trading/data/list")
     if isinstance(data, list):
