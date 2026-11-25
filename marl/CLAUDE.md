@@ -23,6 +23,8 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   TEK tanim burada; `m3_runner` ithal eder. Arsiv ustune yazilmaz; gunluk is (S4) her calismadan once dogrular.
 - `forward_views.py` (Faz 11 S5): pano veri katmani (pencere 'forward' | 'test2026'; kol ort. +- std; urun portfoyu tam sayi
   lot). Karsilastirma YALNIZ ayni pencere ve maliyet. 2026 onbellegi `data/marl/forward/m8/cache/` (arsiv SHA anahtarli).
+  `daily_book` (plan §3.13): tam sayi satirlarindan (`fills`, `p_close`) gun gun lot, ort. maliyet (komisyon HARIC), gerceklesen
+  K/Z, hisse katkisi; ozdeslik sum(katki)+faiz-komisyon = dV (`test_marl_sim_book`). Yalniz okur, defteri degistirmez.
 - `orders.step_integer` (Faz 11 S5): tam sayi modu adimi; ortam (`_step_integer`) ve defter (`LedgerState(integer=True)`) AYNI
   fonksiyonu cagirir. Kesirli yol (`step_fractional`) ayri ve S3 paritesiyle sabit.
 - `forward_job.py` (Faz 11 S4): gunluk is `run_daily` (arsiv dogrula -> S1 panel -> marj kapsami -> defter); ANA venv. Defter deposu
@@ -83,6 +85,7 @@ degistirirsen o belgeyi AYNI commit'te guncelle; belge ile kod ayrisirsa kod hat
   durur. Secim `selection.py` = `evaluation/rl_folds.py` (parite testi); tanim degisirse ikisi birlikte degisir.
 - `python tests/test_marl_core.py` (63, ana venv)
 - `python tests/test_marl_forward_job.py` (5, ana venv; S4: marj kapsami, her gun = bosluk sonrasi = tek seferde bit-es, idempotent, cokme kurtarma + bekciler, tek yazar WRITER)
+- `python tests/test_marl_sim_book.py` (5, ana venv, veri gerekmez; §3.13 gunluk defter ozdesligi, ort. maliyet, sayfa render)
 - `python tests/test_marl_sim_ledger.py` (5, ana venv; S3 defter: M8/rule_series bit-es, JSON durumla devam bit-es, mutasyon, ileri panelde marj kapsami hatasi, S5 tam sayi mod)
 - `python tests/test_marl_forward_panel.py` (6, ana venv; S1 ileri panel: sifir satirla bit-es, zincir, gun kapisi, rows.csv yaz/oku round_trip bit-es, append + B0 + mutasyon, Is Yatirim eski yanit/hata yeniden istenir)
 - `python tests/test_marl_frozen.py` (4, ana venv; Faz 11 S0 arsivi: kur/dogrula, bozulma yakalanir, gercek arsiv 72/72; S2 sade ileri gecis referansla bit-es)

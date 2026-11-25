@@ -1202,3 +1202,43 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .guide-faq:last-child { border-bottom: 0; }
 .guide-faq > summary { cursor: pointer; color: var(--rlt-text); font-weight: 600; font-size: 14px; }
 .guide-faq-a { color: var(--rlt-text); font-size: 13px; line-height: 1.55; margin: 8px 0 6px; }
+
+/* ── Simulasyon sayfasi (Faz 11 §3.13) ─────────────────────────────────────
+   Renkler yalniz token; yon tasiyan metin --rlt-profit / --rlt-loss. */
+.sim-muted { color: var(--rlt-muted); }
+.sim-num { font-variant-numeric: tabular-nums; }
+.sim-pos { color: var(--rlt-profit); }
+.sim-neg { color: var(--rlt-loss); }
+.sim-note { font-size: 12.5px; color: var(--rlt-muted); background: var(--rlt-surface-2); border-radius: var(--rlt-radius-sm); padding: 10px 12px; }
+.sim-card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.sim-range .form-check-label { font-size: 12.5px; color: var(--rlt-muted); }
+.sim-banner { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; }
+.sim-banner-main { display: flex; gap: 12px; align-items: flex-start; flex: 999 1 420px; min-width: 0; }
+.sim-banner-icon { color: var(--rlt-warn); font-size: 18px; line-height: 1.2; }
+.sim-banner-title { font-weight: 600; color: var(--rlt-text); margin-bottom: 2px; }
+.sim-banner-side { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.sim-progress-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.sim-progress { height: 8px; background: var(--rlt-surface-2); }
+.sim-progress .progress-bar { background: var(--rlt-primary-fill); }
+.sim-day-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.sim-day-big { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.sim-day-pnl { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sim-day-pct { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sim-contrib-row { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 7px; }
+.sim-contrib-sym { width: 58px; font-weight: 600; color: var(--rlt-text); }
+.sim-contrib-track { position: relative; flex: 1; height: 14px; }
+.sim-contrib-track::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1px solid var(--rlt-border-strong); }
+.sim-contrib-bar { position: absolute; top: 2px; height: 10px; border-radius: 3px; }
+.sim-contrib-val { width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+.sim-trade-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rlt-border); font-size: 13px; }
+.sim-trade-sym { width: 58px; font-weight: 600; color: var(--rlt-text); }
+.sim-trade-qty { flex: 1; color: var(--rlt-muted); font-variant-numeric: tabular-nums; }
+.sim-trade-amt { font-weight: 500; font-variant-numeric: tabular-nums; }
+.sim-side { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.sim-side-buy { background: color-mix(in srgb, var(--rlt-profit) 14%, transparent); color: var(--rlt-profit); }
+.sim-side-sell { background: color-mix(in srgb, var(--rlt-loss) 14%, transparent); color: var(--rlt-loss); }
+.sim-legend { display: flex; flex-direction: column; gap: 6px; }
+.sim-legend-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.sim-legend-name { flex: 1; color: var(--rlt-text); }
+.sim-legend-val { color: var(--rlt-muted); font-variant-numeric: tabular-nums; }
+.sim-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; }

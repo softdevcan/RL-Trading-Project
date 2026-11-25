@@ -156,6 +156,12 @@ class PolicyStrategy:
         return W.target_weights(z, self.bound)
 
 
+def integer_fills(decisions: list) -> list:
+    """Tam sayi adimindaki gerceklesen emirler (plan §3.13): simge sirasi, yurutme fiyati t+1 acilisi."""
+    return [{'i': i, 'action': d['action'], 'shares': int(d['shares']), 'price': float(d['price']),
+             'commission': float(d['commission'])} for i, d in enumerate(decisions) if d['executed']]
+
+
 def step(mk: Market, strategy, st: LedgerState) -> dict:
     """Karar satiri st.t -> yurutme st.t+1; durumu yerinde ilerletir, gun satirini dondurur."""
     t = st.t
@@ -178,7 +184,9 @@ def step(mk: Market, strategy, st: LedgerState) -> dict:
                 'value': st.value, 'n_sell_blocked': int(r['projection'].get('n_sell_blocked', 0)),
                 'w': r['w'].copy(), 'weight_gap': float(r['weight_gap']),
                 'n_orders': int(sum(d['executed'] for d in r['decisions'])),
-                'holdings': r['holdings'].copy(), 'cash': float(r['cash'])}     # urun portfoyu lot tablosu (S5)
+                'holdings': r['holdings'].copy(), 'cash': float(r['cash']),     # urun portfoyu lot tablosu (S5)
+                # gunluk defter (plan §3.13): gerceklesen emirler (t+1 acilisi) ve degerleme fiyati (t+1 kapanisi)
+                'fills': integer_fills(r['decisions']), 'p_close': np.asarray(r['p_close'], dtype=np.float64).copy()}
     res = A.step_fractional(st.w, u, g_on, g_day, tradable, rf, mk.cost, W.Constraints(), None,
                             no_sell)
     st.w = res.w_next

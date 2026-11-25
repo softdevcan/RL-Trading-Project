@@ -121,6 +121,9 @@ python tests/test_marl_forward_job.py       # Faz 11/S4 gunluk is (marl/forward_
 python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MARL_FORWARD_AUTORUN varsayilan kapali, status 401/200, run viewer 403 /
                                            #          admin 200 + denetim kaydi (tetik sahte), zamanlayici kurali; S5 view/product 401/200/422 + lot tablosu muhasebesi (lot x kapanis + nakit = deger) + /dash/simulation
                                            #          sayfa ve callback'leri (5, ~20 sn; arsiv yoksa 5 atlanir)
+python tests/test_marl_sim_book.py          # Faz 11 §3.13 simulasyon sayfasi gunluk defteri (forward_views.daily_book): gercek step_integer ile sentetik gunler;
+                                           #          sum(katki)+faiz-komisyon = dV, lot x fiyat + nakit = deger, ort. maliyet bagimsiz denetim, islem goremeyen hissede emir yok,
+                                           #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi), ileri pencere on kayit dili (5, ~3 sn; ana venv, VERI GEREKMEZ)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
                                            #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi; S5 tam sayi mod (5, ~5 sn; ana venv, torch)
