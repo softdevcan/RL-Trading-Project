@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Temel imaj (docker/base.Dockerfile) GHCR'de varsa cekilir; yoksa (requirements.txt degisen PR) burada derlenir,
       # ITILMEZ (itme yalniz Deploy'da).

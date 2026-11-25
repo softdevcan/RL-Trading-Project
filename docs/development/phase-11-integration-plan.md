@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.13 · 2026-11-25 · İleri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.14 · 2026-11-25 · Simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,31 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.13 Simülasyon sayfası yeniden tasarımı (2026-11-25; kullanıcı isteği; `tests/test_marl_sim_book.py` 5)
+
+- **Kullanıcı isteği (2026-11-25).** Sayfada portföyde hangi hisselerin olduğu, günlük kazanç ve toplam K/Z anlaşılmıyor; grafikler zayıf. Çatı değiştirilmedi (Next.js değerlendirildi, reddedildi: 13 sayfa ve tema/RBAC bekçileri Dash'e bağlı; sorun bilgi tasarımıydı). Önce örnek veriyle etkileşimli prototip yapıldı ve onaylandı, sonra Dash'e uygulandı.
+- **Sayfa (`dashboard/pages/simulation.py`).** Sıra:
+  1. Pencere bandı: ileri pencerede "ara görünüm — tez sonucu değildir" ve seans ilerlemesi n/126; son çalışma ve marj denetimi aynı satırda.
+  2. İncelenen portföy: kol + tohum ya da kural, sermaye (K-F11-6). Tam lot (K-F11-2); kol ortalamasının lot karşılığı olmadığı yazılır.
+  3. Beş kart: değer, gün K/Z, toplam K/Z (maliyet dahil), en büyük düşüş (tepe → dip tarihi), 1/N kıyası (puan).
+  4. Ortak zaman eksenli üç panel: değer (incelenen tam lot + kıyas çizgileri kesirli, kol bandı ± std), günlük K/Z çubukları, tepeden düşüş. Aralık 1A/3A/Tümü.
+  5. Gün özeti: günün K/Z'si, bir cümle (en çok kazandıran / kaybettiren), hisse bazında katkı çubukları, emir listesi (alış/satış, lot × fiyat), nakit faizi ve maliyet.
+  6. "Portföyümde ne var": halka grafik + tablo (lot, ort. maliyet, kapanış, gün %, piyasa değeri, ağırlık, gün K/Z, toplam K/Z, o günkü işlem; nakit ve toplam satırı).
+  7. Dağılım zamanla (yığılmış alan), strateji karşılaştırma tablosu, 12 tohumun dağılımı.
+  - **Gün seçimi:** grafiğe tıklama ya da önceki/sonraki düğmesi; kartlar, gün özeti, tablo, halka ve dağılım o günün kapanışına geçer. Karşılaştırma tablosu ve tohum grafiği pencere sonunu gösterir (yazılı).
+- **Veri (yalnız okunan; ileri test, dondurulmuş defter ve S3 paritesi değişmez).**
+  - `orders.step_integer` yanıtına `p_exec`, `p_close` eklendi (zaten hesaplanan değerler; hesaba girmez).
+  - `sim_ledger.step` tam sayı satırı `fills` (gerçekleşen emirler: simge, yön, adet, yürütme fiyatı, komisyon; `integer_fills`) ve `p_close` taşır. Kesirli yol ve defter deposu (`rows.csv`) dokunulmadı.
+  - `forward_views.daily_book`: gün gün lot, değerleme fiyatı, ortalama maliyet, birikimli gerçekleşen K/Z, hisse katkısı, nakit faizi, komisyon, emir listesi. `product` yanıtına `book`; `view` kol satırına `members` (tohum başına toplam getiri ve Sharpe).
+  - **Tanımlar.** Ortalama maliyet komisyon HARİÇ hareketli ortalama (kâğıt portföyün `avg_cost`'u komisyon dahil; ikisi ayrı modül, sayfada yazılı). Hisse katkısı = gün sonu pozisyon değeri − önceki gün sonu pozisyon değeri − pozisyona giren net nakit. Özdeşlik: Σ katkı + nakit faizi − komisyon = günlük değer farkı.
+- **Ön kayıt.** İleri pencerede tohum grafiğinin notu kıyas yorumu yapmaz ("126. seansta bir kez okunur"); test penceresinde 1/N üstündeki tohum sayısı yazılır. Ürün portföyü ileri teste girmez, kayıt tutmaz (değişmedi).
+- **Test.**
+  - `test_marl_sim_book` 5 (veri gerektirmez): gerçek `step_integer` adımlarıyla sentetik 59 gün. Özdeşlik ve lot × fiyat + nakit = değer en büyük göreli fark 2,9e-16. Ort. maliyetin bağımsız denetimi: birikimli katkı = lot × (fiyat − ort. maliyet) + gerçekleşen, 1,8e-16. İşlem göremeyen hissede emir yok. Mutasyon: emir fiyatı +0,01 → 6e-7; gerçekleşen yok sayılınca 6e-2. Render ve ön kayıt dili.
+  - `test_marl_forward_api` 5 yeni callback'lere uyarlandı: günlük defter muhasebesi, 12 tohum satırı, grafik 9 iz. **Bu makinede arşiv yok; 5. kontrol arşivli makinede (ev / VDS) koşulmalı.**
+  - `test_dash_props` 4, `test_theme_contrast` 92 (`sim-` sınıf ailesi taranıyor), `test_topbar` 43, `test_marl_core` 63, `test_guide` 9.
+  - Sentetik veriyle ayrı Dash sürecinde görsel kontrol: sayfa açıldı, önceki gün düğmesi bütün bölümleri o güne taşıdı.
+- **Sınırlılık.** Fiyatlar yfinance düzeltilmiş (marl/CLAUDE.md: tam sayı modunda lot/fiyat seviyesi iddiası yok). Ürün portföyü her istekte baştan hesaplanır (test penceresi ilk istekte ~saniyeler).
 
 ### 3.12 İleri veri deposunun VDS'ye devri (2026-11-25; `tests/test_marl_forward_job.py` 5, `scripts/marl/handover_parity.py`)
 
@@ -341,6 +366,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.14 (2026-11-25):** Simülasyon sayfası yeniden tasarımı (§3.13; kullanıcı isteği): eldeki hisseler, gün özeti, gün seçimi; `forward_views.daily_book`, tam sayı satırında `fills`/`p_close`. Test 5.
 - **v0.13 (2026-11-25):** İleri veri deposunun VDS'ye devri (§3.12; kullanıcı kararı): tek yazar `WRITER`, devir paritesi betiği, imajda günlük iş dosyaları ve `GIT_COMMIT`.
 - **v0.12 (2026-11-24):** İş Yatırım eski yanıt / zaman aşımı (§3.11): `fetch_isy` beklenen günü yeniden ister, istek başına toplam süre sınırı; veri kuralı aynı. Test 5.
 - **v0.11 (2026-11-23):** Ürün portföyü lot tablosu (§3.10; kullanıcı isteği).

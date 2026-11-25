@@ -328,7 +328,7 @@ def main() -> int:
     # siniflari (me-2, d-flex, ...) kapsam disi.
     OWN_PREFIXES = ("sidebar-", "account-", "card-title", "state-", "metric-",
                     "theme-", "section-", "page-", "filter-", "topbar",
-                    "nav-label", "brand-text", "guide-")
+                    "nav-label", "brand-text", "guide-", "sim-")
     # Stil TASIMAYAN, kasitli istisnalar:
     #   theme-label  — theme-toggle.js'in metnini gunceldigi kanca
     #   sidebar-link — isaret; bicimi `#sidebar .nav-link` kuralindan geliyor

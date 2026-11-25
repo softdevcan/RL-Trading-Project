@@ -11,6 +11,7 @@ Ne dogrular (ag yok; is tetigi sahte fonksiyonla degistirilir):
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -132,16 +133,29 @@ if HAVE:
         ok5 &= c.get("/api/marl/forward/product", params={"sid": "rule/ew", "capital": 0}).status_code == 422
         ok5 &= c.get("/api/marl/forward/product", params={"sid": "policy/x/s1", "capital": 1e5,
                                                            "window": "test2026"}).status_code == 422
+        # §3.13 gunluk defter: her gun lot x degerleme + nakit = deger; kol satirinda 12 tohum
+        bk = pj.get('book') or {}
+        ok5 &= len(bk.get('dates', [])) == 207 and all(
+            abs(sum(l * m for l, m in zip(bk['lots'][i], bk['mark'][i])) + bk['cash'][i] - bk['value'][i])
+            <= 1e-6 * bk['value'][i] for i in range(len(bk['dates'])))
+        ok5 &= len(next(r for r in v['table'] if r['key'] == 'M-none').get('members', [])) == 12
         rpage = fire(c, "page-content.children", ["/dash/simulation"])
-        rview = fire(c, "sim-chart.figure", ["test2026", ["M-none", "rule/ew", "rule/minvar"]])
-        fig = (rview.json().get("response", {}).get("sim-chart", {}).get("figure", {}) if rview.status_code == 200 else {})
-        rprod = fire(c, "sim-product-out.children", [1], ["policy/M-none/s201", 100000, "test2026"])
-        ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and rview.status_code == 200
-        ok5 &= len(fig.get("data", [])) == 5 and rprod.status_code == 200    # M-none bant (2) + ort. + 2 kural
-        ok5 &= "Eldeki hisseler" in rprod.text
-    check(f"5. S5: view 401/200 (207 seans, M-none N=12), gecersiz anahtar/pencere 422, urun 200 / sermaye 0 / "
-          f"bilinmeyen strateji 422; lot tablosu: lot x kapanis + nakit = tam sayi deger; pano sayfasi + grafik + "
-          f"urun callback'i (lot tablosuyla) 200", ok5)
+        keys = ["M-none", "rule/ew", "rule/minvar"]
+        rview = fire(c, "sim-view.data", ["test2026", keys])
+        vdata = rview.json().get("response", {}).get("sim-view", {}).get("data") if rview.status_code == 200 else None
+        rbook = fire(c, "sim-book.data", ["test2026", "M-none", 201, 100000])
+        bdata = rbook.json().get("response", {}).get("sim-book", {}).get("data") if rbook.status_code == 200 else None
+        rrend = fire(c, "sim-chart.figure", [bdata, vdata, None, "all"], ["M-none", 201])
+        fig = (rrend.json().get("response", {}).get("sim-chart", {}).get("figure", {}) if rrend.status_code == 200
+               else {})
+        ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and "Portföyümde ne var" in json.dumps(
+            rpage.json(), ensure_ascii=False)          # yanit unicode kacisli olabilir
+        ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and "Toplam" in rrend.text
+        # M-none bant (2) + ort. + 2 kural + incelenen + secili gun isareti + gunluk K/Z + dusus
+        ok5 &= len(fig.get("data", [])) == 9
+    check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "
+          f"200 / sermaye 0 / bilinmeyen strateji 422; lot tablosu ve gunluk defter: lot x kapanis + nakit = deger; "
+          f"pano sayfasi + gorunum + defter + render callback'leri 200 (grafik 9 iz)", ok5)
 else:
     print("[ATLANDI] 5. dondurulmus arsiv yok")
 
