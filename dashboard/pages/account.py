@@ -21,41 +21,42 @@ from dash.dash_table import DataTable
 import dash_bootstrap_components as dbc
 
 import dashboard.api_client as api
+import dashboard.components.fmt as F
 from dashboard.auth_context import current_user, display_name
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
 from dashboard.components.table import TABLE_STYLES
 from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED
 
-ROLE_LABELS = {"admin": "Yonetici", "user": "Kullanici", "viewer": "Izleyici"}
+ROLE_LABELS = {"admin": "Yönetici", "user": "Kullanıcı", "viewer": "İzleyici"}
 
 ROLE_HELP = {
-    "admin": "Tum yetkiler ve kullanici yonetimi.",
-    "user": "Kendi calisma alaninda egitim, tahmin ve karar.",
-    "viewer": "Yalnizca okuma.",
+    "admin": "Tüm yetkiler ve kullanıcı yönetimi.",
+    "user": "Kendi çalışma alanında eğitim, tahmin ve karar.",
+    "viewer": "Yalnızca okuma.",
 }
 
 THEME_OPTIONS = [
-    ("light", "Aydinlik", "bi-sun", "Her zaman acik zemin."),
+    ("light", "Aydınlık", "bi-sun", "Her zaman açık zemin."),
     ("dark", "Koyu", "bi-moon-stars", "Her zaman koyu zemin."),
-    ("system", "Sistem", "bi-circle-half", "Isletim sisteminizi izler."),
+    ("system", "Sistem", "bi-circle-half", "İşletim sisteminizi izler."),
 ]
 
 # Denetim kaydindaki ham eylem adlari kullaniciya gosterilmez; /dash/users
 # (admin) ham kodu gosteriyor, burada okunur karsiligi veriliyor.
 ACTION_LABELS = {
-    "login": "Giris",
-    "logout": "Cikis",
-    "password.change": "Parola degisikligi",
-    "account.update": "Profil guncellemesi",
-    "account.revoke_sessions": "Diger oturumlar kapatildi",
-    "session.reuse_detected": "Oturum jetonu tekrar kullanildi",
+    "login": "Giriş",
+    "logout": "Çıkış",
+    "password.change": "Parola değişikliği",
+    "account.update": "Profil güncellemesi",
+    "account.revoke_sessions": "Diğer oturumlar kapatıldı",
+    "session.reuse_detected": "Oturum jetonu tekrar kullanıldı",
     # Admin rolundeki kullanici kendi etkinliginde bunlari da gorur
-    "user.create": "Kullanici olusturuldu",
-    "user.update": "Kullanici guncellendi",
-    "user.delete": "Kullanici silindi",
-    "user.password_reset": "Kullanici parolasi sifirlandi",
-    "user.revoke_sessions": "Kullanicinin oturumlari kapatildi",
+    "user.create": "Kullanıcı oluşturuldu",
+    "user.update": "Kullanıcı güncellendi",
+    "user.delete": "Kullanıcı silindi",
+    "user.password_reset": "Kullanıcı parolası sıfırlandı",
+    "user.revoke_sessions": "Kullanıcının oturumları kapatıldı",
 }
 
 LOGIN_FAIL_REASONS = {
@@ -69,20 +70,13 @@ LOGIN_FAIL_REASONS = {
 # ── Bicimlendirme yardimcilari ────────────────────────────────────────────
 
 def _fmt_dt(value: str | None) -> str:
-    """ISO zaman damgasini "30.08.2026 14:32 UTC" olarak yaz.
+    """ISO zaman damgasini "30.08.2026 17:32 TRT" olarak yaz.
 
-    UTC etiketi bilincli: kayitlar naive-UTC tutuluyor (bkz. models.utcnow).
-    Etiketsiz gostermek "yerel saat" izlenimi verirdi ve son giris saatine
-    bakan kullaniciyi yaniltirdi.
+    Kayitlar naive-UTC tutuluyor (bkz. models.utcnow). Faz 8'de "UTC" etiketiyle
+    yaziliyordu (etiketsiz saat "yerel saat" izlenimi verirdi). Faz 11 §3.15:
+    TRT'ye cevrilip "TRT" etiketiyle yazilir; etiket yine her zaman var.
     """
-    if not value:
-        return "—"
-    try:
-        date, _, rest = value.partition("T")
-        year, month, day = date.split("-")
-        return f"{day}.{month}.{year} {rest[:5]} UTC"
-    except Exception:
-        return str(value)[:19].replace("T", " ")
+    return F.dt_trt(value)
 
 
 def _fmt_size(num_bytes: int) -> str:
@@ -219,12 +213,12 @@ def _theme_card():
 
     return dbc.Card(
         [
-            dbc.CardHeader(html.Span("Gorunum", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Görünüm", className="card-title-sm")),
             dbc.CardBody(
                 [
                     html.P(
-                        "Tercih hesabiniza kaydedilir — baska bir makineden "
-                        "girdiginizde de gecerli olur.",
+                        "Tercih hesabınıza kaydedilir — başka bir makineden "
+                        "girdiğinizde de geçerli olur.",
                         style={"color": TEXT_MUTED, "marginBottom": "16px"},
                     ),
                     dbc.Row(options, className="g-3"),
@@ -294,7 +288,7 @@ def _profile_card():
                             html.I(className="bi bi-lock me-2"),
                             html.Span(id="account-email"),
                             html.Small(
-                                " · giris adresiniz, yalnizca yonetici degistirebilir",
+                                " · giriş adresiniz, yalnızca yönetici değiştirebilir",
                                 style={"color": TEXT_MUTED},
                             ),
                         ],
@@ -320,15 +314,15 @@ def _info_card():
 def _security_card():
     return dbc.Card(
         [
-            dbc.CardHeader(html.Span("Guvenlik", className="card-title-sm")),
+            dbc.CardHeader(html.Span("Güvenlik", className="card-title-sm")),
             dbc.CardBody(
                 [
                     html.P(
-                        "Parolanizi degistirdiginizde diger tum oturumlariniz kapanir.",
+                        "Parolanızı değiştirdiğinizde diğer tüm oturumlarınız kapanır.",
                         style={"color": TEXT_MUTED, "marginBottom": "14px"},
                     ),
                     html.A(
-                        [html.I(className="bi bi-key me-2"), "Parolayi degistir"],
+                        [html.I(className="bi bi-key me-2"), "Parolayı değiştir"],
                         href="/change-password",
                         className="btn btn-outline-secondary",
                     ),
@@ -356,8 +350,8 @@ def _activity_card():
             dbc.CardBody(
                 [
                     html.P(
-                        "Hesabinizla ilgili son 20 olay. Tanimadiginiz bir giris "
-                        "gorurseniz parolanizi degistirin ve diger oturumlari kapatin.",
+                        "Hesabınızla ilgili son 20 olay. Tanımadığınız bir giriş "
+                        "görürseniz parolanızı değiştirin ve diğer oturumları kapatın.",
                         style={"color": TEXT_MUTED, "marginBottom": "14px"},
                     ),
                     html.Div(id="account-activity-body"),
@@ -376,8 +370,8 @@ def layout():
             dcc.Store(id="account-tick", data=0),
 
             create_page_header(
-                "Hesabim",
-                "Profil bilgileri, gorunum tercihi ve oturum guvenligi",
+                "Hesabım",
+                "Profil bilgileri, görünüm tercihi ve oturum güvenliği",
             ),
             dbc.Row(
                 [
@@ -409,7 +403,7 @@ def _session_row(item: dict, last: bool):
     badges = []
     if item.get("current"):
         badges.append(
-            html.Span("bu tarayici", className="badge bg-primary",
+            html.Span("bu tarayıcı", className="badge bg-primary",
                       style={"fontSize": "10px", "marginLeft": "8px"})
         )
 
@@ -455,7 +449,7 @@ def _activity_detail(entry: dict) -> str:
     if action == "account.update":
         change = detail.get("full_name") or {}
         if change:
-            return f"{change.get('from') or '(bos)'} -> {change.get('to') or '(bos)'}"
+            return f"{change.get('from') or '(boş)'} -> {change.get('to') or '(boş)'}"
 
     if action in ("account.revoke_sessions", "user.revoke_sessions"):
         return f"{detail.get('revoked', 0)} oturum"
@@ -495,24 +489,24 @@ def register_callbacks(app):
         role = user.get("role", "user")
 
         rows = [
-            _info_row("Son giris", _fmt_dt(user.get("last_login_at"))),
-            _info_row("Hesap acilisi", _fmt_dt(user.get("created_at"))),
-            _info_row("Hesabi acan", user.get("created_by") or "—"),
+            _info_row("Son giriş", _fmt_dt(user.get("last_login_at"))),
+            _info_row("Hesap açılışı", _fmt_dt(user.get("created_at"))),
+            _info_row("Hesabı açan", user.get("created_by") or "—"),
         ]
         if workspace.get("exists"):
             rows.append(_info_row(
-                "Calisma alani",
+                "Çalışma alanı",
                 f"{workspace.get('files', 0)} dosya · {_fmt_size(workspace.get('bytes', 0))}",
                 last=True,
             ))
         else:
             # Henuz egitim/tahmin yapilmamis hesapta dizin bos olabilir.
-            rows.append(_info_row("Calisma alani", "Henuz dosya yok", last=True))
+            rows.append(_info_row("Çalışma alanı", "Henüz dosya yok", last=True))
 
         if not persistent:
             rows.insert(0, dbc.Alert(
-                "Kimlik dogrulama kapali (AUTH_ENABLED=False). Hesap kaydi yok; "
-                "gorunum tercihi yalnizca bu tarayicida saklanir.",
+                "Kimlik doğrulama kapalı (AUTH_ENABLED=False). Hesap kaydı yok; "
+                "görünüm tercihi yalnızca bu tarayıcıda saklanır.",
                 color="warning", className="py-2",
                 style={"fontSize": "12px"},
             ))
@@ -546,18 +540,18 @@ def register_callbacks(app):
         if not name:
             # Sunucu da reddeder (min_length=1); burada durmak bir tur ASGI
             # cagrisini ve "422" gorunumunu engelliyor.
-            return dbc.Alert("Ad soyad bos olamaz.", color="danger",
+            return dbc.Alert("Ad soyad boş olamaz.", color="danger",
                              className="py-2 mb-0"), no_update
 
         result = api.update_profile(name)
         if result.get("ok"):
             return (
-                dbc.Alert("Profil guncellendi.", color="success",
+                dbc.Alert("Profil güncellendi.", color="success",
                           className="py-2 mb-0", duration=4000),
                 (tick or 0) + 1,
             )
 
-        detail = (result.get("body") or {}).get("detail") or "Guncelleme basarisiz."
+        detail = (result.get("body") or {}).get("detail") or "Güncelleme başarısız."
         return dbc.Alert(str(detail), color="danger", className="py-2 mb-0"), no_update
 
     @app.callback(
@@ -571,7 +565,7 @@ def register_callbacks(app):
         if not sessions:
             return create_state_block(
                 "empty", "Aktif oturum bilgisi yok",
-                "Kimlik dogrulama kapaliyken oturum kaydi tutulmaz.",
+                "Kimlik doğrulama kapalıyken oturum kaydı tutulmaz.",
             )
 
         rows = [_session_row(item, last=(i == len(sessions) - 1))
@@ -581,7 +575,7 @@ def register_callbacks(app):
         rows.append(
             dbc.Button(
                 [html.I(className="bi bi-box-arrow-right me-1"),
-                 "Diger oturumlari kapat"],
+                 "Diğer oturumları kapat"],
                 id="account-revoke-btn",
                 color="danger", outline=True, size="sm",
                 disabled=others == 0,
@@ -590,7 +584,7 @@ def register_callbacks(app):
         )
         if others == 0:
             rows.append(html.Small(
-                "Baska aktif oturum yok.",
+                "Başka aktif oturum yok.",
                 style={"color": TEXT_MUTED, "display": "block", "marginTop": "6px"},
             ))
         return html.Div(rows)
@@ -603,8 +597,8 @@ def register_callbacks(app):
         entries = api.get_own_activity(20)
         if not entries:
             return create_state_block(
-                "empty", "Kayitli etkinlik yok",
-                "Girisler, parola degisiklikleri ve oturum islemleri burada listelenir.",
+                "empty", "Kayıtlı etkinlik yok",
+                "Girişler, parola değişiklikleri ve oturum işlemleri burada listelenir.",
             )
 
         rows = [
@@ -612,7 +606,7 @@ def register_callbacks(app):
                 "ts": _fmt_dt(entry.get("ts")),
                 "action": ACTION_LABELS.get(entry.get("action", ""),
                                             entry.get("action", "")),
-                "result": "Basarili" if entry.get("success") else "Basarisiz",
+                "result": "Başarılı" if entry.get("success") else "Başarısız",
                 "ip": entry.get("ip") or "—",
                 "detail": _activity_detail(entry),
             }
@@ -623,9 +617,9 @@ def register_callbacks(app):
             columns=[
                 {"name": "Zaman", "id": "ts"},
                 {"name": "Olay", "id": "action"},
-                {"name": "Sonuc", "id": "result"},
+                {"name": "Sonuç", "id": "result"},
                 {"name": "IP", "id": "ip"},
-                {"name": "Ayrinti", "id": "detail"},
+                {"name": "Ayrıntı", "id": "detail"},
             ],
             data=rows,
             page_size=8,
@@ -633,7 +627,7 @@ def register_callbacks(app):
             # Basarisiz satir goze carpsin: renk burada ANLAM tasiyor
             # (Faz 8 C.3 kurali), dekoratif degil.
             style_data_conditional=[{
-                "if": {"filter_query": '{result} = "Basarisiz"', "column_id": "result"},
+                "if": {"filter_query": '{result} = "Başarısız"', "column_id": "result"},
                 "color": "var(--rlt-loss)",
                 "fontWeight": "600",
             }],
@@ -654,13 +648,13 @@ def register_callbacks(app):
         result = api.revoke_other_sessions()
         if result.get("ok"):
             count = (result.get("body") or {}).get("revoked", 0)
-            message = (f"{count} oturum kapatildi." if count
-                       else "Kapatilacak baska oturum yoktu.")
+            message = (f"{count} oturum kapatıldı." if count
+                       else "Kapatılacak başka oturum yoktu.")
             return (
                 dbc.Alert(message, color="success", className="py-2 mb-0",
                           duration=4000),
                 (tick or 0) + 1,
             )
 
-        detail = (result.get("body") or {}).get("detail") or "Islem basarisiz."
+        detail = (result.get("body") or {}).get("detail") or "İşlem başarısız."
         return dbc.Alert(str(detail), color="danger", className="py-2 mb-0"), no_update

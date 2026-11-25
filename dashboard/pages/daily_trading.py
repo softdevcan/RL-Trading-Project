@@ -23,9 +23,10 @@ from dashboard.theme import (
     TEXT, TEXT_MUTED, GREEN, RED, BLUE, PURPLE, empty_figure, apply_theme_template,
     plot_palette, plot_rgba,
 )
-from dashboard.components.page_header import create_page_header
+from dashboard.components.page_header import LEGACY_NOTE, create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
+import dashboard.components.fmt as F
 
 from data.bist30_symbols import BIST30_SYMBOLS  # tek kaynak: data/universe/bist30_panel.json (E0, Y11)
 DEFAULT_SYMBOLS = BIST30_SYMBOLS[:5]
@@ -37,8 +38,9 @@ def layout():
     return html.Div([
         dcc.Store(id="dt-decision-store", data={}),
 
-        create_page_header("Gunluk Trading",
-                           "Model karari al ve portfoy uygula"),
+        create_page_header("Günlük Karar",
+                           "Model kararı al ve kâğıt portföye uygula",
+                           note=LEGACY_NOTE),
 
         dbc.Row([
             # ── Left panel: settings ─────────────────────────────────────────
@@ -49,7 +51,7 @@ def layout():
                         # Model selection
                         html.Label("Model", className="section-title"),
                         dcc.Dropdown(id="dt-model-select", options=[], value=None,
-                                     placeholder="Model sec...", clearable=False,
+                                     placeholder="Model seç...", clearable=False,
                                      style={"marginBottom": "16px"}),
 
                         # Risk mode
@@ -57,9 +59,9 @@ def layout():
                         dbc.RadioItems(
                             id="dt-risk-mode",
                             options=[
-                                {"label": "Dusuk Risk", "value": "conservative"},
+                                {"label": "Düşük Risk", "value": "conservative"},
                                 {"label": "Orta Risk", "value": "moderate"},
-                                {"label": "Yuksek Risk", "value": "aggressive"},
+                                {"label": "Yüksek Risk", "value": "aggressive"},
                             ],
                             value="moderate",
                             inline=True,
@@ -77,7 +79,7 @@ def layout():
                         ),
 
                         # Max shares slider
-                        html.Label("Max Hisse Adedi", className="section-title"),
+                        html.Label("En fazla hisse", className="section-title"),
                         dcc.Slider(
                             id="dt-max-shares",
                             min=1, max=10, step=1, value=5,
@@ -94,14 +96,14 @@ def layout():
                         # Elle giris tek seferlik deneme icin duruyor.
                         dbc.Checklist(
                             id="dt-manual-portfolio",
-                            options=[{"label": "Portfoyu elle gir", "value": "manual"}],
+                            options=[{"label": "Portföyü elle gir", "value": "manual"}],
                             value=[],
                             switch=True,
                             className="mb-2",
                         ),
                         html.Div(
                             id="dt-manual-hint",
-                            children="Karar, takip edilen kagit portfoyle alinir.",
+                            children="Karar, takip edilen kâğıt portföyle alınır.",
                             className="section-title",
                             style={"color": TEXT_MUTED, "marginBottom": "8px"},
                         ),
@@ -148,7 +150,7 @@ def layout():
                             className="w-100 mb-2",
                         ),
                         dbc.Button(
-                            [html.I(className="bi bi-download me-2"), "Disa Aktar (JSON)"],
+                            [html.I(className="bi bi-download me-2"), "Dışa Aktar (JSON)"],
                             id="dt-export-btn",
                             color="secondary",
                             outline=True,
@@ -167,7 +169,7 @@ def layout():
                 # esdegeri: `dcc.Store`'a guvenilmez, gezinince sifirlanir).
                 dbc.Card([
                     dbc.CardHeader([
-                        html.Span("Portfoy", className="card-title-sm"),
+                        html.Span("Portföy", className="card-title-sm"),
                         html.Span(id="dt-portfolio-asof",
                                   style={"color": TEXT_MUTED, "marginLeft": "12px",
                                          "fontSize": "13px"}),
@@ -185,14 +187,14 @@ def layout():
 
                 # History selector — gecmis kararlari gormek icin tarih dropdown.
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Gecmis Kararlar", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Geçmiş Kararlar", className="card-title-sm")),
                     dbc.CardBody([
                         dbc.Row([
                             dbc.Col(dcc.Dropdown(
                                 id="dt-history-select",
                                 options=[],
                                 value=None,
-                                placeholder="Onceki bir karari yukle...",
+                                placeholder="Önceki bir kararı yükle...",
                                 clearable=True,
                                                             ), width=9),
                             dbc.Col(dbc.Button(
@@ -214,7 +216,7 @@ def layout():
                 # Decision table
                 dbc.Card([
                     dbc.CardHeader([
-                        html.Span("Trading Kararlari", className="card-title-sm"),
+                        html.Span("Karar Ayrıntısı", className="card-title-sm"),
                         html.Span(id="dt-decision-date-badge", style={"color": TEXT_MUTED, "marginLeft": "12px", "fontSize": "13px"}),
                     ]),
                     dbc.CardBody(html.Div(id="dt-decision-table")),
@@ -222,8 +224,8 @@ def layout():
 
                 # Portfolio chart
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Portfoy Gecmisi", className="card-title-sm")),
-                    dbc.CardBody(dcc.Graph(id="dt-portfolio-chart", figure=empty_figure(),
+                    dbc.CardHeader(html.Span("Portföy Geçmişi", className="card-title-sm")),
+                    dbc.CardBody(dcc.Graph(id="dt-portfolio-chart", figure=_empty_history(),
                                           config={"displayModeBar": False})),
                 ]),
             ], md=8, className="mb-4"),
@@ -283,7 +285,7 @@ def register_callbacks(app):
     def get_decision(decide_n, model, risk, dt, max_shares, balance,
                      s0, q0, s1, q1, s2, q2, s3, q3, s4, q4, manual):
         if not decide_n or not model:
-            empty_msg = html.P("Model secin ve 'Karar Al' butonuna basin.", style={"color": TEXT_MUTED})
+            empty_msg = html.P("Model seçin ve 'Karar Al' butonuna basın.", style={"color": TEXT_MUTED})
             return empty_msg, html.Span(), empty_figure(), {}, html.Span(), dash.no_update
 
         payload = {
@@ -307,7 +309,7 @@ def register_callbacks(app):
         result = api.get_daily_decision(payload)
         if not result:
             return (
-                dbc.Alert("Karar alinamadi.", color="danger"),
+                dbc.Alert("Karar alınamadı.", color="danger"),
                 html.Span(), empty_figure(), {},
                 html.Span(), dash.no_update,
             )
@@ -340,7 +342,7 @@ def register_callbacks(app):
         entry = (history_doc.get("decisions") or {}).get(hist_date)
         if not entry:
             return (
-                dbc.Alert("Secili tarih icin kayit bulunamadi.", color="warning"),
+                dbc.Alert("Seçili tarih için kayıt bulunamadı.", color="warning"),
                 html.Span(), {}, html.Span(),
             )
         result = {
@@ -373,9 +375,9 @@ def register_callbacks(app):
     )
     def toggle_manual_portfolio(value):
         manual = bool(value)
-        hint = ("Girilen bakiye ve pozisyonlar kullanilir; portfoy ilerlemez."
+        hint = ("Girilen bakiye ve pozisyonlar kullanılır; portföy ilerlemez."
                 if manual else
-                "Karar, takip edilen kagit portfoyle alinir.")
+                "Karar, takip edilen kâğıt portföyle alınır.")
         return manual, hint
 
     # Portfoy blogu: sayfa acilista ve her uygulamadan sonra tazelenir.
@@ -401,35 +403,35 @@ def register_callbacks(app):
             return [html.Span()]
         decision_date = decision.get("date") if isinstance(decision, dict) else None
         if not decision_date:
-            return [dbc.Alert("Once 'Karar Al' ile bir karar uretilmeli.", color="warning", dismissable=True)]
+            return [dbc.Alert("Önce 'Karar Al' ile bir karar üretilmeli.", color="warning", dismissable=True)]
         if manual:
             # Elle girilen portfoyle uretilen karari kagit portfoye islemek
             # pozisyonu uydurma bir baslangictan ilerletirdi.
             return [dbc.Alert(
-                "Elle girilen portfoyle alinan karar uygulanamaz — "
-                "'Portfoyu elle gir' anahtarini kapatip karari yenileyin.",
+                "Elle girilen portföyle alınan karar uygulanamaz — "
+                "'Portföyü elle gir' anahtarını kapatıp kararı yenileyin.",
                 color="warning", dismissable=True,
             )]
         raw = api.apply_decision_raw(decision_date)
         if not raw.get("ok"):
-            detail = (raw.get("body") or {}).get("detail") or "Uygulama basarisiz."
+            detail = (raw.get("body") or {}).get("detail") or "Uygulama başarısız."
             # 409: ertesi seans acilisi henuz yok (Faz 11 S7, K-F11-5) — hata degil, bekleme
             return [dbc.Alert(str(detail), color="info" if raw.get("status") == 409 else "danger",
                               dismissable=True)]
         result = raw.get("body") or {}
         if result.get("already_applied"):
             return [dbc.Alert(
-                f"{decision_date} tarihli karar zaten uygulanmis — portfoy degismedi.",
+                f"{decision_date} tarihli karar zaten uygulanmış — portföy değişmedi.",
                 color="info", dismissable=True,
             )]
         applied = result.get("applied") or {}
         val = result.get("portfolio") or {}
         ex = result.get("execution") or {}
-        when = (f"{ex['date']} acilis fiyatiyla " if ex.get("date") else "")
+        when = (f"{ex['date']} açılış fiyatıyla " if ex.get("date") else "")
         msg = [html.I(className="bi bi-check-circle me-2"),
-               f"{applied.get('executed_trades', 0)} islem {when}uygulandi. "
-               f"Toplam deger {_money(val.get('total_value'))}, "
-               f"kar/zarar {_signed_money(val.get('total_pnl'))} "
+               f"{applied.get('executed_trades', 0)} işlem {when}uygulandı. "
+               f"Toplam değer {_money(val.get('total_value'))}, "
+               f"kâr/zarar {_signed_money(val.get('total_pnl'))} "
                f"({_signed_pct(val.get('total_pnl_pct'))})."]
         skipped = applied.get("skipped") or []
         if skipped:
@@ -451,25 +453,23 @@ def register_callbacks(app):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _empty_history():
+    """§3.15: boş portföy geçmişi 450 px yer kaplamasın; ne zaman dolacağını söyle."""
+    fig = empty_figure("Portföy geçmişi yok — ilk 'Uygula'dan sonra çizilir")
+    fig.update_layout(height=160)
+    return fig
+
+
 def _money(v):
-    try:
-        return f"₺{float(v):,.2f}"
-    except (TypeError, ValueError):
-        return "—"
+    return F.money(v)           # Türkçe biçim tek kaynak: dashboard/components/fmt.py (§3.15)
 
 
 def _signed_money(v):
-    try:
-        return f"{'+' if float(v) >= 0 else '-'}₺{abs(float(v)):,.2f}"
-    except (TypeError, ValueError):
-        return "—"
+    return F.signed_money(v)
 
 
 def _signed_pct(v):
-    try:
-        return f"{float(v):+.2f}%"
-    except (TypeError, ValueError):
-        return "—"
+    return F.signed_pct(v)
 
 
 def _pnl_color(v):
@@ -493,7 +493,7 @@ def _render_portfolio(val):
     kalir.
     """
     if not val:
-        return create_state_block("empty", "Portfoy okunamadi."), ""
+        return create_state_block("empty", "Portföy okunamadı."), ""
 
     positions = val.get("positions") or []
     asof = val.get("priced_on")
@@ -509,19 +509,19 @@ def _render_portfolio(val):
     pnl = val.get("total_pnl")
     summary = dbc.Row([
         metric("Nakit", _money(val.get("cash"))),
-        metric("Pozisyon Degeri", _money(val.get("position_value"))),
-        metric("Toplam Deger", _money(val.get("total_value"))),
-        metric("Kar/Zarar", f"{_signed_money(pnl)} ({_signed_pct(val.get('total_pnl_pct'))})",
+        metric("Pozisyon Değeri", _money(val.get("position_value"))),
+        metric("Toplam Değer", _money(val.get("total_value"))),
+        metric("Kâr/Zarar", f"{_signed_money(pnl)} ({_signed_pct(val.get('total_pnl_pct'))})",
                _pnl_color(pnl)),
     ])
 
     breakdown = html.Div([
-        html.Span(f"Baslangic {_money(val.get('initial_capital'))}", style={"color": TEXT_MUTED}),
+        html.Span(f"Başlangıç {_money(val.get('initial_capital'))}", style={"color": TEXT_MUTED}),
         html.Span(" · ", style={"color": TEXT_MUTED}),
-        html.Span(f"gerceklesmis {_signed_money(val.get('realized_pnl'))}",
+        html.Span(f"gerçekleşmiş {_signed_money(val.get('realized_pnl'))}",
                   style={"color": _pnl_color(val.get("realized_pnl"))}),
         html.Span(" · ", style={"color": TEXT_MUTED}),
-        html.Span(f"gerceklesmemis {_signed_money(val.get('unrealized_pnl'))}",
+        html.Span(f"gerçekleşmemiş {_signed_money(val.get('unrealized_pnl'))}",
                   style={"color": _pnl_color(val.get("unrealized_pnl"))}),
         html.Span(" · ", style={"color": TEXT_MUTED}),
         html.Span(f"komisyon {_money(val.get('total_commission'))}",
@@ -531,7 +531,7 @@ def _render_portfolio(val):
     if not positions:
         table = create_state_block(
             "empty",
-            "Acik pozisyon yok — karar alip 'Uygula' dediginde burada gorunur.",
+            "Açık pozisyon yok — karar alıp 'Uygula' dediğinde burada görünür.",
         )
     else:
         header = dbc.Row([
@@ -539,8 +539,8 @@ def _render_portfolio(val):
             dbc.Col(html.Small("Adet", className="section-title"), width=1),
             dbc.Col(html.Small("Maliyet", className="section-title"), width=2),
             dbc.Col(html.Small("Fiyat", className="section-title"), width=2),
-            dbc.Col(html.Small("Deger", className="section-title"), width=2),
-            dbc.Col(html.Small("Kar/Zarar", className="section-title"), width=2),
+            dbc.Col(html.Small("Değer", className="section-title"), width=2),
+            dbc.Col(html.Small("Kâr/Zarar", className="section-title"), width=2),
         ])
         rows = [header]
         for p in positions:
@@ -565,7 +565,7 @@ def _render_portfolio(val):
     children = [summary, breakdown, table]
     if val.get("missing_prices"):
         children.append(html.Div(
-            f"* Fiyati alinamayan sembol maliyetiyle degerlendi: "
+            f"* Fiyatı alınamayan sembol maliyetiyle değerlendi: "
             f"{', '.join(val['missing_prices'])}",
             style={"color": TEXT_MUTED, "fontSize": "12px", "marginTop": "8px"},
         ))
@@ -579,7 +579,7 @@ def _render_decision_table(result):
 
     header = dbc.Row([
         dbc.Col(html.Small("Sembol", className="section-title"), width=2),
-        dbc.Col(html.Small("Islem", className="section-title"), width=2),
+        dbc.Col(html.Small("İşlem", className="section-title"), width=2),
         dbc.Col(html.Small("Adet", className="section-title"), width=1),
         dbc.Col(html.Small("Fiyat", className="section-title"), width=2),
         dbc.Col(html.Small("Toplam", className="section-title"), width=2),
@@ -600,8 +600,8 @@ def _render_decision_table(result):
             dbc.Col(html.Span(d.get("symbol", "—"), className="card-title-sm"), width=2),
             dbc.Col(dbc.Badge(action, style={"backgroundColor": color}, pill=True), width=2),
             dbc.Col(html.Span(str(shares_val), style={"color": TEXT}), width=1),
-            dbc.Col(html.Span(f"₺{d.get('price', 0):,.2f}", style={"color": TEXT}), width=2),
-            dbc.Col(html.Span(f"₺{total_val:,.2f}", style={"color": TEXT}), width=2),
+            dbc.Col(html.Span(F.money(d.get('price', 0)), style={"color": TEXT}), width=2),
+            dbc.Col(html.Span(F.money(total_val), style={"color": TEXT}), width=2),
             dbc.Col(html.Span(d.get("reason", ""), style={"color": TEXT_MUTED, "fontSize": "12px"}), width=3),
         ], className="py-2 border-bottom"))
     return html.Div(rows)
@@ -641,16 +641,16 @@ def _render_summary_cards(result):
         net_color, net_prefix = BLUE, ""
 
     cards = dbc.Row([
-        dbc.Col(_mini_card("Al Toplam", f"₺{total_buy:,.2f}", GREEN), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Sat Toplam", f"₺{total_sell:,.2f}", RED), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Net Nakit Akisi", f"{net_prefix}₺{net:,.2f}", net_color), xs=6, md=3, className="mb-3"),
-        dbc.Col(_mini_card("Islem Sayisi", str(n_executed), PURPLE), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Al Toplam", F.money(total_buy), GREEN), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Sat Toplam", F.money(total_sell), RED), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("Net Nakit Akışı", F.signed_money(net), net_color), xs=6, md=3, className="mb-3"),
+        dbc.Col(_mini_card("İşlem Sayısı", str(n_executed), PURPLE), xs=6, md=3, className="mb-3"),
     ])
     # Faz 11 S7 (K13 + K-F11-5): canli gozlem uyarilari ve yurutme zamani notu
     warns = list((result.get("summary") or {}).get("observation_warnings") or [])
     notes = [html.Li(w) for w in warns] + [html.Li(
-        "Uygula: islemler kararin kapanisindan degil, ERTESI SEANSIN ACILIS fiyatiyla yapilir (simulasyon "
-        "defteriyle ayni yurutme zamani). Tutarlar acilis fiyatina gore degisebilir.")]
+        "Uygula: işlemler kararın kapanışından değil, ERTESİ SEANSIN AÇILIŞ fiyatıyla yapılır (simülasyon "
+        "defteriyle aynı yürütme zamanı). Tutarlar açılış fiyatına göre değişebilir.")]
     return html.Div([cards, dbc.Alert(html.Ul(notes, className="mb-0 small"),
                                       color="warning" if warns else "secondary", className="py-2")])
 
@@ -678,11 +678,11 @@ def _build_portfolio_chart(history):
             fill="tozeroy",
             fillcolor=plot_rgba("blue", 0.12),
             line={"color": plot_palette()["blue"], "width": 2},
-            hovertemplate="<b>%{x}</b><br>₺%{y:,.0f}<extra></extra>",
+            hovertemplate="<b>%{x}</b><br>%{y:,.0f} TL<extra></extra>",
         ))
     else:
-        return empty_figure("Portfoy gecmisi yok")
+        return _empty_history()
 
     apply_theme_template(fig)
-    fig.update_layout(showlegend=False, height=280)
+    fig.update_layout(showlegend=False, height=280, separators=",.")
     return fig

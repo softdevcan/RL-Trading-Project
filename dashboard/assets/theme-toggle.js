@@ -18,7 +18,7 @@
   var THEME_COOKIE = "rlt_theme";
   var RESOLVED_COOKIE = "rlt_theme_r";
   var ORDER = ["light", "dark", "system"];
-  var LABELS = { light: "Aydinlik", dark: "Koyu", system: "Sistem" };
+  var LABELS = { light: "Aydınlık", dark: "Koyu", system: "Sistem" };
   var ICONS = { light: "bi-sun", dark: "bi-moon-stars", system: "bi-circle-half" };
 
   // ── Cerez yardimcilari ───────────────────────────────────────────────────

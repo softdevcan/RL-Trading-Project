@@ -12,7 +12,7 @@ python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
 python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
-python tests/test_training_status.py        # /train/status progress, sembol uyarisi,
+python tests/test_training_status.py        # /train/status progress, sembol uyarisi (metin beklentileri Turkce, §3.15),
                                            #        RL + tahmin egitimi durumunun sayfaya
                                            #        donunce geri gelmesi (19 kontrol)
 python tests/test_daily_trading_tz.py     # Gunluk karar: CSV (tz'siz) + yfinance (tz'li)

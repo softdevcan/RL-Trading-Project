@@ -1276,3 +1276,7 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .home-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .home-legacy { margin-bottom: 24px; }
 .home-legacy-sum { cursor: pointer; color: var(--rlt-text); font-weight: 600; font-size: 14px; }
+
+/* Faz 11 §3.15: sayfa basligi altindaki kapsam notu (tek ajanli sayfalar, bilgi kapisi) */
+.page-scope-note { font-size: 12.5px; color: var(--rlt-muted); margin: 6px 0 0; max-width: 900px; }
+.page-scope-note a { color: var(--rlt-primary); }

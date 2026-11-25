@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.15 · 2026-11-25 · Ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.16 · 2026-11-25 · Arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,25 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.15 Arayüz metinleri ve kullanılabilirlik (2026-11-25; kullanıcı isteği; mevcut testler, beklentileri güncellendi)
+
+- **Kullanıcı isteği (2026-11-25).** §3.14'te kapsam dışı bırakılan eski sayfalar: "yapabileceğimiz diğer arayüz iyileştirmelerini de yapalım". Önce bütün sayfaların ekran görüntüsü alındı (yerel sunucu, Edge); iş o taramadan çıkan somut sorunlarla sınırlı.
+- **Türkçe metin (9 sayfa + bileşenler).** Ekranda görünen dizeler Türkçe karakterle yazıldı. Kör bul-değiştir yapılmadı:
+  - görünen dize konumları AST ile çıkarıldı (bileşen children, label, title, placeholder; sütun adları; etiket sözlükleri) ve kesin karşılığı olan kelime haritası uygulandı;
+  - kimlik, className, value, href, sözlük anahtarı, karşılaştırmaya giren dize ve tanımlayıcı biçimli dizeler (`gram_altin_try`) dışarıda tutuldu; karşılaştırma çakışması 0;
+  - birden çok satıra yayılan dizeler elle düzeltildi; fark satır satır okundu.
+  - `<html lang="tr">`: CSS büyük harf dönüşümü "takip"i "TAKIP" yapıyordu; dil işaretiyle "TAKİP".
+  - Üst çubuk görünüm düğmesi "Aydınlık".
+- **Ortak biçim (`dashboard/components/fmt.py`).** Para "100.000,00 TL" (binlik nokta, ondalık virgül, gerçek eksi; simülasyon sayfasıyla aynı), yüzde "+%5,20", saat TRT. Günlük karar, Modeller ve Tahmin `f"₺{x:,.2f}"` yerine bunu kullanır.
+- **Saat.** Hesabım ve Kullanıcılar sayfasında kimlik kayıtları (naive UTC) TRT'ye çevrilip "TRT" etiketiyle yazılıyor. Kullanıcılar sayfasında son giriş daha önce etiketsiz UTC'ydi.
+- **Hata: hiperparametre durum rozeti.** Kod `"complete"` arıyordu, API `"completed"` döndürüyor: tamamlanan çalışmalar gri ve İngilizce "COMPLETED" görünüyordu. `fmt.status` ikisini de tanır ("Tamamlandı", yeşil); deneme satırları ve detay da aynı eşlemeyi kullanır.
+- **Veri sayfası dosya listesi.** `data/**/*.csv`'nin tamamı (ileri veri önbelleği dahil 364 dosya) alt alta yazılıyordu: sayfa ~15.000 px. Aynı ad (`raw_stock_data.csv`) farklı klasörlerde ayırt edilemiyordu. Artık klasör sütunlu, sıralanır, süzülür, 12'lik sayfalı tablo; dosya/klasör/toplam boyut özeti. Sayfa ~2.000 px.
+- **Boş durumlar.** Akademik sayfada model yokken dört boş grafik ve boş tablo yerine tek kart ("Eğitime git", "Dashboard"). Modeller ve Günlük karar'da boş grafik 450 → 160 px, ne yapılacağını söyleyen metinle.
+- **Kapsam notu.** Tek ajanlı sayfalarda (Modeller, Akademik, Eğitim, Hiperparametre, Günlük karar) başlık altında: bu sayfa Faz 1–9 tek ajanlı modeller içindir; M8 ve simülasyon Dashboard / Simülasyon / Rehber'de. Tahmin sayfasında: bilgi kapısında (P5) yön bilgisi tespit edilmedi, Rehber kartına bağlantı. `create_page_header(note=...)`.
+- **Başlıklar.** "Günlük Trading" → "Günlük Karar" (menüyle aynı), "Hiper Parametre" → "Hiperparametre", Günlük karar kartı "Trading Kararları" → "Karar Ayrıntısı".
+- **Test.** Davranış değişmedi; metin beklentileri güncellendi: `test_account_profile` 84 (3 beklenti: "bu tarayıcı", "Giriş", "boş olamaz"), `test_training_status` 19 (1: "eğitiliyor"). Ayrıca `test_dash_props` 4, `test_theme_contrast` 92 (`page-scope-note`), `test_topbar` 43, `test_delete_artifacts` 32, `test_theme_preference` 31, `test_paper_execution` 4, `test_paper_portfolio` 43, `test_workspace_isolation` 20, `test_training_eta` 57, `test_guide` 9. Görsel kontrol: 9 sayfa yeniden çekildi; konsol hatası 0.
+- **Kapsam dışı.** `dcc.Dropdown`'ın kendi metni ("30 selected") Dash bileşeninden geliyor; tek ajanlı sayfaların iç akışı (form alanları, metrikler) değiştirilmedi.
 
 ### 3.14 Ana sayfa ve arayüzün güncel duruma getirilmesi (2026-11-25; kullanıcı isteği; `tests/test_marl_forward_api.py` 6, `tests/test_guide.py` 9)
 
@@ -385,6 +404,7 @@
 
 ## Versiyon geçmişi
 
+- **v0.16 (2026-11-25):** Arayüz metinleri ve kullanılabilirlik (§3.15; kullanıcı isteği): 9 sayfa Türkçe karakter (AST ile görünen dizeler), `fmt.py` Türkçe para/saat/durum, veri dosya listesi sayfalı tablo, boş durumlar, tek ajanlı sayfalara kapsam notu, hiperparametre durum rozeti hatası.
 - **v0.15 (2026-11-25):** Ana sayfa ve arayüz güncel duruma (§3.14; kullanıcı isteği): M8 özeti (sıralama değil; kural portföyleri yanında) + simülasyon kutusu + durum şeridi; rehberde M8 kartları (`kademe: nihai`), bayat metinler; son çalışma saati TRT; menü Türkçe. Test 6 + 9.
 - **v0.14 (2026-11-25):** Simülasyon sayfası yeniden tasarımı (§3.13; kullanıcı isteği): eldeki hisseler, gün özeti, gün seçimi; `forward_views.daily_book`, tam sayı satırında `fills`/`p_close`. Test 5.
 - **v0.13 (2026-11-25):** İleri veri deposunun VDS'ye devri (§3.12; kullanıcı kararı): tek yazar `WRITER`, devir paritesi betiği, imajda günlük iş dosyaları ve `GIT_COMMIT`.

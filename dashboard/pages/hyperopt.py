@@ -19,9 +19,10 @@ import dash_bootstrap_components as dbc
 from dashboard.theme import (
     CARD2, TEXT, TEXT_MUTED, BORDER, GREEN, RED, BLUE, ORANGE, algo_badge_class,
 )
-from dashboard.components.page_header import create_page_header
+from dashboard.components.page_header import LEGACY_NOTE, create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
+import dashboard.components.fmt as F
 
 # Backend /config/* ulasilamadiginda kullanilan emniyet listeleri.
 _FALLBACK_ALGORITHMS = [
@@ -100,14 +101,15 @@ def layout():
         dcc.Store(id="hyperopt-modal-study-id", data=None),
         dcc.Store(id="hyperopt-data-range", data=data_range),
 
-        create_page_header("Hiper Parametre Optimizasyonu",
-                           "Optuna ile otomatik hiper parametre arama"),
+        create_page_header("Hiperparametre Optimizasyonu",
+                           "Optuna ile otomatik hiperparametre arama",
+                           note=LEGACY_NOTE),
 
         dbc.Row([
             # ── Form panel ──────────────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Optimizasyon Baslat", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Optimizasyon Başlat", className="card-title-sm")),
                     dbc.CardBody([
                         # Algorithm
                         html.Label("Algoritma", className="section-title"),
@@ -133,7 +135,7 @@ def layout():
                             style={"marginBottom": "16px"},
                         ),
                         # n_trials
-                        html.Label("Deneme Sayisi (n_trials)", className="section-title"),
+                        html.Label("Deneme Sayısı (n_trials)", className="section-title"),
                         dbc.Input(id="hyperopt-trials", type="number", value=20, min=1, max=500,
                                   className="mb-3"),
                         # timesteps (schema: ge=10_000, le=1_000_000)
@@ -176,7 +178,7 @@ def layout():
                         html.Div(id="hyperopt-space-info", className="mb-3"),
                         # Start button
                         dbc.Button(
-                            [html.I(className="bi bi-play-circle me-2"), "Optimizasyonu Baslat"],
+                            [html.I(className="bi bi-play-circle me-2"), "Optimizasyonu Başlat"],
                             id="hyperopt-start-btn",
                             color="success",
                             className="w-100",
@@ -211,10 +213,10 @@ def layout():
         # Silme onayi — Optuna deposundan kalici olarak siler
         dbc.Modal(
             [
-                dbc.ModalHeader(dbc.ModalTitle("Calismayi sil")),
+                dbc.ModalHeader(dbc.ModalTitle("Çalışmayı sil")),
                 dbc.ModalBody(html.Div(id="hyperopt-delete-body")),
                 dbc.ModalFooter([
-                    dbc.Button("Vazgec", id="hyperopt-delete-cancel",
+                    dbc.Button("Vazgeç", id="hyperopt-delete-cancel",
                                color="secondary", outline=True, className="me-2"),
                     dbc.Button([html.I(className="bi bi-trash me-1"), "Sil"],
                                id="hyperopt-delete-confirm", color="danger"),
@@ -234,14 +236,14 @@ def layout():
                         html.Div(id="hyperopt-modal-info"),
                     ], md=6),
                     dbc.Col([
-                        html.H6("En Iyi Parametreler", style={"color": TEXT_MUTED}),
+                        html.H6("En İyi Parametreler", style={"color": TEXT_MUTED}),
                         html.Pre(id="hyperopt-modal-params",
                                   style={"backgroundColor": CARD2, "padding": "12px",
                                          "borderRadius": "6px", "color": TEXT, "fontSize": "12px",
                                          "overflowX": "auto"}),
                     ], md=6),
                 ], className="mb-3"),
-                html.H6("Trial Sonuclari", style={"color": TEXT_MUTED, "marginTop": "16px"}),
+                html.H6("Trial Sonuçları", style={"color": TEXT_MUTED, "marginTop": "16px"}),
                 html.Div(id="hyperopt-modal-trials"),
             ]),
             dbc.ModalFooter(dbc.Button("Kapat", id="hyperopt-modal-close", color="secondary")),
@@ -263,9 +265,9 @@ def register_callbacks(app):
             return html.Span()
         spaces = api.get_search_spaces(algo) or {}
         if not spaces:
-            return html.Small(f"{algo} arama uzayi bilgisi yok.", style={"color": TEXT_MUTED})
+            return html.Small(f"{algo} arama uzayı bilgisi yok.", style={"color": TEXT_MUTED})
         n = len(spaces.get("parameters", spaces)) if isinstance(spaces, dict) else 0
-        return html.Small(f"{algo} icin {n} hiper parametre aranacak.", style={"color": TEXT_MUTED})
+        return html.Small(f"{algo} için {n} hiper parametre aranacak.", style={"color": TEXT_MUTED})
 
     @app.callback(
         [Output("hyperopt-poll", "disabled"),
@@ -342,7 +344,7 @@ def register_callbacks(app):
     def refresh_studies(n_ref, n_poll, _tick):
         studies = api.get_hyperopt_studies()
         if not studies:
-            return create_state_block("empty", "Kayitli optimizasyon calismasi yok.")
+            return create_state_block("empty", "Kayıtlı optimizasyon çalışması yok.")
         return _render_studies_grid(studies)
 
     @app.callback(
@@ -364,13 +366,13 @@ def register_callbacks(app):
 
         study_id = str(triggered.get("index"))
         body = html.Div([
-            html.P("Bu optimizasyon kaydi kalici olarak silinecek. "
-                   "Deneme gecmisi ve en iyi parametreler de gider.",
+            html.P("Bu optimizasyon kaydı kalıcı olarak silinecek. "
+                   "Deneme geçmişi ve en iyi parametreler de gider.",
                    style={"color": TEXT}),
             html.Div(study_id, style={"color": TEXT_MUTED, "fontSize": "12px",
                                       "wordBreak": "break-all"}),
             html.Small(
-                "Optuna deposu tum kullanicilar arasinda ORTAK — silinen kayit "
+                "Optuna deposu tüm kullanıcılar arasında ORTAK — silinen kayıt "
                 "herkesten silinir.",
                 style={"color": TEXT_MUTED},
             ),
@@ -391,7 +393,7 @@ def register_callbacks(app):
         result = api.delete_hyperopt_study(str(study_id))
         if result.get("ok"):
             return (
-                dbc.Alert("Calisma silindi.", color="success",
+                dbc.Alert("Çalışma silindi.", color="success",
                           className="py-2 mb-3", duration=4000),
                 (tick or 0) + 1,
             )
@@ -555,7 +557,7 @@ def _render_studies_grid(studies):
         total_trials = s.get("total_trials", s.get("n_trials_target", n_trials)) or n_trials
         progress = int(n_trials / total_trials * 100) if total_trials else 0
 
-        status_color = "success" if status == "complete" else "warning" if status == "running" else "secondary"
+        status_text, status_color = F.status(status)       # "complete"/"completed" ikisi de (§3.15)
         badge_class = algo_badge_class(algo)
 
         cols.append(dbc.Col(
@@ -563,14 +565,14 @@ def _render_studies_grid(studies):
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col(dbc.Badge(algo, pill=True, className=badge_class), width="auto"),
-                        dbc.Col(dbc.Badge(status.upper(), color=status_color, pill=True), width="auto", className="ms-auto"),
+                        dbc.Col(dbc.Badge(status_text, color=status_color, pill=True), width="auto", className="ms-auto"),
                     ], className="mb-2"),
                     html.Div(str(s.get("study_name", sid))[:30],
                              style={"color": TEXT, "fontWeight": "600", "fontSize": "13px", "marginBottom": "8px"}),
                     html.Small(f"Deneme: {n_trials}/{total_trials}", style={"color": TEXT_MUTED}),
                     dbc.Progress(value=progress, color="primary", style={"height": "4px"}, className="my-2"),
                     dbc.Row([
-                        dbc.Col(html.Small("En Iyi", style={"color": TEXT_MUTED}), width=5),
+                        dbc.Col(html.Small("En İyi", style={"color": TEXT_MUTED}), width=5),
                         dbc.Col(html.Span(f"{best:.4f}", style={"color": GREEN, "fontWeight": "700", "fontSize": "14px"}), width=7),
                     ]),
                     html.Div(
@@ -582,7 +584,7 @@ def _render_studies_grid(studies):
                             dbc.Button(html.I(className="bi bi-trash"),
                                        id={"type": "hyperopt-study-delete", "index": str(sid)},
                                        size="sm", color="danger", outline=True,
-                                       title="Bu calismayi sil",
+                                       title="Bu çalışmayı sil",
                                        # Calisan kosum once iptal edilmeli; uc de
                                        # 409 ile reddediyor, dugme onu tekrar etmesin.
                                        disabled=(status == "running")),
@@ -600,23 +602,23 @@ def _render_modal_info(study, stats=None, total_trials=None):
     stats = stats or {}
     best_val = study.get("best_value")
     fields = [
-        ("Calisma Adi", study.get("study_name", "—")),
+        ("Çalışma Adı", study.get("study_name", "—")),
         ("Algoritma", str(study.get("algorithm", "—")).upper()),
-        ("Durum", str(study.get("status", study.get("state", "—"))).upper()),
+        ("Durum", F.status(study.get("status", study.get("state")))[0]),
         ("Faz", str(study.get("phase", "—"))),
-        ("Odul Tipi", str(study.get("reward_type", "—")).upper()),
+        ("Ödül Tipi", str(study.get("reward_type", "—")).upper()),
         ("Tamamlanan", f"{study.get('trials_completed', 0)}/{study.get('n_trials', total_trials or '—')}"),
         ("Pruned/Failed", f"{study.get('trials_pruned', 0)}/{study.get('trials_failed', 0)}"),
-        ("En Iyi Deger", f"{best_val:.4f}" if isinstance(best_val, (int, float)) else "—"),
-        ("En Iyi Trial #", str(study.get("best_trial")) if study.get("best_trial") is not None else "—"),
+        ("En İyi Değer", f"{best_val:.4f}" if isinstance(best_val, (int, float)) else "—"),
+        ("En İyi Trial #", str(study.get("best_trial")) if study.get("best_trial") is not None else "—"),
         ("Train Aralığı", f"{study.get('train_start', '—')} → {study.get('train_end', '—')}"),
         ("Val Aralığı", f"{study.get('val_start', '—')} → {study.get('val_end', '—')}"),
-        ("Olusturuldu", str(study.get("created_at", "—"))[:19]),
+        ("Oluşturuldu", str(study.get("created_at", "—"))[:19]),
     ]
     # Stats only when present (running studies have None)
     if stats.get("mean_value") is not None:
         fields.extend([
-            ("Ort. Deger", f"{stats['mean_value']:.4f}"),
+            ("Ort. Değer", f"{stats['mean_value']:.4f}"),
             ("Medyan", f"{stats.get('median_value', 0):.4f}"),
             ("Std", f"{stats.get('std_value', 0):.4f}"),
             ("Min / Max", f"{stats.get('min_value', 0):.4f} / {stats.get('max_value', 0):.4f}"),
@@ -636,9 +638,9 @@ def _render_trials_table(trials):
 
     header = dbc.Row([
         dbc.Col(html.Small("#", className="section-title"), width=1),
-        dbc.Col(html.Small("Deger", className="section-title"), width=2),
+        dbc.Col(html.Small("Değer", className="section-title"), width=2),
         dbc.Col(html.Small("Durum", className="section-title"), width=2),
-        dbc.Col(html.Small("Sure (s)", className="section-title"), width=2),
+        dbc.Col(html.Small("Süre (s)", className="section-title"), width=2),
         dbc.Col(html.Small("Parametreler", className="section-title"), width=5),
     ])
     rows = [header]
@@ -650,7 +652,7 @@ def _render_trials_table(trials):
         except (TypeError, ValueError):
             val = 0.0
         status = str(t.get("state", t.get("status", "—"))).lower()
-        status_color = "success" if status == "complete" else "warning" if status == "pruned" else "danger" if "fail" in status else "secondary"
+        status_text, status_color = F.status(status)
         duration = t.get("duration_seconds", t.get("duration", t.get("elapsed")))
         duration_str = f"{float(duration):.1f}" if duration not in (None, "—", "") else "—"
         try:
@@ -665,7 +667,7 @@ def _render_trials_table(trials):
         rows.append(dbc.Row([
             dbc.Col(html.Small(str(trial_num), style={"color": TEXT_MUTED}), width=1),
             dbc.Col(html.Small(f"{val:.4f}", style={"color": GREEN if val > 0 else RED}), width=2),
-            dbc.Col(dbc.Badge(status.upper(), color=status_color, pill=True, style={"fontSize": "10px"}), width=2),
+            dbc.Col(dbc.Badge(status_text, color=status_color, pill=True, style={"fontSize": "10px"}), width=2),
             dbc.Col(html.Small(duration_str, style={"color": TEXT_MUTED}), width=2),
             dbc.Col(html.Small(params_str, style={"color": TEXT_MUTED, "fontSize": "11px"}), width=5),
         ], className="py-1 border-bottom"))

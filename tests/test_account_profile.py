@@ -416,12 +416,12 @@ def main() -> int:
 
         r = fire(c, "account-sessions-body.children", [0])
         check("Oturum callback'i calisti", r.status_code == 200, f"(got {r.status_code})")
-        check("Mevcut tarayici isaretlendi", "bu tarayici" in r.text)
+        check("Mevcut tarayici isaretlendi", "bu tarayıcı" in r.text)
 
         r = fire(c, "account-activity-body.children", [0])
         check("Etkinlik callback'i calisti", r.status_code == 200, f"(got {r.status_code})")
         check("Etkinlik tablosu ham eylem kodu degil etiket basiyor",
-              "Giris" in r.text and '"login"' not in r.text,
+              "Giriş" in r.text and '"login"' not in r.text,
               f"(got {r.text[:200]})")
 
         r = fire(c, "account-alert", [1], ["Bob Guncel", 0])
@@ -433,7 +433,7 @@ def main() -> int:
 
         r = fire(c, "account-alert", [1], ["   ", 0])
         check("Bos ad callback'te durduruldu",
-              r.status_code == 200 and "bos olamaz" in r.text, f"(got {r.status_code})")
+              r.status_code == 200 and "boş olamaz" in r.text, f"(got {r.status_code})")
         check("Bos ad DB'yi degistirmedi", name_of("bob@test.local") == "Bob Guncel")
 
         r = fire(c, "account-session-alert", [1], [1])

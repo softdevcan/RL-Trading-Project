@@ -12,7 +12,7 @@ from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 
 from dashboard.theme import BORDER, CARD2, TEXT, TEXT_MUTED, GREEN, BLUE, YELLOW
-from dashboard.components.page_header import create_page_header
+from dashboard.components.page_header import LEGACY_NOTE, create_page_header
 from dashboard.components.state_block import create_state_block
 import dashboard.api_client as api
 
@@ -58,14 +58,15 @@ def layout():
         dcc.Store(id="training-store", data={}),
 
         # Header
-        create_page_header("Model Egitimi",
-                           "Yeni RL modeli egit ve durumunu izle"),
+        create_page_header("Model Eğitimi",
+                           "Yeni tek ajanlı RL modeli eğit ve durumunu izle",
+                           note=LEGACY_NOTE),
 
         dbc.Row([
             # ── Left: Training form ─────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Egitim Parametreleri", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Eğitim Parametreleri", className="card-title-sm")),
                     dbc.CardBody([
                         # Algorithm
                         html.Label("Algoritma", className="section-title"),
@@ -86,7 +87,7 @@ def layout():
                             className="mb-3",
                         ),
                         # Timesteps
-                        html.Label("Timestep Sayisi", className="section-title"),
+                        html.Label("Timestep Sayısı", className="section-title"),
                         dbc.Input(
                             id="training-timesteps",
                             type="number",
@@ -97,7 +98,7 @@ def layout():
                             className="mb-3",
                         ),
                         # Initial balance
-                        html.Label("Baslangic Bakiyesi (₺)", className="section-title"),
+                        html.Label("Başlangıç Bakiyesi (₺)", className="section-title"),
                         dbc.Input(
                             id="training-balance",
                             type="number",
@@ -106,20 +107,20 @@ def layout():
                             className="mb-3",
                         ),
                         # Hyperopt study
-                        html.Label("Hiper Parametre Calismasi", className="section-title"),
+                        html.Label("Hiper Parametre Çalışması", className="section-title"),
                         dcc.Dropdown(
                             id="training-study",
-                            options=[{"label": "Varsayilan parametreler", "value": ""}],
+                            options=[{"label": "Varsayılan parametreler", "value": ""}],
                             value="",
                             clearable=False,
-                            placeholder="Calisma sec (opsiyonel)...",
+                            placeholder="Çalışma seç (opsiyonel)...",
                             style={"marginBottom": "24px"},
                         ),
                         # Tahmini sure — form degistikce guncellenir
                         html.Div(id="training-estimate", className="mb-3"),
                         # Start button
                         dbc.Button(
-                            [html.I(className="bi bi-play-circle me-2"), "Egitimi Baslat"],
+                            [html.I(className="bi bi-play-circle me-2"), "Eğitimi Başlat"],
                             id="training-start-btn",
                             color="success",
                             className="w-100",
@@ -132,7 +133,7 @@ def layout():
             # ── Right: Status ───────────────────────────────────────────────
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.Span("Egitim Durumu", className="card-title-sm")),
+                    dbc.CardHeader(html.Span("Eğitim Durumu", className="card-title-sm")),
                     dbc.CardBody([
                         html.Div(id="training-status-content", children=content),
                     ]),
@@ -147,17 +148,17 @@ def _idle_status():
     # baslamamis durumda. Bos durum blogu (C.7) dogru olan.
     return create_state_block(
         "empty",
-        "Egitim baslatilmadi.",
-        hint="Soldaki formu doldurup egitimi baslatin.",
+        "Eğitim başlatılmadı.",
+        hint="Soldaki formu doldurup eğitimi başlatın.",
     )
 
 
 # Backend `phase_name` degerlerinin panoda gosterilen karsiliklari.
 _PHASE_LABELS = {
-    "preparing": "Veri hazirlaniyor",
-    "training": "Model egitiliyor",
-    "evaluating": "Test setinde degerlendiriliyor",
-    "completed": "Tamamlandi",
+    "preparing": "Veri hazırlanıyor",
+    "training": "Model eğitiliyor",
+    "evaluating": "Test setinde değerlendiriliyor",
+    "completed": "Tamamlandı",
 }
 
 
@@ -171,7 +172,7 @@ def _eta_row(status):
     source = status.get("eta_source")
     # 'prior' = henuz gozlem yok, on tahminden; kullaniciya bunu durustce soyle.
     note = " (on tahmin)" if source == "prior" else ""
-    finish_txt = f" · bitis ~{finish_at}" if finish_at else ""
+    finish_txt = f" · bitiş ~{finish_at}" if finish_at else ""
 
     return dbc.Row([
         dbc.Col(html.Small("Kalan", className="section-title"), width=4),
@@ -222,17 +223,17 @@ def _running_status(status):
     pct = min(int(step / total * 100), 100)
     elapsed = status.get("elapsed_text") or status.get("elapsed", "—")
     metrics = status.get("metrics", {}) or {}
-    phase_label = _PHASE_LABELS.get(status.get("phase_name"), "Egitim devam ediyor")
+    phase_label = _PHASE_LABELS.get(status.get("phase_name"), "Eğitim devam ediyor")
     rate = status.get("steps_per_sec")
 
     rows = [
         dbc.Row([
-            dbc.Col(html.Small("Adim", className="section-title"), width=4),
+            dbc.Col(html.Small("Adım", className="section-title"), width=4),
             dbc.Col(html.Span(f"{step:,} / {total:,}", className="card-title-sm"), width=8),
         ], className="mb-2"),
         dbc.Progress(value=pct, label=f"{pct}%", color="primary", className="mb-3"),
         dbc.Row([
-            dbc.Col(html.Small("Gecen", className="section-title"), width=4),
+            dbc.Col(html.Small("Geçen", className="section-title"), width=4),
             dbc.Col(html.Span(str(elapsed), style={"color": TEXT_MUTED}), width=8),
         ], className="mb-2"),
     ]
@@ -243,8 +244,8 @@ def _running_status(status):
 
     if rate:
         rows.append(dbc.Row([
-            dbc.Col(html.Small("Hiz", className="section-title"), width=4),
-            dbc.Col(html.Span(f"{rate:,.0f} adim/sn", style={"color": TEXT_MUTED}), width=8),
+            dbc.Col(html.Small("Hız", className="section-title"), width=4),
+            dbc.Col(html.Span(f"{rate:,.0f} adım/sn", style={"color": TEXT_MUTED}), width=8),
         ], className="mb-2"))
 
     return html.Div([
@@ -270,12 +271,12 @@ def _completed_status(status):
 
     return html.Div([
         dbc.Alert(
-            [html.I(className="bi bi-check-circle-fill me-2"), f"Egitim tamamlandi!{took}"],
+            [html.I(className="bi bi-check-circle-fill me-2"), f"Eğitim tamamlandı!{took}"],
             color="success", className="mb-3",
         ),
         _render_live_metrics(metrics),
         dbc.Button(
-            [html.I(className="bi bi-arrow-clockwise me-2"), "Yeni Egitim"],
+            [html.I(className="bi bi-arrow-clockwise me-2"), "Yeni Eğitim"],
             id="training-reset-btn",
             color="secondary",
             outline=True,
@@ -316,7 +317,7 @@ def register_callbacks(app):
         Input("training-algo", "value"),
     )
     def update_study_options(algo):
-        opts = [{"label": "Varsayilan parametreler", "value": ""}]
+        opts = [{"label": "Varsayılan parametreler", "value": ""}]
         studies = api.get_hyperopt_studies()
         for s in studies:
             s_algo = s.get("algorithm", "").upper()
@@ -355,7 +356,7 @@ def register_callbacks(app):
         return html.Div([
             html.Div([
                 html.I(className=f"bi {icon} me-2", style={"color": color}),
-                html.Span("Tahmini sure: ", style={"color": TEXT_MUTED, "fontSize": "13px"}),
+                html.Span("Tahmini süre: ", style={"color": TEXT_MUTED, "fontSize": "13px"}),
                 html.Span(f"~{est['total_text']}", className="card-title-sm"),
             ]),
             html.Small(

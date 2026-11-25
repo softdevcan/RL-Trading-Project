@@ -59,7 +59,7 @@ def _index_template() -> str:
     script = script.replace("__RESOLVED__", s.THEME_RESOLVED_COOKIE_NAME)
 
     return """<!DOCTYPE html>
-<html>
+<html lang="tr">
     <head>
         {%metas%}
         <title>{%title%}</title>
@@ -191,15 +191,15 @@ def create_dash_app(prefix: str = "/dash/") -> Dash:
             if not is_admin():
                 return html.Div(
                     [
-                        html.H3("Yetkisiz erisim", style={"color": RED}),
-                        html.P("Bu sayfa yalnizca yoneticiler icindir.", style={"color": TEXT_MUTED}),
+                        html.H3("Yetkisiz erişim", style={"color": RED}),
+                        html.P("Bu sayfa yalnızca yöneticiler içindir.", style={"color": TEXT_MUTED}),
                     ],
                     style={"padding": "40px"},
                 )
             return users.layout()
         return html.Div(
             [
-                html.H3("404 – Sayfa bulunamadi", style={"color": RED}),
+                html.H3("404 – Sayfa bulunamadı", style={"color": RED}),
                 html.P(f"Yol: {pathname}", style={"color": TEXT_MUTED}),
             ],
             style={"padding": "40px"},

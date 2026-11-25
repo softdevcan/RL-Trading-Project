@@ -8,9 +8,9 @@ bosluk sayfadan sayfaya farkliydi; hata durumu cogu yerde hic yoktu.
 from dash import html
 
 _KINDS = {
-    "loading": ("bi bi-hourglass-split", "Yukleniyor..."),
-    "empty": ("bi bi-inbox", "Kayit yok"),
-    "error": ("bi bi-exclamation-triangle", "Bir hata olustu"),
+    "loading": ("bi bi-hourglass-split", "Yükleniyor..."),
+    "empty": ("bi bi-inbox", "Kayıt yok"),
+    "error": ("bi bi-exclamation-triangle", "Bir hata oluştu"),
 }
 
 

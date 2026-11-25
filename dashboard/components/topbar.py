@@ -162,7 +162,7 @@ def _theme_button() -> html.Button:
         ],
         id="theme-toggle",
         type="button",
-        title="Gorunum tercihini degistir",
+        title="Görünüm tercihini değiştir",
         **{"data-theme-set": "__cycle__"},
     )
 
