@@ -182,4 +182,5 @@ def step_integer(holdings, cash: float, value: float, w_prev, u, px: dict, t: in
     k = w_prev[1:] * (g_on - 1.0 - rf) + w_exec * (g_day - 1.0) - comm / v_pre
     return {'R': R, 'X': X, 'k': k, 'turnover': float(summ['turnover']), 'projection': rep,
             'weight_gap': summ['weight_gap'], 'decisions': dec, 'holdings': h, 'cash': cash, 'value': v_next,
-            'w': np.concatenate([[cash], h * p_close]) / v_next, 'commission': float(comm.sum())}
+            'w': np.concatenate([[cash], h * p_close]) / v_next, 'commission': float(comm.sum()),
+            'p_exec': p_exec, 'p_close': p_close}     # pano gunluk defteri (Faz 11 §3.13); hesaba girmez

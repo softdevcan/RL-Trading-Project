@@ -120,7 +120,62 @@ def view(window: str, keys=DEFAULT_VIEW) -> dict:
             row[f] = float(np.nanmean(vals)) if np.isfinite(vals).any() else None
             row[f + '_std'] = float(np.nanstd(vals, ddof=1)) if len(sids) > 1 and np.isfinite(vals).sum() > 1 else None
         row['n_undefined_sharpe'] = int(sum(x['excess_sharpe'] is None for x in m))
+        if key in ARMS:     # tohum dagilimi (plan §3.13): ortalama +- std'nin arkasindaki tek tek sonuclar
+            row['members'] = [{'sid': s, 'seed': s.rsplit('/', 1)[-1], 'cum_return': x['cum_return'],
+                               'excess_sharpe': x['excess_sharpe']} for s, x in zip(sids, m)]
         out['table'].append(row)
+    return out
+
+
+def daily_book(rows: list, symbols, capital: float) -> dict:
+    """Tam sayi defterinin gun gun dokumu (plan §3.13; pano 'Gun ozeti' ve 'Portfoyumde ne var').
+
+    `rows`: `sim_ledger.run` tam sayi modu satirlari (`holdings`, `cash`, `value`, `rf`, `fills`, `p_close`). Baslangic
+    durumu: tum sermaye nakit. Ortalama maliyet komisyon HARIC hareketli ortalama (alista guncellenir, satista degismez,
+    adet 0'a inince sifirlanir); gerceklesen K/Z = (satis fiyati - ort. maliyet) x adet, birikimli. Hisse katkisi
+    = gun sonu pozisyon degeri - onceki gun sonu pozisyon degeri - pozisyona giren net nakit (komisyon haric).
+    Ozdeslik (test): sum(katki) + nakit faizi - komisyon = deger_t - deger_{t-1}. Hesap defteri degistirmez.
+    """
+    n = len(symbols)
+    h_prev, mark_prev = np.zeros(n, dtype=np.int64), np.zeros(n)
+    cash_prev = float(capital)
+    avg, real = np.zeros(n), np.zeros(n)
+    out = {k: [] for k in ('dates', 'value', 'cash', 'lots', 'mark', 'avg_cost', 'realized', 'contrib',
+                           'cash_interest', 'commission', 'trades')}
+    for r in rows:
+        h = np.asarray(r['holdings'], dtype=np.int64)
+        mark = np.asarray(r['p_close'], dtype=np.float64)
+        flow, comm, trades = np.zeros(n), 0.0, []
+        for f in r['fills']:
+            i, q, p = f['i'], f['shares'], f['price']
+            if f['action'] == 'BUY':
+                before = int(h[i]) - q          # h gun sonu adedi; simgede gunde tek karar
+                avg[i] = (avg[i] * before + q * p) / (before + q)
+                flow[i] += q * p
+            else:
+                real[i] += (p - avg[i]) * q
+                flow[i] -= q * p
+                if h[i] == 0:
+                    avg[i] = 0.0
+            comm += f['commission']
+            trades.append({'symbol': symbols[i], 'action': f['action'], 'shares': q, 'price': p,
+                           'amount': q * p, 'commission': f['commission']})
+        interest = cash_prev * float(r['rf'])
+        contrib = h * mark - h_prev * mark_prev - flow
+        out['dates'].append(str(r['date']))
+        out['value'].append(float(r['value']))
+        out['cash'].append(float(r['cash']))
+        out['lots'].append([int(x) for x in h])
+        out['mark'].append([float(x) for x in mark])
+        out['avg_cost'].append([float(x) for x in avg])
+        out['realized'].append([float(x) for x in real])
+        out['contrib'].append([float(x) for x in contrib])
+        out['cash_interest'].append(interest)
+        out['commission'].append(comm)
+        out['trades'].append(sorted(trades, key=lambda x: -x['amount']))
+        h_prev, mark_prev, cash_prev = h, mark, float(r['cash'])
+    out['symbols'] = list(symbols)
+    out['capital'] = float(capital)
     return out
 
 
@@ -164,4 +219,5 @@ def product(sid: str, capital: float, window: str = 'forward') -> dict:
             'n_orders': int(sum(r['n_orders'] for r in it)), 'last_cash_integer': float(it[-1]['cash_weight']),
             'last_weights_integer': {s: float(w) for s, w in zip(mk.symbols, it[-1]['w'][1:]) if w > 1e-9},
             'holdings_date': str(it[-1]['date']), 'holdings': holdings, 'cash_integer_tl': float(it[-1]['cash']),
-            'cash_weight_frac': float(fr[-1]['w'][0])}
+            'cash_weight_frac': float(fr[-1]['w'][0]),
+            'book': daily_book(it, [s.replace('.IS', '') for s in mk.symbols], capital)}
