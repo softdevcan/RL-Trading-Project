@@ -17,12 +17,12 @@ router = APIRouter(prefix="/marl", tags=["marl"])
 
 
 @router.get("/forward/status")
-async def forward_status(user: CurrentUser):
+def forward_status(user: CurrentUser):
     return marl_forward.info()
 
 
 @router.post("/forward/run")
-async def forward_run(user: RequireAdmin):
+def forward_run(user: RequireAdmin):
     if not marl_forward.available():
         raise HTTPException(status_code=409, detail="Dondurulmus M8 arsivi/kaynagi bu sunucuda yok (data/marl/frozen)")
     started = marl_forward.run_now('manual')

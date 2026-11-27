@@ -254,7 +254,6 @@ def test_partial_estimate_dict():
 def test_status_endpoint_resilience():
     """Bozuk on tahmin /train/status'u 500'e dusurmemeli."""
     print("\n[8] Durum ucu dayanikliligi")
-    import asyncio
     from app.api.routes import trading as tr
 
     state = tr.get_training_state()
@@ -268,7 +267,7 @@ def test_status_endpoint_resilience():
             "learn_start_ts": time.time() - 15,
             "estimate": {"total_seconds": 150.0},  # sema ile uyumsuz
         })
-        status = asyncio.run(tr.get_training_status())
+        status = tr.get_training_status()          # §3.19: isleyici artik senkron (def)
         check("bozuk tahminle status donuyor", status.is_training is True)
         check("bozuk tahmin None'a dusuruldu", status.estimate is None)
         check("ETA yine de hesaplandi", status.eta_text not in (None, "—"),

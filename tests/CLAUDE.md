@@ -11,7 +11,7 @@ python tests/test_ppo.py
 python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
-python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
+python tests/test_training_eta.py           # Egitim suresi tahmini (57 kontrol)
 python tests/test_training_status.py        # /train/status progress, sembol uyarisi (metin beklentileri Turkce, §3.15),
                                            #        RL + tahmin egitimi durumunun sayfaya
                                            #        donunce geri gelmesi (19 kontrol)
@@ -29,6 +29,7 @@ python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans)
 python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
+python tests/test_api_async_guard.py        # Faz 11 §3.19: rota isleyicisi async def ise await icermeli (olay dongusu kilidi); mutasyonlu (1)
 python tests/test_data_catalog.py           # Faz 11 §3.17 veri katalogu: 4 grup, ham durumu /data/status'tan, "Bu sayfa: Guncelle"
                                            #        yalniz ham grupta, ileri veri n/126, group_of yol eslemesi (2, veri gerektirmez)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)
@@ -126,7 +127,7 @@ python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MAR
                                            #          m8_ozet, 2026 test kutusu, son calisma TRT damgasi (6, ~25 sn; arsiv yoksa 5-6 atlanir)
 python tests/test_marl_sim_book.py          # Faz 11 §3.13 simulasyon sayfasi gunluk defteri (forward_views.daily_book): gercek step_integer ile sentetik gunler;
                                            #          sum(katki)+faiz-komisyon = dV, lot x fiyat + nakit = deger, ort. maliyet bagimsiz denetim, islem goremeyen hissede emir yok,
-                                           #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi), ileri pencere on kayit dili (5, ~3 sn; ana venv, VERI GEREKMEZ)
+                                           #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi, kol ortalamasi karti), ileri pencere on kayit dili, §3.18 secim/tablo + bos kol tohumu, sade ozet + esli fark + kisa pencerede Sharpe yok (7, ~3 sn; ana venv, VERI GEREKMEZ)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
                                            #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi; S5 tam sayi mod (5, ~5 sn; ana venv, torch)

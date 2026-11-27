@@ -82,7 +82,7 @@ def _get_or_404(db: Session, user_id: str) -> User:
 
 
 @router.get("/users")
-async def list_users(admin: RequireAdmin, db: Annotated[Session, Depends(get_db)]) -> dict:
+def list_users(admin: RequireAdmin, db: Annotated[Session, Depends(get_db)]) -> dict:
     users = []
     for user in service.list_users(db):
         row = user.to_dict()
@@ -92,7 +92,7 @@ async def list_users(admin: RequireAdmin, db: Annotated[Session, Depends(get_db)
 
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
-async def create_user(
+def create_user(
     payload: UserCreate,
     admin: RequireAdmin,
     request: Request,
@@ -124,7 +124,7 @@ async def create_user(
 
 
 @router.patch("/users/{user_id}")
-async def update_user(
+def update_user(
     user_id: str,
     payload: UserUpdate,
     admin: RequireAdmin,
@@ -151,7 +151,7 @@ async def update_user(
 
 
 @router.post("/users/{user_id}/password")
-async def reset_password(
+def reset_password(
     user_id: str,
     payload: PasswordReset,
     admin: RequireAdmin,
@@ -177,7 +177,7 @@ async def reset_password(
 
 
 @router.post("/users/{user_id}/revoke-sessions")
-async def revoke_sessions(
+def revoke_sessions(
     user_id: str,
     admin: RequireAdmin,
     request: Request,
@@ -192,7 +192,7 @@ async def revoke_sessions(
 
 
 @router.delete("/users/{user_id}")
-async def delete_user(
+def delete_user(
     user_id: str,
     admin: RequireAdmin,
     request: Request,
@@ -215,7 +215,7 @@ async def delete_user(
 
 
 @router.get("/audit")
-async def audit_log(
+def audit_log(
     admin: RequireAdmin,
     db: Annotated[Session, Depends(get_db)],
     limit: int = Query(100, ge=1, le=1000),

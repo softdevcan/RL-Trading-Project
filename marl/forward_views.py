@@ -13,6 +13,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
+from collections import OrderedDict
 
 import numpy as np
 
@@ -30,6 +32,50 @@ DEFAULT_VIEW = ('M-none', 'rule/ew', 'rule/minvar')        # K-F11-1
 WINDOWS = ('forward', 'test2026')
 CACHE_DIR = os.path.join('data', 'marl', 'forward', 'm8', 'cache')
 PANEL_M8 = os.path.join('data', 'marl', 'panel_m8.npz')
+
+
+# ── süreç içi önbellek (Faz 11 §3.19) ─────────────────────────────────────────
+# view/product her istekte defteri baştan koşuyordu (2026 ürün portföyü ~390 ms, ileri ~130 ms). Sonuç yalnız girdi
+# dosyalarına bağlı: imza (yol, mtime_ns, boyut) değişince anahtar değişir, eski sonuç bir daha dönmez. Dönen sözlük
+# PAYLAŞILIR: çağıran değiştirmez (rota `view`'de kopya üzerinde çalışır). Tek uvicorn işçisi (Dockerfile) -> tutarlı.
+_MEMO: OrderedDict = OrderedDict()
+_MEMO_LOCK = threading.Lock()
+_MEMO_MAX = 24
+
+
+def _stamp(window: str) -> tuple:
+    """Pencerenin girdi dosyalarının imzası: defter satırları, ileri panel, marj kaydı, arşiv manifesti, M8 paneli."""
+    paths = [os.path.join(FJ.ARCHIVE, 'manifest.json'), PANEL_M8]
+    if window == 'forward':
+        from marl import forward_panel as FP
+        from marl import margin_coverage as MC
+        paths += [os.path.join(FJ.LEDGER_DIR, FJ.ROWS), os.path.join(FP.FWD_ROOT, FP.PANEL_FWD), MC.CHECKS_PATH]
+    out = []
+    for p in paths:
+        try:
+            st = os.stat(p)
+            out.append((p, st.st_mtime_ns, st.st_size))
+        except OSError:
+            out.append((p, None, None))
+    return tuple(out)
+
+
+def _memo(key: tuple, build):
+    with _MEMO_LOCK:
+        if key in _MEMO:
+            _MEMO.move_to_end(key)
+            return _MEMO[key]
+    val = build()
+    with _MEMO_LOCK:
+        _MEMO[key] = val
+        while len(_MEMO) > _MEMO_MAX:
+            _MEMO.popitem(last=False)
+    return val
+
+
+def memo_clear() -> None:
+    with _MEMO_LOCK:
+        _MEMO.clear()
 
 
 def _manifest_sha() -> str:
@@ -55,6 +101,10 @@ def _forward_market():
 
 def raw_series(window: str) -> dict:
     """{'dates': [...], 'series': {sid: {'R', 'X', 'value', 'turnover', 'cash_weight'}}} (deger: 100.000 TL'den)."""
+    return _memo(('raw', window, _stamp(window)), lambda: _raw_series(window))
+
+
+def _raw_series(window: str) -> dict:
     if window == 'forward':
         rows = FJ.read_rows()
         if rows.empty:
@@ -98,7 +148,11 @@ def _metrics(s: dict) -> dict:
 
 
 def view(window: str, keys=DEFAULT_VIEW) -> dict:
-    """Secilen kollar (12 tohum ortalamasi +- std) ve kurallar; ozet tablo."""
+    """Secilen kollar (12 tohum ortalamasi +- std) ve kurallar; ozet tablo. Ust duzey kopya: cagiran anahtar ekleyebilir."""
+    return dict(_memo(('view', window, tuple(keys), _stamp(window)), lambda: _view(window, keys)))
+
+
+def _view(window: str, keys) -> dict:
     raw = raw_series(window)
     dates, ser = raw['dates'], raw['series']
     out = {'window': window, 'dates': dates, 'n_sessions': len(dates), 'lines': {}, 'table': [],
@@ -113,6 +167,10 @@ def view(window: str, keys=DEFAULT_VIEW) -> dict:
         m = [_metrics(ser[s]) for s in sids]
         line = {'label': ARM_LABELS.get(key, key), 'n': len(sids), 'mean': V.mean(axis=0).tolist(),
                 'std': (V.std(axis=0, ddof=1) if len(sids) > 1 else np.zeros(V.shape[1])).tolist()}
+        if 'rule/ew' in ser:    # esli fark (ayni gunler): tohum basina deger - 1/N degeri; yalniz goruntu, okumaya girmez
+            D = V - np.asarray(ser['rule/ew']['value'], float)[None, :]
+            line['diff_ew'] = {'mean': D.mean(axis=0).tolist(),
+                               'std': (D.std(axis=0, ddof=1) if len(sids) > 1 else np.zeros(D.shape[1])).tolist()}
         out['lines'][key] = line
         row = {'key': key, 'label': line['label'], 'n': len(sids)}
         for f in ('cum_return', 'excess_sharpe', 'max_drawdown', 'turnover', 'cash'):
@@ -180,11 +238,16 @@ def daily_book(rows: list, symbols, capital: float) -> dict:
 
 
 def product(sid: str, capital: float, window: str = 'forward') -> dict:
-    """Urun portfoyu: secilen strateji tam sayi lotla (kullanici sermayesi) ve kesirli es; fark (K-F11-2)."""
+    """Urun portfoyu: secilen strateji tam sayi lotla (kullanici sermayesi) ve kesirli es; fark (K-F11-2).
+    Sonuc girdi dosyalari degismedikce onbellekten (paylasilan sozluk; cagiran degistirmez)."""
     if capital <= 0:
         raise ValueError('sermaye pozitif olmali')
     if sid not in FJ.strategy_ids():
         raise ValueError(f'bilinmeyen strateji: {sid}')
+    return _memo(('product', sid, float(capital), window, _stamp(window)), lambda: _product(sid, capital, window))
+
+
+def _product(sid: str, capital: float, window: str) -> dict:
     if window == 'forward':
         arrays, until = _forward_market()
         r0 = FJ.start_row(arrays['dates'])

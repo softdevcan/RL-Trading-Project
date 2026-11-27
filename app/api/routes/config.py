@@ -44,25 +44,25 @@ _REWARD_TYPES: List[Dict[str, str]] = [
 
 
 @router.get("/algorithms")
-async def get_algorithms() -> Dict[str, Any]:
+def get_algorithms() -> Dict[str, Any]:
     """RL training icin desteklenen algoritmalar."""
     return {"algorithms": _ALGORITHMS}
 
 
 @router.get("/phases")
-async def get_phases() -> Dict[str, Any]:
+def get_phases() -> Dict[str, Any]:
     """Trading fazlari (Phase 1 / Phase 2)."""
     return {"phases": _PHASES}
 
 
 @router.get("/reward-types")
-async def get_reward_types() -> Dict[str, Any]:
+def get_reward_types() -> Dict[str, Any]:
     """Hyperopt + RL training icin reward tipleri."""
     return {"reward_types": _REWARD_TYPES}
 
 
 @router.get("/feature-groups")
-async def get_feature_groups() -> Dict[str, Any]:
+def get_feature_groups() -> Dict[str, Any]:
     """
     Prediction feature gruplari registry'si.
 

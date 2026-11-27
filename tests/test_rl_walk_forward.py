@@ -199,10 +199,14 @@ def patched(obj, name, value):
         setattr(obj, name, orig)
 
 
-def http_status(coro):
+def http_status(call):
+    """Isleyicinin HTTP hata kodu. `call`: eşyordam (async isleyici) ya da arg'siz cagrilabilir (senkron isleyici;
+    Faz 11 §3.19'da await'siz isleyiciler `def` oldu, hatayi cagrilinca firlatir)."""
     from fastapi import HTTPException
     try:
-        asyncio.run(coro)
+        r = call() if callable(call) else call
+        if asyncio.iscoroutine(r):
+            asyncio.run(r)
     except HTTPException as exc:
         return exc.status_code
     return None
@@ -880,12 +884,12 @@ def main():
     from app.schemas.hyperopt import OptimizationRequest
     from app.schemas.trading import TrainingRequest
     check("HPO: eski tarih alani (train_start) -> 400",
-          http_status(hp.start_optimization(
+          http_status(lambda: hp.start_optimization(
               OptimizationRequest(algorithm="a2c", train_start="2018-01-01"),
               BackgroundTasks(), None)) == 400)
     check("HPO: bilinmeyen kat -> 400",
-          http_status(hp.start_optimization(OptimizationRequest(algorithm="a2c", fold="1999"),
-                                            BackgroundTasks(), None)) == 400)
+          http_status(lambda: hp.start_optimization(OptimizationRequest(algorithm="a2c", fold="1999"),
+                                                    BackgroundTasks(), None)) == 400)
     spawned = []
     key = tr._training_key(None)
     with patched(tr, "_check_training_data_freshness", lambda phase, **kw: None), \

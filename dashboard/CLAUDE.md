@@ -91,6 +91,27 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   `python scripts/build_guide.py`.
 - Günlük işin saat damgaları saat dilimsiz; panoda `finished_trt` kullan (VDS UTC).
 
+### Sade dil katmani (Faz 11 §3.18)
+- Ana sayfa ve simulasyon sayfasinin USTU alan disindan biri icin (hoca, yatirimci): sade cumle + sayi; ayrinti asagi
+  dogru artar ("Ayrintilar" basligindan sonrasi akademik okur icin). Yeni bir sonuc eklerken once ustteki sade ozete
+  bak, sonra ayrintiya koy.
+- Strateji adlari ve tek cumlelik aciklamalar TEK YER `components/plain.py` (sade ad + teknik kod parantezde). Terim
+  tanimi elle yazilmaz: `glossary.yaml` `sade` alanindan (`plain.how_to_read`).
+- Ana sayfa sorulari (`home.plain_answers`) sayiyi ve yaniti `snapshot.json` `m8_ozet`'ten hesaplar; H1/H2 "daha iyi
+  portfoy seciyor" diye yazilmaz (M8 §7.3a). Kurallar > yapay zeka betimseldir, test edilmedi (§7.3b): notta kalir.
+- Ileri veri: tablo/ozet SABIT sira, siralama ve "en iyi" yok; Sharpe 20 seanstan once "—"; esli fark betimsel.
+- Aciklama isareti `plain.info(uid, term=|text=)`: uid sayfada TEKIL olmali (`sim-i-*`, `home-i-*`); metin sozlukten
+  ya da `plain.NOTES` (nasil okunur, sonuc sayisi YOK). Bilesen alamayan yerde (DataTable basligi) `plain.note_text`.
+- Ozet grafik kareleri (Oynat) istemcide; noktalarin customdata[2] = strateji anahtari (tiklama `sim-focus`a yazar).
+
+### Performans (Faz 11 §3.19)
+- `dcc.Store` icerigi tarayicida durur ve onu Input/State alan HER callback'te sunucuya GERI YUKLENIR (gövde
+  sikistirilmaz). Buyuk veri (defter, gorunum) `components/srv_store.put(deger, **parametreler)` ile sunucuda; Store'a
+  yalniz referans. Okurken `srv_store.get(ref, yeniden_kur)`: jeton duserse parametrelerden yeniden kurulur.
+- Periyodik yenileme bir secim kutusunun `options`/`value`'suna giden Store'u yeniden yazmasin (tahmin sayfasi dersi:
+  kullanicinin secimi her dakika sifirlaniyordu). Liste yalniz acilista; degisince olaya bagli tazele.
+- Cok kareli Plotly animasyonunda kare KISMI olsun (yalniz degisen alanlar); tam izli kare 5x buyuk.
+
 ### Turkce metin ve bicim (Faz 11 §3.15)
 - Ekranda gorunen metin Turkce karakterle yazilir; kimlik, className, value, API anahtari ASCII kalir.
 - Para / yuzde / saat / is durumu `dashboard/components/fmt.py`'den (`money`, `signed_pct`, `dt_trt`, `status`).

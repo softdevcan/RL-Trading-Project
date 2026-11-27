@@ -13,7 +13,7 @@ next_id = 1
 
 
 @router.get("/", response_model=List[ItemResponse])
-async def list_items(
+def list_items(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of items to return")
 ):
@@ -23,7 +23,7 @@ async def list_items(
 
 
 @router.get("/{item_id}", response_model=ItemResponse)
-async def get_item(
+def get_item(
     item_id: int = Path(..., gt=0, description="Item ID")
 ):
     """Get a specific item by ID"""
@@ -33,7 +33,7 @@ async def get_item(
 
 
 @router.post("/", response_model=ItemResponse, status_code=201)
-async def create_item(item: ItemCreate):
+def create_item(item: ItemCreate):
     """Create a new item"""
     global next_id
 
@@ -48,7 +48,7 @@ async def create_item(item: ItemCreate):
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
-async def update_item(
+def update_item(
     item_id: int = Path(..., gt=0, description="Item ID"),
     item_update: ItemUpdate = ...
 ):
@@ -66,7 +66,7 @@ async def update_item(
 
 
 @router.delete("/{item_id}", status_code=204)
-async def delete_item(
+def delete_item(
     item_id: int = Path(..., gt=0, description="Item ID")
 ):
     """Delete an item"""

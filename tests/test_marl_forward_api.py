@@ -143,16 +143,33 @@ if HAVE:
         ok5 &= len(next(r for r in v['table'] if r['key'] == 'M-none').get('members', [])) == 12
         rpage = fire(c, "page-content.children", ["/dash/simulation"])
         keys = ["M-none", "rule/ew", "rule/minvar"]
-        rview = fire(c, "sim-view.data", ["test2026", keys])
-        vdata = rview.json().get("response", {}).get("sim-view", {}).get("data") if rview.status_code == 200 else None
+        rall = fire(c, "sim-view-all.data", ["test2026"])
+        vall = rall.json().get("response", {}).get("sim-view-all", {}).get("data") if rall.status_code == 200 else None
+        rview = fire(c, "sim-view.data", [vall, keys, "M-none"], ["test2026"])
+        vresp = rview.json().get("response", {}) if rview.status_code == 200 else {}
+        vdata = vresp.get("sim-view", {}).get("data")
         rbook = fire(c, "sim-book.data", ["test2026", "M-none", 201, 100000])
         bdata = rbook.json().get("response", {}).get("sim-book", {}).get("data") if rbook.status_code == 200 else None
         rrend = fire(c, "sim-chart.figure", [bdata, vdata, None, "all"], ["M-none", 201])
         fig = (rrend.json().get("response", {}).get("sim-chart", {}).get("figure", {}) if rrend.status_code == 200
                else {})
+        rpan = fire(c, "sim-kpis.children", [bdata, vdata, None], ["M-none", 201])
         ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and "Portföyümde ne var" in json.dumps(
             rpage.json(), ensure_ascii=False)          # yanit unicode kacisli olabilir
-        ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and "Toplam" in rrend.text
+        ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and rpan.status_code == 200 \
+            and "Toplam" in rpan.text
+        # tablo 10 stratejinin hepsi (S-esm dahil), grafik yalniz secilen 3 (aralik yalniz grafigi yeniden cizer)
+        from dashboard.pages import simulation as SP
+        from dashboard.components import srv_store
+        va, vs = SP.view_all_of(vall) or {}, SP.view_of(vdata) or {}
+        ok5 &= len(va.get("table", [])) == 10 and list(vs.get("lines", {})) == keys \
+            and "S-esm" in json.dumps(vresp.get("sim-table", {}), ensure_ascii=False)
+        # §3.19 tarayiciya yalniz referans gider (defter 2026'da ~1 MB idi); jeton dusse de parametrelerden yeniden kurulur
+        ok5 &= len(json.dumps(bdata)) < 10_000 and "token" in bdata and "book" not in bdata
+        srv_store.clear()          # sunucu yeniden basladi gibi: callback ayni referansla yine cizmeli
+        rre = fire(c, "sim-chart.figure", [bdata, vdata, None, "all"], ["M-none", 201])
+        ok5 &= rre.status_code == 200 and len(rre.json().get("response", {}).get("sim-chart", {})
+                                                .get("figure", {}).get("data", [])) == 9
         # M-none bant (2) + ort. + 2 kural + incelenen + secili gun isareti + gunluk K/Z + dusus
         ok5 &= len(fig.get("data", [])) == 9
     check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "
@@ -175,6 +192,7 @@ if HAVE:
     f = H.featured(m8)
     bars = (m8fig.get("data") or [{}])[0]
     ok6 = hp.status_code == 200 and "Öne çıkan model" in htxt and "MARL iletişimsiz (MAPPO)" in htxt
+    ok6 &= "Bu proje ne yapıyor?" in htxt and "Yapay zekâ, basit kurallardan" in htxt     # §3.18 sade ozet ustte
     # one cikan = bos kol haric en yuksek ortalama; kurallar ondan yukarida; cubuk degerleri ozetle ayni (10 cubuk)
     ok6 &= f["arm"]["kol"] == "M-none" and f["rules_above"] == 4 and len(bars.get("x", [])) == 10
     ok6 &= sorted(bars.get("x", [])) == sorted([a["ort"] for a in m8["kollar"]] + [r["ort"] for r in m8["kurallar"]])
