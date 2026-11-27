@@ -1,6 +1,6 @@
 # Faz 11 — Entegrasyon ve sanal parayla simülasyon: plan
 
-**Sürüm:** v0.18 · 2026-11-26 · Veri sayfası veri haritası §3.17; açılır listeler ve takvim, koyu tema §3.16; arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
+**Sürüm:** v0.19 · 2026-11-27 · Sade dil katmanı ve karşılaştırmanın düzeltilmesi §3.18; veri sayfası veri haritası §3.17; açılır listeler ve takvim, koyu tema §3.16; arayüz metinleri ve kullanılabilirlik §3.15; ana sayfa ve arayüz güncel duruma §3.14; simülasyon sayfası yeniden tasarımı §3.13; ileri veri deposunun VDS'ye devri §3.12; S0–S7 bitti; S6 eki etiketle donduruldu; ilk gerçek çalışma bulgusu §3.9; lot tablosu §3.10; İş Yatırım eski yanıt §3.11
 **Durum:** Taslak. Kullanıcı niyeti (2026-11-22): Faz 10 sonrasında MARL eğitimi panoya ve portföy sistemine entegre edilir, sanal parayla simülasyon yapılır. Karar bekleyen maddeler §6'da. **S0 bitti (§3.1). S2 bitti (§3.2). S1 bitti (§3.3). S3 bitti (§3.4). S4 bitti (§3.5).** Kullanıcı (2026-11-22): K-F11-1..6'da öneriler uygulanır.
 **Dayanak:**
 - [Faz 10 planı](phase-10-marl-plan.md) §9 (araştırma kapanışı, devredilenler), §3.3 K1–K10 (karar katmanı), §6 K13, K14, K27, §8 #18.
@@ -69,6 +69,38 @@
   - `scripts/marl/archive_s0.py`.
   - `tests/test_marl_frozen.py`: 3 kontrol.
 - **S4 için kural:** günlük iş her çalışmadan önce `verify_archive(..., forward=...)` çağırır; uyuşmazlıkta o gün yazılmaz.
+
+### 3.18 Sade dil katmanı ve karşılaştırmanın düzeltilmesi (2026-11-27; kullanıcı bildirimi; `tests/test_marl_sim_book.py` 7, `tests/test_marl_forward_api.py` 6)
+
+- **Kullanıcı bildirimi.**
+  - Simülasyonda 1A / 3A seçilince bütün sayfa yenileniyordu.
+  - "4 gün bitti, en yüksek SARL eşmimari ama panoda göremiyorum."
+  - "Hocaların ve normal insanların da anlayabileceği şekilde; aşağı indikçe ayrıntı."
+- **Ölçülen.**
+  - Aralık değişince tek callback grafik, kartlar, gün özeti, eldeki hisseler ve dağılımın hepsini yeniden üretiyordu. Hepsi tek `dcc.Loading` altında olduğu için blok spinner'a gömülüyordu.
+  - Karşılaştırma tablosu yalnız varsayılan üç stratejiyi gösteriyordu.
+  - "Portföy değeri" seçili kolun TEK tohumuydu (varsayılan 201). Kollar tohum 201 üzerinden kıyaslanınca ortalamanın tersi bir sıra çıktı.
+    - Yerel 2 seansta S-esm s201 kolunda 3./12 ve diğer kolların s201'lerinin hepsinden iyiydi. Kol ortalaması ise en düşüktü.
+    - VDS 4 seansta da kol ortalaması en düşük.
+  - Boş kolun tohumları 213–224. Sayfa ona 201 gönderiyordu, portföy hesaplanamıyordu.
+  - Sharpe 3 seanstan itibaren yazılıyordu; 4 günlük seriden yıllık sayı çıkıyordu.
+- **Yapılan.**
+  - Aralık yalnız ana grafiği çizer. Loading yalnız portföy API'si yüklenirken döner, içerik görünür kalır.
+  - `/view` pencere başına bir kez, 10 stratejiyle çekilir. Tablo hepsini SABİT sırayla gösterir. Sıralama ve "en iyi" etiketi yoktur (ek §9).
+  - İncelenen portföy kartı "tek tohum, kol ortalaması değil" der. Yeni "Kol ortalaması · 12 tohum" kartı eklendi. Kolun ortalaması grafikte her zaman çizilir. Boş kol kendi tohumlarıyla açılır.
+  - Sharpe 20 seanstan önce "—".
+  - Eşli fark grafiği "strateji − 1/N", aynı günler. `forward_views.view` → `lines[*].diff_ew` (yalnız görüntü, okumaya girmez).
+  - Sade dil katmanı `dashboard/components/plain.py`:
+    - strateji adları (sade ad + teknik kod) ve tek cümlelik açıklamalar tek yerde;
+    - terim tanımları `glossary.yaml` `sade` alanından (elle yazılmaz).
+  - **Ana sayfa üstü:** "Bu proje ne yapıyor?" ve üç soru:
+    - "Yapay zekâ basit kuralları geçti mi?" (M8 §7.3b, betimsel);
+    - "Her hisseye ayrı ajan, tek ajandan iyi mi?" (H1–H3 etiketleri, §7.3a yazım kuralı);
+    - "Şimdi ne yapılıyor?" (n/126).
+    - Yanıtlar `snapshot.json` `m8_ozet` sayı ve etiketlerinden hesaplanır.
+  - **Simülasyon üstü:** "100.000 TL ile başlasaydınız" grafiği (10 strateji, sabit sıra, ± 12 tohum std), üç satır özet ve ara görünüm yorumu. Altında "Tek bir portföyün içine bakın", en altta "Stratejileri karşılaştırın (ayrıntılı)".
+  - Tarih ekseni hafta sonu boşluksuz; kısa pencerede etiket yalnız defter günlerinde. İlk gün emirlerinin ilk 8'i gösterilir, kalanı açılırda.
+- **Ön kayıtla ilişkisi.** Hiçbiri pencereyi, kolları, ölçütü ya da veri kuralını değiştirmez (ek §9). Eşli fark betimseldir; p-değeri ve test yok, okuma 126. seansta.
 
 ### 3.17 Veri sayfası: veri haritası (2026-11-26; kullanıcı bildirimi; `tests/test_data_catalog.py` 2)
 

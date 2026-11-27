@@ -160,7 +160,7 @@ if HAVE:
             and "Toplam" in rpan.text
         # tablo 10 stratejinin hepsi (S-esm dahil), grafik yalniz secilen 3 (aralik yalniz grafigi yeniden cizer)
         ok5 &= len(vall.get("table", [])) == 10 and list(vdata.get("lines", {})) == keys \
-            and "SARL e" in json.dumps(vresp.get("sim-table", {}), ensure_ascii=False)
+            and "S-esm" in json.dumps(vresp.get("sim-table", {}), ensure_ascii=False)
         # M-none bant (2) + ort. + 2 kural + incelenen + secili gun isareti + gunluk K/Z + dusus
         ok5 &= len(fig.get("data", [])) == 9
     check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "
@@ -183,6 +183,7 @@ if HAVE:
     f = H.featured(m8)
     bars = (m8fig.get("data") or [{}])[0]
     ok6 = hp.status_code == 200 and "Öne çıkan model" in htxt and "MARL iletişimsiz (MAPPO)" in htxt
+    ok6 &= "Bu proje ne yapıyor?" in htxt and "Yapay zekâ, basit kurallardan" in htxt     # §3.18 sade ozet ustte
     # one cikan = bos kol haric en yuksek ortalama; kurallar ondan yukarida; cubuk degerleri ozetle ayni (10 cubuk)
     ok6 &= f["arm"]["kol"] == "M-none" and f["rules_above"] == 4 and len(bars.get("x", [])) == 10
     ok6 &= sorted(bars.get("x", [])) == sorted([a["ort"] for a in m8["kollar"]] + [r["ort"] for r in m8["kurallar"]])

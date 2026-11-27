@@ -113,6 +113,10 @@ def view(window: str, keys=DEFAULT_VIEW) -> dict:
         m = [_metrics(ser[s]) for s in sids]
         line = {'label': ARM_LABELS.get(key, key), 'n': len(sids), 'mean': V.mean(axis=0).tolist(),
                 'std': (V.std(axis=0, ddof=1) if len(sids) > 1 else np.zeros(V.shape[1])).tolist()}
+        if 'rule/ew' in ser:    # esli fark (ayni gunler): tohum basina deger - 1/N degeri; yalniz goruntu, okumaya girmez
+            D = V - np.asarray(ser['rule/ew']['value'], float)[None, :]
+            line['diff_ew'] = {'mean': D.mean(axis=0).tolist(),
+                               'std': (D.std(axis=0, ddof=1) if len(sids) > 1 else np.zeros(D.shape[1])).tolist()}
         out['lines'][key] = line
         row = {'key': key, 'label': line['label'], 'n': len(sids)}
         for f in ('cum_return', 'excess_sharpe', 'max_drawdown', 'turnover', 'cash'):

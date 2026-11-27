@@ -27,6 +27,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 import dashboard.api_client as api
+from dashboard.components import plain
 from dashboard.components.metric_card import create_metric_card
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
@@ -78,6 +79,96 @@ def _version() -> str:
         return f"v{__version__}"
     except Exception:  # pragma: no cover - pano tek basina
         return "—"
+
+
+# ── 0. sade özet (§3.18): alan dışından bir okur yalnız bunu okuyup çıkabilmeli ──
+INTRO = ("Borsa İstanbul'un en büyük 30 hissesi (BIST-30) arasında parayı nasıl paylaştıracağını deneme-yanılmayla kendi "
+         "kendine öğrenen yapay zekâ modelleri (pekiştirmeli öğrenme) eğitiyor ve bunları, öğrenme içermeyen basit "
+         "kurallarla aynı koşullarda karşılaştırıyoruz: aynı hisseler, aynı günler, aynı işlem maliyeti.")
+HOME_TERMS = ["sharpe", "tohum", "baseline-1n", "marl", "sarl", "ileri-veri-testi"]
+
+
+def _label_is(m8: dict, h: str, prefix: str) -> bool:
+    return str((m8.get("etiketler") or {}).get(h, "")).startswith(prefix)
+
+
+def plain_answers(m8: dict | None, st: dict | None) -> list:
+    """Saf: üç soru için {soru, yanit, metin, sayi, not}. Sayılar ve etiketler snapshot.json m8_ozet'ten (elle sayı yok);
+    cümleler M8 tasarımı §7.3 yazım kuralına bağlı (H1/H2 'daha iyi portföy seçiyor' diye yazılmaz)."""
+    out = []
+    if m8:
+        f = featured(m8)
+        years = f"{m8['katlar'][0]}–{m8['katlar'][-1]}"
+        weak = min(m8["kurallar"], key=lambda r: r["ort"])
+        allb = f["rules_above"] == f["n_rules"]
+        out.append({
+            "soru": "Yapay zekâ, basit kurallardan daha iyi yatırım yaptı mı?",
+            "yanit": "Hayır." if allb else ("Kısmen." if f["rules_above"] else "Evet."),
+            "metin": (f"{years} arasındaki {len(m8['katlar'])} yıllık sınavda hiçbir yapay zekâ modeli, riske göre "
+                      "getiride basit kuralların hiçbirine yetişemedi." if allb else
+                      f"{f['n_rules']} basit kuralın {f['rules_above']}'ü en iyi yapay zekâ modelinin üstünde."),
+            "sayi": [("En iyi yapay zekâ modeli", sr(f["arm"]["ort"])),
+                     (f"En zayıf basit kural ({RULE_LABELS.get(weak['kural'], weak['kural'])})", sr(weak["ort"]))],
+            "not": "Riske göre getiri (Sharpe, yüksek = iyi), 6 yıl ortalaması, işlem maliyeti dahil. Maliyetsiz "
+                   "durumda en iyi model en basit kurala ancak yetişiyor. Betimsel karşılaştırma: bu soru için önceden "
+                   "planlanmış bir istatistik testi yok (M8 §7.3b).",
+        })
+        arms = {a["kol"]: a["ort"] for a in m8["kollar"]}
+        if _label_is(m8, "H1", "FARK_VAR") and _label_is(m8, "H2", "FARK_VAR"):
+            yearly = (" Fark her yıl aynı yönde değil." if "yila_bagli" in str(m8["etiketler"].get("H1", "")) else "")
+            comm = (" Ajanların birbirine bilgi göndermesi ölçülebilir bir fark yaratmadı."
+                    if _label_is(m8, "H3", "FARK_GOZLENMEDI") else "")
+            out.append({
+                "soru": "Her hisseye ayrı ajan, tek ajandan iyi mi?",
+                "yanit": "Evet, 6 yılın ortalamasında.",
+                "metin": ("Her hisseye ayrı ajan atayan model, bütün portföyü tek ajanla yöneten iki modelden daha "
+                          "yüksek riske göre getiri verdi. Farkın önemli bir kısmı, daha az alım-satım yapıp daha az "
+                          "işlem maliyeti ödemesinden geliyor." + yearly + comm),
+                "sayi": [(plain.name(k), sr(arms[k])) for k in ("M-none", "S-agr", "S-esm") if k in arms],
+                "not": "Ön kayıtlı eşli test, 6 yıl × 12 tohum (M8 H1–H3). Ayrıntı Rehber'deki M8 kartlarında.",
+            })
+    st = st or {}
+    if st.get("available") is not False and st:
+        n, need = int(st.get("n_sessions") or 0), int(st.get("read_sessions") or READ_SESSIONS)
+        rem = max(0, need - n)
+        out.append({
+            "soru": "Şimdi ne yapılıyor?",
+            "yanit": f"Gerçek piyasada canlı deneme: {n} / {need} gün.",
+            "metin": ("Eğitimi bitmiş modeller dondurularak değiştirilmeden deneniyor: 23 Kasım 2026'dan beri her "
+                      f"işlem günü sanal parayla. Sonuç {need}. günde, önceden yazılmış kurala göre bir kez okunacak; "
+                      "o güne kadar günlük rakamlar yorumlanmaz."),
+            "sayi": [("Kalan işlem günü", f"{rem} (~{max(1, round(rem / 21)) if rem else 0} ay)")],
+            "not": "Bu bir 'ara görünüm'dür; hiçbir karar ona göre değişmez (ileri veri eki §9).",
+            "progress": min(100.0, n / need * 100) if need else 0.0,
+        })
+    return out
+
+
+def plain_summary(m8: dict | None, st: dict | None):
+    def card(a):
+        body = [html.Div(a["soru"], className="home-q"), html.Div(a["yanit"], className="home-a"),
+                html.P(a["metin"], className="home-q-text")]
+        if a.get("progress") is not None:
+            body.append(dbc.Progress(value=a["progress"], className="sim-progress mb-2"))
+        body.append(html.Div([html.Div([html.Span(k, className="home-q-key"), html.Strong(v, className="home-num")],
+                                       className="home-q-row") for k, v in a["sayi"]], className="home-q-nums"))
+        body.append(html.Div(a["not"], className="home-q-note"))
+        return dbc.Col(dbc.Card(dbc.CardBody(body), className="h-100 home-q-card"), lg=4, md=12, className="mb-3")
+    answers = plain_answers(m8, st)
+    return html.Div([
+        dbc.Card(dbc.CardBody([
+            html.Div("Bu proje ne yapıyor?", className="home-intro-title"),
+            html.P(INTRO, className="home-intro"),
+        ]), className="mb-3"),
+        dbc.Row([card(a) for a in answers], id="home-plain"),
+        dbc.Card(dbc.CardBody([
+            html.Div("Terimler nasıl okunur?", className="home-intro-title"),
+            plain.how_to_read(HOME_TERMS, cls="home"),
+        ]), className="mb-4"),
+        html.Div([html.Div("Ayrıntılar", className="home-section-title"),
+                  html.Div("Aşağısı akademik okur için: günlük işin durumu, 6 yıllık sınavın kol kol sonucu ve "
+                           "simülasyon.", className="home-muted")], className="home-section"),
+    ])
 
 
 # ── 1. durum şeridi ──────────────────────────────────────────────────────────
@@ -287,9 +378,10 @@ def layout():
         dcc.Interval(id="home-interval", interval=300_000, n_intervals=0),     # defter günde bir değişir
         create_page_header(
             "Dashboard",
-            "Sistemin bugünkü hâli: son sınavın (M8) sonucu ve dondurulmuş modellerin sanal para simülasyonu",
+            "Yapay zekâ ile portföy yönetimi: ne öğrendik ve şu an gerçek piyasada ne deneniyor",
             actions=html.Div(id="home-status-badge"),
         ),
+        plain_summary(m8, status),
         html.Div(_strip(status_values(status)), id="home-strip-wrap"),
         dbc.Row([
             dbc.Col(dbc.Card([

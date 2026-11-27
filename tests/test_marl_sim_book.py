@@ -162,5 +162,18 @@ check("6. bos kol kendi tohumu (213); incelenen kolun ortalamasi her zaman cizil
       ok6 and list(sub['lines']) == ['rule/ew'] and [r['key'] for r in sub['table']] == ['rule/ew']
       and len(view['lines']) == 2 and [r['plot'] for r in ct.data] == ['', '●'] and len(ct.data) == len(view['table']))
 
+# 7 §3.18 sade ozet + esli fark + kisa pencerede Sharpe yok
+sv = {**view, 'n_sessions': 4, 'window': 'forward'}
+sv['lines'] = {k: dict(v, diff_ew={'mean': [0.0] * len(dates), 'std': [10.0] * len(dates)})
+               for k, v in view['lines'].items()}
+dfig = S.diff_figure(sv)
+sfig = S.summary_figure(sv)
+stxt = str(S.summary_text(sv, 'forward'))
+ok7 = len(dfig.data) == 2 and dfig.data[1].name == S.LABELS['M-none']          # 1/N kendisiyle kiyaslanmaz: bant + cizgi
+ok7 &= [r['sharpe'] for r in S.compare_table(sv).children[0].data] == ['—', '—']
+ok7 &= 'Yapay zekâ modelleri (1)' in stxt and 'yorumlanmaz' in stxt and 'Basit kurallar (1)' in stxt
+ok7 &= list(sfig.data[-1].y) == [S.plain.name('M-none'), S.plain.name('rule/ew')]  # deger sutunu sabit sirada
+check("7. §3.18 ozet: sabit sira, ileri pencerede 'yorumlanmaz'; esli fark 1/N disi; 20 seanstan once Sharpe '—'", ok7)
+
 print(f"\n{passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)

@@ -126,7 +126,7 @@ python tests/test_marl_forward_api.py       # Faz 11/S4 /api/marl/forward/*: MAR
                                            #          m8_ozet, 2026 test kutusu, son calisma TRT damgasi (6, ~25 sn; arsiv yoksa 5-6 atlanir)
 python tests/test_marl_sim_book.py          # Faz 11 §3.13 simulasyon sayfasi gunluk defteri (forward_views.daily_book): gercek step_integer ile sentetik gunler;
                                            #          sum(katki)+faiz-komisyon = dV, lot x fiyat + nakit = deger, ort. maliyet bagimsiz denetim, islem goremeyen hissede emir yok,
-                                           #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi), ileri pencere on kayit dili (5, ~3 sn; ana venv, VERI GEREKMEZ)
+                                           #          2 mutasyon; sayfa render (iz sayisi, 1A, tablo satirlari, gun secimi, kol ortalamasi karti), ileri pencere on kayit dili, §3.18 secim/tablo + bos kol tohumu, sade ozet + esli fark + kisa pencerede Sharpe yok (7, ~3 sn; ana venv, VERI GEREKMEZ)
 python tests/test_marl_sim_ledger.py        # Faz 11/S3 sanal para defteri (marl/sim_ledger.py): 2026 penceresi M-none + S-agr M8 test kaydiyla,
                                            #          minvar + bh rule_series ile bit-es; JSON durumla kaldigi yerden devam bit-es, sermaye R'yi degistirmez;
                                            #          mutasyon (maliyet, 1e-12 agirlik, kaydirilmis baslangic); ileri panelde marj kapsami hatasi; S5 tam sayi mod (5, ~5 sn; ana venv, torch)

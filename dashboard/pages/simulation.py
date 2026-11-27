@@ -27,6 +27,7 @@ from plotly.subplots import make_subplots
 
 import dashboard.api_client as api
 from dashboard.auth_context import is_admin
+from dashboard.components import plain
 from dashboard.components.metric_card import create_metric_card
 from dashboard.components.page_header import create_page_header
 from dashboard.components.table import TABLE_STYLES, numeric_columns
@@ -34,19 +35,10 @@ from dashboard.theme import (BLUE, CYAN, GOLD, ORANGE, PURPLE, TEXT_MUTED, apply
                              plot_palette, plot_rgba)
 
 ARMS = ("M-none", "S-esm", "S-agr", "M-gat", "M-self", "null")
-ARM_OPTIONS = [
-    {"label": "MARL iletişimsiz (12 tohum)", "value": "M-none"},
-    {"label": "SARL eşmimari (12 tohum)", "value": "S-esm"},
-    {"label": "SARL ağırlık (12 tohum)", "value": "S-agr"},
-    {"label": "MARL graf dikkati (12 tohum)", "value": "M-gat"},
-    {"label": "MARL kendine dikkat (12 tohum)", "value": "M-self"},
-    {"label": "Boş kol, negatif kontrol (12 tohum)", "value": "null"},
-    {"label": "1/N eşit ağırlık", "value": "rule/ew"},
-    {"label": "Al-tut", "value": "rule/bh"},
-    {"label": "Min-varyans (aylık)", "value": "rule/minvar"},
-    {"label": "HRP (aylık)", "value": "rule/hrp"},
-]
-LABELS = {o["value"]: o["label"].replace(" (12 tohum)", "") for o in ARM_OPTIONS}
+# Sade ad + teknik kod tek yerden (components/plain.py); sıra sabit, sıralama değil
+LABELS = {k: plain.name(k) for k in plain.ORDER}
+ARM_OPTIONS = [{"label": LABELS[k], "value": k} for k in plain.ORDER]
+MIN_SHARPE_SESSIONS = 20      # daha kısa pencerede yıllık Sharpe gürültüdür; tabloda "—" (4 günden yıllık sayı çıkmaz)
 DEFAULT_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # K-F11-1 (grafikteki kesikli çizgiler)
 ALL_KEYS = [o["value"] for o in ARM_OPTIONS]                   # karşılaştırma tablosu hepsini sabit sırayla gösterir
 SEEDS = list(range(201, 213))
@@ -186,6 +178,14 @@ def _line_at(view: dict, key: str, date: str):
     return view["lines"][key]["mean"][dates.index(date)] / float(view.get("capital") or 1)
 
 
+def date_axis(dates: list) -> dict:
+    """İşlem günü ekseni: hafta sonu boşluğu yok; kısa pencerede etiket yalnız defter günlerinde (tekrar eden tarih yok)."""
+    ax = {"tickformat": "%d.%m.%y", "hoverformat": "%d.%m.%Y", "rangebreaks": [{"bounds": ["sat", "mon"]}]}
+    if len(dates) <= 25:
+        ax["tickvals"] = list(dates)
+    return ax
+
+
 # ── bileşenler ───────────────────────────────────────────────────────────────
 def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=None) -> list:
     """Kol seçiliyse incelenen portföy TEK TOHUMDUR; 'Kol ortalaması' kartı 12 tohumun ortalamasını yanına koyar
@@ -281,7 +281,7 @@ def main_figure(book: dict, view: dict, i: int, rng: str, focus_label: str, them
     fig.update_layout(height=600 + 20 * ((n_leg + 1) // 2), margin={"l": 64, "r": 16, "t": 14 + 22 * ((n_leg + 1) // 2),
                       "b": 30}, hovermode="x unified", separators=",.", bargap=0.35,
                       legend={"orientation": "h", "yanchor": "bottom", "y": 1.01, "x": 0, "font": {"size": 11.5}})
-    fig.update_xaxes(tickformat="%d.%m.%y", hoverformat="%d.%m.%Y")      # plotly yerel ay adları İngilizce
+    fig.update_xaxes(**date_axis(xs))                    # plotly yerel ay adları İngilizce: sayısal tarih biçimi
     fig.update_yaxes(title_text="Değer (TL)", tickformat=",.0f", row=1, col=1)
     fig.update_yaxes(title_text="Gün K/Z", tickformat=",.0f", row=2, col=1)
     fig.update_yaxes(title_text="Düşüş", tickformat=".0%", row=3, col=1)
@@ -329,6 +329,9 @@ def day_panel(book: dict, i: int, is_rule: bool) -> list:
         html.Span(f"{_num(t['shares'])} lot × {_num(t['price'], 2)}", className="sim-trade-qty"),
         html.Span(tl(t["amount"]), className="sim-trade-amt"),
     ], className="sim-trade-row") for t in trades]
+    if len(trade_rows) > 8:
+        trade_rows = trade_rows[:8] + [html.Details([html.Summary(f"Tüm emirler ({len(trade_rows)})",
+                                                                  className="sim-explain-sum"), *trade_rows[8:]])]
     if not trade_rows:
         trade_rows = [html.P("Yeniden dengeleme günü değil; emir yok." if is_rule else
                              "Politika bu gün tam lot eşiğini aşan bir değişiklik yapmadı; emir yok.",
@@ -421,8 +424,7 @@ def weights_figure(book: dict, i: int, rng: str, theme: str | None = None):
     if k0 <= i:
         fig.add_vline(x=dates[i], line={"color": p["text"], "width": 1, "dash": "dot"})
     fig.update_layout(height=260, margin={"l": 50, "r": 16, "t": 10, "b": 30}, hovermode="x unified",
-                      separators=",.", yaxis={"tickformat": ".0%", "range": [0, 1]},
-                      xaxis={"tickformat": "%d.%m.%y", "hoverformat": "%d.%m.%Y"},
+                      separators=",.", yaxis={"tickformat": ".0%", "range": [0, 1]}, xaxis=date_axis(dates[k0:]),
                       legend={"orientation": "h", "y": -0.2})
     apply_theme_template(fig, theme)
     return fig
@@ -445,7 +447,7 @@ def seed_figure(view: dict, window: str, theme: str | None = None):
         hovertemplate="tohum %{text}: %{x:+.2%}<extra></extra>"))
     mean = sum(vals) / len(vals)
     fig.add_vline(x=mean, line={"color": p["text"], "width": 1.5},
-                  annotation={"text": f"ort. {spct(mean, 1)}", "font": {"size": 11}}, annotation_position="bottom")
+                  annotation={"text": f"ort. {spct(mean, 1)}", "font": {"size": 11}}, annotation_position="top left")
     for n_ref, r in enumerate([r for r in rows if str(r.get("key", "")).startswith("rule/")]):
         c = p[LINE_KEYS[(n_ref + 1) % len(LINE_KEYS)]]
         fig.add_vline(x=r["cum_return"], line={"color": c, "width": 2, "dash": "dash"},
@@ -453,7 +455,7 @@ def seed_figure(view: dict, window: str, theme: str | None = None):
                                   "font": {"size": 11, "color": c}},
                       annotation_position="top" if n_ref % 2 == 0 else "bottom right")
     fig.update_layout(height=220, margin={"l": 20, "r": 20, "t": 30, "b": 36}, showlegend=False, separators=",.",
-                      xaxis={"tickformat": "+.0%", "title": "Pencere sonu toplam getiri"},
+                      xaxis={"tickformat": "+.1%", "nticks": 6, "title": "Pencere sonu toplam getiri"},
                       yaxis={"visible": False, "range": [-1, 1]})
     apply_theme_template(fig, theme)
     if window == "forward":
@@ -490,10 +492,12 @@ def compare_table(view: dict, shown=None):
         return "—" if x is None else _sign(x, 5e-3) + _num(x, 2)
     shown = set(shown or [])
     src = view["table"]
+    short = int(view.get("n_sessions") or 0) < MIN_SHARPE_SESSIONS
     rows = [{"label": LABELS.get(r["key"], r["label"]), "n": r["n"],
              "plot": "●" if r["key"] in shown else "",
              "ret": pm(r["cum_return"], r.get("cum_return_std"), spct),
-             "sharpe": pm(r["excess_sharpe"], r.get("excess_sharpe_std"), num), "dd": spct(r["max_drawdown"], 1),
+             "sharpe": "—" if short else pm(r["excess_sharpe"], r.get("excess_sharpe_std"), num),
+             "dd": spct(r["max_drawdown"], 1),
              "turn": pct(r["turnover"] or 0), "cash": pct(r["cash"] or 0)} for r in src]
     hl = [{"if": {"row_index": k}, "backgroundColor": "var(--rlt-surface-2)"}
           for k, r in enumerate(src) if r["key"] in shown]
@@ -508,8 +512,125 @@ def compare_table(view: dict, shown=None):
     )
     foot = html.P(f"{view['n_sessions']} seans · maliyet {view['cost_bps_roundtrip']:.0f} bps gidiş-dönüş · kesirli "
                   "defter (sermaye getiriyi değiştirmez) · kollar 12 tohumun ortalaması ± std · fazla getiri Sharpe: "
-                  "TL risksiz faiz üstü, yıllık · sıra sabittir, sıralama değildir", className="sim-muted small mt-2 mb-0")
+                  "TL risksiz faiz üstü, yıllık" + (f" ({MIN_SHARPE_SESSIONS} seanstan önce gösterilmez: bu kadar kısa "
+                                                    "seriden yıllık sayı gürültüdür)" if short else "") +
+                  " · sıra sabittir, sıralama değildir", className="sim-muted small mt-2 mb-0")
     return html.Div([table, foot])
+
+
+# ── sade özet (sayfanın üstü; §3.18) ────────────────────────────────────────
+GROUP_COLOR = {"ai_multi": "blue", "ai_single": "blue", "control": "muted", "rule": "gold"}
+
+
+def summary_figure(view: dict, theme: str | None = None):
+    """'100.000 TL ile başlasaydınız': 10 stratejinin bugünkü değeri, sabit sırada; yapay zekâ ± 12 tohum std."""
+    rows = {r["key"]: r for r in (view or {}).get("table") or []}
+    keys = [k for k in plain.ORDER if k in rows]
+    if not keys:
+        return empty_figure("Veri yok")
+    p = plot_palette(theme)
+    cap = float(view.get("capital") or 100_000)
+    fig = go.Figure()
+    for g in ("ai_multi", "ai_single", "control", "rule"):
+        ks = [k for k in keys if plain.group(k) == g]
+        if not ks:
+            continue
+        x = [cap * (1 + rows[k]["cum_return"]) for k in ks]
+        err = [cap * (rows[k].get("cum_return_std") or 0) for k in ks]
+        fig.add_trace(go.Scatter(
+            x=x, y=[plain.name(k) for k in ks], mode="markers", name=plain.GROUPS[g],
+            marker={"size": 12, "color": p[GROUP_COLOR[g]], "line": {"width": 1.5, "color": p["bg"]}},
+            error_x={"type": "data", "array": err, "visible": g != "rule", "color": plot_rgba(GROUP_COLOR[g], 0.6, theme),
+                     "thickness": 2, "width": 4},
+            customdata=[[spct(rows[k]["cum_return"]), f"± {_num(e, 0)} TL (12 eğitim arası yayılım)" if e else
+                         "tek seri"] for k, e in zip(ks, err)],
+            hovertemplate="%{y}<br>%{x:,.0f} TL · %{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
+    fig.add_vline(x=cap, line={"color": p["line"], "width": 1.2, "dash": "dot"},
+                  annotation={"text": f"başlangıç {tl(cap)}", "font": {"size": 11}}, annotation_position="top")
+    xs = [cap * (1 + rows[k]["cum_return"] + s * (rows[k].get("cum_return_std") or 0)) for k in keys for s in (-1, 1)]
+    lo, hi = min(xs + [cap]), max(xs + [cap])
+    pad = 0.30 * (hi - lo or cap * 0.01)
+    # değerler sağda ayrı sütun: nokta ve yayılım çubuğunun üstüne binmesin
+    fig.add_trace(go.Scatter(x=[hi + pad * 0.95] * len(keys), y=[plain.name(k) for k in keys], mode="text",
+                             text=[f"{tl(cap * (1 + rows[k]['cum_return']))}  ({spct(rows[k]['cum_return'], 1)})"
+                                   for k in keys], textposition="middle left", textfont={"size": 11.5, "color": p["text"]},
+                             showlegend=False, hoverinfo="skip"))
+    fig.update_layout(height=60 + 30 * len(keys), margin={"l": 10, "r": 10, "t": 26, "b": 30}, separators=",.",
+                      showlegend=True, legend={"orientation": "h", "y": -0.14, "x": 0, "font": {"size": 11}},
+                      xaxis={"tickformat": ",.0f", "range": [lo - pad * 0.4, hi + pad], "title": None},
+                      yaxis={"autorange": "reversed", "automargin": True})
+    apply_theme_template(fig, theme)
+    return fig
+
+
+def _range_tl(vals: list) -> str:
+    lo, hi = min(vals), max(vals)
+    return tl(lo) if abs(hi - lo) < 0.5 else f"{_num(lo)} – {tl(hi)}"
+
+
+def summary_text(view: dict, window: str) -> list:
+    """Üç satır sonuç + bir satır 'nasıl yorumlanmalı'. Sayılar görünümden; yorum dili ön kayda bağlı (ek §9)."""
+    rows = {r["key"]: r for r in (view or {}).get("table") or []}
+    if not rows:
+        return [html.P("Henüz veri yok.", className="sim-muted")]
+    cap = float(view.get("capital") or 100_000)
+    val = {k: cap * (1 + r["cum_return"]) for k, r in rows.items()}
+    ai = [val[k] for k in plain.AI_KEYS if k in val]
+    rules = [val[k] for k in plain.RULE_KEYS if k in val]
+    n, last = int(view.get("n_sessions") or 0), (view.get("dates") or [""])[-1]
+    lines = [html.Div([html.Span(className="sim-dot sim-dot-ai"),
+                       html.Span(f"Yapay zekâ modelleri ({len(ai)})", className="sim-sum-label"),
+                       html.Strong(_range_tl(ai), className="sim-num")], className="sim-sum-row")] if ai else []
+    if rules:
+        lines.append(html.Div([html.Span(className="sim-dot sim-dot-rule"),
+                               html.Span(f"Basit kurallar ({len(rules)})", className="sim-sum-label"),
+                               html.Strong(_range_tl(rules), className="sim-num")], className="sim-sum-row"))
+    if "null" in val:
+        lines.append(html.Div([html.Span(className="sim-dot sim-dot-control"),
+                               html.Span("Kontrol grubu", className="sim-sum-label"),
+                               html.Strong(tl(val["null"]), className="sim-num")], className="sim-sum-row"))
+    ew = rows.get("rule/ew")
+    market = (f" Aynı dönemde parayı hisselere eşit bölmek {spct(ew['cum_return'], 1)} getirdi; bu, piyasanın genel "
+              "yönü için kaba bir ölçü." if ew else "")
+    if window == "forward":
+        read = (f"Bu, {n} işlem günlük bir ara görünüm; değerlendirme {READ_SESSIONS}. günde, önceden yazılmış kurala "
+                f"göre bir kez yapılacak. Bu kadar kısa sürede aradaki farklar yorumlanmaz.{market}")
+        when = f"{d_full(last)} kapanışı itibarıyla · {n} / {READ_SESSIONS} gün" if last else ""
+    else:
+        read = ("Bu, 6 yıllık sınavın (M8) yalnız 2026 bölümü; sonucu zaten okundu. Tek yılın sonucu genellenmez, 6 "
+                f"yılın sonucu ana sayfada.{market}")
+        when = f"{d_full(view['dates'][0])} – {d_full(last)} · {n} işlem günü" if last else ""
+    return [html.Div(when, className="sim-muted small mb-2"), html.Div(lines, className="sim-sum-rows"),
+            html.P(read, className="sim-sum-read")]
+
+
+def diff_figure(view: dict, theme: str | None = None):
+    """Eşli fark: her gün strateji − 1/N (aynı günler), puan. Kol: 12 tohumun farklarının ortalaması ± std."""
+    lines = {k: v for k, v in ((view or {}).get("lines") or {}).items() if k != "rule/ew" and v.get("diff_ew")}
+    if not lines:
+        return empty_figure("Kıyas için 1/N dışında bir strateji seçin")
+    p = plot_palette(theme)
+    cap = float(view.get("capital") or 100_000)
+    dates = view["dates"]
+    order = list(view["lines"])              # renk ana grafikteki sırayla aynı (aynı strateji aynı renk)
+    fig = go.Figure()
+    for key, line in lines.items():
+        ck = LINE_KEYS[order.index(key) % len(LINE_KEYS)]
+        m = [x / cap * 100 for x in line["diff_ew"]["mean"]]
+        s = [x / cap * 100 for x in line["diff_ew"]["std"]]
+        if line["n"] > 1:
+            fig.add_trace(go.Scatter(x=dates + dates[::-1], y=[a + b for a, b in zip(m, s)] + [a - b for a, b in
+                                     zip(m[::-1], s[::-1])], fill="toself", line={"width": 0}, hoverinfo="skip",
+                                     fillcolor=plot_rgba(ck, 0.13, theme), showlegend=False))
+        fig.add_trace(go.Scatter(x=dates, y=m, name=LABELS.get(key, key), mode="lines+markers" if len(dates) <= 10
+                                 else "lines", line={"color": p[ck], "width": 2},
+                                 hovertemplate="%{y:+.2f} puan<extra>" + LABELS.get(key, key) + "</extra>"))
+    fig.add_hline(y=0, line={"color": p["line"], "width": 1.2})
+    fig.update_layout(height=300, margin={"l": 56, "r": 16, "t": 10, "b": 30}, hovermode="x unified", separators=",.",
+                      yaxis={"title": "1/N'e göre fark (puan)", "tickformat": "+.1f"}, xaxis=date_axis(dates),
+                      legend={"orientation": "h", "y": -0.18, "x": 0, "font": {"size": 11}})
+    apply_theme_template(fig, theme)
+    return fig
 
 
 def banner(window: str, status: dict) -> list:
@@ -555,24 +676,47 @@ def layout():
         dcc.Interval(id="sim-poll", interval=5_000, disabled=not running, n_intervals=0),
         dcc.Store(id="sim-view-all"), dcc.Store(id="sim-view"), dcc.Store(id="sim-book"), dcc.Store(id="sim-sel"),
         create_page_header("Sanal Para Simülasyonu",
-                           "Dondurulmuş M8 politikaları ve kural portföyleri — aynı defter, aynı pencere, 20 bps",
+                           "Eğitimi bitmiş ve artık değiştirilmeyen yapay zekâ modelleri ile basit kurallar, aynı sanal "
+                           "parayla, aynı günlerde ve aynı işlem maliyetiyle yatırım yapıyor",
                            actions=admin_btn),
         html.Div(id="sim-run-msg", className="mb-2"),
-        dbc.Card(dbc.CardBody(html.Div(id="sim-banner", children=banner(default_window, status))), className="mb-3"),
+        # 1. sade özet: alan dışından bir okur yalnız bu kartı okuyup çıkabilmeli (§3.18)
+        dbc.Card([
+            dbc.CardHeader(html.Div([
+                html.Span("100.000 TL ile başlasaydınız, bugün", className="card-title-sm"),
+                dbc.RadioItems(id="sim-window", inline=True, value=default_window, className="sim-range", options=[
+                    {"label": "Gerçek piyasada canlı deneme (23 Kas →)", "value": "forward"},
+                    {"label": "2026 sınav dönemi", "value": "test2026"}]),
+            ], className="sim-card-head")),
+            dbc.CardBody([
+                dbc.Row([
+                    dbc.Col(dcc.Loading(dcc.Graph(id="sim-summary-chart", figure=empty_figure(),
+                                                  config={"displayModeBar": False})), lg=7, className="mb-2"),
+                    dbc.Col(html.Div(id="sim-summary-text"), lg=5, className="mb-2"),
+                ]),
+                html.Details([html.Summary("Bu stratejiler ne? (sade açıklama)", className="sim-explain-sum"),
+                              html.Div(plain.strategy_list("sim"), className="mt-2")], className="sim-explain"),
+                html.Details([html.Summary("Terimler nasıl okunur?", className="sim-explain-sum"),
+                              html.Div(plain.how_to_read(["tohum", "baseline-1n", "kural-portfoyleri",
+                                                          "ileri-veri-testi", "sharpe"], cls="sim"),
+                                       className="mt-2")], className="sim-explain"),
+            ]),
+        ], className="mb-3"),
+        dbc.Card(dbc.CardBody(html.Div(id="sim-banner", children=banner(default_window, status))), className="mb-4"),
+        # 2. ayrıntı: tek bir portföyün içi
+        html.Div([html.Div("Tek bir portföyün içine bakın", className="sim-section-title"),
+                  html.Div("Bir strateji ve tohum seçin: gerçek lot sayılarıyla gün gün ne aldığını, ne sattığını ve "
+                           "ne kazandığını görün.", className="sim-muted small")], className="sim-section"),
         dbc.Card(dbc.CardBody(dbc.Row([
-            dbc.Col([html.Label("Pencere", className="section-title"),
-                     dbc.RadioItems(id="sim-window", inline=True, value=default_window, options=[
-                         {"label": "İleri veri (23 Kas →)", "value": "forward"},
-                         {"label": "2026 test penceresi", "value": "test2026"}])], lg=4, className="mb-2"),
             dbc.Col([html.Label("İncelenen portföy", className="section-title"),
                      dcc.Dropdown(id="sim-focus", options=ARM_OPTIONS, value="M-none", clearable=False)],
-                    lg=3, md=6, className="mb-2"),
-            dbc.Col([html.Label("Tohum", className="section-title"),
+                    lg=5, md=6, className="mb-2"),
+            dbc.Col([html.Label("Tohum (12 eğitimden hangisi)", className="section-title"),
                      dcc.Dropdown(id="sim-seed", options=[{"label": str(s), "value": s} for s in SEEDS], value=201,
-                                  clearable=False)], lg=2, md=3, className="mb-2"),
+                                  clearable=False)], lg=3, md=3, className="mb-2"),
             dbc.Col([html.Label("Sermaye (TL)", className="section-title"),
                      dbc.Input(id="sim-capital", type="number", value=100_000, min=1_000, step=1_000, debounce=True)],
-                    lg=3, md=3, className="mb-2"),
+                    lg=4, md=3, className="mb-2"),
         ], className="g-3")), className="mb-1"),
         html.P(id="sim-seed-hint", className="sim-muted small mb-3",
                children="İncelenen portföy seçili TEK tohumdur; kolun 12 tohum ortalaması grafikte kesikli çizgi ve "
@@ -629,6 +773,10 @@ def layout():
                                        style={"height": "260px"})),
             ], className="mb-3"),
         ])),
+        # 3. ayrıntı: teknik karşılaştırma
+        html.Div([html.Div("Stratejileri karşılaştırın (ayrıntılı)", className="sim-section-title"),
+                  html.Div("Akademik okur için: aynı pencere ve maliyette ortalama ± std, riske göre getiri, eşli fark "
+                           "ve 12 eğitimin tek tek sonuçları.", className="sim-muted small")], className="sim-section"),
         dbc.Row([
             dbc.Col(dbc.Card([
                 dbc.CardHeader(html.Span("Strateji karşılaştırması", className="card-title-sm")),
@@ -652,6 +800,15 @@ def layout():
                 ]),
             ], className="h-100"), lg=4, className="mb-3"),
         ]),
+        dbc.Card([
+            dbc.CardHeader(html.Div([
+                html.Div([html.Span("Eşit ağırlığa (1/N) göre fark", className="card-title-sm"),
+                          html.Div("Her gün, aynı günün 1/N sonucuyla eşleştirilmiş birikimli fark (puan = yüzde puanı). "
+                                   "Sıfırın üstü: 1/N'den fazla kazandırdı. Bant: 12 eğitim arasındaki yayılım. "
+                                   "Betimseldir, istatistik testi değildir.", className="sim-muted small")]),
+            ], className="sim-card-head")),
+            dbc.CardBody(dcc.Graph(id="sim-diff", figure=empty_figure(), config={"displayModeBar": False})),
+        ], className="mb-3"),
         dbc.Card([
             dbc.CardHeader(html.Span("Eski tek ajan modelleri", className="card-title-sm")),
             dbc.CardBody([
@@ -717,19 +874,30 @@ def register_callbacks(app):
 
     @app.callback(
         Output("sim-view", "data"), Output("sim-table", "children"),
-        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
+        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"), Output("sim-diff", "figure"),
         Input("sim-view-all", "data"), Input("sim-keys", "value"), Input("sim-focus", "value"),
         State("sim-window", "value"),
     )
     def update_view(v, keys, focus, window):
         if not v:
-            return no_update, no_update, no_update, no_update
+            return no_update, no_update, no_update, no_update, no_update
         if v.get("empty"):
-            return None, html.P(v["empty"], className="sim-muted small"), empty_figure(v["empty"]), ""
+            e = empty_figure(v["empty"])
+            return None, html.P(v["empty"], className="sim-muted small"), e, "", e
         shown = plotted_keys(keys, focus)
         sub = select_view(v, shown)
         fig, seed_note = seed_figure(sub, window) if shown else (empty_figure("Grafik için strateji seçin"), "")
-        return sub, compare_table(v, shown), fig, seed_note
+        return sub, compare_table(v, shown), fig, seed_note, diff_figure(sub)
+
+    @app.callback(
+        Output("sim-summary-chart", "figure"), Output("sim-summary-text", "children"),
+        Input("sim-view-all", "data"), State("sim-window", "value"),
+    )
+    def update_summary(v, window):
+        if not v or v.get("empty"):
+            msg = (v or {}).get("empty") or "Veri alınamadı"
+            return empty_figure(msg), html.P(msg, className="sim-muted")
+        return summary_figure(v), summary_text(v, window)
 
     @app.callback(
         Output("sim-book", "data"), Output("sim-sel", "data"), Output("sim-book-msg", "children"),
