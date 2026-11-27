@@ -145,7 +145,7 @@ if HAVE:
         keys = ["M-none", "rule/ew", "rule/minvar"]
         rall = fire(c, "sim-view-all.data", ["test2026"])
         vall = rall.json().get("response", {}).get("sim-view-all", {}).get("data") if rall.status_code == 200 else None
-        rview = fire(c, "sim-view.data", [vall, keys], ["test2026"])
+        rview = fire(c, "sim-view.data", [vall, keys, "M-none"], ["test2026"])
         vresp = rview.json().get("response", {}) if rview.status_code == 200 else {}
         vdata = vresp.get("sim-view", {}).get("data")
         rbook = fire(c, "sim-book.data", ["test2026", "M-none", 201, 100000])

@@ -133,15 +133,15 @@ out = S.render(book, view, None, 'all', 'M-none', 201)
 fig = out[0]
 held = sum(1 for x in book['lots'][-1] if x > 0)
 tbl = out[5].children[0]
-ok4 = len(out) == 10 and len(fig.data) == 8 and len(out[1]) == 5
+ok4 = len(out) == 10 and len(fig.data) == 8 and len(out[1]) == 6 and 'Kol ortalaması' in str(out[1])
 ok4 &= len(tbl.data) == held + 2 and tbl.data[-1]['value'] == S.tl(book['value'][-1])
 ok4 &= out[8] is False and out[9] is True                         # son gun: onceki acik, sonraki kapali
 r1m = S.render(book, view, None, '1m', 'M-none', 201)
 ok4 &= len([t for t in r1m[0].data if t.name and 'incelenen' in t.name][0].x) == 21
 first = S.render(book, view, dates[0], 'all', 'rule/ew', None)
-ok4 &= first[8] is True and S.d_short(dates[0]) in str(first[1]) and 'İlk gün' in str(first[2])
+ok4 &= first[8] is True and len(first[1]) == 5 and S.d_short(dates[0]) in str(first[1]) and 'İlk gün' in str(first[2])
 ok4 &= S.tl(book['value'][10]) in str(S.render(book, view, dates[10], 'all', 'M-none', 201)[1])
-check(f"4. render: 10 cikti, grafik {len(fig.data)} iz, 5 kart, tablo {len(tbl.data)} satir (= {held} hisse + nakit + "
+check(f"4. render: 10 cikti, grafik {len(fig.data)} iz, 6 kart (kol ort. dahil; kuralda 5), tablo {len(tbl.data)} satir (= {held} hisse + nakit + "
       f"toplam), toplam = deger; 1A 21 gun; ilk gunde onceki kapali; secili gun kartlari tasir", ok4)
 
 # 5 on kayit dili
@@ -156,8 +156,10 @@ check("5. ileri bant 'Ara gorunum' + 3 / 126; ileri tohum notu kiyas yorumu yapm
 # 6 karsilastirma: tablo tum stratejileri sabit sirayla gosterir, grafik yalniz secilenleri cizer (API'ye gitmeden)
 sub = S.select_view(view, ['rule/ew'])
 ct = S.compare_table(view, ['rule/ew']).children[0]
-check("6. select_view yalniz secilen cizgi + satir; tablo tum satirlar ayni sirada, secilen 'Grafikte' isaretli",
-      list(sub['lines']) == ['rule/ew'] and [r['key'] for r in sub['table']] == ['rule/ew']
+ok6 = S.product_sid('null', 201) == 'policy/null/s213' and S.product_sid('S-esm', 205) == 'policy/S-esm/s205'
+ok6 &= S.plotted_keys(['rule/ew'], 'S-esm') == ['rule/ew', 'S-esm'] and S.plotted_keys(['rule/ew'], 'rule/bh') == ['rule/ew']
+check("6. bos kol kendi tohumu (213); incelenen kolun ortalamasi her zaman cizilir; select_view yalniz secilen cizgi + satir; tablo tum satirlar ayni sirada, secilen 'Grafikte' isaretli",
+      ok6 and list(sub['lines']) == ['rule/ew'] and [r['key'] for r in sub['table']] == ['rule/ew']
       and len(view['lines']) == 2 and [r['plot'] for r in ct.data] == ['', '●'] and len(ct.data) == len(view['table']))
 
 print(f"\n{passed} gecti, {failed} kaldi")

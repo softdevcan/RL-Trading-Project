@@ -50,6 +50,11 @@ LABELS = {o["value"]: o["label"].replace(" (12 tohum)", "") for o in ARM_OPTIONS
 DEFAULT_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # K-F11-1 (grafikteki kesikli çizgiler)
 ALL_KEYS = [o["value"] for o in ARM_OPTIONS]                   # karşılaştırma tablosu hepsini sabit sırayla gösterir
 SEEDS = list(range(201, 213))
+NULL_SEEDS = list(range(213, 225))           # boş kol (negatif kontrol) ayrı tohumlarla eğitildi (M8 §6)
+
+
+def seeds_for(focus: str) -> list:
+    return NULL_SEEDS if focus == "null" else SEEDS
 READ_SESSIONS = 126
 FORWARD_START = "2026-11-23"
 RUN_STATUS = {"yazildi": "yazıldı", "degisiklik_yok": "değişiklik yok"}     # forward_job durum kodu -> metin
@@ -128,8 +133,14 @@ def _sign_rules(*cols: str) -> list:
     return out
 
 
+def seed_of(focus: str, seed) -> int:
+    """Kolun tohumu; seçili tohum o kolda yoksa (ör. boş kola geçilince 201) kolun ilk tohumu."""
+    s = seeds_for(focus)
+    return int(seed) if seed is not None and int(seed) in s else s[0]
+
+
 def product_sid(focus: str, seed) -> str:
-    return f"policy/{focus}/s{int(seed or 201)}" if focus in ARMS else focus
+    return f"policy/{focus}/s{seed_of(focus, seed)}" if focus in ARMS else focus
 
 
 def sel_index(book: dict, sel) -> int:
@@ -176,7 +187,9 @@ def _line_at(view: dict, key: str, date: str):
 
 
 # ── bileşenler ───────────────────────────────────────────────────────────────
-def kpi_cards(book: dict, view: dict, i: int) -> list:
+def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=None) -> list:
+    """Kol seçiliyse incelenen portföy TEK TOHUMDUR; 'Kol ortalaması' kartı 12 tohumun ortalamasını yanına koyar
+    (tek tohumla kollar karşılaştırılınca ortalamanın tersi bir sıra çıkabiliyordu: ileri veri, S-esm s201)."""
     cap, V, dates = book["capital"], book["value"], book["dates"]
     v, prev = V[i], (V[i - 1] if i else cap)
     day, tot = v - prev, v - cap
@@ -197,8 +210,10 @@ def kpi_cards(book: dict, view: dict, i: int) -> list:
         bench_card = create_metric_card("1/N kıyası", f"{_sign(gap, 5e-5)}{_num(gap * 100, 1)} puan",
                                         f"aynı dönem, aynı maliyet · 1/N {spct(bench - 1, 1)}", icon="bi bi-sliders",
                                         tone=_tone(gap))
+    is_arm = focus in ARMS
+    one = f" · tek tohum ({seed_of(focus, seed)}), kol ortalaması değil" if is_arm else ""
     cards = [
-        create_metric_card("Portföy değeri", tl(v), f"başlangıç {tl(cap)}", icon="bi bi-wallet2"),
+        create_metric_card("Portföy değeri", tl(v), f"başlangıç {tl(cap)}{one}", icon="bi bi-wallet2"),
         create_metric_card(f"Gün K/Z · {d_short(dates[i])}", stl(day), f"{spct(day / prev)} önceki kapanışa göre",
                            icon="bi bi-calendar-day", tone=_tone(day)),
         create_metric_card("Toplam K/Z", stl(tot), f"{spct(tot / cap)} · işlem maliyeti {tl(cost)} dahil",
@@ -207,6 +222,15 @@ def kpi_cards(book: dict, view: dict, i: int) -> list:
                            tone="loss" if mdd < 0 else "neutral"),
         bench_card,
     ]
+    arm = _line_at(view, focus, dates[i]) if is_arm else None
+    if arm is not None:
+        line = view["lines"][focus]
+        sd = line["std"][(view.get("dates") or []).index(dates[i])] / float(view.get("capital") or 1)
+        gap = tot / cap - (arm - 1)
+        cards.insert(3, create_metric_card(
+            f"Kol ortalaması · {line['n']} tohum", spct(arm - 1),
+            f"± {_num(sd * 100, 2)} puan std · bu tohum {_sign(gap, 5e-5)}{_num(gap * 100, 2)} puan",
+            icon="bi bi-people", tone=_tone(arm - 1)))
     return [dbc.Col(c, xs=12, sm=6, lg=True, className="mb-3") for c in cards]
 
 
@@ -551,8 +575,8 @@ def layout():
                     lg=3, md=3, className="mb-2"),
         ], className="g-3")), className="mb-1"),
         html.P(id="sim-seed-hint", className="sim-muted small mb-3",
-               children="Kol ortalamasının lot karşılığı yoktur; lotlar ve emirler seçili tohumdan. Kural "
-                        "portföylerinde tohum yoktur."),
+               children="İncelenen portföy seçili TEK tohumdur; kolun 12 tohum ortalaması grafikte kesikli çizgi ve "
+                        "'Kol ortalaması' kartında. Ortalamanın lot karşılığı yoktur. Kural portföylerinde tohum yoktur."),
         # Yalnız portföy (API) yüklenirken döner ve içerik görünür kalır; aralık / gün seçimi bütün bloğu örtmez
         dcc.Loading(target_components={"sim-book-msg": "children"}, delay_show=250,
                     overlay_style={"visibility": "visible", "opacity": 0.6}, children=html.Div([
@@ -643,7 +667,13 @@ def layout():
 
 
 def _focus_label(focus: str, seed) -> str:
-    return LABELS.get(focus, focus) + (f" · tohum {seed}" if focus in ARMS else "")
+    return LABELS.get(focus, focus) + (f" · tohum {seed_of(focus, seed)}" if focus in ARMS else "")
+
+
+def plotted_keys(keys, focus) -> list:
+    """Grafikte çizilenler: seçilen kıyaslar + incelenen kolun 12 tohum ortalaması (tek tohum yalnız kalmasın)."""
+    keys = list(keys or [])
+    return keys + [focus] if focus in ARMS and focus not in keys else keys
 
 
 def render_chart(book: dict, view: dict, sel, rng: str, focus: str, seed):
@@ -661,7 +691,7 @@ def render_panels(book: dict, view: dict, sel, focus: str, seed):
     if diff.get("final_diff_pct") is not None:
         sub += (f" · kesirli deftere göre son değer farkı {spct(diff['final_diff_pct'])}, yıllık izleme hatası "
                 f"{pct(diff.get('tracking_error_ann') or 0, 2)}, {diff.get('n_orders') or 0} emir")
-    return (kpi_cards(book, view, i), day_panel(book, i, focus.startswith("rule/")),
+    return (kpi_cards(book, view, i, focus, seed), day_panel(book, i, focus.startswith("rule/")),
             donut, legend, table, weights_figure(book, i, "all"), sub, i == 0, i == len(book["dates"]) - 1)
 
 
@@ -688,16 +718,18 @@ def register_callbacks(app):
     @app.callback(
         Output("sim-view", "data"), Output("sim-table", "children"),
         Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
-        Input("sim-view-all", "data"), Input("sim-keys", "value"), State("sim-window", "value"),
+        Input("sim-view-all", "data"), Input("sim-keys", "value"), Input("sim-focus", "value"),
+        State("sim-window", "value"),
     )
-    def update_view(v, keys, window):
+    def update_view(v, keys, focus, window):
         if not v:
             return no_update, no_update, no_update, no_update
         if v.get("empty"):
             return None, html.P(v["empty"], className="sim-muted small"), empty_figure(v["empty"]), ""
-        sub = select_view(v, keys)
-        fig, seed_note = seed_figure(sub, window) if keys else (empty_figure("Grafik için strateji seçin"), "")
-        return sub, compare_table(v, keys), fig, seed_note
+        shown = plotted_keys(keys, focus)
+        sub = select_view(v, shown)
+        fig, seed_note = seed_figure(sub, window) if shown else (empty_figure("Grafik için strateji seçin"), "")
+        return sub, compare_table(v, shown), fig, seed_note
 
     @app.callback(
         Output("sim-book", "data"), Output("sim-sel", "data"), Output("sim-book-msg", "children"),
@@ -763,9 +795,11 @@ def register_callbacks(app):
                     "", True, True)
         return render_panels(book, view, sel, focus or "M-none", seed)
 
-    @app.callback(Output("sim-seed", "disabled"), Input("sim-focus", "value"))
-    def seed_enabled(focus):
-        return focus not in ARMS
+    @app.callback(Output("sim-seed", "disabled"), Output("sim-seed", "options"), Output("sim-seed", "value"),
+                  Input("sim-focus", "value"), State("sim-seed", "value"))
+    def seed_enabled(focus, seed):
+        s = seeds_for(focus)
+        return focus not in ARMS, [{"label": str(x), "value": x} for x in s], seed_of(focus, seed)
 
     @app.callback(
         Output("sim-run-msg", "children"), Output("sim-poll", "disabled", allow_duplicate=True),
