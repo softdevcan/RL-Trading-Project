@@ -47,7 +47,8 @@ ARM_OPTIONS = [
     {"label": "HRP (aylık)", "value": "rule/hrp"},
 ]
 LABELS = {o["value"]: o["label"].replace(" (12 tohum)", "") for o in ARM_OPTIONS}
-DEFAULT_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # K-F11-1
+DEFAULT_KEYS = ["M-none", "rule/ew", "rule/minvar"]          # K-F11-1 (grafikteki kesikli çizgiler)
+ALL_KEYS = [o["value"] for o in ARM_OPTIONS]                   # karşılaştırma tablosu hepsini sabit sırayla gösterir
 SEEDS = list(range(201, 213))
 READ_SESSIONS = 126
 FORWARD_START = "2026-11-23"
@@ -443,7 +444,19 @@ def seed_figure(view: dict, window: str, theme: str | None = None):
     return fig, note
 
 
-def compare_table(view: dict):
+def select_view(view_all: dict, keys) -> dict:
+    """Tüm stratejili görünümden yalnız seçilenler (grafik çizgileri + tohum grafiği); API'ye yeniden gitmez."""
+    if not view_all:
+        return view_all
+    keys = [k for k in (keys or []) if k in (view_all.get("lines") or {})]
+    rows = {r["key"]: r for r in view_all.get("table") or []}
+    return {**view_all, "lines": {k: view_all["lines"][k] for k in keys},
+            "table": [rows[k] for k in keys if k in rows]}
+
+
+def compare_table(view: dict, shown=None):
+    """Tüm stratejiler SABİT sırada (kollar, sonra kurallar). Sıralama yok: ileri veri ara görünümünde 'en iyi'
+    seçilmez (ek §9, dashboard/CLAUDE.md ana sayfa kuralı). Grafikte çizilenler vurgulanır."""
     def pm(m, s, fmt):
         if m is None:
             return "—"
@@ -451,21 +464,27 @@ def compare_table(view: dict):
 
     def num(x):
         return "—" if x is None else _sign(x, 5e-3) + _num(x, 2)
-    rows = [{"label": r["label"], "n": r["n"], "ret": pm(r["cum_return"], r.get("cum_return_std"), spct),
+    shown = set(shown or [])
+    src = view["table"]
+    rows = [{"label": LABELS.get(r["key"], r["label"]), "n": r["n"],
+             "plot": "●" if r["key"] in shown else "",
+             "ret": pm(r["cum_return"], r.get("cum_return_std"), spct),
              "sharpe": pm(r["excess_sharpe"], r.get("excess_sharpe_std"), num), "dd": spct(r["max_drawdown"], 1),
-             "turn": pct(r["turnover"] or 0), "cash": pct(r["cash"] or 0)} for r in view["table"]]
+             "turn": pct(r["turnover"] or 0), "cash": pct(r["cash"] or 0)} for r in src]
+    hl = [{"if": {"row_index": k}, "backgroundColor": "var(--rlt-surface-2)"}
+          for k, r in enumerate(src) if r["key"] in shown]
     table = DataTable(
-        columns=[{"name": "Strateji", "id": "label"}, {"name": "N", "id": "n"},
+        columns=[{"name": "Strateji", "id": "label"}, {"name": "Grafikte", "id": "plot"}, {"name": "N", "id": "n"},
                  {"name": "Toplam getiri", "id": "ret"}, {"name": "Fazla getiri Sharpe", "id": "sharpe"},
                  {"name": "En büyük düşüş", "id": "dd"}, {"name": "Günlük devir", "id": "turn"},
                  {"name": "Ort. nakit", "id": "cash"}],
-        data=rows, **TABLE_STYLES,
+        data=rows, sort_action="none", **TABLE_STYLES,
         style_cell_conditional=numeric_columns("n", "ret", "sharpe", "dd", "turn", "cash"),
-        style_data_conditional=_sign_rules("ret"),
+        style_data_conditional=hl + _sign_rules("ret"),
     )
     foot = html.P(f"{view['n_sessions']} seans · maliyet {view['cost_bps_roundtrip']:.0f} bps gidiş-dönüş · kesirli "
                   "defter (sermaye getiriyi değiştirmez) · kollar 12 tohumun ortalaması ± std · fazla getiri Sharpe: "
-                  "TL risksiz faiz üstü, yıllık", className="sim-muted small mt-2 mb-0")
+                  "TL risksiz faiz üstü, yıllık · sıra sabittir, sıralama değildir", className="sim-muted small mt-2 mb-0")
     return html.Div([table, foot])
 
 
@@ -510,7 +529,7 @@ def layout():
                            id="sim-run-btn", color="primary", size="sm") if is_admin() else html.Span(id="sim-run-btn")
     return html.Div([
         dcc.Interval(id="sim-poll", interval=5_000, disabled=not running, n_intervals=0),
-        dcc.Store(id="sim-view"), dcc.Store(id="sim-book"), dcc.Store(id="sim-sel"),
+        dcc.Store(id="sim-view-all"), dcc.Store(id="sim-view"), dcc.Store(id="sim-book"), dcc.Store(id="sim-sel"),
         create_page_header("Sanal Para Simülasyonu",
                            "Dondurulmuş M8 politikaları ve kural portföyleri — aynı defter, aynı pencere, 20 bps",
                            actions=admin_btn),
@@ -534,7 +553,9 @@ def layout():
         html.P(id="sim-seed-hint", className="sim-muted small mb-3",
                children="Kol ortalamasının lot karşılığı yoktur; lotlar ve emirler seçili tohumdan. Kural "
                         "portföylerinde tohum yoktur."),
-        dcc.Loading(html.Div([
+        # Yalnız portföy (API) yüklenirken döner ve içerik görünür kalır; aralık / gün seçimi bütün bloğu örtmez
+        dcc.Loading(target_components={"sim-book-msg": "children"}, delay_show=250,
+                    overlay_style={"visibility": "visible", "opacity": 0.6}, children=html.Div([
             html.Div(id="sim-book-msg"),
             dbc.Row(id="sim-kpis", className="g-3"),
             dbc.Row([
@@ -588,7 +609,8 @@ def layout():
             dbc.Col(dbc.Card([
                 dbc.CardHeader(html.Span("Strateji karşılaştırması", className="card-title-sm")),
                 dbc.CardBody([
-                    html.Label("Karşılaştırılan stratejiler (grafikte kesikli çizgi)", className="section-title"),
+                    html.Label("Grafikte kesikli çizgi olarak gösterilenler (tablo hepsini gösterir)",
+                               className="section-title"),
                     dcc.Dropdown(id="sim-keys", options=ARM_OPTIONS, value=DEFAULT_KEYS, multi=True, clearable=False,
                                  className="mb-2"),
                     html.Div(id="sim-note", className="sim-muted small mb-2"),
@@ -620,37 +642,62 @@ def layout():
     ])
 
 
-def render(book: dict, view: dict, sel, rng: str, focus: str, seed):
-    """Store'lardan sayfanın defter bölümleri (saf; test sentetik defterle çağırır)."""
+def _focus_label(focus: str, seed) -> str:
+    return LABELS.get(focus, focus) + (f" · tohum {seed}" if focus in ARMS else "")
+
+
+def render_chart(book: dict, view: dict, sel, rng: str, focus: str, seed):
+    """Yalnız ana grafik: aralık (1A/3A/Tümü) değişince başka hiçbir bölüm yeniden üretilmez."""
+    return main_figure(book, view, sel_index(book, sel), rng, _focus_label(focus, seed))
+
+
+def render_panels(book: dict, view: dict, sel, focus: str, seed):
+    """Grafik dışındaki defter bölümleri (kartlar, gün özeti, eldeki hisseler, dağılım zamanla); aralıktan bağımsız."""
     i = sel_index(book, sel)
-    label = LABELS.get(focus, focus) + (f" · tohum {seed}" if focus in ARMS else "")
+    label = _focus_label(focus, seed)
     donut, legend, table = holdings_block(book, i)
     sub = f"{d_full(book['dates'][i])} kapanışı · {label} · 1 lot = 1 pay"
     diff = book.get("diff") or {}
     if diff.get("final_diff_pct") is not None:
         sub += (f" · kesirli deftere göre son değer farkı {spct(diff['final_diff_pct'])}, yıllık izleme hatası "
                 f"{pct(diff.get('tracking_error_ann') or 0, 2)}, {diff.get('n_orders') or 0} emir")
-    return (main_figure(book, view, i, rng, label), kpi_cards(book, view, i), day_panel(book, i, focus.startswith("rule/")),
-            donut, legend, table, weights_figure(book, i, rng), sub, i == 0, i == len(book["dates"]) - 1)
+    return (kpi_cards(book, view, i), day_panel(book, i, focus.startswith("rule/")),
+            donut, legend, table, weights_figure(book, i, "all"), sub, i == 0, i == len(book["dates"]) - 1)
+
+
+def render(book: dict, view: dict, sel, rng: str, focus: str, seed):
+    """İki callback'in birleşik çıktısı (saf; test sentetik defterle çağırır): grafik + 9 bölüm."""
+    return (render_chart(book, view, sel, rng, focus, seed),) + render_panels(book, view, sel, focus, seed)
 
 
 def register_callbacks(app):
     @app.callback(
-        Output("sim-view", "data"), Output("sim-table", "children"), Output("sim-note", "children"),
-        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
-        Input("sim-window", "value"), Input("sim-keys", "value"),
+        Output("sim-view-all", "data"), Output("sim-note", "children"),
+        Input("sim-window", "value"),
     )
-    def update_view(window, keys):
+    def load_view(window):
+        """Pencere başına TEK istek: 10 stratejinin hepsi (ham seriler sunucuda bir kez okunur)."""
         note = NOTE_FORWARD if window == "forward" else NOTE_TEST
-        if not keys:
-            return None, None, note, empty_figure("Strateji seçin"), ""
-        v = api.get_marl_forward_view(window, keys)
+        v = api.get_marl_forward_view(window, ALL_KEYS)
         if not v or not v.get("dates"):
             msg = ("Henüz ileri veri seansı yok (ilk gün 2026-11-23, 19:00 TRT sonrası işlenir)"
                    if window == "forward" else "Veri alınamadı")
-            return None, html.P(msg, className="sim-muted small"), note, empty_figure(msg), ""
-        fig, seed_note = seed_figure(v, window)
-        return v, compare_table(v), note, fig, seed_note
+            return {"empty": msg}, note
+        return v, note
+
+    @app.callback(
+        Output("sim-view", "data"), Output("sim-table", "children"),
+        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
+        Input("sim-view-all", "data"), Input("sim-keys", "value"), State("sim-window", "value"),
+    )
+    def update_view(v, keys, window):
+        if not v:
+            return no_update, no_update, no_update, no_update
+        if v.get("empty"):
+            return None, html.P(v["empty"], className="sim-muted small"), empty_figure(v["empty"]), ""
+        sub = select_view(v, keys)
+        fig, seed_note = seed_figure(sub, window) if keys else (empty_figure("Grafik için strateji seçin"), "")
+        return sub, compare_table(v, keys), fig, seed_note
 
     @app.callback(
         Output("sim-book", "data"), Output("sim-sel", "data"), Output("sim-book-msg", "children"),
@@ -692,19 +739,29 @@ def register_callbacks(app):
         return dates[i]
 
     @app.callback(
-        Output("sim-chart", "figure"), Output("sim-kpis", "children"), Output("sim-day", "children"),
-        Output("sim-donut", "figure"), Output("sim-donut-legend", "children"), Output("sim-hold-table", "children"),
-        Output("sim-weights", "figure"), Output("sim-hold-sub", "children"),
-        Output("sim-prev", "disabled"), Output("sim-next", "disabled"),
+        Output("sim-chart", "figure"),
         Input("sim-book", "data"), Input("sim-view", "data"), Input("sim-sel", "data"), Input("sim-range", "value"),
         State("sim-focus", "value"), State("sim-seed", "value"),
     )
-    def update_render(book, view, sel, rng, focus, seed):
+    def update_chart(book, view, sel, rng, focus, seed):
+        if not book or not book.get("dates"):
+            return empty_figure("Veri yok")
+        return render_chart(book, view, sel, rng or "all", focus or "M-none", seed)
+
+    @app.callback(
+        Output("sim-kpis", "children"), Output("sim-day", "children"),
+        Output("sim-donut", "figure"), Output("sim-donut-legend", "children"), Output("sim-hold-table", "children"),
+        Output("sim-weights", "figure"), Output("sim-hold-sub", "children"),
+        Output("sim-prev", "disabled"), Output("sim-next", "disabled"),
+        Input("sim-book", "data"), Input("sim-view", "data"), Input("sim-sel", "data"),
+        State("sim-focus", "value"), State("sim-seed", "value"),
+    )
+    def update_panels(book, view, sel, focus, seed):
         if not book or not book.get("dates"):
             e = empty_figure("Veri yok")
-            return (e, [], html.P("Gün seçmek için önce portföy yüklenmeli.", className="sim-muted"), e, [], None, e,
+            return ([], html.P("Gün seçmek için önce portföy yüklenmeli.", className="sim-muted"), e, [], None, e,
                     "", True, True)
-        return render(book, view, sel, rng or "all", focus or "M-none", seed)
+        return render_panels(book, view, sel, focus or "M-none", seed)
 
     @app.callback(Output("sim-seed", "disabled"), Input("sim-focus", "value"))
     def seed_enabled(focus):

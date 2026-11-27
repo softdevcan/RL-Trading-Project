@@ -30,9 +30,10 @@ import dashboard.api_client as api
 from dashboard.components.metric_card import create_metric_card
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
+from dashboard.pages.simulation import ALL_KEYS as SIM_ALL_KEYS
 from dashboard.pages.simulation import LABELS as SIM_LABELS
 from dashboard.pages.simulation import (NOTE_FORWARD, NOTE_TEST, READ_SESSIONS, RUN_STATUS, _num, d_full, d_short,
-                                        spct)
+                                        select_view, spct)
 from dashboard.theme import (CARD2, GOLD, GREEN, RED, TEXT, TEXT_MUTED, YELLOW, algo_badge_class, apply_theme_template,
                              empty_figure, plot_palette, plot_rgba)
 
@@ -350,10 +351,10 @@ def register_callbacks(app):
                   Output("home-sim-note", "children"),
                   Input("home-sim-window", "value"), Input("home-interval", "n_intervals"))
     def update_sim(window, _n):
-        view = api.get_marl_forward_view(window or "forward", SIM_KEYS)
+        view = api.get_marl_forward_view(window or "forward", SIM_ALL_KEYS)   # tablo hepsi, grafik SIM_KEYS
         if not view:
             return empty_figure("Simülasyon verisi alınamadı (arşiv yok ya da sunucuya ulaşılamıyor)"), html.Div(), ""
-        return sim_figure(view), sim_table(view), sim_note(view)
+        return sim_figure(select_view(view, SIM_KEYS)), sim_table(view), sim_note(view)
 
     @app.callback(Output("home-models-list", "children"), Output("home-pred-models-list", "children"),
                   Input("home-interval", "n_intervals"))

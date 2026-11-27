@@ -143,16 +143,24 @@ if HAVE:
         ok5 &= len(next(r for r in v['table'] if r['key'] == 'M-none').get('members', [])) == 12
         rpage = fire(c, "page-content.children", ["/dash/simulation"])
         keys = ["M-none", "rule/ew", "rule/minvar"]
-        rview = fire(c, "sim-view.data", ["test2026", keys])
-        vdata = rview.json().get("response", {}).get("sim-view", {}).get("data") if rview.status_code == 200 else None
+        rall = fire(c, "sim-view-all.data", ["test2026"])
+        vall = rall.json().get("response", {}).get("sim-view-all", {}).get("data") if rall.status_code == 200 else None
+        rview = fire(c, "sim-view.data", [vall, keys], ["test2026"])
+        vresp = rview.json().get("response", {}) if rview.status_code == 200 else {}
+        vdata = vresp.get("sim-view", {}).get("data")
         rbook = fire(c, "sim-book.data", ["test2026", "M-none", 201, 100000])
         bdata = rbook.json().get("response", {}).get("sim-book", {}).get("data") if rbook.status_code == 200 else None
         rrend = fire(c, "sim-chart.figure", [bdata, vdata, None, "all"], ["M-none", 201])
         fig = (rrend.json().get("response", {}).get("sim-chart", {}).get("figure", {}) if rrend.status_code == 200
                else {})
+        rpan = fire(c, "sim-kpis.children", [bdata, vdata, None], ["M-none", 201])
         ok5 &= rpage.status_code == 200 and "Sanal Para" in rpage.text and "Portföyümde ne var" in json.dumps(
             rpage.json(), ensure_ascii=False)          # yanit unicode kacisli olabilir
-        ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and "Toplam" in rrend.text
+        ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and rpan.status_code == 200 \
+            and "Toplam" in rpan.text
+        # tablo 10 stratejinin hepsi (S-esm dahil), grafik yalniz secilen 3 (aralik yalniz grafigi yeniden cizer)
+        ok5 &= len(vall.get("table", [])) == 10 and list(vdata.get("lines", {})) == keys \
+            and "SARL e" in json.dumps(vresp.get("sim-table", {}), ensure_ascii=False)
         # M-none bant (2) + ort. + 2 kural + incelenen + secili gun isareti + gunluk K/Z + dusus
         ok5 &= len(fig.get("data", [])) == 9
     check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "

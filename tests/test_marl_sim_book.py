@@ -153,5 +153,12 @@ check("5. ileri bant 'Ara gorunum' + 3 / 126; ileri tohum notu kiyas yorumu yapm
       'Ara görünüm' in fwd and '3 / 126' in fwd and 'yorumlanmaz' in note_f and "1/N'in üzerinde" not in note_f
       and f"12 tohumun {n_above}'i 1/N'in üzerinde" in note_t)
 
+# 6 karsilastirma: tablo tum stratejileri sabit sirayla gosterir, grafik yalniz secilenleri cizer (API'ye gitmeden)
+sub = S.select_view(view, ['rule/ew'])
+ct = S.compare_table(view, ['rule/ew']).children[0]
+check("6. select_view yalniz secilen cizgi + satir; tablo tum satirlar ayni sirada, secilen 'Grafikte' isaretli",
+      list(sub['lines']) == ['rule/ew'] and [r['key'] for r in sub['table']] == ['rule/ew']
+      and len(view['lines']) == 2 and [r['plot'] for r in ct.data] == ['', '●'] and len(ct.data) == len(view['table']))
+
 print(f"\n{passed} gecti, {failed} kaldi")
 sys.exit(1 if failed else 0)
