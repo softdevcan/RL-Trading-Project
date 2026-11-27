@@ -104,6 +104,14 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
   ya da `plain.NOTES` (nasil okunur, sonuc sayisi YOK). Bilesen alamayan yerde (DataTable basligi) `plain.note_text`.
 - Ozet grafik kareleri (Oynat) istemcide; noktalarin customdata[2] = strateji anahtari (tiklama `sim-focus`a yazar).
 
+### Performans (Faz 11 §3.19)
+- `dcc.Store` icerigi tarayicida durur ve onu Input/State alan HER callback'te sunucuya GERI YUKLENIR (gövde
+  sikistirilmaz). Buyuk veri (defter, gorunum) `components/srv_store.put(deger, **parametreler)` ile sunucuda; Store'a
+  yalniz referans. Okurken `srv_store.get(ref, yeniden_kur)`: jeton duserse parametrelerden yeniden kurulur.
+- Periyodik yenileme bir secim kutusunun `options`/`value`'suna giden Store'u yeniden yazmasin (tahmin sayfasi dersi:
+  kullanicinin secimi her dakika sifirlaniyordu). Liste yalniz acilista; degisince olaya bagli tazele.
+- Cok kareli Plotly animasyonunda kare KISMI olsun (yalniz degisen alanlar); tam izli kare 5x buyuk.
+
 ### Turkce metin ve bicim (Faz 11 §3.15)
 - Ekranda gorunen metin Turkce karakterle yazilir; kimlik, className, value, API anahtari ASCII kalir.
 - Para / yuzde / saat / is durumu `dashboard/components/fmt.py`'den (`money`, `signed_pct`, `dt_trt`, `status`).

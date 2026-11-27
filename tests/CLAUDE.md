@@ -11,7 +11,7 @@ python tests/test_ppo.py
 python tests/test_all_algorithms.py
 python tests/test_env_lookup_equivalence.py # RL env lookup cache bit-eslik (41 kontrol)
 python tests/test_env_price_guards.py       # Gecersiz fiyat korumalari (26 kontrol)
-python tests/test_training_eta.py           # Egitim suresi tahmini (50 kontrol)
+python tests/test_training_eta.py           # Egitim suresi tahmini (57 kontrol)
 python tests/test_training_status.py        # /train/status progress, sembol uyarisi (metin beklentileri Turkce, §3.15),
                                            #        RL + tahmin egitimi durumunun sayfaya
                                            #        donunce geri gelmesi (19 kontrol)
@@ -29,6 +29,7 @@ python tests/test_panel_freshness.py      # Gunluk karar: tazelik olcutu (seans)
 python tests/test_trade_universe.py       # Gunluk karar: modelin sembol evreni model
                                            #        ADINDAN degil MODELDEN cozulur (22 kontrol)
 python tests/test_dash_props.py             # dbc/dcc/html kwarg uyumu (4 kontrol)
+python tests/test_api_async_guard.py        # Faz 11 §3.19: rota isleyicisi async def ise await icermeli (olay dongusu kilidi); mutasyonlu (1)
 python tests/test_data_catalog.py           # Faz 11 §3.17 veri katalogu: 4 grup, ham durumu /data/status'tan, "Bu sayfa: Guncelle"
                                            #        yalniz ham grupta, ileri veri n/126, group_of yol eslemesi (2, veri gerektirmez)
 python tests/test_auth.py                  # Faz 7: oturum akisi (29 kontrol)

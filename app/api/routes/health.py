@@ -9,7 +9,7 @@ router = APIRouter(tags=["Health"])
 
 
 @router.get("/api", response_model=dict)
-async def root():
+def root():
     """API root endpoint - welcome message"""
     return {
         "message": "Welcome to RL Trading API",
@@ -19,7 +19,7 @@ async def root():
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check():
+def health_check():
     """Health check endpoint"""
     return HealthResponse(
         status="healthy",

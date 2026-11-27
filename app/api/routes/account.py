@@ -175,7 +175,7 @@ def _group_sessions(rows: list[SessionToken], current_jti: str) -> list[dict]:
 
 
 @router.get("/me")
-async def get_account(user: CurrentUser, db: Annotated[Session, Depends(get_db)]) -> dict:
+def get_account(user: CurrentUser, db: Annotated[Session, Depends(get_db)]) -> dict:
     """Profil karti icin tek cagri: hesap alanlari + calisma alani kullanimi."""
     row = service.get_user(db, user.id)
     data = (row or user).to_dict()
@@ -189,7 +189,7 @@ async def get_account(user: CurrentUser, db: Annotated[Session, Depends(get_db)]
 
 
 @router.patch("/profile")
-async def update_profile(
+def update_profile(
     payload: ProfileUpdate,
     user: CurrentUser,
     request: Request,
@@ -214,7 +214,7 @@ async def update_profile(
 
 
 @router.get("/sessions")
-async def list_own_sessions(
+def list_own_sessions(
     user: CurrentUser,
     request: Request,
     db: Annotated[Session, Depends(get_db)],
@@ -225,7 +225,7 @@ async def list_own_sessions(
 
 
 @router.get("/activity")
-async def list_own_activity(
+def list_own_activity(
     user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
     limit: int = Query(20, ge=1, le=100),
@@ -260,7 +260,7 @@ async def list_own_activity(
 
 
 @router.get("/notifications")
-async def list_notifications(user: CurrentUser) -> dict:
+def list_notifications(user: CurrentUser) -> dict:
     """Ust cubuktaki zil icin bildirimler.
 
     **Olay gunlugu degil, DURUM ozeti.** Kalici bir bildirim tablosu yok;
@@ -358,7 +358,7 @@ async def list_notifications(user: CurrentUser) -> dict:
 
 
 @router.post("/sessions/revoke-others")
-async def revoke_other_sessions(
+def revoke_other_sessions(
     user: CurrentUser,
     request: Request,
     db: Annotated[Session, Depends(get_db)],

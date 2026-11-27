@@ -11,6 +11,7 @@ import glob
 import os
 import re
 import json
+import threading
 import time
 from datetime import datetime, timedelta
 import numpy as np
@@ -104,7 +105,7 @@ def sanitize_model_name(name: str) -> str:
 
 
 @router.get("/health")
-async def health_check():
+def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
@@ -113,7 +114,7 @@ async def health_check():
 
 
 @router.get("/hyperparameters/{algorithm}")
-async def get_hyperparameter_studies(algorithm: str):
+def get_hyperparameter_studies(algorithm: str):
     """
     Get available hyperparameter study results for a specific algorithm
 
@@ -330,7 +331,7 @@ async def start_training(
 
 
 @router.get("/train/estimate", response_model=TrainingEstimate)
-async def estimate_training_time(
+def estimate_training_time(
     algorithm: str = "ppo",
     phase: int = 1,
     total_timesteps: int = 50_000,
@@ -354,7 +355,7 @@ async def estimate_training_time(
 
 
 @router.get("/train/status", response_model=TrainingStatus)
-async def get_training_status():
+def get_training_status():
     """Get current training status (aktif kullaniciya ait)"""
     training_state = get_training_state()
 
@@ -438,7 +439,7 @@ def _models_cache_key() -> tuple:
 
 
 @router.get("/models", response_model=List[ModelInfo])
-async def list_models():
+def list_models():
     """List all trained models (kullanicinin calisma alani + ortak eski modeller)"""
     model_dirs = ws.read_dirs("models")
 
@@ -502,7 +503,7 @@ async def list_models():
 
 
 @router.get("/models/{model_name}/metrics", response_model=ModelMetrics)
-async def get_model_metrics(model_name: str):
+def get_model_metrics(model_name: str):
     """Get metrics for a specific model"""
     model_name = sanitize_model_name(model_name)
     metrics_file = ws.find_file("results", f"{model_name}_metrics.json")
@@ -526,7 +527,7 @@ async def get_model_metrics(model_name: str):
 
 
 @router.get("/data/info")
-async def get_data_info():
+def get_data_info():
     """Get information about current data"""
     try:
         from data.data_fetcher import DataFetcher
@@ -540,32 +541,89 @@ async def get_data_info():
                 "message": "No data found. Download data first (Veri sayfasi: Yeniden Indir (tam))."
             }
 
-        df = fetcher.load_data('stock_data_with_indicators.csv')
         # Faz 9 / R1: `split_data` satir sayilari yerine walk-forward kat kapsami
         from evaluation.splits import fold_coverage, get_spec
+        from app.services import file_summary
 
-        return {
-            "status": "exists",
-            "total_rows": len(df),
-            "split_spec": get_spec().name,
-            "folds": fold_coverage(df),
-            "columns": df.columns.tolist(),
-            "symbols": df.index.get_level_values('symbol').unique().tolist(),
-            "date_range": {
-                "start": str(df.index.get_level_values('date').min().date()),
-                "end": str(df.index.get_level_values('date').max().date())
+        def build():
+            df = fetcher.load_data('stock_data_with_indicators.csv')
+            return {
+                "status": "exists",
+                "total_rows": len(df),
+                "split_spec": get_spec().name,
+                "folds": fold_coverage(df),
+                "columns": df.columns.tolist(),
+                "symbols": df.index.get_level_values('symbol').unique().tolist(),
+                "date_range": {
+                    "start": str(df.index.get_level_values('date').min().date()),
+                    "end": str(df.index.get_level_values('date').max().date())
+                }
             }
-        }
+        return file_summary.get(os.path.join(fetcher.data_dir, 'stock_data_with_indicators.csv'),
+                                f"info:{get_spec().name}", build)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── dosya özetleri (Faz 11 §3.19): CSV yalnız değişince yeniden okunur; app/services/file_summary.py ──
+def _summary_cache_clear() -> None:
+    from app.services import file_summary
+    file_summary.clear()
+
+
+def _panel_summary(path: str) -> dict:
+    """BIST paneli özeti: satır, semboller (panel sırası), ilk/son tarih. DataFetcher.load_data ile aynı okuma."""
+    from app.services import file_summary
+
+    def build():
+        from data.data_fetcher import DataFetcher
+        fetcher = DataFetcher()
+        fetcher.data_dir = os.path.dirname(path) or fetcher.data_dir
+        df = fetcher.load_data(os.path.basename(path))
+        dates = pd.to_datetime(df.index.get_level_values('date'))
+        if dates.tz is not None:
+            dates = dates.tz_localize(None)
+        return {"rows": int(len(df)), "symbols": df.index.get_level_values('symbol').unique().tolist(),
+                "start": dates.min().strftime('%Y-%m-%d') if len(df) else None,
+                "end": dates.max().strftime('%Y-%m-%d') if len(df) else None}
+    return file_summary.get(path, "panel", build)
+
+
+def _gold_summary(path: str) -> dict:
+    from app.services import file_summary
+
+    def build():
+        from data.gold_fetcher import GoldFetcher
+        df = GoldFetcher.load_data(path)
+        if df is None or df.empty:
+            return {"rows": 0}
+        dates = pd.to_datetime(df.index.get_level_values('date'))
+        return {"rows": int(len(df)), "end": dates.max().strftime('%Y-%m-%d'),
+                "symbols": df.index.get_level_values('symbol').unique().tolist()}
+    return file_summary.get(path, "gold", build)
+
+
+def _macro_summary(path: str) -> dict:
+    from app.services import file_summary
+
+    def build():
+        df = pd.read_csv(path)
+        date_col = 'date' if 'date' in df.columns else df.columns[0]
+        return {"end": pd.to_datetime(df[date_col]).max().strftime('%Y-%m-%d'),
+                "symbols": [c for c in df.columns if c != date_col]}
+    return file_summary.get(path, "macro", build)
+
+
+def _fundamental_summary(path: str) -> dict:
+    from app.services import file_summary
+    return file_summary.get(path, "fundamental",
+                            lambda: {"symbols": pd.read_csv(path, index_col='symbol').index.tolist()})
+
+
 @router.get("/data/list")
-async def list_all_datasets():
+def list_all_datasets():
     """List all available datasets in data folder"""
     try:
-        from data.data_fetcher import DataFetcher
-
         data_dir = "data"
         if not os.path.exists(data_dir):
             return {"datasets": []}
@@ -591,16 +649,12 @@ async def list_all_datasets():
 
                 # Try to get row/date info from BIST files
                 if subdir == "bist":
-                    fetcher = DataFetcher()
-                    df = fetcher.load_data(os.path.basename(csv_path))
-                    if df is not None and len(df) > 0:
+                    sm = _panel_summary(csv_path)
+                    if sm["rows"] > 0:
                         entry.update({
-                            "total_rows": len(df),
-                            "symbols": df.index.get_level_values('symbol').unique().tolist(),
-                            "date_range": {
-                                "start": str(df.index.get_level_values('date').min().date()),
-                                "end": str(df.index.get_level_values('date').max().date()),
-                            },
+                            "total_rows": sm["rows"],
+                            "symbols": sm["symbols"],
+                            "date_range": {"start": sm["start"], "end": sm["end"]},
                         })
 
                 datasets.append(entry)
@@ -647,7 +701,7 @@ def _count_missing_trading_days(last_date_str: str) -> int:
 
 
 @router.get("/data/status")
-async def get_data_status():
+def get_data_status():
     """Tüm veri kaynaklarının mevcut durumunu döndür (son tarih, eksik gün)."""
     logger.info("GET /data/status çağrıldı")
     try:
@@ -657,19 +711,14 @@ async def get_data_status():
         bist_file = os.path.join(_settings.BIST_DIR, 'raw_stock_data.csv')
         if os.path.exists(bist_file):
             try:
-                from data.data_fetcher import DataFetcher
-                fetcher = DataFetcher()
-                df = fetcher.load_data('raw_stock_data.csv')
-                dates = pd.to_datetime(df.index.get_level_values('date'))
-                if dates.tz is not None:
-                    dates = dates.tz_localize(None)
-                last_date = dates.max().strftime('%Y-%m-%d')
+                sm = _panel_summary(bist_file)
+                last_date = sm["end"]
                 status['bist_stocks'] = {
                     'exists': True,
                     'file': bist_file,
                     'last_date': last_date,
                     'missing_days': _count_missing_trading_days(last_date),
-                    'symbols': df.index.get_level_values('symbol').unique().tolist(),
+                    'symbols': sm["symbols"],
                     'label': 'BIST-30 Hisseleri',
                 }
             except Exception as exc:
@@ -691,16 +740,15 @@ async def get_data_status():
             gold_status_list = []
             for gf in sorted(gold_files):
                 try:
-                    df = GoldFetcher.load_data(gf)
-                    if df is not None and not df.empty:
-                        dates = pd.to_datetime(df.index.get_level_values('date'))
-                        last_date = dates.max().strftime('%Y-%m-%d')
+                    sm = _gold_summary(gf)
+                    if sm["rows"] > 0:
+                        last_date = sm["end"]
                         gold_status_list.append({
                             'exists': True,
                             'file': gf,
                             'last_date': last_date,
                             'missing_days': _count_missing_trading_days(last_date),
-                            'symbols': df.index.get_level_values('symbol').unique().tolist(),
+                            'symbols': sm["symbols"],
                         })
                 except Exception as exc:
                     gold_status_list.append({'exists': True, 'file': gf, 'error': str(exc)})
@@ -720,16 +768,14 @@ async def get_data_status():
         macro_file = os.path.join(_settings.MACRO_DIR, 'macro_data.csv')
         if os.path.exists(macro_file):
             try:
-                df = pd.read_csv(macro_file)
-                date_col = 'date' if 'date' in df.columns else df.columns[0]
-                dates = pd.to_datetime(df[date_col])
-                last_date = dates.max().strftime('%Y-%m-%d')
+                sm = _macro_summary(macro_file)
+                last_date = sm["end"]
                 status['macro'] = {
                     'exists': True,
                     'file': macro_file,
                     'last_date': last_date,
                     'missing_days': _count_missing_trading_days(last_date),
-                    'symbols': [c for c in df.columns if c != date_col],
+                    'symbols': sm["symbols"],
                     'label': 'EVDS + Makro (Faiz · CPI · PPI · EUR/TRY · BIST-100)',
                 }
             except Exception as exc:
@@ -748,13 +794,12 @@ async def get_data_status():
         fund_file = os.path.join(_settings.FUNDAMENTAL_DIR, 'fundamental_data.csv')
         if os.path.exists(fund_file):
             try:
-                df = pd.read_csv(fund_file, index_col='symbol')
                 status['fundamental'] = {
                     'exists': True,
                     'file': fund_file,
                     'last_date': None,   # fundamental veri tarihsiz (snapshot)
                     'missing_days': None,
-                    'symbols': df.index.tolist(),
+                    'symbols': _fundamental_summary(fund_file)["symbols"],
                     'label': 'Fundamental (ROE · ROA · P/E · P/B · D/E)',
                 }
             except Exception as exc:
@@ -776,11 +821,11 @@ async def get_data_status():
 
 
 @router.get("/data/catalog")
-async def get_data_catalog():
+def get_data_catalog():
     """Faz 11 §3.17: diskteki veri setleri gruplu — ham piyasa (bu sayfadan güncellenir), referans serileri (betik),
     M8 ve ileri veri (dondurulmuş / sunucu işi), evren. Salt okuma, ağ yok."""
     from app.services import data_catalog, marl_forward
-    status = (await get_data_status()).get("status", {})
+    status = get_data_status().get("status", {})
     try:
         forward = marl_forward.info()
     except Exception as exc:  # pragma: no cover - katalog ileri veri olmadan da kurulur
@@ -791,9 +836,25 @@ async def get_data_catalog():
     return out
 
 
+_DATA_UPDATE_LOCK = threading.Lock()
+
+
 @router.post("/data/update")
-async def update_data(request: DataUpdateRequest, user: RequireWriter):
-    """Seçili veri kaynaklarını güncelle (incremental veya tam)."""
+def update_data(request: DataUpdateRequest, user: RequireWriter):
+    """Seçili veri kaynaklarını güncelle (incremental veya tam).
+
+    Senkron uç: FastAPI iş parçacığı havuzunda koşar, ağdan veri çekerken olay döngüsünü kilitlemez. Aynı anda tek
+    güncelleme (aynı CSV'lere iki yazar olmasın): ikinci istek 409."""
+    if not _DATA_UPDATE_LOCK.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Bir veri güncellemesi zaten çalışıyor; bitince yeniden deneyin.")
+    try:
+        return _update_data_locked(request)
+    finally:
+        _DATA_UPDATE_LOCK.release()
+        _summary_cache_clear()
+
+
+def _update_data_locked(request: DataUpdateRequest):
     try:
         results = {}
         mode = request.mode
@@ -991,7 +1052,7 @@ def get_earliest_date(source: str = "borsapy"):
 
 
 @router.delete("/models/{model_name}")
-async def delete_model(model_name: str, user: RequireWriter):
+def delete_model(model_name: str, user: RequireWriter):
     """Egitilmis modeli sil.
 
     Iki katman var:
@@ -2295,7 +2356,7 @@ async def get_portfolio(user: CurrentUser, date: Optional[str] = None):
 
 
 @router.post("/portfolio/reset", response_model=PortfolioValuation)
-async def reset_portfolio_endpoint(
+def reset_portfolio_endpoint(
     user: RequireWriter,
     initial_capital: float = 100_000.0,
 ):
@@ -2460,7 +2521,7 @@ async def apply_decision(date: str, user: RequireWriter, execution: str = "next_
 
 
 @router.get("/decisions-history")
-async def get_decisions_history():
+def get_decisions_history():
     """
     Return all saved daily decisions (trade_decisions.json) sorted by date desc.
     Used by the dashboard to browse past decisions, not just the most recent one.
@@ -2496,7 +2557,7 @@ async def get_decisions_history():
 
 
 @router.get("/portfolio-history", response_model=PortfolioHistoryResponse)
-async def get_portfolio_history(days: int = 30):
+def get_portfolio_history(days: int = 30):
     """
     Get portfolio history for the last N days
 
@@ -2526,7 +2587,7 @@ async def get_portfolio_history(days: int = 30):
 
 
 @router.get("/latest-portfolio")
-async def get_latest_portfolio():
+def get_latest_portfolio():
     """
     Get the latest portfolio state from history
 
@@ -2590,7 +2651,7 @@ async def get_latest_portfolio():
 # ==================== ACADEMIC ANALYSIS ENDPOINTS ====================
 
 @router.get("/analysis/model-comparison", response_model=ModelComparisonResponse)
-async def get_model_comparison():
+def get_model_comparison():
     """
     Get comprehensive model comparison for academic analysis
 
@@ -2624,7 +2685,7 @@ async def get_model_comparison():
 
 
 @router.get("/analysis/best-models")
-async def get_best_models():
+def get_best_models():
     """
     Get best performing models by different metrics
 
@@ -2671,7 +2732,7 @@ async def get_best_models():
 
 
 @router.post("/analysis/generate-report")
-async def generate_analysis_report(background_tasks: BackgroundTasks, user: RequireWriter):
+def generate_analysis_report(background_tasks: BackgroundTasks, user: RequireWriter):
     """
     Generate comprehensive academic analysis report
 

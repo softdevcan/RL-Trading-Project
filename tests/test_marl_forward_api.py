@@ -159,8 +159,17 @@ if HAVE:
         ok5 &= bool(vdata) and bool(bdata) and rrend.status_code == 200 and rpan.status_code == 200 \
             and "Toplam" in rpan.text
         # tablo 10 stratejinin hepsi (S-esm dahil), grafik yalniz secilen 3 (aralik yalniz grafigi yeniden cizer)
-        ok5 &= len(vall.get("table", [])) == 10 and list(vdata.get("lines", {})) == keys \
+        from dashboard.pages import simulation as SP
+        from dashboard.components import srv_store
+        va, vs = SP.view_all_of(vall) or {}, SP.view_of(vdata) or {}
+        ok5 &= len(va.get("table", [])) == 10 and list(vs.get("lines", {})) == keys \
             and "S-esm" in json.dumps(vresp.get("sim-table", {}), ensure_ascii=False)
+        # §3.19 tarayiciya yalniz referans gider (defter 2026'da ~1 MB idi); jeton dusse de parametrelerden yeniden kurulur
+        ok5 &= len(json.dumps(bdata)) < 10_000 and "token" in bdata and "book" not in bdata
+        srv_store.clear()          # sunucu yeniden basladi gibi: callback ayni referansla yine cizmeli
+        rre = fire(c, "sim-chart.figure", [bdata, vdata, None, "all"], ["M-none", 201])
+        ok5 &= rre.status_code == 200 and len(rre.json().get("response", {}).get("sim-chart", {})
+                                                .get("figure", {}).get("data", [])) == 9
         # M-none bant (2) + ort. + 2 kural + incelenen + secili gun isareti + gunluk K/Z + dusus
         ok5 &= len(fig.get("data", [])) == 9
     check(f"5. S5 + §3.13: view 401/200 (207 seans, M-none N=12 + 12 tohum satiri), gecersiz anahtar/pencere 422, urun "

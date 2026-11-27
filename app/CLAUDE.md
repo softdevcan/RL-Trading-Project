@@ -2,6 +2,14 @@
 
 # CLAUDE.md — app/ (API, kimlik, servisler)
 
+## Uc yazarken: async mi, def mi (Faz 11 §3.19, ONEMLI)
+- Rota isleyicisi `await` kullanmiyorsa `def` yaz, `async def` DEGIL. `async def` olay dongusunde kosar; icinde CSV okuma,
+  ag istegi, model tahmini gibi engelleyici is varsa o surede sunucunun TAMAMI bekler (olculdu: altin fiyati cekilirken
+  hafif istek 2,8 sn). `def` is parcacigi havuzunda kosar. Bekci: `python tests/test_api_async_guard.py`.
+- Paralel kosan `def` isleyiciler ayni dosyaya yazabilir: tek yazar gereken yerde kilit kullan (`update_data`: 409).
+- Buyuk CSV'den yalniz ozet donduren uc her istekte dosyayi okumasin: `app/services/file_summary.get(path, ad, build)`
+  (yol + mtime anahtarli; DataFrame tutma, ozet tut).
+
 ## Auth & kullanici bazli calisma (Faz 7)
 - Giris: `/login` (cerez tabanli oturum — Dash WSGI header tasiyamaz)
 - Kapi: `app/auth/middleware.py` — `/dash/*`, `/api/*`, `/docs` korumali;

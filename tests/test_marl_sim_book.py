@@ -172,7 +172,8 @@ stxt = str(S.summary_text(sv, 'forward'))
 ok7 = len(dfig.data) == 2 and dfig.data[1].name == S.LABELS['M-none']          # 1/N kendisiyle kiyaslanmaz: bant + cizgi
 ok7 &= [r['sharpe'] for r in S.compare_table(sv).children[0].data] == ['—', '—']
 ok7 &= 'Yapay zekâ modelleri (1)' in stxt and 'yorumlanmaz' in stxt and 'Basit kurallar (1)' in stxt
-ok7 &= list(sfig.data[-1].y) == [S.plain.name('M-none'), S.plain.name('rule/ew')]  # deger sutunu sabit sirada
+ok7 &= list(sfig['data'][-1]['y']) == [S.plain.name('M-none'), S.plain.name('rule/ew')]  # deger sutunu sabit sirada
+ok7 &= len(sfig['frames']) == len(dates) and set(sfig['frames'][0]['data'][0]) == {'x', 'error_x', 'customdata'} and set(sfig['frames'][0]['data'][1]) == {'x'}  # kismi kare (§3.19)
 check("7. §3.18 ozet: sabit sira, ileri pencerede 'yorumlanmaz'; esli fark 1/N disi; 20 seanstan once Sharpe '—'", ok7)
 
 print(f"\n{passed} gecti, {failed} kaldi")

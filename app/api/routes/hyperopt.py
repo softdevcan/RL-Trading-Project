@@ -3,6 +3,7 @@ Hyperparameter Optimization API Routes
 """
 
 import asyncio
+import os
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -260,7 +261,7 @@ async def run_optimization_background(
 # ==================== Endpoints ====================
 
 @router.get("/data-range")
-async def get_cached_data_range():
+def get_cached_data_range():
     """
     RL panelinin (egitim rotasiyla ayni dosya) tarih araligini, sembollerini ve
     bolme taniminin katlarini doner. Pano kat secicisini buradan doldurur
@@ -272,24 +273,28 @@ async def get_cached_data_range():
     spec = get_spec()
     try:
         from data.data_fetcher import DataFetcher
+        from app.services import file_summary
 
         fetcher = DataFetcher()
-        df = fetcher.load_data(RL_PANEL_FILE)
-        dates = df.index.get_level_values('date')
-        if dates.tz is not None:
-            dates = dates.tz_localize(None)
-        symbols = sorted(df.index.get_level_values('symbol').unique().tolist())
 
-        return {
-            "available": True,
-            "min_date": dates.min().strftime("%Y-%m-%d"),
-            "max_date": dates.max().strftime("%Y-%m-%d"),
-            "symbols": symbols,
-            "total_rows": int(len(df)),
-            "split_spec": spec.name,
-            # complete = egitim baslangici + test bitisi panelde (evaluation.splits)
-            "folds": fold_coverage(df, spec),
-        }
+        def build():
+            df = fetcher.load_data(RL_PANEL_FILE)
+            dates = df.index.get_level_values('date')
+            if dates.tz is not None:
+                dates = dates.tz_localize(None)
+            symbols = sorted(df.index.get_level_values('symbol').unique().tolist())
+            return {
+                "available": True,
+                "min_date": dates.min().strftime("%Y-%m-%d"),
+                "max_date": dates.max().strftime("%Y-%m-%d"),
+                "symbols": symbols,
+                "total_rows": int(len(df)),
+                "split_spec": spec.name,
+                # complete = egitim baslangici + test bitisi panelde (evaluation.splits)
+                "folds": fold_coverage(df, spec),
+            }
+        # Faz 11 §3.19: panel yalniz degisince yeniden okunur (istek basina ~270 ms idi)
+        return file_summary.get(os.path.join(fetcher.data_dir, RL_PANEL_FILE), f"data-range:{spec.name}", build)
     except FileNotFoundError:
         return {
             "available": False,
@@ -306,7 +311,7 @@ async def get_cached_data_range():
 
 
 @router.post("/start", response_model=OptimizationStartResponse)
-async def start_optimization(
+def start_optimization(
     request: OptimizationRequest,
     background_tasks: BackgroundTasks,
     user: RequireWriter,
@@ -369,7 +374,7 @@ async def start_optimization(
 
 
 @router.get("/studies", response_model=StudyListResponse)
-async def list_studies(
+def list_studies(
     algorithm: Optional[AlgorithmType] = None,
     status: Optional[StudyStatus] = None,
     limit: int = 50,
@@ -457,7 +462,7 @@ async def list_studies(
 
 
 @router.get("/studies/{study_id}", response_model=StudyDetailResponse)
-async def get_study_detail(study_id: str):
+def get_study_detail(study_id: str):
     """
     Study detaylarını getirir.
 
@@ -576,7 +581,7 @@ async def get_study_detail(study_id: str):
 
 
 @router.get("/studies/{study_id}/progress", response_model=OptimizationProgressResponse)
-async def get_optimization_progress(study_id: str):
+def get_optimization_progress(study_id: str):
     """
     Optimization progress'i getirir
     """
@@ -693,7 +698,7 @@ async def cancel_optimization(study_id: str, user: RequireWriter):
 
 
 @router.delete("/studies/{study_id}")
-async def delete_study(study_id: str, user: RequireWriter) -> dict:
+def delete_study(study_id: str, user: RequireWriter) -> dict:
     """Optimizasyon kaydini KALICI olarak siler.
 
     Neden gerekli: tamamlanmis calismalar Optuna'nin SQLite deposunda kaliyor
@@ -747,7 +752,7 @@ async def delete_study(study_id: str, user: RequireWriter) -> dict:
 
 
 @router.get("/search-spaces/{algorithm}", response_model=AlgorithmSearchSpaceResponse)
-async def get_algorithm_search_space(algorithm: AlgorithmType):
+def get_algorithm_search_space(algorithm: AlgorithmType):
     """
     Algoritmanın arama uzayını getirir
     """
@@ -823,7 +828,7 @@ async def websocket_endpoint(websocket: WebSocket, study_id: str):
 
 
 @router.get("/health")
-async def health_check():
+def health_check():
     """Health check endpoint"""
     return {
         "status": "ok",

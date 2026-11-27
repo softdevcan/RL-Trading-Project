@@ -27,7 +27,7 @@ from plotly.subplots import make_subplots
 
 import dashboard.api_client as api
 from dashboard.auth_context import is_admin
-from dashboard.components import plain
+from dashboard.components import plain, srv_store
 from dashboard.components.metric_card import create_metric_card
 from dashboard.components.page_header import create_page_header
 from dashboard.components.table import TABLE_STYLES, numeric_columns
@@ -545,7 +545,11 @@ GROUP_COLOR = {"ai_multi": "blue", "ai_single": "blue", "control": "muted", "rul
 def summary_figure(view: dict, theme: str | None = None):
     """'100.000 TL ile başlasaydınız': 10 strateji sabit sırada, yapay zekâ ± 12 tohum std. Gün kaydırıcısı ve Oynat
     düğmesi her günün durumunu gösterir (kareler istemcide; sunucuya gidilmez). Nokta tıklanınca strateji incelenir
-    (customdata[2] = anahtar)."""
+    (customdata[0] = anahtar).
+
+    Performans (§3.19): kareler KISMİ güncellemedir (yalnız x, yayılım, hover notu, değer yazısı; stil ilk izde bir
+    kez). Tam izli kareler 2026 penceresinde 847 KB / 780 ms idi. Dönüş düz sözlük (dcc.Graph kabul eder; 200 karelik
+    go.Frame doğrulaması pahalı)."""
     lines = (view or {}).get("lines") or {}
     keys = [k for k in plain.ORDER if k in lines]
     dates = (view or {}).get("dates") or []
@@ -556,38 +560,41 @@ def summary_figure(view: dict, theme: str | None = None):
     T = len(dates)
     groups = [(g, [k for k in keys if plain.group(k) == g]) for g in ("ai_multi", "ai_single", "control", "rule")]
     groups = [(g, ks) for g, ks in groups if ks]
-
-    def val(k, t):
-        return lines[k]["mean"][t]
-
-    def sd(k, t):
-        return lines[k]["std"][t] if lines[k].get("n", 1) > 1 else 0.0
-
-    lo = min([cap] + [val(k, t) - sd(k, t) for k in keys for t in range(T)])
-    hi = max([cap] + [val(k, t) + sd(k, t) for k in keys for t in range(T)])
+    mean = {k: lines[k]["mean"] for k in keys}
+    std = {k: (lines[k]["std"] if lines[k].get("n", 1) > 1 else [0.0] * T) for k in keys}
+    lo = min([cap] + [mean[k][t] - std[k][t] for k in keys for t in range(T)])
+    hi = max([cap] + [mean[k][t] + std[k][t] for k in keys for t in range(T)])
     pad = 0.30 * (hi - lo or cap * 0.01)
+    text_x = hi + pad * 0.95
 
-    def day(t):
+    def moving(t):
+        """Gün t'de değişen alanlar: grup başına (x, yayılım, hover notu), sonra değer yazısı sütunu."""
         out = []
         for g, ks in groups:
-            x, err = [val(k, t) for k in ks], [sd(k, t) for k in ks]
-            out.append(go.Scatter(
-                x=x, y=[plain.name(k) for k in ks], mode="markers", name=plain.GROUPS[g],
-                marker={"size": 12, "color": p[GROUP_COLOR[g]], "line": {"width": 1.5, "color": p["bg"]}},
-                error_x={"type": "data", "array": err, "visible": g != "rule", "thickness": 2, "width": 4,
-                         "color": plot_rgba(GROUP_COLOR[g], 0.6, theme)},
-                customdata=[[spct(v / cap - 1), f"± {_num(e, 0)} TL (12 eğitim arası yayılım)" if e else "tek seri", k]
-                            for k, v, e in zip(ks, x, err)],
-                hovertemplate="%{y}<br>%{x:,.0f} TL · %{customdata[0]}<br>%{customdata[1]}<br>"
-                              "<i>tıklayın: aşağıda inceleyin</i><extra></extra>"))
-        # değerler sağda ayrı sütun: nokta ve yayılım çubuğunun üstüne binmesin
-        out.append(go.Scatter(x=[hi + pad * 0.95] * len(keys), y=[plain.name(k) for k in keys], mode="text",
-                              text=[f"{tl(val(k, t))}  ({spct(val(k, t) / cap - 1, 1)})" for k in keys],
-                              textposition="middle left", textfont={"size": 11.5, "color": p["text"]},
-                              showlegend=False, hoverinfo="skip"))
+            d = {"x": [round(mean[k][t]) for k in ks]}
+            if g != "rule":             # kural tek seri: yayılım yok, hover notu sabit
+                d["error_x"] = {"array": [round(std[k][t]) for k in ks]}
+                d["customdata"] = [[k, round(std[k][t])] for k in ks]
+            out.append(d)
+        out.append({"text": [f"{tl(mean[k][t])}  ({spct(mean[k][t] / cap - 1, 1)})" for k in keys]})
         return out
 
-    fig = go.Figure(data=day(T - 1))
+    last = moving(T - 1)
+    fig = go.Figure()
+    for (g, ks), mv in zip(groups, last):
+        fig.add_trace(go.Scatter(
+            x=mv["x"], y=[plain.name(k) for k in ks], mode="markers", name=plain.GROUPS[g],
+            marker={"size": 12, "color": p[GROUP_COLOR[g]], "line": {"width": 1.5, "color": p["bg"]}},
+            error_x={"type": "data", "array": mv.get("error_x", {}).get("array", [0] * len(ks)), "visible": g != "rule",
+                     "thickness": 2, "width": 4, "color": plot_rgba(GROUP_COLOR[g], 0.6, theme)},
+            customdata=mv.get("customdata") or [[k] for k in ks],
+            hovertemplate="%{y}<br>%{x:,.0f} TL<br>" + ("± %{customdata[1]:,.0f} TL (12 eğitim arası yayılım)"
+                                                         if g != "rule" else "tek seri") +
+                          "<br><i>tıklayın: aşağıda inceleyin</i><extra></extra>"))
+    # değerler sağda ayrı sütun: nokta ve yayılım çubuğunun üstüne binmesin
+    fig.add_trace(go.Scatter(x=[text_x] * len(keys), y=[plain.name(k) for k in keys], mode="text", text=last[-1]["text"],
+                             textposition="middle left", textfont={"size": 11.5, "color": p["text"]},
+                             showlegend=False, hoverinfo="skip"))
     fig.add_vline(x=cap, line={"color": p["line"], "width": 1.2, "dash": "dot"},
                   annotation={"text": f"başlangıç {tl(cap)}", "font": {"size": 11}},
                   annotation_position="bottom right")
@@ -596,9 +603,10 @@ def summary_figure(view: dict, theme: str | None = None):
                                              "font": {"size": 11}},
               "xaxis": {"tickformat": ",.0f", "range": [lo - pad * 0.4, hi + pad], "title": None},
               "yaxis": {"autorange": "reversed", "automargin": True}, "hovermode": "closest"}
+    frames = []
     if T > 1:                                  # tek günde oynatılacak bir şey yok
         dur = int(max(60, min(500, 12_000 / T)))
-        fig.frames = [go.Frame(data=day(t), name=str(t)) for t in range(T)]
+        frames = [{"name": str(t), "data": moving(t)} for t in range(T)]
         step = {"mode": "immediate", "frame": {"duration": 0, "redraw": True}, "transition": {"duration": 0}}
         layout["height"] += 80
         layout["margin"]["b"] = 96
@@ -617,7 +625,9 @@ def summary_figure(view: dict, theme: str | None = None):
             ]}]
     fig.update_layout(**layout)
     apply_theme_template(fig, theme)
-    return fig
+    out = fig.to_plotly_json()
+    out["frames"] = frames
+    return out
 
 
 def _range_tl(vals: list) -> str:
@@ -920,6 +930,39 @@ def render(book: dict, view: dict, sel, rng: str, focus: str, seed):
     return (render_chart(book, view, sel, rng, focus, seed),) + render_panels(book, view, sel, focus, seed)
 
 
+# ── sunucu tarafı veri (Faz 11 §3.19): tarayıcıda yalnız referans; components/srv_store.py ─────────────────────
+def _fetch_view_all(ref: dict):
+    v = api.get_marl_forward_view(ref["window"], ALL_KEYS)
+    return v if v and v.get("dates") else None
+
+
+def view_all_of(ref):
+    """sim-view-all referansından 10 stratejili görünüm (None ya da {'empty': ...} olabilir)."""
+    if ref and ref.get("empty"):
+        return ref
+    return srv_store.get(ref, _fetch_view_all)
+
+
+def view_of(ref):
+    """sim-view referansından seçili görünüm (grafik çizgileri + tohumlar)."""
+    def rebuild(r):
+        va = view_all_of(r.get("all"))
+        return select_view(va, r.get("shown") or []) if va and not va.get("empty") else None
+    return srv_store.get(ref, rebuild)
+
+
+def _fetch_book(ref: dict):
+    r = api.get_marl_product(ref["sid"], float(ref["capital"]), ref["window"])
+    if not r or not r.get("dates") or not r.get("book"):
+        return None
+    return {**r["book"], "diff": {"final_diff_pct": r.get("final_diff_pct"),
+                                  "tracking_error_ann": r.get("tracking_error_ann"), "n_orders": r.get("n_orders")}}
+
+
+def book_of(ref):
+    return srv_store.get(ref, _fetch_book)
+
+
 def register_callbacks(app):
     @app.callback(
         Output("sim-view-all", "data"), Output("sim-note", "children"),
@@ -928,33 +971,35 @@ def register_callbacks(app):
     def load_view(window):
         """Pencere başına TEK istek: 10 stratejinin hepsi (ham seriler sunucuda bir kez okunur)."""
         note = NOTE_FORWARD if window == "forward" else NOTE_TEST
-        v = api.get_marl_forward_view(window, ALL_KEYS)
-        if not v or not v.get("dates"):
+        v = _fetch_view_all({"window": window})
+        if not v:
             msg = ("Henüz ileri veri seansı yok (ilk gün 2026-11-23, 19:00 TRT sonrası işlenir)"
                    if window == "forward" else "Veri alınamadı")
             return {"empty": msg}, note
-        return v, note
+        return srv_store.put(v, window=window), note
 
     @app.callback(
         Output("sim-view", "data"), Output("sim-table", "children"), Output("sim-diff", "figure"),
         Input("sim-view-all", "data"), Input("sim-keys", "value"), Input("sim-focus", "value"),
         State("sim-window", "value"),
     )
-    def update_view(v, keys, focus, window):
+    def update_view(ref, keys, focus, window):
+        v = view_all_of(ref)
         if not v:
             return no_update, no_update, no_update
         if v.get("empty"):
             return None, html.P(v["empty"], className="sim-muted small"), empty_figure(v["empty"])
         shown = plotted_keys(keys, focus)
         sub = select_view(v, shown)
-        return sub, compare_table(v, shown), diff_figure(sub)
+        return srv_store.put(sub, all=ref, shown=shown), compare_table(v, shown), diff_figure(sub)
 
     @app.callback(
         Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
         Input("sim-view", "data"), Input("sim-focus", "value"), Input("sim-seed", "value"),
         State("sim-window", "value"),
     )
-    def update_seeds(view, focus, seed, window):
+    def update_seeds(ref, focus, seed, window):
+        view = view_of(ref)
         if not view or not view.get("table"):
             return empty_figure("Tohum dağılımı için bir kol seçin"), ""
         return seed_figure(view, window, focus=focus, seed=seed)
@@ -963,7 +1008,7 @@ def register_callbacks(app):
     def pick_strategy(click):
         """Özet grafikte bir noktaya tıklama: o strateji incelenir (yazı sütununda customdata yok)."""
         try:
-            key = click["points"][0]["customdata"][2]
+            key = click["points"][0]["customdata"][0]
         except (TypeError, KeyError, IndexError):
             return no_update
         return key if key in LABELS else no_update
@@ -988,7 +1033,8 @@ def register_callbacks(app):
         Output("sim-summary-chart", "figure"), Output("sim-summary-text", "children"),
         Input("sim-view-all", "data"), State("sim-window", "value"),
     )
-    def update_summary(v, window):
+    def update_summary(ref, window):
+        v = view_all_of(ref)
         if not v or v.get("empty"):
             msg = (v or {}).get("empty") or "Veri alınamadı"
             return empty_figure(msg), html.P(msg, className="sim-muted")
@@ -1002,15 +1048,16 @@ def register_callbacks(app):
     def update_book(window, focus, seed, capital):
         if not focus or not capital or float(capital) <= 0:
             return None, None, dbc.Alert("Strateji ve pozitif sermaye girin.", color="warning", className="py-2")
-        r = api.get_marl_product(product_sid(focus, seed), float(capital), window)
+        params = {"sid": product_sid(focus, seed), "capital": float(capital), "window": window}
+        r = api.get_marl_product(params["sid"], params["capital"], window)
         if not r:
             return None, None, dbc.Alert("Portföy hesaplanamadı.", color="danger", className="py-2")
         if not r.get("dates") or not r.get("book"):
             return None, None, html.P(r.get("note") or "Bu pencerede veri yok.", className="sim-muted")
-        book = r["book"]
-        book["diff"] = {"final_diff_pct": r.get("final_diff_pct"), "tracking_error_ann": r.get("tracking_error_ann"),
-                        "n_orders": r.get("n_orders")}
-        return book, None, None
+        book = {**r["book"], "diff": {"final_diff_pct": r.get("final_diff_pct"),
+                                      "tracking_error_ann": r.get("tracking_error_ann"), "n_orders": r.get("n_orders")}}
+        # tarayıcıya yalnız referans + gün listesi (gün seçimi için); defter sunucuda
+        return srv_store.put(book, dates=book["dates"], **params), None, None
 
     @app.callback(
         Output("sim-sel", "data", allow_duplicate=True),
@@ -1038,7 +1085,8 @@ def register_callbacks(app):
         Input("sim-book", "data"), Input("sim-view", "data"), Input("sim-sel", "data"), Input("sim-range", "value"),
         State("sim-focus", "value"), State("sim-seed", "value"),
     )
-    def update_chart(book, view, sel, rng, focus, seed):
+    def update_chart(bref, vref, sel, rng, focus, seed):
+        book, view = book_of(bref), view_of(vref)
         if not book or not book.get("dates"):
             return empty_figure("Veri yok")
         return render_chart(book, view, sel, rng or "all", focus or "M-none", seed)
@@ -1051,7 +1099,8 @@ def register_callbacks(app):
         Input("sim-book", "data"), Input("sim-view", "data"), Input("sim-sel", "data"),
         State("sim-focus", "value"), State("sim-seed", "value"),
     )
-    def update_panels(book, view, sel, focus, seed):
+    def update_panels(bref, vref, sel, focus, seed):
+        book, view = book_of(bref), view_of(vref)
         if not book or not book.get("dates"):
             e = empty_figure("Veri yok")
             return ([], html.P("Gün seçmek için önce portföy yüklenmeli.", className="sim-muted"), e, [], None, e,

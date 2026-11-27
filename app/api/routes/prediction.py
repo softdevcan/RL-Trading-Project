@@ -79,7 +79,7 @@ def _validate_source(symbol: str, source: Optional[str]) -> Optional[str]:
 # ------------------------------------------------------------------
 
 @router.post("/train", status_code=status.HTTP_202_ACCEPTED)
-async def train_model(
+def train_model(
     request: PredictionTrainRequest,
     background_tasks: BackgroundTasks,
     response: Response,
@@ -184,7 +184,7 @@ async def train_model(
 
 
 @router.get("/train/status", response_model=PredictionTrainStatusResponse)
-async def get_train_status(
+def get_train_status(
     symbol: str = Query(..., description="Sembol"),
     horizon: str = Query(default='daily'),
     source: Optional[str] = Query(default=None, description="Veri kaynagi"),
@@ -212,7 +212,7 @@ async def get_train_status(
 
 
 @router.get("/train/active")
-async def list_active_trainings() -> dict:
+def list_active_trainings() -> dict:
     """Kullanicinin TUM tahmin egitimi kayitlari (sembol basina degil).
 
     `/train/status` sembol istiyor; pano sayfaya donuldugunde hangi sembolun
@@ -238,7 +238,7 @@ async def list_active_trainings() -> dict:
 
 
 @router.post("/train-ensemble", response_model=EnsembleTrainResponse)
-async def train_ensemble(request: EnsembleTrainRequest, user: RequireWriter):
+def train_ensemble(request: EnsembleTrainRequest, user: RequireWriter):
     """Sembol icin ensemble modeli egit (detayli sonuc)."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -275,7 +275,7 @@ async def train_ensemble(request: EnsembleTrainRequest, user: RequireWriter):
 
 
 @router.post("/cross-validate")
-async def cross_validate(request: CrossValidateRequest, user: RequireWriter):
+def cross_validate(request: CrossValidateRequest, user: RequireWriter):
     """Walk-forward cross-validation ile model karsilastirma."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -298,7 +298,7 @@ async def cross_validate(request: CrossValidateRequest, user: RequireWriter):
 
 
 @router.post("/optimize")
-async def optimize_hyperparameters(request: HyperOptRequest, user: RequireWriter):
+def optimize_hyperparameters(request: HyperOptRequest, user: RequireWriter):
     """Tum modeller icin Optuna hiperparametre optimizasyonu."""
     symbol = _validate_symbol(request.symbol)
     horizon = _validate_horizon(request.horizon)
@@ -321,7 +321,7 @@ async def optimize_hyperparameters(request: HyperOptRequest, user: RequireWriter
 
 
 @router.get("/models", response_model=TrainedModelsResponse)
-async def list_models():
+def list_models():
     """Egitilmis tahmin modellerini listele (sembol + source + horizon + metrikler)."""
     from app.services.prediction_service import PredictionService
     from data.bist30_symbols import STOCK_INFO, ASSET_INFO
@@ -359,7 +359,7 @@ async def list_models():
 # ------------------------------------------------------------------
 
 @router.post("/predict", response_model=PredictionResponse)
-async def predict(request: PredictionRequest, user: RequireWriter):
+def predict(request: PredictionRequest, user: RequireWriter):
     """Sembol+source listesi icin gunluk/haftalik fiyat tahmini uret."""
     horizon = _validate_horizon(request.horizon)
 
@@ -428,7 +428,7 @@ async def predict(request: PredictionRequest, user: RequireWriter):
 # ------------------------------------------------------------------
 
 @router.get("/predictions/{symbol}", response_model=PredictionHistoryResponse)
-async def get_predictions(
+def get_predictions(
     symbol: str,
     horizon: str = Query(default='daily'),
 ):
@@ -455,7 +455,7 @@ class EvaluateRequest(BaseModel):
 
 
 @router.post("/evaluate", response_model=EvaluatePendingResponse)
-async def evaluate_pending(user: RequireWriter, request: EvaluateRequest = EvaluateRequest()):
+def evaluate_pending(user: RequireWriter, request: EvaluateRequest = EvaluateRequest()):
     """Bekleyen tahminleri gerçek fiyatlarla değerlendir."""
     from app.services.prediction_service import PredictionService
     svc = PredictionService()
@@ -475,7 +475,7 @@ async def evaluate_pending(user: RequireWriter, request: EvaluateRequest = Evalu
 # ------------------------------------------------------------------
 
 @router.get("/performance/summary")
-async def get_performance_summary():
+def get_performance_summary():
     """Tüm semboller için özet performans."""
     from app.services.prediction_service import PredictionService
     svc = PredictionService()
@@ -486,7 +486,7 @@ async def get_performance_summary():
 
 
 @router.get("/performance/{symbol}", response_model=PerformanceMetricsResponse)
-async def get_performance(
+def get_performance(
     symbol: str,
     horizon: str = Query(default='daily'),
     window: int = Query(default=30, ge=5),
@@ -506,7 +506,7 @@ async def get_performance(
 
 
 @router.get("/chart-data/{symbol}")
-async def get_chart_data(
+def get_chart_data(
     symbol: str,
     horizon: str = Query(default='daily'),
     days: int = Query(default=30, ge=7),
@@ -529,7 +529,7 @@ async def get_chart_data(
 # ------------------------------------------------------------------
 
 @router.get("/gold/prices", response_model=GoldPricesResponse)
-async def get_gold_prices():
+def get_gold_prices():
     """Güncel ons altın, gram altın ve USD/TRY fiyatlarını döndür."""
     from app.services.gold_service import GoldService
     svc = GoldService()
@@ -547,7 +547,7 @@ async def get_gold_prices():
 
 
 @router.get("/gold/history", response_model=GoldHistoryResponse)
-async def get_gold_history(
+def get_gold_history(
     symbol: str = Query(default='GOLD_GRAM_TRY',
                         description="GC=F, USDTRY=X veya GOLD_GRAM_TRY"),
     days: int = Query(default=90, ge=7, le=1825),
@@ -568,7 +568,7 @@ async def get_gold_history(
 # ------------------------------------------------------------------
 
 @router.get("/symbols", response_model=TradableSymbolsResponse)
-async def get_symbols():
+def get_symbols():
     """Egitim icin secilebilecek sembolleri ve her sembolun desteklenen kaynaklarini dondur."""
     from data.bist30_symbols import (
         BIST30_SYMBOLS, GOLD_SYMBOLS, FX_SYMBOLS, SYNTHETIC_SYMBOLS,
@@ -614,7 +614,7 @@ async def get_symbols():
 # ------------------------------------------------------------------
 
 @router.get("/price-history")
-async def get_price_history(
+def get_price_history(
     symbol: str = Query(..., description="Sembol (ör: GC=F, GOLD_GRAM_TRY, AKBNK.IS)"),
     source: Optional[str] = Query(default=None, description="Veri kaynagi"),
     days: int = Query(default=90, ge=10, le=1825, description="Son kac gun"),
@@ -682,7 +682,7 @@ async def get_price_history(
 # ------------------------------------------------------------------
 
 @router.get("/explain/{symbol}")
-async def explain_prediction(
+def explain_prediction(
     symbol: str,
     horizon: str = Query(default='daily'),
     model_type: str = Query(default='xgboost', description="xgboost, lightgbm, catboost"),

@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-from dash import ALL, Input, Output, State, ctx, dcc, html
+from dash import ALL, Input, Output, State, ctx, dcc, html, no_update
 
 from dashboard.components.page_header import create_page_header
 from dashboard.components.state_block import create_state_block
@@ -448,6 +448,11 @@ def register_callbacks(app):
         except Exception:
             gold_fig = empty_figure("Veri alınamadı")
 
+        if _n:
+            # Faz 11 §3.19: sembol/model listesi yalniz acilista. Her dakika yeniden yazilinca `filter_symbols`
+            # tetikleniyor ve kullanicinin egitim sekmesindeki sembol secimini ilk secenege sifirliyordu.
+            # Egitim bitince model listesi kendi yoklamasiyla (pred-train-poll) tazelenir.
+            return cards, gold_fig, no_update, no_update
         symbols = api.get_prediction_symbols() or []
         models = api.get_prediction_models() or []
         return cards, gold_fig, symbols, models
@@ -496,19 +501,23 @@ def register_callbacks(app):
 
     @app.callback(
         [Output("pred-train-status", "children"),
-         Output("pred-train-poll", "disabled")],
+         Output("pred-train-poll", "disabled"),
+         Output("pred-models-store", "data", allow_duplicate=True)],
         Input("pred-train-poll", "n_intervals"),
+        prevent_initial_call="initial_duplicate",
     )
     def poll_prediction_training(_n):
         """Egitim kayitlarini tazele; calisan kosum kalmayinca yoklamayi kapat.
 
         Kapatmak onemli: bitmis kosumlar icin 3 sn'de bir sorgu atmanin
-        anlami yok, sayfa acik kaldigi surece surer.
+        anlami yok, sayfa acik kaldigi surece surer. Kapanan turda model listesi
+        de tazelenir (§3.19: liste artik dakikalik yenilemeyle gelmiyor).
         """
         runs = _active_runs()
         block = _training_runs_block(runs)
         still_running = any(r.get("state") == "running" for r in runs)
-        return block, not still_running
+        models = no_update if still_running or not _n else (api.get_prediction_models() or [])
+        return block, not still_running, models
 
     # ── Egitim sekmesi: butonla egit, durumu goster
     @app.callback(
