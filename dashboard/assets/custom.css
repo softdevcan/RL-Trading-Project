@@ -1347,6 +1347,17 @@ body .dash-datepicker-input-wrapper .dash-datepicker-input::placeholder,
 .sim-section { margin: 8px 0 10px; }
 .sim-section-title { font-size: 17px; font-weight: 650; color: var(--rlt-text); }
 .sim-term { min-width: 0; }
+/* ⓘ açıklama işareti (components/plain.info) ve tablo başlığı ipucu */
+.sim-info, .home-info { display: inline-flex; align-items: center; color: var(--rlt-muted); cursor: help;
+                        font-size: 0.95em; vertical-align: baseline; text-transform: none; letter-spacing: 0; }
+.sim-info:hover, .sim-info:focus, .home-info:hover, .home-info:focus { color: var(--rlt-primary); outline: none; }
+.popover { max-width: 320px; font-size: 12.5px; line-height: 1.45; }
+.dash-tooltip, .dash-table-tooltip { background-color: var(--rlt-surface-2) !important; color: var(--rlt-text) !important;
+                                     border: 1px solid var(--rlt-border) !important; font-size: 12.5px; line-height: 1.45;
+                                     max-width: 300px; white-space: normal; }
+.dash-tooltip:before, .dash-tooltip:after { border-top-color: var(--rlt-border) !important;
+                                            border-bottom-color: var(--rlt-border) !important; }
+.dash-spreadsheet-container th.dash-header { cursor: help; }
 
 /* ── Ana sayfa (Faz 11 §3.14) ─────────────────────────────────────────────── */
 .home-card-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; }

@@ -187,6 +187,12 @@ def date_axis(dates: list) -> dict:
 
 
 # ── bileşenler ───────────────────────────────────────────────────────────────
+def _t(title: str, uid: str, key: str = "", term: str = ""):
+    """Kart başlığı + ⓘ (not sözlüğü ya da sözlük terimi)."""
+    return [title, " ", plain.info(f"sim-i-{uid}", term=None if key else term or None,
+                                   text=plain.NOTES.get(key) if key else None, title=title if key else None)]
+
+
 def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=None) -> list:
     """Kol seçiliyse incelenen portföy TEK TOHUMDUR; 'Kol ortalaması' kartı 12 tohumun ortalamasını yanına koyar
     (tek tohumla kollar karşılaştırılınca ortalamanın tersi bir sıra çıkabiliyordu: ileri veri, S-esm s201)."""
@@ -204,10 +210,10 @@ def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=Non
               f"tepe {d_short(dates[mdd_pk]) if mdd_pk >= 0 else 'başlangıç'} → dip {d_short(dates[mdd_tr])}")
     bench = _line_at(view, "rule/ew", dates[i])
     if bench is None:
-        bench_card = create_metric_card("1/N kıyası", "—", "1/N'i karşılaştırmaya ekleyin", icon="bi bi-sliders")
+        bench_card = create_metric_card(_t("1/N kıyası", "kpi-ew", term="baseline-1n"), "—", "1/N'i karşılaştırmaya ekleyin", icon="bi bi-sliders")
     else:
         gap = tot / cap - (bench - 1)
-        bench_card = create_metric_card("1/N kıyası", f"{_sign(gap, 5e-5)}{_num(gap * 100, 1)} puan",
+        bench_card = create_metric_card(_t("1/N kıyası", "kpi-ew", term="baseline-1n"), f"{_sign(gap, 5e-5)}{_num(gap * 100, 1)} puan",
                                         f"aynı dönem, aynı maliyet · 1/N {spct(bench - 1, 1)}", icon="bi bi-sliders",
                                         tone=_tone(gap))
     is_arm = focus in ARMS
@@ -216,9 +222,9 @@ def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=Non
         create_metric_card("Portföy değeri", tl(v), f"başlangıç {tl(cap)}{one}", icon="bi bi-wallet2"),
         create_metric_card(f"Gün K/Z · {d_short(dates[i])}", stl(day), f"{spct(day / prev)} önceki kapanışa göre",
                            icon="bi bi-calendar-day", tone=_tone(day)),
-        create_metric_card("Toplam K/Z", stl(tot), f"{spct(tot / cap)} · işlem maliyeti {tl(cost)} dahil",
+        create_metric_card(_t("Toplam K/Z", "kpi-tot", key="total"), stl(tot), f"{spct(tot / cap)} · işlem maliyeti {tl(cost)} dahil",
                            icon="bi bi-graph-up-arrow", tone=_tone(tot)),
-        create_metric_card("En büyük düşüş", spct(mdd, 1), dd_sub, icon="bi bi-arrow-down-right",
+        create_metric_card(_t("En büyük düşüş", "kpi-dd", key="drawdown"), spct(mdd, 1), dd_sub, icon="bi bi-arrow-down-right",
                            tone="loss" if mdd < 0 else "neutral"),
         bench_card,
     ]
@@ -228,7 +234,7 @@ def kpi_cards(book: dict, view: dict, i: int, focus: str | None = None, seed=Non
         sd = line["std"][(view.get("dates") or []).index(dates[i])] / float(view.get("capital") or 1)
         gap = tot / cap - (arm - 1)
         cards.insert(3, create_metric_card(
-            f"Kol ortalaması · {line['n']} tohum", spct(arm - 1),
+            _t(f"Kol ortalaması · {line['n']} tohum", "kpi-arm", key="arm_mean", term="tohum"), spct(arm - 1),
             f"± {_num(sd * 100, 2)} puan std · bu tohum {_sign(gap, 5e-5)}{_num(gap * 100, 2)} puan",
             icon="bi bi-people", tone=_tone(arm - 1)))
     return [dbc.Col(c, xs=12, sm=6, lg=True, className="mb-3") for c in cards]
@@ -430,21 +436,27 @@ def weights_figure(book: dict, i: int, rng: str, theme: str | None = None):
     return fig
 
 
-def seed_figure(view: dict, window: str, theme: str | None = None):
-    """İlk seçili kolun 12 tohumunun pencere sonu toplam getirisi; kural portföyleri referans çizgisi."""
+def seed_figure(view: dict, window: str, theme: str | None = None, focus: str | None = None, seed=None):
+    """İncelenen kolun (yoksa ilk seçili kolun) 12 tohumunun pencere sonu toplam getirisi; incelenen tohum halkalı;
+    kural portföyleri referans çizgisi. Nokta tıklanınca o tohum incelenir (customdata = tohum numarası)."""
     rows = (view or {}).get("table") or []
-    arm = next((r for r in rows if r.get("members")), None)
+    arm = (next((r for r in rows if r.get("members") and r.get("key") == focus), None)
+           or next((r for r in rows if r.get("members")), None))
     if not arm:
         return empty_figure("Tohum dağılımı için karşılaştırmaya bir kol ekleyin"), ""
     p = plot_palette(theme)
     vals = [m["cum_return"] for m in arm["members"]]
     order = sorted(range(len(vals)), key=lambda k: vals[k])
     ys = [((r % 3) - 1) * 0.28 for r in range(len(order))]
+    cur = f"s{seed_of(arm['key'], seed)}" if arm.get("key") == focus else None
+    sel = [arm["members"][k]["seed"] == cur for k in order]
     fig = go.Figure(go.Scatter(
-        x=[vals[k] for k in order], y=ys, mode="markers", name=arm["label"],
-        text=[arm["members"][k]["seed"] for k in order],
-        marker={"size": 12, "color": p["blue"], "line": {"width": 1.5, "color": p["bg"]}},
-        hovertemplate="tohum %{text}: %{x:+.2%}<extra></extra>"))
+        x=[vals[k] for k in order], y=ys, mode="markers", name=LABELS.get(arm.get("key"), arm["label"]),
+        text=[arm["members"][k]["seed"].lstrip("s") for k in order],
+        customdata=[int(arm["members"][k]["seed"].lstrip("s")) for k in order],
+        marker={"size": [17 if x else 12 for x in sel], "color": p["blue"],
+                "line": {"width": [3 if x else 1.5 for x in sel], "color": [p["text"] if x else p["bg"] for x in sel]}},
+        hovertemplate="tohum %{text}: %{x:+.2%}<br><i>tıklayın: bu tohumu inceleyin</i><extra></extra>"))
     mean = sum(vals) / len(vals)
     fig.add_vline(x=mean, line={"color": p["text"], "width": 1.5},
                   annotation={"text": f"ort. {spct(mean, 1)}", "font": {"size": 11}}, annotation_position="top left")
@@ -458,14 +470,15 @@ def seed_figure(view: dict, window: str, theme: str | None = None):
                       xaxis={"tickformat": "+.1%", "nticks": 6, "title": "Pencere sonu toplam getiri"},
                       yaxis={"visible": False, "range": [-1, 1]})
     apply_theme_template(fig, theme)
+    head = f"{LABELS.get(arm.get('key'), arm['label'])} — " if arm.get("key") else ""
     if window == "forward":
-        note = ("Ara görünüm: tohumların kural portföylerine göre konumu ileri testte yorumlanmaz; karşılaştırma "
-                "126. seansta ön kayıtlı kuralla bir kez okunur.")
+        note = (head + "Ara görünüm: tohumların kural portföylerine göre konumu ileri testte yorumlanmaz; "
+                "karşılaştırma 126. seansta ön kayıtlı kuralla bir kez okunur.")
     else:
         rule = next((r for r in rows if r.get("key") == "rule/ew"), None)
         above = f"12 tohumun {sum(v > rule['cum_return'] for v in vals)}'i 1/N'in üzerinde. " if rule else ""
         sd = (sum((v - mean) ** 2 for v in vals) / max(1, len(vals) - 1)) ** 0.5
-        note = (f"{above}Tohumlar arası yayılım (std {_num(sd * 100, 2)} puan) tek bir tohuma bakarak sonuç "
+        note = (f"{head}{above}Tohumlar arası yayılım (std {_num(sd * 100, 2)} puan) tek bir tohuma bakarak sonuç "
                 "çıkarmamanın nedeni.")
     return fig, note
 
@@ -478,6 +491,12 @@ def select_view(view_all: dict, keys) -> dict:
     rows = {r["key"]: r for r in view_all.get("table") or []}
     return {**view_all, "lines": {k: view_all["lines"][k] for k in keys},
             "table": [rows[k] for k in keys if k in rows]}
+
+
+HEADER_TIPS = {"plot": plain.note_text("col_plot"), "n": plain.note_text("col_n"), "ret": plain.note_text("col_ret"),
+               "sharpe": plain.note_text(term="sharpe", extra=f"Yıllık; en az {MIN_SHARPE_SESSIONS} işlem günü gerekir."),
+               "dd": plain.note_text("drawdown"), "turn": plain.note_text(term="devir"),
+               "cash": plain.note_text("col_cash")}
 
 
 def compare_table(view: dict, shown=None):
@@ -509,6 +528,7 @@ def compare_table(view: dict, shown=None):
         data=rows, sort_action="none", **TABLE_STYLES,
         style_cell_conditional=numeric_columns("n", "ret", "sharpe", "dd", "turn", "cash"),
         style_data_conditional=hl + _sign_rules("ret"),
+        tooltip_header=HEADER_TIPS, tooltip_delay=0, tooltip_duration=None,
     )
     foot = html.P(f"{view['n_sessions']} seans · maliyet {view['cost_bps_roundtrip']:.0f} bps gidiş-dönüş · kesirli "
                   "defter (sermaye getiriyi değiştirmez) · kollar 12 tohumun ortalaması ± std · fazla getiri Sharpe: "
@@ -523,42 +543,79 @@ GROUP_COLOR = {"ai_multi": "blue", "ai_single": "blue", "control": "muted", "rul
 
 
 def summary_figure(view: dict, theme: str | None = None):
-    """'100.000 TL ile başlasaydınız': 10 stratejinin bugünkü değeri, sabit sırada; yapay zekâ ± 12 tohum std."""
-    rows = {r["key"]: r for r in (view or {}).get("table") or []}
-    keys = [k for k in plain.ORDER if k in rows]
-    if not keys:
+    """'100.000 TL ile başlasaydınız': 10 strateji sabit sırada, yapay zekâ ± 12 tohum std. Gün kaydırıcısı ve Oynat
+    düğmesi her günün durumunu gösterir (kareler istemcide; sunucuya gidilmez). Nokta tıklanınca strateji incelenir
+    (customdata[2] = anahtar)."""
+    lines = (view or {}).get("lines") or {}
+    keys = [k for k in plain.ORDER if k in lines]
+    dates = (view or {}).get("dates") or []
+    if not keys or not dates:
         return empty_figure("Veri yok")
     p = plot_palette(theme)
     cap = float(view.get("capital") or 100_000)
-    fig = go.Figure()
-    for g in ("ai_multi", "ai_single", "control", "rule"):
-        ks = [k for k in keys if plain.group(k) == g]
-        if not ks:
-            continue
-        x = [cap * (1 + rows[k]["cum_return"]) for k in ks]
-        err = [cap * (rows[k].get("cum_return_std") or 0) for k in ks]
-        fig.add_trace(go.Scatter(
-            x=x, y=[plain.name(k) for k in ks], mode="markers", name=plain.GROUPS[g],
-            marker={"size": 12, "color": p[GROUP_COLOR[g]], "line": {"width": 1.5, "color": p["bg"]}},
-            error_x={"type": "data", "array": err, "visible": g != "rule", "color": plot_rgba(GROUP_COLOR[g], 0.6, theme),
-                     "thickness": 2, "width": 4},
-            customdata=[[spct(rows[k]["cum_return"]), f"± {_num(e, 0)} TL (12 eğitim arası yayılım)" if e else
-                         "tek seri"] for k, e in zip(ks, err)],
-            hovertemplate="%{y}<br>%{x:,.0f} TL · %{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
-    fig.add_vline(x=cap, line={"color": p["line"], "width": 1.2, "dash": "dot"},
-                  annotation={"text": f"başlangıç {tl(cap)}", "font": {"size": 11}}, annotation_position="top")
-    xs = [cap * (1 + rows[k]["cum_return"] + s * (rows[k].get("cum_return_std") or 0)) for k in keys for s in (-1, 1)]
-    lo, hi = min(xs + [cap]), max(xs + [cap])
+    T = len(dates)
+    groups = [(g, [k for k in keys if plain.group(k) == g]) for g in ("ai_multi", "ai_single", "control", "rule")]
+    groups = [(g, ks) for g, ks in groups if ks]
+
+    def val(k, t):
+        return lines[k]["mean"][t]
+
+    def sd(k, t):
+        return lines[k]["std"][t] if lines[k].get("n", 1) > 1 else 0.0
+
+    lo = min([cap] + [val(k, t) - sd(k, t) for k in keys for t in range(T)])
+    hi = max([cap] + [val(k, t) + sd(k, t) for k in keys for t in range(T)])
     pad = 0.30 * (hi - lo or cap * 0.01)
-    # değerler sağda ayrı sütun: nokta ve yayılım çubuğunun üstüne binmesin
-    fig.add_trace(go.Scatter(x=[hi + pad * 0.95] * len(keys), y=[plain.name(k) for k in keys], mode="text",
-                             text=[f"{tl(cap * (1 + rows[k]['cum_return']))}  ({spct(rows[k]['cum_return'], 1)})"
-                                   for k in keys], textposition="middle left", textfont={"size": 11.5, "color": p["text"]},
-                             showlegend=False, hoverinfo="skip"))
-    fig.update_layout(height=60 + 30 * len(keys), margin={"l": 10, "r": 10, "t": 26, "b": 30}, separators=",.",
-                      showlegend=True, legend={"orientation": "h", "y": -0.14, "x": 0, "font": {"size": 11}},
-                      xaxis={"tickformat": ",.0f", "range": [lo - pad * 0.4, hi + pad], "title": None},
-                      yaxis={"autorange": "reversed", "automargin": True})
+
+    def day(t):
+        out = []
+        for g, ks in groups:
+            x, err = [val(k, t) for k in ks], [sd(k, t) for k in ks]
+            out.append(go.Scatter(
+                x=x, y=[plain.name(k) for k in ks], mode="markers", name=plain.GROUPS[g],
+                marker={"size": 12, "color": p[GROUP_COLOR[g]], "line": {"width": 1.5, "color": p["bg"]}},
+                error_x={"type": "data", "array": err, "visible": g != "rule", "thickness": 2, "width": 4,
+                         "color": plot_rgba(GROUP_COLOR[g], 0.6, theme)},
+                customdata=[[spct(v / cap - 1), f"± {_num(e, 0)} TL (12 eğitim arası yayılım)" if e else "tek seri", k]
+                            for k, v, e in zip(ks, x, err)],
+                hovertemplate="%{y}<br>%{x:,.0f} TL · %{customdata[0]}<br>%{customdata[1]}<br>"
+                              "<i>tıklayın: aşağıda inceleyin</i><extra></extra>"))
+        # değerler sağda ayrı sütun: nokta ve yayılım çubuğunun üstüne binmesin
+        out.append(go.Scatter(x=[hi + pad * 0.95] * len(keys), y=[plain.name(k) for k in keys], mode="text",
+                              text=[f"{tl(val(k, t))}  ({spct(val(k, t) / cap - 1, 1)})" for k in keys],
+                              textposition="middle left", textfont={"size": 11.5, "color": p["text"]},
+                              showlegend=False, hoverinfo="skip"))
+        return out
+
+    fig = go.Figure(data=day(T - 1))
+    fig.add_vline(x=cap, line={"color": p["line"], "width": 1.2, "dash": "dot"},
+                  annotation={"text": f"başlangıç {tl(cap)}", "font": {"size": 11}},
+                  annotation_position="bottom right")
+    layout = {"height": 70 + 30 * len(keys), "margin": {"l": 10, "r": 10, "t": 34, "b": 30}, "separators": ",.",
+              "showlegend": True, "legend": {"orientation": "h", "y": 1.0, "yanchor": "bottom", "x": 0,
+                                             "font": {"size": 11}},
+              "xaxis": {"tickformat": ",.0f", "range": [lo - pad * 0.4, hi + pad], "title": None},
+              "yaxis": {"autorange": "reversed", "automargin": True}, "hovermode": "closest"}
+    if T > 1:                                  # tek günde oynatılacak bir şey yok
+        dur = int(max(60, min(500, 12_000 / T)))
+        fig.frames = [go.Frame(data=day(t), name=str(t)) for t in range(T)]
+        step = {"mode": "immediate", "frame": {"duration": 0, "redraw": True}, "transition": {"duration": 0}}
+        layout["height"] += 80
+        layout["margin"]["b"] = 96
+        layout["sliders"] = [{
+            "active": T - 1, "x": 0.14, "len": 0.86, "y": 0, "yanchor": "top", "pad": {"t": 40},
+            "currentvalue": {"prefix": "Gün: ", "font": {"size": 12}}, "font": {"size": 10},
+            "steps": [{"label": d_short(dates[t]), "method": "animate", "args": [[str(t)], step]} for t in range(T)]}]
+        layout["updatemenus"] = [{
+            "type": "buttons", "direction": "left", "showactive": False, "x": 0, "y": 0, "yanchor": "top",
+            "xanchor": "left", "pad": {"t": 62, "r": 6}, "font": {"size": 11},
+            "buttons": [
+                {"label": "▶ Oynat", "method": "animate",
+                 "args": [None, {"frame": {"duration": dur, "redraw": True}, "transition": {"duration": 0},
+                                 "fromcurrent": False, "mode": "immediate"}]},
+                {"label": "❚❚", "method": "animate", "args": [[None], {**step, "frame": {"duration": 0, "redraw": False}}]},
+            ]}]
+    fig.update_layout(**layout)
     apply_theme_template(fig, theme)
     return fig
 
@@ -683,7 +740,9 @@ def layout():
         # 1. sade özet: alan dışından bir okur yalnız bu kartı okuyup çıkabilmeli (§3.18)
         dbc.Card([
             dbc.CardHeader(html.Div([
-                html.Span("100.000 TL ile başlasaydınız, bugün", className="card-title-sm"),
+                html.Span(["100.000 TL ile başlasaydınız, bugün ", plain.info("sim-i-summary", text=plain.NOTES["summary"],
+                                                                         title="Nasıl okunur?")],
+                          className="card-title-sm"),
                 dbc.RadioItems(id="sim-window", inline=True, value=default_window, className="sim-range", options=[
                     {"label": "Gerçek piyasada canlı deneme (23 Kas →)", "value": "forward"},
                     {"label": "2026 sınav dönemi", "value": "test2026"}]),
@@ -704,9 +763,11 @@ def layout():
         ], className="mb-3"),
         dbc.Card(dbc.CardBody(html.Div(id="sim-banner", children=banner(default_window, status))), className="mb-4"),
         # 2. ayrıntı: tek bir portföyün içi
+        dcc.Store(id="sim-scroll"),
         html.Div([html.Div("Tek bir portföyün içine bakın", className="sim-section-title"),
                   html.Div("Bir strateji ve tohum seçin: gerçek lot sayılarıyla gün gün ne aldığını, ne sattığını ve "
-                           "ne kazandığını görün.", className="sim-muted small")], className="sim-section"),
+                           "ne kazandığını görün. İpucu: yukarıdaki grafikte bir noktaya tıklamak da strateji seçer.",
+                           className="sim-muted small")], className="sim-section", id="sim-detail"),
         dbc.Card(dbc.CardBody(dbc.Row([
             dbc.Col([html.Label("İncelenen portföy", className="section-title"),
                      dcc.Dropdown(id="sim-focus", options=ARM_OPTIONS, value="M-none", clearable=False)],
@@ -790,7 +851,8 @@ def layout():
                 ]),
             ], className="h-100"), lg=8, className="mb-3"),
             dbc.Col(dbc.Card([
-                dbc.CardHeader(html.Span("12 tohumun dağılımı", className="card-title-sm")),
+                dbc.CardHeader(html.Span(["İncelenen kolun 12 tohumu ", plain.info(
+                    "sim-i-seeds", text=plain.NOTES["seeds"], title="12 tohum")], className="card-title-sm")),
                 dbc.CardBody([
                     html.P("Her tohum ayrı bir politika; ortalama ± std bandının arkasındaki tek tek sonuçlar.",
                            className="sim-muted small"),
@@ -802,7 +864,8 @@ def layout():
         ]),
         dbc.Card([
             dbc.CardHeader(html.Div([
-                html.Div([html.Span("Eşit ağırlığa (1/N) göre fark", className="card-title-sm"),
+                html.Div([html.Span(["Eşit ağırlığa (1/N) göre fark ", plain.info(
+                    "sim-i-diff", text=plain.NOTES["diff"], title="Eşli fark")], className="card-title-sm"),
                           html.Div("Her gün, aynı günün 1/N sonucuyla eşleştirilmiş birikimli fark (puan = yüzde puanı). "
                                    "Sıfırın üstü: 1/N'den fazla kazandırdı. Bant: 12 eğitim arasındaki yayılım. "
                                    "Betimseldir, istatistik testi değildir.", className="sim-muted small")]),
@@ -873,21 +936,53 @@ def register_callbacks(app):
         return v, note
 
     @app.callback(
-        Output("sim-view", "data"), Output("sim-table", "children"),
-        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"), Output("sim-diff", "figure"),
+        Output("sim-view", "data"), Output("sim-table", "children"), Output("sim-diff", "figure"),
         Input("sim-view-all", "data"), Input("sim-keys", "value"), Input("sim-focus", "value"),
         State("sim-window", "value"),
     )
     def update_view(v, keys, focus, window):
         if not v:
-            return no_update, no_update, no_update, no_update, no_update
+            return no_update, no_update, no_update
         if v.get("empty"):
-            e = empty_figure(v["empty"])
-            return None, html.P(v["empty"], className="sim-muted small"), e, "", e
+            return None, html.P(v["empty"], className="sim-muted small"), empty_figure(v["empty"])
         shown = plotted_keys(keys, focus)
         sub = select_view(v, shown)
-        fig, seed_note = seed_figure(sub, window) if shown else (empty_figure("Grafik için strateji seçin"), "")
-        return sub, compare_table(v, shown), fig, seed_note, diff_figure(sub)
+        return sub, compare_table(v, shown), diff_figure(sub)
+
+    @app.callback(
+        Output("sim-seeds", "figure"), Output("sim-seed-note", "children"),
+        Input("sim-view", "data"), Input("sim-focus", "value"), Input("sim-seed", "value"),
+        State("sim-window", "value"),
+    )
+    def update_seeds(view, focus, seed, window):
+        if not view or not view.get("table"):
+            return empty_figure("Tohum dağılımı için bir kol seçin"), ""
+        return seed_figure(view, window, focus=focus, seed=seed)
+
+    @app.callback(Output("sim-focus", "value"), Input("sim-summary-chart", "clickData"), prevent_initial_call=True)
+    def pick_strategy(click):
+        """Özet grafikte bir noktaya tıklama: o strateji incelenir (yazı sütununda customdata yok)."""
+        try:
+            key = click["points"][0]["customdata"][2]
+        except (TypeError, KeyError, IndexError):
+            return no_update
+        return key if key in LABELS else no_update
+
+    @app.callback(Output("sim-seed", "value", allow_duplicate=True), Input("sim-seeds", "clickData"),
+                  State("sim-focus", "value"), prevent_initial_call=True)
+    def pick_seed(click, focus):
+        try:
+            seed = int(click["points"][0]["customdata"])
+        except (TypeError, KeyError, IndexError, ValueError):
+            return no_update
+        return seed if focus in ARMS and seed in seeds_for(focus) else no_update
+
+    # tıklamadan sonra ayrıntı bölümüne kaydır (istemcide; sunucuya gitmez)
+    app.clientside_callback(
+        """function(c) { if (c && c.points && c.points[0] && c.points[0].customdata) {
+               var e = document.getElementById('sim-detail'); if (e) { e.scrollIntoView({behavior: 'smooth'}); } }
+           return window.dash_clientside.no_update; }""",
+        Output("sim-scroll", "data"), Input("sim-summary-chart", "clickData"), prevent_initial_call=True)
 
     @app.callback(
         Output("sim-summary-chart", "figure"), Output("sim-summary-text", "children"),

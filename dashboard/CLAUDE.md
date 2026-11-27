@@ -100,6 +100,9 @@ UI degisikliginden sonra `python tests/test_theme_contrast.py` ve `python tests/
 - Ana sayfa sorulari (`home.plain_answers`) sayiyi ve yaniti `snapshot.json` `m8_ozet`'ten hesaplar; H1/H2 "daha iyi
   portfoy seciyor" diye yazilmaz (M8 §7.3a). Kurallar > yapay zeka betimseldir, test edilmedi (§7.3b): notta kalir.
 - Ileri veri: tablo/ozet SABIT sira, siralama ve "en iyi" yok; Sharpe 20 seanstan once "—"; esli fark betimsel.
+- Aciklama isareti `plain.info(uid, term=|text=)`: uid sayfada TEKIL olmali (`sim-i-*`, `home-i-*`); metin sozlukten
+  ya da `plain.NOTES` (nasil okunur, sonuc sayisi YOK). Bilesen alamayan yerde (DataTable basligi) `plain.note_text`.
+- Ozet grafik kareleri (Oynat) istemcide; noktalarin customdata[2] = strateji anahtari (tiklama `sim-focus`a yazar).
 
 ### Turkce metin ve bicim (Faz 11 §3.15)
 - Ekranda gorunen metin Turkce karakterle yazilir; kimlik, className, value, API anahtari ASCII kalir.

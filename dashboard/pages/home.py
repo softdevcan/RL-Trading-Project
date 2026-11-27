@@ -102,7 +102,7 @@ def plain_answers(m8: dict | None, st: dict | None) -> list:
         weak = min(m8["kurallar"], key=lambda r: r["ort"])
         allb = f["rules_above"] == f["n_rules"]
         out.append({
-            "soru": "Yapay zekâ, basit kurallardan daha iyi yatırım yaptı mı?",
+            "soru": "Yapay zekâ, basit kurallardan daha iyi yatırım yaptı mı?", "terim": "sharpe",
             "yanit": "Hayır." if allb else ("Kısmen." if f["rules_above"] else "Evet."),
             "metin": (f"{years} arasındaki {len(m8['katlar'])} yıllık sınavda hiçbir yapay zekâ modeli, riske göre "
                       "getiride basit kuralların hiçbirine yetişemedi." if allb else
@@ -119,7 +119,7 @@ def plain_answers(m8: dict | None, st: dict | None) -> list:
             comm = (" Ajanların birbirine bilgi göndermesi ölçülebilir bir fark yaratmadı."
                     if _label_is(m8, "H3", "FARK_GOZLENMEDI") else "")
             out.append({
-                "soru": "Her hisseye ayrı ajan, tek ajandan iyi mi?",
+                "soru": "Her hisseye ayrı ajan, tek ajandan iyi mi?", "terim": "sarl",
                 "yanit": "Evet, 6 yılın ortalamasında.",
                 "metin": ("Her hisseye ayrı ajan atayan model, bütün portföyü tek ajanla yöneten iki modelden daha "
                           "yüksek riske göre getiri verdi. Farkın önemli bir kısmı, daha az alım-satım yapıp daha az "
@@ -132,7 +132,7 @@ def plain_answers(m8: dict | None, st: dict | None) -> list:
         n, need = int(st.get("n_sessions") or 0), int(st.get("read_sessions") or READ_SESSIONS)
         rem = max(0, need - n)
         out.append({
-            "soru": "Şimdi ne yapılıyor?",
+            "soru": "Şimdi ne yapılıyor?", "terim": "ileri-veri-testi",
             "yanit": f"Gerçek piyasada canlı deneme: {n} / {need} gün.",
             "metin": ("Eğitimi bitmiş modeller dondurularak değiştirilmeden deneniyor: 23 Kasım 2026'dan beri her "
                       f"işlem günü sanal parayla. Sonuç {need}. günde, önceden yazılmış kurala göre bir kez okunacak; "
@@ -145,8 +145,9 @@ def plain_answers(m8: dict | None, st: dict | None) -> list:
 
 
 def plain_summary(m8: dict | None, st: dict | None):
-    def card(a):
-        body = [html.Div(a["soru"], className="home-q"), html.Div(a["yanit"], className="home-a"),
+    def card(n, a):
+        q = [a["soru"]] + ([" ", plain.info(f"home-i-q{n}", term=a["terim"], cls="home")] if a.get("terim") else [])
+        body = [html.Div(q, className="home-q"), html.Div(a["yanit"], className="home-a"),
                 html.P(a["metin"], className="home-q-text")]
         if a.get("progress") is not None:
             body.append(dbc.Progress(value=a["progress"], className="sim-progress mb-2"))
@@ -160,7 +161,7 @@ def plain_summary(m8: dict | None, st: dict | None):
             html.Div("Bu proje ne yapıyor?", className="home-intro-title"),
             html.P(INTRO, className="home-intro"),
         ]), className="mb-3"),
-        dbc.Row([card(a) for a in answers], id="home-plain"),
+        dbc.Row([card(n, a) for n, a in enumerate(answers)], id="home-plain"),
         dbc.Card(dbc.CardBody([
             html.Div("Terimler nasıl okunur?", className="home-intro-title"),
             plain.how_to_read(HOME_TERMS, cls="home"),
@@ -193,10 +194,15 @@ def status_values(st: dict) -> dict:
 def _strip(vals: dict) -> dbc.Row:
     def col(card):
         return dbc.Col(card, lg=3, sm=6, xs=12, className="mb-3")
+    def t(label, uid, **kw):
+        return [label, " ", plain.info(f"home-i-{uid}", cls="home", **kw)]
     return dbc.Row([
-        col(create_metric_card("İleri veri testi", vals["forward"], vals["forward_sub"], icon="bi bi-hourglass-split")),
-        col(create_metric_card("Son günlük çalışma", vals["run"], vals["run_sub"], icon="bi bi-arrow-repeat")),
-        col(create_metric_card("Fiyat marjı geçerli", vals["margin"], vals["margin_sub"], icon="bi bi-shield-check")),
+        col(create_metric_card(t("İleri veri testi", "fwd", term="ileri-veri-testi"), vals["forward"],
+                               vals["forward_sub"], icon="bi bi-hourglass-split")),
+        col(create_metric_card(t("Son günlük çalışma", "run", text=plain.NOTES["run"], title="Günlük çalışma"),
+                               vals["run"], vals["run_sub"], icon="bi bi-arrow-repeat")),
+        col(create_metric_card(t("Fiyat marjı geçerli", "margin", text=plain.NOTES["margin"], title="Fiyat marjı"),
+                               vals["margin"], vals["margin_sub"], icon="bi bi-shield-check")),
         col(create_metric_card("Sürüm", _version(), "Faz 11: entegrasyon + sanal para", icon="bi bi-tag")),
     ], className="mb-2", id="home-strip")
 

@@ -100,6 +100,11 @@
     - Yanıtlar `snapshot.json` `m8_ozet` sayı ve etiketlerinden hesaplanır.
   - **Simülasyon üstü:** "100.000 TL ile başlasaydınız" grafiği (10 strateji, sabit sıra, ± 12 tohum std), üç satır özet ve ara görünüm yorumu. Altında "Tek bir portföyün içine bakın", en altta "Stratejileri karşılaştırın (ayrıntılı)".
   - Tarih ekseni hafta sonu boşluksuz; kısa pencerede etiket yalnız defter günlerinde. İlk gün emirlerinin ilk 8'i gösterilir, kalanı açılırda.
+- **Etkileşim (aynı gün, ikinci tur; kullanıcı: "popup, daha etkileşimli ve güzel").**
+  - ⓘ açıklamalar (`plain.info`, dbc.Popover, üstüne gelince / klavyeyle odakta): kart ve soru başlıkları; metin sözlükten ya da `plain.NOTES` okuma notlarından (sonuç sayısı yok). Karşılaştırma tablosu başlıklarında DataTable `tooltip_header`.
+  - Özet grafikte noktaya tıklamak stratejiyi "incelenen portföy" yapar ve ayrıntıya kaydırır.
+  - Tohum grafiği incelenen kolun 12 tohumu; incelenen tohum halkalı; noktaya tıklamak o tohuma geçer.
+  - Özet grafikte "▶ Oynat" ve gün kaydırıcısı (Plotly kareleri, istemcide; sunucuya gidilmez).
 - **Ön kayıtla ilişkisi.** Hiçbiri pencereyi, kolları, ölçütü ya da veri kuralını değiştirmez (ek §9). Eşli fark betimseldir; p-değeri ve test yok, okuma 126. seansta.
 
 ### 3.17 Veri sayfası: veri haritası (2026-11-26; kullanıcı bildirimi; `tests/test_data_catalog.py` 2)

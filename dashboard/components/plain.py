@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import os
 
+import dash_bootstrap_components as dbc
 import yaml
 from dash import html
 
@@ -55,6 +56,35 @@ SEED_NOTE = ("Her yapay zekâ modeli 12 kez, 12 farklı rastgele başlangıçla 
              "12'sinin ortalaması gösterilir.")
 
 
+# ⓘ okuma notları: nasıl okunur, sonuç sayısı YOK (sayılar ekranda kaynağından gelir)
+NOTES = {
+    "summary": ("Her nokta bir strateji. Yapay zekâda nokta 12 eğitimin ortalaması, yatay çizgi aralarındaki yayılım "
+                "(± std); kurallar tek seridir. Bir noktaya tıklayınca o strateji aşağıda incelenir; alttaki düğmeyle "
+                "günleri tek tek oynatabilirsiniz."),
+    "drawdown": "Portföyün o güne kadarki en yüksek değerinden yaşadığı en derin düşüş: yatırımcının gördüğü en kötü an.",
+    "total": "Başlangıçtan bu yana kâr ya da zarar; alım-satım maliyeti düşülmüş olarak.",
+    "arm_mean": ("Seçili kolun 12 ayrı eğitiminin ortalaması. İncelenen portföy bunlardan yalnız biridir; tek bir "
+                 "eğitime bakarak kollar karşılaştırılmaz."),
+    "seeds": ("Her nokta incelenen kolun bir eğitimi (tohum); halkalı olan şu an incelenen. Bir noktaya tıklayınca o "
+              "eğitime geçilir."),
+    "diff": ("Aynı günlerde stratejinin değeri eksi 1/N'in değeri. Bantların üst üste binmesine bakmaktan daha doğru bir "
+             "kıyas, çünkü bütün stratejiler aynı piyasa günlerini yaşıyor."),
+    "col_n": "Kaç seri: yapay zekâda 12 eğitim, kurallarda 1.",
+    "col_plot": "Bu strateji yukarıdaki grafikte kesikli çizgi olarak çiziliyor mu.",
+    "col_ret": "Pencere başından bugüne toplam getiri; yapay zekâda 12 eğitimin ortalaması ± std.",
+    "col_cash": "Portföyün ortalama ne kadarının nakitte durduğu.",
+    "run": "Sunucu her işlem günü akşam (19:00 TRT sonrası) günün kapanış fiyatlarıyla defteri günceller.",
+    "margin": ("Borsa'nın günlük fiyat sınırı her ay birincil kaynaktan yeniden denetlenir; bu tarihten sonrası için "
+               "defter yeni bir denetim olmadan yazılmaz."),
+}
+
+
+def note_text(key: str = "", term: str = "", extra: str = "") -> str:
+    """Düz metin not (DataTable başlık ipucu gibi bileşen alamayan yerler için)."""
+    t = NOTES.get(key) or str((glossary().get(term) or {}).get("sade", "")).strip()
+    return (t + (" " + extra if extra else "")).strip()
+
+
 def name(key: str) -> str:
     return STRATEGIES.get(key, (key,))[0]
 
@@ -81,6 +111,21 @@ def glossary() -> dict:
 
 def term_href(term_id: str) -> str:
     return f"/dash/guide#terim-{term_id}"
+
+
+def info(uid: str, term: str | None = None, text: str | None = None, title: str | None = None,
+         cls: str = "sim") -> html.Span:
+    """ⓘ işareti: üstüne gelince (ya da klavyeyle odaklanınca) kısa açıklama açılır.
+    `term` verilirse başlık ve metin sözlükten (`sade`); `text` sözlükte olmayan, sonuç sayısı İÇERMEYEN okuma notu."""
+    g = glossary().get(term) if term else None
+    body = text or (str(g.get("sade", "")).strip() if g else "")
+    if not body:
+        return html.Span()
+    head = title or (g["terim"] if g else None)
+    pop = ([dbc.PopoverHeader(head)] if head else []) + [dbc.PopoverBody(body)]
+    return html.Span([html.I(className="bi bi-info-circle"),
+                      dbc.Popover(pop, target=uid, trigger="hover focus", placement="top")],
+                     id=uid, tabIndex=0, className=f"{cls}-info", role="button", **{"aria-label": head or "Açıklama"})
 
 
 def how_to_read(term_ids: list, cls: str = "home") -> html.Div:
